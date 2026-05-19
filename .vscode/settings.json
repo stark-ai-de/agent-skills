@@ -1,0 +1,82 @@
+{
+  "files.autoSave": "onFocusChange",
+  "oxc.fmt.configPath": "packages/tooling-config/oxfmt.json",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "oxc.useExecPath": true,
+  "oxc.path.oxfmt": "node_modules/oxfmt/dist/cli.js",
+  "oxc.path.oxlint": "node_modules/oxlint/dist/cli.js",
+  "json.schemaDownload.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "files.associations": {
+    ".env": "env",
+    ".env.*": "env",
+    "**/.env": "env",
+    "**/.env.*": "env"
+  },
+  "shellcheck.ignorePatterns": {
+    ".env": true,
+    ".env.*": true,
+    "**/.env": true,
+    "**/.env.*": true
+  },
+  "files.exclude": {
+    "**/dist": true,
+    "**/.next": true,
+    "**/.docusaurus": true,
+    "**/node_modules": true,
+    "**/.turbo/**": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/out": true
+  },
+  "search.exclude": {
+    "**/dist": true,
+    "**/.next": true,
+    "**/.docusaurus": true,
+    "**/node_modules": true,
+    "**/.turbo/**": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/out": true
+  },
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/.next/**": true,
+    "**/.docusaurus/**": true,
+    "**/node_modules/**": true,
+    "**/.turbo/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/out/**": true
+  },
+  "git.ignoreLimitWarning": true,
+  "git.inputValidationSubjectLength": 100,
+  "editor.rulers": [100],
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  }
+}

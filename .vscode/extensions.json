@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "EditorConfig.EditorConfig",
+    "irongeek.vscode-env",
+    "timonwong.shellcheck",
+    "eamodio.gitlens"
+  ]
+}

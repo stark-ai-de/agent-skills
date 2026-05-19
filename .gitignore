@@ -1,0 +1,15 @@
+node_modules
+.agents/skills/
+.next
+.turbo
+build
+dist
+coverage
+*.tsbuildinfo
+.DS_Store
+*:Zone.Identifier
+
+.env
+.env.*
+!.env.example
+npm-debug.log*
