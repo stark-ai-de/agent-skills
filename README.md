@@ -1,67 +1,81 @@
 <p align="center">
-  <img src="stark-ai-de-agent-skills-logo.png" alt="Agent Skills by stark-ai-de" width="760">
+  <img src="docs/assets/stark-ai-de-agent-skills-logo.svg" alt="Agent Skills by stark-ai-de" width="760">
 </p>
 
 # Agent Skills
 
-Reusable Agent Skills for Codex workflows, repository maintenance, and engineering automation.
+[![skills.sh listing pending](https://img.shields.io/badge/skills.sh-listing_pending-lightgrey)](https://skills.sh/)
 
-This repository is a practical maintainer toolbox. It is for people who want coding agents to review repositories, triage issues, prepare releases, preserve handoffs, write ADRs, and keep skill repositories healthy without loading a giant always-on prompt.
+Public Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and repeatable engineering workflows.
 
-## Install
+This catalog exists for the moments when a coding agent has enough ability to act, but not enough local process to act well. Skills make common workflows explicit: preserve context, review PRs, triage issues, debug failures, write ADRs, slice plans, and keep a public skills catalog installable without loading one giant always-on prompt.
 
-List available skills:
+## When Agents Fail, Use These Skills
+
+| Problem                                  | Skills                                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Agent loses context                      | [`codex-context-guard`](skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](skills/productivity/handoff/SKILL.md)                                   |
+| Repo maintenance is unclear              | [`repo-health-audit`](skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                          |
+| Pull request review is too shallow       | [`pr-review`](skills/repo-maintenance/pr-review/SKILL.md)                                                                                                          |
+| Issues are messy                         | [`issue-triage`](skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                    |
+| Public skill quality is drifting         | [`skill-repo-curator`](skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](skills/skill-maintenance/skill-authoring-review/SKILL.md) |
+| Codex memory is stale or harmful         | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                    |
+| A bug needs evidence before a fix        | [`debugging-diagnosis`](skills/engineering-workflows/debugging-diagnosis/SKILL.md)                                                                                 |
+| A broad plan needs implementation slices | [`issue-plan-slicer`](skills/engineering-workflows/issue-plan-slicer/SKILL.md)                                                                                     |
+
+## Quickstart
+
+List public skills from GitHub:
 
 ```bash
 npx skills add stark-ai-de/agent-skills --list
 ```
 
-Install all skills globally for Codex:
+Install all public skills globally for Codex:
 
 ```bash
 npx skills add stark-ai-de/agent-skills -g -a codex
 ```
 
-Install one skill:
+Install one public skill:
 
 ```bash
 npx skills add stark-ai-de/agent-skills --skill repo-health-audit -g -a codex
 ```
 
-Update installed skills:
+Restore this repository's project-local helper skills from `skills-lock.json`:
 
 ```bash
-npx skills update -g
+npx skills@latest experimental_install -y
 ```
 
-Install from a local checkout:
+Bootstrap a downstream repository after installing the catalog:
 
-```bash
-npx skills@latest add ./skills --list
-npx skills@latest add ./skills --skill repo-health-audit -g -a codex
+```text
+Use $agent-context-bootstrap to set up this repo's AGENTS.md, docs/agents, validation commands, issue tracker notes, and skill routing.
 ```
 
-## Skills
+## Catalog
 
-| Skill                        | Category          | Use when                                                    |
-| ---------------------------- | ----------------- | ----------------------------------------------------------- |
-| `codex-context-guard`        | Codex operations  | Long Codex sessions risk context-window exhaustion          |
-| `codex-memory-curator`       | Codex operations  | Codex memories may be stale, broad, duplicated, or harmful  |
-| `agent-context-bootstrap`    | Repo maintenance  | A repository needs repo-local agent instructions and docs   |
-| `adr-writer`                 | Repo maintenance  | A repo-level decision needs a short ADR                     |
-| `repo-health-audit`          | Repo maintenance  | You want a full repository maintenance audit                |
-| `issue-triage`               | Repo maintenance  | You need to triage issues or label an inbox                 |
-| `pr-review`                  | Repo maintenance  | You need a structured PR review                             |
-| `release-manager`            | Repo maintenance  | You are preparing a release                                 |
-| `dependency-update-review`   | Repo maintenance  | You need dependency or lockfile changes reviewed            |
-| `ci-debugger`                | Repo maintenance  | CI or build logs need root-cause analysis                   |
-| `docs-audit`                 | Repo maintenance  | Docs, README, onboarding, or examples need review           |
-| `security-baseline-review`   | Repo maintenance  | Public repo security hygiene needs review                   |
-| `skill-authoring-review`     | Skill maintenance | You are creating or reviewing a skill                       |
-| `skill-repo-curator`         | Skill maintenance | This skills repo needs catalog, release, or validation work |
-| `skill-installation-support` | Skill maintenance | Users need help with `npx skills` installation              |
-| `handoff`                    | Productivity      | A compact handoff is needed for another agent or thread     |
-| `grill-plan`                 | Productivity      | A plan needs pressure-testing before implementation         |
+The public catalog lives under `skills/` and is stable-only. Draft, personal, private, or third-party helper skills do not belong in this tree.
+
+- [Codex operations](skills/codex-operations/README.md)
+- [Engineering workflows](skills/engineering-workflows/README.md)
+- [Productivity](skills/productivity/README.md)
+- [Repo maintenance](skills/repo-maintenance/README.md)
+- [Skill maintenance](skills/skill-maintenance/README.md)
+
+### Skill Index
+
+**Codex operations:** [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md), [`codex-context-guard`](skills/codex-operations/codex-context-guard/SKILL.md), [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)
+
+**Engineering workflows:** [`debugging-diagnosis`](skills/engineering-workflows/debugging-diagnosis/SKILL.md), [`issue-plan-slicer`](skills/engineering-workflows/issue-plan-slicer/SKILL.md), [`prd-writer`](skills/engineering-workflows/prd-writer/SKILL.md), [`prototype-spike`](skills/engineering-workflows/prototype-spike/SKILL.md), [`repo-map-zoom-out`](skills/engineering-workflows/repo-map-zoom-out/SKILL.md), [`test-first-implementation`](skills/engineering-workflows/test-first-implementation/SKILL.md)
+
+**Productivity:** [`grill-plan`](skills/productivity/grill-plan/SKILL.md), [`handoff`](skills/productivity/handoff/SKILL.md)
+
+**Repo maintenance:** [`adr-writer`](skills/repo-maintenance/adr-writer/SKILL.md), [`agent-context-bootstrap`](skills/repo-maintenance/agent-context-bootstrap/SKILL.md), [`ci-debugger`](skills/repo-maintenance/ci-debugger/SKILL.md), [`dependency-update-review`](skills/repo-maintenance/dependency-update-review/SKILL.md), [`docs-audit`](skills/repo-maintenance/docs-audit/SKILL.md), [`issue-triage`](skills/repo-maintenance/issue-triage/SKILL.md), [`pr-review`](skills/repo-maintenance/pr-review/SKILL.md), [`release-manager`](skills/repo-maintenance/release-manager/SKILL.md), [`repo-health-audit`](skills/repo-maintenance/repo-health-audit/SKILL.md), [`security-baseline-review`](skills/repo-maintenance/security-baseline-review/SKILL.md)
+
+**Skill maintenance:** [`skill-authoring-review`](skills/skill-maintenance/skill-authoring-review/SKILL.md), [`skill-installation-support`](skills/skill-maintenance/skill-installation-support/SKILL.md), [`skill-repo-curator`](skills/skill-maintenance/skill-repo-curator/SKILL.md)
 
 ## Development
 
@@ -75,6 +89,18 @@ Validate the repository:
 
 ```bash
 npm run validate
+```
+
+Run a clean public install smoke test:
+
+```bash
+npm run smoke:install
+```
+
+Check local public skill discovery:
+
+```bash
+npx skills@latest add ./skills --list
 ```
 
 Optional formatting and linting use Oxc tooling:
@@ -93,13 +119,11 @@ npm run scaffold repo-maintenance/my-new-skill
 
 The scaffold command creates files. Review generated content before committing.
 
-### Project-local helper skills
+### Project-Local Helper Skills
 
-This repo uses a few published skills while maintaining the catalog. They are
-installed with `npx skills` into `.agents/skills/`, which is ignored so those
-upstream skills are not republished from this repository.
+This repo uses a few published skills while maintaining the catalog. They are installed with `npx skills` into `.agents/skills/`, which is ignored so those upstream skills are not republished from this repository.
 
-Restore the helper skills from `skills-lock.json`:
+Restore helpers with the lockfile command:
 
 ```bash
 npx skills@latest experimental_install -y
@@ -114,6 +138,15 @@ Current project-local helpers:
 - `vercel-composition-patterns`
 - `vercel-react-best-practices`
 
+## Maintainer Docs
+
+- [Domain glossary](CONTEXT.md)
+- [Validation](docs/validation.md)
+- [Publishing](docs/publishing.md)
+- [Skill examples](docs/examples/README.md)
+- [Out-of-scope boundaries](docs/out-of-scope/README.md)
+- [Decision records](docs/adr/README.md)
+
 ## Compatibility
 
 This repo follows the open Agent Skills specification:
@@ -122,13 +155,7 @@ https://agentskills.io/specification
 
 Each skill is a directory with a required `SKILL.md` file containing `name` and `description` frontmatter, plus optional `references/`, `scripts/`, and `assets/`.
 
-Codex CLI is the primary runtime, but the skills are kept portable for Vercel skills CLI, Claude Code, Cursor, GitHub Copilot agent environments where compatible, and other agents that support the open Agent Skills format.
-
-## Decision Records
-
-Repo-level decisions are documented in `docs/adr/`.
-
-ADRs are intentionally short. The hard limit is 250 words.
+Codex CLI is the primary runtime, but the skills are kept portable for Vercel skills CLI, Claude Code, Cursor, GitHub Copilot agent environments where compatible, and other agents that support the open Agent Skills format. Claude-specific plugin metadata is intentionally omitted until an ADR makes it a supported publishing surface.
 
 ## Safety
 

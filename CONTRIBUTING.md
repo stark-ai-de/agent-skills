@@ -40,6 +40,7 @@ metadata:
 - Do not include secrets, tokens, customer data, private repo paths, or internal hostnames.
 - Do not copy substantial text from other skill repositories.
 - Do not vendor already-published third-party skills into `skills/`; use project-local `npx skills` installs instead.
+- Keep `skills/` stable-only. Draft, experimental, personal, and private skills belong in specs, issues, ignored local folders, or private repositories.
 - If copying third-party material is explicitly required, verify the license and add source/license attribution before publishing.
 - Prefer read-only scripts.
 - Any script that can modify files must be documented in the owning skill and must require user approval before use.
@@ -60,6 +61,7 @@ Run:
 npm run validate
 npm run list
 npx skills@latest add ./skills --list
+npm run smoke:install
 ```
 
 The `npx` command requires network access the first time the CLI is fetched.
@@ -77,12 +79,14 @@ pnpm lint
 - [ ] New or changed skills have valid frontmatter.
 - [ ] Skill names match folder names.
 - [ ] Descriptions include trigger words.
+- [ ] Category README files match `SKILL.md` frontmatter.
 - [ ] Long rubrics, templates, and examples live in `references/` or `assets/`.
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
 - [ ] `npm run validate` passes.
 - [ ] `npx skills@latest add ./skills --list` works for local catalog discovery.
+- [ ] `npm run smoke:install` passes when install smoke behavior changed.
 - [ ] No private or sensitive data is included.
 
 ## Publishing Checklist
@@ -96,3 +100,7 @@ pnpm lint
 ## Deprecation Policy
 
 Do not delete skills abruptly. Add a deprecation notice to `SKILL.md`, identify the replacement skill, keep the deprecated skill for at least one minor release, update README, and add a changelog entry. Remove only after users have a migration path.
+
+## Scope Boundaries
+
+Use `docs/out-of-scope/` for stable boundaries that are not architectural enough for an ADR. Current defaults: do not vendor upstream skills, do not publish personal/private skills, do not add mega-skills, and keep issue tracker automation limited unless demand justifies more.

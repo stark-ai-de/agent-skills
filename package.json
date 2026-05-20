@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "list": "node scripts/list-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && bash -n skills/codex-operations/codex-memory-curator/scripts/*.sh",
+    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && bash -n skills/codex-operations/codex-memory-curator/scripts/*.sh",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
+    "smoke:install": "node scripts/smoke-install.mjs",
     "adr:new": "node scripts/new-adr.mjs",
     "scaffold": "node scripts/scaffold-skill.mjs",
     "format": "oxfmt --config packages/tooling-config/oxfmt.json --ignore-path .oxfmtignore --write .",

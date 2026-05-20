@@ -34,6 +34,12 @@ Check local install discovery:
 npx skills@latest add ./skills --list
 ```
 
+Run the clean-copy public install smoke test:
+
+```bash
+npm run smoke:install
+```
+
 Optional Oxc checks:
 
 ```bash
@@ -54,8 +60,12 @@ pnpm lint
 - `SKILL.md` stays under 500 lines.
 - Skill bodies include the universal skill section contract: goal, use and non-use cases, inputs, workflow, safety rules, references, scripts, output format, completion criteria, and failure modes.
 - README includes install commands.
+- Every public category has a `skills/<category>/README.md`.
+- Category README files link each skill and include the exact `SKILL.md` frontmatter description.
+- Category README files state that third-party helper skills live outside the public catalog under `.agents/skills/`.
 - Skill scripts avoid obvious high-risk shell patterns.
 - Known upstream helper skills are not vendored under `skills/`; they belong in `.agents/skills/` via `npx skills` and `skills-lock.json`.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
+- `smoke:install` checks a clean copy without `.agents/skills/` so helper skills do not mask the public catalog.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

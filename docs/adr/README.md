@@ -28,3 +28,4 @@ ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 | 0001 | Accepted | Use the open Agent Skills specification.                            |
 | 0002 | Accepted | Publish through GitHub and validate/install with Vercel skills CLI. |
 | 0003 | Accepted | Keep ADRs short and anti-bloat.                                     |
+| 0004 | Accepted | Keep the public catalog stable-only and portable.                   |

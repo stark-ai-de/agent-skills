@@ -1,5 +1,7 @@
 # Deprecation Policy
 
+The public `skills/` tree is stable-only. Draft or experimental skills should stay in specs, issues, or ignored project-local folders until they are ready for public install.
+
 Do not delete skills abruptly.
 
 When deprecating:
@@ -10,6 +12,8 @@ When deprecating:
 4. Keep the deprecated skill for at least one minor release.
 5. Update README and changelog.
 6. Remove only after users have a migration path.
+
+Do not replace a deprecated skill with an experimental skill under `skills/`. The replacement must be stable enough for public installation.
 
 Suggested notice:
 

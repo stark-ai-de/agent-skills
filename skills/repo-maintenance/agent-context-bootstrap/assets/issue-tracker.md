@@ -4,6 +4,12 @@
 
 Document the issue tracker used by this repository.
 
+## Live Mutation Rules
+
+- Ask before creating, closing, labeling, assigning, or moving issues.
+- Prefer draft issue bodies when the tracker or labels are unclear.
+- Link validation evidence when changing issue state.
+
 ## Maintainer Rules
 
 - Do not close, label, assign, or move issues without authorization.

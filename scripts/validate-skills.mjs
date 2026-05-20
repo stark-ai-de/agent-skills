@@ -63,6 +63,7 @@ function parseFrontmatter(file) {
 }
 
 const skillFiles = walk(skillsDir, (file) => path.basename(file) === "SKILL.md").sort();
+const skillRecords = [];
 const projectLocalOnlySkillNames = new Set([
   "agent-browser",
   "grill-me",
@@ -82,9 +83,11 @@ for (const file of skillFiles) {
   if (!data) continue;
 
   const parent = path.basename(path.dirname(file));
+  const category = path.relative(skillsDir, path.dirname(file)).split(path.sep)[0];
   const name = data.name;
   const description = data.description;
   const compatibility = data.compatibility;
+  skillRecords.push({ category, description, name, rel });
 
   if (!name) errors.push(`${rel}: missing frontmatter name`);
   if (!description) errors.push(`${rel}: missing frontmatter description`);
@@ -155,6 +158,41 @@ for (const file of skillFiles) {
 
   if (/read all references/i.test(body)) {
     errors.push(`${rel}: do not tell agents to read all references by default`);
+  }
+}
+
+const categories = new Map();
+for (const record of skillRecords) {
+  if (!record.name || !record.description) continue;
+  const records = categories.get(record.category) ?? [];
+  records.push(record);
+  categories.set(record.category, records);
+}
+
+for (const [category, records] of [...categories.entries()].sort()) {
+  const readmePath = path.join(skillsDir, category, "README.md");
+  const rel = path.relative(root, readmePath);
+
+  if (!fs.existsSync(readmePath)) {
+    errors.push(`${rel}: missing category README`);
+    continue;
+  }
+
+  const readme = fs.readFileSync(readmePath, "utf8");
+  if (!readme.includes(".agents/skills/")) {
+    errors.push(
+      `${rel}: must state that third-party helper skills live outside the public catalog`,
+    );
+  }
+
+  for (const record of records.sort((a, b) => a.name.localeCompare(b.name))) {
+    const expectedLink = `[\`${record.name}\`](${record.name}/SKILL.md)`;
+    if (!readme.includes(expectedLink)) {
+      errors.push(`${rel}: missing link ${expectedLink}`);
+    }
+    if (!readme.includes(record.description)) {
+      errors.push(`${rel}: description for "${record.name}" must match SKILL.md frontmatter`);
+    }
   }
 }
 
