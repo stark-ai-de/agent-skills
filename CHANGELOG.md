@@ -4,8 +4,21 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+## v0.1.0 - 2026-05-21
+
+### Added
+
 - Initial public Agent Skills repository scaffold.
 - Validation, listing, and skill scaffolding scripts.
+- Manual GitHub Actions workflows and helper scripts for preparing and publishing releases.
 - Initial skill catalog for Codex operations, repo maintenance, skill maintenance, and productivity workflows.
 - Added `codegraph-ast-grep` for Codex CLI setup and usage of CodeGraph paired with ast-grep.
 - Added `codex-spec-interviewer` for turning fuzzy coding requests into Codex-ready implementation specs.

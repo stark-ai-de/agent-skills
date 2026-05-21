@@ -7,7 +7,10 @@
   "scripts": {
     "list": "node scripts/list-skills.mjs",
     "list:incubator": "node scripts/list-incubator-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/list-incubator-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && bash -n incubator/skills/codex-operations/codex-memory-curator/scripts/*.sh",
+    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/list-incubator-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && node --check scripts/prepare-release.mjs && node --check scripts/validate-release.mjs && node --check scripts/print-release-notes.mjs && bash -n incubator/skills/codex-operations/codex-memory-curator/scripts/*.sh",
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "release:validate": "node scripts/validate-release.mjs",
+    "release:notes": "node scripts/print-release-notes.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
     "smoke:install": "node scripts/smoke-install.mjs",

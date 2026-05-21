@@ -1,0 +1,99 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without leading v
+        required: true
+        type: string
+      dry_run:
+        description: Validate without creating a tag or GitHub Release
+        required: true
+        default: true
+        type: boolean
+      mark_latest:
+        description: Mark the GitHub Release as latest
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: corepack enable
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: npm run validate
+
+      - run: pnpm format:check
+
+      - run: pnpm lint
+
+      - run: node scripts/validate-release.mjs --version "${{ inputs.version }}"
+
+      - name: Verify tag and release do not exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v${VERSION}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists."
+            exit 1
+          fi
+
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            echo "GitHub Release ${tag} already exists."
+            exit 1
+          fi
+
+      - name: Build release notes
+        run: node scripts/print-release-notes.mjs --version "${{ inputs.version }}" > release-notes.md
+
+      - name: Publish GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v${VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${tag}" -m "${tag}"
+          git push origin "${tag}"
+
+          latest_flag=("--latest=false")
+          if [ "${{ inputs.mark_latest }}" = "true" ]; then
+            latest_flag=("--latest")
+          fi
+
+          gh release create "${tag}" \
+            --verify-tag \
+            --title "${tag}" \
+            --notes-file release-notes.md \
+            "${latest_flag[@]}"
+
+      - name: Print post-release verification
+        run: |
+          echo "After publishing, verify:"
+          echo "npx skills add stark-ai-de/agent-skills --list"
+          echo "npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y"
+          echo "gh release view v${{ inputs.version }} -R stark-ai-de/agent-skills"
