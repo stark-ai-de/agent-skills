@@ -58,8 +58,8 @@ Validate release readiness:
 
 ```bash
 node scripts/prepare-release.mjs --version 0.1.0 --dry-run
-node scripts/validate-release.mjs --version 0.1.0
-node scripts/print-release-notes.mjs --version 0.1.0
+node scripts/validate-release.mjs
+node scripts/print-release-notes.mjs
 ```
 
 ## What Validation Checks
@@ -91,6 +91,6 @@ node scripts/print-release-notes.mjs --version 0.1.0
 
 The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, and `npx skills@latest add . --list`.
 
-Release workflows run only through manual dispatch. `Prepare Release` opens a reviewable PR. `Publish Release` creates tags and GitHub Releases only when `dry_run` is `false`.
+`Prepare Release` runs only through manual dispatch and opens a reviewable PR. `Publish Release` runs automatically on `main` as a dry-run release-readiness check and creates tags plus GitHub Releases only when manually dispatched with `dry_run` set to `false`.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

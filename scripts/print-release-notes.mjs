@@ -26,6 +26,11 @@ function fail(message) {
   process.exit(1);
 }
 
+function packageVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  return pkg.version;
+}
+
 function extractReleaseNotes(changelog, version) {
   const lines = changelog.split("\n");
   const headingPattern = new RegExp(`^##\\s+v${version}(\\s|$)`);
@@ -42,7 +47,7 @@ function extractReleaseNotes(changelog, version) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.version) fail("Usage: node scripts/print-release-notes.mjs --version <x.y.z>");
+args.version ??= packageVersion();
 if (!semverPattern.test(args.version))
   fail(`Version must be x.y.z without leading v: ${args.version}`);
 

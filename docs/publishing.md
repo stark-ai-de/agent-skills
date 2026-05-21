@@ -102,7 +102,7 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 
 ## Release Process
 
-Releases use two manual workflows so version changes are reviewable before tags exist.
+Releases use a manual prepare workflow and a guarded publish workflow so version changes are reviewable before tags exist.
 
 ### Prepare Release
 
@@ -124,17 +124,17 @@ node scripts/prepare-release.mjs --version 0.1.0 --dry-run
 
 ### Publish Release
 
-After the release PR is merged, run the `Publish Release` workflow from `main`.
+After the release PR is merged, the `Publish Release` workflow runs automatically on `main` as a dry-run release-readiness check.
 
-The workflow validates the repo, checks release invariants, verifies the tag and GitHub Release do not already exist, creates annotated tag `v<version>`, and creates the GitHub Release from `CHANGELOG.md`.
+The workflow reads the release version from `package.json`. It validates the repo, checks release invariants, and prints the version it would release. It creates an annotated tag and GitHub Release only when manually dispatched with `dry_run: false`.
 
-Use `dry_run: true` first. Use `dry_run: false` only after maintainer approval.
+Use manual dispatch with `dry_run: true` if you want to rerun the same readiness check. Use `dry_run: false` only after maintainer approval.
 
 Equivalent local release validation:
 
 ```bash
-node scripts/validate-release.mjs --version 0.1.0
-node scripts/print-release-notes.mjs --version 0.1.0
+node scripts/validate-release.mjs
+node scripts/print-release-notes.mjs
 ```
 
 ## Release Artifacts
@@ -158,5 +158,6 @@ npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex 
 8. Merge changes through a PR.
 9. Run `Prepare Release`.
 10. Review and merge the release PR.
-11. Run `Publish Release`.
-12. Verify public install.
+11. Confirm the automatic `Publish Release` dry run passed on `main`.
+12. Run `Publish Release` manually with `dry_run: false`.
+13. Verify public install.
