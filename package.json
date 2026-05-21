@@ -1,5 +1,5 @@
 {
-  "name": "agent-skills",
+  "name": "skills",
   "version": "0.1.0",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
@@ -13,11 +13,12 @@
     "pr-review",
     "release-management",
     "repository-maintenance",
+    "skills",
     "workflow-automation"
   ],
-  "homepage": "https://github.com/stark-ai-de/agent-skills#readme",
+  "homepage": "https://github.com/stark-ai-de/skills#readme",
   "bugs": {
-    "url": "https://github.com/stark-ai-de/agent-skills/issues"
+    "url": "https://github.com/stark-ai-de/skills/issues"
   },
   "license": "Apache-2.0",
   "author": {
@@ -27,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stark-ai-de/agent-skills.git"
+    "url": "git+https://github.com/stark-ai-de/skills.git"
   },
   "files": [
     "skills",

@@ -135,6 +135,6 @@ jobs:
       - name: Print post-release verification
         run: |
           echo "After publishing, verify:"
-          echo "npx skills add stark-ai-de/agent-skills --list"
-          echo "npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y"
-          echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
+          echo "npx skills add stark-ai-de/skills --list"
+          echo "npx skills add stark-ai-de/skills --skill codex-spec-interviewer -a codex --copy -y"
+          echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/skills"

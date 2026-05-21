@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This folder contains short decision records for `stark-ai-de/agent-skills`.
+This folder contains short decision records for `stark-ai-de/skills`.
 
 ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 

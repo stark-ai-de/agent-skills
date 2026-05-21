@@ -4,7 +4,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
-const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-smoke-"));
+const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "skills-smoke-"));
 const copyRoot = path.join(tmpRoot, "repo");
 
 function walk(dir, predicate = () => true) {
