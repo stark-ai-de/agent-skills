@@ -5,9 +5,9 @@
 # Agent Skills
 
 ![skills.sh listing updating](https://img.shields.io/badge/skills.sh-listing_updating-lightgrey)
-[![Release](https://img.shields.io/github/v/release/stark-ai-de/skills)](https://github.com/stark-ai-de/skills/releases)
-[![Validate](https://github.com/stark-ai-de/skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/skills/actions/workflows/validate.yml)
-[![License](https://img.shields.io/github/license/stark-ai-de/skills)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
+[![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
+[![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
 Public Agent Skills for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 
@@ -18,13 +18,13 @@ Skills in this repository are reviewed before they are added to the public catal
 List public skills:
 
 ```bash
-npx skills add stark-ai-de/skills --list
+npx skills add stark-ai-de/agent-skills --list
 ```
 
 Install the first promoted public skill for Codex:
 
 ```bash
-npx skills add stark-ai-de/skills --skill codex-spec-interviewer -g -a codex
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
 Use it when a coding request is still fuzzy:
@@ -33,7 +33,7 @@ Use it when a coding request is still fuzzy:
 Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
 ```
 
-Latest release: [`v0.1.0`](https://github.com/stark-ai-de/skills/releases/tag/v0.1.0)
+Latest release: [`v0.1.0`](https://github.com/stark-ai-de/agent-skills/releases/tag/v0.1.0)
 
 ## Public Catalog
 

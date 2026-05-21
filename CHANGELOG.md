@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Renamed repository references from `stark-ai-de/agent-skills` to `stark-ai-de/skills`.
+- Renamed the public repository slug from `stark-ai-de/skills` to `stark-ai-de/agent-skills`.
 
 ### Fixed
 
