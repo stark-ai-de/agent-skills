@@ -34,7 +34,7 @@ Validate only ADRs:
 npm run validate:adrs
 ```
 
-Check local public install discovery after at least one skill is promoted:
+Check local public install discovery:
 
 ```bash
 npx skills@latest add ./skills --list

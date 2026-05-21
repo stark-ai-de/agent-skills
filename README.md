@@ -6,53 +6,50 @@
 
 [![skills.sh listing pending](https://img.shields.io/badge/skills.sh-listing_pending-lightgrey)](https://skills.sh/)
 
-Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and engineering workflows. The public catalog is intentionally empty until individual skills earn promotion from the incubator.
+Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and engineering workflows. The public catalog is promoted-only; candidates start in the incubator until they have proof of quality, utility, and maintenance fit.
 
 This catalog exists for the moments when a coding agent has enough ability to act, but not enough local process to act well. Skills make common workflows explicit: preserve context, review PRs, triage issues, debug failures, write ADRs, slice plans, and keep a public skills catalog installable without loading one giant always-on prompt.
 
 ## Incubator Map
 
-| Problem                                                | Candidate skills                                                                                                                                                                       |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent loses context                                    | [`codex-context-guard`](incubator/skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](incubator/skills/productivity/handoff/SKILL.md)                                   |
-| Repo maintenance is unclear                            | [`repo-health-audit`](incubator/skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                                    |
-| Pull request review is too shallow                     | [`pr-review`](incubator/skills/repo-maintenance/pr-review/SKILL.md)                                                                                                                    |
-| Issues are messy                                       | [`issue-triage`](incubator/skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                              |
-| Skill quality or installability is drifting            | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
-| Codex memory is stale or harmful                       | [`codex-memory-curator`](incubator/skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                              |
-| A fuzzy request needs a challenged implementation spec | [`codex-spec-interviewer`](incubator/skills/codex-operations/codex-spec-interviewer/SKILL.md)                                                                                          |
+| Problem                                     | Candidate skills                                                                                                                                                                       |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent loses context                         | [`codex-context-guard`](incubator/skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](incubator/skills/productivity/handoff/SKILL.md)                                   |
+| Repo maintenance is unclear                 | [`repo-health-audit`](incubator/skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                                    |
+| Pull request review is too shallow          | [`pr-review`](incubator/skills/repo-maintenance/pr-review/SKILL.md)                                                                                                                    |
+| Issues are messy                            | [`issue-triage`](incubator/skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                              |
+| Skill quality or installability is drifting | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
+| Codex memory is stale or harmful            | [`codex-memory-curator`](incubator/skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                              |
 
 ## Quickstart
 
-There are no promoted public skills yet. Skills move into the installable catalog only after promotion proof is added under [`skill-evals/`](skill-evals/README.md).
-
-After the first promotion, list public skills from GitHub:
+List public skills from GitHub:
 
 ```bash
 npx skills add stark-ai-de/agent-skills --list
 ```
 
-Install one promoted public skill:
+Install the first promoted public skill:
 
 ```bash
-npx skills add stark-ai-de/agent-skills --skill <skill-name> -g -a codex
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
-After a relevant bootstrap skill is promoted and installed, use it in a downstream repository:
+Use it in a downstream repository when a request is still fuzzy:
 
 ```text
-Use $agent-context-bootstrap to set up the repo's AGENTS.md, docs/agents, validation commands, issue tracker notes, and skill routing.
+Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
 ```
 
 ## Catalog
 
-The public catalog lives under [`skills/`](skills/README.md) and is promoted-only. It is currently empty. Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
+The public catalog lives under [`skills/`](skills/README.md) and is promoted-only. Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-- No public skills are promoted yet.
+- [Codex operations](skills/codex-operations/README.md)
 
 ### Skill Index
 
-No public skills are promoted yet.
+**Codex operations:** [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)
 
 ## Incubator and Promotion
 
@@ -94,7 +91,7 @@ Run a clean public install smoke test:
 npm run smoke:install
 ```
 
-Check local public skill discovery after at least one skill is promoted:
+Check local public skill discovery:
 
 ```bash
 npx skills@latest add ./skills --list
@@ -168,4 +165,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for naming, frontmatter, safety, validati
 
 ## License
 
-Apache-2.0 for the skills and repository material published from this repo. Project-local helper skills installed under `.agents/skills/` keep their upstream licenses and are not part of this published catalog.
+Apache-2.0 for the skills and repository material published from this repo.

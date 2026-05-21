@@ -4,7 +4,6 @@ description: Interview, challenge, and ADR-gate fuzzy coding requests into Codex
 license: Apache-2.0
 compatibility: Designed for Codex CLI, IDE extension, and Codex app. Works best with repo-local AGENTS.md and project docs.
 metadata:
-  internal: true
   author: stark-ai-de
   category: codex-operations
   version: "0.1.0"

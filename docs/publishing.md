@@ -10,10 +10,10 @@ The public repository is expected to be:
 stark-ai-de/agent-skills
 ```
 
-Recommended GitHub description during incubation:
+Recommended GitHub description:
 
 ```text
-Agent Skills incubator for repo maintenance, Codex operations, skill maintenance, and agent workflow control.
+Public Agent Skills for Codex operations, repo maintenance, skill maintenance, and agent workflow control.
 ```
 
 Recommended GitHub topics:
@@ -31,11 +31,11 @@ release-management
 adr
 ```
 
-Use after at least one skill is promoted:
+Use:
 
 ```bash
 npx skills add stark-ai-de/agent-skills --list
-npx skills add stark-ai-de/agent-skills --skill <skill-name> -g -a codex
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
 ## Local Smoke Test
@@ -45,6 +45,7 @@ From the repository root:
 ```bash
 npm run validate
 npm run list
+npx skills@latest add ./skills --list
 npm run smoke:install
 ```
 
@@ -55,12 +56,11 @@ Do not publish, push, tag, or install globally unless the maintainer explicitly 
 Test one local install after approval:
 
 ```bash
-npx skills add ./skills --skill <skill-name> -a codex --copy -y
+npx skills add ./skills --skill codex-spec-interviewer -a codex --copy -y
 ```
 
 ## First Public Release Checklist
 
-- README explains that the public catalog is empty until promotion.
 - README has the public catalog boundary.
 - README explains the incubator and skill-eval roots.
 - LICENSE exists.
@@ -81,8 +81,8 @@ npx skills add ./skills --skill <skill-name> -a codex --copy -y
 - Category README files exist and match `SKILL.md` frontmatter.
 - Clean-copy smoke install passes without listing project-local helper skills.
 - `npm run validate` passes.
-- `npm run smoke:install` works from the local checkout, including the empty public catalog state.
-- At least one promoted skill can be locally installed after maintainer approval when a promoted skill exists.
+- `npx skills@latest add ./skills --list` works from the local checkout.
+- At least one promoted skill can be locally installed after maintainer approval.
 - GitHub Actions validation is configured.
 
 ## First Release
@@ -109,7 +109,7 @@ Summary:
 
 1. Update public or incubator skills.
 2. Run `npm run validate`.
-3. Run `npx skills add ./skills --list` locally when public skills exist.
+3. Run `npx skills add ./skills --list` locally.
 4. Run `npm run smoke:install`.
 5. Update `CHANGELOG.md`.
 6. Add an ADR only if a decision changed.
@@ -117,4 +117,4 @@ Summary:
 8. Tag version after approval.
 9. Push tag after approval.
 10. Create GitHub Release.
-11. Verify public install when public skills exist.
+11. Verify public install.
