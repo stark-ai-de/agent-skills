@@ -59,6 +59,21 @@ Test one local install after approval:
 npx skills add ./skills --skill codex-spec-interviewer -a codex --copy -y
 ```
 
+## Repository Settings
+
+Keep the repository public before claiming public install readiness. Keep default workflow permissions read-only and grant write permissions only on the release jobs that need them.
+
+Expected settings:
+
+- default branch: `main`
+- delete branch on merge: enabled
+- wiki: disabled
+- issues: enabled
+- workflow default permissions: read
+- `main` ruleset: require PRs, require `validate`, require resolved review threads, block deletion, and block force pushes
+
+Do not change GitHub settings, publish releases, push tags, or install globally unless the maintainer explicitly asks for that action.
+
 ## First Public Release Checklist
 
 - README has the public catalog boundary.
@@ -83,38 +98,65 @@ npx skills add ./skills --skill codex-spec-interviewer -a codex --copy -y
 - `npm run validate` passes.
 - `npx skills@latest add ./skills --list` works from the local checkout.
 - At least one promoted skill can be locally installed after maintainer approval.
-- GitHub Actions validation is configured.
+- GitHub Actions validation, prepare release, and publish release workflows are configured.
 
-## First Release
+## Release Process
 
-Use semantic version tags:
+Releases use two manual workflows so version changes are reviewable before tags exist.
+
+### Prepare Release
+
+Run the `Prepare Release` workflow with:
+
+- `version`: semantic version without a leading `v`
+- `release_kind`: `initial`, `patch`, `minor`, or `major`
+- `dry_run`: keep `true` until the planned changes look right
+
+The workflow validates the repo, runs `scripts/prepare-release.mjs`, validates again, and opens or updates a `release/v<version>` PR when `dry_run` is `false`.
+
+If GitHub does not run normal PR CI for the generated branch, manually dispatch the `Validate` workflow for the release branch before merging.
+
+Equivalent local dry run:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+node scripts/prepare-release.mjs --version 0.1.0 --dry-run
 ```
 
-Create a GitHub Release:
+### Publish Release
 
-```text
-Title: v0.1.0
-Summary:
-- Initial Agent Skills repo
-- agentskills.io-compatible structure
-- Vercel skills CLI install support
-- Lightweight ADR process
+After the release PR is merged, run the `Publish Release` workflow from `main`.
+
+The workflow validates the repo, checks release invariants, verifies the tag and GitHub Release do not already exist, creates annotated tag `v<version>`, and creates the GitHub Release from `CHANGELOG.md`.
+
+Use `dry_run: true` first. Use `dry_run: false` only after maintainer approval.
+
+Equivalent local release validation:
+
+```bash
+node scripts/validate-release.mjs --version 0.1.0
+node scripts/print-release-notes.mjs --version 0.1.0
+```
+
+## Release Artifacts
+
+Do not generate custom per-skill zip files in v1. GitHub Releases provide source archives for each tag, and normal installation uses the skills CLI:
+
+```bash
+npx skills add stark-ai-de/agent-skills --list
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
 ```
 
 ## Release Update Process
 
 1. Update public or incubator skills.
 2. Run `npm run validate`.
-3. Run `npx skills add ./skills --list` locally.
-4. Run `npm run smoke:install`.
-5. Update `CHANGELOG.md`.
-6. Add an ADR only if a decision changed.
-7. Commit changes after approval.
-8. Tag version after approval.
-9. Push tag after approval.
-10. Create GitHub Release.
-11. Verify public install.
+3. Run `pnpm format:check` and `pnpm lint`.
+4. Run `npx skills add ./skills --list` locally.
+5. Run `npm run smoke:install`.
+6. Update `CHANGELOG.md`.
+7. Add an ADR only if a decision changed.
+8. Merge changes through a PR.
+9. Run `Prepare Release`.
+10. Review and merge the release PR.
+11. Run `Publish Release`.
+12. Verify public install.

@@ -54,6 +54,14 @@ pnpm format:check
 pnpm lint
 ```
 
+Validate release readiness:
+
+```bash
+node scripts/prepare-release.mjs --version 0.1.0 --dry-run
+node scripts/validate-release.mjs --version 0.1.0
+node scripts/print-release-notes.mjs --version 0.1.0
+```
+
 ## What Validation Checks
 
 - `skills/**/SKILL.md` exists for promoted public skills.
@@ -77,5 +85,12 @@ pnpm lint
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
 - `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
+- Release validation checks package version, `CHANGELOG.md`, public skill metadata versions, and public skill validation before a tag is created.
+
+## Continuous Integration
+
+The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, and `npx skills@latest add . --list`.
+
+Release workflows run only through manual dispatch. `Prepare Release` opens a reviewable PR. `Publish Release` creates tags and GitHub Releases only when `dry_run` is `false`.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

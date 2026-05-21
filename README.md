@@ -105,6 +105,13 @@ pnpm format:check
 pnpm lint
 ```
 
+Check release readiness without tagging:
+
+```bash
+node scripts/validate-release.mjs --version 0.1.0
+node scripts/print-release-notes.mjs --version 0.1.0
+```
+
 Scaffold a promoted public skill only when promotion proof is ready:
 
 ```bash
