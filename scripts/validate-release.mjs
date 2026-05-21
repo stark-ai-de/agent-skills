@@ -58,6 +58,11 @@ function validatePackageVersion(version) {
   }
 }
 
+function packageVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  return pkg.version;
+}
+
 function validateChangelog(version) {
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
   const headingPattern = new RegExp(`^##\\s+v${version}(\\s|$)`, "m");
@@ -111,7 +116,7 @@ function runSkillValidation() {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.version) errors.push("Usage: node scripts/validate-release.mjs --version <x.y.z>");
+args.version ??= packageVersion();
 if (args.version && !semverPattern.test(args.version)) {
   errors.push(`Version must be x.y.z without leading v: ${args.version}`);
 }

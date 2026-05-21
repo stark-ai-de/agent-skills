@@ -3,10 +3,6 @@ name: Publish Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: Release version without leading v
-        required: true
-        type: string
       dry_run:
         description: Validate without creating a tag or GitHub Release
         required: true
@@ -17,21 +13,26 @@ on:
         required: true
         default: true
         type: boolean
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  publish:
+  release-readiness:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -45,12 +46,53 @@ jobs:
 
       - run: pnpm lint
 
-      - run: node scripts/validate-release.mjs --version "${{ inputs.version }}"
+      - id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - run: node scripts/validate-release.mjs
+
+      - run: node scripts/print-release-notes.mjs > release-notes.md
+
+      - name: Print release readiness
+        run: |
+          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }}."
+          echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
+
+  publish:
+    needs: release-readiness
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - run: corepack enable
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: npm run validate
+
+      - run: pnpm format:check
+
+      - run: pnpm lint
+
+      - run: node scripts/validate-release.mjs
 
       - name: Verify tag and release do not exist
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           tag="v${VERSION}"
 
@@ -65,13 +107,12 @@ jobs:
           fi
 
       - name: Build release notes
-        run: node scripts/print-release-notes.mjs --version "${{ inputs.version }}" > release-notes.md
+        run: node scripts/print-release-notes.mjs > release-notes.md
 
       - name: Publish GitHub Release
-        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           tag="v${VERSION}"
 
@@ -96,4 +137,4 @@ jobs:
           echo "After publishing, verify:"
           echo "npx skills add stark-ai-de/agent-skills --list"
           echo "npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y"
-          echo "gh release view v${{ inputs.version }} -R stark-ai-de/agent-skills"
+          echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
