@@ -26,7 +26,11 @@ Avoid final responses that only say a task is done.
 
 Public skills must be inspectable and safe by default. Avoid destructive scripts, private data, hidden network actions, copied proprietary text, and broad automation that mutates live systems without explicit approval.
 
-Do not vendor already-published third-party skills into this repository's public `skills/` catalog. Install those as project-local helper skills with `npx skills`; keep `.agents/skills/` ignored and track reproducibility in `skills-lock.json`. Only copy third-party material into `skills/` when redistribution is intentional and the license terms are clear.
+Do not vendor already-published third-party skills into this repository's public `skills/` catalog or `incubator/skills/`. Install those as project-local helper skills with `npx skills`; keep `.agents/` and any local `skills-lock.json` ignored. Only copy third-party material into this repo when redistribution is intentional and the license terms are clear.
+
+## Promotion Boundary
+
+Keep `skills/` promoted-only. Keep candidate public skills in `incubator/skills/` until they prove quality, activation fit, useful scope, and maintenance ROI. Keep eval prompts, rubrics, run summaries, and promotion proof in `skill-evals/` by default.
 
 ## Compatibility
 

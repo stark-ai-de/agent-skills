@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const skillsDir = path.join(root, "skills");
+const publicSkillsDir = path.join(root, "skills");
+const incubatorSkillsDir = path.join(root, "incubator", "skills");
 const errors = [];
 const warnings = [];
 const requiredSkillSections = [
@@ -19,6 +20,33 @@ const requiredSkillSections = [
   "Failure modes",
 ];
 const namePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const projectLocalOnlySkillNames = new Set([
+  "agent-browser",
+  "grill-me",
+  "improve-codebase-architecture",
+  "shadcn",
+  "vercel-composition-patterns",
+  "vercel-react-best-practices",
+]);
+
+const skillRoots = [
+  {
+    dir: publicSkillsDir,
+    label: "public catalog",
+    readmeMarker: ".agents/skills/",
+    readmeMarkerMessage:
+      "must state that third-party helper skills live outside the public catalog",
+    requireAtLeastOne: false,
+  },
+  {
+    dir: incubatorSkillsDir,
+    label: "incubator",
+    readmeMarker: "not part of the public catalog",
+    readmeMarkerMessage: "must state that incubator skills are not part of the public catalog",
+    requireInternalMetadata: true,
+    requireAtLeastOne: false,
+  },
+];
 
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
@@ -62,32 +90,17 @@ function parseFrontmatter(file) {
   return { text, data };
 }
 
-const skillFiles = walk(skillsDir, (file) => path.basename(file) === "SKILL.md").sort();
-const skillRecords = [];
-const projectLocalOnlySkillNames = new Set([
-  "agent-browser",
-  "grill-me",
-  "improve-codebase-architecture",
-  "shadcn",
-  "vercel-composition-patterns",
-  "vercel-react-best-practices",
-]);
-
-if (skillFiles.length === 0) {
-  errors.push("No skills found under skills/**/SKILL.md");
-}
-
-for (const file of skillFiles) {
+function validateSkillFile(file, skillRoot) {
   const { text, data } = parseFrontmatter(file);
   const rel = path.relative(root, file);
-  if (!data) continue;
+  if (!data) return null;
+  const frontmatter = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
 
   const parent = path.basename(path.dirname(file));
-  const category = path.relative(skillsDir, path.dirname(file)).split(path.sep)[0];
+  const category = path.relative(skillRoot.dir, path.dirname(file)).split(path.sep)[0];
   const name = data.name;
   const description = data.description;
   const compatibility = data.compatibility;
-  skillRecords.push({ category, description, name, rel });
 
   if (!name) errors.push(`${rel}: missing frontmatter name`);
   if (!description) errors.push(`${rel}: missing frontmatter description`);
@@ -134,6 +147,13 @@ for (const file of skillFiles) {
     errors.push(`${rel}: SKILL.md must start with frontmatter`);
   }
 
+  if (
+    skillRoot.requireInternalMetadata &&
+    !/^\s+internal:\s*(true|"true"|'true')\s*$/m.test(frontmatter)
+  ) {
+    errors.push(`${rel}: incubator skills must set metadata.internal: true`);
+  }
+
   const body = text.replace(/^---\n[\s\S]*?\n---\n?/, "");
   const lineCount = text.split("\n").length;
   const headings = new Set([...body.matchAll(/^##\s+(.+)$/gm)].map((match) => match[1].trim()));
@@ -159,41 +179,83 @@ for (const file of skillFiles) {
   if (/read all references/i.test(body)) {
     errors.push(`${rel}: do not tell agents to read all references by default`);
   }
+
+  return { category, description, name, rel };
 }
 
-const categories = new Map();
-for (const record of skillRecords) {
-  if (!record.name || !record.description) continue;
-  const records = categories.get(record.category) ?? [];
-  records.push(record);
-  categories.set(record.category, records);
+function validateCategoryReadmes(skillRoot, skillRecords) {
+  const categories = new Map();
+  for (const record of skillRecords) {
+    if (!record?.name || !record.description) continue;
+    const records = categories.get(record.category) ?? [];
+    records.push(record);
+    categories.set(record.category, records);
+  }
+
+  for (const [category, records] of [...categories.entries()].sort()) {
+    const readmePath = path.join(skillRoot.dir, category, "README.md");
+    const rel = path.relative(root, readmePath);
+
+    if (!fs.existsSync(readmePath)) {
+      errors.push(`${rel}: missing category README`);
+      continue;
+    }
+
+    const readme = fs.readFileSync(readmePath, "utf8");
+    if (!readme.includes(skillRoot.readmeMarker)) {
+      errors.push(`${rel}: ${skillRoot.readmeMarkerMessage}`);
+    }
+
+    for (const record of records.sort((a, b) => a.name.localeCompare(b.name))) {
+      const expectedLink = `[\`${record.name}\`](${record.name}/SKILL.md)`;
+      if (!readme.includes(expectedLink)) {
+        errors.push(`${rel}: missing link ${expectedLink}`);
+      }
+      if (!readme.includes(record.description)) {
+        errors.push(`${rel}: description for "${record.name}" must match SKILL.md frontmatter`);
+      }
+    }
+  }
 }
 
-for (const [category, records] of [...categories.entries()].sort()) {
-  const readmePath = path.join(skillsDir, category, "README.md");
-  const rel = path.relative(root, readmePath);
+function validateScripts(skillRoot) {
+  for (const file of walk(skillRoot.dir)) {
+    const normalized = file.replaceAll("\\", "/");
+    const rel = path.relative(root, file);
+    const text = fs.readFileSync(file, "utf8");
 
-  if (!fs.existsSync(readmePath)) {
-    errors.push(`${rel}: missing category README`);
-    continue;
-  }
-
-  const readme = fs.readFileSync(readmePath, "utf8");
-  if (!readme.includes(".agents/skills/")) {
-    errors.push(
-      `${rel}: must state that third-party helper skills live outside the public catalog`,
-    );
-  }
-
-  for (const record of records.sort((a, b) => a.name.localeCompare(b.name))) {
-    const expectedLink = `[\`${record.name}\`](${record.name}/SKILL.md)`;
-    if (!readme.includes(expectedLink)) {
-      errors.push(`${rel}: missing link ${expectedLink}`);
+    if (/\/scripts\//.test(normalized)) {
+      if (file.endsWith(".sh") && !text.includes("set -euo pipefail")) {
+        warnings.push(`${rel}: shell scripts should use set -euo pipefail`);
+      }
+      if (/\brm\s+-rf\b|\bsudo\b|\bcurl\b.*\|\s*(sh|bash)|\bwget\b.*\|\s*(sh|bash)/.test(text)) {
+        warnings.push(`${rel}: contains high-risk shell pattern; review carefully`);
+      }
     }
-    if (!readme.includes(record.description)) {
-      errors.push(`${rel}: description for "${record.name}" must match SKILL.md frontmatter`);
+
+    if (/(secret|token|password)\s*=\s*['"][^'"]+['"]/i.test(text)) {
+      warnings.push(`${rel}: possible hard-coded sensitive value pattern; review carefully`);
     }
   }
+}
+
+function validateSkillRoot(skillRoot) {
+  const skillFiles = walk(skillRoot.dir, (file) => path.basename(file) === "SKILL.md").sort();
+
+  if (skillRoot.requireAtLeastOne && skillFiles.length === 0) {
+    errors.push(`No skills found under ${path.relative(root, skillRoot.dir)}/**/SKILL.md`);
+  }
+
+  const skillRecords = skillFiles.map((file) => validateSkillFile(file, skillRoot)).filter(Boolean);
+  validateCategoryReadmes(skillRoot, skillRecords);
+  validateScripts(skillRoot);
+
+  return skillFiles.length;
+}
+
+const counts = new Map();
+for (const skillRoot of skillRoots) {
+  counts.set(skillRoot.label, validateSkillRoot(skillRoot));
 }
 
 const readmePath = path.join(root, "README.md");
@@ -205,26 +267,13 @@ if (!fs.existsSync(readmePath)) {
     warnings.push("README.md should include npx skills install commands");
   }
   if (!readme.includes("--skill")) {
-    warnings.push("README.md should show how to install one specific skill");
+    warnings.push("README.md should show how to install one specific skill after promotion");
   }
-}
-
-for (const file of walk(skillsDir)) {
-  const normalized = file.replaceAll("\\", "/");
-  const rel = path.relative(root, file);
-  const text = fs.readFileSync(file, "utf8");
-
-  if (/\/scripts\//.test(normalized)) {
-    if (file.endsWith(".sh") && !text.includes("set -euo pipefail")) {
-      warnings.push(`${rel}: shell scripts should use set -euo pipefail`);
-    }
-    if (/\brm\s+-rf\b|\bsudo\b|\bcurl\b.*\|\s*(sh|bash)|\bwget\b.*\|\s*(sh|bash)/.test(text)) {
-      warnings.push(`${rel}: contains high-risk shell pattern; review carefully`);
-    }
+  if (!readme.includes("incubator/skills")) {
+    warnings.push("README.md should explain the incubator skill root");
   }
-
-  if (/(secret|token|password)\s*=\s*['"][^'"]+['"]/i.test(text)) {
-    warnings.push(`${rel}: possible hard-coded sensitive value pattern; review carefully`);
+  if (!readme.includes("skill-evals/")) {
+    warnings.push("README.md should explain the skill-evals proof root");
   }
 }
 
@@ -240,4 +289,6 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Validated ${skillFiles.length} skill(s).`);
+console.log(
+  `Validated ${counts.get("public catalog")} public skill(s) and ${counts.get("incubator")} incubator skill(s).`,
+);

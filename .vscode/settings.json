@@ -1,6 +1,6 @@
 {
   "files.autoSave": "onFocusChange",
-  "oxc.fmt.configPath": "packages/tooling-config/oxfmt.json",
+  "oxc.fmt.configPath": "oxfmt.json",
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "oxc.oxc-vscode",

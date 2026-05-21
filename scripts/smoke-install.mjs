@@ -34,11 +34,18 @@ try {
       const rel = path.relative(root, source);
       if (!rel) return true;
       const [topLevel] = rel.split(path.sep);
-      return !new Set([".agents", ".git", "node_modules"]).has(topLevel);
+      return !new Set([".agents", ".git", "node_modules", "skills-lock.json"]).has(topLevel);
     },
   });
 
   const names = walk(path.join(copyRoot, "skills"), (file) => path.basename(file) === "SKILL.md")
+    .map(parseSkillName)
+    .filter(Boolean)
+    .sort();
+  const incubatorNames = walk(
+    path.join(copyRoot, "incubator", "skills"),
+    (file) => path.basename(file) === "SKILL.md",
+  )
     .map(parseSkillName)
     .filter(Boolean)
     .sort();
@@ -51,7 +58,25 @@ try {
 
   const output = `${result.stdout}\n${result.stderr}`;
 
-  if (result.status !== 0) {
+  if (output.includes("agent-browser") || output.includes("grill-me")) {
+    console.error(
+      "Smoke install output included project-local helper skills from .agents/skills/.",
+    );
+    process.exit(1);
+  }
+
+  const leakedIncubator = incubatorNames.filter((name) => output.includes(name));
+  if (leakedIncubator.length > 0) {
+    console.error(
+      `Smoke install output included incubator skill(s): ${leakedIncubator.join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  const noPublicSkills = names.length === 0;
+  const noSkillsFound = /no skills found/i.test(output);
+
+  if (result.status !== 0 && !(noPublicSkills && noSkillsFound)) {
     console.error(output.trim());
     process.exit(result.status ?? 1);
   }
@@ -62,14 +87,11 @@ try {
     process.exit(1);
   }
 
-  if (output.includes("agent-browser") || output.includes("grill-me")) {
-    console.error(
-      "Smoke install output included project-local helper skills from .agents/skills/.",
-    );
-    process.exit(1);
+  if (noPublicSkills) {
+    console.log("Smoke install found no public skills and no incubator/helper skill leaks.");
+  } else {
+    console.log(`Smoke install listed ${names.length} public skill(s) from a clean copy.`);
   }
-
-  console.log(`Smoke install listed ${names.length} public skill(s) from a clean copy.`);
 } finally {
   fs.rmSync(tmpRoot, { force: true, recursive: true });
 }

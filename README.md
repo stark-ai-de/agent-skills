@@ -6,86 +6,83 @@
 
 [![skills.sh listing pending](https://img.shields.io/badge/skills.sh-listing_pending-lightgrey)](https://skills.sh/)
 
-Public Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and repeatable engineering workflows.
+Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and engineering workflows. The public catalog is intentionally empty until individual skills earn promotion from the incubator.
 
 This catalog exists for the moments when a coding agent has enough ability to act, but not enough local process to act well. Skills make common workflows explicit: preserve context, review PRs, triage issues, debug failures, write ADRs, slice plans, and keep a public skills catalog installable without loading one giant always-on prompt.
 
-## When Agents Fail, Use These Skills
+## Incubator Map
 
-| Problem                                  | Skills                                                                                                                                                             |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Agent loses context                      | [`codex-context-guard`](skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](skills/productivity/handoff/SKILL.md)                                   |
-| Repo maintenance is unclear              | [`repo-health-audit`](skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                          |
-| Pull request review is too shallow       | [`pr-review`](skills/repo-maintenance/pr-review/SKILL.md)                                                                                                          |
-| Issues are messy                         | [`issue-triage`](skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                    |
-| Public skill quality is drifting         | [`skill-repo-curator`](skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](skills/skill-maintenance/skill-authoring-review/SKILL.md) |
-| Codex memory is stale or harmful         | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                    |
-| A bug needs evidence before a fix        | [`debugging-diagnosis`](skills/engineering-workflows/debugging-diagnosis/SKILL.md)                                                                                 |
-| A broad plan needs implementation slices | [`issue-plan-slicer`](skills/engineering-workflows/issue-plan-slicer/SKILL.md)                                                                                     |
+| Problem                                                | Candidate skills                                                                                                                                                                       |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent loses context                                    | [`codex-context-guard`](incubator/skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](incubator/skills/productivity/handoff/SKILL.md)                                   |
+| Repo maintenance is unclear                            | [`repo-health-audit`](incubator/skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                                    |
+| Pull request review is too shallow                     | [`pr-review`](incubator/skills/repo-maintenance/pr-review/SKILL.md)                                                                                                                    |
+| Issues are messy                                       | [`issue-triage`](incubator/skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                              |
+| Skill quality or installability is drifting            | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
+| Codex memory is stale or harmful                       | [`codex-memory-curator`](incubator/skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                              |
+| A fuzzy request needs a challenged implementation spec | [`codex-spec-interviewer`](incubator/skills/codex-operations/codex-spec-interviewer/SKILL.md)                                                                                          |
 
 ## Quickstart
 
-List public skills from GitHub:
+There are no promoted public skills yet. Skills move into the installable catalog only after promotion proof is added under [`skill-evals/`](skill-evals/README.md).
+
+After the first promotion, list public skills from GitHub:
 
 ```bash
 npx skills add stark-ai-de/agent-skills --list
 ```
 
-Install all public skills globally for Codex:
+Install one promoted public skill:
 
 ```bash
-npx skills add stark-ai-de/agent-skills -g -a codex
+npx skills add stark-ai-de/agent-skills --skill <skill-name> -g -a codex
 ```
 
-Install one public skill:
-
-```bash
-npx skills add stark-ai-de/agent-skills --skill repo-health-audit -g -a codex
-```
-
-Restore this repository's project-local helper skills from `skills-lock.json`:
-
-```bash
-npx skills@latest experimental_install -y
-```
-
-Bootstrap a downstream repository after installing the catalog:
+After a relevant bootstrap skill is promoted and installed, use it in a downstream repository:
 
 ```text
-Use $agent-context-bootstrap to set up this repo's AGENTS.md, docs/agents, validation commands, issue tracker notes, and skill routing.
+Use $agent-context-bootstrap to set up the repo's AGENTS.md, docs/agents, validation commands, issue tracker notes, and skill routing.
 ```
 
 ## Catalog
 
-The public catalog lives under `skills/` and is stable-only. Draft, personal, private, or third-party helper skills do not belong in this tree.
+The public catalog lives under [`skills/`](skills/README.md) and is promoted-only. It is currently empty. Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-- [Codex operations](skills/codex-operations/README.md)
-- [Engineering workflows](skills/engineering-workflows/README.md)
-- [Productivity](skills/productivity/README.md)
-- [Repo maintenance](skills/repo-maintenance/README.md)
-- [Skill maintenance](skills/skill-maintenance/README.md)
+- No public skills are promoted yet.
 
 ### Skill Index
 
-**Codex operations:** [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md), [`codex-context-guard`](skills/codex-operations/codex-context-guard/SKILL.md), [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)
+No public skills are promoted yet.
 
-**Engineering workflows:** [`debugging-diagnosis`](skills/engineering-workflows/debugging-diagnosis/SKILL.md), [`issue-plan-slicer`](skills/engineering-workflows/issue-plan-slicer/SKILL.md), [`prd-writer`](skills/engineering-workflows/prd-writer/SKILL.md), [`prototype-spike`](skills/engineering-workflows/prototype-spike/SKILL.md), [`repo-map-zoom-out`](skills/engineering-workflows/repo-map-zoom-out/SKILL.md), [`test-first-implementation`](skills/engineering-workflows/test-first-implementation/SKILL.md)
+## Incubator and Promotion
 
-**Productivity:** [`grill-plan`](skills/productivity/grill-plan/SKILL.md), [`handoff`](skills/productivity/handoff/SKILL.md)
+Candidate skills live under [`incubator/skills/`](incubator/README.md). They use the same `SKILL.md` structure and validation rules, but they are not part of the public catalog and should not be listed, promoted, or released through normal `npx skills` discovery.
 
-**Repo maintenance:** [`adr-writer`](skills/repo-maintenance/adr-writer/SKILL.md), [`agent-context-bootstrap`](skills/repo-maintenance/agent-context-bootstrap/SKILL.md), [`ci-debugger`](skills/repo-maintenance/ci-debugger/SKILL.md), [`dependency-update-review`](skills/repo-maintenance/dependency-update-review/SKILL.md), [`docs-audit`](skills/repo-maintenance/docs-audit/SKILL.md), [`issue-triage`](skills/repo-maintenance/issue-triage/SKILL.md), [`pr-review`](skills/repo-maintenance/pr-review/SKILL.md), [`release-manager`](skills/repo-maintenance/release-manager/SKILL.md), [`repo-health-audit`](skills/repo-maintenance/repo-health-audit/SKILL.md), [`security-baseline-review`](skills/repo-maintenance/security-baseline-review/SKILL.md)
+Incubator categories:
 
-**Skill maintenance:** [`skill-authoring-review`](skills/skill-maintenance/skill-authoring-review/SKILL.md), [`skill-installation-support`](skills/skill-maintenance/skill-installation-support/SKILL.md), [`skill-repo-curator`](skills/skill-maintenance/skill-repo-curator/SKILL.md)
+- [Codex operations](incubator/skills/codex-operations/README.md)
+- [Engineering workflows](incubator/skills/engineering-workflows/README.md)
+- [Productivity](incubator/skills/productivity/README.md)
+- [Repo maintenance](incubator/skills/repo-maintenance/README.md)
+- [Skill maintenance](incubator/skills/skill-maintenance/README.md)
+
+Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/` after the skill proves quality, activation fit, broad or high-value use, and acceptable maintenance cost. Maintainer proof belongs in [`skill-evals/`](skill-evals/README.md), not in the runtime skill payload by default.
 
 ## Development
 
-List local skills:
+List public skills:
 
 ```bash
 npm run list
 ```
 
-Validate the repository:
+List incubator skills:
+
+```bash
+npm run list:incubator
+```
+
+Validate public and incubator skills:
 
 ```bash
 npm run validate
@@ -97,7 +94,7 @@ Run a clean public install smoke test:
 npm run smoke:install
 ```
 
-Check local public skill discovery:
+Check local public skill discovery after at least one skill is promoted:
 
 ```bash
 npx skills@latest add ./skills --list
@@ -111,32 +108,23 @@ pnpm format:check
 pnpm lint
 ```
 
-Scaffold a new skill:
+Scaffold a promoted public skill only when promotion proof is ready:
 
 ```bash
 npm run scaffold repo-maintenance/my-new-skill
+```
+
+Scaffold an incubator skill:
+
+```bash
+npm run scaffold:incubator engineering-workflows/my-candidate-skill
 ```
 
 The scaffold command creates files. Review generated content before committing.
 
 ### Project-Local Helper Skills
 
-This repo uses a few published skills while maintaining the catalog. They are installed with `npx skills` into `.agents/skills/`, which is ignored so those upstream skills are not republished from this repository.
-
-Restore helpers with the lockfile command:
-
-```bash
-npx skills@latest experimental_install -y
-```
-
-Current project-local helpers:
-
-- `agent-browser`
-- `grill-me`
-- `improve-codebase-architecture`
-- `shadcn`
-- `vercel-composition-patterns`
-- `vercel-react-best-practices`
+Maintainers may install published or private helper skills into `.agents/skills/` while working on this catalog. The whole `.agents/` tree and `skills-lock.json` are ignored so local helper choices are not republished, reviewed, or treated as this repo's recommended base set.
 
 ## Maintainer Docs
 
@@ -146,6 +134,17 @@ Current project-local helpers:
 - [Skill examples](docs/examples/README.md)
 - [Out-of-scope boundaries](docs/out-of-scope/README.md)
 - [Decision records](docs/adr/README.md)
+
+## Relevant Sources
+
+- [Agent Skills specification](https://agentskills.io/specification) - canonical `SKILL.md` format, frontmatter constraints, optional `scripts/`, `references/`, and `assets/`, progressive disclosure, and validation.
+- [Agent Skills evaluation guide](https://agentskills.io/skill-creation/evaluating-skills) - upstream guidance for skill eval cases, with-skill versus baseline runs, assertions, grading evidence, timing, and benchmark summaries.
+- [Agent Skills description optimization](https://agentskills.io/skill-creation/optimizing-descriptions) - upstream guidance for trigger eval queries, positive and negative cases, repeated runs, and train/validation splits.
+- [Agent Skills client implementation guide](https://agentskills.io/client-implementation/adding-skills-support) - discovery, activation, `.agents/skills/` conventions, and progressive disclosure behavior across clients.
+- [Vercel Agent Skills docs](https://vercel.com/docs/agent-resources/skills) - `npx skills` installation flow and public skill discovery.
+- [Vercel skills CLI README](https://github.com/vercel-labs/skills/blob/main/README.md) - CLI source formats and `metadata.internal: true` behavior for hiding work-in-progress skills from normal discovery.
+- [OpenAI agent evals guide](https://developers.openai.com/api/docs/guides/agent-evals) and [OpenAI evaluation best practices](https://developers.openai.com/api/docs/guides/evaluation-best-practices) - broader guidance for traces, graders, datasets, repeatable eval runs, and continuous evaluation.
+- [Anthropic evaluation guidance](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests) - broader guidance for success criteria, task-specific evals, edge cases, and grading methods.
 
 ## Compatibility
 
@@ -169,4 +168,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for naming, frontmatter, safety, validati
 
 ## License
 
-MIT for the skills and repository material published from this repo. Project-local helper skills installed under `.agents/skills/` keep their upstream licenses and are not part of this published catalog.
+Apache-2.0 for the skills and repository material published from this repo. Project-local helper skills installed under `.agents/skills/` keep their upstream licenses and are not part of this published catalog.

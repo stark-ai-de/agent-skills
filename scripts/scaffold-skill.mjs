@@ -2,16 +2,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const [target] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const rootArg = args[0] === "--incubator" ? args.shift() : null;
+const [target] = args;
+const skillRoot = rootArg ? path.join("incubator", "skills") : "skills";
 
 function usage() {
   console.error("Usage: npm run scaffold <category>/<skill-name>");
+  console.error("       npm run scaffold:incubator <category>/<skill-name>");
   process.exit(1);
 }
 
 if (!target) usage();
 if (target.startsWith("/") || target.includes("..")) {
-  console.error("Skill path must be relative and stay under skills/.");
+  console.error(`Skill path must be relative and stay under ${skillRoot}/.`);
   process.exit(1);
 }
 
@@ -34,7 +38,7 @@ if (!namePattern.test(skillName)) {
   process.exit(1);
 }
 
-const skillDir = path.join(root, "skills", category, skillName);
+const skillDir = path.join(root, skillRoot, category, skillName);
 const skillFile = path.join(skillDir, "SKILL.md");
 
 if (fs.existsSync(skillDir)) {
@@ -45,7 +49,7 @@ if (fs.existsSync(skillDir)) {
 fs.mkdirSync(skillDir, { recursive: true });
 fs.writeFileSync(
   skillFile,
-  `---\nname: ${skillName}\ndescription: Describe the workflow clearly. Use when the user asks for specific trigger terms related to ${skillName}. Do not use when another focused skill owns the task.\nlicense: MIT\nmetadata:\n  author: stark-ai-de\n  category: ${category}\n  version: "0.1.0"\n---\n\n# ${skillName
+  `---\nname: ${skillName}\ndescription: Describe the workflow clearly. Use when the user asks for specific trigger terms related to ${skillName}. Do not use when another focused skill owns the task.\nlicense: Apache-2.0\nmetadata:\n  author: stark-ai-de\n  category: ${category}\n${rootArg ? "  internal: true\n" : ""}  version: "0.1.0"\n---\n\n# ${skillName
     .split("-")
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(
@@ -55,3 +59,8 @@ fs.writeFileSync(
 );
 
 console.log(`Created ${path.relative(root, skillFile)}`);
+console.log(`Next: add ${skillName} to ${path.join(skillRoot, category, "README.md")}.`);
+if (!rootArg) {
+  console.log("Next: add promotion proof under skill-evals/ before release.");
+}
+console.log("Then run npm run validate.");

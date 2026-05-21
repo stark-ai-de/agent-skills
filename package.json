@@ -2,20 +2,22 @@
   "name": "agent-skills",
   "version": "0.1.0",
   "private": true,
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "list": "node scripts/list-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && bash -n skills/codex-operations/codex-memory-curator/scripts/*.sh",
+    "list:incubator": "node scripts/list-incubator-skills.mjs",
+    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/list-incubator-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && bash -n incubator/skills/codex-operations/codex-memory-curator/scripts/*.sh",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
     "smoke:install": "node scripts/smoke-install.mjs",
     "adr:new": "node scripts/new-adr.mjs",
     "scaffold": "node scripts/scaffold-skill.mjs",
-    "format": "oxfmt --config packages/tooling-config/oxfmt.json --ignore-path .oxfmtignore --write .",
-    "format:check": "oxfmt --config packages/tooling-config/oxfmt.json --ignore-path .oxfmtignore --check .",
-    "lint": "oxlint --config packages/tooling-config/oxlint.json scripts",
-    "lint:fix": "oxlint --config packages/tooling-config/oxlint.json --fix scripts"
+    "scaffold:incubator": "node scripts/scaffold-skill.mjs --incubator",
+    "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --write .",
+    "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --check .",
+    "lint": "oxlint --config oxlint.json scripts",
+    "lint:fix": "oxlint --config oxlint.json --fix scripts"
   },
   "devDependencies": {
     "oxfmt": "0.49.0",

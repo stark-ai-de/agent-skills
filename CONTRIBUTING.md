@@ -1,6 +1,6 @@
 # Contributing
 
-This repository contains public Agent Skills. Contributions should keep skills small, composable, inspectable, and safe for public use.
+This repository contains Agent Skills candidates and a promoted public catalog. Contributions should keep skills small, composable, inspectable, and safe for eventual public use.
 
 ## Skill Naming
 
@@ -17,15 +17,16 @@ Every `SKILL.md` must start with YAML frontmatter:
 ---
 name: example-skill
 description: Do one clear workflow. Use when the user asks for concrete trigger terms. Do not use when the task belongs to another skill.
-license: MIT
+license: Apache-2.0
 metadata:
+  internal: true
   author: stark-ai-de
   category: repo-maintenance
   version: "0.1.0"
 ---
 ```
 
-`name` and `description` are required by the Agent Skills specification. This repository also uses `license: MIT` and simple metadata for public catalog clarity. Put routing triggers in `description`; the skill body is loaded only after the skill triggers.
+`name` and `description` are required by the Agent Skills specification. This repository also uses `license: Apache-2.0` and simple metadata for catalog clarity. Incubator skills must set `metadata.internal: true`; remove that marker only during promotion. Put routing triggers in `description`; the skill body is loaded only after the skill triggers.
 
 ## Description Quality
 
@@ -39,8 +40,8 @@ metadata:
 
 - Do not include secrets, tokens, customer data, private repo paths, or internal hostnames.
 - Do not copy substantial text from other skill repositories.
-- Do not vendor already-published third-party skills into `skills/`; use project-local `npx skills` installs instead.
-- Keep `skills/` stable-only. Draft, experimental, personal, and private skills belong in specs, issues, ignored local folders, or private repositories.
+- Do not vendor already-published third-party skills into `skills/` or `incubator/skills/`; use project-local `npx skills` installs instead.
+- Keep `skills/` promoted-only. Draft or experimental public candidates belong in `incubator/skills/` with `metadata.internal: true`; personal and private skills belong in ignored local folders or private repositories.
 - If copying third-party material is explicitly required, verify the license and add source/license attribution before publishing.
 - Prefer read-only scripts.
 - Any script that can modify files must be documented in the owning skill and must require user approval before use.
@@ -51,7 +52,7 @@ metadata:
 - Add an ADR when a repo-level decision changes format, publishing, validation, license, layout, or maintainer policy.
 - Do not add ADRs for typo fixes, tiny copy edits, routine skill additions, or one-off implementation details.
 - Keep ADRs under 250 words and use `docs/adr/TEMPLATE.md`.
-- Do not rewrite accepted ADRs. Supersede them with a new ADR.
+- After initial setup, do not rewrite accepted ADRs. Supersede them with a new ADR.
 
 ## Validation
 
@@ -60,7 +61,7 @@ Run:
 ```bash
 npm run validate
 npm run list
-npx skills@latest add ./skills --list
+npm run list:incubator
 npm run smoke:install
 ```
 
@@ -80,6 +81,8 @@ pnpm lint
 - [ ] Skill names match folder names.
 - [ ] Descriptions include trigger words.
 - [ ] Category README files match `SKILL.md` frontmatter.
+- [ ] Incubator skills are not presented as public catalog entries.
+- [ ] Promotion from `incubator/skills/` to `skills/` has proof in `skill-evals/` or a documented reason to skip it.
 - [ ] Long rubrics, templates, and examples live in `references/` or `assets/`.
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
@@ -96,6 +99,7 @@ pnpm lint
 - [ ] `docs/adr/` exists and ADR validation passes.
 - [ ] GitHub Actions validation is configured.
 - [ ] No upstream helper skill is vendored into `skills/`.
+- [ ] Incubator skills are not listed by public install discovery.
 
 ## Deprecation Policy
 
@@ -103,4 +107,4 @@ Do not delete skills abruptly. Add a deprecation notice to `SKILL.md`, identify 
 
 ## Scope Boundaries
 
-Use `docs/out-of-scope/` for stable boundaries that are not architectural enough for an ADR. Current defaults: do not vendor upstream skills, do not publish personal/private skills, do not add mega-skills, and keep issue tracker automation limited unless demand justifies more.
+Use `docs/out-of-scope/` for stable boundaries that are not architectural enough for an ADR. Current defaults: do not vendor upstream skills, do not publish personal/private skills, do not add mega-skills, keep issue tracker automation limited unless demand justifies more, and promote incubator skills only when quality, utility, and maintenance fit are clear.

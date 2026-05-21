@@ -3,13 +3,13 @@
 Prompt:
 
 ```text
-Use $adr-writer to record that this repo keeps public skills stable-only.
+Use $adr-writer to record that this repo keeps public skills promoted-only.
 ```
 
 Expected ADR shape:
 
 ```md
-# 0004 Keep Public Skills Stable Only
+# 0004 Keep Public Skills Promoted Only
 
 Status: Accepted
 
@@ -19,7 +19,7 @@ Anything under `skills/` can be installed into an agent runtime.
 
 ## Decision
 
-Keep `skills/` limited to stable public skills. Track experiments in specs, issues, or ignored project-local folders.
+Keep `skills/` limited to promoted public skills. Track candidate public skills in `incubator/skills/`.
 
 ## Consequences
 

@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codex Spec Interviewer"
+  short_description: "Interviews, challenges assumptions, ADR-gates architecture, and produces a Codex-ready implementation spec"
+  default_prompt: "Interview me first, challenge the requirements against repo evidence and current sources, ADR-gate any architectural decisions, then produce a production-ready implementation spec before coding."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []

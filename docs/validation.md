@@ -1,13 +1,19 @@
 # Validation
 
-Validation keeps the public skill catalog compatible with the open Agent Skills specification and the lightweight ADR rules.
+Validation keeps the promoted public skill catalog and incubator candidates compatible with the open Agent Skills specification and the lightweight ADR rules.
 
 ## Commands
 
-List skills:
+List public skills:
 
 ```bash
 npm run list
+```
+
+List incubator skills:
+
+```bash
+npm run list:incubator
 ```
 
 Validate skills:
@@ -28,7 +34,7 @@ Validate only ADRs:
 npm run validate:adrs
 ```
 
-Check local install discovery:
+Check local public install discovery after at least one skill is promoted:
 
 ```bash
 npx skills@latest add ./skills --list
@@ -50,7 +56,8 @@ pnpm lint
 
 ## What Validation Checks
 
-- `skills/**/SKILL.md` exists.
+- `skills/**/SKILL.md` exists for promoted public skills.
+- `incubator/skills/**/SKILL.md` is validated when incubator candidates exist.
 - Frontmatter starts the file.
 - `name` and `description` are present.
 - `name` matches the parent folder.
@@ -60,12 +67,15 @@ pnpm lint
 - `SKILL.md` stays under 500 lines.
 - Skill bodies include the universal skill section contract: goal, use and non-use cases, inputs, workflow, safety rules, references, scripts, output format, completion criteria, and failure modes.
 - README includes install commands.
-- Every public category has a `skills/<category>/README.md`.
+- Every public category with promoted skills has a `skills/<category>/README.md`.
+- Every incubator category has an `incubator/skills/<category>/README.md`.
 - Category README files link each skill and include the exact `SKILL.md` frontmatter description.
 - Category README files state that third-party helper skills live outside the public catalog under `.agents/skills/`.
+- Incubator category README files state that incubator skills are not part of the public catalog.
+- Incubator skills set `metadata.internal: true` so root `npx skills` discovery hides them unless `INSTALL_INTERNAL_SKILLS=1` is explicitly set.
 - Skill scripts avoid obvious high-risk shell patterns.
-- Known upstream helper skills are not vendored under `skills/`; they belong in `.agents/skills/` via `npx skills` and `skills-lock.json`.
+- Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
-- `smoke:install` checks a clean copy without `.agents/skills/` so helper skills do not mask the public catalog.
+- `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

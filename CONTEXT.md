@@ -6,7 +6,7 @@ This repository publishes public Agent Skills for repo maintenance, Codex operat
 
 - **Agent Skill**: A directory containing `SKILL.md` plus optional `references/`, `scripts/`, and `assets/`.
 - **public catalog**: The installable skill tree under `skills/`.
-- **project-local helper skill**: A third-party or personal helper installed under `.agents/skills/`; it is ignored and not republished.
+- **project-local helper skill**: A third-party, private, or personal helper installed under `.agents/skills/`; it is ignored and not republished.
 - **category**: The first directory under `skills/`, such as `repo-maintenance`.
 - **stable skill**: A skill intended for public install from this repository.
 - **draft skill**: A proposed or experimental workflow kept outside `skills/` until it is stable.
@@ -23,7 +23,7 @@ This repository publishes public Agent Skills for repo maintenance, Codex operat
 ## Relationships
 
 - `skills/` contains only stable public skills.
-- `.agents/skills/` contains helper skills restored from `skills-lock.json`.
+- `.agents/` and `skills-lock.json` are local-only and ignored from Git.
 - `docs/adr/` records long-lived decisions about repository policy or architecture.
 - `docs/out-of-scope/` records useful boundaries that are not architectural decisions.
 - Category README files must mirror `SKILL.md` frontmatter descriptions.

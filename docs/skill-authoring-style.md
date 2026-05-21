@@ -9,9 +9,9 @@ Required:
 - `name`
 - `description`
 
-Recommended for this public repo:
+Recommended for promoted and incubator skills in this repo:
 
-- `license: MIT`
+- `license: Apache-2.0`
 - `metadata.author: stark-ai-de`
 - `metadata.category: <category>`
 - `metadata.version: "0.1.0"`
@@ -35,6 +35,12 @@ Every skill should include:
 ## References
 
 Use references for long rubrics, examples, templates, decision trees, and troubleshooting guides. Reference files should be one level below the skill folder and linked directly from `SKILL.md`.
+
+## Promotion Boundary
+
+Use `skills/` only for promoted public skills. Put draft or candidate public skills under `incubator/skills/` with `metadata.internal: true` until their quality, activation fit, useful scope, and maintenance ROI justify promotion.
+
+Keep eval prompts, rubrics, run summaries, and promotion proof under `skill-evals/` by default. Do not add eval material to the runtime skill payload unless the skill needs those fixtures while executing.
 
 ## Scripts
 

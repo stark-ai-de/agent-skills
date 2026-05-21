@@ -1,0 +1,54 @@
+# Spec Rubric
+
+Use this before finalizing the implementation spec.
+
+## Mode Selection
+
+| Mode       | Use when                                                                         | Required depth                                        |
+| ---------- | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `compact`  | one-file or tightly scoped feature/bugfix with low ambiguity                     | enough to implement safely in one sitting             |
+| `standard` | default for most features, bugfixes, refactors, migrations                       | explicit requirements, file plan, validation, risks   |
+| `deep`     | repo-wide refactor, architecture change, migration, multi-team or phased rollout | requirements, design, phased tasks, rollout, rollback |
+
+## Required Sections
+
+| Section                            | Compact  | Standard | Deep     |
+| ---------------------------------- | -------- | -------- | -------- |
+| Frontmatter                        | required | required | required |
+| Goal                               | required | required | required |
+| Scope                              | required | required | required |
+| Non-goals                          | optional | required | required |
+| Repo context                       | required | required | required |
+| Assumptions / open questions       | required | required | required |
+| Requirements / acceptance criteria | required | required | required |
+| ADR gate                           | required | required | required |
+| Design notes                       | optional | required | required |
+| Task breakdown                     | light    | required | required |
+| Validation commands                | required | required | required |
+| Source challenge                   | required | required | required |
+| Risks / rollout                    | optional | required | required |
+| Done when                          | required | required | required |
+
+## Acceptance Criteria Bar
+
+- Specificity: no vague "handle appropriately" language.
+- Testability: at least one concrete verification route exists.
+- Bounded scope: non-goals and exclusions are explicit.
+- Repo fit: references actual repo files and commands when known.
+- Source fit: important decisions are checked against repo instructions, ADRs, current code, and current external docs when relevant.
+- ADR fit: durable architectural decisions are captured in ADRs, while feature-specific details remain in the spec.
+- Safety: risky changes have migration or rollback notes.
+- Codex readiness: a coding agent can act without another discovery loop.
+
+## Final Self-Check
+
+- Is the goal explicit?
+- Are non-goals explicit?
+- Are acceptance criteria testable?
+- Are validation commands concrete?
+- Are unknowns labeled rather than invented?
+- Were named requirements and important assumptions challenged against the best available sources?
+- Did the ADR gate classify architectural decisions correctly?
+- Does the spec reference ADRs instead of duplicating durable architecture rationale?
+- Is any skipped source challenge justified?
+- Could Codex implement this without another interview cycle?

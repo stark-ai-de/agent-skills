@@ -1,9 +1,0 @@
-{
-  "name": "@agent-skills/tooling-config",
-  "version": "0.1.0",
-  "private": true,
-  "exports": {
-    "./oxfmt": "./oxfmt.json",
-    "./oxlint": "./oxlint.json"
-  }
-}
