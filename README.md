@@ -4,13 +4,55 @@
 
 # Agent Skills
 
-[![skills.sh listing pending](https://img.shields.io/badge/skills.sh-listing_pending-lightgrey)](https://skills.sh/)
+[![skills.sh](https://img.shields.io/badge/skills.sh-listed-brightgreen)](https://www.skills.sh/stark-ai-de/agent-skills)
+[![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
+[![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
+[![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
-Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and engineering workflows. The public catalog is promoted-only; candidates start in the incubator until they have proof of quality, utility, and maintenance fit.
+Public Agent Skills for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 
-This catalog exists for the moments when a coding agent has enough ability to act, but not enough local process to act well. Skills make common workflows explicit: preserve context, review PRs, triage issues, debug failures, write ADRs, slice plans, and keep a public skills catalog installable without loading one giant always-on prompt.
+This catalog is promoted-only. Skills start in the incubator and move into the public catalog only after they have proof of quality, activation fit, practical utility, and acceptable maintenance cost.
 
-## Incubator Map
+## Install
+
+List public skills:
+
+```bash
+npx skills add stark-ai-de/agent-skills --list
+```
+
+Install the first promoted public skill for Codex:
+
+```bash
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+```
+
+Use it when a coding request is still fuzzy:
+
+```text
+Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+```
+
+Latest release: [`v0.1.0`](https://github.com/stark-ai-de/agent-skills/releases/tag/v0.1.0)
+
+## Public Catalog
+
+The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
+
+| Skill                                                                               | Use when                                                                                                                                | Proof                                                                                 |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a concrete Codex-ready spec before implementation. | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
+
+## Repository Layout
+
+- [`skills/`](skills/README.md) - promoted public skills installable through `npx skills`.
+- [`incubator/skills/`](incubator/README.md) - candidate skills with `metadata.internal: true`; not public catalog entries.
+- [`skill-evals/`](skill-evals/README.md) - maintainer proof for promotion decisions, kept outside runtime skill payloads.
+- [`docs/adr/`](docs/adr/README.md) - short decision records for repo-level policy.
+- `.agents/skills/` - ignored maintainer-local helper installs; not part of this catalog.
+
+<details>
+<summary>Incubator map</summary>
 
 | Problem                                     | Candidate skills                                                                                                                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,98 +63,43 @@ This catalog exists for the moments when a coding agent has enough ability to ac
 | Skill quality or installability is drifting | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
 | Codex memory is stale or harmful            | [`codex-memory-curator`](incubator/skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                              |
 
-## Quickstart
+</details>
 
-List public skills from GitHub:
+## Promotion Model
 
-```bash
-npx skills add stark-ai-de/agent-skills --list
-```
+Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`.
 
-Install the first promoted public skill:
+Before promotion, a skill needs:
 
-```bash
-npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
-```
-
-Use it in a downstream repository when a request is still fuzzy:
-
-```text
-Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
-```
-
-## Catalog
-
-The public catalog lives under [`skills/`](skills/README.md) and is promoted-only. Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
-
-- [Codex operations](skills/codex-operations/README.md)
-
-### Skill Index
-
-**Codex operations:** [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)
-
-## Incubator and Promotion
-
-Candidate skills live under [`incubator/skills/`](incubator/README.md). They use the same `SKILL.md` structure and validation rules, but they are not part of the public catalog and should not be listed, promoted, or released through normal `npx skills` discovery.
-
-Incubator categories:
-
-- [Codex operations](incubator/skills/codex-operations/README.md)
-- [Engineering workflows](incubator/skills/engineering-workflows/README.md)
-- [Productivity](incubator/skills/productivity/README.md)
-- [Repo maintenance](incubator/skills/repo-maintenance/README.md)
-- [Skill maintenance](incubator/skills/skill-maintenance/README.md)
-
-Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/` after the skill proves quality, activation fit, broad or high-value use, and acceptable maintenance cost. Maintainer proof belongs in [`skill-evals/`](skill-evals/README.md), not in the runtime skill payload by default.
+- evidence that it improves work quality,
+- activation tests for when it should and should not trigger,
+- a general or high-value use case,
+- manageable maintenance cost,
+- reviewable proof under `skill-evals/<skill>/`.
 
 ## Development
 
-List public skills:
-
-```bash
-npm run list
-```
-
-List incubator skills:
-
-```bash
-npm run list:incubator
-```
-
-Validate public and incubator skills:
-
-```bash
-npm run validate
-```
-
-Run a clean public install smoke test:
-
-```bash
-npm run smoke:install
-```
-
-Check local public skill discovery:
-
-```bash
-npx skills@latest add ./skills --list
-```
-
-Optional formatting and linting use Oxc tooling:
+Install dependencies:
 
 ```bash
 pnpm install
-pnpm format:check
-pnpm lint
 ```
 
-Check release readiness without tagging:
+Common commands:
 
-```bash
-node scripts/validate-release.mjs
-node scripts/print-release-notes.mjs
-```
+| Command                                 | Purpose                                                             |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| `npm run list`                          | List promoted public skills.                                        |
+| `npm run list:incubator`                | List incubator skills.                                              |
+| `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts.           |
+| `npm run smoke:install`                 | Test public install discovery from a clean copy without `.agents/`. |
+| `npx skills@latest add ./skills --list` | Check local public skill discovery.                                 |
+| `pnpm format:check`                     | Check formatting.                                                   |
+| `pnpm lint`                             | Lint scripts.                                                       |
+| `node scripts/validate-release.mjs`     | Validate release readiness from `package.json`.                     |
+| `node scripts/print-release-notes.mjs`  | Print release notes from `CHANGELOG.md`.                            |
 
-Scaffold a promoted public skill only when promotion proof is ready:
+Scaffold a promoted skill only when promotion proof is ready:
 
 ```bash
 npm run scaffold repo-maintenance/my-new-skill
@@ -123,12 +110,6 @@ Scaffold an incubator skill:
 ```bash
 npm run scaffold:incubator engineering-workflows/my-candidate-skill
 ```
-
-The scaffold command creates files. Review generated content before committing.
-
-### Project-Local Helper Skills
-
-Maintainers may install published or private helper skills into `.agents/skills/` while working on this catalog. The whole `.agents/` tree and `skills-lock.json` are ignored so local helper choices are not republished, reviewed, or treated as this repo's recommended base set.
 
 ## Maintainer Docs
 
