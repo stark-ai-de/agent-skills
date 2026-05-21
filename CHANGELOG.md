@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Renamed repository references from `stark-ai-de/agent-skills` to `stark-ai-de/skills`.
+
 ### Fixed
 
 ### Deprecated
