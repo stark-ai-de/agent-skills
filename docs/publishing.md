@@ -7,7 +7,7 @@ This repository is published by pushing it to a public GitHub repository. There 
 The public repository is expected to be:
 
 ```text
-stark-ai-de/skills
+stark-ai-de/agent-skills
 ```
 
 Recommended GitHub description:
@@ -35,8 +35,8 @@ adr
 Use:
 
 ```bash
-npx skills add stark-ai-de/skills --list
-npx skills add stark-ai-de/skills --skill codex-spec-interviewer -g -a codex
+npx skills add stark-ai-de/agent-skills --list
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
 ## Local Smoke Test
@@ -143,8 +143,8 @@ node scripts/print-release-notes.mjs
 Do not generate custom per-skill zip files in v1. GitHub Releases provide source archives for each tag, and normal installation uses the skills CLI:
 
 ```bash
-npx skills add stark-ai-de/skills --list
-npx skills add stark-ai-de/skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills add stark-ai-de/agent-skills --list
+npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
 ```
 
 ## Release Update Process

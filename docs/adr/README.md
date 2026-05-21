@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This folder contains short decision records for `stark-ai-de/skills`.
+This folder contains short decision records for `stark-ai-de/agent-skills`.
 
 ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 
@@ -36,3 +36,4 @@ ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 | 0009 | Accepted | Hide incubator skills from normal CLI discovery.                    |
 | 0010 | Accepted | Ignore local helper installs and helper lockfiles.                  |
 | 0011 | Accepted | Use manual release workflows.                                       |
+| 0012 | Accepted | Use the `agent-skills` repository slug.                             |
