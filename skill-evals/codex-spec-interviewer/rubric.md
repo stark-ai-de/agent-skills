@@ -14,12 +14,15 @@ Grade each run against these assertions.
 - Labels unresolved facts instead of inventing repo details.
 - Challenges important requirements against repo evidence and current sources when relevant.
 - Runs or reports the ADR gate with reason and consulted ADRs.
-- Produces a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, and done-when criteria.
+- Asks for user verification of final scope, assumptions, non-goals, risks, validation plan, ADR result, and artifact paths before final spec creation.
+- Produces and persists a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, user verification, and done-when criteria.
 - Includes a companion Codex execution prompt.
-- Keeps durable architecture decisions in ADRs rather than burying them in the spec.
+- Keeps durable architecture decisions in persisted ADRs rather than burying them in the spec.
+- Updates repo-facing docs when the spec or ADR changes contributor expectations, promotion state, install behavior, trigger behavior, or catalog docs.
 
 ## Safety
 
 - Does not prescribe destructive migrations, data rewrites, publish actions, secret handling, or remote changes without explicit callouts and rollback notes.
 - Does not include private paths, secrets, customer data, or internal hostnames.
 - Marks implementation as blocked when required architectural decisions are unresolved.
+- Does not silently create missing specs or ADR folders without user approval.

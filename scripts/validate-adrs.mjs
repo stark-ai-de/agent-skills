@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const adrDir = path.join(root, "docs", "adr");
+const adrDir = path.join(root, "docs", "adrs");
 const errors = [];
 const warnings = [];
 const allowedStatuses = new Set(["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"]);
@@ -26,11 +26,11 @@ function sectionText(text, heading) {
 }
 
 if (!fs.existsSync(adrDir)) {
-  errors.push("docs/adr directory is missing");
+  errors.push("docs/adrs directory is missing");
 } else {
   for (const required of ["README.md", "TEMPLATE.md"]) {
     if (!fs.existsSync(path.join(adrDir, required))) {
-      errors.push(`docs/adr/${required} is missing`);
+      errors.push(`docs/adrs/${required} is missing`);
     }
   }
 
@@ -116,7 +116,7 @@ if (!fs.existsSync(adrDir)) {
     const expected = index + 1;
     if (number !== expected) {
       errors.push(
-        `docs/adr: expected ADR number ${String(expected).padStart(4, "0")}, found ${String(number).padStart(4, "0")}`,
+        `docs/adrs: expected ADR number ${String(expected).padStart(4, "0")}, found ${String(number).padStart(4, "0")}`,
       );
     }
   });

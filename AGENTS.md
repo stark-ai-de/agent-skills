@@ -11,8 +11,9 @@ This repository contains public Agent Skills.
 - Keep `SKILL.md` files concise and operational.
 - Move long examples, rubrics, and templates into `references/` or `assets/`.
 - Prefer read-only scripts. Any script that modifies files must be clearly documented.
-- Document repo-level decisions in `docs/adr/`.
+- Document repo-level decisions in `docs/adrs/`.
 - ADRs must be short. The hard limit is 250 words.
+- Follow `docs/specs.md` for spec persistence, ADR linkage, filename examples, and repo-facing documentation update rules.
 - Do not copy copyrighted skill text from other repositories. Use them only as inspiration.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.
 - Run `npm run validate` before finalizing changes.

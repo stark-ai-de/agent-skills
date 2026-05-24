@@ -1,6 +1,7 @@
 ---
 title: "<short human-readable title>"
 slug: "<kebab-case-slug>"
+artifact_path: "docs/specs/<kebab-case-slug>-spec.md"
 mode: "compact"
 status: "draft"
 owner: "<person-or-team>"
@@ -61,6 +62,12 @@ source_request: "<original request>"
 - Requirements revised:
 - Requirements preserved:
 - ADR gate result:
+
+## User verification
+
+- Final checkpoint confirmed by:
+- Confirmation date:
+- Non-blocking open questions accepted:
 
 ## Validation
 

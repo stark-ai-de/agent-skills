@@ -1,17 +1,21 @@
 # Architecture Decision Records
 
-This folder contains short decision records for `stark-ai-de/agent-skills`.
+This file documents ADR policy and the ADR index for `stark-ai-de/agent-skills`. ADR files live in [`docs/adrs/`](adrs/README.md).
 
 ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 
 ## Rules
 
-- Use `docs/adr/TEMPLATE.md`.
+- Use `docs/adrs/TEMPLATE.md`.
 - Use filenames like `0001-use-open-agent-skills-spec.md`.
 - Keep the decision to one sentence.
 - Use bullets, not long paragraphs.
 - Do not write ADRs for tiny edits.
 - After initial setup, do not rewrite accepted ADRs. Supersede them with a new ADR.
+
+## Spec Linkage
+
+For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs.md).
 
 ## Status Values
 
@@ -37,3 +41,4 @@ ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
 | 0010 | Accepted | Ignore local helper installs and helper lockfiles.                  |
 | 0011 | Accepted | Use manual release workflows.                                       |
 | 0012 | Accepted | Use the `agent-skills` repository slug.                             |
+| 0013 | Accepted | Persist specs and ADRs as repo artifacts.                           |

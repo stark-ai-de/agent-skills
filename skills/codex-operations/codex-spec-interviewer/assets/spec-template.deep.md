@@ -1,6 +1,7 @@
 ---
 title: "<short human-readable title>"
 slug: "<kebab-case-slug>"
+artifact_path: "docs/specs/<kebab-case-slug>-spec.md"
 mode: "deep"
 status: "draft"
 owner: "<person-or-team>"
@@ -95,6 +96,14 @@ phases: ["phase-1", "phase-2"]
 - Preceding ADR/spec work needed:
 - ADR gate result:
 - Skipped checks and why:
+
+## User verification
+
+- Final checkpoint confirmed by:
+- Confirmation date:
+- Verified scope/non-goals:
+- Verified rollout/rollback assumptions:
+- Non-blocking open questions accepted:
 
 ## File and module plan
 

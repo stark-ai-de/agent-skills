@@ -1,6 +1,7 @@
 ---
 title: "Add CSV export to admin users table"
 slug: "admin-users-csv-export"
+artifact_path: "docs/specs/admin-users-csv-export-spec.md"
 mode: "compact"
 status: "draft"
 owner: "admin-platform"
@@ -90,6 +91,13 @@ Allow admins to export the currently filtered users table as a CSV file from the
   - exclude sensitive/internal fields
 - ADR gate result:
   - no durable architectural decision identified
+
+## User verification
+
+- Final checkpoint confirmed by: product owner
+- Confirmation date: 2026-05-21
+- Non-blocking open questions accepted:
+  - exact canonical exportable column list may be finalized during implementation review
 
 ## Validation
 
