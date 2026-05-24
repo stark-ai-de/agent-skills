@@ -1,0 +1,9 @@
+[features]
+memories = true
+
+[memories]
+use_memories = true
+generate_memories = true
+disable_on_external_context = false
+min_rate_limit_remaining_percent = 25
+min_rollout_idle_hours = 6

@@ -42,3 +42,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0011 | Accepted | Use manual release workflows.                                       |
 | 0012 | Accepted | Use the `agent-skills` repository slug.                             |
 | 0013 | Accepted | Persist specs and ADRs as repo artifacts.                           |
+| 0014 | Accepted | Prefer Node skill helper scripts for public skill portability.      |

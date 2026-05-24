@@ -11,6 +11,11 @@ Use this folder for:
 - run summaries,
 - promotion proof.
 
+## Current Proof Folders
+
+- [`codex-memory-curator`](codex-memory-curator/README.md)
+- [`codex-spec-interviewer`](codex-spec-interviewer/README.md)
+
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 
 ## Layout

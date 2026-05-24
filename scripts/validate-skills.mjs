@@ -228,6 +228,11 @@ function validateScripts(skillRoot) {
       if (file.endsWith(".sh") && !text.includes("set -euo pipefail")) {
         warnings.push(`${rel}: shell scripts should use set -euo pipefail`);
       }
+      if (skillRoot.label === "public catalog" && file.endsWith(".sh")) {
+        warnings.push(
+          `${rel}: public skill helper scripts should prefer Node .mjs for portability`,
+        );
+      }
       if (/\brm\s+-rf\b|\bsudo\b|\bcurl\b.*\|\s*(sh|bash)|\bwget\b.*\|\s*(sh|bash)/.test(text)) {
         warnings.push(`${rel}: contains high-risk shell pattern; review carefully`);
       }

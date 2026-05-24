@@ -1,0 +1,3 @@
+{"kind":"session_meta","payload":{"id":"synthetic-rollout"}}
+{"kind":"event_msg","message":"Synthetic evidence says the old branch was temporary."}
+{"kind":"response_item","content":"Use this only as supporting evidence, not as a curated memory claim."}

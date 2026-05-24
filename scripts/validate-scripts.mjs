@@ -23,7 +23,11 @@ function check(command, args) {
   execFileSync(command, args, { cwd: root, stdio: "inherit" });
 }
 
-const nodeScripts = walk(path.join(root, "scripts"), (file) => file.endsWith(".mjs")).sort();
+const nodeScripts = [
+  ...walk(path.join(root, "scripts"), (file) => file.endsWith(".mjs")),
+  ...walk(path.join(root, "skills"), (file) => file.endsWith(".mjs")),
+  ...walk(path.join(root, "incubator"), (file) => file.endsWith(".mjs")),
+].sort();
 const shellScripts = [
   ...walk(path.join(root, "skills"), (file) => file.endsWith(".sh")),
   ...walk(path.join(root, "incubator"), (file) => file.endsWith(".sh")),

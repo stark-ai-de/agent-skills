@@ -36,6 +36,20 @@ Use this reference when the classification decision is not obvious from `SKILL.m
 | `DELETE`            | Harmful, stale, duplicated, sensitive, too narrow, one-off, or conflicting | Remove after approval and backup             |
 | `ASK USER`          | Cannot be safely classified from available evidence                        | Ask one focused question before editing      |
 
+## Destination Decision Matrix
+
+Choose one destination for each atomic claim:
+
+| Claim type                                      | Destination       | Reason                                                                                |
+| ----------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| Stable cross-repo user preference               | Memory            | Useful across many sessions and not mandatory team policy.                            |
+| Mandatory team or repo rule                     | `AGENTS.md`       | Must load with the repo and override stale personal context.                          |
+| Detailed architecture or operations context     | Repo docs or ADRs | Too long or too human-facing for memory.                                              |
+| Repeatable on-demand workflow                   | Skill             | Should load only when the task matches.                                               |
+| Runtime behavior toggle                         | Config            | Should be enforced by Codex settings, not recalled as advice.                         |
+| Temporary state, stale branch, obsolete command | Delete            | Harmful or noisy when carried forward.                                                |
+| Sensitive value or private identifier           | Delete            | Should not live in memory; redact output and recommend rotation for real credentials. |
+
 ## Review Questions
 
 Ask these internally for every atomic entry:
@@ -50,6 +64,16 @@ Ask these internally for every atomic entry:
 8. Does it contain secrets, customer data, private identifiers, or sensitive personal data?
 9. Would this be more precise as a skill, config setting, or repo document?
 10. Is it short enough to be a memory?
+
+## Confidence
+
+Add confidence to cleanup plans:
+
+| Confidence | Use when                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| `high`     | Current files prove the claim is correct, stale, or misplaced.                                     |
+| `medium`   | Evidence strongly suggests an action, but the user may know intent.                                |
+| `low`      | The entry is ambiguous or could encode a preference; classify `ASK USER` unless risk is sensitive. |
 
 ## Good Memory Examples
 

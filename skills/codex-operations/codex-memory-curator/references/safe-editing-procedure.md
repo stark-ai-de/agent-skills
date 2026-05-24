@@ -14,31 +14,26 @@ Do not proceed unless the user clearly approves the cleanup.
 
 ## Backup
 
-Run:
+Run the bundled script:
 
 ```bash
-MEM_DIR="${CODEX_HOME:-$HOME/.codex}/memories"
-BACKUP_DIR="${CODEX_HOME:-$HOME/.codex}/memories.backup.$(date +%Y%m%d-%H%M%S)"
-cp -a "$MEM_DIR" "$BACKUP_DIR"
-echo "Backup created at $BACKUP_DIR"
-```
-
-Or use the bundled script:
-
-```bash
-bash scripts/backup-memories.sh
+node scripts/backup-memories.mjs
 ```
 
 Record the backup path in the final answer.
 
+Before editing, record the approved memory IDs from the review report or cleanup plan. Do not edit an entry that lacks explicit approval.
+
 ## Editing Rules
 
 - Apply only changes the user approved.
+- Apply changes by memory ID from the review report or cleanup plan, not by broad pattern.
 - Prefer the smallest edit that removes risk.
 - Preserve the original file format, headings, and ordering where practical.
 - Never delete the only copy of a memory file.
 - Do not print secrets or full sensitive values in diffs or summaries.
 - If a line contains a real secret, remove or redact it after backup and tell the user to rotate it.
+- Re-read each changed section after editing to verify the approved action was applied.
 
 ## Unknown Schema
 
@@ -58,13 +53,15 @@ The proposal should contain replacement entries or deletion notes, not an attemp
 
 ## Diff
 
-After approved edits, show only a trimmed diff:
-
-```bash
-diff -ru "$BACKUP_DIR" "$MEM_DIR" | sed -n '1,240p'
-```
-
+After approved edits, show only a trimmed diff or summarize the changed paths and actions.
 If the diff includes sensitive values, summarize the location and action instead of printing the value.
+
+Include the approved memory IDs in the summary:
+
+```text
+Applied: M-2 MOVE TO AGENTS.md, M-6 DELETE
+Skipped: M-4 ASK USER
+```
 
 ## Recovery
 
