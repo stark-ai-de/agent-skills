@@ -47,12 +47,7 @@ jobs:
       - run: npm run validate
 
       - name: Prepare release files
-        run: |
-          args=(--version "${{ inputs.version }}")
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            args+=(--dry-run)
-          fi
-          node scripts/prepare-release.mjs "${args[@]}"
+        run: node scripts/prepare-release.mjs --version "${{ inputs.version }}"
 
       - run: npm run validate
 

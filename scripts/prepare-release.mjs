@@ -117,7 +117,8 @@ function updateChangelog(version, changed, dryRun) {
   ].join("\n");
   const releaseBody = /^-\s+/m.test(unreleasedBody) ? unreleasedBody : "- No changes recorded.";
   const releaseBlock = `## v${version} - ${releaseDate()}\n\n${releaseBody}`;
-  const next = `${text.slice(0, start)}${emptyUnreleased}\n\n${releaseBlock}\n${text.slice(bodyEnd)}`;
+  const followingReleases = text.slice(bodyEnd).replace(/^\n+/, "");
+  const next = `${text.slice(0, start)}${emptyUnreleased}\n\n${releaseBlock}\n\n${followingReleases}`;
 
   writeIfChanged(file, next, changed, dryRun);
 }

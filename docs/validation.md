@@ -104,6 +104,6 @@ node scripts/print-release-notes.mjs
 
 The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, and `npx skills@latest add . --list`. `npm run validate` includes actionlint for GitHub Actions workflows. On pull requests, it also runs release validation when release intent is detected so partial version, changelog, or public skill metadata updates fail before merge.
 
-`Prepare Release` runs only through manual dispatch and opens a reviewable PR. `Publish Release` runs only through manual dispatch. Keep `dry_run` set to `true` for a final readiness check, then rerun with `dry_run` set to `false` only after maintainer approval.
+`Prepare Release` runs only through manual dispatch. Its dry run prepares files in the ephemeral runner so validation can inspect the would-be release tree, but it does not commit or open a PR. `Publish Release` runs only through manual dispatch. Keep `dry_run` set to `true` for a final readiness check, then rerun with `dry_run` set to `false` only after maintainer approval.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

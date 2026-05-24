@@ -111,9 +111,9 @@ Run the `Prepare Release` workflow with:
 
 - `version`: semantic version without a leading `v`
 - `release_kind`: `initial`, `patch`, `minor`, or `major`
-- `dry_run`: keep `true` until the planned changes look right
+- `dry_run`: keep `true` until the prepared release files and validation look right
 
-The workflow validates the repo, runs `scripts/prepare-release.mjs`, validates again, and opens or updates a `release/v<version>` PR when `dry_run` is `false`.
+The workflow validates the repo, prepares release files in the ephemeral runner, validates the prepared tree, and opens or updates a `release/v<version>` PR only when `dry_run` is `false`.
 
 If GitHub does not run normal PR CI for the generated branch, manually dispatch the `Validate` workflow for the release branch before merging.
 
