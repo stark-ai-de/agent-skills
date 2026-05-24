@@ -34,6 +34,12 @@ Validate only ADRs:
 npm run validate:adrs
 ```
 
+Validate script syntax:
+
+```bash
+npm run validate:scripts
+```
+
 Check local public install discovery:
 
 ```bash
@@ -92,6 +98,7 @@ node scripts/print-release-notes.mjs
 - `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill `metadata.version`.
 - Release validation checks package version, `CHANGELOG.md`, public skill metadata versions, and public skill validation before a tag is created.
+- Script syntax validation checks repository Node scripts and skill shell scripts.
 
 ## Continuous Integration
 

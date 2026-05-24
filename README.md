@@ -33,8 +33,6 @@ Use it when a coding request is still fuzzy:
 Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
 ```
 
-Latest release: [`v0.1.0`](https://github.com/stark-ai-de/agent-skills/releases/tag/v0.1.0)
-
 ## Public Catalog
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
