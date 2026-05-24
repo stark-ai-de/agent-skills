@@ -12,23 +12,23 @@ Use this before finalizing the implementation spec.
 
 ## Required Sections
 
-| Section                            | Compact  | Standard | Deep     |
-| ---------------------------------- | -------- | -------- | -------- |
-| Frontmatter                        | required | required | required |
-| Goal                               | required | required | required |
-| Scope                              | required | required | required |
-| Non-goals                          | optional | required | required |
-| Repo context                       | required | required | required |
-| Assumptions / open questions       | required | required | required |
-| Requirements / acceptance criteria | required | required | required |
-| ADR gate                           | required | required | required |
-| Design notes                       | optional | required | required |
-| Task breakdown                     | light    | required | required |
-| Validation commands                | required | required | required |
-| Source challenge                   | required | required | required |
-| Risks / rollout                    | optional | required | required |
+| Section                            | Compact   | Standard | Deep     |
+| ---------------------------------- | --------- | -------- | -------- |
+| Frontmatter                        | required  | required | required |
+| Goal                               | required  | required | required |
+| Scope                              | required  | required | required |
+| Non-goals                          | optional  | required | required |
+| Repo context                       | required  | required | required |
+| Assumptions / open questions       | required  | required | required |
+| Requirements / acceptance criteria | required  | required | required |
+| ADR gate                           | required  | required | required |
+| Design notes                       | optional  | required | required |
+| Task breakdown                     | light     | required | required |
+| Validation commands                | required  | required | required |
+| Source challenge                   | required  | required | required |
+| Risks / rollout                    | optional  | required | required |
 | Artifact path / persistence        | path only | required | required |
-| Done when                          | required | required | required |
+| Done when                          | required  | required | required |
 
 ## Acceptance Criteria Bar
 

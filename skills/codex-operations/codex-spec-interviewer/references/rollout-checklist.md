@@ -64,21 +64,21 @@ Validate that `codex-spec-interviewer` routes correctly, asks high-value questio
 
 ## Risk Checklist
 
-| Risk / edge case                 | Recommended mitigation                                                             |
-| -------------------------------- | ---------------------------------------------------------------------------------- |
-| Over-broad skill description     | keep description narrow, concrete, and honest                                      |
-| Mega skill scope                 | limit the skill to interviewing and spec creation                                  |
-| Invented repo facts              | mark unknowns as `unspecified`                                                     |
-| Missing non-goals                | require explicit non-goals in standard/deep modes                                  |
-| Missing validation commands      | require validation section even if marked `unspecified`                            |
-| Premature final spec             | use the final checkpoint and block unresolved material decisions                   |
-| Version-mismatched guidance      | inspect repo reality before asking detailed questions                              |
-| Stale ADR or named requirement   | challenge briefly and propose a preceding ADR/spec update if needed                |
-| ADR spam                         | create ADRs only for durable architectural or repo-level decisions                 |
-| Missing architecture decision    | block or phase implementation until the ADR decision is explicit                   |
-| Over-research                    | challenge only material decisions; do not re-evaluate everything                   |
-| Hidden migrations / rollout risk | force rollout/rollback notes for standard/deep modes                               |
+| Risk / edge case                 | Recommended mitigation                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Over-broad skill description     | keep description narrow, concrete, and honest                                                                               |
+| Mega skill scope                 | limit the skill to interviewing and spec creation                                                                           |
+| Invented repo facts              | mark unknowns as `unspecified`                                                                                              |
+| Missing non-goals                | require explicit non-goals in standard/deep modes                                                                           |
+| Missing validation commands      | require validation section even if marked `unspecified`                                                                     |
+| Premature final spec             | use the final checkpoint and block unresolved material decisions                                                            |
+| Version-mismatched guidance      | inspect repo reality before asking detailed questions                                                                       |
+| Stale ADR or named requirement   | challenge briefly and propose a preceding ADR/spec update if needed                                                         |
+| ADR spam                         | create ADRs only for durable architectural or repo-level decisions                                                          |
+| Missing architecture decision    | block or phase implementation until the ADR decision is explicit                                                            |
+| Over-research                    | challenge only material decisions; do not re-evaluate everything                                                            |
+| Hidden migrations / rollout risk | force rollout/rollback notes for standard/deep modes                                                                        |
 | Surprise file churn              | use clear spec conventions, confirm ambiguous or risky writes, create ADRs only when required, and refuse silent overwrites |
-| Sensitive examples               | use sanitized placeholders only                                                    |
-| Prompt-injection style wording   | avoid hypey routing text and keep references curated                               |
-| Too many interview questions     | ask one high-impact question at a time unless independent questions can be batched |
+| Sensitive examples               | use sanitized placeholders only                                                                                             |
+| Prompt-injection style wording   | avoid hypey routing text and keep references curated                                                                        |
+| Too many interview questions     | ask one high-impact question at a time unless independent questions can be batched                                          |
