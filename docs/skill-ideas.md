@@ -20,6 +20,9 @@ IDs are stable references. Add new ideas with the next ID instead of renumbering
 | IDEA-008 | [Skill Update Notifier](#idea-008-skill-update-notifier)                                   | `skill-maintenance`     | `skill-installation-support` | Notify users about available skill updates before use.                     |
 | IDEA-009 | [Commit Syntax Preference Manager](#idea-009-commit-syntax-preference-manager)             | `repo-maintenance`      | IDEA-007                     | Capture and enforce preferred commit message conventions.                  |
 | IDEA-010 | [WASM Upgrade Advisor](#idea-010-wasm-upgrade-advisor)                                     | `engineering-workflows` | `prototype-spike`            | Recommend WASM ports only when workload shape justifies them.              |
+| IDEA-011 | [Agent Output Budget Review](#idea-011-agent-output-budget-review)                         | `skill-maintenance`     | `skill-authoring-review`     | Check whether a skill's output contract is concise without losing safety.  |
+| IDEA-012 | [Safe Context File Compressor](#idea-012-safe-context-file-compressor)                     | `codex-operations`      | `codex-memory-curator`       | Reduce recurring context files only after safety and preservation checks.  |
+| IDEA-013 | [Commit Message Writer](#idea-013-commit-message-writer)                                   | `repo-maintenance`      | IDEA-009                     | Draft concise commit messages that match discovered repository convention. |
 
 ## IDEA-001: Skill Inventory Organizer
 
@@ -261,3 +264,75 @@ Teams can overuse WebAssembly for small JavaScript-native logic or miss high-val
 - Should this skill be advisory only, or should it scaffold worker boundaries and benchmark harnesses?
 - Which WASM libraries should be treated as default recommendations versus project-specific research targets?
 - How should it measure whether a WASM port improves user-perceived performance after serialization and worker overhead?
+
+## IDEA-011: Agent Output Budget Review
+
+- **Status:** Idea
+- **Possible category:** `skill-maintenance`
+- **Related current skill:** `skill-authoring-review`
+
+### Problem
+
+Skills can produce long, vague, or overly conversational outputs that consume context and bury the actionable artifact, but optimizing only for brevity can remove safety detail or rationale.
+
+### Candidate Behavior
+
+- Inspect a skill's output format, examples, eval cases, and reference docs.
+- Identify where output can become shorter through tables, stable receipts, severity lines, path-first findings, or bounded summaries.
+- Flag places where brevity would be unsafe, such as security warnings, destructive operations, migrations, and onboarding explanations.
+- Recommend output contracts that preserve exact identifiers, file paths, validation results, and remaining risk.
+- Require quality assertions before making token-savings claims.
+
+### Open Questions
+
+- Should this be a standalone skill or a rubric section inside `skill-authoring-review`?
+- Which output-length metrics are useful without making skills optimize for word count alone?
+- Should token-budget checks belong in `skill-evals/`, validation scripts, or human review only?
+
+## IDEA-012: Safe Context File Compressor
+
+- **Status:** Idea
+- **Possible category:** `codex-operations`
+- **Related current skill:** `codex-memory-curator`
+
+### Problem
+
+Agents repeatedly load large context files such as `AGENTS.md`, memory notes, handoffs, and repository guidance. Shrinking these files can save context, but unsafe compression can drop instructions, corrupt code blocks, or expose secrets to external services.
+
+### Candidate Behavior
+
+- Inspect candidate files and classify whether they are safe to compress.
+- Produce a preservation report for headings, code blocks, inline code, URLs, paths, commands, env vars, dates, and security-sensitive terms before any rewrite.
+- Recommend a compressed draft that keeps technical meaning and flags ambiguous reductions for human review.
+- Keep backups and require explicit approval before overwriting any file.
+- Refuse suspected secret files, credential paths, private keys, and sensitive customer data.
+
+### Open Questions
+
+- Should this skill be read-only by default with no bundled rewrite script?
+- Should compression use only the current agent context, or is an external model/API ever acceptable?
+- Where should backups live so compressed context files do not create stale duplicate instructions?
+
+## IDEA-013: Commit Message Writer
+
+- **Status:** Idea
+- **Possible category:** `repo-maintenance`
+- **Related idea:** `IDEA-009: Commit Syntax Preference Manager`
+
+### Problem
+
+Agents often write commit messages that are too long, too generic, or mismatched with a repository's actual convention.
+
+### Candidate Behavior
+
+- Inspect staged diff summary, recent commit history, commitlint config, issue tracker conventions, and repository instructions.
+- Draft one or more commit messages that match the discovered convention.
+- Prefer the reason for the change over a file-by-file description when the diff already explains the mechanics.
+- Include a body only when the reason, migration impact, security context, breaking change, or linked issue is not obvious.
+- Do not stage, commit, amend, or push unless the user separately authorizes the git operation.
+
+### Open Questions
+
+- Should this be a standalone skill or an execution mode of `Commit Syntax Preference Manager`?
+- How should it handle repositories with multiple valid conventions?
+- Should validation include a deterministic commitlint check when the repo provides one?

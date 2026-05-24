@@ -15,3 +15,5 @@ We need to clean up the billing integration. It has grown messy, agents keep tou
 - Produce a `standard` or `deep` implementation spec depending on scope evidence.
 - Include non-goals, file areas, acceptance criteria, validation, risks, rollout notes, and a Codex execution prompt.
 - Run the ADR gate and explain whether a durable architecture decision is required.
+- Ask the user to verify the final scope, assumptions, non-goals, risks, validation plan, and artifact paths before creating the final spec.
+- Save the final spec under `docs/specs/<kebab-slug>-spec.md` or a user-approved equivalent.

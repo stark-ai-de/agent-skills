@@ -4,7 +4,7 @@
 
 # Agent Skills
 
-![skills.sh listing updating](https://img.shields.io/badge/skills.sh-listing_updating-lightgrey)
+[![skills.sh](https://skills.sh/b/stark-ai-de/agent-skills)](https://www.skills.sh/stark-ai-de/agent-skills)
 [![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
 [![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
 [![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
@@ -18,13 +18,13 @@ Skills in this repository are reviewed before they are added to the public catal
 List public skills:
 
 ```bash
-npx skills add stark-ai-de/agent-skills --list
+npx skills add https://github.com/stark-ai-de/agent-skills --list
 ```
 
 Install the first promoted public skill for Codex:
 
 ```bash
-npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
 Use it when a coding request is still fuzzy:
@@ -39,17 +39,24 @@ Latest release: [`v0.1.0`](https://github.com/stark-ai-de/agent-skills/releases/
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-| Skill                                                                               | Use when                                                                                                                                | Proof                                                                                 |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a concrete Codex-ready spec before implementation. | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
+| Skill                                                                               | Use when                                                                                                                                                | Proof                                                                                 |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation. | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
 
 ## Repository Layout
 
 - [`skills/`](skills/README.md) - promoted public skills installable through `npx skills`.
 - [`incubator/skills/`](incubator/README.md) - candidate skills with `metadata.internal: true`; not public catalog entries.
 - [`skill-evals/`](skill-evals/README.md) - maintainer proof for promotion decisions, kept outside runtime skill payloads.
-- [`docs/adr/`](docs/adr/README.md) - short decision records for repo-level policy.
+- [`docs/specs/`](docs/specs/README.md) - publishable implementation specs; private drafts belong in ignored `do-not-publish/`.
+- [`docs/specs.md`](docs/specs.md) - repository policy for persisted implementation specs.
+- [`docs/adrs/`](docs/adrs/README.md) - short decision record files for repo-level policy.
+- [`docs/adrs.md`](docs/adrs.md) - ADR policy and index.
 - `.agents/skills/` - ignored maintainer-local helper installs; not part of this catalog.
+
+## Specs and ADRs
+
+See [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples, ADR linkage, and repo-facing documentation update rules. See [`docs/adrs.md`](docs/adrs.md) for ADR policy and the index.
 
 <details>
 <summary>Incubator map</summary>
@@ -76,6 +83,8 @@ Before promotion, a skill needs:
 - a general or high-value use case,
 - manageable maintenance cost,
 - reviewable proof under `skill-evals/<skill>/`.
+
+For promotion and public-contract documentation updates, see [`docs/specs.md`](docs/specs.md#documentation-updates).
 
 ## Development
 
@@ -118,7 +127,7 @@ npm run scaffold:incubator engineering-workflows/my-candidate-skill
 - [Publishing](docs/publishing.md)
 - [Skill examples](docs/examples/README.md)
 - [Out-of-scope boundaries](docs/out-of-scope/README.md)
-- [Decision records](docs/adr/README.md)
+- [Decision records](docs/adrs.md)
 
 ## Relevant Sources
 

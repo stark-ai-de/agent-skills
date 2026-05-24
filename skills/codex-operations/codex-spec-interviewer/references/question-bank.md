@@ -1,6 +1,6 @@
 # Question Bank
 
-Ask one high-impact question at a time when the answer can change the next question. Use a small batch only when the questions are independent and low-friction. Start with the highest-impact unknowns, summarize after each answer or evidence pass, and continue only when uncertainty still blocks a safe implementation spec.
+Ask one high-impact question at a time when the answer can change the next question. Use a small batch only when the questions are independent and low-friction. Start with the highest-impact unknowns, summarize after each answer or evidence pass, and continue until every material aspect is covered, source-backed, or explicitly accepted by the user as non-blocking.
 
 ## Discovery
 
@@ -35,6 +35,17 @@ Ask one high-impact question at a time when the answer can change the next quest
 - Should rollout be phased, all at once, or internal-only first?
 - What is the rollback strategy if behavior regresses?
 - Are there high-risk areas like auth, billing, secrets, or shared contracts?
+- Which repository files should document the resulting spec or ADR expectations, such as `README.md`, `AGENTS.md`, `CONTRIBUTING.md`, or docs indexes?
+- Does this change public catalog status, install behavior, trigger behavior, or promotion proof that must be reflected in repo-facing files?
+
+## Artifact Persistence
+
+- Should I save specs under the default `docs/specs/` folder?
+- Should I save ADRs under the default `docs/adrs/` folder?
+- The default specs or ADR folder is missing. Can I create `<suggested-folder>/`, or should I use a different path?
+- The selected specs folder is ignored by git. Should this spec stay local-only, should I unignore that path, or should I use a tracked docs path?
+- The proposed spec path is `<path>`. Should I overwrite it, choose a new slug, or update the existing spec?
+- Should open question `<question>` block spec creation, or should it be recorded as a non-blocking follow-up?
 
 ## Source Challenge
 
@@ -50,3 +61,11 @@ Ask one high-impact question at a time when the answer can change the next quest
 - Is there an existing ADR that already decides this?
 - If a new ADR is needed, what is the one-sentence decision?
 - Is implementation blocked until the ADR is accepted?
+
+## Final Verification
+
+Use this checkpoint before saving final artifacts:
+
+- Here is my current scope, non-goals, assumptions, risks, ADR result, validation plan, and artifact paths. Is anything material missing or wrong?
+- Are all listed open questions non-blocking for implementation, or should I keep interviewing?
+- Do you approve saving the spec to `<spec-path>` and any ADR to `<adr-path>`?

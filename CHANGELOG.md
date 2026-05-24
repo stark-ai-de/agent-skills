@@ -7,6 +7,8 @@
 ### Changed
 
 - Renamed the public repository slug from `stark-ai-de/skills` to `stark-ai-de/agent-skills`.
+- Updated `codex-spec-interviewer` to require user-verified finalization, persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
+- Documented the repository policy for implementation specs in `docs/specs/` and ADRs in `docs/adrs/`.
 
 ### Fixed
 

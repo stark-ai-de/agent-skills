@@ -15,4 +15,5 @@ coverage
 !.env.example
 npm-debug.log*
 
-specs/
+docs/specs/do-not-publish/*
+!docs/specs/do-not-publish/.gitkeep

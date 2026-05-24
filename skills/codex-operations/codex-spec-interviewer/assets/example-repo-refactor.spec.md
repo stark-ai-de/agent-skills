@@ -1,6 +1,7 @@
 ---
 title: "Replace legacy fetchJson wrapper with typed apiClient across the repo"
 slug: "typed-api-client-repo-refactor"
+artifact_path: "docs/specs/typed-api-client-repo-refactor-spec.md"
 mode: "deep"
 status: "draft"
 owner: "platform-foundation"
@@ -91,7 +92,7 @@ The repository currently uses a mixture of `fetchJson(...)`, ad hoc `fetch(...)`
 
 - ADR required: yes, if `apiClient` is not already the accepted shared HTTP abstraction.
 - Existing ADRs consulted: check for API-client or transport ADR before implementation.
-- ADR draft or path: `docs/adr/NNNN-use-typed-api-client.md` if no accepted ADR exists.
+- ADR draft or path: `docs/adrs/NNNN-use-typed-api-client.md` if no accepted ADR exists.
 - Supersedes: any accepted ADR that requires permanent legacy `fetchJson` usage.
 - Implementation blocked until ADR accepted: yes for repo-wide cutover; no for inventory-only work.
 
@@ -115,6 +116,17 @@ The repository currently uses a mixture of `fetchJson(...)`, ad hoc `fetch(...)`
 - Skipped checks and why:
   - package-specific external docs are unnecessary until the concrete `apiClient` implementation is inspected
 
+## User verification
+
+- Final checkpoint confirmed by: platform owner
+- Confirmation date: 2026-05-21
+- Verified scope/non-goals:
+  - migrate safe call sites, preserve runtime behavior, and defer service-specific exceptions
+- Verified rollout/rollback assumptions:
+  - cutover proceeds in phases and implementation remains blocked where a required ADR is unresolved
+- Non-blocking open questions accepted:
+  - exact call-site inventory is completed during phase 1 before code changes
+
 ## File and module plan
 
 ### Expected touched areas
@@ -127,7 +139,7 @@ The repository currently uses a mixture of `fetchJson(...)`, ad hoc `fetch(...)`
 ### Expected new files
 
 - migration inventory note if needed:
-  - `docs/adr/` or `docs/migrations/typed-api-client.md`
+  - `docs/adrs/` or `docs/migrations/typed-api-client.md`
 - targeted helpers/tests only if required
 
 ### Explicitly protected areas
