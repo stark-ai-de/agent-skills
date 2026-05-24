@@ -27,18 +27,20 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 
 ## Index
 
-| ADR  | Status   | Decision                                                            |
-| ---- | -------- | ------------------------------------------------------------------- |
-| 0001 | Accepted | Use the open Agent Skills specification.                            |
-| 0002 | Accepted | Publish through GitHub and validate/install with Vercel skills CLI. |
-| 0003 | Accepted | Keep ADRs short and anti-bloat.                                     |
-| 0004 | Accepted | Start with an empty promoted-only public catalog.                   |
-| 0005 | Accepted | License the public catalog under Apache-2.0.                        |
-| 0006 | Accepted | Use the incubator as the default home for skill candidates.         |
-| 0007 | Accepted | Treat skill evals as maintainer proof, not default runtime content. |
-| 0008 | Accepted | Promotion requires value and maintainability, not just evals.       |
-| 0009 | Accepted | Hide incubator skills from normal CLI discovery.                    |
-| 0010 | Accepted | Ignore local helper installs and helper lockfiles.                  |
-| 0011 | Accepted | Use manual release workflows.                                       |
-| 0012 | Accepted | Use the `agent-skills` repository slug.                             |
-| 0013 | Accepted | Persist specs and ADRs as repo artifacts.                           |
+| ADR  | Status     | Decision                                                            |
+| ---- | ---------- | ------------------------------------------------------------------- |
+| 0001 | Accepted   | Use the open Agent Skills specification.                            |
+| 0002 | Accepted   | Publish through GitHub and validate/install with Vercel skills CLI. |
+| 0003 | Accepted   | Keep ADRs short and anti-bloat.                                     |
+| 0004 | Accepted   | Start with an empty promoted-only public catalog.                   |
+| 0005 | Accepted   | License the public catalog under Apache-2.0.                        |
+| 0006 | Accepted   | Use the incubator as the default home for skill candidates.         |
+| 0007 | Accepted   | Treat skill evals as maintainer proof, not default runtime content. |
+| 0008 | Accepted   | Promotion requires value and maintainability, not just evals.       |
+| 0009 | Accepted   | Hide incubator skills from normal CLI discovery.                    |
+| 0010 | Accepted   | Ignore local helper installs and helper lockfiles.                  |
+| 0011 | Superseded | Use manual release workflows.                                       |
+| 0012 | Accepted   | Use the `agent-skills` repository slug.                             |
+| 0013 | Accepted   | Persist specs and ADRs as repo artifacts.                           |
+| 0014 | Accepted   | Prefer Node skill helper scripts for public skill portability.      |
+| 0015 | Accepted   | Prepare releases in change PRs.                                     |

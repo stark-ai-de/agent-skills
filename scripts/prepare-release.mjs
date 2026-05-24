@@ -25,21 +25,6 @@ function fail(message) {
   process.exit(1);
 }
 
-function walk(dir, predicate = () => true) {
-  if (!fs.existsSync(dir)) return [];
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const files = [];
-
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...walk(full, predicate));
-    if (entry.isFile() && predicate(full)) files.push(full);
-  }
-
-  return files;
-}
-
 function writeIfChanged(file, next, changed, dryRun) {
   const current = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
   if (current === next) return;
@@ -51,37 +36,22 @@ function writeIfChanged(file, next, changed, dryRun) {
 function updatePackageVersion(version, changed, dryRun) {
   const file = path.join(root, "package.json");
   const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+  if (semverPattern.test(pkg.version) && compareSemver(version, pkg.version) < 0) {
+    fail(
+      `Release version ${version} must not be lower than current package version ${pkg.version}.`,
+    );
+  }
   pkg.version = version;
   writeIfChanged(file, `${JSON.stringify(pkg, null, 2)}\n`, changed, dryRun);
 }
 
-function updateSkillVersion(text, version) {
-  const match = text.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return text;
-
-  let frontmatter = match[1];
-  if (/^metadata:\s*$/m.test(frontmatter)) {
-    if (/^\s+version:\s*.*$/m.test(frontmatter)) {
-      frontmatter = frontmatter.replace(/^\s+version:\s*.*$/m, `  version: "${version}"`);
-    } else {
-      frontmatter = frontmatter.replace(/^metadata:\s*$/m, `metadata:\n  version: "${version}"`);
-    }
-  } else {
-    frontmatter = `${frontmatter}\nmetadata:\n  version: "${version}"`;
+function compareSemver(a, b) {
+  const left = a.split(".").map(Number);
+  const right = b.split(".").map(Number);
+  for (let i = 0; i < 3; i += 1) {
+    if (left[i] !== right[i]) return left[i] - right[i];
   }
-
-  return text.replace(/^---\n[\s\S]*?\n---/, `---\n${frontmatter}\n---`);
-}
-
-function updatePublicSkillVersions(version, changed, dryRun) {
-  const skillsDir = path.join(root, "skills");
-  const skillFiles = walk(skillsDir, (file) => path.basename(file) === "SKILL.md").sort();
-  if (skillFiles.length === 0) fail("Cannot prepare a release without public skills.");
-
-  for (const file of skillFiles) {
-    const text = fs.readFileSync(file, "utf8");
-    writeIfChanged(file, updateSkillVersion(text, version), changed, dryRun);
-  }
+  return 0;
 }
 
 function releaseDate() {
@@ -117,7 +87,8 @@ function updateChangelog(version, changed, dryRun) {
   ].join("\n");
   const releaseBody = /^-\s+/m.test(unreleasedBody) ? unreleasedBody : "- No changes recorded.";
   const releaseBlock = `## v${version} - ${releaseDate()}\n\n${releaseBody}`;
-  const next = `${text.slice(0, start)}${emptyUnreleased}\n\n${releaseBlock}\n${text.slice(bodyEnd)}`;
+  const followingReleases = text.slice(bodyEnd).replace(/^\n+/, "");
+  const next = `${text.slice(0, start)}${emptyUnreleased}\n\n${releaseBlock}\n\n${followingReleases}`;
 
   writeIfChanged(file, next, changed, dryRun);
 }
@@ -129,7 +100,6 @@ if (!semverPattern.test(args.version))
 
 const changed = [];
 updatePackageVersion(args.version, changed, args.dryRun);
-updatePublicSkillVersions(args.version, changed, args.dryRun);
 updateChangelog(args.version, changed, args.dryRun);
 
 if (changed.length === 0) {

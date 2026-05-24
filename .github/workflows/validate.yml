@@ -40,6 +40,8 @@ jobs:
 
       - name: Validate planned release
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
-        run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}"
+        run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
 
-      - run: npx skills@latest add . --list
+      - run: npx skills@latest add ./skills --list
+
+      - run: npm run smoke:install

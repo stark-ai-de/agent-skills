@@ -66,9 +66,10 @@ pnpm lint:actions
 Validate release readiness:
 
 ```bash
-node scripts/prepare-release.mjs --version 0.1.0 --dry-run
+NEXT_VERSION=0.2.1
+node scripts/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
 node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs
+node scripts/validate-release.mjs --base-ref origin/main
 node scripts/print-release-notes.mjs
 ```
 
@@ -84,6 +85,7 @@ node scripts/print-release-notes.mjs
 - `compatibility` is no more than 500 characters when present.
 - `SKILL.md` stays under 500 lines.
 - Skill bodies include the universal skill section contract: goal, use and non-use cases, inputs, workflow, safety rules, references, scripts, output format, completion criteria, and failure modes.
+- Public skills set `metadata.version` with `x.y.z` semver.
 - README includes install commands.
 - Every public category with promoted skills has a `skills/<category>/README.md`.
 - Every incubator category has an `incubator/skills/<category>/README.md`.
@@ -96,14 +98,14 @@ node scripts/print-release-notes.mjs
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
 - `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
-- Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill `metadata.version`.
-- Release validation checks package version, `CHANGELOG.md`, public skill metadata versions, and public skill validation before a tag is created.
+- Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
+- Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
 
 ## Continuous Integration
 
-The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, and `npx skills@latest add . --list`. `npm run validate` includes actionlint for GitHub Actions workflows. On pull requests, it also runs release validation when release intent is detected so partial version, changelog, or public skill metadata updates fail before merge.
+The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, `npx skills@latest add ./skills --list`, and `npm run smoke:install`. `npm run validate` includes actionlint for GitHub Actions workflows. On pull requests, it also runs release validation when release intent is detected so partial package, changelog, or public skill version updates fail before merge.
 
-`Prepare Release` runs only through manual dispatch and opens a reviewable PR. `Publish Release` runs only through manual dispatch. Keep `dry_run` set to `true` for a final readiness check, then rerun with `dry_run` set to `false` only after maintainer approval.
+`Publish Release` runs only through manual dispatch. Keep `dry_run` set to `true` for a final readiness check, then rerun with `dry_run` set to `false` only after maintainer approval.
 
 Warnings are not always blockers, but new warnings should be reviewed before publishing.

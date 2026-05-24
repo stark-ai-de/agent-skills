@@ -1,9 +1,11 @@
 # ADR-0011: Use manual release workflows
 
-Status: Accepted  
-Date: 2026-05-21  
-Owner: stark-ai-de  
+Status: Superseded
+Date: 2026-05-21
+Owner: stark-ai-de
 Gist: Releases should be automated but explicitly triggered.
+
+Superseded by [ADR-0015](0015-prepare-releases-in-change-prs.md).
 
 ## Decision
 

@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -61,8 +61,8 @@
     "adr:new": "node scripts/new-adr.mjs",
     "scaffold": "node scripts/scaffold-skill.mjs",
     "scaffold:incubator": "node scripts/scaffold-skill.mjs --incubator",
-    "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --write .",
-    "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --check .",
+    "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --write .",
+    "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check .",
     "lint": "oxlint --config oxlint.json scripts",
     "lint:actions": "node scripts/lint-actions.mjs",
     "lint:fix": "oxlint --config oxlint.json --fix scripts"

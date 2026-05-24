@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "test": "node scripts/test.js"
+  }
+}

@@ -21,25 +21,33 @@ List public skills:
 npx skills add https://github.com/stark-ai-de/agent-skills --list
 ```
 
-Install the first promoted public skill for Codex:
+Install a promoted public skill for Codex:
 
 ```bash
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
 ```
 
-Use it when a coding request is still fuzzy:
+Use `codex-spec-interviewer` when a coding request is still fuzzy:
 
 ```text
 Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+```
+
+Use `codex-memory-curator` when Codex memory state needs review or cleanup:
+
+```text
+Use $codex-memory-curator to audit my Codex memories for stale repo rules, sensitive entries, and cleanup candidates.
 ```
 
 ## Public Catalog
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-| Skill                                                                               | Use when                                                                                                                                                | Proof                                                                                 |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation. | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
+| Skill                                                                               | Use when                                                                                                                                                 | Proof                                                                                 |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)     | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning. | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)     |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation.  | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
 
 ## Repository Layout
 
@@ -66,7 +74,6 @@ See [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples, AD
 | Pull request review is too shallow          | [`pr-review`](incubator/skills/repo-maintenance/pr-review/SKILL.md)                                                                                                                    |
 | Issues are messy                            | [`issue-triage`](incubator/skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                              |
 | Skill quality or installability is drifting | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
-| Codex memory is stale or harmful            | [`codex-memory-curator`](incubator/skills/codex-operations/codex-memory-curator/SKILL.md)                                                                                              |
 
 </details>
 
@@ -147,6 +154,8 @@ https://agentskills.io/specification
 Each skill is a directory with a required `SKILL.md` file containing `name` and `description` frontmatter, plus optional `references/`, `scripts/`, and `assets/`.
 
 Codex CLI is the primary runtime, but the skills are kept portable for Vercel skills CLI, Claude Code, Cursor, GitHub Copilot agent environments where compatible, and other agents that support the open Agent Skills format. Claude-specific plugin metadata is intentionally omitted until an ADR makes it a supported publishing surface.
+
+Public skill helper scripts prefer dependency-free Node.js `.mjs` files for macOS, Linux, Windows, WSL, and CI portability. See [ADR-0014](docs/adrs/0014-prefer-node-skill-helper-scripts.md).
 
 ## Safety
 

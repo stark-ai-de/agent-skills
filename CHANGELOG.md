@@ -6,14 +6,34 @@
 
 ### Changed
 
-- Updated `codex-spec-interviewer` to require user-verified finalization, convention-aware persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
-- Documented the repository policy for implementation specs in `docs/specs/` and ADRs in `docs/adrs/`.
-
 ### Fixed
 
 ### Deprecated
 
 ### Removed
+
+## v0.2.0 - 2026-05-24
+
+### Added
+
+- Added `codex-memory-curator` as a promoted public Codex operations skill.
+
+### Changed
+
+- Updated `codex-spec-interviewer` to require user-verified finalization, convention-aware persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
+- Documented the repository policy for implementation specs in `docs/specs/` and ADRs in `docs/adrs/`.
+- Simplified release preparation so public skill changes carry skill version, package version, and changelog updates in the same pull request.
+- Clarified that public skill `metadata.version` is independent from the repository package version.
+
+### Fixed
+
+- Fixed release validation so unchanged public skills can keep versions below the repository package release.
+
+### Deprecated
+
+### Removed
+
+- Removed the separate `Prepare Release` workflow.
 
 ## v0.1.1 - 2026-05-24
 
