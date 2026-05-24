@@ -50,3 +50,10 @@ Ask one high-impact question at a time when the answer can change the next quest
 - Is there an existing ADR that already decides this?
 - If a new ADR is needed, what is the one-sentence decision?
 - Is implementation blocked until the ADR is accepted?
+
+## Final Verification
+
+- I found `<existing-spec-dir>` for specs and will use that convention unless you want a different destination.
+- I need confirmation for `<suggested-spec-dir-or-adr-path>` because the destination is missing, ambiguous, public/private sensitive, an overwrite, or an ADR write.
+- Here is the scope, non-goals, assumptions, risks, validation plan, ADR result, final spec path, and any required ADR path. Is anything material missing or wrong before I save the spec?
+- Which remaining unknowns are acceptable as non-blocking, and which should block implementation?

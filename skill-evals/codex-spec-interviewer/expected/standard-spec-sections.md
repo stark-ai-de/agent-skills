@@ -11,6 +11,8 @@ A passing standard output should include:
 - requirements or acceptance criteria,
 - source challenge summary,
 - ADR gate result,
+- final verification checkpoint,
+- artifact paths and persistence status,
 - design notes,
 - task breakdown,
 - validation commands,

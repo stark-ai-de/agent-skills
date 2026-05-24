@@ -27,6 +27,7 @@ Use this before finalizing the implementation spec.
 | Validation commands                | required | required | required |
 | Source challenge                   | required | required | required |
 | Risks / rollout                    | optional | required | required |
+| Artifact path / persistence        | path only | required | required |
 | Done when                          | required | required | required |
 
 ## Acceptance Criteria Bar
@@ -37,6 +38,7 @@ Use this before finalizing the implementation spec.
 - Repo fit: references actual repo files and commands when known.
 - Source fit: important decisions are checked against repo instructions, ADRs, current code, and current external docs when relevant.
 - ADR fit: durable architectural decisions are captured in ADRs, while feature-specific details remain in the spec.
+- Persistence fit: the skill uses clear repo conventions without ceremony, confirms ambiguous or risky destinations, saves the spec by default, keeps compact specs to an artifact path line, saves ADR files only when required, and uses chat output only after an explicit persistence decline or blocker.
 - Safety: risky changes have migration or rollback notes.
 - Codex readiness: a coding agent can act without another discovery loop.
 
@@ -50,5 +52,7 @@ Use this before finalizing the implementation spec.
 - Were named requirements and important assumptions challenged against the best available sources?
 - Did the ADR gate classify architectural decisions correctly?
 - Does the spec reference ADRs instead of duplicating durable architecture rationale?
+- Did the final checkpoint verify scope, non-goals, assumptions, risks, validation, ADR status, and artifact paths?
+- Are any unresolved decisions clearly blocking, non-blocking, or accepted by the user?
 - Is any skipped source challenge justified?
 - Could Codex implement this without another interview cycle?

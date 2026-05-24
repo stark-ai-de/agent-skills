@@ -25,6 +25,7 @@ source_request: "<original request>"
 
 - Relevant files or areas:
 - Existing commands or conventions:
+- Artifact path:
 - Unknown repo facts marked as unspecified:
 
 ## Requirements

@@ -15,4 +15,5 @@ This repository contains public Agent Skills.
 - ADRs must be short. The hard limit is 250 words.
 - Do not copy copyrighted skill text from other repositories. Use them only as inspiration.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.
+- Do not stage files with `git add` unless the user explicitly asks.
 - Run `npm run validate` before finalizing changes.

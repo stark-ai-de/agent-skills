@@ -136,6 +136,19 @@ The repository currently uses a mixture of `fetchJson(...)`, ad hoc `fetch(...)`
 - public API schema definitions
 - unrelated UI state management
 
+## Artifact plan
+
+- Spec path: `docs/specs/typed-api-client-migration-spec.md`
+- Destination basis: existing `docs/specs/` convention; ADR path requires confirmation if a new ADR is needed
+- Explicit confirmation needed: yes, for ADR creation or ambiguous API-client ownership
+- Spec persistence: saved
+- Existing file overwrite needed: no
+- ADR paths:
+  - `docs/adr/NNNN-adopt-typed-api-client.md` if no existing ADR covers the default transport abstraction
+- ADR persistence: blocked until existing ADR coverage and API-client ownership are confirmed
+- ADR index updates needed: yes when a new ADR is saved
+- Companion execution prompt path or embedding: embed with saved spec unless the repo already stores execution prompts separately
+
 ## Task breakdown
 
 ### Phase 1
@@ -185,6 +198,18 @@ rg "fetchJson\\(" .
 - auth/header propagation regressions
 - duplicated requests or retry regressions
 - accidental scope creep in touched files
+
+## Verification checkpoint
+
+- Scope and non-goals confirmed: yes
+- Assumptions reviewed: yes
+- Non-blocking unknowns accepted: no; API-client ownership must be confirmed first
+- Blocking decisions: ADR gate remains unresolved until existing ADRs and ownership are checked
+- Risks and rollout reviewed: yes
+- Validation plan reviewed: yes
+- ADR result reviewed: yes
+- Spec saved: yes
+- ADR persistence needed: unresolved
 
 ## Rollout and rollback
 

@@ -45,7 +45,8 @@ Include this result before the final spec:
 2. Use the repo ADR template and word limit.
 3. Mark status as `Proposed` unless the maintainer explicitly accepts it.
 4. Reference the ADR from the implementation spec.
-5. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
+5. Persist the ADR when required, report its path, and update the repo ADR index when one exists.
+6. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
 
 ## Spec Linkage
 

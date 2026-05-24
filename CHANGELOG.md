@@ -6,6 +6,8 @@
 
 ### Changed
 
+- Tightened `codex-spec-interviewer` so final specs are verified, convention-aware, and saved by default while ambiguous destinations and ADR files remain confirmation-gated.
+
 ### Fixed
 
 ### Deprecated

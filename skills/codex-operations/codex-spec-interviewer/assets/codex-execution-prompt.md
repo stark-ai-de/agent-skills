@@ -4,11 +4,12 @@ You are Codex acting as a careful software engineering agent inside `{{REPO_NAME
 
 # Goal
 
-Implement the attached spec exactly, with minimal scope creep and clear verification.
+Implement the attached or referenced spec exactly, with minimal scope creep and clear verification.
 
 # Instructions
 
 - Treat the spec as the primary task contract.
+- If the spec was saved in the repository, read that file from disk before editing.
 - Treat the source challenge findings as part of the task contract.
 - Treat referenced ADRs and ADR gate results as architectural constraints.
 - Read repository instructions such as `AGENTS.md` before editing.

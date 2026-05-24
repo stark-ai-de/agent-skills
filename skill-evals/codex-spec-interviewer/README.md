@@ -7,6 +7,7 @@ This folder contains the initial promotion proof for `codex-spec-interviewer`.
 - Broad utility: applies to fuzzy features, refactors, migrations, bugfixes, and architecture work.
 - Clear boundary: excludes tiny direct edits and already complete implementation specs.
 - High value: produces implementation specs, ADR gate results, validation plans, and Codex execution prompts.
+- Durable output: verifies final scope, saves the spec, and creates ADR files only when required.
 - Manageable maintenance: mostly repo-workflow guidance plus bundled templates and rubrics.
 
 ## Eval Set
