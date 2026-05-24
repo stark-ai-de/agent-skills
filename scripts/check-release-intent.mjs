@@ -75,6 +75,15 @@ function metadataVersion(text) {
   return frontmatter?.match(/^\s+version:\s*["']?([^"'\n]+)["']?$/m)?.[1]?.trim() ?? null;
 }
 
+function compareSemver(a, b) {
+  const left = a.split(".").map(Number);
+  const right = b.split(".").map(Number);
+  for (let i = 0; i < 3; i += 1) {
+    if (left[i] !== right[i]) return left[i] - right[i];
+  }
+  return 0;
+}
+
 function changelogReleaseVersions(text) {
   if (!text) return new Set();
   const versions = new Set();
@@ -84,12 +93,14 @@ function changelogReleaseVersions(text) {
   return versions;
 }
 
-function addCandidate(candidates, errors, version, reason) {
-  if (!version || !semverPattern.test(version)) {
-    errors.push(`${reason} uses invalid or missing semver version: ${version ?? "(missing)"}`);
-    return;
-  }
-  candidates.set(version, [...(candidates.get(version) ?? []), reason]);
+function skillFileFor(changedFile) {
+  const match = changedFile.match(/^(skills\/[^/]+\/[^/]+)\//);
+  if (!match) return null;
+  return `${match[1]}/SKILL.md`;
+}
+
+function uniqueSkillFiles(files) {
+  return [...new Set(files.map(skillFileFor).filter(Boolean))].sort();
 }
 
 function writeGithubOutput(values) {
@@ -100,8 +111,8 @@ function writeGithubOutput(values) {
 
 const args = parseArgs(process.argv.slice(2));
 const errors = [];
-const candidates = new Map();
 const reasons = [];
+const skillReasons = [];
 
 if (!args.baseRef || /^0+$/.test(args.baseRef)) {
   errors.push("A non-empty --base-ref is required to detect release intent.");
@@ -111,54 +122,108 @@ if (!args.baseRef || /^0+$/.test(args.baseRef)) {
 
 if (errors.length === 0) {
   const files = changedFiles(args.baseRef, args.headRef);
+  const basePackageVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
+  const currentPackageVersion = packageVersion(readTargetFile("package.json", args.headRef));
+  const packageChanged = basePackageVersion !== currentPackageVersion;
 
-  if (files.includes("package.json")) {
-    const baseVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
-    const currentVersion = packageVersion(readTargetFile("package.json", args.headRef));
-    if (baseVersion !== currentVersion) {
-      reasons.push(
-        `package.json version changed from ${baseVersion ?? "(missing)"} to ${currentVersion ?? "(missing)"}`,
+  if (packageChanged) {
+    if (!currentPackageVersion || !semverPattern.test(currentPackageVersion)) {
+      errors.push(
+        `package.json uses invalid or missing semver version: ${currentPackageVersion ?? "(missing)"}`,
       );
-      addCandidate(candidates, errors, currentVersion, "package.json");
+    } else if (
+      basePackageVersion &&
+      semverPattern.test(basePackageVersion) &&
+      compareSemver(currentPackageVersion, basePackageVersion) <= 0
+    ) {
+      errors.push(
+        `package.json version must increase from ${basePackageVersion} to a higher semver; got ${currentPackageVersion}`,
+      );
+    } else {
+      reasons.push(
+        `package.json version changed from ${basePackageVersion ?? "(missing)"} to ${currentPackageVersion}`,
+      );
     }
   }
 
-  if (files.includes("CHANGELOG.md")) {
-    const baseVersions = changelogReleaseVersions(readGitFile(args.baseRef, "CHANGELOG.md"));
-    const currentVersions = changelogReleaseVersions(readTargetFile("CHANGELOG.md", args.headRef));
-    for (const version of currentVersions) {
-      if (!baseVersions.has(version)) {
+  const baseChangelogVersions = changelogReleaseVersions(readGitFile(args.baseRef, "CHANGELOG.md"));
+  const currentChangelogVersions = changelogReleaseVersions(
+    readTargetFile("CHANGELOG.md", args.headRef),
+  );
+  const addedChangelogVersions = [...currentChangelogVersions].filter(
+    (version) => !baseChangelogVersions.has(version),
+  );
+
+  if (addedChangelogVersions.length > 0) {
+    if (!packageChanged) {
+      errors.push(
+        `CHANGELOG.md release sections require a package.json version bump: v${addedChangelogVersions.join(", v")}`,
+      );
+    }
+    for (const version of addedChangelogVersions) {
+      if (version !== currentPackageVersion) {
+        errors.push(
+          `CHANGELOG.md added v${version}, but package.json is ${currentPackageVersion ?? "(missing)"}`,
+        );
+      } else {
         reasons.push(`CHANGELOG.md added v${version}`);
-        addCandidate(candidates, errors, version, "CHANGELOG.md");
       }
     }
+  } else if (packageChanged && currentPackageVersion) {
+    errors.push(
+      `package.json version bump to ${currentPackageVersion} requires a CHANGELOG.md v${currentPackageVersion} section`,
+    );
   }
 
-  for (const file of files.filter(
-    (name) => name.startsWith("skills/") && name.endsWith("/SKILL.md"),
-  )) {
-    const baseVersion = metadataVersion(readGitFile(args.baseRef, file));
-    const currentVersion = metadataVersion(readTargetFile(file, args.headRef));
+  for (const skillFile of uniqueSkillFiles(files)) {
+    const baseText = readGitFile(args.baseRef, skillFile);
+    const currentText = readTargetFile(skillFile, args.headRef);
+    const baseVersion = metadataVersion(baseText);
+    const currentVersion = metadataVersion(currentText);
 
-    if (baseVersion !== currentVersion) {
-      reasons.push(
-        `${file} metadata.version changed from ${baseVersion ?? "(missing)"} to ${currentVersion ?? "(missing)"}`,
+    if (!baseText && currentText) {
+      if (!currentVersion || !semverPattern.test(currentVersion)) {
+        errors.push(`${skillFile}: new public skills must set metadata.version with x.y.z semver`);
+      } else {
+        skillReasons.push(`${skillFile} added at ${currentVersion}`);
+      }
+      continue;
+    }
+
+    if (baseText && !currentText) {
+      skillReasons.push(`${skillFile} removed`);
+      continue;
+    }
+
+    if (!baseVersion || !currentVersion) {
+      errors.push(
+        `${skillFile}: public skill changes require metadata.version in base and current file`,
       );
-      if (currentVersion) {
-        addCandidate(candidates, errors, currentVersion, file);
-      }
+    } else if (!semverPattern.test(currentVersion)) {
+      errors.push(`${skillFile}: metadata.version must use x.y.z semver`);
+    } else if (currentVersion === baseVersion) {
+      errors.push(`${skillFile} changed without increasing metadata.version from ${baseVersion}`);
+    } else if (
+      !semverPattern.test(baseVersion) ||
+      compareSemver(currentVersion, baseVersion) <= 0
+    ) {
+      errors.push(
+        `${skillFile} metadata.version must increase from ${baseVersion} to a higher semver; got ${currentVersion}`,
+      );
+    } else {
+      skillReasons.push(
+        `${skillFile} metadata.version changed from ${baseVersion} to ${currentVersion}`,
+      );
     }
   }
 
-  if (reasons.length > 0 && candidates.size === 0) {
-    errors.push("Release intent was detected, but no release version candidate was found.");
-  }
-
-  if (candidates.size > 1) {
-    const versions = [...candidates.entries()]
-      .map(([version, versionReasons]) => `v${version} (${versionReasons.join(", ")})`)
-      .join("; ");
-    errors.push(`Release metadata points at multiple versions: ${versions}`);
+  if (skillReasons.length > 0) {
+    reasons.push(...skillReasons);
+    if (!packageChanged) {
+      errors.push(
+        `Public skill changes require a package.json version bump: ${skillReasons.join("; ")}`,
+      );
+    }
   }
 }
 
@@ -178,7 +243,7 @@ if (reasons.length === 0) {
   }
   console.log("No release intent detected.");
 } else {
-  const releaseVersion = [...candidates.keys()][0];
+  const releaseVersion = packageVersion(readTargetFile("package.json", args.headRef));
   const releaseReasons = reasons.join("; ");
   if (args.githubOutput) {
     writeGithubOutput({

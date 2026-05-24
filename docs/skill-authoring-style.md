@@ -14,7 +14,9 @@ Recommended for promoted and incubator skills in this repo:
 - `license: Apache-2.0`
 - `metadata.author: stark-ai-de`
 - `metadata.category: <category>`
-- `metadata.version: "0.1.0"`
+- `metadata.version` as the skill's own `x.y.z` semver; new promoted and incubator skills may start at `"0.1.0"`
+
+Increase a promoted skill's `metadata.version` when its public instructions, references, scripts, or behavior change. Leave unchanged promoted skills at their current version even when `package.json` is bumped for a repository release.
 
 Descriptions are routing rules. Include the concrete workflow, trigger terms, and exclusions when important. Keep descriptions under 500 characters when possible and never over 1024 characters.
 

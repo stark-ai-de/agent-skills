@@ -27,6 +27,7 @@ if (parts.length !== 2) {
 
 const [category, skillName] = parts;
 const namePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const initialSkillVersion = "0.1.0";
 
 if (!namePattern.test(category)) {
   console.error("Category must use lowercase letters, numbers, and hyphens.");
@@ -49,7 +50,7 @@ if (fs.existsSync(skillDir)) {
 fs.mkdirSync(skillDir, { recursive: true });
 fs.writeFileSync(
   skillFile,
-  `---\nname: ${skillName}\ndescription: Describe the workflow clearly. Use when the user asks for specific trigger terms related to ${skillName}. Do not use when another focused skill owns the task.\nlicense: Apache-2.0\nmetadata:\n  author: stark-ai-de\n  category: ${category}\n${rootArg ? "  internal: true\n" : ""}  version: "0.1.0"\n---\n\n# ${skillName
+  `---\nname: ${skillName}\ndescription: Describe the workflow clearly. Use when the user asks for specific trigger terms related to ${skillName}. Do not use when another focused skill owns the task.\nlicense: Apache-2.0\nmetadata:\n  author: stark-ai-de\n  category: ${category}\n${rootArg ? "  internal: true\n" : ""}  version: "${initialSkillVersion}"\n---\n\n# ${skillName
     .split("-")
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(

@@ -99,37 +99,45 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 - `npm run validate` passes.
 - `npx skills@latest add ./skills --list` works from the local checkout.
 - At least one promoted skill can be locally installed after maintainer approval.
-- GitHub Actions validation, prepare release, and publish release workflows are configured.
+- GitHub Actions validation and publish release workflows are configured.
 
 ## Release Process
 
-Releases use a manual prepare workflow and a guarded publish workflow so version changes are reviewable before tags exist.
+Releases are prepared in the same pull request that changes the public catalog, then published manually from `main`.
 
-### Prepare Release
+### Prepare In The Change PR
 
-Run the `Prepare Release` workflow with:
+Public skill versions are independent from the repository package version:
 
-- `version`: semantic version without a leading `v`
-- `release_kind`: `initial`, `patch`, `minor`, or `major`
-- `dry_run`: keep `true` until the prepared release files and validation look right
+- New promoted skills may start at `metadata.version: "0.1.0"`.
+- Changed promoted skills must increase their own `metadata.version`.
+- Unchanged promoted skills keep their existing `metadata.version`.
+- The repository `package.json` version represents the public catalog release and must increase when public skills are added, removed, or their own versions increase.
 
-The workflow validates the repo, prepares release files in the ephemeral runner, validates the prepared tree, and opens or updates a `release/v<version>` PR only when `dry_run` is `false`.
-
-If GitHub does not run normal PR CI for the generated branch, manually dispatch the `Validate` workflow for the release branch before merging.
-
-Equivalent local dry run:
+Use the local helper when preparing the package and changelog release files:
 
 ```bash
-node scripts/prepare-release.mjs --version 0.1.0 --dry-run
+NEXT_VERSION=0.2.1
+node scripts/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
+node scripts/prepare-release.mjs --version "$NEXT_VERSION"
+```
+
+The helper updates only `package.json` and `CHANGELOG.md`. Bump changed public skill `metadata.version` values directly in the same PR.
+
+Validate the release contract locally:
+
+```bash
+node scripts/check-release-intent.mjs --base-ref origin/main
+node scripts/validate-release.mjs --base-ref origin/main
 ```
 
 ### Publish Release
 
-After the release PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
+After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
 The workflow reads the release version from `package.json`. It validates the repo, checks release invariants, and prints the version it would release. It creates an annotated tag and GitHub Release only when manually dispatched with `dry_run: false`.
 
-Release intent means a change updated `package.json` version, added a `CHANGELOG.md` release heading, or changed a public skill `metadata.version`. Pull request validation runs release validation for those changes so partial release preparation fails before merge.
+Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
 Use manual dispatch with `dry_run: true` if you want to rerun the same readiness check. Use `dry_run: false` only after maintainer approval.
 
@@ -147,6 +155,7 @@ Do not generate custom per-skill zip files in v1. GitHub Releases provide source
 ```bash
 npx skills add https://github.com/stark-ai-de/agent-skills --list
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
 ```
 
 ## Release Update Process
@@ -156,12 +165,10 @@ npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-in
 3. Run `pnpm format:check` and `pnpm lint`.
 4. Run `npx skills add ./skills --list` locally.
 5. Run `npm run smoke:install`.
-6. Update `CHANGELOG.md`.
+6. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.
 7. Add an ADR only if a decision changed.
-8. Merge changes through a PR.
-9. Run `Prepare Release`.
-10. Review and merge the release PR.
-11. Confirm the release-intent PR gate passed.
-12. Run `Publish Release` manually with `dry_run: true`.
-13. Run `Publish Release` manually with `dry_run: false`.
-14. Verify public install.
+8. Confirm the release-intent PR gate passed.
+9. Merge changes through a PR.
+10. Run `Publish Release` manually with `dry_run: true`.
+11. Run `Publish Release` manually with `dry_run: false`.
+12. Verify public install.
