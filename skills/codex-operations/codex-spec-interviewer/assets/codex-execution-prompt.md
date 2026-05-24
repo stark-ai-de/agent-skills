@@ -9,9 +9,10 @@ Implement the attached or referenced spec exactly, with minimal scope creep and 
 # Instructions
 
 - Treat the spec as the primary task contract.
-- If the spec was saved in the repository, read that file from disk before editing.
+- Read the spec from `{{SPEC_PATH}}` when a path is provided; otherwise use the attached spec content.
 - Treat the source challenge findings as part of the task contract.
 - Treat referenced ADRs and ADR gate results as architectural constraints.
+- Treat the user verification section as the boundary of approved scope.
 - Read repository instructions such as `AGENTS.md` before editing.
 - For medium or larger work, create and maintain a short plan before making code changes.
 - Prefer the repository's existing patterns and abstractions over inventing new ones.

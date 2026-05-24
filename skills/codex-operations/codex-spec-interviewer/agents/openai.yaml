@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex Spec Interviewer"
-  short_description: "Interviews, challenges, ADR-gates, and saves specs"
-  default_prompt: "Use $codex-spec-interviewer to interview me, source-check the requirements, ADR-gate durable decisions, and save a Codex-ready implementation spec."
+  short_description: "Interviews, verifies, ADR-gates, and saves Codex-ready specs"
+  default_prompt: "Use $codex-spec-interviewer to interview me, source-check the requirements, ADR-gate durable decisions, verify the final scope, and save a Codex-ready implementation spec."
 policy:
   allow_implicit_invocation: true
 dependencies:

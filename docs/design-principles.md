@@ -22,6 +22,8 @@ Maintainer skills should produce concrete outputs: review reports, triage decisi
 
 Avoid final responses that only say a task is done.
 
+For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs.md).
+
 ## Public Safety
 
 Public skills must be inspectable and safe by default. Avoid destructive scripts, private data, hidden network actions, copied proprietary text, and broad automation that mutates live systems without explicit approval.
@@ -38,4 +40,6 @@ Skills use the common Agent Skills structure: a folder with required `SKILL.md` 
 
 ## Decision Records
 
-Use short ADRs in `docs/adr/` for long-lived repo decisions such as format standards, publishing process, validation rules, license changes, or major category changes. Do not write ADRs for typo fixes, minor copy edits, or routine skill additions.
+Use short ADRs in `docs/adrs/` for long-lived repo decisions such as format standards, publishing process, validation rules, license changes, or major category changes. Do not write ADRs for typo fixes, minor copy edits, or routine skill additions.
+
+For implementation spec linkage to ADRs, see [`docs/specs.md`](specs.md).

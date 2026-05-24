@@ -13,6 +13,8 @@ A passing standard output should include:
 - ADR gate result,
 - final verification checkpoint,
 - artifact paths and persistence status,
+- user verification,
+- persisted artifact path,
 - design notes,
 - task breakdown,
 - validation commands,

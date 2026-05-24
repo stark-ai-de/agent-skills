@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const adrDir = path.join(root, "docs", "adr");
+const adrDir = path.join(root, "docs", "adrs");
 const templatePath = path.join(adrDir, "TEMPLATE.md");
 const [title] = process.argv.slice(2);
 
@@ -22,12 +22,12 @@ function slugify(value) {
 if (!title) usage();
 
 if (!fs.existsSync(adrDir)) {
-  console.error("docs/adr directory is missing");
+  console.error("docs/adrs directory is missing");
   process.exit(1);
 }
 
 if (!fs.existsSync(templatePath)) {
-  console.error("docs/adr/TEMPLATE.md is missing");
+  console.error("docs/adrs/TEMPLATE.md is missing");
   process.exit(1);
 }
 

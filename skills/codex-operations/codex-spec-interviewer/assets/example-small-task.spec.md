@@ -1,6 +1,7 @@
 ---
 title: "Add CSV export to admin users table"
 slug: "admin-users-csv-export"
+artifact_path: "docs/specs/admin-users-csv-export-spec.md"
 mode: "compact"
 status: "draft"
 owner: "admin-platform"
@@ -91,15 +92,6 @@ Allow admins to export the currently filtered users table as a CSV file from the
 - ADR gate result:
   - no durable architectural decision identified
 
-## Artifact plan
-
-- Spec path: `docs/specs/admin-users-csv-export-spec.md`
-- Destination basis: existing `docs/specs/` convention
-- Explicit confirmation needed: no
-- Spec persistence: saved
-- Existing file overwrite needed: no
-- ADR paths: none
-
 ## Validation
 
 ```bash
@@ -107,15 +99,6 @@ pnpm lint
 pnpm test
 pnpm exec playwright test admin-users-export.spec.ts
 ```
-
-## Verification checkpoint
-
-- Scope/non-goals confirmed: yes
-- Non-blocking unknowns accepted: exact column list can be confirmed during implementation
-- Blocking decisions: none
-- ADR result reviewed: yes
-- Spec saved: yes
-- ADR persistence needed: no
 
 ## Done when
 

@@ -1,6 +1,7 @@
 ---
 title: "<short human-readable title>"
 slug: "<kebab-case-slug>"
+artifact_path: "docs/specs/<kebab-case-slug>-spec.md"
 mode: "compact"
 status: "draft"
 owner: "<person-or-team>"
@@ -25,7 +26,6 @@ source_request: "<original request>"
 
 - Relevant files or areas:
 - Existing commands or conventions:
-- Artifact path:
 - Unknown repo facts marked as unspecified:
 
 ## Requirements

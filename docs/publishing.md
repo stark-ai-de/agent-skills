@@ -35,8 +35,8 @@ adr
 Use:
 
 ```bash
-npx skills add stark-ai-de/agent-skills --list
-npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills add https://github.com/stark-ai-de/agent-skills --list
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
 ## Local Smoke Test
@@ -84,7 +84,7 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 - CONTRIBUTING.md exists.
 - CHANGELOG.md exists.
 - AGENTS.md exists.
-- `docs/adr/` exists with initial ADRs.
+- `docs/adrs/` exists with initial ADRs.
 - Every public and incubator skill has `SKILL.md`.
 - Every public and incubator skill name matches its folder name.
 - Every public and incubator skill follows agentskills.io naming constraints.
@@ -145,8 +145,8 @@ node scripts/print-release-notes.mjs
 Do not generate custom per-skill zip files in v1. GitHub Releases provide source archives for each tag, and normal installation uses the skills CLI:
 
 ```bash
-npx skills add stark-ai-de/agent-skills --list
-npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills add https://github.com/stark-ai-de/agent-skills --list
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
 ```
 
 ## Release Update Process

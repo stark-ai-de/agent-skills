@@ -49,10 +49,11 @@ metadata:
 
 ## ADR Rules
 
-- Add an ADR when a repo-level decision changes format, publishing, validation, license, layout, or maintainer policy.
-- Do not add ADRs for typo fixes, tiny copy edits, routine skill additions, or one-off implementation details.
-- Keep ADRs under 250 words and use `docs/adr/TEMPLATE.md`.
-- After initial setup, do not rewrite accepted ADRs. Supersede them with a new ADR.
+Follow [`docs/adrs.md`](docs/adrs.md) for ADR scope, naming, status values, word limits, and index updates.
+
+## Spec Rules
+
+Follow [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples, ADR linkage, safety review, and repo-facing documentation update rules.
 
 ## Validation
 
@@ -96,7 +97,7 @@ pnpm lint
 
 - [ ] README includes install, update, and compatibility sections.
 - [ ] `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, and `AGENTS.md` exist.
-- [ ] `docs/adr/` exists and ADR validation passes.
+- [ ] `docs/adrs/` exists and ADR validation passes.
 - [ ] GitHub Actions validation is configured.
 - [ ] No upstream helper skill is vendored into `skills/`.
 - [ ] Incubator skills are not listed by public install discovery.

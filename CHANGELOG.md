@@ -6,7 +6,8 @@
 
 ### Changed
 
-- Tightened `codex-spec-interviewer` so final specs are verified, convention-aware, and saved by default while ambiguous destinations and ADR files remain confirmation-gated.
+- Updated `codex-spec-interviewer` to require user-verified finalization, convention-aware persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
+- Documented the repository policy for implementation specs in `docs/specs/` and ADRs in `docs/adrs/`.
 
 ### Fixed
 

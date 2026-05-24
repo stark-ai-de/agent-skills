@@ -21,3 +21,5 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 - `cases/direct-implementation-negative.md`
 
 Use `rubric.md` to grade outputs. `runs/` stores run summaries and evidence.
+
+Passing outputs must include a user-verified finalization checkpoint and persisted spec/ADR artifact paths, not only chat-rendered drafts.
