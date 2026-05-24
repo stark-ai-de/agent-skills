@@ -7,6 +7,8 @@
   "oxc.useExecPath": true,
   "oxc.path.oxfmt": "node_modules/oxfmt/dist/cli.js",
   "oxc.path.oxlint": "node_modules/oxlint/dist/cli.js",
+  "actionlint.executable": "node_modules/.bin/github-actionlint",
+  "actionlint.runTrigger": "onType",
   "json.schemaDownload.enable": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit",

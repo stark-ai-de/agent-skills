@@ -7,7 +7,7 @@ Gist: Releases should be automated but explicitly triggered.
 
 ## Decision
 
-We will use manual GitHub Actions workflows to prepare release PRs, create tags, and publish GitHub Releases.
+We will use manual GitHub Actions workflows to prepare release PRs, create tags, and publish GitHub Releases. Pull requests with release-intent metadata must pass release validation before merge.
 
 ## Why
 
@@ -24,6 +24,7 @@ We will use manual GitHub Actions workflows to prepare release PRs, create tags,
 ## Consequences
 
 - Good: Releases become repeatable and auditable.
+- Good: Partial release preparation fails at the PR gate.
 - Tradeoff: Maintainers still approve each release step.
 - Risk: Generated release PRs may need manual validation unless a GitHub App token is added.
 

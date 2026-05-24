@@ -13,9 +13,6 @@ on:
         required: true
         default: true
         type: boolean
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read

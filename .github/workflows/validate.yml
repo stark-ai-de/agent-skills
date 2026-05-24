@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -30,5 +32,14 @@ jobs:
       - run: pnpm format:check
 
       - run: pnpm lint
+
+      - name: Check release intent
+        id: release-intent
+        if: ${{ github.event_name == 'pull_request' }}
+        run: node scripts/check-release-intent.mjs --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
+
+      - name: Validate planned release
+        if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
+        run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}"
 
       - run: npx skills@latest add . --list

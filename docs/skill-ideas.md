@@ -20,6 +20,8 @@ IDs are stable references. Add new ideas with the next ID instead of renumbering
 | IDEA-008 | [Skill Update Notifier](#idea-008-skill-update-notifier)                                   | `skill-maintenance`     | `skill-installation-support` | Notify users about available skill updates before use.                     |
 | IDEA-009 | [Commit Syntax Preference Manager](#idea-009-commit-syntax-preference-manager)             | `repo-maintenance`      | IDEA-007                     | Capture and enforce preferred commit message conventions.                  |
 | IDEA-010 | [WASM Upgrade Advisor](#idea-010-wasm-upgrade-advisor)                                     | `engineering-workflows` | `prototype-spike`            | Recommend WASM ports only when workload shape justifies them.              |
+| IDEA-011 | [Release Changelog Operator](#idea-011-release-changelog-operator)                         | `repo-maintenance`      | None                         | Prepare changelog entries and release readiness checks from repo evidence. |
+| IDEA-012 | [Stark AI Skills Setup Assistant](#idea-012-stark-ai-skills-setup-assistant)               | `skill-maintenance`     | IDEA-001                     | Help install and verify the `stark-ai-de/agent-skills` stack safely.       |
 
 ## IDEA-001: Skill Inventory Organizer
 
@@ -261,3 +263,51 @@ Teams can overuse WebAssembly for small JavaScript-native logic or miss high-val
 - Should this skill be advisory only, or should it scaffold worker boundaries and benchmark harnesses?
 - Which WASM libraries should be treated as default recommendations versus project-specific research targets?
 - How should it measure whether a WASM port improves user-perceived performance after serialization and worker overhead?
+
+## IDEA-011: Release Changelog Operator
+
+- **Status:** Idea
+- **Possible category:** `repo-maintenance`
+- **Related current skill:** None
+
+### Problem
+
+Maintainers often delay releases because changelog entries, release notes, version checks, validation commands, and approval boundaries are scattered across commits, PRs, issues, package metadata, and workflow docs.
+
+### Candidate Behavior
+
+- Inspect recent commits, merged PRs, issue links, package metadata, existing changelog style, and release workflow docs.
+- Draft changelog entries grouped by user impact, fixes, docs, internal maintenance, and breaking changes when the repo uses those categories.
+- Check release readiness gates, such as version bump, changelog section, validation status, tag naming, publish workflow inputs, and unresolved TODOs.
+- Produce a release checklist and copy-pasteable release notes without creating tags, releases, commits, or workflow dispatches automatically.
+- Require explicit approval before changing changelog files, version files, tags, releases, or CI/CD workflow state.
+
+### Open Questions
+
+- Should this be one release operator skill, or split into a changelog-only skill and a release-readiness skill?
+- Which sources should be authoritative when commit history, PR titles, issue labels, and changelog conventions disagree?
+- Should the first version target GitHub Releases and npm-style packages, or stay generic across repositories?
+
+## IDEA-012: Stark AI Skills Setup Assistant
+
+- **Status:** Idea
+- **Possible category:** `skill-maintenance`
+- **Related idea:** `IDEA-001: Skill Inventory Organizer`
+
+### Problem
+
+Users may want the `stark-ai-de/agent-skills` workflow available in a project or globally, but setup can be unclear across Codex, Claude Code, Cursor, OpenCode, and other runtimes with different local skill paths.
+
+### Candidate Behavior
+
+- Detect the current repo, installed agent runtimes, existing project-local skills, and global skill installs where paths are stable.
+- Recommend the correct `npx skills add https://github.com/stark-ai-de/agent-skills ...` command for the requested scope, agent, and skill selection.
+- Verify that `codex-spec-interviewer` or other selected Stark AI skills are discoverable after install.
+- Explain when to use project-local install, global install, `--copy`, or explicit `--agent` flags.
+- Require explicit approval before running install, update, remove, overwrite, or global mutation commands.
+
+### Open Questions
+
+- Should this be a public skill, or a repo-local helper for maintainers and Stark AI projects only?
+- Should it install only promoted public skills, or also support incubator skills behind an explicit internal flag?
+- How should it avoid confusing this repository's public catalog with ignored `.agents/skills/` helper installs?
