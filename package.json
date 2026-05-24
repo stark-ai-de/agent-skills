@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.2.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -50,7 +50,7 @@
   "scripts": {
     "list": "node scripts/list-skills.mjs",
     "list:incubator": "node scripts/list-incubator-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:adrs && node --check scripts/list-skills.mjs && node --check scripts/list-incubator-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && node --check scripts/prepare-release.mjs && node --check scripts/validate-release.mjs && node --check scripts/print-release-notes.mjs && bash -n incubator/skills/codex-operations/codex-memory-curator/scripts/*.sh",
+    "validate": "npm run validate:skills && npm run validate:adrs && npm run lint:actions && node --check scripts/list-skills.mjs && node --check scripts/list-incubator-skills.mjs && node --check scripts/validate-skills.mjs && node --check scripts/validate-adrs.mjs && node --check scripts/new-adr.mjs && node --check scripts/scaffold-skill.mjs && node --check scripts/smoke-install.mjs && node --check scripts/prepare-release.mjs && node --check scripts/validate-release.mjs && node --check scripts/print-release-notes.mjs && node --check scripts/check-release-intent.mjs && node --check scripts/lint-actions.mjs && bash -n incubator/skills/codex-operations/codex-memory-curator/scripts/*.sh",
     "release:prepare": "node scripts/prepare-release.mjs",
     "release:validate": "node scripts/validate-release.mjs",
     "release:notes": "node scripts/print-release-notes.mjs",
@@ -63,14 +63,16 @@
     "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --write .",
     "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --check .",
     "lint": "oxlint --config oxlint.json scripts",
+    "lint:actions": "node scripts/lint-actions.mjs",
     "lint:fix": "oxlint --config oxlint.json --fix scripts"
   },
   "devDependencies": {
+    "github-actionlint": "1.7.12",
     "oxfmt": "0.49.0",
     "oxlint": "1.64.0"
   },
   "engines": {
     "node": ">=22.13.0"
   },
-  "packageManager": "pnpm@11.0.9"
+  "packageManager": "pnpm@11.3.0"
 }

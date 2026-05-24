@@ -44,12 +44,11 @@ Include this result before the final spec:
 1. Draft exactly one architectural decision per ADR.
 2. Use the repo ADR template and word limit.
 3. Mark status as `Proposed` unless the maintainer explicitly accepts it.
-4. Persist the ADR to the repo's ADR folder before or with the implementation spec.
-5. Use the repo ADR filename pattern. If no pattern exists, use `NNNN-kebab-title.md` with the next sequential number.
-6. If the ADR folder is missing, ask the user whether to create `docs/adrs/` or use another path before writing.
-7. Update the ADR index when the repo has one.
-8. Reference the ADR from the implementation spec.
-9. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
+4. Use the repo ADR filename pattern. If no pattern exists, use `NNNN-kebab-title.md` with the next sequential number.
+5. If the ADR folder is missing, ask the user whether to create `docs/adrs/` or use another path before writing.
+6. Persist the ADR when required, report its path, and update the repo ADR index when one exists.
+7. Reference the ADR from the implementation spec.
+8. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
 
 ## Spec Linkage
 

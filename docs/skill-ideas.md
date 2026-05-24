@@ -23,6 +23,8 @@ IDs are stable references. Add new ideas with the next ID instead of renumbering
 | IDEA-011 | [Agent Output Budget Review](#idea-011-agent-output-budget-review)                         | `skill-maintenance`     | `skill-authoring-review`     | Check whether a skill's output contract is concise without losing safety.  |
 | IDEA-012 | [Safe Context File Compressor](#idea-012-safe-context-file-compressor)                     | `codex-operations`      | `codex-memory-curator`       | Reduce recurring context files only after safety and preservation checks.  |
 | IDEA-013 | [Commit Message Writer](#idea-013-commit-message-writer)                                   | `repo-maintenance`      | IDEA-009                     | Draft concise commit messages that match discovered repository convention. |
+| IDEA-014 | [Release Changelog Operator](#idea-014-release-changelog-operator)                         | `repo-maintenance`      | None                         | Prepare changelog entries and release readiness checks from repo evidence. |
+| IDEA-015 | [Stark AI Skills Setup Assistant](#idea-015-stark-ai-skills-setup-assistant)               | `skill-maintenance`     | IDEA-001                     | Help install and verify the `stark-ai-de/agent-skills` stack safely.       |
 
 ## IDEA-001: Skill Inventory Organizer
 
@@ -336,3 +338,51 @@ Agents often write commit messages that are too long, too generic, or mismatched
 - Should this be a standalone skill or an execution mode of `Commit Syntax Preference Manager`?
 - How should it handle repositories with multiple valid conventions?
 - Should validation include a deterministic commitlint check when the repo provides one?
+
+## IDEA-014: Release Changelog Operator
+
+- **Status:** Idea
+- **Possible category:** `repo-maintenance`
+- **Related current skill:** None
+
+### Problem
+
+Maintainers often delay releases because changelog entries, release notes, version checks, validation commands, and approval boundaries are scattered across commits, PRs, issues, package metadata, and workflow docs.
+
+### Candidate Behavior
+
+- Inspect recent commits, merged PRs, issue links, package metadata, existing changelog style, and release workflow docs.
+- Draft changelog entries grouped by user impact, fixes, docs, internal maintenance, and breaking changes when the repo uses those categories.
+- Check release readiness gates, such as version bump, changelog section, validation status, tag naming, publish workflow inputs, and unresolved TODOs.
+- Produce a release checklist and copy-pasteable release notes without creating tags, releases, commits, or workflow dispatches automatically.
+- Require explicit approval before changing changelog files, version files, tags, releases, or CI/CD workflow state.
+
+### Open Questions
+
+- Should this be one release operator skill, or split into a changelog-only skill and a release-readiness skill?
+- Which sources should be authoritative when commit history, PR titles, issue labels, and changelog conventions disagree?
+- Should the first version target GitHub Releases and npm-style packages, or stay generic across repositories?
+
+## IDEA-015: Stark AI Skills Setup Assistant
+
+- **Status:** Idea
+- **Possible category:** `skill-maintenance`
+- **Related idea:** `IDEA-001: Skill Inventory Organizer`
+
+### Problem
+
+Users may want the `stark-ai-de/agent-skills` workflow available in a project or globally, but setup can be unclear across Codex, Claude Code, Cursor, OpenCode, and other runtimes with different local skill paths.
+
+### Candidate Behavior
+
+- Detect the current repo, installed agent runtimes, existing project-local skills, and global skill installs where paths are stable.
+- Recommend the correct `npx skills add https://github.com/stark-ai-de/agent-skills ...` command for the requested scope, agent, and skill selection.
+- Verify that `codex-spec-interviewer` or other selected Stark AI skills are discoverable after install.
+- Explain when to use project-local install, global install, `--copy`, or explicit `--agent` flags.
+- Require explicit approval before running install, update, remove, overwrite, or global mutation commands.
+
+### Open Questions
+
+- Should this be a public skill, or a repo-local helper for maintainers and Stark AI projects only?
+- Should it install only promoted public skills, or also support incubator skills behind an explicit internal flag?
+- How should it avoid confusing this repository's public catalog with ignored `.agents/skills/` helper installs?

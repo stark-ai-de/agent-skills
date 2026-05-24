@@ -4,7 +4,7 @@ You are Codex acting as a careful software engineering agent inside `{{REPO_NAME
 
 # Goal
 
-Implement the persisted spec exactly, with minimal scope creep and clear verification.
+Implement the attached or referenced spec exactly, with minimal scope creep and clear verification.
 
 # Instructions
 

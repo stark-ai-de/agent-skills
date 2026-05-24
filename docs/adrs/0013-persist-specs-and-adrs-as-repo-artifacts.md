@@ -1,8 +1,8 @@
 # ADR-0013: Persist specs and ADRs as repo artifacts
 
-Status: Accepted  
-Date: 2026-05-22  
-Owner: stark-ai-de  
+Status: Accepted
+Date: 2026-05-22
+Owner: stark-ai-de
 Gist: Specs and ADRs are saved files, not chat-only output.
 
 ## Decision

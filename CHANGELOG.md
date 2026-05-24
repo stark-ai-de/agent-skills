@@ -6,11 +6,31 @@
 
 ### Changed
 
-- Renamed the public repository slug from `stark-ai-de/skills` to `stark-ai-de/agent-skills`.
-- Updated `codex-spec-interviewer` to require user-verified finalization, persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
+- Updated `codex-spec-interviewer` to require user-verified finalization, convention-aware persisted spec/ADR artifacts, predictable spec filenames, and repo-facing documentation updates when artifact policy or promotion state changes.
 - Documented the repository policy for implementation specs in `docs/specs/` and ADRs in `docs/adrs/`.
 
 ### Fixed
+
+### Deprecated
+
+### Removed
+
+## v0.1.1 - 2026-05-24
+
+### Added
+
+- Added release-intent detection so pull requests that partially change `package.json`, `CHANGELOG.md`, or public skill `metadata.version` must pass release validation.
+- Added GitHub Actions workflow linting to the local and CI validation gates.
+- Added Cursor and VS Code actionlint recommendations and workspace settings for inline workflow diagnostics.
+
+### Changed
+
+- Renamed the public repository slug from `stark-ai-de/skills` to `stark-ai-de/agent-skills`.
+- Kept `Publish Release` manual-only now that pull requests validate release intent before merge.
+
+### Fixed
+
+- Corrected `codex-spec-interviewer` release metadata to `0.1.1`.
 
 ### Deprecated
 

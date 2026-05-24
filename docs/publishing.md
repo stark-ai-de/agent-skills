@@ -125,9 +125,11 @@ node scripts/prepare-release.mjs --version 0.1.0 --dry-run
 
 ### Publish Release
 
-After the release PR is merged, the `Publish Release` workflow runs automatically on `main` as a dry-run release-readiness check.
+After the release PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
 The workflow reads the release version from `package.json`. It validates the repo, checks release invariants, and prints the version it would release. It creates an annotated tag and GitHub Release only when manually dispatched with `dry_run: false`.
+
+Release intent means a change updated `package.json` version, added a `CHANGELOG.md` release heading, or changed a public skill `metadata.version`. Pull request validation runs release validation for those changes so partial release preparation fails before merge.
 
 Use manual dispatch with `dry_run: true` if you want to rerun the same readiness check. Use `dry_run: false` only after maintainer approval.
 
@@ -159,6 +161,7 @@ npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-in
 8. Merge changes through a PR.
 9. Run `Prepare Release`.
 10. Review and merge the release PR.
-11. Confirm the automatic `Publish Release` dry run passed on `main`.
-12. Run `Publish Release` manually with `dry_run: false`.
-13. Verify public install.
+11. Confirm the release-intent PR gate passed.
+12. Run `Publish Release` manually with `dry_run: true`.
+13. Run `Publish Release` manually with `dry_run: false`.
+14. Verify public install.

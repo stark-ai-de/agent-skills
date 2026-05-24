@@ -4,6 +4,7 @@
     "EditorConfig.EditorConfig",
     "irongeek.vscode-env",
     "timonwong.shellcheck",
-    "eamodio.gitlens"
+    "eamodio.gitlens",
+    "jimeh.actionlint"
   ]
 }

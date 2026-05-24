@@ -16,4 +16,5 @@ This repository contains public Agent Skills.
 - Follow `docs/specs.md` for spec persistence, ADR linkage, filename examples, and repo-facing documentation update rules.
 - Do not copy copyrighted skill text from other repositories. Use them only as inspiration.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.
+- Do not stage files with `git add` unless the user explicitly asks.
 - Run `npm run validate` before finalizing changes.

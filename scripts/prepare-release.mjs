@@ -93,10 +93,15 @@ function updateChangelog(version, changed, dryRun) {
   const text = fs.readFileSync(file, "utf8");
   if (new RegExp(`^##\\s+v${version}(\\s|$)`, "m").test(text)) return;
 
-  const match = text.match(/^## Unreleased\n([\s\S]*?)(?=^##\s+|\s*$)/m);
-  if (!match) fail("CHANGELOG.md must contain a '## Unreleased' section.");
+  const heading = "## Unreleased\n";
+  const start = text.indexOf(heading);
+  if (start === -1) fail("CHANGELOG.md must contain a '## Unreleased' section.");
 
-  const unreleasedBody = match[1].trim();
+  const bodyStart = start + heading.length;
+  const rest = text.slice(bodyStart);
+  const nextRelease = rest.search(/^##\s+/m);
+  const bodyEnd = nextRelease === -1 ? text.length : bodyStart + nextRelease;
+  const unreleasedBody = text.slice(bodyStart, bodyEnd).trim();
   const emptyUnreleased = [
     "## Unreleased",
     "",
@@ -110,9 +115,9 @@ function updateChangelog(version, changed, dryRun) {
     "",
     "### Removed",
   ].join("\n");
-  const releaseBody = unreleasedBody || "- No changes recorded.";
+  const releaseBody = /^-\s+/m.test(unreleasedBody) ? unreleasedBody : "- No changes recorded.";
   const releaseBlock = `## v${version} - ${releaseDate()}\n\n${releaseBody}`;
-  const next = text.replace(match[0], `${emptyUnreleased}\n\n${releaseBlock}\n`);
+  const next = `${text.slice(0, start)}${emptyUnreleased}\n\n${releaseBlock}\n${text.slice(bodyEnd)}`;
 
   writeIfChanged(file, next, changed, dryRun);
 }

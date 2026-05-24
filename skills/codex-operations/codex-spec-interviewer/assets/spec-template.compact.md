@@ -63,12 +63,6 @@ source_request: "<original request>"
 - Requirements preserved:
 - ADR gate result:
 
-## User verification
-
-- Final checkpoint confirmed by:
-- Confirmation date:
-- Non-blocking open questions accepted:
-
 ## Validation
 
 ```bash

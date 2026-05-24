@@ -64,8 +64,8 @@ Ask one high-impact question at a time when the answer can change the next quest
 
 ## Final Verification
 
-Use this checkpoint before saving final artifacts:
-
-- Here is my current scope, non-goals, assumptions, risks, ADR result, validation plan, and artifact paths. Is anything material missing or wrong?
-- Are all listed open questions non-blocking for implementation, or should I keep interviewing?
-- Do you approve saving the spec to `<spec-path>` and any ADR to `<adr-path>`?
+- I found `<existing-spec-dir>` for specs and will use that convention unless you want a different destination.
+- I need confirmation for `<suggested-spec-dir-or-adr-path>` because the destination is missing, ambiguous, public/private sensitive, an overwrite, or an ADR write.
+- Here is the scope, non-goals, assumptions, risks, validation plan, ADR result, final spec path, and any required ADR path. Is anything material missing or wrong before I save the spec?
+- Which remaining unknowns are acceptable as non-blocking, and which should block implementation?
+- Do you approve saving the spec to `<spec-path>` and any ADR to `<adr-path>` when confirmation is required?

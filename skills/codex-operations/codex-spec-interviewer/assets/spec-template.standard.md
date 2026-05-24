@@ -117,6 +117,17 @@ source_request: "<original request>"
 - Verified scope/non-goals:
 - Non-blocking open questions accepted:
 
+## Artifact plan
+
+- Spec path:
+- Destination basis: existing convention/suggested/user-provided/declined
+- Explicit confirmation needed: yes/no
+- Spec persistence: saved/declined/blocked
+- Existing file overwrite needed: yes/no
+- ADR paths:
+- ADR persistence: none/saved/declined/blocked
+- ADR index updates needed:
+
 ## Validation
 
 ```bash
@@ -131,6 +142,18 @@ source_request: "<original request>"
 - Verify:
 - Verify:
 - Verify:
+
+## Verification checkpoint
+
+- Scope and non-goals confirmed: yes/no
+- Assumptions reviewed:
+- Non-blocking unknowns accepted: yes/no
+- Blocking decisions:
+- Risks and rollout reviewed: yes/no
+- Validation plan reviewed: yes/no
+- ADR result reviewed: yes/no
+- Spec saved: yes/no
+- ADR persistence needed: yes/no
 
 ## Risks and rollout
 

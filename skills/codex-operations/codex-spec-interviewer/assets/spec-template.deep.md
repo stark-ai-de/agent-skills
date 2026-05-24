@@ -121,6 +121,18 @@ phases: ["phase-1", "phase-2"]
 
 - `path/to/avoid`
 
+## Artifact plan
+
+- Spec path:
+- Destination basis: existing convention/suggested/user-provided/declined
+- Explicit confirmation needed: yes/no
+- Spec persistence: saved/declined/blocked
+- Existing file overwrite needed: yes/no
+- ADR paths:
+- ADR persistence: none/saved/declined/blocked
+- ADR index updates needed:
+- Companion execution prompt path or embedding:
+
 ## Task breakdown
 
 ### Phase 1
@@ -157,6 +169,18 @@ phases: ["phase-1", "phase-2"]
 - Regression hotspots:
 - Security review points:
 - Migration sanity checks:
+
+## Verification checkpoint
+
+- Scope and non-goals confirmed: yes/no
+- Assumptions reviewed:
+- Non-blocking unknowns accepted: yes/no
+- Blocking decisions:
+- Risks and rollout reviewed: yes/no
+- Validation plan reviewed: yes/no
+- ADR result reviewed: yes/no
+- Spec saved: yes/no
+- ADR persistence needed: yes/no
 
 ## Rollout and rollback
 
