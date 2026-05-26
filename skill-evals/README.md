@@ -13,6 +13,7 @@ Use this folder for:
 
 ## Current Proof Folders
 
+- [`animated-readme-logo`](animated-readme-logo/README.md)
 - [`codex-memory-curator`](codex-memory-curator/README.md)
 - [`codex-spec-interviewer`](codex-spec-interviewer/README.md)
 
