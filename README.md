@@ -7,11 +7,14 @@
 [![skills.sh](https://skills.sh/b/stark-ai-de/agent-skills)](https://www.skills.sh/stark-ai-de/agent-skills)
 [![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
 [![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
+[![GitHub Pages](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml)
 [![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
 Public Agent Skills for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 
 Skills in this repository are reviewed before they are added to the public catalog. Draft and experimental skills live in the incubator until they have enough evaluation proof and maintenance clarity.
+
+Browse the generated GitHub Pages catalog at <https://stark-ai-de.github.io/agent-skills/>.
 
 ## Install
 
@@ -58,6 +61,7 @@ The public catalog lives under [`skills/`](skills/README.md). Candidate, experim
 - [`docs/specs.md`](docs/specs.md) - repository policy for persisted implementation specs.
 - [`docs/adrs/`](docs/adrs/README.md) - short decision record files for repo-level policy.
 - [`docs/adrs.md`](docs/adrs.md) - ADR policy and index.
+- [`site/`](site/) - Astro static GitHub Pages site generated from public and incubator `SKILL.md` files.
 - `.agents/skills/` - ignored maintainer-local helper installs; not part of this catalog.
 
 ## Specs and ADRs
@@ -108,6 +112,7 @@ Common commands:
 | `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts.           |
 | `npm run smoke:install`                 | Test public install discovery from a clean copy without `.agents/`. |
 | `npx skills@latest add ./skills --list` | Check local public skill discovery.                                 |
+| `pnpm --filter ./site build`            | Build the generated GitHub Pages catalog.                           |
 | `pnpm format:check`                     | Check formatting.                                                   |
 | `pnpm lint`                             | Lint scripts.                                                       |
 | `node scripts/validate-release.mjs`     | Validate release readiness from `package.json`.                     |

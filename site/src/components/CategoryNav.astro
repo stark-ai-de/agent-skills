@@ -1,0 +1,28 @@
+---
+import type { CategoryGroup } from "../lib/skills";
+import { withBase } from "../lib/site";
+
+interface Props {
+  basePath?: string;
+  groups: CategoryGroup[];
+  label: string;
+}
+
+const { basePath, groups, label } = Astro.props;
+
+const hrefForCategory = (category: string) =>
+  basePath ? `${withBase(basePath)}#${category}` : `#${category}`;
+---
+
+{
+  groups.length > 0 && (
+    <nav class="category-nav" aria-label={label}>
+      {groups.map((group) => (
+        <a href={hrefForCategory(group.category)}>
+          <span>{group.label}</span>
+          <small>{group.skills.length}</small>
+        </a>
+      ))}
+    </nav>
+  )
+}

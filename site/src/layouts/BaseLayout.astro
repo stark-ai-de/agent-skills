@@ -1,0 +1,314 @@
+---
+import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import {
+  absoluteSiteUrl,
+  DEFAULT_OG_IMAGE_HEIGHT,
+  DEFAULT_OG_IMAGE_PATH,
+  DEFAULT_OG_IMAGE_WIDTH,
+  GITHUB_REPO_URL,
+  SEO_KEYWORDS,
+  SITE_DESCRIPTION,
+  SITE_TITLE,
+  toSeoDescription,
+  withBase
+} from "../lib/site";
+import { baseStructuredData, type JsonLdNode } from "../lib/seo";
+
+interface Props {
+  canonicalPath?: string;
+  description?: string;
+  imageAlt?: string;
+  imagePath?: string;
+  noindex?: boolean;
+  ogType?: string;
+  structuredData?: JsonLdNode[];
+  title?: string;
+}
+
+const {
+  canonicalPath = "/",
+  description = SITE_DESCRIPTION,
+  imageAlt = `${SITE_TITLE} catalog preview`,
+  imagePath = DEFAULT_OG_IMAGE_PATH,
+  noindex = false,
+  ogType = "website",
+  structuredData = [],
+  title
+} = Astro.props;
+
+const pageTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const metaDescription = toSeoDescription(description);
+const ogImage = absoluteSiteUrl(imagePath);
+const manifestUrl = withBase("/site.webmanifest");
+const robotsContent = noindex ? "noindex, nofollow" : "index, follow";
+const googlebotContent = noindex
+  ? robotsContent
+  : "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1";
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [...baseStructuredData(metaDescription), ...structuredData]
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>
+      (() => {
+        const storageKey = "agent-skills-theme";
+        const root = document.documentElement;
+
+        const readStoredTheme = () => {
+          try {
+            const value = window.localStorage.getItem(storageKey);
+            return value === "dark" || value === "light" ? value : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        const theme = readStoredTheme() ?? preferredTheme;
+
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={metaDescription} />
+    <meta name="application-name" content={SITE_TITLE} />
+    <meta name="author" content="stark AI" />
+    <meta name="creator" content="stark AI" />
+    <meta name="publisher" content="stark AI" />
+    <meta name="keywords" content={SEO_KEYWORDS.join(", ")} />
+    <meta name="robots" content={robotsContent} />
+    <meta name="googlebot" content={googlebotContent} />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f8f9ff" data-theme-color />
+    <link rel="author" href="https://stark-ai.de/" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang="en" href={canonicalUrl} />
+    <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+    <link rel="manifest" href={manifestUrl} />
+    <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" sizes="any" />
+    <link rel="alternate icon" href={withBase("/favicon.ico")} type="image/x-icon" sizes="16x16" />
+    <link
+      rel="apple-touch-icon"
+      href={withBase("/apple-icon.png")}
+      type="image/png"
+      sizes="204x204"
+    />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:secure_url" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(DEFAULT_OG_IMAGE_WIDTH)} />
+    <meta property="og:image:height" content={String(DEFAULT_OG_IMAGE_HEIGHT)} />
+    <meta property="og:image:alt" content={imageAlt} />
+    {ogType === "article" && <meta property="article:author" content="stark AI" />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={metaDescription} />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={imageAlt} />
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <nav class="topbar" aria-label="Primary navigation">
+        <a class="brand-link" href={withBase("/")}>
+          <img
+            src={withBase("/stark-ai-de-agent-skills-logo.svg")}
+            alt="Agent Skills by stark AI"
+            width="217"
+            height="72"
+          />
+        </a>
+        <div class="nav-links">
+          <a href={withBase("/skills/")}>Public</a>
+          <a href={withBase("/incubator/")}>Incubator</a>
+          <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">GitHub</a>
+        </div>
+        <ThemeToggle />
+      </nav>
+    </header>
+    <main id="content">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div>
+        <img src={withBase("/logo-alternative.svg")} alt="" width="56" height="56" loading="lazy" />
+        <p>Agent Skills by stark AI</p>
+      </div>
+      <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">Source on GitHub</a>
+    </footer>
+    <script is:inline>
+      (() => {
+        const themeStorageKey = "agent-skills-theme";
+        const resetTimers = new WeakMap();
+        const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+        const root = document.documentElement;
+
+        const readStoredTheme = () => {
+          try {
+            const value = window.localStorage.getItem(themeStorageKey);
+            return value === "dark" || value === "light" ? value : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const writeStoredTheme = (theme) => {
+          try {
+            window.localStorage.setItem(themeStorageKey, theme);
+          } catch {
+            return;
+          }
+        };
+
+        const getPreferredTheme = () => (themeMedia.matches ? "dark" : "light");
+
+        const updateThemeControls = (theme) => {
+          const nextTheme = theme === "dark" ? "light" : "dark";
+          const label = `Switch to ${nextTheme} mode`;
+
+          document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+            if (!(button instanceof HTMLButtonElement)) {
+              return;
+            }
+
+            button.setAttribute("aria-label", label);
+            button.setAttribute("aria-pressed", String(theme === "dark"));
+            button.title = label;
+
+            const labelNode = button.querySelector("[data-theme-toggle-label]");
+            if (labelNode) {
+              labelNode.textContent = label;
+            }
+          });
+        };
+
+        const applyTheme = (theme, persist = false) => {
+          root.dataset.theme = theme;
+          root.style.colorScheme = theme;
+
+          const themeColor = document.querySelector("[data-theme-color]");
+          if (themeColor instanceof HTMLMetaElement) {
+            themeColor.content = theme === "dark" ? "#071422" : "#f8f9ff";
+          }
+
+          if (persist) {
+            writeStoredTheme(theme);
+          }
+
+          updateThemeControls(theme);
+        };
+
+        applyTheme(readStoredTheme() ?? root.dataset.theme ?? getPreferredTheme());
+
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const button = target.closest("[data-theme-toggle]");
+          if (!(button instanceof HTMLButtonElement)) {
+            return;
+          }
+
+          const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(nextTheme, true);
+        });
+
+        themeMedia.addEventListener("change", () => {
+          if (!readStoredTheme()) {
+            applyTheme(getPreferredTheme());
+          }
+        });
+
+        const copyWithFallback = async (text) => {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+          }
+
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.inset = "0 auto auto -9999px";
+          document.body.append(textArea);
+          textArea.select();
+
+          try {
+            document.execCommand("copy");
+          } finally {
+            textArea.remove();
+          }
+        };
+
+        document.addEventListener("click", async (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const button = target.closest("[data-copy-command]");
+          if (!(button instanceof HTMLButtonElement)) {
+            return;
+          }
+
+          const command = button.getAttribute("data-copy-command");
+          if (!command) {
+            return;
+          }
+
+          const status = button.querySelector("[data-copy-status]");
+          clearTimeout(resetTimers.get(button));
+          delete button.dataset.copyFailed;
+
+          try {
+            await copyWithFallback(command);
+            button.dataset.copied = "true";
+            if (status) {
+              status.textContent = "Copied command";
+            }
+          } catch {
+            delete button.dataset.copied;
+            button.dataset.copyFailed = "true";
+            if (status) {
+              status.textContent = "Copy failed";
+            }
+          }
+
+          resetTimers.set(
+            button,
+            window.setTimeout(() => {
+              delete button.dataset.copied;
+              delete button.dataset.copyFailed;
+              if (status) {
+                status.textContent = "Copy command";
+              }
+            }, 1800)
+          );
+        });
+      })();
+    </script>
+  </body>
+</html>

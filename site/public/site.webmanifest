@@ -1,0 +1,35 @@
+{
+  "name": "Agent Skills by stark AI",
+  "short_name": "Agent Skills",
+  "description": "Public and incubator Agent Skills from stark-ai-de, generated from SKILL.md source files.",
+  "start_url": "/agent-skills/",
+  "scope": "/agent-skills/",
+  "display": "standalone",
+  "background_color": "#f8f9ff",
+  "theme_color": "#0021c7",
+  "categories": ["business", "developer-tools", "productivity", "technology"],
+  "lang": "en-US",
+  "id": "/agent-skills/",
+  "icons": [
+    {
+      "src": "/agent-skills/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/agent-skills/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/agent-skills/apple-icon.png",
+      "sizes": "204x204",
+      "type": "image/png"
+    },
+    {
+      "src": "/agent-skills/logo-alternative.png",
+      "sizes": "2048x2048",
+      "type": "image/png"
+    }
+  ]
+}

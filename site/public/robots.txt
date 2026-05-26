@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: stark-ai-de.github.io
+Sitemap: https://stark-ai-de.github.io/agent-skills/sitemap-index.xml

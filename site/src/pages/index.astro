@@ -1,0 +1,122 @@
+---
+import CategoryNav from "../components/CategoryNav.astro";
+import CommandBlock from "../components/CommandBlock.astro";
+import SkillCard from "../components/SkillCard.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+  breadcrumbStructuredData,
+  skillListStructuredData,
+  webPageStructuredData
+} from "../lib/seo";
+import { getIncubatorSkills, getPublicSkills, groupByCategory } from "../lib/skills";
+import { absoluteSiteUrl, GITHUB_REPO_URL, SITE_DESCRIPTION, withBase } from "../lib/site";
+
+const [publicSkills, incubatorSkills] = await Promise.all([
+  getPublicSkills(),
+  getIncubatorSkills()
+]);
+const publicGroups = groupByCategory(publicSkills);
+const incubatorGroups = groupByCategory(incubatorSkills);
+const canonicalUrl = absoluteSiteUrl("/");
+const structuredData = [
+  webPageStructuredData({
+    canonicalUrl,
+    description: SITE_DESCRIPTION,
+    title: "Agent Skills Catalog"
+  }),
+  breadcrumbStructuredData([{ name: "Catalog", url: canonicalUrl }]),
+  skillListStructuredData([...publicSkills, ...incubatorSkills], canonicalUrl)
+];
+---
+
+<BaseLayout
+  title="Catalog"
+  description={SITE_DESCRIPTION}
+  canonicalPath="/"
+  structuredData={structuredData}
+>
+  <section class="hero-section">
+    <div class="hero-copy">
+      <p class="eyebrow">stark-ai-de/agent-skills</p>
+      <h1>Agent Skills Catalog</h1>
+      <p>
+        Public Codex-ready skills and clearly separated incubator candidates,
+        generated directly from repository <code>SKILL.md</code> files.
+      </p>
+      <div class="hero-actions">
+        <a class="button button--primary" href={withBase("/skills/")}>Browse public skills</a>
+        <a class="button button--secondary" href={withBase("/incubator/")}>Review incubator</a>
+      </div>
+    </div>
+    <div class="hero-panel" aria-label="Catalog summary">
+      <img
+        class="hero-panel__logo"
+        src={withBase("/stark-ai-de-agent-skills-logo.svg")}
+        alt=""
+        width="300"
+        height="100"
+      />
+      <dl>
+        <div>
+          <dt>Public</dt>
+          <dd>{publicSkills.length}</dd>
+        </div>
+        <div>
+          <dt>Incubator</dt>
+          <dd>{incubatorSkills.length}</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>SKILL.md</dd>
+        </div>
+      </dl>
+      <CommandBlock
+        command="npx skills add https://github.com/stark-ai-de/agent-skills --list"
+        label="List public skills command"
+      />
+    </div>
+  </section>
+
+  <section class="catalog-band">
+    <header class="section-heading">
+      <p>Promoted catalog</p>
+      <h2>Public skills</h2>
+      <a href={withBase("/skills/")}>View all public skills</a>
+    </header>
+    <CategoryNav basePath="/skills/" groups={publicGroups} label="Public skill categories" />
+    <div class="skill-grid">
+      {publicSkills.map((skill) => <SkillCard skill={skill} />)}
+    </div>
+  </section>
+
+  <section class="catalog-band catalog-band--muted">
+    <header class="section-heading">
+      <p>Candidate catalog</p>
+      <h2>Incubator skills</h2>
+      <a href={withBase("/incubator/")}>View incubator skills</a>
+    </header>
+    <CategoryNav
+      basePath="/incubator/"
+      groups={incubatorGroups}
+      label="Incubator skill categories"
+    />
+    <p class="section-note">
+      Incubator pages are marked as candidate/internal and are not presented as
+      promoted public catalog entries.
+    </p>
+  </section>
+
+  <section class="source-band">
+    <div>
+      <p class="eyebrow">Source of truth</p>
+      <h2>Repository files drive every page.</h2>
+      <p>
+        Skill names, descriptions, categories, metadata, source links, and proof
+        links are read at build time from the repo tree.
+      </p>
+    </div>
+    <a class="button button--secondary" href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">
+      Open repository
+    </a>
+  </section>
+</BaseLayout>

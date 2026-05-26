@@ -1,0 +1,50 @@
+---
+import CategoryNav from "../../components/CategoryNav.astro";
+import CategorySection from "../../components/CategorySection.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  breadcrumbStructuredData,
+  skillListStructuredData,
+  webPageStructuredData
+} from "../../lib/seo";
+import { getPublicSkills, groupByCategory } from "../../lib/skills";
+import { absoluteSiteUrl } from "../../lib/site";
+
+const skills = await getPublicSkills();
+const groups = groupByCategory(skills);
+const description = "Promoted public Agent Skills from stark-ai-de, generated from skills/**/SKILL.md.";
+const canonicalUrl = absoluteSiteUrl("/skills/");
+const structuredData = [
+  webPageStructuredData({
+    canonicalUrl,
+    description,
+    title: "Public Agent Skills",
+    type: "CollectionPage"
+  }),
+  breadcrumbStructuredData([
+    { name: "Catalog", url: absoluteSiteUrl("/") },
+    { name: "Public Skills", url: canonicalUrl }
+  ]),
+  skillListStructuredData(skills, canonicalUrl)
+];
+---
+
+<BaseLayout
+  title="Public Skills"
+  description={description}
+  canonicalPath="/skills/"
+  structuredData={structuredData}
+>
+  <section class="collection-hero">
+    <p class="eyebrow">Promoted public catalog</p>
+    <h1>Public skills</h1>
+    <p>
+      These skills are installable through the public catalog and include
+      versioned metadata, source links, and available eval proof.
+    </p>
+  </section>
+  <CategoryNav groups={groups} label="Public skill categories" />
+  <div class="collection-stack">
+    {groups.map((group) => <CategorySection group={group} />)}
+  </div>
+</BaseLayout>

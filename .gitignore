@@ -1,6 +1,7 @@
 node_modules
 .agents/
 skills-lock.json
+.astro
 .next
 .turbo
 build

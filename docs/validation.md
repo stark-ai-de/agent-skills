@@ -40,6 +40,12 @@ Validate script syntax:
 npm run validate:scripts
 ```
 
+Build the GitHub Pages catalog:
+
+```bash
+pnpm --filter ./site build
+```
+
 Check local public install discovery:
 
 ```bash
@@ -95,6 +101,7 @@ node scripts/print-release-notes.mjs
 - Incubator skills set `metadata.internal: true` so root `npx skills` discovery hides them unless `INSTALL_INTERNAL_SKILLS=1` is explicitly set.
 - Skill scripts avoid obvious high-risk shell patterns.
 - GitHub Actions workflows pass `actionlint` through `pnpm lint:actions`.
+- The Astro GitHub Pages catalog builds generated public and incubator skill routes from `SKILL.md`.
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
 - `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
@@ -104,7 +111,9 @@ node scripts/print-release-notes.mjs
 
 ## Continuous Integration
 
-The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, `npx skills@latest add ./skills --list`, and `npm run smoke:install`. `npm run validate` includes actionlint for GitHub Actions workflows. On pull requests, it also runs release validation when release intent is detected so partial package, changelog, or public skill version updates fail before merge.
+The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, `npx skills@latest add ./skills --list`, and `npm run smoke:install`. `npm run validate` includes actionlint for GitHub Actions workflows and the Astro site build. On pull requests, it also runs release validation when release intent is detected so partial package, changelog, or public skill version updates fail before merge.
+
+The `GitHub Pages` workflow builds `site/` on pull requests without deploying. Pushes to `main` and manual dispatches from `main` upload the static `site/dist` artifact and deploy through GitHub Pages Actions.
 
 `Publish Release` runs only through manual dispatch. Keep `dry_run` set to `true` for a final readiness check, then rerun with `dry_run` set to `false` only after maintainer approval.
 
