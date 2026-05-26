@@ -44,3 +44,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0013 | Accepted   | Persist specs and ADRs as repo artifacts.                           |
 | 0014 | Accepted   | Prefer Node skill helper scripts for public skill portability.      |
 | 0015 | Accepted   | Prepare releases in change PRs.                                     |
+| 0016 | Accepted   | Use OpenAI metadata for Codex-facing skills.                        |

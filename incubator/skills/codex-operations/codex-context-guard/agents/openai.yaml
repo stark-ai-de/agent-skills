@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codex Context Guard"
+  short_description: "Keeps long Codex tasks context-efficient"
+  default_prompt: "Use $codex-context-guard to keep this long Codex task context-efficient and decide whether compaction or a handoff is needed."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []

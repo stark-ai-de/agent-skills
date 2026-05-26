@@ -20,6 +20,14 @@ Increase a promoted skill's `metadata.version` when its public instructions, ref
 
 Descriptions are routing rules. Include the concrete workflow, trigger terms, and exclusions when important. Keep descriptions under 500 characters when possible and never over 1024 characters.
 
+## OpenAI/Codex Metadata
+
+Codex/OpenAI-facing skills under `skills/` and `incubator/skills/` should include `agents/openai.yaml`. Keep it focused on product metadata: `interface`, `policy.allow_implicit_invocation`, and `dependencies.tools`.
+
+Do not add `agents/openai.yaml` as boilerplate to every skill. Keep routing and workflow instructions in `SKILL.md`, and do not add product metadata to ignored project-local helper installs under `.agents/skills/` by default.
+
+See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy decision.
+
 ## Body Shape
 
 Every skill should include:

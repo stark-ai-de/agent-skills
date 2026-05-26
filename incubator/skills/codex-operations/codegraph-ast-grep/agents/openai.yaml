@@ -1,0 +1,8 @@
+interface:
+  display_name: "CodeGraph ast-grep"
+  short_description: "CodeGraph and ast-grep setup for Codex"
+  default_prompt: "Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []

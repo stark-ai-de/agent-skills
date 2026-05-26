@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.2.1 - 2026-05-26
+
+### Added
+
+- Added OpenAI/Codex metadata validation for Codex-facing public and incubator skills.
+- Added `agents/openai.yaml` metadata for `codex-memory-curator` and incubator Codex operations skills.
+
+### Changed
+
+- Documented that Codex/OpenAI-facing skills use `agents/openai.yaml` while `SKILL.md` remains the portable source of truth.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.2.0 - 2026-05-24
 
 ### Added
