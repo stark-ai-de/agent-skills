@@ -45,3 +45,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0014 | Accepted   | Prefer Node skill helper scripts for public skill portability.      |
 | 0015 | Accepted   | Prepare releases in change PRs.                                     |
 | 0016 | Accepted   | Use OpenAI metadata for Codex-facing skills.                        |
+| 0017 | Accepted   | Use Astro for the GitHub Pages skill catalog.                       |

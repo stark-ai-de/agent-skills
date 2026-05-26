@@ -1,0 +1,57 @@
+---
+import SkillPage from "../../components/SkillPage.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  breadcrumbStructuredData,
+  skillStructuredData,
+  webPageStructuredData
+} from "../../lib/seo";
+import type { CatalogSkill } from "../../lib/skills";
+import { getIncubatorSkills } from "../../lib/skills";
+import { absoluteSiteUrl } from "../../lib/site";
+
+interface Props {
+  skill: CatalogSkill;
+}
+
+export async function getStaticPaths() {
+  const skills = await getIncubatorSkills();
+
+  return skills.map((skill) => ({
+    params: {
+      slug: skill.name
+    },
+    props: {
+      skill
+    }
+  }));
+}
+
+const { skill } = Astro.props;
+const canonicalPath = `/incubator/${skill.name}/`;
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const pageTitle = `${skill.title} Agent Skill`;
+const structuredData = [
+  webPageStructuredData({
+    canonicalUrl,
+    description: skill.description,
+    title: pageTitle
+  }),
+  breadcrumbStructuredData([
+    { name: "Catalog", url: absoluteSiteUrl("/") },
+    { name: "Incubator Skills", url: absoluteSiteUrl("/incubator/") },
+    { name: skill.title, url: canonicalUrl }
+  ]),
+  skillStructuredData(skill, canonicalUrl)
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={skill.description}
+  canonicalPath={canonicalPath}
+  ogType="article"
+  structuredData={structuredData}
+>
+  <SkillPage skill={skill} />
+</BaseLayout>

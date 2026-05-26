@@ -1,0 +1,51 @@
+---
+import CategoryNav from "../../components/CategoryNav.astro";
+import CategorySection from "../../components/CategorySection.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  breadcrumbStructuredData,
+  skillListStructuredData,
+  webPageStructuredData
+} from "../../lib/seo";
+import { getIncubatorSkills, groupByCategory } from "../../lib/skills";
+import { absoluteSiteUrl } from "../../lib/site";
+
+const skills = await getIncubatorSkills();
+const groups = groupByCategory(skills);
+const description =
+  "Candidate/internal Agent Skills from stark-ai-de, generated from incubator/skills/**/SKILL.md.";
+const canonicalUrl = absoluteSiteUrl("/incubator/");
+const structuredData = [
+  webPageStructuredData({
+    canonicalUrl,
+    description,
+    title: "Incubator Agent Skills",
+    type: "CollectionPage"
+  }),
+  breadcrumbStructuredData([
+    { name: "Catalog", url: absoluteSiteUrl("/") },
+    { name: "Incubator Skills", url: canonicalUrl }
+  ]),
+  skillListStructuredData(skills, canonicalUrl)
+];
+---
+
+<BaseLayout
+  title="Incubator Skills"
+  description={description}
+  canonicalPath="/incubator/"
+  structuredData={structuredData}
+>
+  <section class="collection-hero">
+    <p class="eyebrow">Candidate/internal catalog</p>
+    <h1>Incubator skills</h1>
+    <p>
+      Incubator skills are visible for maintainer review and local testing, but
+      they are not promoted public catalog entries.
+    </p>
+  </section>
+  <CategoryNav groups={groups} label="Incubator skill categories" />
+  <div class="collection-stack">
+    {groups.map((group) => <CategorySection group={group} />)}
+  </div>
+</BaseLayout>

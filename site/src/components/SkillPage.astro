@@ -1,0 +1,80 @@
+---
+import CommandBlock from "./CommandBlock.astro";
+import type { CatalogSkill } from "../lib/skills";
+import { collectionLabel } from "../lib/skills";
+import { withBase } from "../lib/site";
+
+interface Props {
+  skill: CatalogSkill;
+}
+
+const { skill } = Astro.props;
+const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
+const commandLabel = skill.kind === "public" ? "Install command" : "Local test command";
+const command = skill.installCommand ?? skill.localUsageCommand;
+---
+
+<section class="skill-hero">
+  <div class="breadcrumbs" aria-label="Breadcrumb">
+    <a href={withBase("/")}>Catalog</a>
+    <span>/</span>
+    <a href={withBase(indexHref)}>{collectionLabel(skill.kind)}</a>
+  </div>
+  <p class="eyebrow">{skill.kind === "public" ? "Promoted public skill" : "Incubator candidate"}</p>
+  <h1>{skill.title}</h1>
+  <p>{skill.description}</p>
+  <div class="meta-pills">
+    <span>{skill.categoryLabel}</span>
+    {skill.version && <span>Version {skill.version}</span>}
+    <span>{skill.license}</span>
+    {skill.hasOpenAiMetadata && <span>Codex/OpenAI metadata available</span>}
+  </div>
+</section>
+
+<div class="detail-layout">
+  <aside class="detail-panel" aria-label={`${skill.name} details`}>
+    <section>
+      <h2>Source</h2>
+      <p>{skill.sourcePath}</p>
+      <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Open on GitHub</a>
+    </section>
+    {
+      command && (
+        <section>
+          <h2>{commandLabel}</h2>
+          <CommandBlock command={command} label={`${skill.name} ${commandLabel.toLowerCase()}`} />
+        </section>
+      )
+    }
+    {
+      skill.evalUrl && (
+        <section>
+          <h2>Promotion proof</h2>
+          <p>{skill.evalPath}</p>
+          <a href={skill.evalUrl} rel="noreferrer" target="_blank">Open eval evidence</a>
+        </section>
+      )
+    }
+    {
+      skill.openAiMetadataUrl && (
+        <section>
+          <h2>Agent metadata</h2>
+          <p>{skill.openAiMetadataPath}</p>
+          <a href={skill.openAiMetadataUrl} rel="noreferrer" target="_blank">Open metadata</a>
+        </section>
+      )
+    }
+    {
+      skill.compatibility && (
+        <section>
+          <h2>Compatibility</h2>
+          <p>{skill.compatibility}</p>
+        </section>
+      )
+    }
+  </aside>
+
+  <article class="skill-content">
+    <div class="markdown" set:html={skill.html} />
+  </article>
+</div>

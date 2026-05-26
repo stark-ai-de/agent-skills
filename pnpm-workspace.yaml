@@ -1,0 +1,6 @@
+packages:
+  - "."
+  - "site"
+allowBuilds:
+  esbuild: true
+  sharp: true

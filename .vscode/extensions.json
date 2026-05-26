@@ -5,6 +5,7 @@
     "irongeek.vscode-env",
     "timonwong.shellcheck",
     "eamodio.gitlens",
-    "jimeh.actionlint"
+    "jimeh.actionlint",
+    "astro-build.astro-vscode"
   ]
 }

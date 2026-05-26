@@ -1,0 +1,20 @@
+---
+import SkillCard from "./SkillCard.astro";
+import type { CategoryGroup } from "../lib/skills";
+
+interface Props {
+  group: CategoryGroup;
+}
+
+const { group } = Astro.props;
+---
+
+<section class="category-section" id={group.category}>
+  <header class="section-heading section-heading--compact">
+    <p>{group.skills.length} skill{group.skills.length === 1 ? "" : "s"}</p>
+    <h2>{group.label}</h2>
+  </header>
+  <div class="skill-grid">
+    {group.skills.map((skill) => <SkillCard skill={skill} />)}
+  </div>
+</section>

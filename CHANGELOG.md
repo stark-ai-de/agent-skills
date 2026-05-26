@@ -12,6 +12,24 @@
 
 ### Removed
 
+## v0.2.2 - 2026-05-26
+
+### Added
+
+- Added an Astro GitHub Pages catalog generated from public and incubator `SKILL.md` files.
+- Added branded catalog assets, metadata, sitemap, JSON-LD, and generated skill detail pages.
+- Added GitHub Pages deployment workflow and site build validation.
+
+### Changed
+
+- Extended repository validation to build and verify the generated site.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.2.1 - 2026-05-26
 
 ### Added
