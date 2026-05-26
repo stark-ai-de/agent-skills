@@ -37,6 +37,7 @@ const skillRoots = [
     readmeMarker: ".agents/skills/",
     readmeMarkerMessage:
       "must state that third-party helper skills live outside the public catalog",
+    openAiMetadataCategories: new Set(["codex-operations"]),
     requireAtLeastOne: false,
   },
   {
@@ -45,6 +46,7 @@ const skillRoots = [
     readmeMarker: "not part of the public catalog",
     readmeMarkerMessage: "must state that incubator skills are not part of the public catalog",
     requireInternalMetadata: true,
+    openAiMetadataCategories: new Set(["codex-operations"]),
     requireAtLeastOne: false,
   },
 ];
@@ -190,7 +192,55 @@ function validateSkillFile(file, skillRoot) {
     errors.push(`${rel}: do not tell agents to read all references by default`);
   }
 
+  if (skillRoot.openAiMetadataCategories?.has(category)) {
+    validateOpenAiMetadata(file, name, skillRoot, category);
+  }
+
   return { category, description, name, rel };
+}
+
+function validateOpenAiMetadata(file, name, skillRoot, category) {
+  const skillDir = path.dirname(file);
+  const metadataFile = path.join(skillDir, "agents", "openai.yaml");
+  const rel = path.relative(root, metadataFile);
+
+  if (!fs.existsSync(metadataFile)) {
+    errors.push(`${rel}: ${skillRoot.label} ${category} skills must include agents/openai.yaml`);
+    return;
+  }
+
+  const text = fs.readFileSync(metadataFile, "utf8");
+  const shortDescription = text.match(/^\s+short_description:\s*"([^"]+)"\s*$/m)?.[1];
+  const defaultPrompt = text.match(/^\s+default_prompt:\s*"([^"]+)"\s*$/m)?.[1];
+
+  if (!/^interface:\s*$/m.test(text)) {
+    errors.push(`${rel}: missing interface block`);
+  }
+  if (!/^\s+display_name:\s*"[^"]+"\s*$/m.test(text)) {
+    errors.push(`${rel}: missing quoted interface.display_name`);
+  }
+  if (!shortDescription) {
+    errors.push(`${rel}: missing quoted interface.short_description`);
+  } else if (shortDescription.length < 25 || shortDescription.length > 64) {
+    errors.push(`${rel}: interface.short_description must be 25-64 characters`);
+  }
+  if (!defaultPrompt) {
+    errors.push(`${rel}: missing quoted interface.default_prompt`);
+  } else if (name && !defaultPrompt.includes(`$${name}`)) {
+    errors.push(`${rel}: interface.default_prompt must mention $${name}`);
+  }
+  if (!/^policy:\s*$/m.test(text)) {
+    errors.push(`${rel}: missing policy block`);
+  }
+  if (!/^\s+allow_implicit_invocation:\s*(true|false)\s*$/m.test(text)) {
+    errors.push(`${rel}: missing policy.allow_implicit_invocation`);
+  }
+  if (!/^dependencies:\s*$/m.test(text)) {
+    errors.push(`${rel}: missing dependencies block`);
+  }
+  if (!/^\s+tools:\s*\[\]\s*$/m.test(text)) {
+    errors.push(`${rel}: dependencies.tools must be present, use [] when empty`);
+  }
 }
 
 function validateCategoryReadmes(skillRoot, skillRecords) {

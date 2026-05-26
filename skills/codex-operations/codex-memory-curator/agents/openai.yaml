@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codex Memory Curator"
+  short_description: "Audits, prunes, and rewrites Codex memory state"
+  default_prompt: "Use $codex-memory-curator to audit my Codex memories, identify stale or risky entries, and propose a focused cleanup plan."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []
