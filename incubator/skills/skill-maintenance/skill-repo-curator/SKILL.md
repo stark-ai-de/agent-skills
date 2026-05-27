@@ -71,6 +71,7 @@ Follow the process above, fix structural drift first, then update catalog, chang
 
 Read only when needed:
 
+- `references/agent-skills-release.md` when preparing a release for this repository.
 - `references/repo-release-checklist.md` before a release.
 - `references/deprecation-policy.md` before replacing or removing a skill.
 
