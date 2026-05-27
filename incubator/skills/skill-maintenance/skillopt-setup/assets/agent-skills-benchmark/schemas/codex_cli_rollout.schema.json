@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "hard", "soft", "prediction", "assertion_results", "task_type"],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "hard": {
+      "enum": [0, 1]
+    },
+    "soft": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "prediction": {
+      "type": "string"
+    },
+    "assertion_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "passed", "evidence"],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "task_type": {
+      "const": "agent_skill_quality"
+    }
+  }
+}

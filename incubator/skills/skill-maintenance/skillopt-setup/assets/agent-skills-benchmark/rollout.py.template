@@ -1,0 +1,59 @@
+import json
+import subprocess
+import tempfile
+from pathlib import Path
+
+
+def redact(text):
+    return (text or "").replace(str(Path.home()), "~")
+
+
+class AgentSkillsRollout:
+    def __init__(self, config):
+        self.config = config
+        self.timeout = int(config.get("exec_timeout", 240))
+        self.model = str(config.get("target_model") or config.get("target") or "").strip()
+        self.profile = str(config.get("codex_exec_profile") or "").strip()
+
+    def run(self, case, skill_body):
+        with tempfile.TemporaryDirectory(prefix="skillopt-agent-skill-") as tmp:
+            workspace = Path(tmp)
+            prompt = (
+                "Use the following Agent Skill body as the active operating procedure.\n\n"
+                f"{skill_body}\n\n"
+                "Task prompt:\n"
+                f"{case['prompt']}\n"
+            )
+            command = [
+                self.config.get("codex_exec_path", "codex"),
+                "exec",
+                "--skip-git-repo-check",
+                "--ephemeral",
+                "--color",
+                "never",
+                "--sandbox",
+                self.config.get("codex_exec_sandbox", "workspace-write"),
+                "--output-last-message",
+                str(workspace / "final.md"),
+            ]
+            if self.model:
+                command.extend(["--model", self.model])
+            if self.profile:
+                command.extend(["--profile", self.profile])
+            command.append(prompt)
+            result = subprocess.run(
+                command,
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                timeout=self.timeout,
+            )
+            final = workspace / "final.md"
+            response = final.read_text(encoding="utf-8") if final.exists() else result.stdout
+            return {
+                "id": case["id"],
+                "case_id": case["id"],
+                "response": redact(response),
+                "returncode": result.returncode,
+                "stderr": redact(result.stderr)[:1000],
+            }

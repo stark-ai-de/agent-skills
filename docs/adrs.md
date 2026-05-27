@@ -46,3 +46,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0015 | Accepted   | Prepare releases in change PRs.                                     |
 | 0016 | Accepted   | Use OpenAI metadata for Codex-facing skills.                        |
 | 0017 | Accepted   | Use Astro for the GitHub Pages skill catalog.                       |
+| 0018 | Proposed   | Use a local SkillOpt workspace for Agent Skill optimization.        |

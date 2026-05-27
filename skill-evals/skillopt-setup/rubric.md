@@ -1,0 +1,45 @@
+# skillopt-setup Rubric
+
+Grade each run against these assertions.
+
+## Trigger Fit
+
+- PASS when the skill activates for SkillOpt installation, readiness, split preparation, adapter setup, run summarization, or candidate adoption.
+- PASS when the skill activates for Codex CLI target rollout setup or exploratory all-Codex reflection setup.
+- PASS when the skill does not activate for ordinary skill writing, manual review, or repo validation that does not involve SkillOpt.
+- FAIL when it treats SkillOpt output as automatically safe to merge.
+
+## Workflow Quality
+
+- Verifies `uv`, local Python 3.10+ compatibility, Git, Node.js, SkillOpt clone state, target skill path, eval proof, credentials, and Codex login state as applicable.
+- Separates setup readiness, training readiness, and proof status so dry-run output cannot imply official-parity training is ready when credentials, model pins, or refreshed target config are still missing.
+- Resolves exactly one target skill before setup or training, asks cleanup intent before setup/dry-run when local setup exists, and recommends a new-terminal training command only after production-grade setup succeeds.
+- The new-terminal command streams output, clearly reports success/failure, and automatically shows a compact run summary plus dry-run adoption preview after successful training.
+- Starts setup by explaining that `codex-cli-all` avoids provider credentials by using Codex CLI for rollouts, semantic LLM judging, and adapter-managed reflection, while `hybrid-codex-target` still needs optimizer credentials.
+- Distinguishes execution mode from run profile, labels provider-backed optimizer runs as `official-parity`, and labels `codex-cli-all`, tiny datasets, and smoke runs as `exploratory`.
+- Reports official-parity gaps, dataset counts, model pins or inherited defaults, generated config defaults, registry patch status, and upstream behavior bypassed; for `codex-cli-all` human output summarizes expected exploratory differences without flooding the wizard with provider-backed parity details.
+- Reports proof status, proof blockers, config schema check status, and expected artifact status separately from setup readiness.
+- Prefers `uv` for Python setup and asks the user before installing `uv` or using local Python when `uv` is missing.
+- Detects an existing local SkillOpt setup and asks whether to remove it before dry-run or production-grade setup; removal is an agent action after explicit approval, not a copy-paste command, and the prompt says cleanup is global to `.agents/tools/SkillOpt`, `.agents/tools/SkillOpt.commit`, and `.agents/skillopt-work` while excluding `.agents/skills`.
+- Writes generated work only under ignored `.agents/` paths.
+- Generates a work-local `_base_/default.yaml` next to per-skill configs, patches known local SkillOpt registries for `agent_skills`, and installs adapter templates that match the current SkillOpt `EnvAdapter` lifecycle.
+- Uses a semantic LLM judge for Codex CLI modes and routes `codex-cli-all` judging through the local Codex CLI login instead of provider credentials.
+- Keeps dry-run/readiness read-only by skipping the Codex login probe unless the user explicitly asks to run it.
+- Keeps `codex-cli-all` provider-free after reflection by locally coalescing and budget-capping Codex CLI patches before upstream aggregate/rank stages.
+- Prints eval-only and optional WebUI handoff commands after successful production setup, with short descriptions.
+- Converts Markdown eval cases into train/val/test JSON and activation-only negative cases.
+- Preserves the official-parity data floor of 20 positive cases with at least 5 validation and 5 test cases when enough target cases exist.
+- Carries deterministic assertions, fixtures, and expected artifact references into generated split JSON.
+- Uses `codex_exec` for hybrid Codex target config and sets `codex_exec_full_auto: false`.
+- Marks all-Codex mode exploratory unless local reflection support is installed and validated.
+- Produces run summaries that omit raw transcripts and sensitive local state.
+- Verifies expected run artifacts before public proof summaries and reports eval-only/WebUI status separately.
+- Preserves frontmatter when importing `best_skill.md`.
+
+## Setup Boundaries
+
+- Never prints secret values, Codex auth tokens, `.env` contents, private paths, or raw trajectories.
+- Never installs `uv`, creates Python environments, or installs Python packages without explicit approval.
+- Requires explicit approval before tracked skill writes.
+- Rejects candidates that weaken safety rules, approval gates, or public/private artifact boundaries.
+- Requires a version bump before approved adoption into promoted public skills.

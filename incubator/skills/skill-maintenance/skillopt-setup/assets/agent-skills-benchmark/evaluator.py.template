@@ -1,0 +1,315 @@
+import json
+import re
+import subprocess
+import tempfile
+from pathlib import Path
+
+
+def _short(text, limit=1000):
+    value = str(text or "")
+    return value if len(value) <= limit else f"{value[:limit]}..."
+
+
+def _extract_json(text):
+    value = (text or "").strip()
+    if not value:
+        raise ValueError("empty judge response")
+    if value.startswith("```"):
+        value = re.sub(r"^```(?:json)?\s*", "", value)
+        value = re.sub(r"\s*```$", "", value)
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        start = value.find("{")
+        end = value.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        return json.loads(value[start : end + 1])
+
+
+def _contains_expected_text(response, expected):
+    text = (response or "").lower()
+    return any(fragment.lower() in text for fragment in expected if isinstance(fragment, str))
+
+
+def _bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "pass", "passed", "1"}
+    return bool(value)
+
+
+def _float_score(value):
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(1.0, score))
+
+
+def _match_assertion(response, assertion):
+    text = response or ""
+    raw = str(assertion or "").strip()
+    if not raw:
+        return None
+    kind, _, value = raw.partition(":")
+    kind = kind.strip().lower()
+    value = value.strip()
+    if not value:
+        kind = "contains"
+        value = raw
+
+    haystack = text.lower()
+    needle = value.lower()
+    if kind in {"contains", "must_include", "include"}:
+        passed = needle in haystack
+        return {"text": raw, "passed": passed, "evidence": "substring present" if passed else "substring missing"}
+    if kind in {"not_contains", "must_not_include", "exclude"}:
+        passed = needle not in haystack
+        return {"text": raw, "passed": passed, "evidence": "substring absent" if passed else "forbidden substring present"}
+    if kind == "regex":
+        try:
+            passed = re.search(value, text, flags=re.IGNORECASE | re.MULTILINE) is not None
+        except re.error as error:
+            return {"text": raw, "passed": False, "evidence": f"invalid regex: {_short(error, 200)}"}
+        return {"text": raw, "passed": passed, "evidence": "regex matched" if passed else "regex did not match"}
+    if kind in {"section", "heading"}:
+        pattern = rf"^#+\s+{re.escape(value)}\s*$"
+        passed = re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE) is not None
+        return {"text": raw, "passed": passed, "evidence": "heading present" if passed else "heading missing"}
+    if kind in {"path", "artifact_path"}:
+        passed = value in text
+        return {"text": raw, "passed": passed, "evidence": "path referenced" if passed else "path not referenced"}
+
+    passed = needle in haystack
+    return {"text": raw, "passed": passed, "evidence": "substring present" if passed else "substring missing"}
+
+
+class AgentSkillsEvaluator:
+    def __init__(self, config=None):
+        self.config = dict(config or {})
+        self.judge_backend = str(self.config.get("judge_backend") or "heuristic").strip().lower()
+        self.codex_path = str(self.config.get("codex_exec_path") or "codex")
+        self.codex_model = str(
+            self.config.get("codex_cli_judge_model")
+            or self.config.get("judge_model")
+            or ""
+        ).strip()
+        self.codex_profile = str(self.config.get("codex_cli_judge_profile") or "").strip()
+        self.codex_timeout = int(self.config.get("codex_cli_judge_timeout") or 240)
+        self.codex_sandbox = str(self.config.get("codex_cli_judge_sandbox") or "read-only")
+
+    def score(self, case, rollout):
+        response = rollout.get("response", "")
+        expected = case.get("expected_behavior", [])
+        deterministic = self._score_deterministic(case, response)
+        if deterministic and not deterministic["passed"]:
+            result = deterministic
+        elif self.judge_backend == "codex_cli":
+            result = self._score_with_codex_cli(case, response, expected, deterministic)
+        elif deterministic:
+            result = deterministic
+        else:
+            result = self._score_with_heuristic(response, expected)
+
+        hard = 1 if result["passed"] else 0
+        soft = _float_score(result.get("score", hard))
+        task_type = str(case.get("task_type") or case.get("skill_name") or "agent_skill_quality")
+        return {
+            "id": case["id"],
+            "hard": hard,
+            "soft": soft,
+            "prediction": response[:500],
+            "assertion_results": result["assertion_results"],
+            "judge_backend": result["judge_backend"],
+            "judge_reason": result.get("reason", ""),
+            "task_type": task_type,
+        }
+
+    def _score_with_heuristic(self, response, expected):
+        assertion_results = []
+        if expected:
+            passed = _contains_expected_text(response, expected)
+            assertion_results.append(
+                {
+                    "text": "Response semantically reflects expected behavior",
+                    "passed": passed,
+                    "evidence": "Matched expected behavior text" if passed else "No exact expected behavior text matched",
+                }
+            )
+        else:
+            passed = bool(response.strip())
+            assertion_results.append(
+                {
+                    "text": "Response is non-empty",
+                    "passed": passed,
+                    "evidence": "Non-empty response" if passed else "Empty response",
+                }
+            )
+        return {
+            "passed": passed,
+            "score": 1.0 if passed else 0.0,
+            "assertion_results": assertion_results,
+            "judge_backend": "heuristic",
+            "reason": assertion_results[0]["evidence"],
+        }
+
+    def _score_deterministic(self, case, response):
+        assertions = case.get("deterministic_assertions") or []
+        results = [
+            item
+            for item in (_match_assertion(response, assertion) for assertion in assertions)
+            if item is not None
+        ]
+        if not results:
+            return None
+        passed = all(item["passed"] for item in results)
+        score = sum(1 for item in results if item["passed"]) / len(results)
+        return {
+            "passed": passed,
+            "score": score,
+            "assertion_results": results,
+            "judge_backend": "deterministic",
+            "reason": "deterministic assertions passed" if passed else "deterministic assertion failed",
+        }
+
+    def _score_with_codex_cli(self, case, response, expected, deterministic=None):
+        if not response.strip():
+            return {
+                "passed": False,
+                "score": 0.0,
+                "assertion_results": [
+                    {
+                        "text": "Response is non-empty",
+                        "passed": False,
+                        "evidence": "Empty response",
+                    }
+                ],
+                "judge_backend": "codex_cli",
+                "reason": "Empty response",
+            }
+
+        with tempfile.TemporaryDirectory(prefix="skillopt-codex-judge-") as tmp:
+            out = Path(tmp) / "judge.json"
+            command = [
+                self.codex_path,
+                "exec",
+                "--skip-git-repo-check",
+                "--ephemeral",
+                "--color",
+                "never",
+                "--sandbox",
+                self.codex_sandbox,
+                "--output-last-message",
+                str(out),
+            ]
+            if self.codex_model:
+                command.extend(["--model", self.codex_model])
+            if self.codex_profile:
+                command.extend(["--profile", self.codex_profile])
+            command.append(self._judge_prompt(case, response, expected))
+            try:
+                completed = subprocess.run(
+                    command,
+                    cwd=tmp,
+                    text=True,
+                    capture_output=True,
+                    timeout=self.codex_timeout,
+                    check=False,
+                )
+            except (OSError, subprocess.TimeoutExpired) as error:
+                return self._judge_failure(f"Codex judge failed: {_short(error, 500)}")
+
+            if completed.returncode != 0:
+                return self._judge_failure(
+                    f"Codex judge exited {completed.returncode}: {_short(completed.stderr, 500)}"
+                )
+
+            try:
+                payload = _extract_json(out.read_text(encoding="utf-8") if out.exists() else completed.stdout)
+                return self._normalise_judge_payload(payload, expected, deterministic)
+            except Exception as error:
+                return self._judge_failure(f"Codex judge returned invalid JSON: {_short(error, 500)}")
+
+    def _judge_prompt(self, case, response, expected):
+        payload = {
+            "case_id": case.get("id", ""),
+            "user_prompt": case.get("prompt", ""),
+            "should_trigger": case.get("should_trigger", True),
+            "expected_behavior": expected,
+            "assistant_response": _short(response, 12000),
+        }
+        return (
+            "You are a strict evaluator for Agent Skill optimization. Return JSON only.\n"
+            "Judge whether the assistant response semantically satisfies the expected behavior. "
+            "Do not require exact wording. Award partial score for materially correct but incomplete responses. "
+            "Fail responses that invent repo facts, skip required verification/persistence gates, or only ask for context "
+            "when the expected behavior requires a concrete provisional artifact/checkpoint.\n\n"
+            "Return this exact shape:\n"
+            "{\"passed\": boolean, \"score\": number, \"reason\": \"short\", "
+            "\"assertions\": [{\"text\": \"criterion\", \"passed\": boolean, \"evidence\": \"short\"}]}\n\n"
+            f"Evaluation input:\n{json.dumps(payload, ensure_ascii=False)}"
+        )
+
+    def _normalise_judge_payload(self, payload, expected, deterministic=None):
+        if not isinstance(payload, dict):
+            raise ValueError("judge payload is not an object")
+        passed = _bool(payload.get("passed"))
+        score = _float_score(payload.get("score", 1.0 if passed else 0.0))
+        assertions = payload.get("assertions")
+        if not isinstance(assertions, list):
+            assertions = []
+        normalised = []
+        for item in assertions[:12]:
+            if not isinstance(item, dict):
+                continue
+            normalised.append(
+                {
+                    "text": _short(item.get("text") or "Judge assertion", 300),
+                    "passed": _bool(item.get("passed")),
+                    "evidence": _short(item.get("evidence") or item.get("reason") or "", 500),
+                }
+            )
+        if not normalised:
+            normalised.append(
+                {
+                    "text": "Response satisfies expected behavior",
+                    "passed": passed,
+                    "evidence": _short(payload.get("reason") or "Judge did not return assertions", 500),
+                }
+            )
+        if expected and not any(not item["passed"] for item in normalised) and not passed:
+            normalised.append(
+                {
+                    "text": "Overall expected behavior",
+                    "passed": False,
+                    "evidence": _short(payload.get("reason") or "Overall judge result failed", 500),
+                }
+            )
+        if deterministic:
+            normalised = deterministic["assertion_results"] + normalised
+            passed = deterministic["passed"] and passed
+            score = min(score, deterministic["score"])
+        return {
+            "passed": passed,
+            "score": score,
+            "assertion_results": normalised,
+            "judge_backend": "codex_cli",
+            "reason": _short(payload.get("reason") or "", 500),
+        }
+
+    def _judge_failure(self, evidence):
+        return {
+            "passed": False,
+            "score": 0.0,
+            "assertion_results": [
+                {
+                    "text": "Codex CLI judge completed",
+                    "passed": False,
+                    "evidence": evidence,
+                }
+            ],
+            "judge_backend": "codex_cli",
+            "reason": evidence,
+        }

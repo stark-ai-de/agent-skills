@@ -1,0 +1,53 @@
+_base_: ../_base_/default.yaml
+
+env:
+  name: agent_skills
+  run_profile: exploratory
+  skill_init: .agents/skillopt-work/<skill>/initial/skill-body.md
+  split_mode: split_dir
+  split_dir: .agents/skillopt-work/<skill>/data
+  out_root: .agents/skillopt-work/<skill>/outputs/<run-name>
+  reflection_backend: codex_cli
+  codex_cli_reflection_model: ""
+  codex_cli_reflection_timeout: 240
+  judge_backend: codex_cli
+  codex_cli_judge_model: ""
+  codex_cli_judge_timeout: 240
+  codex_cli_judge_sandbox: read-only
+  exec_timeout: 240
+  workers: 1
+  max_turns: 1
+
+train:
+  num_epochs: 1
+  batch_size: 2
+  seed: 42
+
+gradient:
+  minibatch_size: 1
+  analyst_workers: 1
+  failure_only: false
+
+optimizer:
+  learning_rate: 2
+  min_learning_rate: 1
+  lr_scheduler: constant
+  skill_update_mode: patch
+  use_slow_update: false
+  use_meta_skill: false
+
+evaluation:
+  use_gate: true
+  eval_test: true
+  sel_env_num: 0
+  test_env_num: 0
+
+model:
+  target_backend: codex_exec
+  target: ""
+  codex_exec_path: codex
+  codex_exec_use_sdk: cli
+  codex_exec_full_auto: false
+  codex_exec_sandbox: workspace-write
+  codex_exec_network_access: false
+  codex_exec_web_search: false
