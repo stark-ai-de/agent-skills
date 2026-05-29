@@ -4,15 +4,16 @@ Use CodeGraph for semantic scope. Use ast-grep for syntax-exact matches. Use pro
 
 ## Tool choice
 
-| Need                      | First choice                           | Follow-up                  |
-| ------------------------- | -------------------------------------- | -------------------------- |
-| Understand repo structure | CodeGraph files/status                 | targeted file reads        |
-| Find a symbol by name     | CodeGraph search                       | CodeGraph node             |
-| Trace callers/callees     | CodeGraph callers/callees              | targeted file reads        |
-| Estimate impact radius    | CodeGraph impact/affected              | tests/typecheck            |
-| Find syntax pattern       | ast-grep pattern                       | ast-grep YAML rule         |
-| Test a complex AST rule   | ast-grep MCP `test_match_code_rule`    | CLI `ast-grep scan --rule` |
-| Perform rewrite           | ast-grep interactive or reviewed patch | typecheck/lint/tests       |
+| Need                       | First choice                           | Follow-up                  |
+| -------------------------- | -------------------------------------- | -------------------------- |
+| Understand repo structure  | CodeGraph files/status                 | targeted file reads        |
+| Find a symbol by name      | CodeGraph search                       | CodeGraph node             |
+| Trace callers/callees      | CodeGraph callers/callees              | MCP `codegraph_trace`      |
+| Explain a path from X to Y | MCP `codegraph_trace`                  | targeted file reads        |
+| Estimate impact radius     | CodeGraph impact/affected              | tests/typecheck            |
+| Find syntax pattern        | ast-grep pattern                       | ast-grep YAML rule         |
+| Test a complex AST rule    | ast-grep MCP `test_match_code_rule`    | CLI `ast-grep scan --rule` |
+| Perform rewrite            | ast-grep interactive or reviewed patch | typecheck/lint/tests       |
 
 ## Exploration flow
 
@@ -35,6 +36,8 @@ codegraph files --filter "**/*auth*"
 codegraph context "explain login flow"
 codegraph affected src/auth.ts --filter "**/*.{test,spec}.*"
 ```
+
+When CodeGraph MCP is available, use `codegraph_trace` for a specific path such as how `AuthMiddleware` reaches `handleRequest`.
 
 4. Read only the specific files or ranges needed for edits.
 
@@ -70,6 +73,6 @@ Then run the smallest relevant validation command.
 ## Context discipline
 
 - Do not dump broad CodeGraph context into the main response unless it directly answers the user.
-- Prefer status/search/callers/callees/impact before large context generation.
+- Prefer status/search/callers/callees/trace/impact before large context generation.
 - Cap ast-grep result counts where the MCP tool supports it.
 - Summarize findings and only read source files that are candidates for editing.

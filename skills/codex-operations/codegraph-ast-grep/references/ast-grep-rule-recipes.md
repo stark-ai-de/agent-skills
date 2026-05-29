@@ -53,6 +53,15 @@ Run it:
 ast-grep scan --rule example-rule.yml src
 ```
 
+Test a one-off rule without writing a file:
+
+```bash
+ast-grep scan --inline-rules 'id: example-rule
+language: TypeScript
+rule:
+  pattern: example($ARG)' src
+```
+
 ## Relational rule example
 
 Find `Promise.all(...)` that contains an awaited expression:

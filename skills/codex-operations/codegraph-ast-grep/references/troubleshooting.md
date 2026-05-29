@@ -17,11 +17,12 @@ In the Codex TUI:
 Inspect config locations:
 
 ```bash
-test -f ~/.codex/config.toml && sed -n '1,220p' ~/.codex/config.toml || true
-test -f .codex/config.toml && sed -n '1,220p' .codex/config.toml || true
+test -f ~/.codex/config.toml && grep -n '^\[mcp_servers' ~/.codex/config.toml || true
+test -f .codex/config.toml && grep -n '^\[mcp_servers' .codex/config.toml || true
 ```
 
 Make sure the command in `config.toml` exists on `PATH` from the same shell environment that starts Codex.
+If full config inspection is needed, redact tokens, static headers, customer hostnames, and private paths before sharing output.
 
 ## CodeGraph server does not connect
 
@@ -57,13 +58,14 @@ If the backend line reports `wasm`, native SQLite support may be missing or not 
 
 ## CodeGraph misses files or symbols
 
-Inspect `.codegraph/config.json`:
+Check graph health and indexed files:
 
 ```bash
-sed -n '1,220p' .codegraph/config.json
+codegraph status
+codegraph files --filter "**/*target*"
 ```
 
-Check excludes, supported language, generated files, and max file size. Run `codegraph sync` after changes.
+CodeGraph follows its default excludes and project `.gitignore` rules. To change what is indexed, update `.gitignore` rather than `.codegraph/`, then run `codegraph sync`.
 
 ## ast-grep command not found
 
@@ -96,4 +98,4 @@ If the MCP path fails, use the ast-grep CLI directly until the environment is fi
 
 ## Windows/WSL path mismatch
 
-Codex, CodeGraph, ast-grep, and the repository should run in the same environment. Avoid mixing Windows paths and WSL paths in MCP config. Prefer project-scoped `.codex/config.toml` only when the project is trusted and the path is stable.
+Codex, CodeGraph, ast-grep, and the repository should run in the same environment. Avoid mixing Windows paths and WSL paths in MCP config. Prefer CodeGraph-managed local setup only when the project is trusted and the path is stable.

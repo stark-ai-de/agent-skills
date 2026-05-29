@@ -27,8 +27,15 @@ npx skills add https://github.com/stark-ai-de/agent-skills --list
 Install a promoted public skill for Codex:
 
 ```bash
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
+```
+
+Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, exploration, structural search, or refactor planning:
+
+```text
+Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning.
 ```
 
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
@@ -49,6 +56,7 @@ The public catalog lives under [`skills/`](skills/README.md). Candidate, experim
 
 | Skill                                                                               | Use when                                                                                                                                                 | Proof                                                                                 |
 | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md)         | CodeGraph and ast-grep need setup, MCP config, repo exploration, structural search, impact analysis, or safe refactor planning.                          | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)         |
 | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)     | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning. | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)     |
 | [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation.  | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
 

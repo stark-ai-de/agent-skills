@@ -36,6 +36,7 @@ Use:
 
 ```bash
 npx skills add https://github.com/stark-ai-de/agent-skills --list
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 ```
 
@@ -54,10 +55,10 @@ npm run smoke:install
 
 Do not publish, push, tag, or install globally unless the maintainer explicitly asks for that action.
 
-Test one local install after approval:
+Test the changed public skill locally after approval:
 
 ```bash
-npx skills add ./skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills add ./skills --skill codegraph-ast-grep -a codex --copy -y
 ```
 
 ## Repository Settings
@@ -154,6 +155,7 @@ Do not generate custom per-skill zip files in v1. GitHub Releases provide source
 
 ```bash
 npx skills add https://github.com/stark-ai-de/agent-skills --list
+npx skills add https://github.com/stark-ai-de/agent-skills --skill codegraph-ast-grep -a codex --copy -y
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
 npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
 ```
