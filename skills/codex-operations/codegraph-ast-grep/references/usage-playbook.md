@@ -2,6 +2,17 @@
 
 Use CodeGraph for semantic scope. Use ast-grep for syntax-exact matches. Use project validation for correctness.
 
+## Simple use cases
+
+| User need                                | How the workflow helps                                                                   |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Explain why validation or build fails    | CodeGraph maps the command path, then targeted reads inspect only the failing surface.   |
+| Change a shared function safely          | CodeGraph finds callers, callees, and likely impact before any patch is written.         |
+| Trace a route, request, event, or action | CodeGraph trace follows the path between the start symbol and destination behavior.      |
+| Find risky or repeated code shapes       | ast-grep matches syntax such as file writes, deprecated calls, or duplicate handlers.    |
+| Plan a mechanical refactor               | CodeGraph scopes the subsystem; ast-grep verifies exact matches before edits.            |
+| Review generated or unfamiliar code      | CodeGraph identifies entry points; ast-grep checks specific patterns without grep noise. |
+
 ## Tool choice
 
 | Need                       | First choice                           | Follow-up                  |

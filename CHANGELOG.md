@@ -12,6 +12,22 @@
 
 ### Removed
 
+## v0.3.2 - 2026-05-29
+
+### Added
+
+### Changed
+
+- Added user-facing `codegraph-ast-grep` use cases to the README, skill body, and usage playbook so the generated catalog explains everyday development workflows.
+
+### Fixed
+
+- Excluded local `.codegraph/` index state from the smoke-install clean copy so local CodeGraph sockets cannot break smoke validation.
+
+### Deprecated
+
+### Removed
+
 ## v0.3.1 - 2026-05-29
 
 ### Added

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # CodeGraph + ast-grep
@@ -20,6 +20,14 @@ Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repositor
 - A repo needs faster exploration before debugging, refactoring, review, or architecture work.
 - The task requires finding symbols, callers, callees, affected files, route handlers, imports, or structural code patterns.
 - The user mentions `codegraph`, `ast-grep`, `sg`, `codex mcp`, `.codegraph`, `sgconfig`, structural search, or AST rules.
+
+## Common use cases
+
+- Explain a validation, build, route, or feature flow before editing it.
+- Find callers, callees, and likely impact before changing shared code.
+- Trace how one symbol, request path, or UI action reaches another.
+- Find exact code shapes such as unsafe writes, repeated handlers, or deprecated API calls.
+- Plan small refactors by combining CodeGraph semantic scope with ast-grep syntax matches.
 
 ## When not to use
 

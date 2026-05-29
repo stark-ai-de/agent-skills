@@ -38,6 +38,14 @@ Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, explor
 Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning.
 ```
 
+Typical use cases:
+
+- explain how a validation, build, route, or feature flow works before editing it,
+- find callers, callees, and likely impact before changing a shared function,
+- trace how one symbol or request path reaches another,
+- find exact code shapes such as unsafe writes, repeated handlers, or deprecated API calls,
+- combine semantic scope from CodeGraph with syntax-exact ast-grep matches for small refactors.
+
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
 
 ```text
