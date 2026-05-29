@@ -132,7 +132,6 @@ jobs:
       - name: Print post-release verification
         run: |
           echo "After publishing, verify:"
-          echo "npx skills add stark-ai-de/agent-skills --list"
-          echo "npx skills add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y"
-          echo "npx skills add stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y"
+          echo "npx skills@latest add stark-ai-de/agent-skills --list"
+          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill '*' -a codex --copy -y"
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
