@@ -51,7 +51,7 @@ npx skills@latest add ./skills --list
 npm run smoke:install
 ```
 
-`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/` and `skills-lock.json`, runs `npx skills@latest add . --list`, verifies every public skill is listed when present, verifies incubator skills are not listed, and removes the temporary copy. It does not install global skills.
+`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/`, `.codegraph/`, and `skills-lock.json`, runs `npx skills@latest add . --list`, verifies every public skill is listed when present, verifies incubator skills are not listed, and removes the temporary copy. It does not install global skills.
 
 Do not publish, push, tag, or install globally unless the maintainer explicitly asks for that action.
 

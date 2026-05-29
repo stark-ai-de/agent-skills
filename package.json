@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
