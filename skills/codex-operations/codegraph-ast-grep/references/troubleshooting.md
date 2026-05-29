@@ -77,6 +77,17 @@ ast-grep --version
 
 On Linux, avoid relying on `sg` because it can be a system command.
 
+## ast-grep warns that postinstall did not run
+
+After approval, reinstall pnpm global ast-grep with build approval:
+
+```bash
+pnpm add -g --allow-build=@ast-grep/cli @ast-grep/cli
+ast-grep --version
+```
+
+`pnpm approve-builds` does not apply to global packages. If the warning remains after a global reinstall, inspect the shim target and the global install metadata before changing project config.
+
 ## ast-grep no matches
 
 - Confirm the language: `-l ts`, `-l tsx`, `-l js`, or `-l jsx`.

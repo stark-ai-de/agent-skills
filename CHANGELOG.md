@@ -12,6 +12,20 @@
 
 ### Removed
 
+## v0.3.1 - 2026-05-29
+
+### Added
+
+### Changed
+
+- Updated `codegraph-ast-grep` setup guidance to present global vs repo-local install tradeoffs before approval, recommend global setup for personal multi-repo use, respect package-manager freshness and build-script policies, document pnpm ast-grep build approval, and keep `.codegraph/` index data ignored.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.3.0 - 2026-05-29
 
 ### Added

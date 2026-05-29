@@ -1,5 +1,6 @@
 node_modules
 .agents/
+.codegraph/
 skills-lock.json
 .astro
 .next
