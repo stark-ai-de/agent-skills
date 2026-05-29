@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.3.0 - 2026-05-29
+
+### Added
+
+- Promoted `codegraph-ast-grep` into the public Codex operations catalog with current CodeGraph, Codex MCP, ast-grep, and ast-grep MCP guidance.
+- Added `skill-evals/codegraph-ast-grep` promotion proof.
+
+### Changed
+
+- Updated public catalog, install examples, and publishing docs for the `codegraph-ast-grep` promotion.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.2.2 - 2026-05-26
 
 ### Added
