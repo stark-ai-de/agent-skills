@@ -18,18 +18,26 @@ Browse the generated GitHub Pages catalog at <https://stark-ai-de.github.io/agen
 
 ## Install
 
-List public skills:
+Check available public skills:
 
 ```bash
-npx skills add https://github.com/stark-ai-de/agent-skills --list
+npx skills@latest add stark-ai-de/agent-skills --list
+```
+
+This only lists skills; it does not install them or create a skills.sh install event.
+
+Install all promoted public skills for Codex:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill '*' -g -a codex -y
 ```
 
 Install a promoted public skill for Codex:
 
 ```bash
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
 ```
 
 Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, exploration, structural search, or refactor planning:

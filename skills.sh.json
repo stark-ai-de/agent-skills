@@ -1,0 +1,10 @@
+{
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Codex Operations",
+      "description": "Skills for Codex setup, memory hygiene, repo exploration, and spec workflows.",
+      "skills": ["codegraph-ast-grep", "codex-memory-curator", "codex-spec-interviewer"]
+    }
+  ]
+}
