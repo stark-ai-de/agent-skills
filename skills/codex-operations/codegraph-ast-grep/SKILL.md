@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # CodeGraph + ast-grep
@@ -41,22 +41,26 @@ Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repositor
 
 1. Identify the user's goal: setup, verification, exploration, impact analysis, structural search, or refactor planning.
 2. Check existing state before proposing changes: repo root, `.codegraph/`, Codex MCP config, ast-grep config, and tool versions.
-3. For setup, read `references/setup-and-mcp-config.md`, inspect available package managers, ask the user to choose install scope and package manager per tool, then produce commands for review before any tool install or config write.
-4. For exploration, use CodeGraph first: status, file map, symbol search, callers/callees, trace, node details, and impact radius. Use large context-building tools only when targeted output is needed.
-5. For structural matching, use ast-grep after the target syntax shape is known. Prefer `find_code` or simple CLI patterns first, then YAML rules for relational or multi-condition matches.
-6. For refactors, combine both tools: CodeGraph to scope impacted symbols and files, ast-grep to match exact syntax, then project validation such as typecheck, lint, tests, or build.
-7. Summarize commands run, findings, proposed edits, validation, and remaining risk.
+3. For setup, read `references/setup-and-mcp-config.md`, inspect available package managers, present the global vs repo-local tradeoff table with global marked as the recommended default, then ask the user whether to continue and which scope/package-manager path to use.
+4. Produce commands for review before any tool install or config write.
+5. For setup installs, respect the selected package manager's freshness, trust, and build-script policy. If policy affects the installed version or install behavior, report that without bypassing it unless the user explicitly asks for an exception.
+6. After CodeGraph initialization, check whether `.codegraph/` is untracked and add or recommend a repo `.gitignore` entry before finalizing setup.
+7. For exploration, use CodeGraph first: status, file map, symbol search, callers/callees, trace, node details, and impact radius. Use large context-building tools only when targeted output is needed.
+8. For structural matching, use ast-grep after the target syntax shape is known. Prefer `find_code` or simple CLI patterns first, then YAML rules for relational or multi-condition matches.
+9. For refactors, combine both tools: CodeGraph to scope impacted symbols and files, ast-grep to match exact syntax, then project validation such as typecheck, lint, tests, or build.
+10. Summarize commands run, findings, proposed edits, validation, and remaining risk.
 
 ## Safety rules
 
 - Do not install tools, modify `~/.codex/config.toml`, or write project config without explicit approval.
 - Do not paste full MCP config files into chat; inspect server names first and redact secrets or static headers.
 - Do not use `curl | sh` or equivalent install pipelines in default instructions.
+- Do not bypass package-manager freshness, trust, or build-script approval policies unless the user explicitly asks for that exception.
 - Do not assume global vs project-local installs, or a package manager, when setup will modify the user's machine or repo.
 - Do not treat CodeGraph as a compiler, type checker, linter, or test runner.
 - Do not apply ast-grep rewrites automatically unless the user asked for the rewrite and the patch is reviewed.
 - Keep private repo paths, tokens, customer data, and internal hostnames out of skill examples.
-- Prefer project-local tool installs or printed config snippets before global configuration.
+- Prefer printed config snippets until the user approves an install/config scope; for personal multi-repo use, global is the recommended setup.
 - If MCP tools are unavailable, fall back to CLI commands and explain the limitation.
 
 ## References

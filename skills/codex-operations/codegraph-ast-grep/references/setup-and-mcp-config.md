@@ -32,9 +32,33 @@ test -f ~/.codex/config.toml && grep -n '^\[mcp_servers' ~/.codex/config.toml ||
 
 Read full MCP config only when needed, and redact tokens, static headers, customer hostnames, and private paths before echoing snippets back to the user.
 
+Respect the selected package manager's freshness, trust, and build-script policy. If the package manager installs an older mature version or blocks lifecycle scripts, report that behavior and ask before bypassing it.
+
+For npm-family installs, these checks can help distinguish registry latest from policy-selected versions:
+
+```bash
+pnpm config get minimumReleaseAge 2>/dev/null || true
+pnpm config get --json allowBuilds 2>/dev/null || true
+npm view @colbymchenry/codegraph version dist-tags --json
+npm view @ast-grep/cli version dist-tags --json
+```
+
 ## Setup decisions
 
-Before running install or config-writing commands, ask the user to choose:
+Before running install or config-writing commands, present this table and ask the user whether to continue with the recommended global setup or choose a repo-local/diagnostics-only path:
+
+| Layer                      | Recommended default            | Repo-local alternative                      | Use repo-local when                                                        |
+| -------------------------- | ------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------- |
+| `codegraph-ast-grep` skill | Global install after release   | Project-local `.agents/skills/` copy        | Developing or testing unreleased skill changes in this repo                |
+| CodeGraph CLI              | Global/user-wide               | One-time runner where practical             | A repo must avoid global workstation tools                                 |
+| CodeGraph MCP              | Global/user-level registration | Project-local config                        | A repo needs pinned server commands or isolated MCP behavior               |
+| CodeGraph index            | Per-repo `.codegraph/`         | None                                        | Always keep index data local to the repo and ignored by Git                |
+| ast-grep CLI               | Global/user-wide               | Project-local dev dependency                | CI, committed rules, or team-reproducible ast-grep behavior                |
+| ast-grep MCP               | Global/user-level registration | Project-local config with `AST_GREP_CONFIG` | The repo has custom `sgconfig.yml`, rule directories, or language mappings |
+
+Global is the recommended default for personal multi-repo use because it keeps the same workflow available everywhere while CodeGraph still stores indexes per repo. Repo-local is better for reproducibility, CI, or unreleased skill development.
+
+Then confirm:
 
 - Install scope: global or user-wide for use across many repos, project-local for one repo or evaluation, or diagnostics-only when tools are already available.
 - Package manager per tool: choose from package managers found in preflight; do not install a new package manager unless the user asks.
@@ -48,14 +72,13 @@ CodeGraph and ast-grep do not have identical install channels. If both tools nee
 | ast-grep CLI | Project-local `pnpm`, `npm`, `yarn`, or `bun`; user-wide `pnpm`, `npm`, `brew`, `cargo`, `pipx`, or `pip`                                                           | Do not assume a global install when the user only wants to test one repo.                                        |
 | ast-grep MCP | `uvx` runner plus Codex MCP registration                                                                                                                            | Do not treat `uvx` as installing the normal ast-grep CLI.                                                        |
 
-Recommend based on the user's goal and available tools:
+## Global vs project-local MCP registration
 
-| User goal                                    | Recommendation                                                              | Hints                                                                                                                              |
-| -------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Use CodeGraph and ast-grep across many repos | User-wide CodeGraph plus user-wide ast-grep with the user's chosen managers | Good for personal workstations. Confirm global bin paths are on `PATH`; pnpm may require `pnpm setup` before global binaries work. |
-| Try the tools in one repo                    | Project-local install or one-time runner                                    | Avoids changing the user's global environment. Good for evaluation, CI experiments, and team-specific pinning.                     |
-| Keep repo behavior reproducible              | Project-local devDependency for ast-grep                                    | Pins the ast-grep version in the project lockfile. Use the repo's existing package manager when possible.                          |
-| Avoid writes for now                         | Diagnostics-only path                                                       | Check existing binaries, print config snippets, and explain which approval-required command would be needed next.                  |
+Global or user-level Codex MCP registration is the right default when the user wants the same server available across many repositories. It avoids repeating `codex mcp add` in each checkout, keeps the Codex server list consistent, and works well for servers that infer the active project from the client root URI or current repo context, such as CodeGraph.
+
+Project-local MCP config is better when a server needs repo-specific environment, pinned commands, or team-reproducible behavior. It avoids leaking experimental tools into unrelated work and can point at a repo `sgconfig.yml`, but each repo needs its own config and the path can become stale after moving a checkout.
+
+For CodeGraph, global MCP plus per-repo `.codegraph/` indexes is usually a good multi-project setup. For ast-grep MCP, global registration without `AST_GREP_CONFIG` is useful for generic structural search; prefer project-local config only when the repo has custom language mappings or rule directories.
 
 Give hints for every package manager found in preflight:
 
@@ -104,6 +127,8 @@ Initialize a project graph:
 codegraph init -i
 ```
 
+After initialization, `.codegraph/` stores local index data. If `git status --short` shows it as untracked, ask before editing `.gitignore`; after approval, add `.codegraph/` to the repo `.gitignore` before finalizing.
+
 ### ast-grep CLI
 
 Install project-locally with the chosen repo package manager:
@@ -118,13 +143,15 @@ bun add --dev @ast-grep/cli
 Install user-wide with the chosen package manager:
 
 ```bash
-pnpm add -g @ast-grep/cli
+pnpm add -g --allow-build=@ast-grep/cli @ast-grep/cli
 brew install ast-grep
 cargo install ast-grep --locked
 npm i @ast-grep/cli -g
 pipx install ast-grep-cli
 pip install ast-grep-cli
 ```
+
+For pnpm global installs, `approve-builds` is not supported after the fact. Use `--allow-build=@ast-grep/cli` during install so the native ast-grep binary is prepared and the CLI does not fall back to runtime binary resolution on every invocation.
 
 ### ast-grep MCP
 
