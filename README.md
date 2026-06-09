@@ -38,6 +38,7 @@ Install a promoted public skill for Codex:
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
 ```
 
 Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, exploration, structural search, or refactor planning:
@@ -66,15 +67,22 @@ Use `codex-memory-curator` when Codex memory state needs review or cleanup:
 Use $codex-memory-curator to audit my Codex memories for stale repo rules, sensitive entries, and cleanup candidates.
 ```
 
+Use `architecture-compass` when a repository needs ADR guardrails or ADR-guided refactoring:
+
+```text
+Use $architecture-compass in setup mode to install ADR guardrails, or refactor mode to align code with repo ADRs, stack rules, and examples.
+```
+
 ## Public Catalog
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-| Skill                                                                               | Use when                                                                                                                                                 | Proof                                                                                 |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md)         | CodeGraph and ast-grep need setup, MCP config, repo exploration, structural search, impact analysis, or safe refactor planning.                          | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)         |
-| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)     | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning. | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)     |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md) | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation.  | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
+| Skill                                                                                | Use when                                                                                                                                                 | Proof                                                                                 |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md) | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.       | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)     |
+| [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md)          | CodeGraph and ast-grep need setup, MCP config, repo exploration, structural search, impact analysis, or safe refactor planning.                          | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)         |
+| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)      | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning. | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)     |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)  | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation.  | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
 
 ## Repository Layout
 

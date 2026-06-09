@@ -7,3 +7,4 @@ Candidate skills start in [`../incubator/skills/`](../incubator/README.md) and m
 ## Categories
 
 - [Codex operations](codex-operations/README.md)
+- [Engineering workflows](engineering-workflows/README.md)
