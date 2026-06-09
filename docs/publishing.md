@@ -40,6 +40,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill '*' -g -a codex -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
 ```
 
 `--list` is a discovery check only. It does not install skills and should not be treated as a skills.sh indexing trigger. skills.sh ranks and discovers repository pages from anonymous successful-install telemetry when telemetry is enabled. A root `skills.sh.json` customizes display after the repository has been seen by that service.
@@ -162,6 +163,7 @@ npx skills@latest add stark-ai-de/agent-skills --list
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a codex --copy -y
 ```
 
 ## Release Update Process

@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.4.0 - 2026-06-09
+
+### Added
+
+- Promoted `architecture-compass` into the public Engineering Workflows catalog with setup and refactor modes for ADR-governed repositories.
+- Added `skill-evals/architecture-compass` promotion proof.
+
+### Changed
+
+- Updated public catalog, install examples, publishing docs, and generated site coverage for the `architecture-compass` promotion.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.3.2 - 2026-05-29
 
 ### Added

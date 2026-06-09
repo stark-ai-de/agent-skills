@@ -1,0 +1,9 @@
+# Engineering Workflows
+
+Promoted skills for architecture-bound implementation and repository workflow control.
+
+Third-party helper skills live outside the public catalog under `.agents/skills/`.
+
+| Skill                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`architecture-compass`](architecture-compass/SKILL.md) | Set up ADR governance or refactor/review repositories from explicit ADRs, stack rules, and code examples. Use when a repo needs agent-facing ADR guardrails or when existing/new code must follow documented source structure, runtime boundaries, request patterns, backend composition, env handling, and validation rules. Do not use for tiny edits, style-only cleanup, or tasks without repo evidence. |
