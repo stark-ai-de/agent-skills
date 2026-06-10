@@ -6,14 +6,14 @@ compatibility: Designed for Codex CLI, IDE extension, and Codex app. Works best 
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Architecture Compass
 
 ## Goal
 
-Set up ADR governance for a repository, or refactor/review repository code so it follows explicit ADRs, stack rules, source-structure rules, runtime-boundary rules, and representative code examples. Prefer target-repository evidence over bundled defaults. Produce durable agent instructions, minimal reversible implementation changes, and validation evidence.
+Set up ADR governance for a repository, or refactor/review repository code so it follows explicit ADRs, stack rules, source-structure rules, runtime-boundary rules, and representative code examples. In setup and new-repo modes, treat bundled ADR guardrails as the adoption baseline and keep every bundled guardrail visible as adopted, adapted, deferred, or rejected. When target-repository evidence conflicts with a bundled guardrail, challenge rejection with an explicit user decision and rationale before recording it as rejected. Produce durable agent instructions, minimal reversible implementation changes, and validation evidence.
 
 ## When to use
 
@@ -54,6 +54,7 @@ Setup outputs should include:
 - agent instructions that say accepted ADRs are binding,
 - ADR discovery paths and index links,
 - ADR precedence and conflict rules,
+- adoption decisions for bundled ADR guardrails: adopt, adapt, defer, or reject,
 - stack-rule and dependency-deviation rules,
 - optional PR checklist when a PR-template convention exists or the user asks for one,
 - future usage prompts for refactor and implementation tasks.
@@ -86,7 +87,7 @@ Inspect only the minimum context needed, but include these when relevant:
 - Representative source files for the area being changed.
 - Current file layout, import aliases, package manager, workspace tooling, test/lint/type-check commands, and CI expectations.
 - Existing generated-file conventions and allowlisted exceptions.
-- Bundled references only after target repo evidence is inspected or unavailable.
+- Bundled references after target repo evidence is inspected. In setup and new-repo modes, inspect bundled ADR guardrails as adoption candidates even when target repo evidence exists.
 
 ## Workflow
 
@@ -94,9 +95,13 @@ Inspect only the minimum context needed, but include these when relevant:
    - `setup`: install or refresh durable ADR guardrails.
    - `refactor`: align code, diffs, or new implementation with existing ADRs and examples.
      Internal sub-modes may be `audit`, `implementation`, `new-repo-bootstrap`, `pr-review`, `docs-sync`, or `stack-deviation`.
-2. Build a target rule set from repo evidence before using bundled references. Label each rule as `target ADR`, `target docs`, `target example`, `target stack rule`, `bundled pattern`, or `assumption`.
+2. Build a rule set from repo evidence and bundled guardrail candidates. Label each rule as `target ADR`, `target docs`, `target example`, `target stack rule`, `bundled ADR candidate`, `bundled pattern`, or `assumption`.
 3. Resolve conflicts explicitly:
-   - target ADRs outrank bundled patterns,
+   - accepted target ADRs are binding for refactor work,
+   - setup and new-repo work must record whether each bundled ADR guardrail is adopted, adapted, deferred, or rejected,
+   - guardrails that do not fit the current implementation slice should be deferred with a future trigger instead of removed,
+   - target evidence that contradicts a bundled guardrail is conflict evidence, not permission to omit the guardrail silently,
+   - user-confirmed rejection requires an explicit rationale and, when durable, an ADR note or superseding ADR,
    - target docs outrank current drift,
    - current code examples count as evidence only when they are identified as approved examples or consistently match the ADR,
    - stale or contradictory ADRs require a maintainer decision or superseding ADR before broad implementation.
@@ -139,8 +144,8 @@ Read only what the mode requires:
 - `references/preferred-stack-profile.md` when the target repo has adopted this stack profile, asks for it, or needs a starter stack profile.
 - `references/checklists.md` before finalizing output.
 - `assets/refactor-report-template.md` when returning an audit or refactor report.
-- `assets/new-repo-adoption-plan-template.md` when bootstrapping a new repo or installing guardrails.
-- `assets/setup-report-template.md` when returning setup results.
+- `assets/setup-report-template.md` when returning setup results, including new-repo guardrail adoption decisions.
+- `assets/new-repo-adoption-plan-template.md` only when a separate first-implementation layout plan is needed after the setup report.
 - `assets/agent-instructions-template.md` when creating or updating ADR-focused agent instructions.
 - `assets/adr-draft-template.md` when a target repo needs a source-structure ADR draft.
 
@@ -151,7 +156,8 @@ No bundled scripts in v0. Prefer target repo validation commands. Add a read-onl
 ## Safety rules
 
 - Do not invent repo facts, file paths, commands, accepted ADRs, or validation results.
-- Do not override target repo ADRs with bundled defaults.
+- Do not override target repo ADRs with bundled defaults during implementation.
+- Do not drop bundled ADR guardrails in setup mode; defer future-fit guardrails and challenge rejected guardrails before recording the user-confirmed rationale.
 - Do not include secrets, credentials, private links, private repo names, customer data, internal hostnames, or copied full source files in output.
 - Do not perform destructive migrations, broad rewrites, file deletion, or irreversible moves without explicit user approval.
 - Do not create missing docs, ADR folders, or validation scripts without approval, except for standard guardrail files in explicit `setup` mode.
@@ -175,7 +181,8 @@ For audit-only tasks, do not paste patches unless asked. For implementation task
 
 ## Completion criteria
 
-- Target repo evidence was inspected before bundled defaults were applied, or the missing evidence is reported.
+- Target repo evidence was inspected before bundled guardrails were adopted or adapted, or the missing evidence is reported.
+- In setup and new-repo modes, each bundled ADR guardrail has an adoption decision, deferred future trigger, or user-confirmed rejection rationale.
 - Rules are linked to their provenance labels.
 - File roles and runtime boundaries are explicit.
 - Changes are minimal and reversible.
@@ -186,6 +193,7 @@ For audit-only tasks, do not paste patches unless asked. For implementation task
 ## Failure modes
 
 - If ADRs and examples conflict, stop before broad edits and report the conflict.
+- If target evidence conflicts with a bundled ADR guardrail during setup, ask why the guardrail should be rejected or changed before recording it as rejected.
 - If the target repo has no rules and the action is `setup`, create a starter ADR governance plan. If the action is `refactor`, produce an adoption plan instead of pretending rules exist.
 - If validation commands are unknown, mark them as `unspecified` and infer only from repo scripts when available.
 - If a refactor is too large for one safe pass, split it into phases.

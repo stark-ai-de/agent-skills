@@ -31,16 +31,17 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
 
 1. Discover current ADR locations, architecture docs, stack rules, agent instructions, README/contribution docs, and approved examples.
 2. Preserve the repo's existing ADR directory and naming convention. If none exists, prefer `docs/adr/` unless the repo already uses another convention.
-3. Add or update agent instructions so they state:
+3. Compare target evidence with bundled ADR guardrails. For each guardrail, record `adopt`, `adapt`, `defer`, or `reject`. Do not omit a guardrail because target evidence is sparse. Use `defer` when a guardrail does not fit the current slice but may fit future repo growth. Ask for a user-confirmed rationale when target evidence conflicts with a guardrail.
+4. Add or update agent instructions so they state:
    - accepted ADRs are binding,
    - ADRs must be inspected before architecture-affecting code changes,
    - existing ADR-linked examples should be preferred over generic framework defaults,
    - conflicts with ADRs must be reported before implementation,
    - final responses should name the ADRs applied.
-4. Add or update an ADR index that lists active decisions by area.
-5. Add or update stack rules only when the repo has a dependency policy or the user provided one.
-6. Add an optional PR checklist only when a PR-template convention exists or the user asks for one.
-7. Return a setup report and the canonical prompts future agents should use.
+5. Add or update an ADR index that lists active decisions by area.
+6. Add or update stack rules only when the repo has a dependency policy or the user provided one.
+7. Add an optional PR checklist only when a PR-template convention exists or the user asks for one.
+8. Return a setup report and the canonical prompts future agents should use.
 
 ### New repository setup
 
@@ -52,9 +53,10 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
    - optional `STACK_RULES.md`,
    - optional PR checklist,
    - minimal example files only for selected stack boundaries.
-3. Avoid creating unused apps, packages, or backend services before they have owners.
-4. Mark open decisions explicitly instead of pretending the architecture is complete.
-5. Return first-implementation guardrails and validation commands.
+3. Treat bundled ADR guardrails as the starter baseline. Mark each as adopted, adapted, deferred, or rejected. Use `defer` for guardrails that are not part of the first implementation slice.
+4. Avoid creating unused apps, packages, or backend services before they have owners.
+5. Mark open decisions explicitly instead of pretending the architecture is complete.
+6. Return first-implementation guardrails and validation commands.
 
 ### Setup output
 
@@ -64,6 +66,7 @@ Use `assets/setup-report-template.md`. Include:
 - files created or changed,
 - ADR discovery paths,
 - active ADRs or starter ADRs,
+- bundled guardrail adoption decisions and challenged rejections,
 - agent instruction summary,
 - future prompts,
 - open decisions,
@@ -123,7 +126,7 @@ Create or propose:
 - Minimal example files for the selected stack, not full product examples.
 - Initial validation commands and source-shape reporting plan.
 
-Do not assume the target repo must use every bundled pattern. Ask or infer the selected stack first.
+Do not assume every bundled pattern is part of the first implementation slice. Do not silently omit a bundled guardrail; ask or infer the selected stack first, then record the guardrail as adopted, adapted, deferred, or rejected.
 
 ## PR review for architecture drift
 
