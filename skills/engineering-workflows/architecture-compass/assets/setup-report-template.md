@@ -27,6 +27,15 @@
 - Conflict rule:
 - Final-response reporting rule:
 
+## Bundled guardrail adoption
+
+- Decisions: `adopt`, `adapt`, `defer`, or `reject`. Use `defer` when the guardrail is kept for future repo growth but not active in the current slice.
+- For `defer`, fill the future trigger or owner condition. For `reject`, fill the user-confirmed rejection rationale.
+
+| Guardrail | Decision | Target evidence | Future trigger or owner condition | User-confirmed rejection rationale |
+| --------- | -------- | --------------- | --------------------------------- | ---------------------------------- |
+|           |          |                 |                                   |                                    |
+
 ## Active or starter ADRs
 
 | ADR | Status | Area | Notes |

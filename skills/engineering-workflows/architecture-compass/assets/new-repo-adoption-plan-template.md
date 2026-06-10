@@ -1,5 +1,7 @@
 # New Repository ADR-Guided Adoption Plan
 
+Use this template for the first-implementation layout plan after guardrail adoption has been recorded in `setup-report-template.md`.
+
 ## Selected stack
 
 - Workspace:

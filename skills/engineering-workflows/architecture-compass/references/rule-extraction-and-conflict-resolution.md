@@ -1,6 +1,6 @@
 # Rule Extraction and Conflict Resolution
 
-Use this reference before applying any bundled pattern. The target repository’s accepted rules are the source of truth.
+Use this reference before applying any bundled pattern. The target repository’s accepted rules are the source of truth for existing implementation decisions. In setup and new-repo modes, bundled ADR guardrails are adoption candidates that must be explicitly adopted, adapted, deferred, or rejected.
 
 ## Evidence ranking
 
@@ -16,14 +16,16 @@ Rank evidence in this order unless the user says otherwise:
 
 Do not treat a current code example as approved when it contradicts an accepted ADR. Treat it as drift unless the user or repo docs identify it as the newer accepted pattern.
 
+Evidence ranking does not mean bundled guardrails disappear when target evidence exists. In setup and new-repo modes, inspect every bundled guardrail and record an adoption decision. Absence of target evidence is not a reason to omit a guardrail. If a guardrail does not fit the current implementation slice, defer it with a future trigger. Contrary target evidence blocks silent adoption and requires an explicit user decision.
+
 ## Rule-set format
 
 When extracting rules, maintain a short working table:
 
-| Rule                     | Provenance      | Applies to           | Strength                      | Notes                                             |
-| ------------------------ | --------------- | -------------------- | ----------------------------- | ------------------------------------------------- |
-| Keep route files thin    | target ADR      | App Router routes    | required                      | Delegates to screen components or route helpers   |
-| Use server-only sentinel | bundled pattern | `lib/server-only/**` | required when pattern applies | Mark unavailable if framework does not support it |
+| Rule                     | Provenance            | Applies to           | Strength              | Notes                                                 |
+| ------------------------ | --------------------- | -------------------- | --------------------- | ----------------------------------------------------- |
+| Keep route files thin    | target ADR            | App Router routes    | required              | Delegates to screen components or route helpers       |
+| Use server-only sentinel | bundled ADR candidate | `lib/server-only/**` | required when adopted | Defer if no server-only framework boundary exists yet |
 
 Strength values:
 
@@ -36,11 +38,14 @@ Strength values:
 
 When rules conflict:
 
-- Prefer target ADRs over bundled references.
+- Treat accepted target ADRs as binding for refactor work.
+- In setup mode, treat target ADRs that contradict bundled guardrails as conflict evidence, not automatic permission to omit the bundled guardrail.
 - Prefer accepted docs over undocumented current drift.
 - Prefer specific local rules over broad generic rules.
 - Prefer current official framework requirements over stale examples when the framework behavior changed.
 - Do not silently merge conflicting rules into a compromise. Report the conflict.
+- If a bundled guardrail does not fit the current slice, record it as `defer` with the future repo condition that would activate it.
+- If target evidence points toward rejecting a bundled guardrail, ask an interview-style question and record the user-confirmed rationale.
 
 Conflict output:
 
@@ -55,6 +60,8 @@ Recommendation: <ask maintainer, draft ADR, limit scope, or follow accepted ADR>
 ## Target examples versus bundled examples
 
 Use target examples first when they exist and match accepted rules. Use bundled examples only as generic shape guidance when the target repo lacks examples or the user asks for a starter pattern.
+
+Do not use target examples to erase a bundled ADR guardrail unless they are tied to accepted target ADRs or the user explicitly confirms rejection.
 
 When using bundled examples:
 

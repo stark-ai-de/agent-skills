@@ -12,6 +12,21 @@
 
 ### Removed
 
+## v0.4.1 - 2026-06-10
+
+### Added
+
+### Changed
+
+- Updated `architecture-compass` setup and new-repo guidance so bundled ADR guardrails remain visible as adopted, adapted, deferred, or rejected decisions instead of being silently dropped by target-repository evidence.
+- Made `setup-report-template.md` the canonical setup output for bundled guardrail adoption decisions, with deferred and rejected guardrails carrying explicit follow-up context.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.4.0 - 2026-06-09
 
 ### Added

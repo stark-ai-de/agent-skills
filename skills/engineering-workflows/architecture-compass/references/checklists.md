@@ -7,6 +7,9 @@
 - [ ] `AGENTS.md` or the repo's equivalent agent-instruction file tells agents to treat accepted ADRs as binding.
 - [ ] ADR discovery paths are listed.
 - [ ] ADR precedence and conflict handling are documented.
+- [ ] Bundled ADR guardrails are listed with `adopt`, `adapt`, `defer`, or `reject`.
+- [ ] Deferred guardrails have a future trigger or owner condition.
+- [ ] Rejected guardrails have a user-confirmed rationale.
 - [ ] Existing ADR-linked examples are referenced instead of copied wholesale.
 - [ ] `docs/adr/index.md` or the repo's ADR index convention lists active decisions by area.
 - [ ] Stack rules are created or updated only when the repo has a policy or the user provided one.

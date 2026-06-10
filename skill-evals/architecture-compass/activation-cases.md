@@ -10,7 +10,7 @@ Prompt:
 Use Architecture Compass in setup mode for this repo. Make future agents rely on the provided ADRs.
 ```
 
-Expected: activate. The skill should inspect existing ADRs and docs, update or create agent instructions, update the ADR index, and return future prompts.
+Expected: activate. The skill should inspect existing ADRs and docs, compare bundled guardrails against target evidence, defer future-fit guardrails, challenge rejected guardrails, update or create agent instructions, update the ADR index, and return future prompts.
 
 ### Case 2: ADR setup for a new repo
 
@@ -20,7 +20,7 @@ Prompt:
 Use the Architecture Compass in setup mode for a new TypeScript monorepo. Create the minimal ADR governance files before implementation starts.
 ```
 
-Expected: activate. The skill should create a starter ADR governance plan with `AGENTS.md`, ADR index, source-structure ADR, optional stack rules, and validation notes.
+Expected: activate. The skill should create a starter ADR governance plan with `AGENTS.md`, ADR index, source-structure ADR, bundled guardrail adoption decisions, optional stack rules, and validation notes.
 
 ### Case 3: Existing repo refactor
 
@@ -50,7 +50,7 @@ Prompt:
 Create a starter source structure and ADRs for a new TypeScript monorepo so future implementation follows the same architecture rules.
 ```
 
-Expected: activate. The skill should produce an adoption plan, ADR draft, docs list, and starter examples.
+Expected: activate. The skill should produce an adoption plan, ADR draft, bundled guardrail adoption decisions, docs list, and starter examples.
 
 ### Case 6: Backend runtime composition
 
