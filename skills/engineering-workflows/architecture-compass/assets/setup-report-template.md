@@ -30,11 +30,19 @@
 ## Bundled guardrail adoption
 
 - Decisions: `adopt`, `adapt`, `defer`, or `reject`. Use `defer` when the guardrail is kept for future repo growth but not active in the current slice.
-- For `defer`, fill the future trigger or owner condition. For `reject`, fill the user-confirmed rejection rationale.
+- For `adapt`, fill the active adapted rule. For `defer`, fill the future trigger or owner condition. For `reject`, fill the user-confirmed rejection rationale.
 
-| Guardrail | Decision | Target evidence | Future trigger or owner condition | User-confirmed rejection rationale |
-| --------- | -------- | --------------- | --------------------------------- | ---------------------------------- |
-|           |          |                 |                                   |                                    |
+| Guardrail                                       | Decision | Target evidence | Active or adapted rule | Future trigger or owner condition | User-confirmed rejection rationale |
+| ----------------------------------------------- | -------- | --------------- | ---------------------- | --------------------------------- | ---------------------------------- |
+| Workspace and source-role ownership             |          |                 |                        |                                   |                                    |
+| Thin framework entrypoints                      |          |                 |                        |                                   |                                    |
+| Server-only and browser-safe runtime boundaries |          |                 |                        |                                   |                                    |
+| Request read/write boundaries                   |          |                 |                        |                                   |                                    |
+| Backend runtime composition                     |          |                 |                        |                                   |                                    |
+| Environment loading and config ownership        |          |                 |                        |                                   |                                    |
+| Infrastructure placement outside runtime source |          |                 |                        |                                   |                                    |
+| Export/import boundary policy                   |          |                 |                        |                                   |                                    |
+| Validation and documentation promotion path     |          |                 |                        |                                   |                                    |
 
 ## Active or starter ADRs
 

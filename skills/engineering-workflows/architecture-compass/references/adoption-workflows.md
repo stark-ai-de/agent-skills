@@ -31,7 +31,7 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
 
 1. Discover current ADR locations, architecture docs, stack rules, agent instructions, README/contribution docs, and approved examples.
 2. Preserve the repo's existing ADR directory and naming convention. If none exists, prefer `docs/adr/` unless the repo already uses another convention.
-3. Compare target evidence with bundled ADR guardrails. For each guardrail, record `adopt`, `adapt`, `defer`, or `reject`. Do not omit a guardrail because target evidence is sparse. Use `defer` when a guardrail does not fit the current slice but may fit future repo growth. Ask for a user-confirmed rationale when target evidence conflicts with a guardrail.
+3. Compare target evidence with the bundled ADR guardrail rows in `assets/setup-report-template.md`. For each guardrail, record `adopt`, `adapt`, `defer`, or `reject`. Do not omit a guardrail because target evidence is sparse. Use `defer` when a guardrail does not fit the current slice but may fit future repo growth. Ask for a user-confirmed rationale when target evidence conflicts with a guardrail.
 4. Add or update agent instructions so they state:
    - accepted ADRs are binding,
    - ADRs must be inspected before architecture-affecting code changes,
@@ -53,7 +53,7 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
    - optional `STACK_RULES.md`,
    - optional PR checklist,
    - minimal example files only for selected stack boundaries.
-3. Treat bundled ADR guardrails as the starter baseline. Mark each as adopted, adapted, deferred, or rejected. Use `defer` for guardrails that are not part of the first implementation slice.
+3. Treat the bundled ADR guardrail rows in `assets/setup-report-template.md` as the starter baseline. Mark each as adopted, adapted, deferred, or rejected. Use `defer` for guardrails that are not part of the first implementation slice.
 4. Avoid creating unused apps, packages, or backend services before they have owners.
 5. Mark open decisions explicitly instead of pretending the architecture is complete.
 6. Return first-implementation guardrails and validation commands.
