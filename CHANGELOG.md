@@ -12,6 +12,21 @@
 
 ### Removed
 
+## v0.4.2 - 2026-06-10
+
+### Added
+
+### Changed
+
+- Clarified the canonical `architecture-compass` bundled guardrail inventory for setup and new-repo runs.
+- Expanded setup reporting so adapted guardrails record the active adapted rule alongside defer and reject evidence.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.4.1 - 2026-06-10
 
 ### Added

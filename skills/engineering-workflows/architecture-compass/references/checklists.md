@@ -7,7 +7,8 @@
 - [ ] `AGENTS.md` or the repo's equivalent agent-instruction file tells agents to treat accepted ADRs as binding.
 - [ ] ADR discovery paths are listed.
 - [ ] ADR precedence and conflict handling are documented.
-- [ ] Bundled ADR guardrails are listed with `adopt`, `adapt`, `defer`, or `reject`.
+- [ ] Bundled ADR guardrails from `assets/setup-report-template.md` are listed with `adopt`, `adapt`, `defer`, or `reject`.
+- [ ] Adapted guardrails state the active adapted rule.
 - [ ] Deferred guardrails have a future trigger or owner condition.
 - [ ] Rejected guardrails have a user-confirmed rationale.
 - [ ] Existing ADR-linked examples are referenced instead of copied wholesale.

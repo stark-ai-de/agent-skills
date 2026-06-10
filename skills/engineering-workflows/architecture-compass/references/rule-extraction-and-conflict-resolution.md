@@ -16,7 +16,7 @@ Rank evidence in this order unless the user says otherwise:
 
 Do not treat a current code example as approved when it contradicts an accepted ADR. Treat it as drift unless the user or repo docs identify it as the newer accepted pattern.
 
-Evidence ranking does not mean bundled guardrails disappear when target evidence exists. In setup and new-repo modes, inspect every bundled guardrail and record an adoption decision. Absence of target evidence is not a reason to omit a guardrail. If a guardrail does not fit the current implementation slice, defer it with a future trigger. Contrary target evidence blocks silent adoption and requires an explicit user decision.
+Evidence ranking does not mean bundled guardrails disappear when target evidence exists. In setup and new-repo modes, inspect every bundled guardrail row from `assets/setup-report-template.md` and record an adoption decision. Absence of target evidence is not a reason to omit a guardrail. If a guardrail does not fit the current implementation slice, defer it with a future trigger. Contrary target evidence blocks silent adoption and requires an explicit user decision.
 
 ## Rule-set format
 

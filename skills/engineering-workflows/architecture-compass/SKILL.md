@@ -6,7 +6,7 @@ compatibility: Designed for Codex CLI, IDE extension, and Codex app. Works best 
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Architecture Compass
@@ -95,7 +95,7 @@ Inspect only the minimum context needed, but include these when relevant:
    - `setup`: install or refresh durable ADR guardrails.
    - `refactor`: align code, diffs, or new implementation with existing ADRs and examples.
      Internal sub-modes may be `audit`, `implementation`, `new-repo-bootstrap`, `pr-review`, `docs-sync`, or `stack-deviation`.
-2. Build a rule set from repo evidence and bundled guardrail candidates. Label each rule as `target ADR`, `target docs`, `target example`, `target stack rule`, `bundled ADR candidate`, `bundled pattern`, or `assumption`.
+2. Build a rule set from repo evidence and bundled guardrail candidates. Use the prefilled rows in `assets/setup-report-template.md` as the canonical bundled guardrail inventory for setup and new-repo runs. Label each rule as `target ADR`, `target docs`, `target example`, `target stack rule`, `bundled ADR candidate`, `bundled pattern`, or `assumption`.
 3. Resolve conflicts explicitly:
    - accepted target ADRs are binding for refactor work,
    - setup and new-repo work must record whether each bundled ADR guardrail is adopted, adapted, deferred, or rejected,
@@ -144,7 +144,7 @@ Read only what the mode requires:
 - `references/preferred-stack-profile.md` when the target repo has adopted this stack profile, asks for it, or needs a starter stack profile.
 - `references/checklists.md` before finalizing output.
 - `assets/refactor-report-template.md` when returning an audit or refactor report.
-- `assets/setup-report-template.md` when returning setup results, including new-repo guardrail adoption decisions.
+- `assets/setup-report-template.md` when returning setup results, including the canonical bundled guardrail inventory and new-repo guardrail adoption decisions.
 - `assets/new-repo-adoption-plan-template.md` only when a separate first-implementation layout plan is needed after the setup report.
 - `assets/agent-instructions-template.md` when creating or updating ADR-focused agent instructions.
 - `assets/adr-draft-template.md` when a target repo needs a source-structure ADR draft.
