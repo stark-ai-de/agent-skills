@@ -6,7 +6,7 @@ compatibility: Designed for Codex CLI, IDE extension, and Codex app. Works best 
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # Architecture Compass
@@ -88,6 +88,7 @@ Inspect only the minimum context needed, but include these when relevant:
 - Current file layout, import aliases, package manager, workspace tooling, test/lint/type-check commands, and CI expectations.
 - Existing generated-file conventions and allowlisted exceptions.
 - Bundled references after target repo evidence is inspected. In setup and new-repo modes, inspect bundled ADR guardrails as adoption candidates even when target repo evidence exists.
+- Target repository formatting and linting policy. For JavaScript or TypeScript starter setup, treat Oxc as the bundled default unless target ADRs, stack rules, or an explicit maintainer rejection choose another toolchain.
 
 ## Workflow
 
@@ -105,6 +106,7 @@ Inspect only the minimum context needed, but include these when relevant:
    - target docs outrank current drift,
    - current code examples count as evidence only when they are identified as approved examples or consistently match the ADR,
    - stale or contradictory ADRs require a maintainer decision or superseding ADR before broad implementation.
+   - Oxc formatting/linting is the bundled JS/TS starter default, but target ADRs, stack rules, or explicit maintainer rejection outrank that default.
 4. Map files by source role: route entrypoint, React component, hook, domain module, query contract, client query options, server query options, server-only module, Server Action, backend bootstrap, runtime composition, HTTP app, route plugin, service, config/env, infrastructure, test, fixture, generated file, or docs.
 5. Compare the current or proposed implementation against the rule set.
 6. Produce a concise gap report before broad edits. Include file paths, violated rule, severity, recommended change, and validation.

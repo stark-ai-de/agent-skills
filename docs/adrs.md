@@ -46,3 +46,6 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0015 | Accepted   | Prepare releases in change PRs.                                     |
 | 0016 | Accepted   | Use OpenAI metadata for Codex-facing skills.                        |
 | 0017 | Accepted   | Use Astro for the GitHub Pages skill catalog.                       |
+| 0018 | Accepted   | Use Bun runtime and pnpm package manager guidance.                  |
+| 0019 | Accepted   | Use native TypeScript tooling in Architecture Compass guidance.     |
+| 0020 | Accepted   | Use Oxc for formatting and linting.                                 |

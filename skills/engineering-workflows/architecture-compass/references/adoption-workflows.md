@@ -39,7 +39,7 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
    - conflicts with ADRs must be reported before implementation,
    - final responses should name the ADRs applied.
 5. Add or update an ADR index that lists active decisions by area.
-6. Add or update stack rules only when the repo has a dependency policy or the user provided one.
+6. Add or update stack rules only when the repo has a dependency policy, the user provided one, or a JS/TS starter setup needs the bundled Oxc lint/format default recorded.
 7. Add an optional PR checklist only when a PR-template convention exists or the user asks for one.
 8. Return a setup report and the canonical prompts future agents should use.
 
@@ -54,9 +54,10 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
    - optional PR checklist,
    - minimal example files only for selected stack boundaries.
 3. Treat the bundled ADR guardrail rows in `assets/setup-report-template.md` as the starter baseline. Mark each as adopted, adapted, deferred, or rejected. Use `defer` for guardrails that are not part of the first implementation slice.
-4. Avoid creating unused apps, packages, or backend services before they have owners.
-5. Mark open decisions explicitly instead of pretending the architecture is complete.
-6. Return first-implementation guardrails and validation commands.
+4. For JavaScript or TypeScript starter repos, record Oxc as the default lint/format toolchain unless the maintainer explicitly rejects it or target evidence already selects another accepted toolchain.
+5. Avoid creating unused apps, packages, or backend services before they have owners.
+6. Mark open decisions explicitly instead of pretending the architecture is complete.
+7. Return first-implementation guardrails and validation commands.
 
 ### Setup output
 

@@ -13,8 +13,15 @@ Use this reference only when the target repository has adopted these stack rules
 
 - Use Next.js as the default application framework for web projects.
 - Use TypeScript everywhere.
-- Use pnpm workspaces and Turbo for monorepo orchestration.
-- Use Oxc tools for linting and formatting when the repository has adopted them.
+- Use native TypeScript tooling as the preferred type-checking and editor baseline. While TypeScript 7 is pre-stable, install `@typescript/native-preview` and run `tsgo` instead of `tsc`; after TypeScript 7 is stable under the `typescript` package, use that stable `tsc` entry point.
+- Keep TypeScript 6 compatibility explicit for tools that still require the JavaScript compiler API: use `typescript` only where that peer dependency is required, or `@typescript/typescript6` / `tsc6` when a repo needs side-by-side TS6 diagnostics.
+- In VS Code, prefer the TypeScript Native Preview extension with `"js/ts.experimental.useTsgo": true`; in other editors, use the native TypeScript language server only when the editor integration is available.
+- Use Bun as the preferred app/backend runtime for new starter guidance when no target-repo ADR says otherwise.
+- Use pnpm workspaces, `pnpm-lock.yaml`, and Turbo for monorepo orchestration.
+- Treat pnpm as the dependency-install, workspace, and lockfile owner. Do not introduce `bun install` or `bun.lock` in pnpm-adopted repositories.
+- Use `bun run` for Bun-runtime commands when the target repo adopts Bun, but do not treat `bun run` as package-manager ownership.
+- Configure `pnpm-workspace.yaml` with explicit supply-chain hardening: `strictDepBuilds: true`, `blockExoticSubdeps: true`, `minimumReleaseAge: 1440`, `minimumReleaseAgeStrict: true`, `trustPolicy: no-downgrade`, and narrow `allowBuilds` entries for reviewed lifecycle scripts.
+- Use Oxc tools as the default linting and formatting toolchain for JavaScript and TypeScript starter guidance unless target-repo ADRs, stack rules, or explicit maintainer rejection choose another toolchain. Add `oxlint-tsgolint` only when the repo intentionally adopts type-aware linting, then run `oxlint --type-aware`; use `--type-check` as an optional combined diagnostics path, not as a silent replacement for the repo's explicit `tsgo` gate.
 - Deploy Next.js web projects to Vercel by default when no deployment ADR says otherwise.
 
 ## Runtime validation and parsing
@@ -41,6 +48,7 @@ Use this reference only when the target repository has adopted these stack rules
 - Consider GraphQL when many parameterized read requests benefit from dynamic queries, filtering, or field selection.
 - Do not default to SWR or ad hoc client-side fetch layers when TanStack Query and native Next.js patterns already cover the requirement.
 - Use ElysiaJS only when the system should run as a separate backend and serverless or API-route-based delivery is not the right fit.
+- Run Elysia backend services on Bun by default. Use the Elysia Node adapter only when the target repo's runtime ADR, deployment host, or dependency compatibility requires Node.js.
 
 ## Forms, URL state, and internationalization
 
