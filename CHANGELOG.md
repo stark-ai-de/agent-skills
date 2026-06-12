@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.4.3 - 2026-06-11
+
+### Added
+
+- Added ADRs for Architecture Compass starter guidance covering Bun/pnpm ownership, native TypeScript tooling, and Oxc lint/format defaults.
+- Added a publishable spec for the Architecture Compass Oxc tooling policy.
+
+### Changed
+
+- Updated `architecture-compass` preferred stack guidance for Bun runtimes, pnpm workspace hardening, native TypeScript `tsgo` usage, Oxc linting/formatting defaults, and layered Oxc type-aware linting.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.4.2 - 2026-06-10
 
 ### Added

@@ -42,6 +42,7 @@
 | Environment loading and config ownership        |          |                 |                        |                                   |                                    |
 | Infrastructure placement outside runtime source |          |                 |                        |                                   |                                    |
 | Export/import boundary policy                   |          |                 |                        |                                   |                                    |
+| Oxc formatting and linting for JS/TS starters   |          |                 |                        |                                   |                                    |
 | Validation and documentation promotion path     |          |                 |                        |                                   |                                    |
 
 ## Active or starter ADRs

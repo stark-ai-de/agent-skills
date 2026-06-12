@@ -58,7 +58,7 @@ Run the clean-copy public install smoke test:
 npm run smoke:install
 ```
 
-Optional Oxc checks:
+Oxc and workflow checks:
 
 ```bash
 pnpm install
@@ -100,6 +100,7 @@ node scripts/print-release-notes.mjs
 - Incubator category README files state that incubator skills are not part of the public catalog.
 - Incubator skills set `metadata.internal: true` so root `npx skills` discovery hides them unless `INSTALL_INTERNAL_SKILLS=1` is explicitly set.
 - Skill scripts avoid obvious high-risk shell patterns.
+- Oxc formatting and script linting pass through `pnpm format:check` and `pnpm lint`.
 - GitHub Actions workflows pass `actionlint` through `pnpm lint:actions`.
 - The Astro GitHub Pages catalog builds generated public and incubator skill routes from `SKILL.md`.
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.

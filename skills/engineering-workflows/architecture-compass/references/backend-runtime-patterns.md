@@ -18,12 +18,13 @@ It must not own app-specific clients, topics, service instances, config parsing,
 
 ## Shared HTTP base
 
+The default starter runtime is Bun. Do not add the Elysia Node adapter unless the target repo has a Node.js runtime ADR, deployment host requirement, or dependency compatibility reason.
+
 Generic shape:
 
 ```ts
 import { randomUUID } from "node:crypto";
 
-import { node } from "@elysiajs/node";
 import { Elysia } from "elysia";
 
 export interface BackendElysiaOptions {
@@ -58,7 +59,7 @@ export function createRequestIdPlugin(options: { name: string; requestIdHeader: 
 export function createBackendElysiaApp(options: BackendElysiaOptions) {
   const pluginOptions = getBackendPluginOptions(options);
 
-  return new Elysia({ adapter: node(), name: options.name })
+  return new Elysia({ name: options.name })
     .use(createRequestIdPlugin(pluginOptions))
     .use(createErrorHandlingPlugin(pluginOptions))
     .use(createLoggingPlugin(pluginOptions));
@@ -66,6 +67,8 @@ export function createBackendElysiaApp(options: BackendElysiaOptions) {
 ```
 
 Keep app-specific response models, clients, services, topics, and config out of this package.
+
+For a target repo that has adopted Node.js for backend services, use the documented Elysia Node adapter in this shared HTTP base and record the runtime reason in the repo ADR or stack rules.
 
 ## Health and readiness routes
 
@@ -110,14 +113,11 @@ export { createBackendServiceHttpApp as createHttpApp };
 
 ## Process bootstrap `main.ts`
 
-`main.ts` is process bootstrap. It loads env files, creates the runtime, creates the HTTP app, starts listening, registers signal handlers, coordinates shutdown, and then starts runtime loops. It does not contain business logic or create individual services.
+`main.ts` is process bootstrap. It runs after the target repo's Bun command has selected env-file behavior, creates the runtime, creates the HTTP app, starts listening, registers signal handlers, coordinates shutdown, and then starts runtime loops. It does not contain business logic or create individual services.
 
 ```ts
-import { loadBackendServiceEnvFiles } from "./env-files";
 import { createHttpApp } from "./http-app";
 import { createRuntime } from "./runtime";
-
-loadBackendServiceEnvFiles();
 
 const runtime = await createRuntime();
 const app = createHttpApp(runtime);
@@ -257,39 +257,18 @@ export type BackendServiceConfig = ReturnType<typeof loadBackendServiceConfig>;
 
 ## Env file loading
 
-Backend workers are plain Node processes. They load local env files in `main.ts` before runtime creation.
+Backend workers are Bun processes by default. Bun loads `.env` files automatically unless disabled, so target repos should make env-file policy explicit in package scripts, process-manager commands, or deployment config before `main.ts` runs.
 
-```ts
-import { existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { loadEnvFile } from "node:process";
-import { fileURLToPath } from "node:url";
-
-const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const repoRoot = resolve(packageRoot, "../..");
-
-const nodeEnv = process.env.NODE_ENV ?? "development";
-const envFileNames =
-  nodeEnv === "test"
-    ? [`.env.${nodeEnv}.local`, `.env.${nodeEnv}`, ".env"]
-    : [`.env.${nodeEnv}.local`, ".env.local", `.env.${nodeEnv}`, ".env"];
-
-export function loadBackendServiceEnvFiles(): void {
-  for (const root of [packageRoot, repoRoot]) {
-    for (const envFileName of envFileNames) {
-      loadEnvFileIfExists(resolve(root, envFileName));
-    }
-  }
-}
-
-function loadEnvFileIfExists(path: string): void {
-  if (existsSync(path)) {
-    loadEnvFile(path);
+```json
+{
+  "scripts": {
+    "dev": "bun --env-file=.env.development.local --watch src/main.ts",
+    "start": "bun --no-env-file src/main.ts"
   }
 }
 ```
 
-Env file loading is a bootstrap concern. Service modules, route modules, and domain modules must not load env files.
+Env file selection is a deployable-app concern. Service modules, route modules, and domain modules must not load env files or read scattered environment variables. Runtime code receives parsed config explicitly.
 
 ## Dependency injection policy
 

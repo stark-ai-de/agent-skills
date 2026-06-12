@@ -11,7 +11,8 @@ Use this template for the first-implementation layout plan after guardrail adopt
 - Styling/UI:
 - Data/request layer:
 - Package manager:
-- Lint/format:
+- Lint/format: Oxc for JavaScript/TypeScript starters unless target ADRs, stack rules, or explicit rejection choose another toolchain.
+- pnpm workspace hardening:
 
 ## Initial layout
 
@@ -60,8 +61,42 @@ Include only examples selected for the stack:
 - [ ] New files have one source role.
 - [ ] Runtime boundaries are explicit.
 - [ ] Stack choices match stack rules.
+- [ ] Oxc owns JavaScript/TypeScript linting and formatting, or the accepted alternative is recorded.
+- [ ] pnpm owns dependency installation, workspace resolution, and lockfile state.
+- [ ] `pnpm-workspace.yaml` includes supply-chain hardening and reviewed `allowBuilds` entries.
 - [ ] Docs point to canonical ADRs.
 - [ ] Validation commands exist.
+
+## pnpm workspace baseline
+
+```yaml
+packages:
+  - "."
+  - "apps/*"
+  - "packages/*"
+strictDepBuilds: true
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+trustPolicy: no-downgrade
+allowBuilds: {}
+```
+
+Populate `allowBuilds` only after reviewing dependencies that genuinely need lifecycle scripts. Add narrow `minimumReleaseAgeExclude` or `trustPolicyExclude` entries only for approved urgent or compatibility cases.
+
+## Oxc lint/format baseline
+
+```json
+{
+  "scripts": {
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint"
+  }
+}
+```
+
+Keep formatter and linter config in repo-root Oxc config files unless target repo structure requires package-local overrides.
 
 ## Validation commands
 
