@@ -130,6 +130,7 @@ Do not create a new `cursor-*` skill when the only difference is the filesystem 
     ```
 
     Keep `codex-memory-curator` under Codex operations unless the user explicitly wants Cursor to inspect Codex memory state.
+
 11. Audit `codegraph-ast-grep` for Codex MCP wording. If a concise compatibility note is enough, update the existing skill and bump its version. If Cursor MCP setup needs a materially different workflow, create a follow-up `cursor-codegraph-ast-grep` spec or add it to this implementation only after updating the file plan and eval proof.
 12. Do not create `cursor-memory-curator` in this change. Record it as a separate possible future skill only after verifying Cursor's durable state model and desired cleanup boundaries.
 13. Update `CHANGELOG.md`, package release metadata, public catalog tables, and affected `metadata.version` values.
