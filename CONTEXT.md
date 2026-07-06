@@ -1,6 +1,6 @@
 # Agent Skills Catalog Context
 
-This repository publishes public Agent Skills for repo maintenance, Codex operations, skill maintenance, productivity, and repeatable engineering workflows.
+This repository publishes public Agent Skills for repo maintenance, Codex operations, Cursor operations, skill maintenance, productivity, and repeatable engineering workflows.
 
 ## Canonical Terms
 

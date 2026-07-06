@@ -2,6 +2,10 @@
 
 Use this reference when the task is installation, MCP setup, or repository initialization.
 
+## Runtime boundary
+
+The executable MCP commands in this reference are Codex commands unless explicitly labeled otherwise. Codex MCP commands and `~/.codex/config.toml` snippets are Codex-only. When the user is installing the skill for Cursor, use `npx skills ... -a cursor` for the skill install and do not write Codex MCP config as if it were Cursor config. For Cursor or another runtime's MCP setup, inspect the target repo's runtime configuration or current runtime docs before proposing config writes.
+
 ## Preflight
 
 From the target repository root:
@@ -22,7 +26,7 @@ for tool in pnpm npm yarn bun brew cargo pip pipx uvx codegraph ast-grep; do
 done
 ```
 
-Check existing config before editing anything:
+Check existing Codex config before editing anything when Codex MCP is in scope:
 
 ```bash
 ls -la .codex .codegraph 2>/dev/null || true
@@ -62,7 +66,7 @@ Then confirm:
 
 - Install scope: global or user-wide for use across many repos, project-local for one repo or evaluation, or diagnostics-only when tools are already available.
 - Package manager per tool: choose from package managers found in preflight; do not install a new package manager unless the user asks.
-- MCP config location: printed snippet only, CodeGraph-managed local install when supported, or user-level Codex registration.
+- MCP config location: printed snippet only, CodeGraph-managed local install when supported, user-level Codex registration, or a runtime-specific path after its current config shape is verified.
 
 CodeGraph and ast-grep do not have identical install channels. If both tools need installation, ask separately for the CodeGraph install path and the ast-grep install path.
 
@@ -70,11 +74,11 @@ CodeGraph and ast-grep do not have identical install channels. If both tools nee
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | CodeGraph    | `npx @colbymchenry/codegraph` for one-time setup, `pnpm add -g @colbymchenry/codegraph`, or `npm install -g @colbymchenry/codegraph` for user-wide CLI availability | Do not offer `brew`, `cargo`, `pip`, `pipx`, `yarn`, or `bun` CodeGraph commands unless upstream documents them. |
 | ast-grep CLI | Project-local `pnpm`, `npm`, `yarn`, or `bun`; user-wide `pnpm`, `npm`, `brew`, `cargo`, `pipx`, or `pip`                                                           | Do not assume a global install when the user only wants to test one repo.                                        |
-| ast-grep MCP | `uvx` runner plus Codex MCP registration                                                                                                                            | Do not treat `uvx` as installing the normal ast-grep CLI.                                                        |
+| ast-grep MCP | `uvx` runner plus Codex MCP registration when Codex is the target                                                                                                   | Do not treat `uvx` as installing the normal ast-grep CLI.                                                        |
 
 ## Global vs project-local MCP registration
 
-Global or user-level Codex MCP registration is the right default when the user wants the same server available across many repositories. It avoids repeating `codex mcp add` in each checkout, keeps the Codex server list consistent, and works well for servers that infer the active project from the client root URI or current repo context, such as CodeGraph.
+Global or user-level runtime MCP registration is the right default when the user wants the same server available across many repositories. For Codex, this avoids repeating `codex mcp add` in each checkout, keeps the Codex server list consistent, and works well for servers that infer the active project from the client root URI or current repo context, such as CodeGraph.
 
 Project-local MCP config is better when a server needs repo-specific environment, pinned commands, or team-reproducible behavior. It avoids leaking experimental tools into unrelated work and can point at a repo `sgconfig.yml`, but each repo needs its own config and the path can become stale after moving a checkout.
 
@@ -94,7 +98,7 @@ Give hints for every package manager found in preflight:
 | `pip`           | Python environment install       | Use only when the user explicitly wants the CLI in the active Python environment.             |
 | `uvx`           | One-time MCP server runner       | Useful for ast-grep MCP experiments; it does not install the ast-grep CLI for normal use.     |
 
-When setup is complete, explain the practical improvement in one or two sentences: CodeGraph gives Codex a semantic map for symbols, callers, callees, traces, and impact; ast-grep adds syntax-aware search and rule testing so refactors can start from exact matches instead of broad text search.
+When setup is complete, explain the practical improvement in one or two sentences: CodeGraph gives the agent a semantic map for symbols, callers, callees, traces, and impact; ast-grep adds syntax-aware search and rule testing so refactors can start from exact matches instead of broad text search.
 
 ## Approval-required command matrix
 

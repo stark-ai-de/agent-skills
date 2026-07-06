@@ -12,6 +12,37 @@
 
 ### Removed
 
+## v0.5.0 - 2026-07-06
+
+### Added
+
+- Added the promoted `cursor-spec-interviewer` public skill under Cursor Operations with self-contained templates, references, Cursor execution prompt asset, and eval proof.
+- Added the promoted `cursor-memory-curator` public skill under Cursor Operations with Cursor-native context inventory, redacted risk scanning, approval-gated backup, cleanup templates, references, and eval proof.
+- Added the promoted `claude-memory-curator` public skill under Claude Operations with Claude Code context inventory, redacted risk scanning, approval-gated backup, cleanup templates, references, and eval proof.
+- Added the promoted `claude-spec-interviewer` public skill under Claude Operations with Claude Code-native source challenge, ADR gate, persistence guidance, execution prompt asset, templates, references, and eval proof.
+- Added ADR-0021 to keep portable public skills in workflow categories and reserve runtime operations categories for runtime-specific behavior.
+- Added Cursor global and project-local install examples for `cursor-spec-interviewer` and `cursor-memory-curator`.
+- Added Claude Code project-local and user-level install guidance for `claude-spec-interviewer` and `claude-memory-curator`.
+
+### Changed
+
+- Moved `codegraph-ast-grep` to Engineering Workflows and updated its setup wording with runtime-specific MCP boundaries while keeping Codex MCP configuration clearly Codex-only.
+- Clarified that `codex-memory-curator` remains scoped to Codex memory state even when installed from Cursor.
+- Updated public catalog docs and package metadata for Cursor Operations and Claude Operations.
+- Tightened Claude skill descriptions so trigger keywords are front-loaded and resilient to Claude Code skill-list truncation.
+- Revised `codex-spec-interviewer` 0.2.0 with a deduplicated payload, clearer Codex integration boundaries, private-spec destination guidance, and refocused rollout guidance.
+
+### Fixed
+
+- Fixed `codex-spec-interviewer` artifact-destination guidance so private, exploratory, sensitive, or not-yet-public specs stay under the ignored `docs/specs/do-not-publish/` structure unless the maintainer explicitly confirms a publishable `docs/specs/` destination.
+- Fixed spec-interviewer eval proof so explicit no-file persistence declines are exempt from persisted-path checks.
+- Removed stale Cursor proof text that still listed the Codex spec-interviewer payload cleanup as a pending follow-up.
+- Fixed `claude-memory-curator` inventory and risk scanning so explicit Claude auto-memory directories do not cause repo instruction files to be classified as auto-memory topics.
+
+### Deprecated
+
+### Removed
+
 ## v0.4.3 - 2026-06-11
 
 ### Added

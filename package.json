@@ -1,13 +1,16 @@
 {
   "name": "agent-skills",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "private": true,
-  "description": "Public Agent Skills catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
+  "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
     "adr",
     "agent-skills",
     "ai-agents",
+    "anthropic-claude",
+    "claude-code",
     "codex",
+    "cursor",
     "developer-tools",
     "openai-codex",
     "pr-review",

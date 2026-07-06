@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Codex Memory Curator
@@ -13,6 +13,8 @@ metadata:
 ## Goal
 
 Audit Codex memories as user-owned durable state: expose stale, unsafe, duplicated, or misplaced entries; propose better destinations; add a structured cleanup plan when approval needs precision; and apply cleanup only after a report, backup, and explicit user approval.
+
+When installed or invoked from Cursor, keep the subject scoped to Codex memory files and Codex memory configuration. Do not treat this as a Cursor memory, Cursor rules, or Cursor workspace-state curator.
 
 ## Core principle
 
@@ -29,6 +31,7 @@ Memory is context, not truth. The latest user request, current repo files, `AGEN
 
 - Do not use for ordinary repo documentation cleanup unless Codex memories are part of the task.
 - Do not use for generic prompt engineering that does not inspect memory files or memory config.
+- Do not use for Cursor rules, Cursor settings, or Cursor workspace-state cleanup unless Codex memories are also explicitly part of the task.
 - Do not modify memories when the user only asked for review.
 - Do not inspect unrelated personal files outside Codex memory/config paths and the current repo files needed to verify conflicts.
 

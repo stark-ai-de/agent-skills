@@ -10,7 +10,7 @@
 [![GitHub Pages](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml)
 [![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
-Public Agent Skills for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
+Public Agent Skills for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 
 Skills in this repository are reviewed before they are added to the public catalog. Draft and experimental skills live in the incubator until they have enough evaluation proof and maintenance clarity.
 
@@ -26,11 +26,47 @@ npx skills@latest add stark-ai-de/agent-skills --list
 
 This only lists skills; it does not install them or create a skills.sh install event.
 
-Install all promoted public skills for Codex:
+Install all Cursor-ready public skills globally for Cursor:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill '*' -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep -g -a cursor -y
 ```
+
+Install the Cursor-native spec interviewer project-locally for Cursor:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor
+```
+
+Install the Cursor-native memory curator project-locally for Cursor:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor
+```
+
+Install the Claude Code public skills from a repository clone into project-local Claude skills:
+
+```bash
+mkdir -p .claude/skills
+cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
+cp -R skills/claude-operations/claude-memory-curator .claude/skills/
+```
+
+Install them user-wide for Claude Code:
+
+```bash
+mkdir -p ~/.claude/skills
+cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
+cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
+```
+
+Install all Codex-ready public skills globally for Codex:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass -g -a codex -y
+```
+
+Avoid `--skill '*'` for a single runtime: the wildcard selects every public skill, so it would also install Cursor- and Claude-specific skills such as `cursor-spec-interviewer`, `cursor-memory-curator`, and `claude-spec-interviewer` into Codex.
 
 Install a promoted public skill for Codex:
 
@@ -41,7 +77,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
 ```
 
-Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, exploration, structural search, or refactor planning:
+Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, runtime-specific MCP guidance, exploration, structural search, or refactor planning:
 
 ```text
 Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning.
@@ -55,6 +91,12 @@ Typical use cases:
 - find exact code shapes such as unsafe writes, repeated handlers, or deprecated API calls,
 - combine semantic scope from CodeGraph with syntax-exact ast-grep matches for small refactors.
 
+Install the same portable skill for Cursor when a Cursor project needs CodeGraph plus ast-grep guidance:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a cursor -y
+```
+
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
 
 ```text
@@ -67,6 +109,30 @@ Use `codex-memory-curator` when Codex memory state needs review or cleanup:
 Use $codex-memory-curator to audit my Codex memories for stale repo rules, sensitive entries, and cleanup candidates.
 ```
 
+Use `cursor-spec-interviewer` when a Cursor Agent coding request is still fuzzy:
+
+```text
+Use $cursor-spec-interviewer to turn this Cursor refactor idea into a Cursor-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+```
+
+Use `cursor-memory-curator` when Cursor durable context needs review or cleanup:
+
+```text
+Use $cursor-memory-curator to audit my Cursor rules, stale persistent context, and cleanup candidates.
+```
+
+Use `claude-spec-interviewer` when a Claude Code coding request is still fuzzy:
+
+```text
+Use $claude-spec-interviewer to turn this Claude Code refactor idea into a persisted implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+```
+
+Use `claude-memory-curator` when Claude Code durable context needs review or cleanup:
+
+```text
+Use $claude-memory-curator to audit my CLAUDE.md files, Claude rules, auto memory, stale instructions, and cleanup candidates.
+```
+
 Use `architecture-compass` when a repository needs ADR guardrails or ADR-guided refactoring:
 
 ```text
@@ -77,24 +143,29 @@ Use $architecture-compass in setup mode to install ADR guardrails, or refactor m
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-| Skill                                                                                | Use when                                                                                                                                                 | Proof                                                                                 |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md) | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.       | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)     |
-| [`codegraph-ast-grep`](skills/codex-operations/codegraph-ast-grep/SKILL.md)          | CodeGraph and ast-grep need setup, MCP config, repo exploration, structural search, impact analysis, or safe refactor planning.                          | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)         |
-| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)      | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning. | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)     |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)  | A feature, bugfix, refactor, migration, repo-wide change, or architecture task needs a user-verified, persisted Codex-ready spec before implementation.  | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md) |
+| Skill                                                                                  | Use when                                                                                                                                                           | Proof                                                                                   |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)   | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.                 | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)       |
+| [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)     | Claude Code durable context is stale, noisy, conflicting, sensitive, misplaced, unenforced, or needs review, cleanup plans, or destination classification.         | [`skill-evals/claude-memory-curator/`](skill-evals/claude-memory-curator/README.md)     |
+| [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Claude Code task needs a persisted Claude-ready spec first.                 | [`skill-evals/claude-spec-interviewer/`](skill-evals/claude-spec-interviewer/README.md) |
+| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need setup, runtime-specific MCP guidance, repo exploration, structural search, impact analysis, or safe refactor planning.                 | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
+| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)        | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning.           | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)       |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)    | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Codex task needs a user-verified, persisted Codex-ready spec first.         | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md)   |
+| [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md)     | Cursor durable context is stale, noisy, ignored, sensitive, conflicting, or needs review, cleanup plans, destination classification, or settings action guidance.  | [`skill-evals/cursor-memory-curator/`](skill-evals/cursor-memory-curator/README.md)     |
+| [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Cursor Agent task needs a user-verified, persisted Cursor-ready spec first. | [`skill-evals/cursor-spec-interviewer/`](skill-evals/cursor-spec-interviewer/README.md) |
 
 ## Repository Layout
 
 - [`skills/`](skills/README.md) - promoted public skills installable through `npx skills`.
 - [`incubator/skills/`](incubator/README.md) - candidate skills with `metadata.internal: true`; not public catalog entries.
 - [`skill-evals/`](skill-evals/README.md) - maintainer proof for promotion decisions, kept outside runtime skill payloads.
-- [`docs/specs/`](docs/specs/README.md) - publishable implementation specs; private drafts belong in ignored `do-not-publish/`.
+- [`docs/specs/`](docs/specs/README.md) - publishable implementation specs; private, exploratory, sensitive, or not-yet-public specs belong in ignored `do-not-publish/`.
 - [`docs/specs.md`](docs/specs.md) - repository policy for persisted implementation specs.
 - [`docs/adrs/`](docs/adrs/README.md) - short decision record files for repo-level policy.
 - [`docs/adrs.md`](docs/adrs.md) - ADR policy and index.
 - [`site/`](site/) - Astro static GitHub Pages site generated from public and incubator `SKILL.md` files.
 - `.agents/skills/` - ignored maintainer-local helper installs; not part of this catalog.
+- `.claude/skills/` - optional ignored Claude Code project-local installs; not part of this catalog.
 
 ## Specs and ADRs
 

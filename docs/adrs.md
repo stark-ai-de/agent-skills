@@ -49,3 +49,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0018 | Accepted   | Use Bun runtime and pnpm package manager guidance.                  |
 | 0019 | Accepted   | Use native TypeScript tooling in Architecture Compass guidance.     |
 | 0020 | Accepted   | Use Oxc for formatting and linting.                                 |
+| 0021 | Accepted   | Place portable public skills in workflow categories.                |
