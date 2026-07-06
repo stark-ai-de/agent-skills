@@ -14,7 +14,7 @@ A passing standard output should include:
 - final verification checkpoint,
 - artifact paths and persistence status,
 - user verification,
-- persisted artifact path,
+- persisted artifact path, or proposed artifact path plus persistence decline or blocker,
 - design notes,
 - task breakdown,
 - validation commands,

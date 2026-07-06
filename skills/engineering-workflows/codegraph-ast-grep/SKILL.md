@@ -1,25 +1,28 @@
 ---
 name: codegraph-ast-grep
-description: Use when a repo needs CodeGraph plus ast-grep for Codex MCP setup, exploration, impact analysis, structural search, or safe refactor planning.
+description: Use when a repo needs CodeGraph plus ast-grep setup, runtime-specific MCP guidance, exploration, impact analysis, structural search, or safe refactor planning.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
-  category: codex-operations
-  version: "0.1.2"
+  category: engineering-workflows
+  version: "0.1.3"
 ---
 
 # CodeGraph + ast-grep
 
 ## Goal
 
-Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repository maps, symbol lookup, call flow, call-path tracing, and impact analysis; ast-grep for deterministic AST-based pattern search, rule testing, and refactor planning.
+Help an agent use CodeGraph and ast-grep together: CodeGraph for semantic repository maps, symbol lookup, call flow, call-path tracing, and impact analysis; ast-grep for deterministic AST-based pattern search, rule testing, and refactor planning.
+
+Use the same exploration workflow from Codex, Cursor, or another Agent Skills client. Keep runtime-specific MCP registration separate: Codex MCP commands and `~/.codex/config.toml` are Codex-only, while Cursor or other runtime MCP setup must be verified from current docs or the target repo's runtime configuration before writing config.
 
 ## When to use
 
-- The user asks to set up CodeGraph, ast-grep, or MCP servers for Codex CLI.
+- The user asks to set up CodeGraph, ast-grep, or MCP servers for an agent runtime such as Codex CLI or Cursor.
+- The user asks whether this skill can be installed or used from Codex, Cursor, or another Agent Skills client.
 - A repo needs faster exploration before debugging, refactoring, review, or architecture work.
 - The task requires finding symbols, callers, callees, affected files, route handlers, imports, or structural code patterns.
-- The user mentions `codegraph`, `ast-grep`, `sg`, `codex mcp`, `.codegraph`, `sgconfig`, structural search, or AST rules.
+- The user mentions `codegraph`, `ast-grep`, `sg`, `codex mcp`, Cursor MCP, `.codegraph`, `sgconfig`, structural search, or AST rules.
 
 ## Common use cases
 
@@ -38,17 +41,18 @@ Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repositor
 
 ## Inputs to inspect
 
-- Repository root, monorepo layout, and existing `.codex/`, `.codegraph/`, `sgconfig.yml`, or `sgconfig.yaml` files.
+- Repository root, monorepo layout, and existing `.codex/`, `.cursor/`, `.codegraph/`, `sgconfig.yml`, or `sgconfig.yaml` files.
 - For setup tasks, available package managers and tool paths.
 - `git status --short` before changing any files.
-- Codex MCP status through `/mcp` or `codex mcp --help` where available.
+- Runtime MCP status through `/mcp`, `codex mcp --help`, Cursor MCP settings, or equivalent runtime tooling when available and relevant.
+- Cursor skill install scope or Cursor MCP config only when the user asks for Cursor setup.
 - CodeGraph health through `codegraph status` when CodeGraph is installed.
 - ast-grep availability through `ast-grep --version` and optional ast-grep MCP availability.
 
 ## Workflow
 
 1. Identify the user's goal: setup, verification, exploration, impact analysis, structural search, or refactor planning.
-2. Check existing state before proposing changes: repo root, `.codegraph/`, Codex MCP config, ast-grep config, and tool versions.
+2. Check existing state before proposing changes: repo root, `.codegraph/`, runtime MCP config, ast-grep config, and tool versions.
 3. For setup, read `references/setup-and-mcp-config.md`, inspect available package managers, present the global vs repo-local tradeoff table with global marked as the recommended default, then ask the user whether to continue and which scope/package-manager path to use.
 4. Produce commands for review before any tool install or config write.
 5. For setup installs, respect the selected package manager's freshness, trust, and build-script policy. If policy affects the installed version or install behavior, report that without bypassing it unless the user explicitly asks for an exception.
@@ -60,7 +64,8 @@ Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repositor
 
 ## Safety rules
 
-- Do not install tools, modify `~/.codex/config.toml`, or write project config without explicit approval.
+- Do not install tools, modify runtime config such as `~/.codex/config.toml` or Cursor MCP settings, or write project config without explicit approval.
+- Do not describe `~/.codex/config.toml` or `codex mcp add` as Cursor configuration.
 - Do not paste full MCP config files into chat; inspect server names first and redact secrets or static headers.
 - Do not use `curl | sh` or equivalent install pipelines in default instructions.
 - Do not bypass package-manager freshness, trust, or build-script approval policies unless the user explicitly asks for that exception.
@@ -75,7 +80,7 @@ Help Codex use CodeGraph and ast-grep together: CodeGraph for semantic repositor
 
 Read only what the task needs:
 
-- `references/setup-and-mcp-config.md` for installation, Codex MCP, and repo initialization.
+- `references/setup-and-mcp-config.md` for installation, runtime MCP boundaries, and repo initialization.
 - `references/usage-playbook.md` for choosing CodeGraph vs ast-grep during exploration and refactors.
 - `references/ast-grep-rule-recipes.md` for TypeScript/TSX structural-search examples.
 - `references/troubleshooting.md` for MCP, indexing, backend, and matching failures.
@@ -103,4 +108,4 @@ For setup tasks only, also include user choices needed or received, recommendati
 - If `.codegraph/` is stale, run or recommend `codegraph sync` before relying on graph results.
 - If `codegraph status` reports a slow WASM backend or database locking, use `references/troubleshooting.md`.
 - If ast-grep finds no matches, inspect syntax with a smaller pattern or `dump_syntax_tree` before broadening the search.
-- If Codex MCP is unavailable, use CLI equivalents and tell the user what could not be verified.
+- If runtime MCP is unavailable, use CLI equivalents and tell the user what could not be verified.

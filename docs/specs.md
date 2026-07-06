@@ -4,12 +4,12 @@ Implementation specs are saved planning artifacts that guide coding work.
 
 Specs are working contracts, not durable architecture policy. Put long-lived repo, runtime, validation, publishing, security, or ownership decisions in [`docs/adrs/`](adrs/README.md), then link the ADR from the spec. See [`docs/adrs.md`](adrs.md) for ADR policy and the ADR index.
 
-This public catalog keeps private or repo-creation drafts in `docs/specs/do-not-publish/`, which is ignored by git except for its `.gitkeep`. Track publishable specs under `docs/specs/` only after the maintainer confirms they contain no secrets, customer data, private repo paths, or internal hostnames.
+This public catalog keeps private, sensitive, exploratory, or repo-creation drafts in `docs/specs/do-not-publish/`, which is ignored by git except for its `.gitkeep`. Track publishable specs under `docs/specs/` only after the maintainer explicitly confirms they are intended for public release and contain no secrets, customer data, private repo paths, or internal hostnames.
 
 ## Persistence
 
-- Save publishable specs in `docs/specs/` by default.
-- Save private or repo-creation drafts in `docs/specs/do-not-publish/`.
+- Save specs in `docs/specs/do-not-publish/` when they are private, exploratory, sensitive, repo-creation drafts, or not explicitly approved for public release.
+- Save specs in `docs/specs/` only when the maintainer explicitly confirms the spec is publishable.
 - Save ADRs in `docs/adrs/` using the repo's ADR filename pattern.
 - If a target repo lacks a specs or ADR folder, ask before creating one. Suggest `docs/specs/` and `docs/adrs/` unless the repo already has a better convention.
 - If the selected specs folder is ignored by git and the user expects a shared repo artifact, ask whether to keep it local-only, unignore that path, or choose a tracked docs path.

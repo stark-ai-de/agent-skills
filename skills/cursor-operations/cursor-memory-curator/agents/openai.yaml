@@ -1,0 +1,8 @@
+interface:
+  display_name: "Cursor Memory Curator"
+  short_description: "Audits and safely cleans up Cursor rules and persistent context"
+  default_prompt: "Use $cursor-memory-curator to audit my Cursor rules and persistent context, identify stale or risky entries, and propose a focused cleanup plan."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []
