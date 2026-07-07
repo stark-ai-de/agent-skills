@@ -24,7 +24,9 @@ function isWsl() {
 
 function buildUrl(xml) {
   const compressed = zlib.deflateRawSync(encodeURIComponent(xml)).toString("base64");
-  const payload = encodeURIComponent(JSON.stringify({ type: "xml", compressed: true, data: compressed }));
+  const payload = encodeURIComponent(
+    JSON.stringify({ type: "xml", compressed: true, data: compressed }),
+  );
   return `https://app.diagrams.net/?grid=0&pv=0&border=10&edit=_blank#create=${payload}`;
 }
 
@@ -37,7 +39,9 @@ function writeShortcut(url) {
 function wslpath(filePath) {
   const result = spawnSync("wslpath", ["-w", filePath], { encoding: "utf8" });
   if (result.status !== 0) {
-    throw new Error(`wslpath failed: ${(result.stderr || result.stdout || "").trim()}`);
+    throw new Error(
+      `wslpath failed: ${(result.stderr || result.stdout || "").trim()}`,
+    );
   }
   return result.stdout.trim();
 }
@@ -52,7 +56,9 @@ function openUrl(url) {
   }
   if (isWsl()) {
     const shortcut = writeShortcut(url);
-    return spawnSync("cmd.exe", ["/c", "start", "", wslpath(shortcut)], { stdio: "inherit" });
+    return spawnSync("cmd.exe", ["/c", "start", "", wslpath(shortcut)], {
+      stdio: "inherit",
+    });
   }
   return spawnSync("xdg-open", [url], { stdio: "inherit" });
 }
@@ -83,7 +89,9 @@ function main() {
   console.error(`Local file: ${inputPath}`);
   console.error(`URL length: ${url.length}`);
   if (url.length > 32768) {
-    console.error("Warning: URL is large; browsers may reject it. Use the .drawio file fallback if opening fails.");
+    console.error(
+      "Warning: URL is large; browsers may reject it. Use the .drawio file fallback if opening fails.",
+    );
   }
 
   if (shouldOpen) {
