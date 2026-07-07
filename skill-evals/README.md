@@ -22,6 +22,7 @@ Use this folder for:
 - [`codex-spec-interviewer`](codex-spec-interviewer/README.md)
 - [`cursor-memory-curator`](cursor-memory-curator/README.md)
 - [`cursor-spec-interviewer`](cursor-spec-interviewer/README.md)
+- [`drawio-diagrams`](drawio-diagrams/README.md)
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 

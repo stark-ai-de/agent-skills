@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1">
+    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="start" value="Start" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dcfce7,#14532d);strokeColor=light-dark(#16a34a,#86efac);fontColor=light-dark(#052e16,#f0fdf4);" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="process" value="Process request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ffffff,#1f2937);strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#111827,#f9fafb);" vertex="1" parent="1">
+          <mxGeometry x="220" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="done" value="Done" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);" edge="1" parent="1" source="start" target="process">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);" edge="1" parent="1" source="process" target="done">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
