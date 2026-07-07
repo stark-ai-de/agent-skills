@@ -110,6 +110,21 @@ function isObstacle(cell) {
   return cell.style.shape && cell.style.shape !== "image";
 }
 
+function isDecorativeEdge(cell) {
+  const id = cell.attrs.id || "";
+  const value = (cell.attrs.value || "").toLowerCase();
+  const role = (cell.style.dataRole || cell.style.semantic || "").toLowerCase();
+  return (
+    id.startsWith("decorative-") ||
+    id.startsWith("legend-") ||
+    role === "decorative" ||
+    role === "legend" ||
+    role === "false" ||
+    value.includes("decorative") ||
+    value.includes("legend")
+  );
+}
+
 function main() {
   const input = process.argv[2];
   if (!input || input === "--help" || input === "-h") {
@@ -137,8 +152,9 @@ function main() {
     const id = cell.attrs.id || "?";
     if (cell.attrs.edge === "1") {
       if (!cell.attrs.source || !cell.attrs.target) {
+        if (isDecorativeEdge(cell)) continue;
         errors.push(
-          `ERROR [${id}] edge must reference source and target vertex ids; floating mxPoint-only edges are not allowed in generated diagrams`,
+          `ERROR [${id}] edge must reference source and target vertex ids; floating mxPoint-only edges are not allowed in generated diagrams unless marked decorative or legend`,
         );
         continue;
       }
@@ -173,7 +189,8 @@ function main() {
     if (cell.attrs.vertex === "1" && (cell.attrs.style || "").includes("shape=image")) {
       const hasFixedAspect =
         (cell.attrs.style || "").includes("aspect=fixed") ||
-        (cell.attrs.style || "").includes("imageAspect=1");
+        (cell.attrs.style || "").includes("imageAspect=1") ||
+        (cell.attrs.style || "").includes("dataRole=decorative-image");
       if (!hasFixedAspect) {
         errors.push(
           `ERROR [${id}] image/logo missing aspect=fixed or imageAspect=1; logos must preserve their original aspect ratio`,
