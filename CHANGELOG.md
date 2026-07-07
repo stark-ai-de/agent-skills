@@ -5,14 +5,17 @@
 ### Added
 
 - Added strict XML preflight and browser URL helper coverage to the public `drawio-diagrams` skill.
+- Added `drawio-diagrams` rules for real-logo defaults, icon source cascades, connector routing, fixed-aspect logos, and simplified/detailed diagram views.
 
 ### Changed
 
 - Expanded `drawio-diagrams` setup, delivery, verification, and icon-catalog guidance with concrete commands and curated style starters.
+- Updated `drawio-diagrams` to ask for missing-logo fetch approval during initial setup and to use simplified icons consistently when approval or sources are unavailable.
 
 ### Fixed
 
 - Hardened `drawio-diagrams` regression coverage for forbidden XML constructs, icon catalog smoke checks, and browser URL generation.
+- Added diagram-rule regression coverage for floating semantic edges and distorted image/logo cells.
 
 ### Deprecated
 
@@ -127,7 +130,7 @@
 
 ### Changed
 
-- Updated public catalog, install examples, publishing docs, and generated site coverage for the `architecture-compass` promotion.
+- Updated public catalog, install examples, and generated site coverage for the `architecture-compass` promotion.
 
 ### Fixed
 
