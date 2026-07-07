@@ -135,6 +135,8 @@ Lookup workflow:
 4. Fetch only the selected SVG, for example `https://thesvg.org/icons/{slug}/{variant}.svg`, then embed it as a data URI.
 5. Record the source, slug, variant, and any license/trademark note available from the manifest in the final response.
 
+Use these tables as candidate lookup terms, not as pinned slugs. Verify each selected icon against the manifest before embedding or naming a concrete source path.
+
 High-value lookup examples to verify at runtime:
 
 | Domain        | Example lookup terms                                                                 |
@@ -146,6 +148,17 @@ High-value lookup examples to verify at runtime:
 | Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus                |
 | Dev/Security  | GitHub, GitLab, Python, TypeScript, React, Next.js, Node.js, Auth0, Okta, Sentry     |
 
+Enterprise / DACH B2B AI lookup pack:
+
+| Workflow area     | Candidate lookup terms                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| LLM/RAG           | LangGraph, LangSmith, LlamaIndex, Perplexity, DeepSeek, Workers AI                                               |
+| Automation        | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool                                                               |
+| ERP/CRM           | SAP, DATEV, Odoo, Salesforce, HubSpot, Microsoft, Slack, Notion                                                  |
+| Cloud/runtime     | AWS, Microsoft Azure, Google Cloud, Cloudflare, Cloudflare Workers AI, Vercel, Supabase, Docker, Kubernetes      |
+| Data/BI           | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Tableau, Metabase, Grafana, Elasticsearch, Prometheus          |
+| Delivery/security | GitHub, GitHub Actions, GitHub Copilot, GitLab, Python, TypeScript, React, Next.js, Node.js, 1Password, Keycloak |
+
 ## Icon validation
 
 Check that each recognized brand/source resolved to a real logo in `brand-logos` mode, dimensions are positive, aspect ratio is preserved, the icon is not larger than its parent node, the icon does not overlap the label, embedded data is valid in portable mode, remote image URLs are absent, no black/white logo was recolored, and light/dark variants remain visible.
@@ -154,4 +167,4 @@ Check that each recognized brand/source resolved to a real logo in `brand-logos`
 
 Do not fetch or embed remote icons without explicit user approval. When using a local icon cache, preserve source/license notes in the task output and embed the selected SVG as a data URI.
 
-Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, and icon validation rules.
+Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, enterprise AI lookup feedback, and icon validation rules.
