@@ -12,6 +12,10 @@ const examples = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/references/examples",
 );
+const urlOpener = path.join(
+  root,
+  "skills/engineering-workflows/drawio-diagrams/scripts/open-drawio-url.mjs",
+);
 
 function run(file) {
   return spawnSync("python3", [validator, file], {
@@ -22,6 +26,23 @@ function run(file) {
 
 function assertRun(name, file, expectedStatus, expectedOutput) {
   const result = run(file);
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+  if (result.error) throw result.error;
+  if (result.status !== expectedStatus) {
+    throw new Error(`${name}: expected exit ${expectedStatus}, got ${result.status}\n${output}`);
+  }
+  if (expectedOutput && !output.includes(expectedOutput)) {
+    throw new Error(
+      `${name}: expected output to include ${JSON.stringify(expectedOutput)}\n${output}`,
+    );
+  }
+}
+
+function assertNodeRun(name, args, expectedStatus, expectedOutput) {
+  const result = spawnSync("node", args, {
+    cwd: root,
+    encoding: "utf8",
+  });
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   if (result.error) throw result.error;
   if (result.status !== expectedStatus) {
@@ -54,6 +75,7 @@ const temp = mkdtempSync(path.join(tmpdir(), "drawio-validator-"));
 try {
   assertRun("clean example", path.join(examples, "example-clean.drawio"), 0);
   assertRun("architecture icons example", path.join(examples, "architecture-icons.drawio"), 0);
+  assertRun("icon catalog smoke example", path.join(examples, "icon-catalog-smoke.drawio"), 0);
   assertRun("existing edit before example", path.join(examples, "existing-edit-before.drawio"), 0);
   assertRun("existing edit after example", path.join(examples, "existing-edit-after.drawio"), 0);
   assertRun("multi-page example", path.join(examples, "multi-page.drawio"), 0);
@@ -63,6 +85,31 @@ try {
     path.join(examples, "example-contrast-broken.drawio"),
     1,
     "text/fill contrast below 4.5:1",
+  );
+  assertRun(
+    "comment strict parse example",
+    path.join(examples, "example-comment-broken.drawio"),
+    2,
+    "XML comments are forbidden",
+  );
+  assertRun(
+    "doctype strict parse example",
+    path.join(examples, "example-doctype-broken.drawio"),
+    2,
+    "DOCTYPE declarations are forbidden",
+  );
+  assertRun(
+    "processing instruction strict parse example",
+    path.join(examples, "example-processing-instruction-broken.drawio"),
+    2,
+    "processing instructions are forbidden",
+  );
+
+  assertNodeRun(
+    "browser URL builder",
+    [urlOpener, path.join(examples, "example-clean.drawio"), "--print-only"],
+    0,
+    "https://app.diagrams.net/?grid=0&pv=0&border=10&edit=_blank#create=",
   );
 
   const missingEdgeAs = path.join(temp, "missing-edge-as.drawio");
