@@ -1,17 +1,64 @@
 # Icon catalog and policy
 
-Icons are essential for architecture and technical diagrams, but labels remain mandatory unless the user asks for icon-only output.
+Icons are essential for architecture and technical diagrams. Labels remain mandatory unless the user asks for icon-only output.
 
-## Decision ladder
+## Icon mode default
 
-1. Native draw.io stencils and style strings.
-2. Shape search through available MCP `search_shapes` or an explicitly configured local shape index.
-3. Approved local SVG/icon cache, embedded as a data URI.
-4. Generic draw.io shapes if no icon is found.
+Default and recommended mode is `brand-logos`: use real product, vendor, and service logos/icons wherever a recognizable brand or technology is named. This maximizes recognition in stakeholder diagrams.
+
+Offer `simplified-icons` as an explicit alternative when the user wants non-branded visuals, legal review is pending, network access is denied, or a diagram should avoid vendor-specific marks. In simplified mode, use generic draw.io shapes consistently for the whole diagram or the whole visual family.
+
+Do not mix real logos with placeholders for equivalent entities. If Google Drive, Salesforce, and SAP use real logos, then Slack, Anthropic, OpenAI, code repositories, databases, queues, and other named products should also get real icons if a source is available. If a logo cannot be found after the approved source cascade, ask whether to continue searching, use a user-supplied logo, or downgrade that family to simplified icons.
+
+## Approval and setup behavior
+
+The skill may use already embedded icons, built-in draw.io stencils, configured local icon caches, and previously approved local manifests without asking again. Network fetches, package installs, MCP config writes, hosted services, and new cache downloads still require explicit approval.
+
+When brand logos are likely needed and no approved local source exists, ask during initial setup, before diagram generation:
+
+```text
+Recommended: use real logos for named products and embed them in the .drawio file.
+May I fetch missing SVG logos from approved icon sources for this diagram? If not, I will use simplified generic icons consistently.
+```
+
+Repository icon contracts usually govern application UI/code, not architecture diagrams. Default is to ignore repo icon contracts for diagrams. Ask only when the user explicitly wants the diagram to follow those contracts.
+
+## Source cascade for real icons
+
+Use the first source that yields a clean SVG/icon with the preferred variant. Preserve source names in the task report.
+
+| Priority | Source | Best for | Notes |
+| ---: | --- | --- | --- |
+| 1 | Existing embedded icon or approved local cache | repeat edits, offline/private work | Reuse exact logo variants already accepted in the file or project. |
+| 2 | Native draw.io stencils/style strings | cloud services, Kubernetes, networking, architecture primitives | Best for AWS/Azure/GCP/Kubernetes service icons and editable shapes. |
+| 3 | theSVG registry/cache | broad brand, SaaS, AI, cloud, product logos | Prefer symbol/icon variants over wordmarks; use `light`, `dark`, or `mono` only when the source provides those variants. |
+| 4 | Simple Icons / Simple Icons draw.io | popular brand glyphs | Useful when theSVG misses a brand or when a reusable draw.io library is preferred. |
+| 5 | Iconify icon sets | broad fallback across many maintained open-source icon sets | Search Iconify when individual libraries miss; export the selected SVG and embed it. |
+| 6 | Devicon / developer-icons | programming languages, frameworks, databases, dev tools | Useful for Code, GitHub, TypeScript, Python, React, Node, Docker, PostgreSQL, etc. |
+| 7 | Web3 and crypto packs | chains, wallets, coins, protocols | Use `web3icons`, `cryptocurrency-icons`, or equivalent approved caches for blockchain diagrams. |
+| 8 | Generic visual libraries | non-brand UI concepts | Material Symbols, Tabler, Lucide, Font Awesome, Bootstrap Icons, and Heroicons are good for generic users, locks, documents, alerts, arrows, servers, and UI metaphors. Lucide explicitly avoids brand logos, so use it only for simplified/generic mode. |
+
+## Logo consistency rules
+
+- Prefer pure symbol/icon variants. Do not use a text wordmark, such as a full OpenAI wordmark, unless all logos in that visual group are wordmarks or the user requested wordmarks.
+- If color logos are used in a diagram, use color variants for all logos where the source offers color. Do not mix color logos with monochrome variants except when a brand only offers black/white.
+- If a logo exists only in black or only in white, use exactly that source variant on a background where it remains visible. Do not recolor black/white logos.
+- Do not tint, recolor, crop, stretch, skew, or rotate brand logos.
+- Preserve aspect ratio. Image/logo cells must include `aspect=fixed` or an equivalent fixed-aspect image setting, and their geometry should match the SVG `viewBox` ratio whenever possible.
+- Put fixed-color logos on neutral chip backgrounds that work in light and dark mode.
+- A missing real icon is a warning to resolve before delivery, not a reason to silently emit a placeholder.
 
 ## Self-contained output
 
 Generated diagrams must embed SVG/image data as data URIs. Do not rely on remote image URLs inside diagram XML.
+
+Use:
+
+```text
+shape=image;image=data:image/svg+xml;base64,...;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;html=1;
+```
+
+Preserve aspect ratio. Use 48x48 or 60x60 icon cells, with label below or adjacent. For non-square logos, size the cell to the source viewBox ratio, for example 96x48 or 120x40.
 
 ## Curated native style starters
 
@@ -29,7 +76,7 @@ data: shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;s
 | --- | --- | ---: | --- |
 | AWS Lambda | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;` + `icon` | 60x60 | Known-good fixture style. |
 | AWS EC2 / compute | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;` + `icon` | 60x60 | Verify with shape search when exact service naming matters. |
-| AWS API Gateway | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;` + `icon` | 60x60 | Use a labelled box fallback if unavailable. |
+| AWS API Gateway | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;` + `icon` | 60x60 | Use a labelled box fallback only in simplified mode. |
 | AWS S3 / object storage | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;` + `icon` | 60x60 | Generic storage fallback: `data`. |
 | AWS RDS | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;` + `icon` | 60x60 | Generic relational DB fallback: `data`. |
 | AWS DynamoDB | `shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;` + `icon` | 60x60 | Generic NoSQL DB fallback: `data`. |
@@ -62,8 +109,8 @@ data: shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;s
 | Kubernetes Secret | `shape=mxgraph.kubernetes.secret;` + `icon` | 60x60 | Use a lock fallback if missing. |
 | Kubernetes Namespace | `shape=mxgraph.kubernetes.ns;` + `icon` | 60x60 | Usually better as a labelled container. |
 | User / actor | `shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;` | 40x70 | Good for flow and architecture entrypoints. |
-| Browser / client | `shape=mxgraph.mockup.forms.window;` + `box` | 140x80 | Fallback: rounded box labelled `Client`. |
-| Generic server | `shape=mxgraph.networks.server;` + `box` | 100x80 | Fallback: rounded box labelled `Server`. |
+| Browser / client | `shape=mxgraph.mockup.forms.window;` + `box` | 140x80 | Simplified-mode fallback for web client. |
+| Generic server | `shape=mxgraph.networks.server;` + `box` | 100x80 | Simplified-mode fallback for server. |
 | Generic database | `data` | 100x70 | Portable and theme-friendly. |
 | Generic queue | `shape=mxgraph.flowchart.stored_data;` + `box` | 120x60 | Label with queue/topic name. |
 | Lock / secret | `shape=mxgraph.basic.lock;` + `icon` | 48x48 | Fallback: small rounded box labelled `Secret`. |
@@ -78,13 +125,13 @@ Treat this table as a fast path, not as the full icon universe. For high-fidelit
 
 Do not maintain a static theSVG slug catalog in this skill. Slugs, aliases, variants, and license fields can drift, so verify them against an approved local manifest or the live registry before use.
 
-Use theSVG only after native stencils and configured local shape search miss a needed brand/product icon. Network access, CLI install, MCP use, or icon download requires explicit user approval unless the needed SVG already exists in an approved local cache.
+Use theSVG after local caches, native stencils, and configured local shape search miss a needed brand/product icon. Network access, CLI install, MCP use, or icon download requires explicit user approval unless the needed SVG already exists in an approved local cache.
 
 Lookup workflow:
 
 1. Search any approved local icon cache first.
 2. If the user approves network lookup, inspect `https://thesvg.org/api/registry.json` and match by slug, title, aliases, categories, and available variants.
-3. Prefer `mono`, `light`, or `dark` variants for theme-aware diagrams. Use `default` brand-color variants only on neutral chip backgrounds.
+3. Prefer pure icon/symbol variants over wordmarks. Use `mono`, `light`, or `dark` variants only when those variants are provided by the source and match the overall logo color mode.
 4. Fetch only the selected SVG, for example `https://thesvg.org/icons/{slug}/{variant}.svg`, then embed it as a data URI.
 5. Record the source, slug, variant, and any license/trademark note available from the manifest in the final response.
 
@@ -99,29 +146,12 @@ High-value lookup examples to verify at runtime:
 | Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus                |
 | Dev/Security  | GitHub, GitLab, Python, TypeScript, React, Next.js, Node.js, Auth0, Okta, Sentry     |
 
-## SVG embedding style
-
-Use:
-
-```text
-shape=image;image=data:image/svg+xml;base64,...;verticalLabelPosition=bottom;verticalAlign=top;html=1;
-```
-
-Preserve aspect ratio. Use 48x48 or 60x60 icon cells, with label below or adjacent.
-
-## Light/dark icon rules
-
-- Prefer native stencils for recolorable architecture symbols.
-- Use fixed brand colors only on neutral chip backgrounds.
-- Prefer `light`, `dark`, or `mono` variants when available.
-- Do not recolor brand logos unless the source provides the variant.
-
 ## Icon validation
 
-Check that each icon source resolved, dimensions are positive, aspect ratio is preserved, the icon is not larger than its parent node, the icon does not overlap the label, embedded data is valid in portable mode, remote image URLs are absent, and light/dark variants remain visible.
+Check that each recognized brand/source resolved to a real logo in `brand-logos` mode, dimensions are positive, aspect ratio is preserved, the icon is not larger than its parent node, the icon does not overlap the label, embedded data is valid in portable mode, remote image URLs are absent, no black/white logo was recolored, and light/dark variants remain visible.
 
 ## External icons
 
 Do not fetch or embed remote icons without explicit user approval. When using a local icon cache, preserve source/license notes in the task output and embed the selected SVG as a data URI.
 
-Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, and icon validation rules.
+Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, and icon validation rules.
