@@ -44,9 +44,7 @@ function assertRun(name, file, expectedStatus, expectedOutput) {
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   if (result.error) throw result.error;
   if (result.status !== expectedStatus) {
-    throw new Error(
-      `${name}: expected exit ${expectedStatus}, got ${result.status}\n${output}`,
-    );
+    throw new Error(`${name}: expected exit ${expectedStatus}, got ${result.status}\n${output}`);
   }
   if (expectedOutput && !output.includes(expectedOutput)) {
     throw new Error(
@@ -79,9 +77,7 @@ function assertNodeRun(name, args, expectedStatus, expectedOutput) {
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   if (result.error) throw result.error;
   if (result.status !== expectedStatus) {
-    throw new Error(
-      `${name}: expected exit ${expectedStatus}, got ${result.status}\n${output}`,
-    );
+    throw new Error(`${name}: expected exit ${expectedStatus}, got ${result.status}\n${output}`);
   }
   if (expectedOutput && !output.includes(expectedOutput)) {
     throw new Error(
@@ -109,33 +105,12 @@ const temp = mkdtempSync(path.join(tmpdir(), "drawio-validator-"));
 
 try {
   assertRun("clean example", path.join(examples, "example-clean.drawio"), 0);
-  assertRun(
-    "architecture icons example",
-    path.join(examples, "architecture-icons.drawio"),
-    0,
-  );
-  assertRun(
-    "icon catalog smoke example",
-    path.join(examples, "icon-catalog-smoke.drawio"),
-    0,
-  );
-  assertRun(
-    "existing edit before example",
-    path.join(examples, "existing-edit-before.drawio"),
-    0,
-  );
-  assertRun(
-    "existing edit after example",
-    path.join(examples, "existing-edit-after.drawio"),
-    0,
-  );
+  assertRun("architecture icons example", path.join(examples, "architecture-icons.drawio"), 0);
+  assertRun("icon catalog smoke example", path.join(examples, "icon-catalog-smoke.drawio"), 0);
+  assertRun("existing edit before example", path.join(examples, "existing-edit-before.drawio"), 0);
+  assertRun("existing edit after example", path.join(examples, "existing-edit-after.drawio"), 0);
   assertRun("multi-page example", path.join(examples, "multi-page.drawio"), 0);
-  assertRun(
-    "broken example",
-    path.join(examples, "example-broken.drawio"),
-    1,
-    "duplicate id",
-  );
+  assertRun("broken example", path.join(examples, "example-broken.drawio"), 1, "duplicate id");
   assertRun(
     "contrast example",
     path.join(examples, "example-contrast-broken.drawio"),
@@ -296,12 +271,7 @@ try {
 `,
     "utf8",
   );
-  assertRun(
-    "malformed root layer",
-    malformedRootLayer,
-    1,
-    '<mxCell id="1"/> must set parent="0"',
-  );
+  assertRun("malformed root layer", malformedRootLayer, 1, '<mxCell id="1"/> must set parent="0"');
 
   const missingVertexDimensions = path.join(temp, "missing-vertex-dimensions.drawio");
   writeFileSync(
@@ -311,12 +281,7 @@ try {
         </mxCell>`),
     "utf8",
   );
-  assertRun(
-    "vertex dimensions",
-    missingVertexDimensions,
-    1,
-    "vertex has no usable mxGeometry",
-  );
+  assertRun("vertex dimensions", missingVertexDimensions, 1, "vertex has no usable mxGeometry");
 
   const inlineFontSize = path.join(temp, "inline-font-size.drawio");
   writeFileSync(
