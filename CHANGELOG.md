@@ -12,6 +12,28 @@
 
 ### Removed
 
+## v0.6.0 - 2026-07-07
+
+### Added
+
+- Promoted `drawio-diagrams` into the public Engineering Workflows catalog for creating, editing, validating, and exporting editable draw.io / diagrams.net `.drawio` diagrams.
+- Added the `drawio-diagrams` runtime payload with concise workflow guidance, XML authoring references, diagram-type and theming playbooks, delivery guidance, public-safe examples, and OpenAI metadata.
+- Added deterministic draw.io validation for multi-page files, root/layer structure, attached vertex and edge geometry, dimensions, contrast, font-size, overlap, containment, icon, and edge-reference checks.
+- Added optional local helpers for draw.io Desktop export and explicitly approved local shape/icon-cache search.
+- Added `drawio-diagrams` eval proof, promotion cases, rubric, and a public release spec.
+- Added ADR-0022 to allow dependency-free Python helpers by exception for complex deterministic public-skill validation.
+
+### Changed
+
+- Updated public catalog docs, Engineering Workflows listings, install guidance, publishing docs, package metadata, and generated site coverage for the `drawio-diagrams` promotion.
+- Extended repository validation with draw.io examples and validator scenarios.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.5.0 - 2026-07-06
 
 ### Added

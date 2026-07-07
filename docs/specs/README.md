@@ -5,3 +5,11 @@ Publishable implementation specs live in this folder only after maintainer confi
 Private, exploratory, sensitive, repo-creation, or not-yet-public specs belong in `do-not-publish/`, which is ignored by git.
 
 For spec policy, naming, ADR linkage, and documentation update rules, see [`../specs.md`](../specs.md).
+
+## Tracked Specs
+
+- [`architecture-compass-oxc-tooling-policy-spec.md`](architecture-compass-oxc-tooling-policy-spec.md) - Oxc formatting and linting policy for Architecture Compass guidance.
+- [`cursor-codex-operations-skills-spec.md`](cursor-codex-operations-skills-spec.md) - Cursor-native support and runtime category boundaries.
+- [`drawio-diagrams-public-release-spec.md`](drawio-diagrams-public-release-spec.md) - public release contract for `drawio-diagrams`.
+- [`github-pages-skill-catalog-spec.md`](github-pages-skill-catalog-spec.md) - generated GitHub Pages catalog.
+- [`native-typescript-tooling-architecture-compass-spec.md`](native-typescript-tooling-architecture-compass-spec.md) - native TypeScript tooling guidance for Architecture Compass.

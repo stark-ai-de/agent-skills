@@ -1,0 +1,8 @@
+interface:
+  display_name: "Draw.io Diagrams"
+  short_description: "Creates, edits, verifies, and exports draw.io diagrams"
+  default_prompt: "Use $drawio-diagrams for draw.io/diagrams.net diagram creation, editing, verification, and export. Detect available tools, choose the best path, keep .drawio as the source of truth, validate XML, and report visual/dark-mode verification honestly."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools: []
