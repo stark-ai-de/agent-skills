@@ -6,6 +6,7 @@
 
 - Added strict XML preflight and browser URL helper coverage to the public `drawio-diagrams` skill.
 - Added `drawio-diagrams` rules for real-logo defaults, icon source cascades, connector routing, fixed-aspect logos, and simplified/detailed diagram views.
+- Added enterprise / DACH B2B AI lookup terms to the `drawio-diagrams` icon catalog for AI, automation, ERP/CRM, cloud, data, delivery, and security icon needs.
 
 ### Changed
 
@@ -130,7 +131,7 @@
 
 ### Changed
 
-- Updated public catalog, install examples, and generated site coverage for the `architecture-compass` promotion.
+- Updated public catalog, install examples, publishing docs, and generated site coverage for the `architecture-compass` promotion.
 
 ### Fixed
 
