@@ -20,10 +20,7 @@ function rejectForbiddenXml(text, source) {
       `${source} contains ${"DOC" + "TYPE"} declarations are forbidden in generated draw.io XML`,
     );
   }
-  const withoutXmlDecl = text.replace(
-    /^\uFEFF?\s*<\?xml\s+[^?]*\?>/i,
-    "",
-  );
+  const withoutXmlDecl = text.replace(/^\uFEFF?\s*<\?xml\s+[^?]*\?>/i, "");
   if (/<\?/.test(withoutXmlDecl)) {
     throw new ForbiddenXmlError(
       `${source} contains processing instructions are forbidden except an XML declaration`,
@@ -37,9 +34,7 @@ function scanCompressedDiagramPayloads(text) {
     const payload = match[1].trim();
     if (!payload || payload.includes("<")) continue;
     try {
-      const inflated = zlib
-        .inflateRawSync(Buffer.from(payload, "base64"))
-        .toString("utf8");
+      const inflated = zlib.inflateRawSync(Buffer.from(payload, "base64")).toString("utf8");
       const xml = decodeURIComponent(inflated);
       rejectForbiddenXml(xml, "compressed diagram payload");
     } catch (error) {
