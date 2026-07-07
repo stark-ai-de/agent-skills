@@ -12,6 +12,10 @@ const strictPreflight = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/scripts/preflight-drawio-xml.mjs",
 );
+const diagramRules = path.join(
+  root,
+  "skills/engineering-workflows/drawio-diagrams/scripts/validate-drawio-diagram-rules.mjs",
+);
 const examples = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/references/examples",
@@ -131,10 +135,49 @@ try {
   );
 
   assertNodeRun(
+    "diagram rules clean example",
+    [diagramRules, path.join(examples, "example-clean.drawio")],
+    0,
+    "diagram rule error(s)",
+  );
+  assertNodeRun(
     "browser URL builder",
     [urlOpener, path.join(examples, "example-clean.drawio"), "--print-only"],
     0,
     "https://app.diagrams.net/?grid=0&pv=0&border=10&edit=_blank#create=",
+  );
+
+  const floatingEdge = path.join(temp, "floating-edge.drawio");
+  writeFileSync(
+    floatingEdge,
+    drawio(`        <mxCell id="edge" value="Events and artifacts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="80" as="sourcePoint"/>
+            <mxPoint x="300" y="80" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "floating semantic edge",
+    [diagramRules, floatingEdge],
+    1,
+    "edge must reference source and target vertex ids",
+  );
+
+  const distortedLogo = path.join(temp, "distorted-logo.drawio");
+  writeFileSync(
+    distortedLogo,
+    drawio(`        <mxCell id="sap_logo" value="SAP" style="shape=image;image=data:image/svg+xml;base64,PHN2Zy8+;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="60" height="60" as="geometry"/>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "distorted logo guard",
+    [diagramRules, distortedLogo],
+    1,
+    "logos must preserve their original aspect ratio",
   );
 
   const missingEdgeAs = path.join(temp, "missing-edge-as.drawio");
