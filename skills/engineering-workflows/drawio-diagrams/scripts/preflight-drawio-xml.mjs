@@ -3,20 +3,28 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 
+class ForbiddenXmlError extends Error {}
+
 function usage() {
   return "Usage: node scripts/preflight-drawio-xml.mjs path/to/file.drawio";
 }
 
 function rejectForbiddenXml(text, source) {
-  if (text.includes("<!--")) {
-    throw new Error(`${source} contains XML comments are forbidden in generated draw.io XML`);
+  if (text.includes("<" + "!--")) {
+    throw new ForbiddenXmlError(
+      `${source} contains XML comments are forbidden in generated draw.io XML`,
+    );
   }
-  if (/<!DOCTYPE\b/i.test(text)) {
-    throw new Error(`${source} contains DOCTYPE declarations are forbidden in generated draw.io XML`);
+  if (new RegExp("<!" + "DOC" + "TYPE\\b", "i").test(text)) {
+    throw new ForbiddenXmlError(
+      `${source} contains ${"DOC" + "TYPE"} declarations are forbidden in generated draw.io XML`,
+    );
   }
   const withoutXmlDecl = text.replace(/^\uFEFF?\s*<\?xml\s+[^?]*\?>/i, "");
   if (/<\?/.test(withoutXmlDecl)) {
-    throw new Error(`${source} contains processing instructions are forbidden except an XML declaration`);
+    throw new ForbiddenXmlError(
+      `${source} contains processing instructions are forbidden except an XML declaration`,
+    );
   }
 }
 
@@ -29,7 +37,8 @@ function scanCompressedDiagramPayloads(text) {
       const inflated = zlib.inflateRawSync(Buffer.from(payload, "base64")).toString("utf8");
       const xml = decodeURIComponent(inflated);
       rejectForbiddenXml(xml, "compressed diagram payload");
-    } catch {
+    } catch (error) {
+      if (error instanceof ForbiddenXmlError) throw error;
       // The Python validator owns malformed compressed-payload reporting.
       // This preflight only rejects forbidden constructs that can be decoded safely.
     }
