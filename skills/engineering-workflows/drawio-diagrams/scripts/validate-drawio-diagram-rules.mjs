@@ -142,9 +142,7 @@ function main() {
   }
 
   const cells = parseCells(xml);
-  const byId = new Map(
-    cells.filter((cell) => cell.attrs.id).map((cell) => [cell.attrs.id, cell]),
-  );
+  const byId = new Map(cells.filter((cell) => cell.attrs.id).map((cell) => [cell.attrs.id, cell]));
   const errors = [];
   const warnings = [];
 
