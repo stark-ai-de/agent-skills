@@ -8,6 +8,10 @@ const validator = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py",
 );
+const strictPreflight = path.join(
+  root,
+  "skills/engineering-workflows/drawio-diagrams/scripts/preflight-drawio-xml.mjs",
+);
 const examples = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/references/examples",
@@ -24,6 +28,13 @@ function run(file) {
   });
 }
 
+function runPreflight(file) {
+  return spawnSync("node", [strictPreflight, file], {
+    cwd: root,
+    encoding: "utf8",
+  });
+}
+
 function assertRun(name, file, expectedStatus, expectedOutput) {
   const result = run(file);
   const output = `${result.stdout || ""}${result.stderr || ""}`;
@@ -34,6 +45,20 @@ function assertRun(name, file, expectedStatus, expectedOutput) {
   if (expectedOutput && !output.includes(expectedOutput)) {
     throw new Error(
       `${name}: expected output to include ${JSON.stringify(expectedOutput)}\n${output}`,
+    );
+  }
+}
+
+function assertPreflight(name, file, expectedStatus, expectedOutput) {
+  const result = runPreflight(file);
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+  if (result.error) throw result.error;
+  if (result.status !== expectedStatus) {
+    throw new Error(`${name}: expected preflight exit ${expectedStatus}, got ${result.status}\n${output}`);
+  }
+  if (expectedOutput && !output.includes(expectedOutput)) {
+    throw new Error(
+      `${name}: expected preflight output to include ${JSON.stringify(expectedOutput)}\n${output}`,
     );
   }
 }
@@ -86,19 +111,19 @@ try {
     1,
     "text/fill contrast below 4.5:1",
   );
-  assertRun(
+  assertPreflight(
     "comment strict parse example",
     path.join(examples, "example-comment-broken.drawio"),
     2,
     "XML comments are forbidden",
   );
-  assertRun(
+  assertPreflight(
     "doctype strict parse example",
     path.join(examples, "example-doctype-broken.drawio"),
     2,
     "DOCTYPE declarations are forbidden",
   );
-  assertRun(
+  assertPreflight(
     "processing instruction strict parse example",
     path.join(examples, "example-processing-instruction-broken.drawio"),
     2,
