@@ -161,6 +161,22 @@ try {
     "processing instructions are forbidden",
   );
 
+  const compressedForbidden = path.join(temp, "compressed-comment.drawio");
+  writeFileSync(
+    compressedForbidden,
+    `<mxfile host="app.diagrams.net">
+  <diagram name="Compressed Forbidden">dY5BCsJADEVPk2VhmhxhbLvyECOJODBthjhKj2/abhTsKo88/k+A4rxOlurjqiwFMCROteW3RC1qT6ALIKZXUx9AA1A01XYQYN91Hrmr3TKzLM6+2N28RilbX+ajI2wFOJ7YfrehJpOl/Qk4fN8df56m4QM=</diagram>
+</mxfile>
+`,
+    "utf8",
+  );
+  assertPreflight(
+    "compressed comment strict parse example",
+    compressedForbidden,
+    2,
+    "compressed diagram payload contains XML comments are forbidden",
+  );
+
   assertNodeRun(
     "diagram rules clean example",
     [diagramRules, path.join(examples, "example-clean.drawio")],
@@ -190,6 +206,24 @@ try {
     [diagramRules, floatingEdge],
     1,
     "edge must reference source and target vertex ids",
+  );
+
+  const decorativeEdge = path.join(temp, "decorative-edge.drawio");
+  writeFileSync(
+    decorativeEdge,
+    drawio(`        <mxCell id="legend-line" value="Legend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;dataRole=legend;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="80" as="sourcePoint"/>
+            <mxPoint x="300" y="80" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "decorative floating edge",
+    [diagramRules, decorativeEdge],
+    0,
+    "0 diagram rule error(s)",
   );
 
   const distortedLogo = path.join(temp, "distorted-logo.drawio");
