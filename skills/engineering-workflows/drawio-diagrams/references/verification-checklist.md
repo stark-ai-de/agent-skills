@@ -2,6 +2,15 @@
 
 ## Deterministic lint must pass with no errors
 
+Fatal parse failures:
+
+- unreadable input file
+- XML comments (`<!-- ... -->`) anywhere in the file or compressed page payload
+- `<!DOCTYPE ...>` declarations
+- processing instructions other than an optional XML declaration
+- unescaped ampersands or malformed XML entities
+- unbalanced or malformed XML tags
+
 Errors:
 
 - invalid XML subset
@@ -31,6 +40,8 @@ Warnings:
 - likely high crossing/crowding
 - linked or remote icons in portable mode
 - icon aspect-ratio or label-overlap risk
+
+Every validator error should identify the page or cell and include a fix hint. Warnings must be fixed or explicitly justified in the final task report.
 
 ## Visual inspection rubric
 
