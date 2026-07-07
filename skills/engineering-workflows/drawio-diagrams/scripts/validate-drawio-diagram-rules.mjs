@@ -96,7 +96,11 @@ function segmentIntersectsBox(a, b, box, padding = 0) {
 }
 
 function isContainer(cell) {
-  return cell.style.container === "1" || (cell.attrs.style || "").includes("swimlane") || cell.style.fillColor === "none";
+  return (
+    cell.style.container === "1" ||
+    (cell.attrs.style || "").includes("swimlane") ||
+    cell.style.fillColor === "none"
+  );
 }
 
 function isObstacle(cell) {
@@ -123,7 +127,9 @@ function main() {
   }
 
   const cells = parseCells(xml);
-  const byId = new Map(cells.filter((cell) => cell.attrs.id).map((cell) => [cell.attrs.id, cell]));
+  const byId = new Map(
+    cells.filter((cell) => cell.attrs.id).map((cell) => [cell.attrs.id, cell]),
+  );
   const errors = [];
   const warnings = [];
 
@@ -145,7 +151,14 @@ function main() {
       const routeEnd = center(targetBox);
       for (const obstacle of cells) {
         const oid = obstacle.attrs.id;
-        if (!oid || oid === cell.attrs.source || oid === cell.attrs.target || !isObstacle(obstacle)) continue;
+        if (
+          !oid ||
+          oid === cell.attrs.source ||
+          oid === cell.attrs.target ||
+          !isObstacle(obstacle)
+        ) {
+          continue;
+        }
         const obstacleBox = bbox(obstacle);
         if (!obstacleBox) continue;
         if (segmentIntersectsBox(routeStart, routeEnd, obstacleBox, 4)) {
@@ -158,7 +171,9 @@ function main() {
     }
 
     if (cell.attrs.vertex === "1" && (cell.attrs.style || "").includes("shape=image")) {
-      const hasFixedAspect = (cell.attrs.style || "").includes("aspect=fixed") || (cell.attrs.style || "").includes("imageAspect=1");
+      const hasFixedAspect =
+        (cell.attrs.style || "").includes("aspect=fixed") ||
+        (cell.attrs.style || "").includes("imageAspect=1");
       if (!hasFixedAspect) {
         errors.push(
           `ERROR [${id}] image/logo missing aspect=fixed or imageAspect=1; logos must preserve their original aspect ratio`,
@@ -169,7 +184,9 @@ function main() {
 
   for (const line of errors) console.log(line);
   for (const line of warnings) console.log(line);
-  console.log(`${inputPath}: ${errors.length} diagram rule error(s), ${warnings.length} warning(s)`);
+  console.log(
+    `${inputPath}: ${errors.length} diagram rule error(s), ${warnings.length} warning(s)`,
+  );
   process.exit(errors.length ? 1 : 0);
 }
 
