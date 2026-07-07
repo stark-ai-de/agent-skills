@@ -39,7 +39,7 @@ Inspect the user's prompt, existing `.drawio` files, requested output formats, t
 4. Author or patch `.drawio` XML. Preserve unknown cells, IDs, pages, layers, and manual coordinates when editing; create a backup before overwriting an existing diagram.
 5. Apply light/dark-compatible styling with `adaptiveColors="auto"` and `light-dark(...)` where explicit colors are needed.
 6. Resolve icons: native stencils first, approved local shape search second, approved local SVG/icon cache third, then generic draw.io shapes.
-7. Run `scripts/validate_drawio.py` (dependency-free Python helper allowed by ADR-0022). Fix every ERROR and justify or fix every WARN.
+7. Run `scripts/preflight-drawio-xml.mjs` and `scripts/validate_drawio.py` (dependency-free helpers allowed by ADR-0022). Fix every ERROR and justify or fix every WARN.
 8. If draw.io Desktop CLI is available, run `scripts/render-drawio.mjs`, inspect the light PNG and dark SVG, and fix visual issues for at most three cycles.
 9. Deliver `.drawio`, optional exports, chosen path, validation status, visual/dark verification status, and remaining warnings.
 
@@ -59,6 +59,7 @@ Never install tools, write MCP config, download indexes, fetch remote icons, or 
 
 ## Scripts
 
+- `scripts/preflight-drawio-xml.mjs`: read-only strict XML preflight for forbidden constructs before the Python lint.
 - `scripts/validate_drawio.py`: read-only lint for `.drawio`/mxGraph XML.
 - `scripts/render-drawio.mjs`: exports light PNG and dark SVG when draw.io Desktop CLI exists.
 - `scripts/open-drawio-url.mjs`: read-only browser URL builder/opener for `.drawio` files.
