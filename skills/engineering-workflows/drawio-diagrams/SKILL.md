@@ -35,11 +35,11 @@ Inspect the user's prompt, existing `.drawio` files, requested output formats, t
    - Direct draw.io XML for custom styling, precise placement, icons, containers, swimlanes, or no CLI.
    - Structure XML plus CLI `--layout` for flow/tree/network layout when useful.
    - MCP live/preview tools when already available and the user wants live iteration.
-   - `.drawio` plus `app.diagrams.net/#create=` URL when the user wants browser opening without installation.
+   - `.drawio` plus `app.diagrams.net/#create=` URL via `scripts/open-drawio-url.mjs` when the user wants browser opening without installation.
 4. Author or patch `.drawio` XML. Preserve unknown cells, IDs, pages, layers, and manual coordinates when editing; create a backup before overwriting an existing diagram.
 5. Apply light/dark-compatible styling with `adaptiveColors="auto"` and `light-dark(...)` where explicit colors are needed.
 6. Resolve icons: native stencils first, approved local shape search second, approved local SVG/icon cache third, then generic draw.io shapes.
-7. Run `scripts/validate_drawio.py`. Fix every ERROR and justify or fix every WARN.
+7. Run `scripts/validate_drawio.py` (dependency-free Python helper allowed by ADR-0022). Fix every ERROR and justify or fix every WARN.
 8. If draw.io Desktop CLI is available, run `scripts/render-drawio.mjs`, inspect the light PNG and dark SVG, and fix visual issues for at most three cycles.
 9. Deliver `.drawio`, optional exports, chosen path, validation status, visual/dark verification status, and remaining warnings.
 
@@ -61,6 +61,7 @@ Never install tools, write MCP config, download indexes, fetch remote icons, or 
 
 - `scripts/validate_drawio.py`: read-only lint for `.drawio`/mxGraph XML.
 - `scripts/render-drawio.mjs`: exports light PNG and dark SVG when draw.io Desktop CLI exists.
+- `scripts/open-drawio-url.mjs`: read-only browser URL builder/opener for `.drawio` files.
 - `scripts/search-shapes.mjs`: searches an explicitly configured local shape index or an approved local cache.
 
 ## Output format
