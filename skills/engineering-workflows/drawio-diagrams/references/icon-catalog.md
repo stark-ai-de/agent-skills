@@ -37,6 +37,8 @@ Lookup workflow:
 4. Fetch only the selected SVG, for example `https://thesvg.org/icons/{slug}/{variant}.svg`, then embed it as a data URI unless the user explicitly chooses linked mode.
 5. Record the source, slug, variant, and any license/trademark note available from the manifest in the final response.
 
+Use these tables as candidate lookup terms, not as pinned slugs. Verify each selected icon against the manifest before embedding or naming a concrete source path.
+
 High-value lookup examples to verify at runtime:
 
 | Domain        | Example lookup terms                                                                 |
@@ -47,6 +49,17 @@ High-value lookup examples to verify at runtime:
 | Cloud/Runtime | AWS, Azure, Google Cloud, Cloudflare, Vercel, Supabase, Docker, Kubernetes           |
 | Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus                |
 | Dev/Security  | GitHub, GitLab, Python, TypeScript, React, Next.js, Node.js, Auth0, Okta, Sentry     |
+
+German B2B AI / stark AI lookup pack:
+
+| Workflow area     | Candidate lookup terms                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| LLM/RAG           | LangGraph, LangSmith, LlamaIndex, Perplexity, DeepSeek, Workers AI                                             |
+| Automation        | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool                                                             |
+| ERP/CRM           | SAP, DATEV, Odoo, Salesforce, HubSpot, Microsoft, Slack, Notion                                                |
+| Cloud/runtime     | AWS, Microsoft Azure, Google Cloud, Cloudflare, Cloudflare Workers AI, Vercel, Supabase, Docker, Kubernetes    |
+| Data/BI           | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Tableau, Metabase, Grafana, Elasticsearch, Prometheus        |
+| Delivery/security | GitHub, GitHub Actions, GitHub Copilot, GitLab, Python, TypeScript, React, Next.js, Node.js, 1Password, Keycloak |
 
 ## SVG embedding style
 
