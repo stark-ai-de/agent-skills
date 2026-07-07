@@ -39,9 +39,7 @@ function writeShortcut(url) {
 function wslpath(filePath) {
   const result = spawnSync("wslpath", ["-w", filePath], { encoding: "utf8" });
   if (result.status !== 0) {
-    throw new Error(
-      `wslpath failed: ${(result.stderr || result.stdout || "").trim()}`,
-    );
+    throw new Error(`wslpath failed: ${(result.stderr || result.stdout || "").trim()}`);
   }
   return result.stdout.trim();
 }
