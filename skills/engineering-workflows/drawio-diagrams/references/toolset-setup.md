@@ -3,7 +3,7 @@
 ## Detection order
 
 1. `python3` for the bundled dependency-free validator.
-2. Node >= 18 for `render-drawio.mjs`, `open-drawio-url.mjs`, and `search-shapes.mjs`.
+2. Node >= 18 for `render-drawio.mjs`, `open-drawio-url.mjs`, `search-shapes.mjs`, and `validate-drawio-diagram-rules.mjs`.
 3. draw.io Desktop CLI:
    - `drawio` on PATH
    - macOS `/Applications/draw.io.app/Contents/MacOS/draw.io`
@@ -26,6 +26,17 @@ grep -qi microsoft /proc/version 2>/dev/null && echo WSL2 || true
 [ -x "/mnt/c/Program Files/draw.io/draw.io.exe" ] && echo WSL2-system-drawio
 ```
 
+## Initial setup question for icon-rich diagrams
+
+Real logos are the recommended default for named products. If missing logos require network access, package installs, or new cache downloads, ask once before layout work starts:
+
+```text
+Recommended: use real logos and embed them in the .drawio file for best recognition.
+May I fetch missing SVG logos from approved icon sources and cache them locally for this diagram? If not, I will use simplified generic icons consistently.
+```
+
+If the user says no, do not ask repeatedly during generation; switch the diagram or affected visual family to `simplified-icons` mode and report that choice.
+
 ## Promotion table
 
 | Missing tool | Promote when | Benefit | Example install/config command |
@@ -36,13 +47,13 @@ grep -qi microsoft /proc/version 2>/dev/null && echo WSL2 || true
 | `@drawio/mcp` tool server | browser opening for XML/CSV/Mermaid without a full live editor | local tool server URL flow | configure the MCP client with `npx -y @drawio/mcp` if the user approves |
 | `drawio-mcp-server` live editor | existing open documents, pages, layers, and live browser editing matter | interactive CRUD editing and export | configure the MCP client for `npx -y drawio-mcp-server --editor` if approved |
 | `@next-ai-drawio/mcp-server` preview | fast browser preview sessions matter | preview-oriented create/edit/export tools | configure with `npx -y @next-ai-drawio/mcp-server` if approved |
-| local icon cache / theSVG | brand/cloud logos are missing from native stencils | SVG variants and broad icon coverage | use an existing approved cache, or fetch selected SVGs only after approval |
+| local icon cache / theSVG / Simple Icons / Iconify / Devicon / Web3 packs | brand, cloud, AI, SaaS, dev-tool, or crypto logos are missing | broad real-logo coverage with SVG embedding | use an existing approved cache, or fetch selected SVGs only after approval |
 
-Never install or configure without explicit approval. If approval is not granted, continue with direct XML and generic/native shapes.
+Never install or configure without explicit approval. If approval is not granted, continue with direct XML and simplified/native shapes.
 
 ## Optional local caches
 
-Runtime should prefer native draw.io stencils and generic shapes. Use local shape indexes or icon caches only when they already exist or the user approves creating or fetching them. Keep downloaded indexes outside the skill folder so the skill stays small and reproducible.
+Runtime should prefer existing embedded icons, native draw.io stencils, and approved local icon caches. Use local shape indexes or icon caches only when they already exist or the user approves creating or fetching them. Keep downloaded indexes outside the skill folder so the skill stays small and reproducible.
 
 Suggested cache locations:
 
@@ -57,4 +68,4 @@ Record any external icon or index source in the final response.
 
 Use `local-only` mode for sensitive diagrams. Hosted `mcp.draw.io` receives diagram content and requires explicit acceptance. `browser-url` mode carries diagram data in the URL fragment and can still be exposed through browser history, screenshots, sync, or logs. `self-hosted` mode may use self-hosted draw.io or local MCP tools.
 
-Sources: integrated from draw.io CLI/MCP workflows and privacy-mode rules.
+Sources: integrated from draw.io CLI/MCP workflows, icon-source setup feedback, and privacy-mode rules.
