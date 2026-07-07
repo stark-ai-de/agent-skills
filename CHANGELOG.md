@@ -4,6 +4,18 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+## v0.6.1 - 2026-07-07
+
+### Added
+
 - Added strict XML preflight and browser URL helper coverage to the public `drawio-diagrams` skill.
 - Added `drawio-diagrams` rules for real-logo defaults, icon source cascades, connector routing, fixed-aspect logos, and simplified/detailed diagram views.
 - Added enterprise / DACH B2B AI lookup terms to the `drawio-diagrams` icon catalog for AI, automation, ERP/CRM, cloud, data, delivery, and security icon needs.
@@ -272,7 +284,7 @@
 - Initial public Agent Skills repository scaffold.
 - Validation, listing, and skill scaffolding scripts.
 - Manual GitHub Actions workflows and helper scripts for preparing and publishing releases.
-- Initial skill catalog for Codex operations, repo maintenance, skill maintenance, and productivity workflows.
+- Initial skill catalog for Codex operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 - Added `codegraph-ast-grep` for Codex CLI setup and usage of CodeGraph paired with ast-grep.
 - Added `codex-spec-interviewer` for turning fuzzy coding requests into Codex-ready implementation specs.
 - Added incubator engineering workflow candidates for debugging, test-first implementation, issue slicing, PRDs, repo mapping, and prototype spikes.
