@@ -148,7 +148,7 @@ High-value lookup examples to verify at runtime:
 | Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus                |
 | Dev/Security  | GitHub, GitLab, Python, TypeScript, React, Next.js, Node.js, Auth0, Okta, Sentry     |
 
-Enterprise / DACH B2B AI lookup pack:
+Business AI workflow lookup pack:
 
 | Workflow area     | Candidate lookup terms                                                                                           |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -167,4 +167,4 @@ Check that each recognized brand/source resolved to a real logo in `brand-logos`
 
 Do not fetch or embed remote icons without explicit user approval. When using a local icon cache, preserve source/license notes in the task output and embed the selected SVG as a data URI.
 
-Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, enterprise AI lookup feedback, and icon validation rules.
+Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, business AI workflow lookup feedback, and icon validation rules.
