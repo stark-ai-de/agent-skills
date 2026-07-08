@@ -1,0 +1,11 @@
+<?xml-stylesheet type="text/xsl" href="diagram.xsl"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="Processing Instruction Broken">
+    <mxGraphModel adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

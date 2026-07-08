@@ -5,3 +5,6 @@ site/public
 build
 dist
 coverage
+
+# Wide, human-authored draw.io reference tables are easier to read without oxfmt alignment churn.
+skills/engineering-workflows/drawio-diagrams/references/*.md

@@ -23,11 +23,12 @@ Generate uncompressed `.drawio` XML as the durable source:
 - Use unique stable IDs.
 - Add `vertex="1"` to vertices and `edge="1"` to edges.
 - Every vertex needs `<mxGeometry x="..." y="..." width="..." height="..." as="geometry"/>`.
-- Every edge needs `<mxGeometry relative="1" as="geometry"/>`.
+- Every semantic edge needs `source="..."` and `target="..."` vertex ids plus `<mxGeometry relative="1" as="geometry"/>`.
+- Floating mxPoint-only edges are forbidden for generated architecture/process flow. Use them only for deliberate decorative legend lines, and mark those as decorative in the label or id.
 - Escape XML-sensitive characters in attributes.
 - Do not emit XML comments, DOCTYPE, or processing instructions.
 - Use one consistent edge style family per diagram.
-- Avoid `exitX`, `exitY`, `entryX`, `entryY`, and hand waypoints unless there is a specific geometric reason.
+- Avoid `exitX`, `exitY`, `entryX`, `entryY`, and hand waypoints by default, but use them intentionally when needed to attach to the correct side or route around annotations.
 - Preserve unknown cells and IDs when editing.
 
 ## Rigid grid
@@ -40,15 +41,29 @@ Default grid:
 - decision diamond = 140 x 80
 - circle = 60 x 60
 - cylinder/database = 100 x 70
-- icon cell = 48 x 48 or 60 x 60 with label below
+- icon cell = 48 x 48 or 60 x 60 with label below; non-square logos use their source aspect ratio
+
+## Edge routing
+
+Connectors must avoid labels, annotations, and text boxes. Route branches through empty corridors between elements, not through elements. Use side ports when the semantic direction is clear:
+
+```text
+exitX=1;exitY=0.5;entryX=0;entryY=0.5;
+```
+
+For horizontal flow into a store or platform component, enter on the left edge. For fan-out/fan-in patterns, place branch points midway between source and target columns.
 
 ## Containers and groups
 
 Containers render behind children. Children must remain within parent inner bounds. Prefer parent-child containment over visual-only grouping when the semantics matter.
 
+For collapsible groups, keep the overview title/icon on the parent and put details in child cells. Collapsed groups hide children; they do not dynamically trim text inside a single label.
+
 ## Layers and pages
 
 Validate every page independently. Preserve hidden layers, metadata, and manual positions unless the user requested relayout.
+
+Use a separate `Details` layer or `Detailed` page when the diagram needs a global simplified/expanded view. This is more reliable than expecting one plus/minus click to collapse all groups.
 
 ## Light/dark
 
@@ -56,4 +71,4 @@ Every `mxGraphModel` must include `adaptiveColors="auto"`. Use draw.io defaults 
 
 When editing an existing diagram, create a backup before overwriting unless the user chose a separate output path. Preserve unknown cells, metadata, page/layer structure, and manual coordinates unless the user requested relayout.
 
-Sources: integrated from draw.io/mxGraph XML practice, layout/validation ideas, and safe-edit rules.
+Sources: integrated from draw.io/mxGraph XML practice, layout/validation ideas, routing feedback, collapse behavior, and safe-edit rules.

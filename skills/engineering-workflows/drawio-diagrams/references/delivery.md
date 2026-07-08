@@ -26,9 +26,29 @@ drawio -x -f pdf -e -b 10 -o name.drawio.pdf name.drawio
 drawio -x -f svg --svg-theme dark -e -b 10 -o name.dark.svg name.drawio
 ```
 
+Use `scripts/render-drawio.mjs name.drawio` for the standard light PNG + dark SVG verification export.
+
 ## Browser URL delivery
 
-Build `https://app.diagrams.net/#create=<payload>` from Node built-ins using raw deflate over `encodeURIComponent(xml)` inside the JSON payload. Print URL and warn about URL-length limits. Use `.drawio` file fallback for large diagrams.
+Use `scripts/open-drawio-url.mjs` to build a `https://app.diagrams.net/#create=<payload>` URL from the `.drawio` file with Node built-ins. The script deflates `encodeURIComponent(xml)`, wraps it as `{ type: "xml", compressed: true, data }`, prints the URL, and can open it per platform.
+
+```bash
+node skills/engineering-workflows/drawio-diagrams/scripts/open-drawio-url.mjs name.drawio --print-only
+node skills/engineering-workflows/drawio-diagrams/scripts/open-drawio-url.mjs name.drawio --open
+```
+
+Platform behavior:
+
+| Environment | Opening behavior |
+| --- | --- |
+| macOS | `open <url>` |
+| Linux | `xdg-open <url>` |
+| Windows | writes a temporary `.url` shortcut and opens it with `cmd.exe /c start` |
+| WSL2 | writes a temporary `.url`, converts it with `wslpath -w`, then opens through `cmd.exe /c start` |
+
+Use the `.url` shortcut workaround on Windows and WSL2 because direct `cmd.exe /c start <url>` can strip the `#create=` fragment or split on `&`.
+
+Warn about browser URL-length limits. Very large diagrams should be delivered as `.drawio` files instead of URL-only artifacts.
 
 ## Final response contract
 
