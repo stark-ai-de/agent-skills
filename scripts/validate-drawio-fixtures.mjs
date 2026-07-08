@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import zlib from "node:zlib";
 
 const root = process.cwd();
 const validator = path.join(
@@ -86,17 +87,29 @@ function assertNodeRun(name, args, expectedStatus, expectedOutput) {
   }
 }
 
-function drawio(cells) {
-  return `<mxfile host="app.diagrams.net">
-  <diagram name="Regression">
-    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+function graphModel(cells) {
+  return `<mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
 ${cells}
       </root>
-    </mxGraphModel>
+    </mxGraphModel>`;
+}
+
+function drawio(cells) {
+  return `<mxfile host="app.diagrams.net">
+  <diagram name="Regression">
+    ${graphModel(cells)}
   </diagram>
+</mxfile>
+`;
+}
+
+function compressedDrawio(cells) {
+  const payload = zlib.deflateRawSync(encodeURIComponent(graphModel(cells))).toString("base64");
+  return `<mxfile host="app.diagrams.net">
+  <diagram name="Compressed Regression">${payload}</diagram>
 </mxfile>
 `;
 }
@@ -159,6 +172,12 @@ try {
     "diagram rule error(s)",
   );
   assertNodeRun(
+    "diagram rules multi-page example",
+    [diagramRules, path.join(examples, "multi-page.drawio")],
+    0,
+    "0 diagram rule error(s), 0 warning(s)",
+  );
+  assertNodeRun(
     "browser URL builder",
     [urlOpener, path.join(examples, "example-clean.drawio"), "--print-only"],
     0,
@@ -179,6 +198,53 @@ try {
   assertNodeRun(
     "floating semantic edge",
     [diagramRules, floatingEdge],
+    1,
+    "edge must reference source and target vertex ids",
+  );
+
+  const compressedFloatingEdge = path.join(temp, "compressed-floating-edge.drawio");
+  writeFileSync(
+    compressedFloatingEdge,
+    compressedDrawio(`        <mxCell id="edge" value="Compressed events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="80" as="sourcePoint"/>
+            <mxPoint x="300" y="80" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "compressed floating semantic edge",
+    [diagramRules, compressedFloatingEdge],
+    1,
+    "edge must reference source and target vertex ids",
+  );
+
+  const singleQuotedFloatingEdge = path.join(temp, "single-quoted-floating-edge.drawio");
+  writeFileSync(
+    singleQuotedFloatingEdge,
+    `<mxfile host='app.diagrams.net'>
+  <diagram name='Single Quoted'>
+    <mxGraphModel adaptiveColors='auto' dx='800' dy='600' grid='1' gridSize='10' page='1' pageScale='1' pageWidth='827' pageHeight='1169' math='0' shadow='0'>
+      <root>
+        <mxCell id='0'/>
+        <mxCell id='1' parent='0'/>
+        <mxCell id='edge' value='Single quoted events' style='edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;' edge='1' parent='1'>
+          <mxGeometry relative='1' as='geometry'>
+            <mxPoint x='40' y='80' as='sourcePoint'/>
+            <mxPoint x='300' y='80' as='targetPoint'/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+`,
+    "utf8",
+  );
+  assertNodeRun(
+    "single-quoted floating semantic edge",
+    [diagramRules, singleQuotedFloatingEdge],
     1,
     "edge must reference source and target vertex ids",
   );

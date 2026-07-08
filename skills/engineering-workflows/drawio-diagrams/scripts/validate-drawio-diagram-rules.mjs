@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 
 function usage() {
   return "Usage: node scripts/validate-drawio-diagram-rules.mjs path/to/file.drawio";
@@ -17,10 +18,43 @@ function decodeXml(value = "") {
 
 function parseAttrs(text = "") {
   const attrs = {};
-  for (const match of text.matchAll(/([:\w.-]+)="([^"]*)"/g)) {
-    attrs[match[1]] = decodeXml(match[2]);
+  for (const match of text.matchAll(/([:\w.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
+    attrs[match[1]] = decodeXml(match[2] ?? match[3] ?? "");
   }
   return attrs;
+}
+
+function inflateDiagramPayload(payload) {
+  const inflated = zlib.inflateRawSync(Buffer.from(payload.trim(), "base64")).toString("utf8");
+  return decodeURIComponent(inflated);
+}
+
+function extractModels(xml) {
+  const pages = [];
+  const trimmed = xml.trim();
+  if (trimmed.startsWith("<mxGraphModel")) {
+    return [{ name: "Document", xml: trimmed }];
+  }
+
+  const diagramRe = /<diagram\b([^>]*)>([\s\S]*?)<\/diagram>/g;
+  for (const match of xml.matchAll(diagramRe)) {
+    const attrs = parseAttrs(match[1]);
+    const name = attrs.name || `Page-${pages.length + 1}`;
+    const body = (match[2] || "").trim();
+    const model = body.match(/<mxGraphModel\b[\s\S]*?<\/mxGraphModel>/);
+    if (model) {
+      pages.push({ name, xml: model[0] });
+      continue;
+    }
+    if (!body) throw new Error(`diagram ${JSON.stringify(name)} has no mxGraphModel or payload`);
+    pages.push({ name, xml: inflateDiagramPayload(body) });
+  }
+
+  if (pages.length > 0) return pages;
+
+  const nestedModel = xml.match(/<mxGraphModel\b[\s\S]*?<\/mxGraphModel>/);
+  if (nestedModel) return [{ name: "Document", xml: nestedModel[0] }];
+  throw new Error("no mxGraphModel or diagram payload found");
 }
 
 function styleMap(style = "") {
@@ -125,23 +159,12 @@ function isDecorativeEdge(cell) {
   );
 }
 
-function main() {
-  const input = process.argv[2];
-  if (!input || input === "--help" || input === "-h") {
-    console.error(usage());
-    process.exit(input ? 0 : 2);
-  }
+function cellRef(page, id) {
+  return `${page.name}:${id || "?"}`;
+}
 
-  const inputPath = path.resolve(input);
-  let xml;
-  try {
-    xml = fs.readFileSync(inputPath, "utf8");
-  } catch (error) {
-    console.error(`FATAL: cannot read ${inputPath}: ${error.message}`);
-    process.exit(2);
-  }
-
-  const cells = parseCells(xml);
+function validatePage(page) {
+  const cells = parseCells(page.xml);
   const byId = new Map(cells.filter((cell) => cell.attrs.id).map((cell) => [cell.attrs.id, cell]));
   const errors = [];
   const warnings = [];
@@ -152,7 +175,7 @@ function main() {
       if (!cell.attrs.source || !cell.attrs.target) {
         if (isDecorativeEdge(cell)) continue;
         errors.push(
-          `ERROR [${id}] edge must reference source and target vertex ids; floating mxPoint-only edges are not allowed in generated diagrams unless marked decorative or legend`,
+          `ERROR [${cellRef(page, id)}] edge must reference source and target vertex ids; floating mxPoint-only edges are not allowed in generated diagrams unless marked decorative or legend`,
         );
         continue;
       }
@@ -177,7 +200,7 @@ function main() {
         if (!obstacleBox) continue;
         if (segmentIntersectsBox(routeStart, routeEnd, obstacleBox, 4)) {
           warnings.push(
-            `WARN  [${id}] probable centerline route crosses ${oid}; use side ports, branch waypoints between elements, or relayout so arrows do not overlap text boxes`,
+            `WARN  [${cellRef(page, id)}] probable centerline route crosses ${oid}; use side ports, branch waypoints between elements, or relayout so arrows do not overlap text boxes`,
           );
           break;
         }
@@ -191,10 +214,38 @@ function main() {
         (cell.attrs.style || "").includes("dataRole=decorative-image");
       if (!hasFixedAspect) {
         errors.push(
-          `ERROR [${id}] image/logo missing aspect=fixed or imageAspect=1; logos must preserve their original aspect ratio`,
+          `ERROR [${cellRef(page, id)}] image/logo missing aspect=fixed or imageAspect=1; logos must preserve their original aspect ratio`,
         );
       }
     }
+  }
+
+  return { errors, warnings };
+}
+
+function main() {
+  const input = process.argv[2];
+  if (!input || input === "--help" || input === "-h") {
+    console.error(usage());
+    process.exit(input ? 0 : 2);
+  }
+
+  const inputPath = path.resolve(input);
+  let pages;
+  try {
+    const xml = fs.readFileSync(inputPath, "utf8");
+    pages = extractModels(xml);
+  } catch (error) {
+    console.error(`FATAL: cannot read or parse ${inputPath}: ${error.message}`);
+    process.exit(2);
+  }
+
+  const errors = [];
+  const warnings = [];
+  for (const page of pages) {
+    const result = validatePage(page);
+    errors.push(...result.errors);
+    warnings.push(...result.warnings);
   }
 
   for (const line of errors) console.log(line);
