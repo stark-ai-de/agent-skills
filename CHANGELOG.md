@@ -12,6 +12,21 @@
 
 ### Removed
 
+## v0.6.2 - 2026-07-08
+
+### Added
+
+### Changed
+
+### Fixed
+
+- Fixed `drawio-diagrams` route-crossing validation so transparent text boxes and callouts are still treated as connector obstacles.
+- Added regression coverage for connectors crossing transparent `fillColor=none` callouts.
+
+### Deprecated
+
+### Removed
+
 ## v0.6.1 - 2026-07-07
 
 ### Added

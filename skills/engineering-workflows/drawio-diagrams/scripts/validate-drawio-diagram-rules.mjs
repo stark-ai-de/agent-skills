@@ -130,10 +130,11 @@ function segmentIntersectsBox(a, b, box, padding = 0) {
 }
 
 function isContainer(cell) {
+  const isTextOrLabel = (cell.attrs.style || "").startsWith("text;") || cell.attrs.value;
   return (
     cell.style.container === "1" ||
     (cell.attrs.style || "").includes("swimlane") ||
-    cell.style.fillColor === "none"
+    (cell.style.fillColor === "none" && !isTextOrLabel)
   );
 }
 
