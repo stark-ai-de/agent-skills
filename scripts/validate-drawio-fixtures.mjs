@@ -267,6 +267,30 @@ try {
     "0 diagram rule error(s)",
   );
 
+  const transparentCalloutCrossing = path.join(temp, "transparent-callout-crossing.drawio");
+  writeFileSync(
+    transparentCalloutCrossing,
+    drawio(`        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="220" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="callout" value="Do not cross" style="text;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="110" y="45" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "transparent text callout crossing",
+    [diagramRules, transparentCalloutCrossing],
+    0,
+    "probable centerline route crosses callout",
+  );
+
   const distortedLogo = path.join(temp, "distorted-logo.drawio");
   writeFileSync(
     distortedLogo,
