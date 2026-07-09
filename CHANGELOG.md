@@ -13,8 +13,6 @@
 
 ### Fixed
 
-- Added a `drawio-diagrams` diagram-rule warning for dense edge labels that lack a readable label background.
-
 ### Deprecated
 
 ### Removed
