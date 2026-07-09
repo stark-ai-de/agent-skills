@@ -1,9 +1,24 @@
 # Multi-page Diagram
 
-Prompt:
+## Prompt
 
 ```text
 Use $drawio-diagrams to create a two-page draw.io file: one page for runtime request flow and one page for data flow.
 ```
 
-Expected: activate. The skill should create descriptive page names, keep repeated entities consistently labeled, validate each page independently, and report the multi-page structure.
+## Should Trigger
+
+Yes
+
+## Expected Behavior
+
+- Create descriptive page names.
+- Keep repeated entities consistently labeled across pages.
+- Validate each page independently.
+- Report the multi-page structure in the final answer.
+
+## Deterministic Assertions
+
+- contains: Runtime
+- contains: Data Flow
+- contains: validate_drawio.py

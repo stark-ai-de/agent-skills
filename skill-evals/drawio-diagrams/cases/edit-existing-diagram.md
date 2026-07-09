@@ -1,9 +1,29 @@
 # Edit Existing Diagram
 
-Prompt:
+## Prompt
 
 ```text
 Use $drawio-diagrams to edit this existing Client -> API -> Database draw.io file and add Redis as a cache without disturbing the existing nodes.
 ```
 
-Expected: activate. The skill should read the existing file first, preserve unknown cells and stable IDs, create a backup or alternate output before overwrite, add the smallest safe change, validate the edited page, and report any warnings.
+## Should Trigger
+
+Yes
+
+## Fixtures
+
+- skills/engineering-workflows/drawio-diagrams/references/examples/existing-edit-before.drawio
+
+## Expected Behavior
+
+- Read the existing file first.
+- Preserve unknown cells, stable IDs, pages, layers, and existing geometry.
+- Create a backup or alternate output before overwrite.
+- Add the smallest safe Redis cache change.
+- Validate the edited page and report any warnings.
+
+## Deterministic Assertions
+
+- contains: backup
+- contains: preserve
+- contains: validate_drawio.py

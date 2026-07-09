@@ -1,9 +1,25 @@
 # Create Architecture Diagram
 
-Prompt:
+## Prompt
 
 ```text
 Use $drawio-diagrams to create an editable draw.io architecture diagram for a client, API gateway, worker, PostgreSQL database, and Redis cache.
 ```
 
-Expected: activate. The skill should build a semantic model, choose direct XML or a CLI-assisted path based on available tools, use editable `.drawio` XML, prefer native stencils or generic shapes, validate the result, and report export/dark-mode verification status.
+## Should Trigger
+
+Yes
+
+## Expected Behavior
+
+- Build a semantic model before drawing.
+- Choose direct XML or a CLI-assisted path based on available tools.
+- Use editable `.drawio` XML with stable IDs and geometry.
+- Prefer native stencils or generic labeled shapes.
+- Validate the result and report export or dark-mode verification status.
+
+## Deterministic Assertions
+
+- contains: .drawio
+- contains: validate_drawio.py
+- contains: editable

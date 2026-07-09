@@ -123,6 +123,8 @@ try {
   assertRun("existing edit before example", path.join(examples, "existing-edit-before.drawio"), 0);
   assertRun("existing edit after example", path.join(examples, "existing-edit-after.drawio"), 0);
   assertRun("multi-page example", path.join(examples, "multi-page.drawio"), 0);
+  assertRun("compressed page before example", path.join(examples, "compressed-page-before.drawio"), 0);
+  assertRun("crowded routing before example", path.join(examples, "crowded-routing-before.drawio"), 0);
   assertRun("broken example", path.join(examples, "example-broken.drawio"), 1, "duplicate id");
   assertRun(
     "contrast example",
@@ -147,6 +149,16 @@ try {
     path.join(examples, "example-processing-instruction-broken.drawio"),
     2,
     "processing instructions are forbidden",
+  );
+  assertPreflight(
+    "compressed page before strict parse",
+    path.join(examples, "compressed-page-before.drawio"),
+    0,
+  );
+  assertPreflight(
+    "crowded routing before strict parse",
+    path.join(examples, "crowded-routing-before.drawio"),
+    0,
   );
 
   const compressedForbidden = path.join(temp, "compressed-comment.drawio");
@@ -176,6 +188,18 @@ try {
     [diagramRules, path.join(examples, "multi-page.drawio")],
     0,
     "0 diagram rule error(s), 0 warning(s)",
+  );
+  assertNodeRun(
+    "diagram rules compressed page before example",
+    [diagramRules, path.join(examples, "compressed-page-before.drawio")],
+    0,
+    "0 diagram rule error(s)",
+  );
+  assertNodeRun(
+    "diagram rules crowded routing before example",
+    [diagramRules, path.join(examples, "crowded-routing-before.drawio")],
+    0,
+    "0 diagram rule error(s)",
   );
   assertNodeRun(
     "browser URL builder",

@@ -1,0 +1,71 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Crowded Routing Before">
+    <mxGraphModel adaptiveColors="auto" dx="1000" dy="700" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ecfeff,#164e63);strokeColor=light-dark(#0891b2,#67e8f9);fontColor=light-dark(#083344,#ecfeff);" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin" value="Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#fce7f3,#831843);strokeColor=light-dark(#db2777,#f9a8d4);fontColor=light-dark(#500724,#fdf2f8);" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
+          <mxGeometry x="280" y="160" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="queue" value="Queue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#fef9c3,#713f12);strokeColor=light-dark(#ca8a04,#facc15);fontColor=light-dark(#422006,#fefce8);" vertex="1" parent="1">
+          <mxGeometry x="500" y="80" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker" value="Worker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ffedd5,#7c2d12);strokeColor=light-dark(#ea580c,#fdba74);fontColor=light-dark(#431407,#fff7ed);" vertex="1" parent="1">
+          <mxGeometry x="500" y="240" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="database" value="Database" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#dcfce7,#14532d);strokeColor=light-dark(#16a34a,#86efac);fontColor=light-dark(#052e16,#f0fdf4);" vertex="1" parent="1">
+          <mxGeometry x="720" y="80" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage" value="Object Storage" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#e0e7ff,#312e81);strokeColor=light-dark(#4f46e5,#a5b4fc);fontColor=light-dark(#1e1b4b,#eef2ff);" vertex="1" parent="1">
+          <mxGeometry x="710" y="240" width="120" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="webhook" value="Webhook" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ede9fe,#4c1d95);strokeColor=light-dark(#7c3aed,#c4b5fd);fontColor=light-dark(#2e1065,#f5f3ff);" vertex="1" parent="1">
+          <mxGeometry x="500" y="390" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="crowded-label" value="Crowded label lane" style="text;html=1;strokeColor=none;fillColor=none;fontColor=light-dark(#0f172a,#f8fafc);" vertex="1" parent="1">
+          <mxGeometry x="330" y="255" width="150" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-client-api" value="request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="client" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-admin-api" value="admin request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="admin" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-api-queue" value="dispatch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="api" target="queue">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="120"/>
+              <mxPoint x="450" y="270"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-api-database" value="read model" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="api" target="database">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-queue-worker" value="job" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="queue" target="worker">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-worker-database" value="data write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="worker" target="database">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-worker-storage" value="artifact" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="worker" target="storage">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-webhook-api" value="webhook callback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="webhook" target="api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="420"/>
+              <mxPoint x="360" y="270"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

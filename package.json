@@ -60,7 +60,7 @@
     "release:notes": "node scripts/print-release-notes.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
-    "validate:drawio": "node scripts/validate-drawio-fixtures.mjs",
+    "validate:drawio": "node scripts/validate-drawio-fixtures.mjs && node scripts/validate-drawio-visual-evals.mjs",
     "validate:skillopt": "node scripts/validate-skillopt-setup.mjs",
     "validate:scripts": "node scripts/validate-scripts.mjs",
     "validate:site": "pnpm --filter ./site build",
