@@ -10,6 +10,8 @@ Offer `simplified-icons` as an explicit alternative when the user wants non-bran
 
 Do not mix real logos with placeholders for equivalent entities. If Google Drive, Salesforce, and SAP use real logos, then Slack, Anthropic, OpenAI, code repositories, databases, queues, and other named products should also get real icons if a source is available. If a logo cannot be found after the approved source cascade, ask whether to continue searching, use a user-supplied logo, or downgrade that family to simplified icons.
 
+When a detailed official/product logo exists, do not replace it with a simplified monochrome glyph just to fit the diagram palette. Preserve the source artwork and adjust the chip/background, label placement, or surrounding fill to make it readable in light and dark mode.
+
 ## Approval and setup behavior
 
 The skill may use already embedded icons, built-in draw.io stencils, configured local icon caches, and previously approved local manifests without asking again. Network fetches, package installs, MCP config writes, hosted services, and new cache downloads still require explicit approval.
@@ -43,10 +45,18 @@ Use the first source that yields a clean SVG/icon with the preferred variant. Pr
 - Prefer pure symbol/icon variants. Do not use a text wordmark, such as a full OpenAI wordmark, unless all logos in that visual group are wordmarks or the user requested wordmarks.
 - If color logos are used in a diagram, use color variants for all logos where the source offers color. Do not mix color logos with monochrome variants except when a brand only offers black/white.
 - If a logo exists only in black or only in white, use exactly that source variant on a background where it remains visible. Do not recolor black/white logos.
-- Do not tint, recolor, crop, stretch, skew, or rotate brand logos.
+- Do not tint, recolor, crop, stretch, skew, rotate, invert, or dark-mode-filter brand logos.
 - Preserve aspect ratio. Image/logo cells must include `aspect=fixed` or an equivalent fixed-aspect image setting, and their geometry should match the SVG `viewBox` ratio whenever possible.
-- Put fixed-color logos on neutral chip backgrounds that work in light and dark mode.
+- Put fixed-color logos on neutral chip backgrounds that work in light and dark mode. Change the chip/background when contrast is weak instead of changing the logo.
+- Use consistent chip geometry in a visual family. Common default chips are 44x44 or 48x48 with 6-8 px padding; use a non-square chip only when the source viewBox requires it, and then keep similar logos consistent.
 - A missing real icon is a warning to resolve before delivery, not a reason to silently emit a placeholder.
+
+## Common logo pitfalls to avoid
+
+- Bun: preserve the original Bun logo artwork. Do not invert or simplify it; use a neutral chip/background with enough contrast instead.
+- Redis: use the recognizable Redis logo from approved sources, not an unrelated red generic glyph or outdated-looking placeholder.
+- BullMQ: avoid washed-out low-contrast marks in dark mode. Use an official/recognizable mark where available, or a consistent simplified queue icon if real-logo mode cannot be completed.
+- Mixed chips: avoid 42x42, 40x48, and 48x48 chips in the same row unless viewBox ratios require it and the difference is deliberate.
 
 ## Self-contained output
 
@@ -142,10 +152,10 @@ High-value lookup examples to verify at runtime:
 | Domain        | Example lookup terms                                                                 |
 | ------------- | ------------------------------------------------------------------------------------ |
 | AI            | OpenAI, ChatGPT, Anthropic, Mistral, Hugging Face, Cohere, Gemini, LangChain, Ollama |
-| Automation    | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool                                   |
+| Automation    | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool, BullMQ                          |
 | SaaS/Business | Salesforce, HubSpot, Slack, Notion, Odoo, SAP, Microsoft                             |
-| Cloud/Runtime | AWS, Azure, Google Cloud, Cloudflare, Vercel, Supabase, Docker, Kubernetes           |
-| Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus                |
+| Cloud/Runtime | AWS, Azure, Google Cloud, Cloudflare, Vercel, Supabase, Docker, Kubernetes, Bun      |
+| Data/Ops      | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Grafana, Prometheus, Redis         |
 | Dev/Security  | GitHub, GitLab, Python, TypeScript, React, Next.js, Node.js, Auth0, Okta, Sentry     |
 
 Business AI workflow lookup pack:
@@ -153,18 +163,18 @@ Business AI workflow lookup pack:
 | Workflow area     | Candidate lookup terms                                                                                           |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
 | LLM/RAG           | LangGraph, LangSmith, LlamaIndex, Perplexity, DeepSeek, Workers AI                                               |
-| Automation        | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool                                                               |
+| Automation        | n8n, Make, Zapier, Airbyte, Apache Airflow, Retool, BullMQ                                                       |
 | ERP/CRM           | SAP, DATEV, Odoo, Salesforce, HubSpot, Microsoft, Slack, Notion                                                  |
-| Cloud/runtime     | AWS, Microsoft Azure, Google Cloud, Cloudflare, Cloudflare Workers AI, Vercel, Supabase, Docker, Kubernetes      |
-| Data/BI           | PostgreSQL, Snowflake, Databricks, dbt, BigQuery, Tableau, Metabase, Grafana, Elasticsearch, Prometheus          |
+| Cloud/runtime     | AWS, Microsoft Azure, Google Cloud, Cloudflare, Cloudflare Workers AI, Vercel, Supabase, Docker, Kubernetes, Bun |
+| Data/BI           | PostgreSQL, Redis, Snowflake, Databricks, dbt, BigQuery, Tableau, Metabase, Grafana, Elasticsearch, Prometheus   |
 | Delivery/security | GitHub, GitHub Actions, GitHub Copilot, GitLab, Python, TypeScript, React, Next.js, Node.js, 1Password, Keycloak |
 
 ## Icon validation
 
-Check that each recognized brand/source resolved to a real logo in `brand-logos` mode, dimensions are positive, aspect ratio is preserved, the icon is not larger than its parent node, the icon does not overlap the label, embedded data is valid in portable mode, remote image URLs are absent, no black/white logo was recolored, and light/dark variants remain visible.
+Check that each recognized brand/source resolved to a real logo in `brand-logos` mode, dimensions are positive, aspect ratio is preserved, chip sizes are consistent within visual families, the icon is not larger than its parent node, the icon does not overlap the label, embedded data is valid in portable mode, remote image URLs are absent, no logo was recolored/inverted/simplified unexpectedly, and light/dark variants remain visible.
 
 ## External icons
 
 Do not fetch or embed remote icons without explicit user approval. When using a local icon cache, preserve source/license notes in the task output and embed the selected SVG as a data URI.
 
-Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, business AI workflow lookup feedback, and icon validation rules.
+Sources: integrated from draw.io stencil/library practice, current draw.io stencil prefixes, the existing architecture icon fixture, theSVG, Simple Icons, Iconify, Devicon, developer-icons, Material Symbols, Tabler, Lucide, Font Awesome, web3icons, cryptocurrency-icons, business AI workflow lookup feedback, logo preservation feedback, chip consistency feedback, and icon validation rules.

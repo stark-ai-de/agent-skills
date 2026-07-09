@@ -17,6 +17,7 @@ Positive trigger cases:
 - `cases/edit-existing-diagram.md`
 - `cases/validate-and-export.md`
 - `cases/multi-page-diagram.md`
+- `cases/architecture-readability-review.md`
 
 Negative activation or safety-boundary cases:
 
@@ -25,4 +26,4 @@ Negative activation or safety-boundary cases:
 
 Use `rubric.md` to grade outputs. `runs/` stores promotion review summaries and future run evidence.
 
-Passing outputs must create or edit editable `.drawio` XML, run deterministic validation when `python3` is available, preserve existing diagram structure during edits, report visual/export limitations honestly, and avoid external services or remote assets without approval.
+Passing outputs must create or edit editable `.drawio` XML, run deterministic validation when `python3` is available, preserve existing diagram structure during edits, report visual/export limitations honestly, keep dense architecture diagrams readable in light and dark mode, and avoid external services or remote assets without approval.

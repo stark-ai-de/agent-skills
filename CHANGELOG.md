@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.6.3 - 2026-07-09
+
+### Added
+
+- Added `drawio-diagrams` architecture readability guidance for connector-label gutters, fan-out lanes, package/detail row treatment, component-card hierarchy, whitespace balancing, and icon-chip consistency.
+- Added a `drawio-diagrams` architecture readability eval case and rubric criteria for dense architecture diagrams and logo fidelity.
+
+### Changed
+
+- Expanded `drawio-diagrams` XML authoring, routing, theming, icon, and verification references to keep labels off section borders, separate worker/outbound routes, preserve real logo artwork, and distinguish component titles from metadata.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ## v0.6.2 - 2026-07-08
 
 ### Added
