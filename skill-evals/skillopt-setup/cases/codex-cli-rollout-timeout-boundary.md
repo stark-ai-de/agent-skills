@@ -19,3 +19,11 @@ During `codex-cli-all` training for `$drawio-diagrams`, nested `codex exec` hung
 - On timeout, avoid workspace traversal, artifact collection, or recursive cleanup that could hang; preserve only a redacted workspace path for debugging.
 - Treat timeout or nonzero target rollout exit as a runtime scoring failure, not as a semantic judge pass.
 - Do not print raw transcripts, auth material, or private local paths.
+
+## Deterministic Assertions
+
+- contains: codex exec
+- contains: approval policy
+- contains: timeout
+- contains: SIGTERM
+- contains: SIGKILL

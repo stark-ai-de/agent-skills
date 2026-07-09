@@ -19,3 +19,11 @@ Readiness can reach a consumer-compatible provider endpoint, but official-parity
 - Keep `codex-cli-all` available only as an exploratory provider-free comparison path.
 - State that `codex-cli-all` must keep slow update and meta skill disabled because those mechanisms call provider-backed optimizer paths.
 - Do not print raw provider responses, `.env` contents, auth material, internal hostnames, or private local paths.
+
+## Deterministic Assertions
+
+- contains: provider authentication
+- contains: credential variable names
+- contains: SKILLOPT_OPTIMIZER_MODEL
+- contains: codex-cli-all
+- contains: slow update

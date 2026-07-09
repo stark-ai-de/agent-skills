@@ -10,7 +10,10 @@ function parseArgs(argv) {
   const args = { json: false, terminal: false, webuiCheck: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--json") args.json = true;
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--json") args.json = true;
     else if (arg === "--terminal" || arg === "--compact") args.terminal = true;
     else if (arg === "--webui-check") args.webuiCheck = true;
     else if (arg === "--skill") args.skill = argv[++i];
@@ -20,6 +23,17 @@ function parseArgs(argv) {
   if (!args.skill) fail("--skill is required");
   if (!args.run) fail("--run is required");
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node verify-skillopt-run-artifacts.mjs --skill <skill> --run <run-dir> [options]
+
+Options:
+  --terminal
+  --compact
+  --webui-check
+  --json
+  --help`);
 }
 
 function fail(message) {

@@ -16,7 +16,10 @@ function parseArgs(argv) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--write") args.write = true;
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--write") args.write = true;
     else if (arg === "--json") args.json = true;
     else if (arg === "--terminal" || arg === "--compact") args.terminal = true;
     else if (arg === "--skill") args.skill = argv[++i];
@@ -27,6 +30,18 @@ function parseArgs(argv) {
   if (!args.skill) fail("--skill is required");
   if (!args.run) fail("--run is required");
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node summarize-skillopt-run.mjs --skill <skill> --run <run-dir> [options]
+
+Options:
+  --terminal
+  --compact
+  --write
+  --date <yyyy-mm-dd>
+  --json
+  --help`);
 }
 
 function fail(message) {

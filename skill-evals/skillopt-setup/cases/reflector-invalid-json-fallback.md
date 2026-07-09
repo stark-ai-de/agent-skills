@@ -19,3 +19,11 @@ Codex CLI reflection returned a fenced JSON block once, prose around JSON once, 
 - Skip reflected patches that edit frontmatter, include secret-like strings, reference unsupported optimizer sources, exceed the edit budget, or are otherwise malformed.
 - Return only valid patches and keep patch count bounded for provider-free exploratory mode.
 - Do not persist raw reflection transcripts in tracked files.
+
+## Deterministic Assertions
+
+- contains: codex_cli_reflector.py
+- contains: JSON
+- contains: no patches
+- contains: frontmatter
+- contains: secret-like

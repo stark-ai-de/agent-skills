@@ -15,3 +15,10 @@ Create a public summary for `.agents/skillopt-work/codex-spec-interviewer/output
 - Include SkillOpt commit, target skill path, initial and best hashes, mode, run profile, official-parity status, optimizer backend, target backend, judge backend, split counts, model pins, expected artifact status, and validation status.
 - Exclude raw trajectories, provider credentials, Codex auth tokens, private paths, and `.env` contents.
 - Mark candidate acceptance as proposed, accepted, or rejected.
+
+## Deterministic Assertions
+
+- contains: summarize-skillopt-run.mjs
+- contains: SkillOpt commit
+- contains: model pins
+- contains: raw trajectories

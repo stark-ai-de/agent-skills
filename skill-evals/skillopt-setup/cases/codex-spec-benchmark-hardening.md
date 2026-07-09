@@ -17,3 +17,11 @@ Prepare `codex-spec-interviewer` as the first SkillOpt proof target and make sur
 - Carry `## Deterministic Assertions`, `## Fixtures`, and `## Expected Artifacts` into generated split JSON.
 - Keep `Should Trigger No` cases in activation-only negative data, not positive optimization training.
 - Report deterministic assertion, fixture, and expected-artifact coverage in dataset metadata or readiness output.
+
+## Deterministic Assertions
+
+- contains: prepare-skillopt-split.mjs --skill codex-spec-interviewer --seed 42
+- contains: 20 positive
+- contains: 5 validation
+- contains: 5 test
+- contains: Deterministic Assertions

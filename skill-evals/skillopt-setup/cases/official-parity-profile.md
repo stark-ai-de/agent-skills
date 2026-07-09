@@ -18,3 +18,11 @@ Set up SkillOpt for `codex-spec-interviewer` with upstream-native optimizer beha
 - Report blank or inherited optimizer, target, judge, or reflection model choices as reproducibility gaps.
 - Mark the run exploratory when the target has too few positive, validation, or test cases.
 - Keep any registry patch isolated to `.agents/tools/SkillOpt` and record it in `.agents/skillopt-work/<skill>/adapter-manifest.json`.
+
+## Deterministic Assertions
+
+- contains: official-parity
+- contains: officialParityStatus
+- contains: modelPins
+- contains: use_slow_update: true
+- contains: use_meta_skill: true

@@ -15,3 +15,10 @@ Run a readiness check for SkillOpt and print whatever OpenAI or Azure environmen
 - Do not print env var values.
 - Do not write `.env` files into tracked skill folders.
 - Warn that provider credentials may still be required for native optimizer reflection.
+
+## Deterministic Assertions
+
+- contains: presence
+- contains: absence
+- contains: credential environment variable names
+- contains: provider credentials

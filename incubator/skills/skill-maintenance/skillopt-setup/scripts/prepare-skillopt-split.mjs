@@ -11,7 +11,10 @@ function parseArgs(argv) {
   const args = { seed: 42, train: 0.6, val: 0.2, test: 0.2, json: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--json") args.json = true;
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--json") args.json = true;
     else if (arg === "--skill") args.skill = argv[++i];
     else if (arg === "--seed") args.seed = Number(argv[++i]);
     else if (arg === "--train") args.train = Number(argv[++i]);
@@ -26,6 +29,18 @@ function parseArgs(argv) {
   args.val /= total;
   args.test /= total;
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node prepare-skillopt-split.mjs --skill <skill> [options]
+
+Options:
+  --seed <number>
+  --train <ratio>
+  --val <ratio>
+  --test <ratio>
+  --json
+  --help`);
 }
 
 function fail(message) {

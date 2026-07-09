@@ -17,3 +17,10 @@ SkillOpt setup is ready. Do you want me to run the SkillOpt training now?
 - Offer `Should I run SkillOpt training for <target-skill> in this agent session anyway?` only as an explicit current-session option.
 - If the target is ambiguous or missing, ask which Agent Skill should be optimized.
 - Do not ask a generic "run SkillOpt training now" question.
+
+## Deterministic Assertions
+
+- contains: target skill
+- contains: new terminal
+- contains: summarize-skillopt-run.mjs
+- contains: apply-skillopt-best.mjs

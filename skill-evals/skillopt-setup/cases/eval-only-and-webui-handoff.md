@@ -20,3 +20,10 @@ Setup succeeded for `codex-spec-interviewer`. Give me the final commands to run 
 - Provide a short description and command for rerunning dry-run adoption preview with change counts.
 - Provide a short description and command for `scripts/eval_only.py` against `best_skill.md`.
 - Provide an optional WebUI command for local `.agents/` outputs without implying it must be installed automatically.
+
+## Deterministic Assertions
+
+- contains: python -u scripts/train.py
+- contains: summarize-skillopt-run.mjs --terminal
+- contains: apply-skillopt-best.mjs --dry-run --summary
+- contains: scripts/eval_only.py

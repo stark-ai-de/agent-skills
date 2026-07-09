@@ -19,3 +19,10 @@ A generated draw.io benchmark case had deterministic assertions and visual asser
 - Run the semantic Codex judge only when hard assertions are absent or when an explicitly safe fallback path is documented.
 - Stratify visual-assertion cases into validation or test splits when possible so they are not all hidden in training.
 - Do not let an LLM judge override failed deterministic or visual evidence.
+
+## Deterministic Assertions
+
+- contains: deterministic_assertions
+- contains: visual_assertions
+- contains: hard gate
+- contains: semantic

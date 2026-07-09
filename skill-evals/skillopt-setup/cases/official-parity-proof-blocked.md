@@ -20,3 +20,11 @@ Run readiness for an official-parity SkillOpt proof on `codex-spec-interviewer`,
 - In dry-run/readiness, skip the Codex login probe unless the user explicitly asks.
 - Do not print credential values.
 - Do not claim that setup readiness is the same as proof readiness.
+
+## Deterministic Assertions
+
+- contains: check-skillopt-readiness.mjs --skill codex-spec-interviewer --mode hybrid-codex-target --run-profile official-parity --json
+- contains: proofStatus
+- contains: proofBlockers
+- contains: training readiness
+- contains: setup readiness

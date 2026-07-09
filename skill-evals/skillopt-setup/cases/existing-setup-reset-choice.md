@@ -18,3 +18,9 @@ Use SkillOpt to prepare training for `codex-spec-interviewer`. I want a dry-run 
 - Dry-run output does not recommend production setup commands, reset commands, or SkillOpt training commands.
 - Do not remove installed skills under `.agents/skills/`.
 - Provide the recommended new-terminal SkillOpt training command only after production-grade setup succeeds.
+
+## Deterministic Assertions
+
+- contains: setup-skillopt-local.mjs --cleanup-only --approved
+- contains: --existing-setup-choice reuse
+- contains: .agents/skills

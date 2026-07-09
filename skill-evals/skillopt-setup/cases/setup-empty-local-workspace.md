@@ -21,3 +21,10 @@ Set up SkillOpt for the incubator skill `skill-authoring-review`. I do not have 
 - Confirm `.agents/` is ignored before planning local clone output.
 - Report missing SkillOpt clone and virtualenv as setup prerequisites.
 - Keep all third-party clone and generated workspace paths under `.agents/`.
+
+## Deterministic Assertions
+
+- contains: setup-skillopt-local.mjs
+- contains: .agents/tools/SkillOpt
+- contains: check-skillopt-readiness.mjs
+- contains: uv

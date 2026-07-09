@@ -17,3 +17,11 @@ Training finished for `.agents/skillopt-work/codex-spec-interviewer/outputs/run-
 - Report eval-only status separately from training completion.
 - Check optional WebUI importability only when explicitly requested; do not silently install WebUI dependencies.
 - Do not read or publish raw trajectories.
+
+## Deterministic Assertions
+
+- contains: verify-skillopt-run-artifacts.mjs
+- contains: config.json
+- contains: history.json
+- contains: runtime_state.json
+- contains: best_skill.md

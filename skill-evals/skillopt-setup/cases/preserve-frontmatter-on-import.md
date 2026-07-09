@@ -17,3 +17,10 @@ Review `.agents/skillopt-work/skill-authoring-review/outputs/run-001/best_skill.
 - Preserve original frontmatter unless frontmatter optimization was explicitly requested.
 - Reject changes that alter `name`, `description`, `license`, or `metadata`.
 - Require explicit approval before writing tracked files.
+
+## Deterministic Assertions
+
+- contains: apply-skillopt-best.mjs --dry-run
+- contains: frontmatter
+- contains: name
+- contains: description

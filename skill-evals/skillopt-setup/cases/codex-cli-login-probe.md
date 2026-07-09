@@ -16,3 +16,9 @@ Before running a hybrid SkillOpt optimization, verify that `codex exec` is usabl
 - Verify the final response is exactly `CODEX_READY` after trimming whitespace.
 - Redact token-like strings and home paths from diagnostics.
 - Warn if `OPENAI_API_KEY` is set while Codex CLI auth mode was requested.
+
+## Deterministic Assertions
+
+- contains: probe-codex-cli.mjs --json
+- contains: CODEX_READY
+- contains: redacted

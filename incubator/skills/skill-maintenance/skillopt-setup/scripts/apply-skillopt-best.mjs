@@ -9,7 +9,10 @@ function parseArgs(argv) {
   const args = { approved: false, dryRun: true, json: false, summary: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--approved") {
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--approved") {
       args.approved = true;
       args.dryRun = false;
     } else if (arg === "--dry-run") {
@@ -24,6 +27,18 @@ function parseArgs(argv) {
   if (!args.skill) fail("--skill is required");
   if (!args.best) fail("--best is required");
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node apply-skillopt-best.mjs --skill <skill> --best <best_skill.md> [options]
+
+Options:
+  --dry-run
+  --approved
+  --version <x.y.z>
+  --summary
+  --json
+  --help`);
 }
 
 function fail(message) {

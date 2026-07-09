@@ -12,12 +12,25 @@ function parseArgs(argv) {
   const args = { json: false, authMode: "codex-cli", timeout: 240000 };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--json") args.json = true;
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--json") args.json = true;
     else if (arg === "--auth-mode") args.authMode = argv[++i];
     else if (arg === "--timeout-ms") args.timeout = Number(argv[++i]);
     else fail(`Unknown argument: ${arg}`);
   }
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node probe-codex-cli.mjs [options]
+
+Options:
+  --auth-mode <codex-cli>
+  --timeout-ms <number>
+  --json
+  --help`);
 }
 
 function fail(message) {

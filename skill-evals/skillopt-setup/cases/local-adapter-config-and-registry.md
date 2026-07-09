@@ -18,3 +18,10 @@ SkillOpt setup created configs, but training failed before rollouts because `_ba
 - Install an adapter/dataloader pair that matches the current SkillOpt `EnvAdapter` lifecycle and accepts flattened config kwargs from `get_adapter`.
 - Record the result in `.agents/skillopt-work/<skill>/adapter-manifest.json` with `registry_patch.status` set to `ready`, or block with manual review if the local SkillOpt entrypoints have an unknown shape.
 - Do not edit tracked SkillOpt sources or stage files.
+
+## Deterministic Assertions
+
+- contains: prepare-local-skillopt-adapter.mjs
+- contains: _base_/default.yaml
+- contains: agent_skills
+- contains: adapter-manifest.json

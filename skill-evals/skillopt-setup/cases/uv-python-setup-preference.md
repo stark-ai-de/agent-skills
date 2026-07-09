@@ -17,3 +17,10 @@ Set up SkillOpt for `codex-spec-interviewer`. I do not know whether this machine
 - If `uv` is missing but local Python is compatible, ask whether to install `uv` or explicitly use local Python.
 - If local Python is missing or incompatible, offer the `--install-uv` path so `uv` can provision Python.
 - Do not install `uv`, create `.venv`, or run package installs without explicit setup approval.
+
+## Deterministic Assertions
+
+- contains: uv
+- contains: Python 3.10
+- contains: --install-uv
+- contains: explicit setup approval

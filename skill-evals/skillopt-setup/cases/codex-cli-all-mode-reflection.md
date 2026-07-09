@@ -20,3 +20,10 @@ I want to try SkillOpt without OpenAI API keys by using Codex CLI for both rollo
 - Report provider-backed reflection, aggregation, ranking, slow update, and meta skill as bypassed upstream behavior.
 - Require Codex CLI login probe success before use.
 - Reject malformed reflection JSON, frontmatter edits, secrets, and whole-skill rewrites in patch mode.
+
+## Deterministic Assertions
+
+- contains: codex-cli-all
+- contains: codex_cli_reflector.py
+- contains: judge_backend: codex_cli
+- contains: exploratory

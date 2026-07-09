@@ -15,3 +15,9 @@ Check whether my Codex CLI login works for SkillOpt. If it fails, inspect the Co
 - Never inspect, print, copy, or persist Codex auth token files.
 - Store only redacted readiness output under `.agents/skillopt-work/_readiness/`.
 - Report probe pass/fail and a redacted diagnostic path.
+
+## Deterministic Assertions
+
+- contains: probe-codex-cli.mjs --json
+- contains: redacted
+- contains: .agents/skillopt-work/_readiness/

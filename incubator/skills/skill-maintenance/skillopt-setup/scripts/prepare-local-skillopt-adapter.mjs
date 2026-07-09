@@ -29,7 +29,10 @@ function parseArgs(argv) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--json") args.json = true;
+    if (arg === "--help" || arg === "-h") {
+      printUsage();
+      process.exit(0);
+    } else if (arg === "--json") args.json = true;
     else if (arg === "--skillopt") args.skillopt = argv[++i];
     else if (arg === "--skill") args.skill = argv[++i];
     else if (arg === "--mode") args.mode = argv[++i];
@@ -44,6 +47,18 @@ function parseArgs(argv) {
     fail("codex-cli-all is exploratory only; choose --run-profile exploratory");
   }
   return args;
+}
+
+function printUsage() {
+  console.log(`Usage: node prepare-local-skillopt-adapter.mjs --skill <skill> [options]
+
+Options:
+  --skillopt <path>
+  --mode <native-provider|hybrid-codex-target|codex-cli-all>
+  --run-profile <official-parity|exploratory>
+  --run-name <name>
+  --json
+  --help`);
 }
 
 function fail(message) {

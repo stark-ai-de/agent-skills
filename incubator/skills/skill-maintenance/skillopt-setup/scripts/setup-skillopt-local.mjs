@@ -62,6 +62,7 @@ function parseArgs(argv) {
     else if (arg === "--install-uv") args.installUv = true;
     else if (arg === "--skip-install") args.skipInstall = true;
     else if (arg === "--probe-codex") args.probeCodex = true;
+    else if (arg === "--no-codex-probe") args.probeCodex = false;
     else if (arg === "--reset-existing") args.resetExisting = true;
     else if (arg === "--cleanup-only") args.cleanupOnly = true;
     else if (arg === "--existing-setup-choice") args.existingSetupChoice = argv[++i];
@@ -101,6 +102,7 @@ Options:
   --existing-setup-choice <reuse>
   --run-profile <official-parity|exploratory>
   --probe-codex
+  --no-codex-probe
   --skip-install
   --run-name <name>
   --skillopt <path>
