@@ -129,6 +129,10 @@ function segmentIntersectsBox(a, b, box, padding = 0) {
   return true;
 }
 
+function stripMarkup(value = "") {
+  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function isContainer(cell) {
   const isTextOrLabel = (cell.attrs.style || "").startsWith("text;") || cell.attrs.value;
   return (
@@ -160,6 +164,10 @@ function isDecorativeEdge(cell) {
   );
 }
 
+function hasReadableLabelBackground(cell) {
+  return Boolean(cell.style.labelBackgroundColor || cell.style.labelBorderColor);
+}
+
 function cellRef(page, id) {
   return `${page.name}:${id || "?"}`;
 }
@@ -180,6 +188,14 @@ function validatePage(page) {
         );
         continue;
       }
+
+      const edgeLabel = stripMarkup(cell.attrs.value || "");
+      if (edgeLabel.length > 12 && !isDecorativeEdge(cell) && !hasReadableLabelBackground(cell)) {
+        warnings.push(
+          `WARN  [${cellRef(page, id)}] dense edge label lacks labelBackgroundColor; add a filled label background or move the label into an explicit label cell so it does not sit on rails or section borders`,
+        );
+      }
+
       const source = byId.get(cell.attrs.source);
       const target = byId.get(cell.attrs.target);
       const sourceBox = source ? bbox(source) : null;
