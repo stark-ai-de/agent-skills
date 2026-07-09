@@ -381,7 +381,7 @@ function removeExistingSetup(args, skillOptPath, steps) {
 
 function modeNote(mode, runProfile = defaultRunProfile(mode)) {
   if (mode === "codex-cli-all") {
-    return "codex-cli-all avoids provider credentials by using Codex CLI for target rollouts, semantic LLM judging, and adapter-managed reflection through the user's Codex login. It is exploratory, not upstream-native official optimizer parity.";
+    return "codex-cli-all avoids provider credentials by using Codex CLI for target rollouts, semantic LLM judging, and adapter-managed reflection through the user's Codex login. It keeps slow update and meta skill disabled because those upstream epoch-boundary mechanisms call provider-backed chat_optimizer. It is exploratory, not upstream-native official optimizer parity.";
   }
   if (mode === "hybrid-codex-target") {
     return `hybrid-codex-target uses Codex CLI for target rollouts and judging, but native SkillOpt optimizer/reflection still needs provider credentials. Run profile: ${runProfile}.`;

@@ -1,11 +1,392 @@
 import json
+import hashlib
+import os
+import shutil
+import signal
 import subprocess
+import struct
 import tempfile
+import xml.etree.ElementTree as ET
+import zlib
 from pathlib import Path
 
 
 def redact(text):
-    return (text or "").replace(str(Path.home()), "~")
+    return str(text or "").replace(str(Path.home()), "~")
+
+
+def short(text, limit=8000):
+    value = redact(text)
+    return value if len(value) <= limit else f"{value[:limit]}..."
+
+
+def as_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def normalize_task_prompt(prompt, skill_name="drawio-diagrams"):
+    text = str(prompt or "")
+    return (
+        text.replace(f"${skill_name}", "the provided Agent Skill body")
+        .replace(f"@{skill_name}", "the provided Agent Skill body")
+    )
+
+
+def config_bool(value):
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def toml_string(value):
+    return json.dumps(str(value))
+
+
+def safe_rmtree(path):
+    try:
+        shutil.rmtree(path)
+        return ""
+    except OSError as error:
+        return short(error, 500)
+
+
+def process_group_alive(pgid):
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+
+
+def signal_process_group(process, sig):
+    try:
+        os.killpg(process.pid, sig)
+        return ""
+    except ProcessLookupError:
+        return "already exited"
+    except OSError as error:
+        return short(error, 500)
+
+
+def communicate_after_signal(process, timeout):
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+        return as_text(stdout), as_text(stderr), False
+    except subprocess.TimeoutExpired as error:
+        return as_text(error.stdout), as_text(error.stderr), True
+
+
+def find_repo_root():
+    for candidate in [Path.cwd(), *Path.cwd().parents]:
+        if (candidate / "skills" / "engineering-workflows" / "drawio-diagrams").is_dir():
+            return candidate
+    return None
+
+
+def copy_tree(src, dst):
+    shutil.copytree(
+        src,
+        dst,
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
+
+
+def seed_workspace(workspace, case, skill_name):
+    repo_root = find_repo_root()
+    if repo_root is None:
+        return "No repository helper files were found for this isolated rollout."
+
+    skill_dir = repo_root / "skills" / "engineering-workflows" / skill_name
+    notes = []
+    for dirname in ("scripts", "references"):
+        src = skill_dir / dirname
+        if src.is_dir():
+            copy_tree(src, workspace / dirname)
+            notes.append(f"- ./{dirname}/ from the target skill package")
+
+    fixture_notes = []
+    fixture_dir = workspace / "fixtures"
+    for fixture in case.get("fixtures") or []:
+        src = repo_root / fixture
+        if not src.is_file():
+            fixture_notes.append(f"- missing fixture: {fixture}")
+            continue
+        fixture_dir.mkdir(parents=True, exist_ok=True)
+        dst = fixture_dir / src.name
+        shutil.copy2(src, dst)
+        fixture_notes.append(f"- ./fixtures/{dst.name} copied from {fixture}")
+
+    if fixture_notes:
+        notes.append("Fixtures:")
+        notes.extend(fixture_notes)
+    if not notes:
+        return "No case-specific helper files were required for this isolated rollout."
+    return "\n".join(notes)
+
+
+def paeth_predictor(left, up, upper_left):
+    estimate = left + up - upper_left
+    left_distance = abs(estimate - left)
+    up_distance = abs(estimate - up)
+    upper_left_distance = abs(estimate - upper_left)
+    if left_distance <= up_distance and left_distance <= upper_left_distance:
+        return left
+    if up_distance <= upper_left_distance:
+        return up
+    return upper_left
+
+
+def png_channels(color_type):
+    if color_type in {0, 3}:
+        return 1
+    if color_type == 2:
+        return 3
+    if color_type == 4:
+        return 2
+    if color_type == 6:
+        return 4
+    raise ValueError(f"unsupported PNG color type {color_type}")
+
+
+def png_pixel_sample(row, x, bit_depth, pixel_stride):
+    if bit_depth >= 8:
+        start = x * pixel_stride
+        return bytes(row[start : start + pixel_stride]).hex()
+    bit_offset = x * bit_depth
+    byte = row[bit_offset // 8]
+    shift = 8 - bit_depth - (bit_offset % 8)
+    mask = (1 << bit_depth) - 1
+    return str((byte >> shift) & mask)
+
+
+def sample_has_value(data):
+    return any(byte != 0 for byte in data)
+
+
+def sample_equals(data, expected):
+    return expected is not None and bytes(data) == bytes(expected)
+
+
+def png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transparency):
+    if bit_depth >= 8:
+        start = x * pixel_stride
+        bytes_per_sample = (bit_depth + 7) // 8
+        if color_type == 0:
+            sample = row[start : start + bytes_per_sample]
+            if sample_equals(sample, transparency.get("grayscale")):
+                return None
+            return bytes(sample).hex()
+        if color_type == 2:
+            sample = row[start : start + 3 * bytes_per_sample]
+            if sample_equals(sample, transparency.get("rgb")):
+                return None
+            return bytes(sample).hex()
+        if color_type == 3:
+            palette_index = row[start]
+            alpha = transparency.get("palette", {}).get(palette_index)
+            if alpha == 0:
+                return None
+            return str(palette_index)
+        if color_type == 4:
+            alpha_start = start + bytes_per_sample
+            alpha = row[alpha_start : alpha_start + bytes_per_sample]
+            if not sample_has_value(alpha):
+                return None
+            return bytes(row[start:alpha_start]).hex()
+        if color_type == 6:
+            alpha_start = start + 3 * bytes_per_sample
+            alpha = row[alpha_start : alpha_start + bytes_per_sample]
+            if not sample_has_value(alpha):
+                return None
+            return bytes(row[start:alpha_start]).hex()
+        return bytes(row[start : start + pixel_stride]).hex()
+    if color_type == 0:
+        sample = png_pixel_sample(row, x, bit_depth, pixel_stride)
+        if transparency.get("grayscale_value") is not None and sample == str(transparency["grayscale_value"]):
+            return None
+        return sample
+    if color_type == 3:
+        palette_index = int(png_pixel_sample(row, x, bit_depth, pixel_stride))
+        alpha = transparency.get("palette", {}).get(palette_index)
+        if alpha == 0:
+            return None
+        return str(palette_index)
+    return png_pixel_sample(row, x, bit_depth, pixel_stride)
+
+
+def png_transparency_sample_bytes(data, bit_depth, sample_index):
+    bytes_per_sample = (bit_depth + 7) // 8
+    sample_start = sample_index * 2
+    return bytes(data[sample_start + 2 - bytes_per_sample : sample_start + 2])
+
+
+def png_metadata(path):
+    try:
+        data = path.read_bytes()
+        if len(data) < 33 or data[:8] != b"\x89PNG\r\n\x1a\n":
+            return {"valid": False, "error": "invalid PNG signature"}
+
+        offset = 8
+        width = None
+        height = None
+        bit_depth = None
+        color_type = None
+        transparency = {}
+        idat_chunks = []
+        while offset + 12 <= len(data):
+            length = struct.unpack(">I", data[offset : offset + 4])[0]
+            chunk_type = data[offset + 4 : offset + 8].decode("ascii", errors="replace")
+            data_start = offset + 8
+            data_end = data_start + length
+            if data_end + 4 > len(data):
+                raise ValueError("truncated PNG chunk")
+            chunk = data[data_start:data_end]
+            if chunk_type == "IHDR":
+                if length != 13:
+                    raise ValueError("invalid PNG IHDR length")
+                width, height = struct.unpack(">II", chunk[:8])
+                bit_depth = chunk[8]
+                color_type = chunk[9]
+                if chunk[10] != 0 or chunk[11] != 0 or chunk[12] != 0:
+                    raise ValueError("unsupported PNG compression, filter, or interlace method")
+            elif chunk_type == "IDAT":
+                idat_chunks.append(chunk)
+            elif chunk_type == "tRNS":
+                if color_type == 0:
+                    if length != 2:
+                        raise ValueError("invalid PNG tRNS length for grayscale image")
+                    transparency["grayscale"] = png_transparency_sample_bytes(chunk, bit_depth, 0)
+                    transparency["grayscale_value"] = struct.unpack(">H", chunk)[0]
+                elif color_type == 2:
+                    if length != 6:
+                        raise ValueError("invalid PNG tRNS length for truecolor image")
+                    transparency["rgb"] = b"".join(
+                        png_transparency_sample_bytes(chunk, bit_depth, sample_index)
+                        for sample_index in range(3)
+                    )
+                elif color_type == 3:
+                    transparency["palette"] = {index: alpha for index, alpha in enumerate(chunk)}
+            elif chunk_type == "IEND":
+                break
+            offset = data_end + 4
+
+        if not width or not height or bit_depth is None or color_type is None:
+            raise ValueError("PNG missing IHDR")
+        if not idat_chunks:
+            raise ValueError("PNG missing IDAT data")
+
+        channels = png_channels(color_type)
+        bits_per_pixel = channels * bit_depth
+        row_bytes = (width * bits_per_pixel + 7) // 8
+        filter_stride = max(1, (bits_per_pixel + 7) // 8)
+        pixel_stride = filter_stride if bit_depth >= 8 else 1
+        inflated = zlib.decompress(b"".join(idat_chunks))
+        if len(inflated) < height * (row_bytes + 1):
+            raise ValueError("PNG IDAT data is shorter than expected image rows")
+
+        offset = 0
+        previous = bytearray(row_bytes)
+        distinct_pixels = set()
+        visible_distinct_pixels = set()
+        visible_pixel_count = 0
+        transparent_pixel_count = 0
+        for _ in range(height):
+            row_filter = inflated[offset]
+            encoded = inflated[offset + 1 : offset + 1 + row_bytes]
+            row = bytearray(row_bytes)
+            offset += row_bytes + 1
+            for x in range(row_bytes):
+                left = row[x - filter_stride] if x >= filter_stride else 0
+                up = previous[x] if x < len(previous) else 0
+                upper_left = previous[x - filter_stride] if x >= filter_stride else 0
+                predictor = 0
+                if row_filter == 1:
+                    predictor = left
+                elif row_filter == 2:
+                    predictor = up
+                elif row_filter == 3:
+                    predictor = (left + up) // 2
+                elif row_filter == 4:
+                    predictor = paeth_predictor(left, up, upper_left)
+                elif row_filter != 0:
+                    raise ValueError(f"unsupported PNG row filter {row_filter}")
+                row[x] = (encoded[x] + predictor) & 0xFF
+
+            for x in range(width):
+                distinct_pixels.add(png_pixel_sample(row, x, bit_depth, pixel_stride))
+                visible_sample = png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transparency)
+                if visible_sample is None:
+                    transparent_pixel_count += 1
+                else:
+                    visible_pixel_count += 1
+                    visible_distinct_pixels.add(visible_sample)
+            previous = row
+
+        nonblank = (
+            visible_pixel_count > 0
+            if transparent_pixel_count > 0
+            else len(visible_distinct_pixels) > 1
+        )
+        return {
+            "valid": True,
+            "width": width,
+            "height": height,
+            "bit_depth": bit_depth,
+            "color_type": color_type,
+            "distinct_pixels": len(distinct_pixels),
+            "visible_distinct_pixels": len(visible_distinct_pixels),
+            "visible_pixel_count": visible_pixel_count,
+            "transparent_pixel_count": transparent_pixel_count,
+            "nonblank": nonblank,
+        }
+    except Exception as error:
+        return {"valid": False, "error": short(error, 300)}
+
+
+def svg_metadata(path):
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        root = ET.fromstring(text)
+        local_name = root.tag.rsplit("}", 1)[-1].split(":")[-1]
+        return {
+            "valid": local_name == "svg",
+            "text_sample": text[:200000],
+        }
+    except Exception as error:
+        return {"valid": False, "error": short(error, 300), "text_sample": ""}
+
+
+def collect_artifacts(workspace):
+    artifacts = []
+    for path in sorted(workspace.rglob("*")):
+        if not path.is_file():
+            continue
+        suffix = path.suffix.lower()
+        if suffix not in {".png", ".svg"}:
+            continue
+        try:
+            content = path.read_bytes()
+        except OSError:
+            continue
+        item = {
+            "path": path.relative_to(workspace).as_posix(),
+            "kind": suffix[1:],
+            "size_bytes": len(content),
+            "sha256": hashlib.sha256(content).hexdigest(),
+        }
+        if suffix == ".png":
+            item.update(png_metadata(path))
+        elif suffix == ".svg":
+            item.update(svg_metadata(path))
+        artifacts.append(item)
+    return artifacts
 
 
 class AgentSkillsRollout:
@@ -14,19 +395,47 @@ class AgentSkillsRollout:
         self.timeout = int(config.get("exec_timeout", 240))
         self.model = str(config.get("target_model") or config.get("target") or "").strip()
         self.profile = str(config.get("codex_exec_profile") or "").strip()
+        self.reasoning_effort = str(config.get("codex_exec_reasoning_effort") or "").strip()
+        self.approval_policy = str(config.get("codex_exec_approval_policy") or "never").strip()
+        self.web_search = config_bool(config.get("codex_exec_web_search"))
+        self.network_access = config_bool(config.get("codex_exec_network_access"))
 
     def run(self, case, skill_body):
-        with tempfile.TemporaryDirectory(prefix="skillopt-agent-skill-") as tmp:
-            workspace = Path(tmp)
+        workspace = Path(tempfile.mkdtemp(prefix="skillopt-agent-skill-"))
+        keep_workspace = False
+        cleanup_error = ""
+        outcome = None
+        try:
+            skill_name = str(case.get("skill_name") or "drawio-diagrams")
+            task_prompt = normalize_task_prompt(case["prompt"], skill_name)
+            workspace_note = seed_workspace(workspace, case, skill_name)
             prompt = (
-                "Use the following Agent Skill body as the active operating procedure.\n\n"
+                "Use only the following Agent Skill body as the active operating procedure. "
+                "Do not read or load installed skill files from ~/.agents/skills, ~/.codex/skills, "
+                "the workspace, or any other skill registry. If the task prompt names a skill, "
+                "interpret it as referring only to the skill body below. Local helper scripts, "
+                "references, and fixtures for this isolated rollout are available only inside "
+                "the current working directory; use those local copies instead of searching "
+                "outside the workspace.\n\n"
+                "This is a bounded SkillOpt rollout. Keep the implementation minimal and finish "
+                "with a concise delivery summary. Do not perform open-ended environment searches, "
+                "do not wait for unavailable optional tools, and run at most one validation/export "
+                "attempt before reporting skipped or unavailable capabilities honestly. Do not call "
+                "shell commands, file-editing tools, browser tools, or external tools in this nested "
+                "rollout environment; provide the final response text directly, describing the "
+                "minimal files, commands, validations, and skipped capabilities that the skill would "
+                "use for the task.\n\n"
                 f"{skill_body}\n\n"
+                "Rollout workspace files:\n"
+                f"{workspace_note}\n\n"
                 "Task prompt:\n"
-                f"{case['prompt']}\n"
+                f"{task_prompt}\n"
             )
             command = [
                 self.config.get("codex_exec_path", "codex"),
                 "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
                 "--skip-git-repo-check",
                 "--ephemeral",
                 "--color",
@@ -38,22 +447,89 @@ class AgentSkillsRollout:
             ]
             if self.model:
                 command.extend(["--model", self.model])
+            if self.reasoning_effort:
+                command.extend(["-c", f'model_reasoning_effort="{self.reasoning_effort}"'])
+            if self.approval_policy:
+                command.extend(["-c", f"approval_policy={toml_string(self.approval_policy)}"])
+            command.extend([
+                "-c",
+                f"sandbox_workspace_write.network_access={'true' if self.network_access else 'false'}",
+            ])
+            if self.web_search:
+                command.append("--search")
             if self.profile:
                 command.extend(["--profile", self.profile])
             command.append(prompt)
-            result = subprocess.run(
-                command,
-                cwd=workspace,
-                text=True,
-                capture_output=True,
-                timeout=self.timeout,
-            )
             final = workspace / "final.md"
-            response = final.read_text(encoding="utf-8") if final.exists() else result.stdout
-            return {
-                "id": case["id"],
-                "case_id": case["id"],
-                "response": redact(response),
-                "returncode": result.returncode,
-                "stderr": redact(result.stderr)[:1000],
-            }
+            try:
+                process = subprocess.Popen(
+                    command,
+                    cwd=workspace,
+                    stdin=subprocess.DEVNULL,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    start_new_session=True,
+                )
+                stdout, stderr = process.communicate(timeout=self.timeout)
+                response = final.read_text(encoding="utf-8") if final.exists() else stdout
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": redact(response),
+                    "returncode": process.returncode,
+                    "stderr": short(stderr),
+                    "stdout": short(stdout),
+                    "artifacts": collect_artifacts(workspace),
+                }
+            except subprocess.TimeoutExpired as error:
+                stdout = as_text(error.stdout)
+                stderr = as_text(error.stderr)
+                termination_notes = []
+                term_error = signal_process_group(process, signal.SIGTERM)
+                if term_error:
+                    termination_notes.append(f"SIGTERM: {term_error}")
+                term_stdout, term_stderr, still_running = communicate_after_signal(process, 5)
+                stdout = term_stdout or stdout
+                stderr = term_stderr or stderr
+                if still_running:
+                    kill_error = signal_process_group(process, signal.SIGKILL)
+                    if kill_error:
+                        termination_notes.append(f"SIGKILL: {kill_error}")
+                    kill_stdout, kill_stderr, still_running = communicate_after_signal(process, 5)
+                    stdout = kill_stdout or stdout
+                    stderr = kill_stderr or stderr
+                # On timeout, avoid inspecting or deleting the workspace. Some
+                # failed Codex/tool subprocesses can leave cwd/file handles in a
+                # kernel-blocked state; walking the tree or rmtree can wedge the
+                # trainer even after the direct child has exited.
+                keep_workspace = True
+                response = stdout
+                stderr_text = (
+                    f"codex exec timed out after {self.timeout} seconds\n"
+                    f"process_alive_after_kill={keep_workspace}\n"
+                    f"termination_notes={termination_notes}\n"
+                    f"stdout before timeout:\n{stdout}\n"
+                    f"stderr before timeout:\n{stderr}"
+                )
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": redact(response),
+                    "returncode": 124,
+                    "stderr": short(stderr_text),
+                    "stdout": short(stdout),
+                    "artifacts": [],
+                    "timeout": True,
+                }
+                if keep_workspace:
+                    outcome["workspace_preserved"] = redact(str(workspace))
+            return outcome
+        finally:
+            if keep_workspace:
+                if outcome is not None:
+                    outcome["workspace_preserved"] = redact(str(workspace))
+            else:
+                cleanup_error = safe_rmtree(workspace)
+                if cleanup_error and outcome is not None:
+                    outcome["cleanup_error"] = cleanup_error

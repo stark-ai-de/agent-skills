@@ -26,19 +26,26 @@ Grade each run against these assertions.
 - Uses a semantic LLM judge for Codex CLI modes and routes `codex-cli-all` judging through the local Codex CLI login instead of provider credentials.
 - Keeps dry-run/readiness read-only by skipping the Codex login probe unless the user explicitly asks to run it.
 - Keeps `codex-cli-all` provider-free after reflection by locally coalescing and budget-capping Codex CLI patches before upstream aggregate/rank stages.
+- Keeps `codex-cli-all` slow update and meta skill disabled because those upstream epoch-boundary mechanisms call provider-backed optimizer paths.
+- Bounds Codex CLI target rollouts with no-tool/final-response-only prompts, closed stdin, process-group cleanup, timeout handling, and no workspace traversal on timeout.
+- Normalizes `$skill`/`@skill` prompt references to the provided skill body and seeds only declared local helpers and fixtures into isolated rollout workspaces.
+- Degrades invalid, empty, timed-out, or prose/fenced Codex CLI reflection output to no patches instead of crashing.
 - Prints eval-only and optional WebUI handoff commands after successful production setup, with short descriptions.
 - Converts Markdown eval cases into train/val/test JSON and activation-only negative cases.
 - Preserves the official-parity data floor of 20 positive cases with at least 5 validation and 5 test cases when enough target cases exist.
-- Carries deterministic assertions, fixtures, and expected artifact references into generated split JSON.
+- Carries deterministic assertions, visual assertions, fixtures, and expected artifact references into generated split JSON.
+- Treats deterministic and visual assertions as hard scoring gates before semantic LLM judging; failed hard evidence fails the item without LLM override.
 - Uses `codex_exec` for hybrid Codex target config and sets `codex_exec_full_auto: false`.
 - Marks all-Codex mode exploratory unless local reflection support is installed and validated.
 - Produces run summaries that omit raw transcripts and sensitive local state.
 - Verifies expected run artifacts before public proof summaries and reports eval-only/WebUI status separately.
 - Preserves frontmatter when importing `best_skill.md`.
+- Rejects `best_skill.md` adoption when recorded test hard score regresses from baseline or when the candidate contains secret-like text.
 
 ## Setup Boundaries
 
 - Never prints secret values, Codex auth tokens, `.env` contents, private paths, or raw trajectories.
+- Treats provider endpoint reachability and provider authentication as separate readiness facts, and reports auth blockers generically without raw provider responses.
 - Never installs `uv`, creates Python environments, or installs Python packages without explicit approval.
 - Requires explicit approval before tracked skill writes.
 - Rejects candidates that weaken safety rules, approval gates, or public/private artifact boundaries.

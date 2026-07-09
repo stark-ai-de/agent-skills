@@ -24,6 +24,7 @@
 - If SkillOpt reports unknown environment `agent_skills`, rerun `prepare-local-skillopt-adapter.mjs`; current setup patches known local `scripts/train.py` and `scripts/eval_only.py` registry shapes inside `.agents/tools/SkillOpt` and records the result in `.agents/skillopt-work/<skill>/adapter-manifest.json`.
 - If SkillOpt reports `AgentSkillsAdapter.__init__()` missing `config`, rerun `prepare-local-skillopt-adapter.mjs`; current setup copies an adapter that accepts flattened SkillOpt config kwargs and implements the current `EnvAdapter` lifecycle.
 - If registry files changed upstream, treat setup as blocked until the adapter patch is reviewed.
+- If `codex-cli-all` readiness blocks on slow update or meta skill, keep both disabled or switch to `hybrid-codex-target`/`native-provider`; those mechanisms call upstream provider-backed optimizer functions.
 
 ## Adoption Fails
 

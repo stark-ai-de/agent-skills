@@ -111,6 +111,10 @@ function deterministicAssertions(text) {
   return bullets(section(text, "Deterministic Assertions"));
 }
 
+function visualAssertions(text) {
+  return bullets(section(text, "Visual Assertions"));
+}
+
 function expectedArtifactPaths(text, skillName) {
   const explicit = [
     ...bullets(section(text, "Expected Artifact")),
@@ -172,6 +176,37 @@ function splitItems(items, ratios) {
   };
 }
 
+function hasVisualAssertions(item) {
+  return (item.visual_assertions || []).length > 0;
+}
+
+function ensureTaggedSplit(splits, targetName, predicate, sourceNames) {
+  if (splits[targetName].some(predicate)) return false;
+  const replacementIndex = splits[targetName].findIndex((item) => !predicate(item));
+  if (replacementIndex === -1) return false;
+
+  for (const sourceName of sourceNames) {
+    if (sourceName === targetName) continue;
+    const sourceIndex = splits[sourceName].findIndex(predicate);
+    if (sourceIndex === -1) continue;
+
+    const tagged = splits[sourceName][sourceIndex];
+    splits[sourceName][sourceIndex] = splits[targetName][replacementIndex];
+    splits[targetName][replacementIndex] = tagged;
+    return true;
+  }
+  return false;
+}
+
+function stratifyVisualAssertions(splits) {
+  const allItems = [...splits.train, ...splits.val, ...splits.test];
+  if (!allItems.some(hasVisualAssertions)) return splits;
+
+  ensureTaggedSplit(splits, "test", hasVisualAssertions, ["train", "val"]);
+  ensureTaggedSplit(splits, "val", hasVisualAssertions, ["train"]);
+  return splits;
+}
+
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
@@ -209,6 +244,7 @@ const trainingItems = [];
 const activationNegativeCases = [];
 const qualityCounters = {
   positive_with_deterministic_assertions: 0,
+  positive_with_visual_assertions: 0,
   positive_with_fixtures: 0,
   positive_with_expected_artifacts: 0,
 };
@@ -220,6 +256,7 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
   const fixtures = fixturePaths(text);
   const expectedArtifacts = expectedArtifactPaths(text, skillName);
   const deterministic = deterministicAssertions(text);
+  const visual = visualAssertions(text);
   const item = {
     id: `${skillName}/${slugFromFile(caseFile)}`,
     skill_name: skillName,
@@ -230,6 +267,7 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
     fixtures,
     expected_artifacts: expectedArtifacts,
     deterministic_assertions: deterministic,
+    visual_assertions: visual,
     tags: trigger ? ["positive"] : ["negative", "activation"],
     should_trigger: trigger,
     workspace_policy: "workspace-write",
@@ -238,6 +276,7 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
 
   if (trigger) {
     if (deterministic.length) qualityCounters.positive_with_deterministic_assertions += 1;
+    if (visual.length) qualityCounters.positive_with_visual_assertions += 1;
     if (fixtures.length) qualityCounters.positive_with_fixtures += 1;
     if (expectedArtifacts.length) qualityCounters.positive_with_expected_artifacts += 1;
     trainingItems.push(item);
@@ -248,6 +287,7 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
 
 const shuffled = seededShuffle(trainingItems, args.seed);
 const splits = splitItems(shuffled, args);
+stratifyVisualAssertions(splits);
 for (const [split, items] of Object.entries(splits)) {
   writeJson(path.join(dataDir, split, "items.json"), items);
 }
@@ -305,6 +345,7 @@ const quality = {
     "Activation-only negative cases are excluded from body optimization training.",
     "Negative cases remain useful for readiness and adoption safety review.",
     "Deterministic assertions are used by the local evaluator before semantic LLM judging when present.",
+    "Visual assertions are checked against rollout artifacts before semantic LLM judging when present.",
   ],
 };
 writeJson(path.join(workDir, "dataset-metadata.json"), quality);

@@ -54,19 +54,20 @@ Keep each wizard answer short and state the current decision before asking the n
 
 | User goal | Mode | Profile | Requirements | Notes |
 | --- | --- | --- | --- | --- |
-| Fastest setup-to-run path without provider keys | `codex-cli-all` | `exploratory` | Logged-in Codex CLI; optional model pins for target, judge, and reflection | Recommended when the user wants to try SkillOpt now. It is not official parity. |
+| Fastest setup-to-run path without provider keys | `codex-cli-all` | `exploratory` | Logged-in Codex CLI; optional model pins for target, judge, and reflection; slow/meta disabled | Recommended when the user wants to try SkillOpt now. It is not official parity. |
 | Best local official-parity path with Codex target rollouts | `hybrid-codex-target` | `official-parity` | Provider credentials for optimizer/reflection, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, `SKILLOPT_JUDGE_MODEL`, Codex CLI login, data floor met | Uses Codex for target rollouts and judging, but keeps provider-backed optimizer behavior. |
-| Most upstream-native provider-backed path | `native-provider` | `official-parity` | Provider credentials, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, data floor met | Use when the target can run through provider-backed chat instead of Codex CLI. |
+| Most upstream-native provider-backed path | `native-provider` | `official-parity` | Provider credentials, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, data floor met | Use when the target can run through provider-backed chat instead of Codex CLI. Azure/OpenAI-compatible, Anthropic, Qwen, and MiniMax are recognized credential families. |
 | Smoke test only | any mode | `exploratory` | Minimal local prerequisites | Do not publish as official-parity proof. |
 
 Official-parity config should keep validation gate, test evaluation, cosine schedule, slow update, meta skill, official-style edit budgets, fresh run output, artifact verification, eval-only proof, and curated public summaries. If any of those are unsupported or missing, report the exact proof blocker or gap.
+Skill-aware reflection is a current upstream option, but it is optional and experimental; keep it disabled unless the user asks for appendix-based failure routing.
 
 ## Startup Mode Note
 
 Tell the user this before asking for setup depth:
 
 ```text
-If you want setup-to-run SkillOpt without provider credentials, choose codex-cli-all. It uses Codex CLI for rollouts, semantic LLM judging, and adapter-managed reflection through the user's Codex login, so it is the easiest no-provider path. It is exploratory and not upstream-native official optimizer parity. hybrid-codex-target uses Codex CLI for rollouts and judging but still needs optimizer credentials.
+If you want setup-to-run SkillOpt without provider credentials, choose codex-cli-all. It uses Codex CLI for rollouts, semantic LLM judging, and adapter-managed reflection through the user's Codex login, so it is the easiest no-provider path. It is exploratory and not upstream-native official optimizer parity. Keep slow update and meta skill disabled in this mode. hybrid-codex-target uses Codex CLI for rollouts and judging but still needs optimizer credentials.
 ```
 
 Use `codex-cli-all` first when the user has no optimizer credentials or wants the simplest Codex-only path. Use `hybrid-codex-target` when the user wants upstream-native SkillOpt reflection and has optimizer credentials. Classify tiny datasets as exploratory even in provider-backed modes.

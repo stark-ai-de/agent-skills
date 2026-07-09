@@ -151,8 +151,52 @@ function signed(value) {
   return value > 0 ? `+${value}` : String(value);
 }
 
+function formatMetric(value) {
+  return value === null || value === undefined ? "not recorded" : String(value);
+}
+
 function formatChangeStats(stats) {
   return `+${stats.added_lines} / -${stats.removed_lines} lines (net ${signed(stats.net_lines)}), chars ${signed(stats.char_delta)}`;
+}
+
+function readJson(file, fallback = null) {
+  if (!fs.existsSync(file)) return fallback;
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function candidateRunSummary(bestPath) {
+  const summary = readJson(path.join(path.dirname(bestPath), "summary.json"), null);
+  if (!summary || typeof summary !== "object") {
+    return {
+      status: "not_recorded",
+      reason: "summary.json not found next to best_skill.md",
+    };
+  }
+
+  const baselineTestHard = finiteNumber(summary.baseline_test_hard);
+  const testHard = finiteNumber(summary.test_hard);
+  const testDeltaHard =
+    finiteNumber(summary.test_delta_hard) ??
+    (baselineTestHard === null || testHard === null ? null : testHard - baselineTestHard);
+  const regressed =
+    (testDeltaHard !== null && testDeltaHard < 0) ||
+    (baselineTestHard !== null && testHard !== null && testHard < baselineTestHard);
+
+  return {
+    status: regressed ? "regressed" : "checked",
+    baseline_test_hard: baselineTestHard,
+    test_hard: testHard,
+    test_delta_hard: testDeltaHard,
+  };
 }
 
 function rejectReasons(originalBody, candidateBody, candidateFrontmatter, originalFrontmatter) {
@@ -221,6 +265,12 @@ const rejections = rejectReasons(
   candidateParts.frontmatter,
   originalParts.frontmatter,
 );
+const scoreGate = candidateRunSummary(bestPath);
+if (scoreGate.status === "regressed") {
+  rejections.push(
+    `candidate regresses test hard score (${scoreGate.baseline_test_hard} -> ${scoreGate.test_hard})`,
+  );
+}
 const promoted = path.relative(root, skillPath).replaceAll("\\", "/").startsWith("skills/");
 if (promoted && args.approved && !args.version) {
   rejections.push("promoted public skills require --version for approved adoption");
@@ -245,6 +295,7 @@ const report = {
   candidate_path: path.relative(root, bestPath).replaceAll("\\", "/"),
   promoted,
   preserved_frontmatter: true,
+  score_gate: scoreGate,
   rejections,
   changed: original !== nextText,
   changes,
@@ -273,6 +324,11 @@ if (args.json) {
   console.log(`Candidate: ${report.candidate_path}`);
   console.log(`Changed: ${report.changed ? "yes" : "no"}`);
   console.log(`Change amount: ${formatChangeStats(report.changes)}`);
+  if (report.score_gate.status !== "not_recorded") {
+    console.log(
+      `Test hard score: ${formatMetric(report.score_gate.baseline_test_hard)} -> ${formatMetric(report.score_gate.test_hard)} (delta ${formatMetric(report.score_gate.test_delta_hard)})`,
+    );
+  }
   console.log(`Safety checks: ${report.ok ? "pass" : "review blockers"}`);
   if (rejections.length) {
     console.log("Review blockers:");
@@ -290,6 +346,11 @@ if (args.json) {
   console.log(`Dry run: ${report.dry_run ? "yes" : "no"}`);
   console.log(`Accepted by safety checks: ${report.ok ? "yes" : "no"}`);
   console.log(`Change amount: ${formatChangeStats(report.changes)}`);
+  if (report.score_gate.status !== "not_recorded") {
+    console.log(
+      `Test hard score: ${formatMetric(report.score_gate.baseline_test_hard)} -> ${formatMetric(report.score_gate.test_hard)} (delta ${formatMetric(report.score_gate.test_delta_hard)})`,
+    );
+  }
   if (rejections.length) {
     console.log("Rejections:");
     for (const reason of rejections) console.log(`- ${reason}`);

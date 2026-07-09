@@ -28,6 +28,11 @@ Cases cover setup, data conversion, credential handling, Codex CLI probing, conf
 - `cases/official-parity-proof-blocked.md`
 - `cases/verify-run-artifacts.md`
 - `cases/codex-spec-benchmark-hardening.md`
+- `cases/codex-cli-rollout-timeout-boundary.md`
+- `cases/hard-assertion-gate-before-judge.md`
+- `cases/reflector-invalid-json-fallback.md`
+- `cases/provider-auth-blocker-no-secret-leak.md`
+- `cases/reject-regressing-or-secret-best-skill.md`
 - `cases/eval-only-and-webui-handoff.md`
 - `cases/negative-ordinary-skill-review.md`
 

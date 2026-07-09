@@ -15,6 +15,7 @@ Each item has this shape:
   "fixtures": [],
   "expected_artifacts": [],
   "deterministic_assertions": ["contains: implementation spec"],
+  "visual_assertions": [],
   "tags": ["positive"],
   "should_trigger": true,
   "workspace_policy": "workspace-write",
@@ -29,6 +30,7 @@ Each item has this shape:
 - Extract fixture paths from `## Fixture` or `## Fixtures`.
 - Extract expected artifact paths from `## Expected Artifact` or `## Expected Artifacts`; otherwise link shared files under `skill-evals/<skill>/expected/` when present.
 - Extract deterministic checks from `## Deterministic Assertions`.
+- Extract generated-artifact checks from `## Visual Assertions`.
 - Preserve `Should Trigger Yes/No` when present.
 - Link `rubric.md` and `expected/` artifacts when present.
 - Exclude raw run transcripts from generated JSON.
@@ -45,3 +47,14 @@ Supported deterministic assertion prefixes are:
 - `path: <repo-relative path>`
 
 When deterministic assertions are present, the local evaluator checks them before semantic LLM judging. A failed deterministic assertion fails the item without relying on the LLM judge.
+
+Supported visual assertion prefixes are:
+
+- `artifact_exists: <glob>`
+- `png_dimensions: <glob> min_width=<px> min_height=<px>`
+- `png_nonblank: <glob> [min_size=<bytes>]`
+- `svg_valid: <glob>`
+- `svg_contains: <glob> <text>`
+- `svg_not_contains: <glob> <text>`
+
+Visual assertions are evaluated against artifacts captured from the rollout workspace. They are intended for image-generating eval environments where draw.io Desktop export is available; if required artifacts are missing, the item fails deterministically.

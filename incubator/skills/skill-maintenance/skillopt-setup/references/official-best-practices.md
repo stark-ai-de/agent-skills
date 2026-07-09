@@ -33,6 +33,7 @@ Expected setup properties:
 - Edit budget is close to the official default: `learning_rate: 4`, `min_learning_rate: 2`.
 - Model choices are pinned or the summary explicitly records inherited defaults.
 - Target data has enough positive cases and held-out validation/test cases to avoid overfitting.
+- `use_skill_aware_reflection` is optional and experimental; leave it off by default unless the user explicitly wants EmbodiSkill-style appendix routing and the proof report records the extra surface.
 
 Recommended data floor for an official-parity claim:
 
@@ -51,7 +52,7 @@ Use `exploratory` for:
 - missing model pins.
 - setup-only validation before provider credentials are available.
 
-`codex-cli-all` is useful because it avoids provider credentials by using the user's Codex login for rollouts, semantic judging, and adapter-managed reflection. It is not upstream-native official optimizer parity because provider-backed reflection, aggregation, ranking, slow update, and meta skill are bypassed or locally managed.
+`codex-cli-all` is useful because it avoids provider credentials by using the user's Codex login for rollouts, semantic judging, and adapter-managed reflection. It is not upstream-native official optimizer parity because provider-backed reflection, aggregation, ranking, slow update, and meta skill are bypassed. Keep slow update and meta skill disabled in this mode; enabling either uses upstream `chat_optimizer` and is no longer a provider-free run.
 
 ## Reporting Requirements
 
@@ -67,6 +68,7 @@ Readiness and summaries should report:
 - SkillOpt commit and config schema check result,
 - generated config defaults,
 - registry patch status,
+- slow update, meta skill, and skill-aware-reflection status,
 - expected local artifacts such as `config.json`, `history.json`, `runtime_state.json`, and `best_skill.md`.
 
 ## Proof Checklist
@@ -78,6 +80,7 @@ Before calling a run official-parity proof:
 - Require provider credentials and explicit optimizer/target/judge model pins for provider-backed proof modes.
 - Verify `config.json`, `history.json`, `runtime_state.json`, `best_skill.md`, `steps/`, and `skills/`.
 - If slow update or meta skill is enabled, verify the corresponding output directory or record why it was skipped.
+- If skill-aware reflection is enabled, verify appendix artifacts/markers and record that the run used the experimental appendix surface.
 - Run or separately schedule eval-only on `best_skill.md`.
 - Check whether optional WebUI support is importable before recommending it as available.
 - Publish only curated summaries under `skill-evals/<target>/runs/`; keep raw `.agents/` logs and trajectories ignored.

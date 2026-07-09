@@ -9,9 +9,10 @@
 3. Confirm the candidate preserves frontmatter unless frontmatter optimization was explicitly requested.
 4. Reject candidates that weaken safety rules, approval gates, or scope boundaries.
 5. Reject candidates with secret-like strings, private local paths, raw transcripts, or optimizer-only workspace paths.
-6. Require `--approved` before writing tracked files.
-7. For promoted public skills, bump `metadata.version` explicitly.
-8. Run repo validation after any write.
+6. Reject candidates when the run summary beside `best_skill.md` records a lower test hard score than the baseline.
+7. Require `--approved` before writing tracked files.
+8. For promoted public skills, bump `metadata.version` explicitly.
+9. Run repo validation after any write.
 
 ## Public Evidence
 

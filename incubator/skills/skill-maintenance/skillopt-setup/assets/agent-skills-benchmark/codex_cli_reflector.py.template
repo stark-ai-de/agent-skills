@@ -9,6 +9,25 @@ SECRET_PATTERN = re.compile(r"(sk-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{32,})")
 FORBIDDEN_OPTIMIZER_PATTERN = re.compile(r"codex[-_\s]?opt", re.IGNORECASE)
 
 
+def _extract_json_payload(text):
+    value = (text or "").strip()
+    if not value:
+        return {}
+    if value.startswith("```"):
+        value = re.sub(r"^```(?:json)?\s*", "", value)
+        value = re.sub(r"\s*```$", "", value)
+    decoder = json.JSONDecoder()
+    for index, char in enumerate(value):
+        if char not in "{[":
+            continue
+        try:
+            payload, _ = decoder.raw_decode(value[index:])
+            return payload
+        except json.JSONDecodeError:
+            continue
+    return {}
+
+
 class CodexCliReflector:
     def __init__(self, env):
         self.env = env
@@ -33,6 +52,8 @@ class CodexCliReflector:
             command = [
                 self.codex_path,
                 "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
                 "--skip-git-repo-check",
                 "--ephemeral",
                 "--color",
@@ -47,8 +68,26 @@ class CodexCliReflector:
             if self.profile:
                 command.extend(["--profile", self.profile])
             command.append(prompt)
-            subprocess.run(command, text=True, capture_output=True, timeout=self.timeout, check=True)
-            payload = json.loads(out.read_text(encoding="utf-8"))
+            try:
+                completed = subprocess.run(
+                    command,
+                    stdin=subprocess.DEVNULL,
+                    text=True,
+                    capture_output=True,
+                    timeout=self.timeout,
+                    check=False,
+                )
+            except (OSError, subprocess.TimeoutExpired) as error:
+                print(f"    [agent_skills reflection skipped] codex_cli failed: {error}", flush=True)
+                return []
+            if completed.returncode != 0:
+                print(
+                    f"    [agent_skills reflection skipped] codex_cli exited {completed.returncode}",
+                    flush=True,
+                )
+                return []
+            payload_text = out.read_text(encoding="utf-8") if out.exists() else completed.stdout
+            payload = _extract_json_payload(payload_text)
             source_type = "failure" if failures else "success"
             patches = self._normalise_payload(
                 payload,
@@ -57,24 +96,34 @@ class CodexCliReflector:
             )
             patches_dir = Path(out_dir) / "patches"
             patches_dir.mkdir(parents=True, exist_ok=True)
+            valid_patches = []
             for index, patch in enumerate(patches):
-                self._validate_patch(patch)
+                try:
+                    self._validate_patch(patch)
+                except ValueError as error:
+                    print(
+                        f"    [agent_skills reflection skipped patch] {error}",
+                        flush=True,
+                    )
+                    continue
+                valid_patches.append(patch)
                 (patches_dir / f"codex_cli_reflection_{index:03d}.json").write_text(
                     json.dumps(patch, ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
             print(
-                f"    [agent_skills reflection done] patches={len(patches)}",
+                f"    [agent_skills reflection done] patches={len(valid_patches)}",
                 flush=True,
             )
-            return patches
+            return valid_patches
 
     def _prompt(self, results, skill_content, kwargs):
         failures = [item for item in results if not item.get("hard")]
         successes = [item for item in results if item.get("hard")]
         update_mode = kwargs.get("update_mode", "patch")
         return (
-            "Return JSON only. Produce bounded SkillOpt RawPatch objects for an Agent Skill body. "
+            "Return exactly one JSON object only, with no markdown and no second object. "
+            "Produce bounded SkillOpt RawPatch objects for an Agent Skill body. "
             "Use this shape: {\"raw_patches\":[{\"source_type\":\"failure\","
             "\"patch\":{\"reasoning\":\"...\",\"edits\":[{\"op\":\"replace\","
             "\"target\":\"exact text\",\"content\":\"replacement text\"}]}}]}. "

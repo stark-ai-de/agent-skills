@@ -136,10 +136,70 @@ function patchRegistryFile(skillOptPath, relativeFile) {
   return { file: display, status: "patched", action: "inserted_agent_skills_registry" };
 }
 
-function registryPatchStatus(skillOptPath) {
-  const files = ["scripts/train.py", "scripts/eval_only.py"].map((file) =>
-    patchRegistryFile(skillOptPath, file),
+function patchConfigEnvExpansion(skillOptPath) {
+  const relativeFile = "skillopt/config.py";
+  const file = path.join(skillOptPath, relativeFile);
+  const display = relativeFile.replaceAll("\\", "/");
+  if (!fs.existsSync(file)) return { file: display, status: "not_found" };
+
+  const text = fs.readFileSync(file, "utf8");
+  if (text.includes("_ENV_PLACEHOLDER_ALLOWLIST")) {
+    return { file: display, status: "already_patched" };
+  }
+  if (!text.includes("_STRUCTURED_SECTIONS = frozenset({") || !text.includes("cfg = yaml.safe_load(f) or {}")) {
+    return { file: display, status: "unknown_shape", action: "manual_config_review_required" };
+  }
+
+  const withAllowlist = text.replace(
+    /(_STRUCTURED_SECTIONS = frozenset\(\{\n[\s\S]*?\n\}\)\n)/,
+    `$1
+_ENV_PLACEHOLDER_ALLOWLIST = frozenset({
+    "SKILLOPT_OPTIMIZER_MODEL",
+    "SKILLOPT_TARGET_MODEL",
+    "SKILLOPT_JUDGE_MODEL",
+    "SKILLOPT_REFLECTION_MODEL",
+})
+`,
   );
+  if (withAllowlist === text) {
+    return { file: display, status: "unknown_shape", action: "manual_config_review_required" };
+  }
+
+  const helper = `
+def _expand_safe_env_placeholders(value: Any) -> Any:
+    """Expand allowlisted \${ENV} strings without materializing secrets."""
+    if isinstance(value, dict):
+        return {key: _expand_safe_env_placeholders(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [_expand_safe_env_placeholders(item) for item in value]
+    if isinstance(value, str) and value.startswith("\${") and value.endswith("}"):
+        env_name = value[2:-1]
+        if env_name in _ENV_PLACEHOLDER_ALLOWLIST and os.environ.get(env_name):
+            return os.environ[env_name]
+    return value
+
+`;
+
+  const withHelper = withAllowlist.replace(
+    /\n\n# ── YAML loading with _base_ inheritance/,
+    `\n\n${helper}# ── YAML loading with _base_ inheritance`,
+  );
+  const updated = withHelper.replace(
+    "    with open(abs_path) as f:\n        cfg = yaml.safe_load(f) or {}\n",
+    "    with open(abs_path) as f:\n        cfg = yaml.safe_load(f) or {}\n\n    cfg = _expand_safe_env_placeholders(cfg)\n",
+  );
+
+  fs.writeFileSync(file, updated, "utf8");
+  return { file: display, status: "patched", action: "inserted_safe_model_env_expansion" };
+}
+
+function registryPatchStatus(skillOptPath) {
+  const files = [
+    ...["scripts/train.py", "scripts/eval_only.py"].map((file) =>
+      patchRegistryFile(skillOptPath, file),
+    ),
+    patchConfigEnvExpansion(skillOptPath),
+  ];
   const status = files.every((file) =>
     ["patched", "already_patched"].includes(file.status),
   )
@@ -156,8 +216,8 @@ function upstreamBehaviorBypassed(mode) {
     "provider-backed reflection",
     "provider-backed patch aggregation",
     "provider-backed patch ranking",
-    "provider-backed slow update",
-    "provider-backed meta skill",
+    "provider-backed slow update (keep optimizer.use_slow_update disabled in codex-cli-all)",
+    "provider-backed meta skill (keep optimizer.use_meta_skill disabled in codex-cli-all)",
   ];
 }
 
@@ -314,6 +374,7 @@ const manifest = {
     "Generated work configs include a matching _base_/default.yaml under the target work directory.",
     "Codex CLI mode configs use judge_backend: codex_cli so semantic judging runs through local Codex login.",
     "codex-cli-all is exploratory because reflection, aggregation, and ranking are adapter-managed rather than upstream-native optimizer calls.",
+    "codex-cli-all keeps slow update and meta skill disabled because those upstream epoch-boundary mechanisms call provider-backed chat_optimizer.",
     "If registry_patch reports manual review, inspect local SkillOpt entrypoints before training.",
   ],
 };

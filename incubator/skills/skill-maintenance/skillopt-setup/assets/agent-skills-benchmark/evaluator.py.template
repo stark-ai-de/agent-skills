@@ -1,4 +1,5 @@
 import json
+import fnmatch
 import re
 import subprocess
 import tempfile
@@ -86,6 +87,147 @@ def _match_assertion(response, assertion):
     return {"text": raw, "passed": passed, "evidence": "substring present" if passed else "substring missing"}
 
 
+def _artifact_matches(artifacts, pattern):
+    matches = []
+    for artifact in artifacts or []:
+        artifact_path = str(artifact.get("path") or "")
+        name = Path(artifact_path).name
+        if fnmatch.fnmatch(artifact_path, pattern) or fnmatch.fnmatch(name, pattern):
+            matches.append(artifact)
+    return matches
+
+
+def _parse_visual_options(parts):
+    options = {}
+    for part in parts:
+        match = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(\d+)$", part)
+        if not match:
+            raise ValueError(f"invalid key=value token {part!r}")
+        options[match.group(1)] = int(match.group(2))
+    return options
+
+
+def _parse_visual_assertion(assertion):
+    raw = str(assertion or "").strip()
+    if not raw:
+        return None
+    kind, separator, value = raw.partition(":")
+    if not separator:
+        raise ValueError("missing ':' separator")
+    kind = kind.strip()
+    value = value.strip()
+    if not value:
+        raise ValueError("missing assertion value")
+    parts = value.split()
+    glob = parts[0]
+    if not glob:
+        raise ValueError("missing artifact glob")
+    return {"raw": raw, "kind": kind, "glob": glob, "parts": parts[1:]}
+
+
+def _match_visual_assertion(artifacts, assertion):
+    try:
+        parsed = _parse_visual_assertion(assertion)
+    except ValueError as error:
+        return {"text": str(assertion), "passed": False, "evidence": f"invalid visual assertion: {error}"}
+    if parsed is None:
+        return None
+
+    raw = parsed["raw"]
+    kind = parsed["kind"]
+    matches = _artifact_matches(artifacts, parsed["glob"])
+    if not matches:
+        return {"text": raw, "passed": False, "evidence": f"no artifact matched {parsed['glob']}"}
+
+    if kind == "artifact_exists":
+        return {"text": raw, "passed": True, "evidence": f"{len(matches)} matching artifact(s)"}
+
+    if kind == "png_dimensions":
+        try:
+            options = _parse_visual_options(parsed["parts"])
+        except ValueError as error:
+            return {"text": raw, "passed": False, "evidence": str(error)}
+        min_width = options.get("min_width")
+        min_height = options.get("min_height")
+        if not min_width or not min_height:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "png_dimensions requires min_width and min_height",
+            }
+        for artifact in matches:
+            if (
+                artifact.get("kind") == "png"
+                and artifact.get("valid")
+                and int(artifact.get("width") or 0) >= min_width
+                and int(artifact.get("height") or 0) >= min_height
+            ):
+                return {
+                    "text": raw,
+                    "passed": True,
+                    "evidence": f"{artifact.get('path')} is {artifact.get('width')}x{artifact.get('height')}",
+                }
+        return {"text": raw, "passed": False, "evidence": "no PNG met required dimensions"}
+
+    if kind == "png_nonblank":
+        try:
+            options = _parse_visual_options(parsed["parts"])
+        except ValueError as error:
+            return {"text": raw, "passed": False, "evidence": str(error)}
+        min_size = int(options.get("min_size") or 1024)
+        for artifact in matches:
+            if (
+                artifact.get("kind") == "png"
+                and artifact.get("valid")
+                and int(artifact.get("width") or 0) > 0
+                and int(artifact.get("height") or 0) > 0
+                and int(artifact.get("size_bytes") or 0) >= min_size
+                and bool(artifact.get("nonblank"))
+            ):
+                return {
+                    "text": raw,
+                    "passed": True,
+                    "evidence": (
+                        f"{artifact.get('path')} has {artifact.get('visible_pixel_count')} visible pixel(s) "
+                        f"and {artifact.get('visible_distinct_pixels')} visible decoded pixel value(s)"
+                    ),
+                }
+        return {"text": raw, "passed": False, "evidence": "no PNG passed decoded nonblank pixel check"}
+
+    if kind == "svg_valid":
+        invalid = [artifact for artifact in matches if artifact.get("kind") != "svg" or not artifact.get("valid")]
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": "all matching SVG artifacts are valid" if not invalid else "one or more SVG artifacts are invalid",
+        }
+
+    if kind in {"svg_contains", "svg_not_contains"}:
+        text = " ".join(parsed["parts"]).strip()
+        if not text:
+            return {"text": raw, "passed": False, "evidence": f"{kind} requires text"}
+        needle = text.lower()
+        containing = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") == "svg"
+            and needle in str(artifact.get("text_sample") or "").lower()
+        ]
+        if kind == "svg_contains":
+            return {
+                "text": raw,
+                "passed": bool(containing),
+                "evidence": f"{containing[0].get('path')} contains text" if containing else "no SVG contained text",
+            }
+        return {
+            "text": raw,
+            "passed": not containing,
+            "evidence": "forbidden text absent" if not containing else f"{containing[0].get('path')} contains forbidden text",
+        }
+
+    return {"text": raw, "passed": False, "evidence": f"unsupported visual assertion kind {kind!r}"}
+
+
 class AgentSkillsEvaluator:
     def __init__(self, config=None):
         self.config = dict(config or {})
@@ -103,15 +245,31 @@ class AgentSkillsEvaluator:
     def score(self, case, rollout):
         response = rollout.get("response", "")
         expected = case.get("expected_behavior", [])
-        deterministic = self._score_deterministic(case, response)
-        if deterministic and not deterministic["passed"]:
-            result = deterministic
-        elif self.judge_backend == "codex_cli":
-            result = self._score_with_codex_cli(case, response, expected, deterministic)
-        elif deterministic:
-            result = deterministic
+        returncode = rollout.get("returncode", 0)
+        if returncode not in (0, None):
+            result = {
+                "passed": False,
+                "score": 0.0,
+                "assertion_results": [
+                    {
+                        "text": "Target rollout command exits successfully",
+                        "passed": False,
+                        "evidence": f"returncode={returncode}; stderr={_short(rollout.get('stderr', ''), 500)}",
+                    }
+                ],
+                "judge_backend": "runtime",
+                "reason": f"target rollout failed with returncode={returncode}",
+            }
         else:
-            result = self._score_with_heuristic(response, expected)
+            deterministic = self._score_deterministic(case, response)
+            visual = self._score_visual(case, rollout)
+            hard_assertions = self._combine_hard_assertions(deterministic, visual)
+            if hard_assertions:
+                result = hard_assertions
+            elif self.judge_backend == "codex_cli":
+                result = self._score_with_codex_cli(case, response, expected, hard_assertions)
+            else:
+                result = self._score_with_heuristic(response, expected)
 
         hard = 1 if result["passed"] else 0
         soft = _float_score(result.get("score", hard))
@@ -172,6 +330,43 @@ class AgentSkillsEvaluator:
             "assertion_results": results,
             "judge_backend": "deterministic",
             "reason": "deterministic assertions passed" if passed else "deterministic assertion failed",
+        }
+
+    def _score_visual(self, case, rollout):
+        assertions = case.get("visual_assertions") or []
+        results = [
+            item
+            for item in (_match_visual_assertion(rollout.get("artifacts") or [], assertion) for assertion in assertions)
+            if item is not None
+        ]
+        if not results:
+            return None
+        passed = all(item["passed"] for item in results)
+        score = sum(1 for item in results if item["passed"]) / len(results)
+        return {
+            "passed": passed,
+            "score": score,
+            "assertion_results": results,
+            "judge_backend": "visual",
+            "reason": "visual assertions passed" if passed else "visual assertion failed",
+        }
+
+    def _combine_hard_assertions(self, *groups):
+        active = [group for group in groups if group]
+        if not active:
+            return None
+        results = []
+        for group in active:
+            results.extend(group.get("assertion_results") or [])
+        passed = all(item["passed"] for item in results)
+        score = sum(1 for item in results if item["passed"]) / len(results) if results else 0.0
+        backends = "+".join(group.get("judge_backend", "deterministic") for group in active)
+        return {
+            "passed": passed,
+            "score": score,
+            "assertion_results": results,
+            "judge_backend": backends,
+            "reason": "hard assertions passed" if passed else "hard assertion failed",
         }
 
     def _score_with_codex_cli(self, case, response, expected, deterministic=None):

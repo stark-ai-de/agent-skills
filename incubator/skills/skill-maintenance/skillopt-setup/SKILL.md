@@ -50,11 +50,11 @@ Guide the user through setup as a short wizard. Ask one decision at a time unles
 2. Wizard step: existing setup. Immediately inspect `.agents/tools/SkillOpt`, `.agents/tools/SkillOpt.commit`, and `.agents/skillopt-work`. If any exist, ask whether to remove the current local setup or reuse/update it before dry-run or production setup. Cleanup is global to the local SkillOpt setup and must not remove `.agents/skills/`.
 3. If the user chooses cleanup, run `setup-skillopt-local.mjs --cleanup-only --approved` yourself before setup. Do not present cleanup as a copy-paste command.
 4. Wizard step: setup goal. Explain the recommended branches:
-   - easiest no-provider path: `codex-cli-all`, exploratory, uses Codex CLI login for rollouts, semantic judging, and adapter-managed reflection,
-   - best official-parity path: `hybrid-codex-target` or `native-provider`, provider-backed optimizer/reflection, requires credentials and model pins.
+  - easiest no-provider path: `codex-cli-all`, exploratory, uses Codex CLI login for rollouts, semantic judging, and adapter-managed reflection; keep slow update and meta skill disabled in this mode because those upstream epoch-boundary mechanisms call the provider-backed optimizer path,
+  - best official-parity path: `hybrid-codex-target` or `native-provider`, provider-backed optimizer/reflection, requires credentials and model pins.
 5. Wizard step: Python. Prefer `uv`. If `uv` is missing, ask whether to install `uv` or explicitly use compatible local Python 3.10+.
 6. Wizard step: data quality. Run readiness or split preparation early enough to report positive, validation, and test counts. Official-parity proof needs at least 20 positive cases, 5 validation cases, and 5 test cases; otherwise classify the run as exploratory or blocked for proof.
-7. Wizard step: best-practice configuration. For official-parity, require provider credential presence plus `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, and judge model pins. For `codex-cli-all`, preserve exploratory defaults and report which upstream provider-backed behavior is bypassed.
+7. Wizard step: best-practice configuration. For official-parity, require provider credential presence plus `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, and judge model pins. For `codex-cli-all`, preserve exploratory defaults, require slow update/meta skill to stay disabled, and report which upstream provider-backed behavior is bypassed.
 8. Wizard step: dry-run. Ask whether the user wants a dry-run first unless already answered. If yes, run setup without `--approved`, report the dry-run result only, and ask whether to continue. Do not show production setup commands or SkillOpt training commands after dry-run.
 9. Wizard step: production setup. If the user skips dry-run or approves continuation, run production-grade setup with `--approved`, using `.agents/` as the persistent workspace and passing `--existing-setup-choice reuse` when reuse was chosen.
 10. Prepare or update the ignored SkillOpt workspace, split JSON, local adapter, target manifest, and mode/profile config.
@@ -73,6 +73,7 @@ Guide the user through setup as a short wizard. Ask one decision at a time unles
 - Preserve frontmatter unless the user explicitly requests a description or frontmatter optimization pass.
 - For promoted skills, require a `metadata.version` bump before final validation.
 - In Codex CLI mode, default to no live web search and no network access unless the eval case explicitly requires it.
+- Treat SkillOpt-Sleep as a separate `v0.2.0` companion surface, not the default Agent Skills training workflow; do not harvest transcripts or configure sleep cycles unless the user explicitly asks for SkillOpt-Sleep.
 - Treat readiness and dry-run as read-only: use `--no-codex-probe` there, then ask before running the Codex login probe because it writes ignored diagnostics under `.agents/skillopt-work/_readiness`.
 
 ## References

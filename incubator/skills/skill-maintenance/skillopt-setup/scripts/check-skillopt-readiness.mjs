@@ -159,10 +159,35 @@ function providerPresence() {
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_AUTH_MODE",
+    "AZURE_OPENAI_MANAGED_IDENTITY_CLIENT_ID",
+    "OPTIMIZER_AZURE_OPENAI_ENDPOINT",
+    "OPTIMIZER_AZURE_OPENAI_API_KEY",
+    "OPTIMIZER_AZURE_OPENAI_AUTH_MODE",
+    "OPTIMIZER_AZURE_OPENAI_MANAGED_IDENTITY_CLIENT_ID",
+    "AZURE_OPENAI_OPTIMIZER_ENDPOINT",
+    "AZURE_OPENAI_OPTIMIZER_API_KEY",
+    "AZURE_OPENAI_OPTIMIZER_AUTH_MODE",
+    "AZURE_OPENAI_OPTIMIZER_MANAGED_IDENTITY_CLIENT_ID",
+    "TARGET_AZURE_OPENAI_ENDPOINT",
+    "TARGET_AZURE_OPENAI_API_KEY",
+    "TARGET_AZURE_OPENAI_AUTH_MODE",
+    "TARGET_AZURE_OPENAI_MANAGED_IDENTITY_CLIENT_ID",
+    "AZURE_OPENAI_TARGET_ENDPOINT",
+    "AZURE_OPENAI_TARGET_API_KEY",
+    "AZURE_OPENAI_TARGET_AUTH_MODE",
+    "AZURE_OPENAI_TARGET_MANAGED_IDENTITY_CLIENT_ID",
     "OPENAI_API_KEY",
     "ANTHROPIC_API_KEY",
     "QWEN_CHAT_BASE_URL",
     "QWEN_CHAT_MODEL",
+    "QWEN_CHAT_API_KEY",
+    "OPTIMIZER_QWEN_CHAT_BASE_URL",
+    "OPTIMIZER_QWEN_CHAT_MODEL",
+    "TARGET_QWEN_CHAT_BASE_URL",
+    "TARGET_QWEN_CHAT_MODEL",
+    "MINIMAX_API_KEY",
+    "MINIMAX_BASE_URL",
+    "MINIMAX_MODEL",
     "SKILLOPT_OPTIMIZER_MODEL",
     "SKILLOPT_TARGET_MODEL",
     "SKILLOPT_JUDGE_MODEL",
@@ -211,6 +236,7 @@ function evalCaseCounts(evalDir) {
     negative: 0,
     total: 0,
     positive_with_deterministic_assertions: 0,
+    positive_with_visual_assertions: 0,
     positive_with_fixtures: 0,
     positive_with_expected_artifacts: 0,
   };
@@ -224,6 +250,9 @@ function evalCaseCounts(evalDir) {
       counts.positive += 1;
       if (hasBullets(text, "Deterministic Assertions")) {
         counts.positive_with_deterministic_assertions += 1;
+      }
+      if (hasBullets(text, "Visual Assertions")) {
+        counts.positive_with_visual_assertions += 1;
       }
       if (hasBullets(text, "Fixture") || hasBullets(text, "Fixtures")) {
         counts.positive_with_fixtures += 1;
@@ -323,7 +352,18 @@ function configProfile(skillName, mode) {
     optimizer_min_learning_rate: extractYamlValue(text, "min_learning_rate"),
     optimizer_lr_scheduler: extractYamlValue(text, "lr_scheduler"),
     optimizer_use_slow_update: extractYamlValue(text, "use_slow_update"),
+    optimizer_slow_update_samples: extractYamlValue(text, "slow_update_samples"),
+    optimizer_slow_update_gate_with_selection: extractYamlValue(
+      text,
+      "slow_update_gate_with_selection",
+    ),
     optimizer_use_meta_skill: extractYamlValue(text, "use_meta_skill"),
+    optimizer_use_skill_aware_reflection: extractYamlValue(text, "use_skill_aware_reflection"),
+    optimizer_skill_aware_appendix_source: extractYamlValue(text, "skill_aware_appendix_source"),
+    optimizer_skill_aware_consolidate_threshold: extractYamlValue(
+      text,
+      "skill_aware_consolidate_threshold",
+    ),
     evaluation_use_gate: extractYamlValue(text, "use_gate"),
     evaluation_eval_test: extractYamlValue(text, "eval_test"),
     target_backend: extractYamlValue(text, "target_backend"),
@@ -517,6 +557,7 @@ function benchmarkQuality(datasetCounts) {
     },
     positiveWithDeterministicAssertions:
       datasetCounts.positive_with_deterministic_assertions || 0,
+    positiveWithVisualAssertions: datasetCounts.positive_with_visual_assertions || 0,
     positiveWithFixtures: datasetCounts.positive_with_fixtures || 0,
     positiveWithExpectedArtifacts: datasetCounts.positive_with_expected_artifacts || 0,
     blockers,
@@ -559,8 +600,8 @@ function upstreamBehaviorBypassed(mode) {
     "provider-backed reflection",
     "provider-backed patch aggregation",
     "provider-backed patch ranking",
-    "provider-backed slow update",
-    "provider-backed meta skill",
+    "provider-backed slow update (keep optimizer.use_slow_update disabled in codex-cli-all)",
+    "provider-backed meta skill (keep optimizer.use_meta_skill disabled in codex-cli-all)",
   ];
 }
 
@@ -680,13 +721,75 @@ function officialParityReport(args, providerOk, datasetCounts, configInfo, quali
 }
 
 function hasProviderCredentials(presence) {
+  const tokenlessAzureAuthModes = new Set(["azure_cli", "managed_identity"]);
+  const sharedAzureAuth = String(process.env.AZURE_OPENAI_AUTH_MODE || "").trim().toLowerCase();
+  const optimizerAzureAuth = String(
+    process.env.OPTIMIZER_AZURE_OPENAI_AUTH_MODE ||
+      process.env.AZURE_OPENAI_OPTIMIZER_AUTH_MODE ||
+      "",
+  )
+    .trim()
+    .toLowerCase();
+  const targetAzureAuth = String(
+    process.env.TARGET_AZURE_OPENAI_AUTH_MODE ||
+      process.env.AZURE_OPENAI_TARGET_AUTH_MODE ||
+      "",
+  )
+    .trim()
+    .toLowerCase();
   const azureKey = presence.AZURE_OPENAI_ENDPOINT && presence.AZURE_OPENAI_API_KEY;
   const azureCli =
-    presence.AZURE_OPENAI_ENDPOINT && process.env.AZURE_OPENAI_AUTH_MODE === "azure_cli";
+    presence.AZURE_OPENAI_ENDPOINT && tokenlessAzureAuthModes.has(sharedAzureAuth);
+  const optimizerAzure =
+    (presence.OPTIMIZER_AZURE_OPENAI_ENDPOINT || presence.AZURE_OPENAI_OPTIMIZER_ENDPOINT) &&
+    (presence.OPTIMIZER_AZURE_OPENAI_API_KEY ||
+      presence.AZURE_OPENAI_OPTIMIZER_API_KEY ||
+      presence.AZURE_OPENAI_API_KEY ||
+      tokenlessAzureAuthModes.has(optimizerAzureAuth));
+  const targetAzure =
+    (presence.TARGET_AZURE_OPENAI_ENDPOINT || presence.AZURE_OPENAI_TARGET_ENDPOINT) &&
+    (presence.TARGET_AZURE_OPENAI_API_KEY ||
+      presence.AZURE_OPENAI_TARGET_API_KEY ||
+      presence.AZURE_OPENAI_API_KEY ||
+      tokenlessAzureAuthModes.has(targetAzureAuth));
   const openai = presence.OPENAI_API_KEY;
   const anthropic = presence.ANTHROPIC_API_KEY;
   const qwen = presence.QWEN_CHAT_BASE_URL && presence.QWEN_CHAT_MODEL;
-  return Boolean(azureKey || azureCli || openai || anthropic || qwen);
+  const optimizerQwen = presence.OPTIMIZER_QWEN_CHAT_BASE_URL && presence.OPTIMIZER_QWEN_CHAT_MODEL;
+  const targetQwen = presence.TARGET_QWEN_CHAT_BASE_URL && presence.TARGET_QWEN_CHAT_MODEL;
+  const minimax = presence.MINIMAX_API_KEY;
+  return Boolean(
+    azureKey ||
+      azureCli ||
+      optimizerAzure ||
+      targetAzure ||
+      openai ||
+      anthropic ||
+      qwen ||
+      optimizerQwen ||
+      targetQwen ||
+      minimax,
+  );
+}
+
+function configBool(value) {
+  return String(value || "").trim().toLowerCase() === "true";
+}
+
+function codexCliAllUnsupportedProviderFeatures(args, configInfo) {
+  if (args.mode !== "codex-cli-all") return [];
+  const blockers = [];
+  if (configBool(configInfo.values.optimizer_use_slow_update)) {
+    blockers.push(
+      "codex-cli-all cannot enable optimizer.use_slow_update; slow update uses provider-backed chat_optimizer",
+    );
+  }
+  if (configBool(configInfo.values.optimizer_use_meta_skill)) {
+    blockers.push(
+      "codex-cli-all cannot enable optimizer.use_meta_skill; meta skill uses provider-backed chat_optimizer",
+    );
+  }
+  return blockers;
 }
 
 function adapterManifestCompatibility(adapterManifest, skillName, args, effectiveRunProfile) {
@@ -826,6 +929,7 @@ else {
     eval_negative: evalCounts.negative,
     eval_total: evalCounts.total,
     positive_with_deterministic_assertions: evalCounts.positive_with_deterministic_assertions,
+    positive_with_visual_assertions: evalCounts.positive_with_visual_assertions,
     positive_with_fixtures: evalCounts.positive_with_fixtures,
     positive_with_expected_artifacts: evalCounts.positive_with_expected_artifacts,
     estimated_split: estimateSplitCounts(evalCounts.positive),
@@ -881,6 +985,13 @@ if (args.mode === "hybrid-codex-target" && !providerOk && !args.setupOnly) {
 const configInfo = configProfile(skillName, args.mode);
 const configSchema = configSchemaCheck(skillName, args.mode);
 const quality = benchmarkQuality(datasetCounts);
+const codexCliAllProviderFeatureBlockers = codexCliAllUnsupportedProviderFeatures(args, configInfo);
+if (codexCliAllProviderFeatureBlockers.length) {
+  missing.push(...codexCliAllProviderFeatureBlockers);
+  warnings.push(
+    "codex-cli-all is the provider-free exploratory path; keep slow update and meta skill disabled, or choose hybrid-codex-target/native-provider for provider-backed optimizer features.",
+  );
+}
 const officialParity = officialParityReport(
   args,
   providerOk,
@@ -1004,7 +1115,10 @@ const result = {
     validationGate: configInfo.values.evaluation_use_gate !== "false",
     testEvaluation: configInfo.values.evaluation_eval_test !== "false",
     slowUpdate: configInfo.values.optimizer_use_slow_update === "true",
+    slowUpdateGateWithSelection:
+      configInfo.values.optimizer_slow_update_gate_with_selection === "true",
     metaSkill: configInfo.values.optimizer_use_meta_skill === "true",
+    skillAwareReflection: configInfo.values.optimizer_use_skill_aware_reflection === "true",
     cosineScheduler: configInfo.values.optimizer_lr_scheduler === "cosine",
     requiredModelPins: requiredModelPinNames(args.mode, configInfo).map((name) => ({
       name,

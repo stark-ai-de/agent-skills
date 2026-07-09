@@ -34,7 +34,12 @@ optimizer:
   lr_scheduler: constant
   skill_update_mode: patch
   use_slow_update: false
+  slow_update_samples: 20
+  slow_update_gate_with_selection: false
   use_meta_skill: false
+  use_skill_aware_reflection: false
+  skill_aware_appendix_source: both
+  skill_aware_consolidate_threshold: 0
 
 evaluation:
   use_gate: true
@@ -48,6 +53,8 @@ model:
   codex_exec_path: codex
   codex_exec_use_sdk: cli
   codex_exec_full_auto: false
+  codex_exec_reasoning_effort: none
   codex_exec_sandbox: workspace-write
   codex_exec_network_access: false
   codex_exec_web_search: false
+  codex_exec_approval_policy: never
