@@ -1,0 +1,360 @@
+import os
+from pathlib import Path
+
+from .dataloader import AgentSkillsDataLoader
+from .evaluator import AgentSkillsEvaluator
+from .rollout import AgentSkillsRollout
+from .codex_cli_reflector import CodexCliReflector
+
+from skillopt.datasets.base import BatchSpec
+from skillopt.envs.base import EnvAdapter
+from skillopt.gradient.reflect import run_minibatch_reflect
+
+
+def _compact(values):
+    return {key: value for key, value in values.items() if value is not None}
+
+
+def _flatten_config(config):
+    flat = {}
+    if not isinstance(config, dict):
+        return flat
+    for value in config.values():
+        if isinstance(value, dict):
+            flat.update(_flatten_config(value))
+    for key, value in config.items():
+        if not isinstance(value, dict):
+            flat[key] = value
+    return flat
+
+
+def _safe_id(value):
+    return "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in str(value)).strip("_") or "case"
+
+
+class AgentSkillsAdapter(EnvAdapter):
+    def __init__(
+        self,
+        env="agent_skills",
+        split_dir="",
+        data_path="",
+        split_mode="split_dir",
+        split_ratio="2:1:7",
+        split_seed=42,
+        split_output_dir="",
+        out_root="",
+        max_turns=1,
+        exec_timeout=240,
+        workers=1,
+        analyst_workers=1,
+        failure_only=False,
+        minibatch_size=1,
+        edit_budget=2,
+        seed=42,
+        limit=0,
+        reflection_backend="native",
+        codex_cli_reflection_model="",
+        codex_cli_reflection_timeout=240,
+        judge_backend="heuristic",
+        codex_cli_judge_model="",
+        codex_cli_judge_profile="",
+        codex_cli_judge_timeout=240,
+        codex_cli_judge_sandbox="read-only",
+        codex_exec_path="codex",
+        codex_exec_sandbox="workspace-write",
+        codex_exec_profile="",
+        codex_exec_full_auto=False,
+        codex_exec_reasoning_effort="none",
+        codex_exec_use_sdk="cli",
+        codex_exec_network_access=False,
+        codex_exec_web_search=False,
+        codex_exec_approval_policy="never",
+        target_backend="",
+        target_model="",
+        optimizer_backend="",
+        optimizer_model="",
+        run_profile="exploratory",
+        official_parity_status="unspecified",
+        config=None,
+        **extra_config,
+    ):
+        if isinstance(env, dict) and config is None:
+            config = env
+            env = "agent_skills"
+        startup_config = _flatten_config(config)
+        startup_config.update(_flatten_config(extra_config))
+        self.max_turns = int(max_turns or 1)
+        self.exec_timeout = int(exec_timeout or 240)
+        self.workers = int(workers or 1)
+        self.analyst_workers = int(analyst_workers or 1)
+        self.failure_only = bool(failure_only)
+        self.minibatch_size = int(minibatch_size or 1)
+        self.edit_budget = int(edit_budget or 2)
+        self.env_config = _compact(
+            {
+                "name": env,
+                "split_dir": split_dir,
+                "data_path": data_path,
+                "split_mode": split_mode,
+                "split_ratio": split_ratio,
+                "split_seed": split_seed,
+                "split_output_dir": split_output_dir,
+                "out_root": out_root,
+                "max_turns": max_turns,
+                "exec_timeout": exec_timeout,
+                "workers": workers,
+                "analyst_workers": analyst_workers,
+                "failure_only": failure_only,
+                "minibatch_size": minibatch_size,
+                "edit_budget": edit_budget,
+                "seed": seed,
+                "limit": limit,
+                "reflection_backend": reflection_backend,
+                "codex_cli_reflection_model": codex_cli_reflection_model,
+                "codex_cli_reflection_timeout": codex_cli_reflection_timeout,
+                "judge_backend": judge_backend,
+                "codex_cli_judge_model": codex_cli_judge_model,
+                "codex_cli_judge_profile": codex_cli_judge_profile,
+                "codex_cli_judge_timeout": codex_cli_judge_timeout,
+                "codex_cli_judge_sandbox": codex_cli_judge_sandbox,
+                "run_profile": run_profile,
+                "official_parity_status": official_parity_status,
+            }
+        )
+        self.model_config = _compact(
+            {
+                "codex_exec_path": codex_exec_path,
+                "codex_exec_sandbox": codex_exec_sandbox,
+                "codex_exec_profile": codex_exec_profile,
+                "codex_exec_full_auto": codex_exec_full_auto,
+                "codex_exec_reasoning_effort": codex_exec_reasoning_effort,
+                "codex_exec_use_sdk": codex_exec_use_sdk,
+                "codex_exec_network_access": codex_exec_network_access,
+                "codex_exec_web_search": codex_exec_web_search,
+                "codex_exec_approval_policy": codex_exec_approval_policy,
+                "target_backend": target_backend,
+                "target_model": target_model,
+                "optimizer_backend": optimizer_backend,
+                "optimizer_model": optimizer_model,
+                "exec_timeout": exec_timeout,
+            }
+        )
+        self.config = {"env": dict(self.env_config), "model": dict(self.model_config)}
+        self.dataloader = AgentSkillsDataLoader(
+            split_dir=split_dir,
+            data_path=data_path,
+            split_mode=split_mode,
+            split_ratio=split_ratio,
+            split_seed=split_seed,
+            split_output_dir=split_output_dir,
+            seed=seed,
+            limit=limit,
+        )
+        self.evaluator = AgentSkillsEvaluator(self._rollout_config())
+        self.rollout_runner = AgentSkillsRollout(self._rollout_config())
+        self.reflector = CodexCliReflector(self._rollout_config())
+        if startup_config:
+            self._sync_from_flat_config(startup_config)
+            self._rebuild_components()
+
+    def _rollout_config(self):
+        merged = dict(self.model_config)
+        merged.update(self.env_config)
+        if hasattr(self, "_cfg"):
+            merged.update(self._cfg)
+        return merged
+
+    def _sync_from_flat_config(self, cfg):
+        env_keys = {
+            "env",
+            "split_dir",
+            "data_path",
+            "split_mode",
+            "split_ratio",
+            "split_seed",
+            "split_output_dir",
+            "out_root",
+            "max_turns",
+            "exec_timeout",
+            "workers",
+            "analyst_workers",
+            "failure_only",
+            "minibatch_size",
+            "edit_budget",
+            "seed",
+            "limit",
+            "reflection_backend",
+            "codex_cli_reflection_model",
+            "codex_cli_reflection_timeout",
+            "judge_backend",
+            "codex_cli_judge_model",
+            "codex_cli_judge_profile",
+            "codex_cli_judge_timeout",
+            "codex_cli_judge_sandbox",
+            "run_profile",
+            "official_parity_status",
+        }
+        model_keys = {
+            "codex_exec_path",
+            "codex_exec_sandbox",
+            "codex_exec_profile",
+            "codex_exec_full_auto",
+            "codex_exec_reasoning_effort",
+            "codex_exec_use_sdk",
+            "codex_exec_network_access",
+            "codex_exec_web_search",
+            "codex_exec_approval_policy",
+            "target_backend",
+            "target_model",
+            "optimizer_backend",
+            "optimizer_model",
+        }
+        for key in env_keys:
+            if key in cfg:
+                env_key = "name" if key == "env" else key
+                self.env_config[env_key] = cfg[key]
+        for key in model_keys:
+            if key in cfg:
+                self.model_config[key] = cfg[key]
+        self.max_turns = int(self.env_config.get("max_turns") or 1)
+        self.exec_timeout = int(self.env_config.get("exec_timeout") or 240)
+        self.workers = int(self.env_config.get("workers") or 1)
+        self.analyst_workers = int(self.env_config.get("analyst_workers") or 1)
+        self.failure_only = bool(self.env_config.get("failure_only", False))
+        self.minibatch_size = int(self.env_config.get("minibatch_size") or 1)
+        self.edit_budget = int(self.env_config.get("edit_budget") or 2)
+        self.config = {
+            "env": dict(self.env_config),
+            "model": dict(self.model_config),
+            "flat": dict(cfg),
+        }
+
+    def _rebuild_components(self):
+        self.dataloader = AgentSkillsDataLoader(
+            split_dir=self.env_config.get("split_dir", ""),
+            data_path=self.env_config.get("data_path", ""),
+            split_mode=self.env_config.get("split_mode", "split_dir"),
+            split_ratio=self.env_config.get("split_ratio", "2:1:7"),
+            split_seed=self.env_config.get("split_seed", 42),
+            split_output_dir=self.env_config.get("split_output_dir", ""),
+            seed=self.env_config.get("seed", 42),
+            limit=self.env_config.get("limit", 0),
+        )
+        self.evaluator = AgentSkillsEvaluator(self._rollout_config())
+        self.rollout_runner = AgentSkillsRollout(self._rollout_config())
+        self.reflector = CodexCliReflector(self._rollout_config())
+
+    def setup(self, cfg):
+        super().setup(cfg)
+        flat_cfg = _flatten_config(cfg)
+        self._sync_from_flat_config(flat_cfg)
+        self._rebuild_components()
+        self.dataloader.setup(flat_cfg)
+
+    def get_dataloader(self):
+        return self.dataloader
+
+    def build_env_from_batch(self, batch: BatchSpec, **kwargs):
+        return list(batch.payload or [])
+
+    def build_train_env(self, batch_size, seed, **kwargs):
+        batch = self.dataloader.build_train_batch(batch_size=batch_size, seed=seed, **kwargs)
+        return self.build_env_from_batch(batch, **kwargs)
+
+    def build_eval_env(self, env_num, split, seed, **kwargs):
+        batch = self.dataloader.build_eval_batch(env_num=env_num, split=split, seed=seed, **kwargs)
+        return self.build_env_from_batch(batch, **kwargs)
+
+    def get_task_types(self):
+        seen = []
+        for item in self.dataloader.train_items + self.dataloader.val_items + self.dataloader.test_items:
+            task_type = str(item.get("task_type") or item.get("skill_name") or "agent_skill_quality")
+            if task_type not in seen:
+                seen.append(task_type)
+        return seen or ["agent_skill_quality"]
+
+    def rollout(self, env_manager, skill_content, out_dir, **kwargs):
+        items = list(env_manager or [])
+        prediction_dir = Path(out_dir) / "predictions"
+        prediction_dir.mkdir(parents=True, exist_ok=True)
+        results = []
+        print(f"    [agent_skills rollout] starting {len(items)} case(s)", flush=True)
+        for index, case in enumerate(items, 1):
+            print(
+                f"      [agent_skills rollout] {index}/{len(items)} {case.get('id', '<unknown>')}",
+                flush=True,
+            )
+            rollout = self.rollout_runner.run(case, skill_content)
+            scored = self.evaluator.score(case, rollout)
+            scored.update(
+                {
+                    "task_description": case.get("prompt", ""),
+                    "target_user_prompt": case.get("prompt", ""),
+                    "expected_behavior": case.get("expected_behavior", []),
+                    "case_path": case.get("case_path", ""),
+                    "returncode": rollout.get("returncode", 0),
+                    "stderr": rollout.get("stderr", ""),
+                }
+            )
+            case_dir = prediction_dir / _safe_id(scored["id"])
+            case_dir.mkdir(parents=True, exist_ok=True)
+            (case_dir / "conversation.json").write_text(
+                self._conversation_json(case, rollout),
+                encoding="utf-8",
+            )
+            (case_dir / "target_user_prompt.txt").write_text(
+                str(case.get("prompt", "")),
+                encoding="utf-8",
+            )
+            print(
+                f"      [agent_skills rollout done] {scored['id']} hard={scored['hard']} returncode={rollout.get('returncode', 0)}",
+                flush=True,
+            )
+            results.append(scored)
+        return results
+
+    def _conversation_json(self, case, rollout):
+        import json
+
+        return json.dumps(
+            [
+                {
+                    "role": "user",
+                    "content": case.get("prompt", ""),
+                },
+                {
+                    "role": "assistant",
+                    "content": rollout.get("response", ""),
+                },
+                {
+                    "role": "system",
+                    "content": f"returncode={rollout.get('returncode', 0)} stderr={rollout.get('stderr', '')}",
+                },
+            ],
+            ensure_ascii=False,
+            indent=2,
+        )
+
+    def reflect(self, results, skill_content, out_dir, **kwargs):
+        backend = str(self.env_config.get("reflection_backend") or "native").strip().lower()
+        if backend == "codex_cli":
+            return self.reflector.reflect(results, skill_content, out_dir, **kwargs)
+
+        prediction_dir = kwargs.get("prediction_dir", os.path.join(out_dir, "predictions"))
+        patches_dir = kwargs.get("patches_dir", os.path.join(out_dir, "patches"))
+        return run_minibatch_reflect(
+            results=results,
+            skill_content=skill_content,
+            prediction_dir=prediction_dir,
+            patches_dir=patches_dir,
+            workers=self.analyst_workers,
+            failure_only=self.failure_only,
+            minibatch_size=self.minibatch_size,
+            edit_budget=self.edit_budget,
+            random_seed=kwargs.get("random_seed"),
+            error_system=self.get_error_minibatch_prompt(),
+            success_system=self.get_success_minibatch_prompt(),
+            step_buffer_context=kwargs.get("step_buffer_context", ""),
+            meta_skill_context=kwargs.get("meta_skill_context", ""),
+            update_mode=getattr(self, "_cfg", {}).get("skill_update_mode", "patch"),
+        )

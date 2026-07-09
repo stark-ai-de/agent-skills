@@ -1,0 +1,204 @@
+import json
+import re
+import subprocess
+import tempfile
+from pathlib import Path
+
+
+SECRET_PATTERN = re.compile(r"(sk-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{32,})")
+FORBIDDEN_OPTIMIZER_PATTERN = re.compile(r"codex[-_\s]?opt", re.IGNORECASE)
+
+
+def _extract_json_payload(text):
+    value = (text or "").strip()
+    if not value:
+        return {}
+    if value.startswith("```"):
+        value = re.sub(r"^```(?:json)?\s*", "", value)
+        value = re.sub(r"\s*```$", "", value)
+    decoder = json.JSONDecoder()
+    for index, char in enumerate(value):
+        if char not in "{[":
+            continue
+        try:
+            payload, _ = decoder.raw_decode(value[index:])
+            return payload
+        except json.JSONDecodeError:
+            continue
+    return {}
+
+
+class CodexCliReflector:
+    def __init__(self, env):
+        self.env = env
+        self.timeout = int(env.get("codex_cli_reflection_timeout", 240))
+        self.codex_path = str(env.get("codex_exec_path") or "codex")
+        self.model = str(env.get("codex_cli_reflection_model") or "").strip()
+        self.profile = str(env.get("codex_exec_profile") or "").strip()
+        self.edit_budget = max(1, int(env.get("edit_budget") or 2))
+
+    def reflect(self, results, skill_content, out_dir, **kwargs):
+        if not results:
+            return []
+        failures = sum(1 for item in results if not item.get("hard"))
+        successes = len(results) - failures
+        print(
+            f"    [agent_skills reflection] codex_cli results={len(results)} failures={failures} successes={successes}",
+            flush=True,
+        )
+        with tempfile.TemporaryDirectory(prefix="skillopt-codex-reflect-") as tmp:
+            out = Path(tmp) / "patch.json"
+            prompt = self._prompt(results, skill_content, kwargs)
+            command = [
+                self.codex_path,
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--skip-git-repo-check",
+                "--ephemeral",
+                "--color",
+                "never",
+                "--sandbox",
+                "read-only",
+                "--output-last-message",
+                str(out),
+            ]
+            if self.model:
+                command.extend(["--model", self.model])
+            if self.profile:
+                command.extend(["--profile", self.profile])
+            command.append(prompt)
+            try:
+                completed = subprocess.run(
+                    command,
+                    stdin=subprocess.DEVNULL,
+                    text=True,
+                    capture_output=True,
+                    timeout=self.timeout,
+                    check=False,
+                )
+            except (OSError, subprocess.TimeoutExpired) as error:
+                print(f"    [agent_skills reflection skipped] codex_cli failed: {error}", flush=True)
+                return []
+            if completed.returncode != 0:
+                print(
+                    f"    [agent_skills reflection skipped] codex_cli exited {completed.returncode}",
+                    flush=True,
+                )
+                return []
+            payload_text = out.read_text(encoding="utf-8") if out.exists() else completed.stdout
+            payload = _extract_json_payload(payload_text)
+            source_type = "failure" if failures else "success"
+            patches = self._normalise_payload(
+                payload,
+                batch_size=len(results),
+                source_type=source_type,
+            )
+            patches_dir = Path(out_dir) / "patches"
+            patches_dir.mkdir(parents=True, exist_ok=True)
+            valid_patches = []
+            for index, patch in enumerate(patches):
+                try:
+                    self._validate_patch(patch)
+                except ValueError as error:
+                    print(
+                        f"    [agent_skills reflection skipped patch] {error}",
+                        flush=True,
+                    )
+                    continue
+                valid_patches.append(patch)
+                (patches_dir / f"codex_cli_reflection_{index:03d}.json").write_text(
+                    json.dumps(patch, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+            print(
+                f"    [agent_skills reflection done] patches={len(valid_patches)}",
+                flush=True,
+            )
+            return valid_patches
+
+    def _prompt(self, results, skill_content, kwargs):
+        failures = [item for item in results if not item.get("hard")]
+        successes = [item for item in results if item.get("hard")]
+        update_mode = kwargs.get("update_mode", "patch")
+        return (
+            "Return exactly one JSON object only, with no markdown and no second object. "
+            "Produce bounded SkillOpt RawPatch objects for an Agent Skill body. "
+            "Use this shape: {\"raw_patches\":[{\"source_type\":\"failure\","
+            "\"patch\":{\"reasoning\":\"...\",\"edits\":[{\"op\":\"replace\","
+            "\"target\":\"exact text\",\"content\":\"replacement text\"}]}}]}. "
+            f"Return at most {self.edit_budget} edits total. "
+            "Return an empty raw_patches list when no useful edit is justified. "
+            "Do not include frontmatter, secrets, local auth paths, or whole-skill rewrites.\n\n"
+            f"Update mode: {update_mode}\n\n"
+            f"Current skill:\n{skill_content[:8000]}\n\n"
+            f"Failures:\n{json.dumps(failures, ensure_ascii=False)[:8000]}\n\n"
+            f"Successes:\n{json.dumps(successes, ensure_ascii=False)[:5000]}"
+        )
+
+    def _normalise_payload(self, payload, batch_size, source_type):
+        if isinstance(payload, dict) and isinstance(payload.get("raw_patches"), list):
+            candidates = payload["raw_patches"]
+        elif isinstance(payload, list):
+            candidates = payload
+        elif isinstance(payload, dict) and "patch" in payload:
+            candidates = [payload]
+        elif isinstance(payload, dict) and "edits" in payload:
+            candidates = [{"source_type": "failure", "patch": payload}]
+        else:
+            return []
+
+        edits = []
+        reasoning = []
+        seen = set()
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            patch = candidate.get("patch", candidate)
+            if not isinstance(patch, dict):
+                continue
+            if patch.get("reasoning"):
+                reasoning.append(str(patch.get("reasoning")))
+            for edit in patch.get("edits", []):
+                if not isinstance(edit, dict):
+                    continue
+                key = json.dumps(edit, sort_keys=True, ensure_ascii=False)
+                if key in seen:
+                    continue
+                seen.add(key)
+                edit = dict(edit)
+                edit.setdefault("source_type", candidate.get("source_type", source_type))
+                edits.append(edit)
+
+        if not edits:
+            return []
+
+        selected = edits[: self.edit_budget]
+        merged_reasoning = " ".join(reasoning).strip() or "codex_cli local merge"
+        if len(edits) > len(selected):
+            merged_reasoning += f" [codex-cli local truncation {len(edits)}->{len(selected)} edits]"
+        return [
+            {
+                "source_type": source_type,
+                "batch_size": batch_size,
+                "patch": {
+                    "reasoning": merged_reasoning,
+                    "edits": selected,
+                },
+            }
+        ]
+
+    def _validate_patch(self, payload):
+        text = json.dumps(payload, ensure_ascii=False)
+        if "---" in text:
+            raise ValueError("patch must not include frontmatter")
+        if SECRET_PATTERN.search(text):
+            raise ValueError("patch contains a secret-like string")
+        if FORBIDDEN_OPTIMIZER_PATTERN.search(text):
+            raise ValueError("patch references an unsupported optimizer source")
+        edits = payload.get("patch", {}).get("edits", [])
+        if len(edits) > 8:
+            raise ValueError("patch exceeds edit budget")
+        for edit in edits:
+            if edit.get("op") == "replace_all":
+                raise ValueError("whole-skill replacement is disabled in patch mode")

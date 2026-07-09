@@ -1,0 +1,68 @@
+import json
+from pathlib import Path
+
+from skillopt.datasets.base import SplitDataLoader
+
+
+REQUIRED_FIELDS = {
+    "id",
+    "skill_name",
+    "case_path",
+    "prompt",
+    "expected_behavior",
+    "rubric_path",
+    "fixtures",
+    "visual_assertions",
+    "tags",
+    "should_trigger",
+    "workspace_policy",
+    "source_hash",
+}
+
+
+class AgentSkillsDataLoader(SplitDataLoader):
+    def __init__(
+        self,
+        split_dir="",
+        data_path="",
+        split_mode="split_dir",
+        split_ratio="2:1:7",
+        split_seed=42,
+        split_output_dir="",
+        seed=42,
+        limit=0,
+    ):
+        super().__init__(
+            split_dir=split_dir,
+            data_path=data_path,
+            split_mode=split_mode,
+            split_ratio=split_ratio,
+            split_seed=split_seed,
+            split_output_dir=split_output_dir,
+            seed=seed,
+            limit=limit,
+        )
+
+    def load_split_items(self, split_path):
+        path = Path(split_path) / "items.json"
+        items = json.loads(path.read_text(encoding="utf-8"))
+        for item in items:
+            missing = sorted(REQUIRED_FIELDS - set(item))
+            if missing:
+                raise ValueError(f"{path}: item {item.get('id', '<unknown>')} missing {missing}")
+        return sorted(items, key=lambda item: item["id"])
+
+    def load_split(self, split):
+        if self._splits:
+            return self.get_split_items(split)
+        alias = {
+            "valid_seen": "val",
+            "selection": "val",
+            "valid_unseen": "test",
+        }.get(split, split)
+        return self.load_split_items(Path(self.split_dir) / alias)
+
+    def load_all(self):
+        if self._splits:
+            return {split: self.load_split(split) for split in ("train", "val", "test")}
+        return {split: self.load_split(split) for split in ("train", "val", "test")}

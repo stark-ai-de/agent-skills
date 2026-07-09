@@ -1,6 +1,8 @@
 .git
 node_modules
 site/public
+incubator/skills/skill-maintenance/skillopt-setup
+skill-evals/skillopt-setup
 .turbo
 build
 dist

@@ -1,0 +1,52 @@
+_base_: ../_base_/default.yaml
+
+env:
+  name: agent_skills
+  run_profile: <run-profile>
+  skill_init: .agents/skillopt-work/<skill>/initial/skill-body.md
+  split_mode: split_dir
+  split_dir: .agents/skillopt-work/<skill>/data
+  out_root: .agents/skillopt-work/<skill>/outputs/<run-name>
+  reflection_backend: native
+  judge_backend: heuristic
+  exec_timeout: 180
+  workers: 8
+  max_turns: 1
+
+train:
+  num_epochs: 4
+  batch_size: 40
+  seed: 42
+
+gradient:
+  minibatch_size: 8
+  merge_batch_size: 8
+  analyst_workers: 16
+  max_analyst_rounds: 3
+  failure_only: false
+
+optimizer:
+  learning_rate: 4
+  min_learning_rate: 2
+  lr_scheduler: cosine
+  skill_update_mode: patch
+  use_slow_update: true
+  slow_update_samples: 20
+  slow_update_gate_with_selection: false
+  use_meta_skill: true
+  longitudinal_pair_policy: mixed
+  use_skill_aware_reflection: false
+  skill_aware_appendix_source: both
+  skill_aware_consolidate_threshold: 0
+
+evaluation:
+  use_gate: true
+  eval_test: true
+  sel_env_num: 0
+  test_env_num: 0
+
+model:
+  optimizer_backend: openai_chat
+  target_backend: openai_chat
+  optimizer: ${SKILLOPT_OPTIMIZER_MODEL}
+  target: ${SKILLOPT_TARGET_MODEL}
