@@ -14,8 +14,15 @@ Use this folder for:
 ## Current Proof Folders
 
 - [`animated-readme-logo`](animated-readme-logo/README.md)
+- [`architecture-compass`](architecture-compass/README.md)
+- [`claude-memory-curator`](claude-memory-curator/README.md)
+- [`claude-spec-interviewer`](claude-spec-interviewer/README.md)
+- [`codegraph-ast-grep`](codegraph-ast-grep/README.md)
 - [`codex-memory-curator`](codex-memory-curator/README.md)
 - [`codex-spec-interviewer`](codex-spec-interviewer/README.md)
+- [`cursor-memory-curator`](cursor-memory-curator/README.md)
+- [`cursor-spec-interviewer`](cursor-spec-interviewer/README.md)
+- [`drawio-diagrams`](drawio-diagrams/README.md)
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 

@@ -13,7 +13,7 @@ stark-ai-de/agent-skills
 Recommended GitHub description:
 
 ```text
-Public Agent Skills for Codex operations, repo maintenance, skill maintenance, and agent workflow control.
+Public Agent Skills for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
 ```
 
 Recommended GitHub topics:
@@ -22,7 +22,10 @@ Recommended GitHub topics:
 skills
 agent-skills
 codex
+cursor
 openai-codex
+claude-code
+anthropic-claude
 ai-agents
 repository-maintenance
 developer-tools
@@ -35,9 +38,31 @@ adr
 Use:
 
 ```bash
-npx skills add https://github.com/stark-ai-de/agent-skills --list
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --list
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
 ```
+
+Install Claude Code public skills from a repository clone into project-local or user-level Claude skills:
+
+```bash
+mkdir -p .claude/skills
+cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
+cp -R skills/claude-operations/claude-memory-curator .claude/skills/
+
+mkdir -p ~/.claude/skills
+cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
+cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
+```
+
+Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
+
+`--list` is a discovery check only. It does not install skills and should not be treated as a skills.sh indexing trigger. skills.sh ranks and discovers repository pages from anonymous successful-install telemetry when telemetry is enabled. A root `skills.sh.json` customizes display after the repository has been seen by that service.
 
 ## Local Smoke Test
 
@@ -50,14 +75,14 @@ npx skills@latest add ./skills --list
 npm run smoke:install
 ```
 
-`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/` and `skills-lock.json`, runs `npx skills@latest add . --list`, verifies every public skill is listed when present, verifies incubator skills are not listed, and removes the temporary copy. It does not install global skills.
+`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/`, `.codegraph/`, and `skills-lock.json`, runs `npx skills@latest add . --list`, verifies every public skill is listed when present, verifies incubator skills are not listed, and removes the temporary copy. It does not install global skills.
 
-Do not publish, push, tag, or install globally unless the maintainer explicitly asks for that action.
+Do not publish, push, tag, send telemetry-triggering installs, or install globally unless the maintainer explicitly asks for that action.
 
-Test one local install after approval:
+Test the changed public skill locally after approval:
 
 ```bash
-npx skills add ./skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills@latest add ./skills --skill codegraph-ast-grep -a codex --copy -y
 ```
 
 ## Repository Settings
@@ -153,17 +178,24 @@ node scripts/print-release-notes.mjs
 Do not generate custom per-skill zip files in v1. GitHub Releases provide source archives for each tag, and normal installation uses the skills CLI:
 
 ```bash
-npx skills add https://github.com/stark-ai-de/agent-skills --list
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
-npx skills add https://github.com/stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --list
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor --copy -y
 ```
+
+For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer` and `skills/claude-operations/claude-memory-curator`, then use the manual copy commands above from a tag checkout.
 
 ## Release Update Process
 
 1. Update public or incubator skills.
 2. Run `npm run validate`.
 3. Run `pnpm format:check` and `pnpm lint`.
-4. Run `npx skills add ./skills --list` locally.
+4. Run `npx skills@latest add ./skills --list` locally.
 5. Run `npm run smoke:install`.
 6. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.
 7. Add an ADR only if a decision changed.

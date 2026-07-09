@@ -34,7 +34,9 @@ try {
       const rel = path.relative(root, source);
       if (!rel) return true;
       const [topLevel] = rel.split(path.sep);
-      return !new Set([".agents", ".git", "node_modules", "skills-lock.json"]).has(topLevel);
+      return !new Set([".agents", ".codegraph", ".git", "node_modules", "skills-lock.json"]).has(
+        topLevel,
+      );
     },
   });
 

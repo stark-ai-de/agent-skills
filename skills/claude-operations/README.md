@@ -1,0 +1,12 @@
+# Claude Operations
+
+Promoted skills for Claude Code operating context.
+
+Claude-specific plugin metadata is intentionally omitted until an ADR makes it a supported publishing surface.
+
+Third-party helper skills live outside the public catalog under `.agents/skills/`.
+
+| Skill                                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`claude-memory-curator`](claude-memory-curator/SKILL.md)     | Audit, review, clean up, and prune Claude Code durable context. Use when the user asks about CLAUDE.md, CLAUDE.local.md, .claude/rules, user Claude rules, Claude Code auto memory, /memory, stale instructions, memory pollution, sensitive context, settings such as autoMemoryEnabled or claudeMdExcludes, or where a Claude instruction should live. Do not use for Codex memory, Cursor rules, Claude app memory, Anthropic API Memory Stores, or generic docs cleanup.                                      |
+| [`claude-spec-interviewer`](claude-spec-interviewer/SKILL.md) | Interview fuzzy Claude Code coding requests into user-verified implementation specs with source challenge, ADR gate, validation plan, and execution prompt. Use when the user asks for /claude-spec-interviewer, a Claude Code implementation plan, PRD, requirements, plan before coding, Plan Mode planning, persisted spec, ADR decision, CLAUDE.md evidence, or .claude/rules evidence. Do not use for direct implementation, pure brainstorming, memory cleanup, or authoring Claude instruction files only. |

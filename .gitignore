@@ -1,6 +1,8 @@
 node_modules
 __pycache__/
 .agents/
+.claude/
+.codegraph/
 skills-lock.json
 .astro
 .next
@@ -9,6 +11,8 @@ build
 dist
 coverage
 *.tsbuildinfo
+__pycache__/
+*.py[cod]
 .DS_Store
 *:Zone.Identifier
 

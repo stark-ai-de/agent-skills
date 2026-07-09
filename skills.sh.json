@@ -1,0 +1,25 @@
+{
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Codex Operations",
+      "description": "Runtime-specific skills for Codex memory hygiene and spec workflows.",
+      "skills": ["codex-memory-curator", "codex-spec-interviewer"]
+    },
+    {
+      "title": "Cursor Operations",
+      "description": "Runtime-specific skills for Cursor durable context and spec workflows.",
+      "skills": ["cursor-memory-curator", "cursor-spec-interviewer"]
+    },
+    {
+      "title": "Claude Operations",
+      "description": "Runtime-specific skills for Claude Code durable context and spec workflows.",
+      "skills": ["claude-memory-curator", "claude-spec-interviewer"]
+    },
+    {
+      "title": "Engineering Workflows",
+      "description": "Portable skills for ADR governance, repo exploration, refactoring, and editable diagrams.",
+      "skills": ["architecture-compass", "codegraph-ast-grep", "drawio-diagrams"]
+    }
+  ]
+}

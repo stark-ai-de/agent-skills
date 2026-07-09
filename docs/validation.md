@@ -58,7 +58,7 @@ Run the clean-copy public install smoke test:
 npm run smoke:install
 ```
 
-Optional Oxc checks:
+Oxc and workflow checks:
 
 ```bash
 pnpm install
@@ -100,11 +100,12 @@ node scripts/print-release-notes.mjs
 - Incubator category README files state that incubator skills are not part of the public catalog.
 - Incubator skills set `metadata.internal: true` so root `npx skills` discovery hides them unless `INSTALL_INTERNAL_SKILLS=1` is explicitly set.
 - Skill scripts avoid obvious high-risk shell patterns.
+- Oxc formatting and script linting pass through `pnpm format:check` and `pnpm lint`.
 - GitHub Actions workflows pass `actionlint` through `pnpm lint:actions`.
 - The Astro GitHub Pages catalog builds generated public and incubator skill routes from `SKILL.md`.
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
-- `smoke:install` checks a clean copy without `.agents/skills/`, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
+- `smoke:install` checks a clean copy without local `.agents/` or `.codegraph/` state, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
 - Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
