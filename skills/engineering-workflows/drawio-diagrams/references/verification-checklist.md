@@ -41,7 +41,7 @@ Warnings:
 - long edge labels
 - dense edge labels without label backgrounds or explicit label cells
 - likely high crossing/crowding
-- probable edge centerline crossing a text box, icon label, callout, section title, or component
+- probable connector route crossing a text box, icon label, callout, section title, or component
 - linked or remote icons in portable mode
 - icon aspect-ratio or label-overlap risk
 - recognized brand rendered as a generic placeholder while peers use real logos

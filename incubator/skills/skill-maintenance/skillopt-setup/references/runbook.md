@@ -47,20 +47,23 @@ Keep each wizard answer short and state the current decision before asking the n
 - Dry-run: target, maturity/path, mode/profile, Python path, existing setup choice, setup readiness, training readiness, proof status/blockers, data-floor status, model-pin gaps, adapter-manifest refresh status, then the production setup question.
 - Production setup success: completed setup steps, local paths, new-terminal training command, short manual result commands, then the current-session execution question.
 - Readiness: separate setup readiness from training readiness and proof status. `safe_to_setup: true` means the helper can prepare `.agents/`; it does not mean an official-parity training run has all credentials and model pins.
+- Strict training readiness: use `--strict-training-ready` only when the user wants the setup command to fail unless the selected mode/profile can actually start training. This checks backend- and role-specific provider endpoint/auth requirements, a live chat preflight for OpenAI-compatible endpoints, Codex probe state, model pins, non-empty and source-current generated splits, the current initial-skill checksum, visual artifact readiness, live SkillOpt patch/commit state, refreshed target manifest, and generated config compatibility.
 - Existing setup: describe cleanup as global to `.agents/tools/SkillOpt`, `.agents/tools/SkillOpt.commit`, and `.agents/skillopt-work`; it does not remove installed skills under `.agents/skills`.
-- Codex probe: dry-run/readiness should skip the login probe unless the user asks, because the probe writes ignored diagnostics under `.agents/skillopt-work/_readiness`.
+- Codex probe: dry-run/readiness should skip a new login probe unless the user asks, because the probe writes ignored diagnostics under `.agents/skillopt-work/_readiness`. If a prior successful probe exists there, strict readiness may reuse it.
 
 ### Best-Practice Configuration Branches
 
-| User goal | Mode | Profile | Requirements | Notes |
-| --- | --- | --- | --- | --- |
-| Fastest setup-to-run path without provider keys | `codex-cli-all` | `exploratory` | Logged-in Codex CLI; optional model pins for target, judge, and reflection; slow/meta disabled | Recommended when the user wants to try SkillOpt now. It is not official parity. |
-| Best local official-parity path with Codex target rollouts | `hybrid-codex-target` | `official-parity` | Provider credentials for optimizer/reflection, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, `SKILLOPT_JUDGE_MODEL`, Codex CLI login, data floor met | Uses Codex for target rollouts and judging, but keeps provider-backed optimizer behavior. |
-| Most upstream-native provider-backed path | `native-provider` | `official-parity` | Provider credentials, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, data floor met | Use when the target can run through provider-backed chat instead of Codex CLI. Azure/OpenAI-compatible, Anthropic, Qwen, and MiniMax are recognized credential families. |
-| Smoke test only | any mode | `exploratory` | Minimal local prerequisites | Do not publish as official-parity proof. |
+| User goal                                                  | Mode                  | Profile           | Requirements                                                                                                                                                | Notes                                                                                                                                                                    |
+| ---------------------------------------------------------- | --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Fastest setup-to-run path without provider keys            | `codex-cli-all`       | `exploratory`     | Logged-in Codex CLI; optional model pins for target, judge, and reflection; slow/meta disabled                                                              | Recommended when the user wants to try SkillOpt now. It is not official parity.                                                                                          |
+| Best local official-parity path with Codex target rollouts | `hybrid-codex-target` | `official-parity` | Provider credentials for optimizer/reflection, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, `SKILLOPT_JUDGE_MODEL`, Codex CLI login, data floor met | Uses Codex for target rollouts and judging, but keeps provider-backed optimizer behavior.                                                                                |
+| Most upstream-native provider-backed path                  | `native-provider`     | `official-parity` | Provider credentials, `SKILLOPT_OPTIMIZER_MODEL`, `SKILLOPT_TARGET_MODEL`, data floor met                                                                   | Use when the target can run through provider-backed chat instead of Codex CLI. Azure/OpenAI-compatible, Anthropic, Qwen, and MiniMax are recognized credential families. |
+| Smoke test only                                            | any mode              | `exploratory`     | Minimal local prerequisites                                                                                                                                 | Do not publish as official-parity proof.                                                                                                                                 |
 
 Official-parity config should keep validation gate, test evaluation, cosine schedule, slow update, meta skill, official-style edit budgets, fresh run output, artifact verification, eval-only proof, and curated public summaries. If any of those are unsupported or missing, report the exact proof blocker or gap.
 Skill-aware reflection is a current upstream option, but it is optional and experimental; keep it disabled unless the user asks for appendix-based failure routing.
+
+For evals with `visual_assertions`, readiness must report `visualArtifactReadiness`. A full visual optimization run needs `drawio` or `diagrams.net` on PATH. If that is missing, setup should use the generated `data-text-only` split in `visual_eval_policy: auto` and report `text_only_ready`. Do not scale loops or workers against the full visual split until the render environment is fixed.
 
 ## Startup Mode Note
 
@@ -154,6 +157,12 @@ If the user chose to reuse/update existing setup, include `--existing-setup-choi
 
 Add `--install-uv` only after the user chooses the `uv` installer path. Add `--python-manager local --python python3` only after the user chooses local Python. Add `--probe-codex` only when the user wants a live Codex CLI login probe during setup.
 
+Add `--strict-training-ready` when the user wants a fully runnable handoff rather than setup-only preparation. In Codex-backed modes, pair it with `--probe-codex`; otherwise strict readiness blocks on the missing Codex login proof.
+
+If `.agents/skillopt-work/_readiness/codex-probe-final.txt` already contains `CODEX_READY` with a status-0 diagnostic, strict readiness can pass with `--no-codex-probe` by reusing that ignored evidence.
+
+For `openai_chat` with `AZURE_OPENAI_AUTH_MODE=openai_compatible` (or its supported aliases), strict readiness runs the skill-owned endpoint probe from environment-provided endpoint/auth/model settings. It requires both model listing and one successful chat completion, captures the response, and reports only redacted pass/fail status. Ordinary non-strict readiness remains network-free and reports that the preflight was not run.
+
 5. Run readiness:
 
 ```bash
@@ -185,6 +194,8 @@ node <skill-root>/scripts/prepare-skillopt-split.mjs \
   --seed 42
 ```
 
+This writes both `.agents/skillopt-work/<target-skill>/data` and `.agents/skillopt-work/<target-skill>/data-text-only`. The latter is always present for explicit text-only configs; when visual assertions exist, it excludes those visual cases and is the automatic fallback when render tooling is unavailable.
+
 8. Prepare the adapter and configs, if not using the setup orchestrator:
 
 ```bash
@@ -192,10 +203,21 @@ node <skill-root>/scripts/prepare-local-skillopt-adapter.mjs \
   --skill <target-skill> \
   --skillopt .agents/tools/SkillOpt \
   --mode hybrid-codex-target \
-  --run-profile official-parity
+  --run-profile official-parity \
+  --visual-eval-policy auto
 ```
 
 9. Recommend the paste-ready SkillOpt command for a new terminal from the repo root. Explain that terminal execution keeps full logs and direct user control. Then offer current-session execution as an explicit option: `Should I run SkillOpt training for <target-skill> in this agent session anyway?`
+
+## Local OpenAI-Compatible Gateway
+
+If LiteLLM or another OpenAI-compatible route is unsuitable and the user wants a local Codex-backed endpoint, use `references/local-openai-gateway.md`. Start the gateway from the loaded skill, then run `probe-openai-compatible-endpoint.mjs`. Do not treat `/v1/models` success as proof; require one successful `/v1/chat/completions` response before marking the endpoint usable for SkillOpt.
+
+The bundled gateway is loopback-only and applies a strict no-workspace-read/no-write/no-network Codex profile to every request, including SkillOpt candidate prompts. It rejects `allow_write`, `workspace-write`, inherited process environments, host user config/rules, and selectable Codex profiles. Do not publish or reverse-proxy it to remote clients without an additional OS/container process, memory, disk, and defense-in-depth host-read isolation boundary; do not recommend one monolithic service that hosts every gateway script. Use a shared route layer for client-facing model names and separate gateway deployments by backend and trust boundary. One Codex gateway can carry multiple aliases only when auth, resource, and ownership boundaries are the same.
+
+## Local Artifact Audit
+
+When asked to move learnings from `.agents/`, run `audit-skillopt-local-artifacts.mjs --skill <skill>` before copying or editing tracked files. Use `references/local-artifact-audit.md` for promotion rules. Raw SkillOpt clones, installed skill copies, data splits, outputs, transcripts, readiness diagnostics, and temporary candidates remain ignored local state. Promote only sanitized scripts, references, templates, eval cases, or curated run summaries, and add validation coverage for each promoted behavior.
 
 ## Continue After Setup
 

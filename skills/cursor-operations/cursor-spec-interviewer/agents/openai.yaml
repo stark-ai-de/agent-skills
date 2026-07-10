@@ -1,7 +1,7 @@
 interface:
   display_name: "Cursor Spec Interviewer"
   short_description: "Interviews, verifies, ADR-gates, and saves Cursor-ready specs"
-  default_prompt: "Use $cursor-spec-interviewer to interview me, source-check the requirements, ADR-gate durable decisions, verify the final scope, and save a Cursor-ready implementation spec."
+  default_prompt: "Use $cursor-spec-interviewer in native Cursor Plan Mode to interview me with structured questions, source-check the requirements, ADR-gate durable decisions, verify the final scope, then hand off a save-only continuation for the Cursor-ready spec without implementing it."
 policy:
   allow_implicit_invocation: true
 dependencies:

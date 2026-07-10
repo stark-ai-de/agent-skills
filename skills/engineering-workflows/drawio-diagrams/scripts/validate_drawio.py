@@ -39,6 +39,7 @@ class Cell:
     target: str | None
     geometry: tuple[float, float, float, float] | None
     relative_geometry: bool
+    geometry_offset: tuple[float, float]
     style_map: dict[str, str]
 
     @classmethod
@@ -52,8 +53,18 @@ class Cell:
         geo = el.find("mxGeometry")
         geometry = None
         relative_geometry = False
+        geometry_offset = (0.0, 0.0)
         if geo is not None and geo.get("as") == "geometry":
             relative_geometry = geo.get("relative") == "1"
+            offset = geo.find('mxPoint[@as="offset"]')
+            if offset is not None:
+                try:
+                    geometry_offset = (
+                        float(offset.get("x", "0")),
+                        float(offset.get("y", "0")),
+                    )
+                except ValueError:
+                    geometry_offset = (0.0, 0.0)
             if all(name in geo.attrib for name in ("x", "y", "width", "height")):
                 try:
                     geometry = (
@@ -77,6 +88,7 @@ class Cell:
             target=el.get("target"),
             geometry=geometry,
             relative_geometry=relative_geometry,
+            geometry_offset=geometry_offset,
             style_map=style_map,
         )
 
@@ -188,18 +200,34 @@ def contrast_checks(fill_colors: list[str], font_colors: list[str]) -> list[tupl
     return [(fill, font) for fill in fill_colors for font in font_colors]
 
 
-def abs_bbox(cell: Cell, cells_by_id: dict[str, Cell]) -> tuple[float, float, float, float] | None:
+def abs_bbox(
+    cell: Cell,
+    cells_by_id: dict[str, Cell],
+    seen: set[str] | None = None,
+    depth: int = 0,
+) -> tuple[float, float, float, float] | None:
     if cell.geometry is None:
         return None
     x, y, width, height = cell.geometry
+    if depth >= 20 or (cell.id and cell.id in (seen or set())):
+        return (x, y, width, height)
     parent = cells_by_id.get(cell.parent or "")
-    depth = 0
-    while parent is not None and parent.id not in ("0", "1") and depth < 20:
-        if parent.geometry:
-            x += parent.geometry[0]
-            y += parent.geometry[1]
-        parent = cells_by_id.get(parent.parent or "")
-        depth += 1
+    if parent is None or parent.id in ("0", "1"):
+        return (x, y, width, height)
+    next_seen = set(seen or set())
+    if cell.id:
+        next_seen.add(cell.id)
+    parent_box = abs_bbox(parent, cells_by_id, next_seen, depth + 1)
+    if parent_box is None:
+        return (x, y, width, height)
+    parent_x, parent_y, parent_width, parent_height = parent_box
+    if cell.relative_geometry:
+        offset_x, offset_y = cell.geometry_offset
+        x = parent_x + x * parent_width + offset_x
+        y = parent_y + y * parent_height + offset_y
+    else:
+        x += parent_x
+        y += parent_y
     return (x, y, width, height)
 
 
@@ -270,6 +298,15 @@ def validate_model(name: str, model: ET.Element, profile: str, theme: str | None
                 add_error(errors, edge.id, f'{attr}="{ref}" references an edge')
             elif not target.is_vertex:
                 add_error(errors, edge.id, f'{attr}="{ref}" is not a vertex')
+        for attr in ("sourcePort", "targetPort"):
+            ref = edge.style_map.get(attr)
+            if not ref:
+                continue
+            port = cells_by_id.get(ref)
+            if port is None:
+                add_error(errors, edge.id, f'{attr}="{ref}" does not exist')
+            elif not port.is_vertex:
+                add_error(errors, edge.id, f'{attr}="{ref}" is not a vertex')
         if profile == "flowforge" and "endArrow=none" not in edge.style and "edgeStyle=orthogonalEdgeStyle" not in edge.style:
             add_error(errors, edge.id, "flowforge profile requires edgeStyle=orthogonalEdgeStyle")
 
@@ -336,7 +373,12 @@ def validate_model(name: str, model: ET.Element, profile: str, theme: str | None
         if cx < px - pad or cy < py - pad or cx + cw > px + pw + pad or cy + ch > py + ph + pad:
             add_error(errors, child.id, f"child outside parent {parent.id} bounds")
 
-    endpoint_ids = {edge.source for edge in edges if edge.source} | {edge.target for edge in edges if edge.target}
+    endpoint_ids = (
+        {edge.source for edge in edges if edge.source}
+        | {edge.target for edge in edges if edge.target}
+        | {edge.style_map.get("sourcePort") for edge in edges if edge.style_map.get("sourcePort")}
+        | {edge.style_map.get("targetPort") for edge in edges if edge.style_map.get("targetPort")}
+    )
     for vertex in vertices:
         if vertex.id and vertex.id not in endpoint_ids and not vertex.is_container and not vertex.is_decorative_line:
             add_warning(warnings, vertex.id, "orphan vertex has no incoming or outgoing edge")

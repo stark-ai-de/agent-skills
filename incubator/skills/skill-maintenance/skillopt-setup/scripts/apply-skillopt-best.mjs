@@ -108,8 +108,7 @@ function simpleDiff(before, after) {
   const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
   for (let i = a.length - 1; i >= 0; i -= 1) {
     for (let j = b.length - 1; j >= 0; j -= 1) {
-      dp[i][j] =
-        a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
     }
   }
   const lines = [];
@@ -214,6 +213,22 @@ function candidateRunSummary(bestPath) {
   };
 }
 
+function containsSecretLikeString(text) {
+  if (/sk-[A-Za-z0-9_-]{20,}/.test(text)) return true;
+
+  const knownSecretPrefix = /\b(?:ghp_|github_pat_|xox[baprs]-|AKIA|ASIA)[A-Za-z0-9_/-]{12,}\b/;
+  if (knownSecretPrefix.test(text)) return true;
+
+  const genericToken = /(?<![A-Za-z0-9+/=._-])[A-Za-z0-9+/=._-]{40,}(?![A-Za-z0-9+/=._-])/g;
+  for (const match of text.matchAll(genericToken)) {
+    const token = match[0];
+    const mixedAlphaNumeric = /[a-z]/.test(token) && /[A-Z]/.test(token) && /\d/.test(token);
+    const encodedPayload = token.length % 4 === 0 && /^[A-Za-z0-9+/]+={1,2}$/.test(token);
+    if (mixedAlphaNumeric || encodedPayload) return true;
+  }
+  return false;
+}
+
 function rejectReasons(originalBody, candidateBody, candidateFrontmatter, originalFrontmatter) {
   const reasons = [];
   const topOriginal = parseTopLevelFrontmatter(originalFrontmatter);
@@ -232,7 +247,7 @@ function rejectReasons(originalBody, candidateBody, candidateFrontmatter, origin
   }
 
   if (candidateBody.split(/\r?\n/).length > 500) reasons.push("candidate body exceeds 500 lines");
-  if (/(sk-[A-Za-z0-9_-]{20,}|[A-Za-z0-9+/=._-]{40,})/.test(candidateBody)) {
+  if (containsSecretLikeString(candidateBody)) {
     reasons.push("candidate contains a secret-like string");
   }
   if (/\/home\/|\/Users\/|[A-Z]:\\/.test(candidateBody))

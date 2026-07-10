@@ -1,8 +1,180 @@
 import json
+import os
 import re
+import shutil
+import signal
 import subprocess
 import tempfile
+import time
 from pathlib import Path
+from threading import Thread
+
+
+REFLECTOR_PERMISSION_PROFILE = "skillopt_reflector"
+
+
+def _toml_string(value):
+    return json.dumps(str(value))
+
+
+def _path_is_within(path, root):
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _codex_runtime_read_path(command):
+    candidate = Path(str(command or "codex")).expanduser()
+    if not candidate.is_absolute():
+        resolved = shutil.which(str(candidate))
+        if not resolved:
+            return None
+        candidate = Path(resolved)
+    try:
+        executable = candidate.resolve(strict=True)
+    except OSError:
+        return None
+    runtime_path = executable
+    for parent in executable.parents:
+        package_json = parent / "package.json"
+        if not package_json.is_file():
+            continue
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        package_name = str(package.get("name") or "")
+        if package_name == "@openai/codex" or package_name.startswith("@openai/codex-"):
+            runtime_path = parent
+            break
+    forbidden_roots = [(Path.home() / ".codex").resolve()]
+    if os.environ.get("CODEX_HOME"):
+        forbidden_roots.append(Path(os.environ["CODEX_HOME"]).expanduser().resolve())
+    if runtime_path in {Path(runtime_path.anchor), Path.home()}:
+        return None
+    if any(_path_is_within(runtime_path, root) for root in forbidden_roots):
+        return None
+    return runtime_path
+
+
+def _text_filesystem_permissions(command):
+    entries = ['":minimal"="read"']
+    runtime_path = _codex_runtime_read_path(command)
+    if runtime_path is not None:
+        entries.append(f"{_toml_string(runtime_path)}=\"read\"")
+    return "{" + ",".join(entries) + "}"
+
+
+def _minimal_codex_environment():
+    allowed = (
+        "HOME",
+        "PATH",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "TERM",
+        "COLORTERM",
+        "NO_COLOR",
+        "CODEX_HOME",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+    )
+    return {key: os.environ[key] for key in allowed if os.environ.get(key)}
+
+
+def _toml_inline_string_map(values):
+    return "{" + ",".join(
+        f"{_toml_string(key)}={_toml_string(value)}" for key, value in values.items()
+    ) + "}"
+
+
+def _shell_environment(workspace, process_env):
+    temp_dir = Path(workspace) / ".tmp"
+    temp_dir.mkdir(mode=0o700)
+    values = {
+        "HOME": str(workspace),
+        "PATH": process_env.get("PATH", os.defpath),
+        "TMPDIR": str(temp_dir),
+        "TMP": str(temp_dir),
+        "TEMP": str(temp_dir),
+    }
+    for key in ("LANG", "LC_ALL", "LC_CTYPE", "TERM", "COLORTERM", "NO_COLOR"):
+        if process_env.get(key):
+            values[key] = process_env[key]
+    return values
+
+
+def _process_group_alive(pgid):
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+
+
+def _reap_process_group(process, grace_seconds=1):
+    if not _process_group_alive(process.pid):
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    deadline = time.monotonic() + grace_seconds
+    while _process_group_alive(process.pid) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    if _process_group_alive(process.pid):
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return
+
+
+def _start_process_group_reaper(process):
+    thread = Thread(
+        target=lambda: (process.wait(), _reap_process_group(process)),
+        name="skillopt-reflector-process-reaper",
+        daemon=True,
+    )
+    thread.start()
+    return thread
+
+
+def _run_isolated_codex(command, cwd, env, timeout):
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    reaper = _start_process_group_reaper(process)
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _reap_process_group(process)
+        try:
+            process.communicate(timeout=1)
+        except subprocess.TimeoutExpired:
+            pass
+        raise
+    finally:
+        reaper.join(timeout=7)
+        if reaper.is_alive() or _process_group_alive(process.pid):
+            _reap_process_group(process)
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
 
 SECRET_PATTERN = re.compile(r"(sk-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{32,})")
@@ -49,6 +221,8 @@ class CodexCliReflector:
         with tempfile.TemporaryDirectory(prefix="skillopt-codex-reflect-") as tmp:
             out = Path(tmp) / "patch.json"
             prompt = self._prompt(results, skill_content, kwargs)
+            process_env = _minimal_codex_environment()
+            shell_env = _shell_environment(tmp, process_env)
             command = [
                 self.codex_path,
                 "exec",
@@ -58,10 +232,22 @@ class CodexCliReflector:
                 "--ephemeral",
                 "--color",
                 "never",
-                "--sandbox",
-                "read-only",
                 "--output-last-message",
                 str(out),
+                "--strict-config",
+                "-c",
+                f"default_permissions={_toml_string(REFLECTOR_PERMISSION_PROFILE)}",
+                "-c",
+                (
+                    f"permissions.{REFLECTOR_PERMISSION_PROFILE}.filesystem="
+                    f"{_text_filesystem_permissions(self.codex_path)}"
+                ),
+                "-c",
+                f"permissions.{REFLECTOR_PERMISSION_PROFILE}.network.enabled=false",
+                "-c",
+                'shell_environment_policy.inherit="none"',
+                "-c",
+                f"shell_environment_policy.set={_toml_inline_string_map(shell_env)}",
             ]
             if self.model:
                 command.extend(["--model", self.model])
@@ -69,13 +255,11 @@ class CodexCliReflector:
                 command.extend(["--profile", self.profile])
             command.append(prompt)
             try:
-                completed = subprocess.run(
+                completed = _run_isolated_codex(
                     command,
-                    stdin=subprocess.DEVNULL,
-                    text=True,
-                    capture_output=True,
-                    timeout=self.timeout,
-                    check=False,
+                    tmp,
+                    process_env,
+                    self.timeout,
                 )
             except (OSError, subprocess.TimeoutExpired) as error:
                 print(f"    [agent_skills reflection skipped] codex_cli failed: {error}", flush=True)

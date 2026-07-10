@@ -18,6 +18,7 @@ REQUIRED_FIELDS = {
     "workspace_policy",
     "source_hash",
 }
+WORKSPACE_POLICIES = {"text-only", "isolated-artifact-write"}
 
 
 class AgentSkillsDataLoader(SplitDataLoader):
@@ -50,6 +51,22 @@ class AgentSkillsDataLoader(SplitDataLoader):
             missing = sorted(REQUIRED_FIELDS - set(item))
             if missing:
                 raise ValueError(f"{path}: item {item.get('id', '<unknown>')} missing {missing}")
+            if item["workspace_policy"] not in WORKSPACE_POLICIES:
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has unsupported "
+                    f"workspace_policy {item['workspace_policy']!r}"
+                )
+            has_visual_assertions = any(
+                str(assertion or "").strip()
+                for assertion in item["visual_assertions"]
+            )
+            if (
+                item["workspace_policy"] == "isolated-artifact-write"
+            ) != has_visual_assertions:
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has workspace_policy "
+                    "that does not match its visual assertions"
+                )
         return sorted(items, key=lambda item: item["id"])
 
     def load_split(self, split):

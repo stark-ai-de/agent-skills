@@ -75,10 +75,37 @@ function parseCells(xml) {
     const body = match[2] || "";
     const geo = body.match(/<mxGeometry\b([^>]*)>/);
     const geoAttrs = geo ? parseAttrs(geo[1]) : {};
+    const points = parseWaypoints(body);
+    const offset = parseGeometryOffset(body);
     const parsedStyle = styleMap(attrs.style || "");
-    cells.push({ attrs, body, geo: geoAttrs, style: parsedStyle });
+    cells.push({ attrs, body, geo: geoAttrs, offset, points, style: parsedStyle });
   }
   return cells;
+}
+
+function parseWaypoints(body = "") {
+  const points = [];
+  const arrayRe = /<Array\b([^>]*)>([\s\S]*?)<\/Array>/g;
+  for (const arrayMatch of body.matchAll(arrayRe)) {
+    const arrayAttrs = parseAttrs(arrayMatch[1]);
+    if (arrayAttrs.as !== "points") continue;
+    for (const pointMatch of arrayMatch[2].matchAll(/<mxPoint\b([^>]*?)\/?>/g)) {
+      const attrs = parseAttrs(pointMatch[1]);
+      const x = number(attrs.x);
+      const y = number(attrs.y);
+      if (x != null && y != null) points.push({ x, y });
+    }
+  }
+  return points;
+}
+
+function parseGeometryOffset(body = "") {
+  for (const pointMatch of body.matchAll(/<mxPoint\b([^>]*?)\/?>/g)) {
+    const attrs = parseAttrs(pointMatch[1]);
+    if (attrs.as !== "offset") continue;
+    return { x: number(attrs.x) || 0, y: number(attrs.y) || 0 };
+  }
+  return { x: 0, y: 0 };
 }
 
 function number(value) {
@@ -98,6 +125,52 @@ function bbox(cell) {
 
 function center(box) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+function absoluteBbox(cell, byId, seen = new Set(), depth = 0) {
+  const box = bbox(cell);
+  if (!box) return null;
+  const id = cell.attrs.id || "";
+  if (depth >= 20 || seen.has(id)) return box;
+  const parent = byId.get(cell.attrs.parent || "");
+  if (!parent || ["0", "1"].includes(parent.attrs.id)) return box;
+  const nextSeen = new Set(seen);
+  if (id) nextSeen.add(id);
+  const parentBox = absoluteBbox(parent, byId, nextSeen, depth + 1);
+  if (!parentBox) return box;
+  if (cell.geo.relative === "1") {
+    return {
+      ...box,
+      x: parentBox.x + box.x * parentBox.width + cell.offset.x,
+      y: parentBox.y + box.y * parentBox.height + cell.offset.y,
+    };
+  }
+  return { ...box, x: parentBox.x + box.x, y: parentBox.y + box.y };
+}
+
+function portPoint(box, style, prefix) {
+  const x = number(style[`${prefix}X`]);
+  const y = number(style[`${prefix}Y`]);
+  if (x == null || y == null) return center(box);
+  return {
+    x: box.x + box.width * x,
+    y: box.y + box.height * y,
+  };
+}
+
+function edgeParentOrigin(edge, byId) {
+  const parent = byId.get(edge.attrs.parent || "");
+  if (!parent || ["0", "1"].includes(parent.attrs.id)) return { x: 0, y: 0 };
+  const parentBox = absoluteBbox(parent, byId);
+  return parentBox ? { x: parentBox.x, y: parentBox.y } : { x: 0, y: 0 };
+}
+
+function routePoints(edge, sourceBox, targetBox, byId, sourceUsesPort, targetUsesPort) {
+  const start = sourceUsesPort ? center(sourceBox) : portPoint(sourceBox, edge.style, "exit");
+  const end = targetUsesPort ? center(targetBox) : portPoint(targetBox, edge.style, "entry");
+  const origin = edgeParentOrigin(edge, byId);
+  const points = edge.points.map((point) => ({ x: point.x + origin.x, y: point.y + origin.y }));
+  return [start, ...points, end];
 }
 
 function segmentIntersectsBox(a, b, box, padding = 0) {
@@ -180,28 +253,53 @@ function validatePage(page) {
         );
         continue;
       }
-      const source = byId.get(cell.attrs.source);
-      const target = byId.get(cell.attrs.target);
-      const sourceBox = source ? bbox(source) : null;
-      const targetBox = target ? bbox(target) : null;
+      const sourcePortId = cell.style.sourcePort || "";
+      const targetPortId = cell.style.targetPort || "";
+      const sourcePort = sourcePortId ? byId.get(sourcePortId) : null;
+      const targetPort = targetPortId ? byId.get(targetPortId) : null;
+      for (const [role, portId, port] of [
+        ["sourcePort", sourcePortId, sourcePort],
+        ["targetPort", targetPortId, targetPort],
+      ]) {
+        if (portId && (!port || port.attrs.vertex !== "1")) {
+          errors.push(
+            `ERROR [${cellRef(page, id)}] ${role}=${JSON.stringify(portId)} must reference a vertex`,
+          );
+        }
+      }
+      const source = sourcePort || byId.get(cell.attrs.source);
+      const target = targetPort || byId.get(cell.attrs.target);
+      const sourceBox = source ? absoluteBbox(source, byId) : null;
+      const targetBox = target ? absoluteBbox(target, byId) : null;
       if (!source || !target || !sourceBox || !targetBox) continue;
-      const routeStart = center(sourceBox);
-      const routeEnd = center(targetBox);
+      const route = routePoints(
+        cell,
+        sourceBox,
+        targetBox,
+        byId,
+        Boolean(sourcePort),
+        Boolean(targetPort),
+      );
       for (const obstacle of cells) {
         const oid = obstacle.attrs.id;
         if (
           !oid ||
           oid === cell.attrs.source ||
           oid === cell.attrs.target ||
+          oid === sourcePortId ||
+          oid === targetPortId ||
           !isObstacle(obstacle)
         ) {
           continue;
         }
-        const obstacleBox = bbox(obstacle);
+        const obstacleBox = absoluteBbox(obstacle, byId);
         if (!obstacleBox) continue;
-        if (segmentIntersectsBox(routeStart, routeEnd, obstacleBox, 4)) {
+        const crossesObstacle = route
+          .slice(1)
+          .some((point, index) => segmentIntersectsBox(route[index], point, obstacleBox, 4));
+        if (crossesObstacle) {
           warnings.push(
-            `WARN  [${cellRef(page, id)}] probable centerline route crosses ${oid}; use side ports, branch waypoints between elements, or relayout so arrows do not overlap text boxes`,
+            `WARN  [${cellRef(page, id)}] probable connector route crosses ${oid}; use side ports, branch waypoints between elements, or relayout so arrows do not overlap text boxes`,
           );
           break;
         }

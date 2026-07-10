@@ -4,7 +4,30 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 function usage() {
-  return "Usage: node scripts/render-drawio.mjs path/to/file.drawio";
+  return "Usage: node scripts/render-drawio.mjs path/to/file.drawio [--page-index <1-based-index>]";
+}
+
+function parseArgs(argv) {
+  let input = null;
+  let pageIndex = null;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--help" || arg === "-h") return { help: true, input, pageIndex };
+    if (arg === "--page-index" || arg === "-p") {
+      const value = argv[++index];
+      if (!value || !/^\d+$/.test(value) || Number(value) < 1) {
+        throw new Error("--page-index must be a positive 1-based integer");
+      }
+      pageIndex = Number(value);
+      continue;
+    }
+    if (arg.startsWith("-")) throw new Error(`Unknown argument: ${arg}`);
+    if (input) throw new Error(`Unexpected extra input: ${arg}`);
+    input = arg;
+  }
+
+  return { help: false, input, pageIndex };
 }
 
 function pathCandidates() {
@@ -23,11 +46,19 @@ function pathCandidates() {
 }
 
 function findDrawio() {
+  const configured = process.env.DRAWIO_BIN;
+  if (configured) {
+    if (fs.existsSync(configured)) return configured;
+    const probe = spawnSync(configured, ["--version"], { encoding: "utf8" });
+    if (!probe.error && probe.status === 0) return configured;
+  }
   for (const candidate of pathCandidates()) {
     if (fs.existsSync(candidate)) return candidate;
   }
-  const probe = spawnSync("drawio", ["--version"], { encoding: "utf8" });
-  if (!probe.error) return "drawio";
+  for (const command of ["drawio", "diagrams.net"]) {
+    const probe = spawnSync(command, ["--version"], { encoding: "utf8" });
+    if (!probe.error && probe.status === 0) return command;
+  }
   return null;
 }
 
@@ -45,12 +76,19 @@ function runDrawio(drawio, args) {
 }
 
 function main() {
-  const input = process.argv[2];
-  if (!input || process.argv.includes("--help") || process.argv.includes("-h")) {
-    console.log(usage());
-    process.exit(input ? 0 : 2);
+  let args;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    console.error(error.message);
+    console.error(usage());
+    process.exit(2);
   }
-  const inputPath = path.resolve(input);
+  if (!args.input || args.help) {
+    console.log(usage());
+    process.exit(args.help ? 0 : 2);
+  }
+  const inputPath = path.resolve(args.input);
   if (!fs.existsSync(inputPath)) {
     console.error(`Input not found: ${inputPath}`);
     process.exit(2);
@@ -63,8 +101,21 @@ function main() {
 
   const lightPng = `${inputPath}.png`;
   const darkSvg = inputPath.replace(/\.drawio$/i, "") + ".dark.svg";
+  const pageArgs = args.pageIndex ? ["--page-index", String(args.pageIndex)] : [];
   try {
-    runDrawio(drawio, ["-x", "-f", "png", "-s", "2", "-b", "10", "-o", lightPng, inputPath]);
+    runDrawio(drawio, [
+      "-x",
+      "-f",
+      "png",
+      "-s",
+      "2",
+      "-b",
+      "10",
+      ...pageArgs,
+      "-o",
+      lightPng,
+      inputPath,
+    ]);
     runDrawio(drawio, [
       "-x",
       "-f",
@@ -74,6 +125,7 @@ function main() {
       "-e",
       "-b",
       "10",
+      ...pageArgs,
       "-o",
       darkSvg,
       inputPath,

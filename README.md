@@ -101,7 +101,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a 
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
 
 ```text
-Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+/plan Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
 ```
 
 Use `codex-memory-curator` when Codex memory state needs review or cleanup:
@@ -113,7 +113,7 @@ Use $codex-memory-curator to audit my Codex memories for stale repo rules, sensi
 Use `cursor-spec-interviewer` when a Cursor Agent coding request is still fuzzy:
 
 ```text
-Use $cursor-spec-interviewer to turn this Cursor refactor idea into a Cursor-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+Switch to Plan Mode, then use /cursor-spec-interviewer to turn this Cursor refactor idea into a Cursor-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
 ```
 
 Use `cursor-memory-curator` when Cursor durable context needs review or cleanup:
@@ -125,7 +125,7 @@ Use $cursor-memory-curator to audit my Cursor rules, stale persistent context, a
 Use `claude-spec-interviewer` when a Claude Code coding request is still fuzzy:
 
 ```text
-Use $claude-spec-interviewer to turn this Claude Code refactor idea into a persisted implementation spec with acceptance criteria, validation commands, and an ADR gate result.
+/claude-spec-interviewer Turn this Claude Code refactor idea into a persisted implementation spec with acceptance criteria, validation commands, and an ADR gate result; enter native Plan mode first when the host tool is available.
 ```
 
 Use `claude-memory-curator` when Claude Code durable context needs review or cleanup:

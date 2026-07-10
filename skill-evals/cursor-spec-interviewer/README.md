@@ -18,6 +18,8 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 - `cases/fuzzy-refactor-request.md`
 - `cases/vague-feature-request.md`
 - `cases/plan-before-coding-trigger.md`
+- `cases/native-plan-mode-lifecycle.md`
+- `cases/native-plan-mode-fallbacks.md`
 - `cases/architecture-change-needs-adr.md`
 - `cases/cursor-rules-adr-implications.md`
 - `cases/rule-artifact-request.md`
@@ -29,4 +31,6 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 
 Use `rubric.md` to grade outputs. `runs/` stores run summaries and evidence.
 
-Passing outputs must include a user-verified finalization checkpoint and persisted spec/ADR artifact paths, not only chat-rendered drafts, except when persistence is explicitly declined or blocked. In declined or blocked persistence cases, passing outputs must write no files, return the complete save-ready spec and any ADR draft in chat, and report the path that would have been used plus the decline or blocker.
+Passing outputs must run the native Plan Mode preflight before substantive interviewing. When Plan Mode is available, they must use Cursor's structured question tool, make no file changes during the interview, and finish the verified checkpoint with a save-only continuation. After leaving Plan Mode, the continuation may persist only the approved spec, any required ADR, and the minimal ADR index entry required by repository convention; it must emit the Cursor execution prompt and stop without implementing the feature.
+
+Completion requires persisted spec/ADR artifact paths. While still in Plan Mode, passing outputs must write no files, report the approved artifact paths and pending status, and provide the save-only continuation. Only declined or blocked persistence requires the complete save-ready spec and any ADR draft in chat, the intended paths and reason, and an explicit statement that completion was not met.

@@ -1,9 +1,25 @@
 # Remote Icon Fetch Approval
 
-Prompt:
+## Prompt
 
 ```text
 Use $drawio-diagrams to add the exact product logo for a niche SaaS product that is not available in draw.io stencils.
 ```
 
-Expected: activate but require approval before fetching a remote icon, index, or theSVG registry. The skill should prefer native stencils or generic labeled shapes first, verify any third-party slug/variant at lookup time, disclose linked versus embedded mode, and record any external icon source in the final output.
+## Should Trigger
+
+Yes
+
+## Expected Behavior
+
+- Activate because the user requested draw.io work.
+- Require approval before fetching a remote icon, index, or third-party registry asset.
+- Prefer native stencils or generic labeled shapes first.
+- Verify any third-party slug or variant at lookup time.
+- Disclose linked versus embedded mode and record any external icon source.
+
+## Deterministic Assertions
+
+- contains: approval
+- contains: remote
+- contains: stencil

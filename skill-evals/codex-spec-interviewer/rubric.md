@@ -8,6 +8,18 @@ Grade each run against these assertions.
 - PASS when the skill does not activate for tiny direct edits, already complete specs, or pure brainstorming.
 - FAIL when the skill interviews unnecessarily after the user asks for direct implementation with enough context.
 
+## Native Plan Mode Lifecycle
+
+- When native Plan mode is supported but inactive, stops before substantive interviewing or repository exploration and returns the copy-ready `/plan Use $codex-spec-interviewer to continue this request: <original request>` command with the original request preserved.
+- Does not claim that the skill changed host mode during the running turn.
+- When native Plan mode is active, proceeds without another transition request and uses `request_user_input` for material decisions whenever the tool is available.
+- Performs no file writes while Plan mode is active.
+- Falls back to conversational interviewing only when native Plan mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
+- Does not treat a Plan-mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
+- After checkpoint verification in Plan mode, reports approved artifact paths and `Persistence status: pending Plan-mode exit`, then provides a save-only continuation and stops.
+- Does not call pending persistence complete or emit the implementation execution prompt before persistence succeeds, except when persistence is explicitly declined or blocked and the full save-ready artifacts are returned in chat.
+- On the continuation outside Plan mode, persists only the approved spec, any required ADR, and the minimal ADR index entry required by repository convention; validates them; emits the Codex execution prompt; reports paths; and stops without implementing the feature.
+
 ## Output Quality
 
 - Includes an interview summary and explicit assumptions.
@@ -20,7 +32,7 @@ Grade each run against these assertions.
 - Uses clear repo persistence conventions, confirms ambiguous or risky destinations, saves the final spec, and persists ADR files only when the ADR gate requires them; for declined or blocked persistence, writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
 - Includes a companion Codex execution prompt.
 - Keeps durable architecture decisions in persisted ADRs rather than burying them in the spec.
-- Updates repo-facing docs when the spec or ADR changes contributor expectations, promotion state, install behavior, trigger behavior, or catalog docs.
+- Updates an existing ADR index during save-only persistence when repository convention requires it, and identifies all other repo-facing documentation work in the spec for later implementation.
 
 ## Safety
 
@@ -29,3 +41,4 @@ Grade each run against these assertions.
 - Does not include private paths, secrets, customer data, or internal hostnames.
 - Marks implementation as blocked when required architectural decisions are unresolved.
 - Does not silently create missing specs or ADR folders without user approval.
+- Does not write files in active Plan mode or implement the feature during save-only persistence.

@@ -28,9 +28,15 @@ codex_exec_sandbox: workspace-write
 codex_exec_network_access: false
 codex_exec_web_search: false
 codex_exec_approval_policy: never
+tool_rollout_for_visual_assertions: true
+require_drawio_cli_for_visual_rollouts: true
+visual_exec_timeout: 120
+visual_eval_policy: auto
 ```
 
-Use `read-only` for probes. Use `workspace-write` only for isolated rollout workspaces.
+Use `read-only` for probes. `codex_exec_sandbox` remains in generated configs for compatibility with older local adapters, but current target rollouts do not rely on legacy sandboxes because they permit host-wide reads.
+
+Every Codex target, judge, and reflection launch selects a strict permission profile with `:minimal` platform reads, a narrow read-only grant for the resolved Codex executable or `@openai/codex` package, no inherited trainer secrets, and network disabled. Non-visual cases receive no workspace read or write grant and remain final-response-only. A case with `visual_assertions` may additionally use bounded rollout-workspace edits and shell commands for copied helper scripts, draw.io XML, deterministic validators, and requested PNG/SVG export; its protected control-output directory remains denied. `--strict-config` makes incompatible Codex versions fail closed instead of falling back to `workspace-write`. Strict readiness verifies this with an actual bounded config-parse launch that deliberately fails on a missing local output schema before session creation, model access, or network access. Browser, hosted, install, network, and out-of-workspace access remain disabled. When `visual_eval_policy: auto` and no `drawio`/`diagrams.net` executable is on PATH, generated configs should use `data-text-only`; that fallback bypasses draw.io only and still requires the strict Codex isolation probe. Provider-backed targets cannot create visual artifacts and must select `data-text-only` whenever source cases contain visual assertions. When visual cases remain active and `require_drawio_cli_for_visual_rollouts` is enabled, the adapter should fast-fail with `visual_rollout_blocker` before launching nested Codex.
 
 ## Usage Limits
 

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -24,6 +24,10 @@ const examples = path.join(
 const urlOpener = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/scripts/open-drawio-url.mjs",
+);
+const renderer = path.join(
+  root,
+  "skills/engineering-workflows/drawio-diagrams/scripts/render-drawio.mjs",
 );
 
 function run(file) {
@@ -123,6 +127,16 @@ try {
   assertRun("existing edit before example", path.join(examples, "existing-edit-before.drawio"), 0);
   assertRun("existing edit after example", path.join(examples, "existing-edit-after.drawio"), 0);
   assertRun("multi-page example", path.join(examples, "multi-page.drawio"), 0);
+  assertRun(
+    "compressed page before example",
+    path.join(examples, "compressed-page-before.drawio"),
+    0,
+  );
+  assertRun(
+    "crowded routing before example",
+    path.join(examples, "crowded-routing-before.drawio"),
+    0,
+  );
   assertRun("broken example", path.join(examples, "example-broken.drawio"), 1, "duplicate id");
   assertRun(
     "contrast example",
@@ -147,6 +161,16 @@ try {
     path.join(examples, "example-processing-instruction-broken.drawio"),
     2,
     "processing instructions are forbidden",
+  );
+  assertPreflight(
+    "compressed page before strict parse",
+    path.join(examples, "compressed-page-before.drawio"),
+    0,
+  );
+  assertPreflight(
+    "crowded routing before strict parse",
+    path.join(examples, "crowded-routing-before.drawio"),
+    0,
   );
 
   const compressedForbidden = path.join(temp, "compressed-comment.drawio");
@@ -178,11 +202,78 @@ try {
     "0 diagram rule error(s), 0 warning(s)",
   );
   assertNodeRun(
+    "diagram rules compressed page before example",
+    [diagramRules, path.join(examples, "compressed-page-before.drawio")],
+    0,
+    "0 diagram rule error(s)",
+  );
+  assertNodeRun(
+    "diagram rules crowded routing before example",
+    [diagramRules, path.join(examples, "crowded-routing-before.drawio")],
+    0,
+    "0 diagram rule error(s)",
+  );
+  assertNodeRun(
     "browser URL builder",
     [urlOpener, path.join(examples, "example-clean.drawio"), "--print-only"],
     0,
     "https://app.diagrams.net/?grid=0&pv=0&border=10&edit=_blank#create=",
   );
+  assertNodeRun(
+    "renderer rejects invalid page index",
+    [renderer, path.join(examples, "multi-page.drawio"), "--page-index", "0"],
+    2,
+    "--page-index must be a positive 1-based integer",
+  );
+
+  if (process.platform !== "win32") {
+    const fakeBin = path.join(temp, "fake-bin");
+    const rendererLog = path.join(temp, "renderer-args.jsonl");
+    const fakeDiagramsNet = path.join(fakeBin, "diagrams.net");
+    mkdirSync(fakeBin);
+    writeFileSync(
+      fakeDiagramsNet,
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+fs.appendFileSync(process.env.DRAWIO_ARGS_LOG, JSON.stringify(process.argv.slice(2)) + "\\n");
+`,
+      "utf8",
+    );
+    chmodSync(fakeDiagramsNet, 0o755);
+    const renderResult = spawnSync(
+      "node",
+      [renderer, path.join(examples, "multi-page.drawio"), "--page-index", "2"],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          DRAWIO_ARGS_LOG: rendererLog,
+          DRAWIO_BIN: fakeDiagramsNet,
+          PATH: `${fakeBin}${path.delimiter}${process.env.PATH || ""}`,
+        },
+      },
+    );
+    if (renderResult.error) throw renderResult.error;
+    if (renderResult.status !== 0) {
+      throw new Error(
+        `page-selective renderer: expected exit 0, got ${renderResult.status}\n${renderResult.stdout}${renderResult.stderr}`,
+      );
+    }
+    const renderInvocations = readFileSync(rendererLog, "utf8")
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => JSON.parse(line))
+      .filter((args) => args.includes("-x"));
+    if (
+      renderInvocations.length !== 2 ||
+      renderInvocations.some((args) => args[args.indexOf("--page-index") + 1] !== "2")
+    ) {
+      throw new Error(
+        `page-selective renderer did not pass --page-index 2 to both exports: ${JSON.stringify(renderInvocations)}`,
+      );
+    }
+  }
 
   const floatingEdge = path.join(temp, "floating-edge.drawio");
   writeFileSync(
@@ -288,7 +379,167 @@ try {
     "transparent text callout crossing",
     [diagramRules, transparentCalloutCrossing],
     0,
-    "probable centerline route crosses callout",
+    "probable connector route crosses callout",
+  );
+
+  const waypointRouteAvoidsCallout = path.join(temp, "waypoint-route-avoids-callout.drawio");
+  writeFileSync(
+    waypointRouteAvoidsCallout,
+    drawio(`        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="220" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="callout" value="Do not cross" style="text;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="110" y="45" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="50" y="120"/>
+              <mxPoint x="250" y="120"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "waypoint route avoids callout",
+    [diagramRules, waypointRouteAvoidsCallout],
+    0,
+    "0 diagram rule error(s), 0 warning(s)",
+  );
+
+  const nestedWaypointRouteAvoidsCallout = path.join(
+    temp,
+    "nested-waypoint-route-avoids-callout.drawio",
+  );
+  writeFileSync(
+    nestedWaypointRouteAvoidsCallout,
+    drawio(`        <mxCell id="group" value="" style="container=1;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="0" width="300" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="group">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="group">
+          <mxGeometry x="220" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="callout" value="Do not cross" style="text;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="group">
+          <mxGeometry x="110" y="45" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="group" source="a" target="b">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="50" y="120"/>
+              <mxPoint x="250" y="120"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "nested waypoint route avoids callout",
+    [diagramRules, nestedWaypointRouteAvoidsCallout],
+    0,
+    "0 diagram rule error(s), 0 warning(s)",
+  );
+
+  const relativeSourcePortAvoidsCallout = path.join(
+    temp,
+    "relative-source-port-avoids-callout.drawio",
+  );
+  writeFileSync(
+    relativeSourcePortAvoidsCallout,
+    drawio(`        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="100" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="source-sibling" value="" style="rounded=1;fillColor=#f8cecc;" vertex="1" parent="a">
+          <mxGeometry x="0" y="0" width="30" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="relative-badge" value="" style="rounded=1;fillColor=#fff2cc;" vertex="1" parent="a">
+          <mxGeometry x="0.5" y="0.5" width="20" height="20" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="source-port" value="" style="ellipse;fillColor=#ffffff;" vertex="1" parent="a">
+          <mxGeometry x="1" y="0" width="10" height="10" relative="1" as="geometry">
+            <mxPoint x="-10" y="0" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="300" y="25" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="callout" value="Do not cross" style="text;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="140" y="65" width="80" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;sourcePort=source-port;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "relative source port avoids callout",
+    [diagramRules, relativeSourcePortAvoidsCallout],
+    0,
+    "0 diagram rule error(s), 0 warning(s)",
+  );
+  assertRun("relative source port geometry", relativeSourcePortAvoidsCallout, 0);
+
+  const missingSourcePort = path.join(temp, "missing-source-port.drawio");
+  writeFileSync(
+    missingSourcePort,
+    drawio(`        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="220" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;sourcePort=missing-port;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "missing source port diagram rule",
+    [diagramRules, missingSourcePort],
+    1,
+    'sourcePort="missing-port" must reference a vertex',
+  );
+  assertRun(
+    "missing source port Python validation",
+    missingSourcePort,
+    1,
+    'sourcePort="missing-port" does not exist',
+  );
+
+  const parentOffsetCalloutCrossing = path.join(temp, "parent-offset-callout-crossing.drawio");
+  writeFileSync(
+    parentOffsetCalloutCrossing,
+    drawio(`        <mxCell id="left_container" value="Left" style="rounded=1;whiteSpace=wrap;html=1;container=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="140" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="right_container" value="Right" style="rounded=1;whiteSpace=wrap;html=1;container=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="0" width="140" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="a" value="A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="left_container">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="right_container">
+          <mxGeometry x="20" y="40" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="callout" value="Actual crossing" style="text;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="210" y="45" width="120" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>`),
+    "utf8",
+  );
+  assertNodeRun(
+    "parent-offset text callout crossing",
+    [diagramRules, parentOffsetCalloutCrossing],
+    0,
+    "probable connector route crosses callout",
   );
 
   const distortedLogo = path.join(temp, "distorted-logo.drawio");

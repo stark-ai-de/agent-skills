@@ -33,19 +33,28 @@ Recognized credential names:
 - `AZURE_OPENAI_TARGET_API_KEY`
 - `AZURE_OPENAI_TARGET_AUTH_MODE`
 - `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
 - `QWEN_CHAT_BASE_URL`
 - `QWEN_CHAT_MODEL`
 - `QWEN_CHAT_API_KEY`
 - `OPTIMIZER_QWEN_CHAT_BASE_URL`
 - `OPTIMIZER_QWEN_CHAT_MODEL`
+- `OPTIMIZER_QWEN_CHAT_API_KEY`
 - `TARGET_QWEN_CHAT_BASE_URL`
 - `TARGET_QWEN_CHAT_MODEL`
+- `TARGET_QWEN_CHAT_API_KEY`
 - `MINIMAX_API_KEY`
 - `MINIMAX_BASE_URL`
 - `MINIMAX_MODEL`
 
 Azure CLI or managed identity auth can avoid an API key for Azure, but an Azure endpoint is still required. For OpenAI-compatible endpoints, current upstream docs prefer `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_AUTH_MODE=openai_compatible`; still report `OPENAI_API_KEY` presence because some local reference docs and backends mention it.
+
+Endpoint reachability is not enough. For OpenAI-compatible routes, run `probe-openai-compatible-endpoint.mjs` and require one successful `/v1/chat/completions` response before declaring the route usable. The probe uses the raw URL only for requests and strips URL userinfo plus sensitive query and fragment values from all public diagnostics. `--strict-training-ready` performs this preflight automatically for configured `openai_chat` roles using `openai_compatible` auth; non-strict readiness does not make network calls.
+
+Readiness validates the backend actually selected in the generated config. An unrelated `OPENAI_API_KEY`, Qwen setting, or target-only credential does not satisfy an `openai_chat` optimizer role. A selected `qwen_chat` role requires its base URL, model, and API key; endpoint and model alone are not training-ready. The installed SkillOpt clone maps `claude_chat` to a host-readable local Claude CLI rather than an Anthropic API-key backend, so this adapter marks `claude_chat` unsupported. It also rejects `claude_code_exec`, which the Agent Skills rollout adapter does not implement, and rejects `minimax_chat` for optimizer work because installed SkillOpt implements MiniMax only on its target path. Native provider mode validates optimizer and target separately; hybrid mode validates the provider-backed optimizer separately from the Codex target. Official-parity runs additionally require a semantic judge: `provider` reuses the validated optimizer provider, while `codex_cli` also requires the Codex isolation and login proofs. The heuristic judge is exploratory-only.
+
+## Local Codex Gateway
+
+If a provider-compatible endpoint is needed but the user does not want LiteLLM, start `codex-local-openai-chat-gateway.mjs` from this skill and probe it with `probe-openai-compatible-endpoint.mjs`. This can satisfy an OpenAI-compatible Chat Completions interface for local experiments, but it is not upstream provider parity. Keep the selected run classified by its real mode/profile and keep provider credentials/model pins explicit for official-parity runs.
 
 ## `hybrid-codex-target`
 

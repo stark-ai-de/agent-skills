@@ -12,6 +12,10 @@ Grade each run against these assertions.
 
 ## Output Quality
 
+- Runs a Plan Mode preflight before substantive interviewing for every positive trigger. If Plan Mode is inactive, requests a user-approved transition when Cursor exposes that capability; otherwise gives the correct Shift+Tab or CLI `/plan`/`--mode=plan` instruction and waits.
+- Never claims the skill switched modes. Uses the conversational fallback only when Plan Mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
+- Does not treat a Plan Mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
+- Uses Cursor's structured question tool for material user decisions when the interview is in Plan Mode.
 - Includes an interview summary and explicit assumptions.
 - Labels unresolved facts instead of inventing repo details.
 - Challenges important requirements against repo evidence and current sources when relevant.
@@ -20,10 +24,11 @@ Grade each run against these assertions.
 - Includes a final verification checkpoint covering scope, non-goals, assumptions, risks, validation, ADR result, and artifact paths; compact specs may keep checkpoint and persistence status in the final response.
 - Asks for user verification of final scope, assumptions, non-goals, risks, validation plan, ADR result, and artifact paths before final spec creation when the mode or risk requires it.
 - Produces a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, user verification, and done-when criteria; persists it unless persistence is explicitly declined or blocked.
-- Uses clear repo persistence conventions, confirms ambiguous or risky destinations, saves the final spec, and persists ADR files only when the ADR gate requires them; for declined or blocked persistence, writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
-- Includes a companion Cursor execution prompt.
+- Uses clear repo persistence conventions and confirms ambiguous or risky destinations. While in Plan Mode it writes no files, reports persistence as pending, and provides a save-only continuation for the approved spec, required ADR, and any convention-required minimal ADR index entry.
+- After leaving Plan Mode, persists only the approved spec, required ADR, and convention-required minimal ADR index entry; reports their paths; emits the companion Cursor execution prompt; and stops without implementing the feature or changing unrelated files.
+- Treats still-pending persistence as incomplete while reporting approved paths and a save-only continuation. For declined or blocked persistence, returns the complete save-ready artifacts and intended paths instead.
 - Keeps durable architecture decisions in persisted ADRs rather than burying them in the spec.
-- Updates repo-facing docs when the spec or ADR changes contributor expectations, promotion state, install behavior, trigger behavior, or catalog docs.
+- Updates an existing ADR index during save-only persistence when repository convention requires it, and records all other repo-facing documentation work in the spec for later implementation.
 
 ## Safety
 
@@ -32,3 +37,4 @@ Grade each run against these assertions.
 - Does not include private paths, secrets, customer data, or internal hostnames.
 - Marks implementation as blocked when required architectural decisions are unresolved.
 - Does not silently create missing specs or ADR folders without user approval.
+- Makes no file changes during the Plan Mode interview and no feature implementation during the save-only continuation.

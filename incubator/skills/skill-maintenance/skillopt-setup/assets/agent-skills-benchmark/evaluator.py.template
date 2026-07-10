@@ -1,14 +1,201 @@
 import json
 import fnmatch
+import os
 import re
+import shutil
+import signal
 import subprocess
 import tempfile
+import time
 from pathlib import Path
+from threading import Thread
+
+
+JUDGE_PERMISSION_PROFILE = "skillopt_judge"
+
+
+def _toml_string(value):
+    return json.dumps(str(value))
+
+
+def _path_is_within(path, root):
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _codex_runtime_read_path(command):
+    candidate = Path(str(command or "codex")).expanduser()
+    if not candidate.is_absolute():
+        resolved = shutil.which(str(candidate))
+        if not resolved:
+            return None
+        candidate = Path(resolved)
+    try:
+        executable = candidate.resolve(strict=True)
+    except OSError:
+        return None
+    runtime_path = executable
+    for parent in executable.parents:
+        package_json = parent / "package.json"
+        if not package_json.is_file():
+            continue
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        package_name = str(package.get("name") or "")
+        if package_name == "@openai/codex" or package_name.startswith("@openai/codex-"):
+            runtime_path = parent
+            break
+    forbidden_roots = [(Path.home() / ".codex").resolve()]
+    if os.environ.get("CODEX_HOME"):
+        forbidden_roots.append(Path(os.environ["CODEX_HOME"]).expanduser().resolve())
+    if runtime_path in {Path(runtime_path.anchor), Path.home()}:
+        return None
+    if any(_path_is_within(runtime_path, root) for root in forbidden_roots):
+        return None
+    return runtime_path
+
+
+def _text_filesystem_permissions(command):
+    entries = ['":minimal"="read"']
+    runtime_path = _codex_runtime_read_path(command)
+    if runtime_path is not None:
+        entries.append(f"{_toml_string(runtime_path)}=\"read\"")
+    return "{" + ",".join(entries) + "}"
+
+
+def _minimal_codex_environment():
+    allowed = (
+        "HOME",
+        "PATH",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "TERM",
+        "COLORTERM",
+        "NO_COLOR",
+        "CODEX_HOME",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+    )
+    return {key: os.environ[key] for key in allowed if os.environ.get(key)}
+
+
+def _toml_inline_string_map(values):
+    return "{" + ",".join(
+        f"{_toml_string(key)}={_toml_string(value)}" for key, value in values.items()
+    ) + "}"
+
+
+def _shell_environment(workspace, process_env):
+    temp_dir = Path(workspace) / ".tmp"
+    temp_dir.mkdir(mode=0o700)
+    values = {
+        "HOME": str(workspace),
+        "PATH": process_env.get("PATH", os.defpath),
+        "TMPDIR": str(temp_dir),
+        "TMP": str(temp_dir),
+        "TEMP": str(temp_dir),
+    }
+    for key in ("LANG", "LC_ALL", "LC_CTYPE", "TERM", "COLORTERM", "NO_COLOR"):
+        if process_env.get(key):
+            values[key] = process_env[key]
+    return values
+
+
+def _process_group_alive(pgid):
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+
+
+def _reap_process_group(process, grace_seconds=1):
+    if not _process_group_alive(process.pid):
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    deadline = time.monotonic() + grace_seconds
+    while _process_group_alive(process.pid) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    if _process_group_alive(process.pid):
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return
+
+
+def _start_process_group_reaper(process):
+    thread = Thread(
+        target=lambda: (process.wait(), _reap_process_group(process)),
+        name="skillopt-judge-process-reaper",
+        daemon=True,
+    )
+    thread.start()
+    return thread
+
+
+def _run_isolated_codex(command, cwd, env, timeout):
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    reaper = _start_process_group_reaper(process)
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _reap_process_group(process)
+        try:
+            process.communicate(timeout=1)
+        except subprocess.TimeoutExpired:
+            pass
+        raise
+    finally:
+        reaper.join(timeout=7)
+        if reaper.is_alive() or _process_group_alive(process.pid):
+            _reap_process_group(process)
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
 
 def _short(text, limit=1000):
     value = str(text or "")
     return value if len(value) <= limit else f"{value[:limit]}..."
+
+
+def _redact_sensitive(text):
+    value = str(text or "")
+    value = re.sub(r"/home/[A-Za-z0-9._-]+/", "~/", value)
+    value = re.sub(r"/Users/[A-Za-z0-9._-]+/", "~/", value)
+    value = re.sub(r"(?i)(https?://)[^/@\s]+:[^/@\s]+@", r"\1[redacted]@", value)
+    value = re.sub(r"(?i)([?&](?:api[_-]?key|token|secret|password)=)[^&\s]+", r"\1[redacted]", value)
+    value = re.sub(r"sk-[A-Za-z0-9_-]{20,}", "[redacted-token]", value)
+    value = re.sub(
+        r"\b(?:ghp_|github_pat_|xox[baprs]-|AKIA|ASIA)[A-Za-z0-9_/-]{12,}\b",
+        "[redacted-token]",
+        value,
+    )
+    return value
 
 
 def _extract_json(text):
@@ -97,6 +284,10 @@ def _artifact_matches(artifacts, pattern):
     return matches
 
 
+def _decode_markdown_escapes(value):
+    return re.sub(r"\\([\\`*_[\]{}()#+\-.!])", r"\1", value)
+
+
 def _parse_visual_options(parts):
     options = {}
     for part in parts:
@@ -119,7 +310,7 @@ def _parse_visual_assertion(assertion):
     if not value:
         raise ValueError("missing assertion value")
     parts = value.split()
-    glob = parts[0]
+    glob = _decode_markdown_escapes(parts[0])
     if not glob:
         raise ValueError("missing artifact glob")
     return {"raw": raw, "kind": kind, "glob": glob, "parts": parts[1:]}
@@ -206,23 +397,43 @@ def _match_visual_assertion(artifacts, assertion):
         text = " ".join(parsed["parts"]).strip()
         if not text:
             return {"text": raw, "passed": False, "evidence": f"{kind} requires text"}
-        needle = text.lower()
-        containing = [
+        inspectable = [
             artifact
             for artifact in matches
             if artifact.get("kind") == "svg"
-            and needle in str(artifact.get("text_sample") or "").lower()
+            and artifact.get("valid")
+            and "visible_text" in artifact
+        ]
+        if len(inspectable) != len(matches):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "one or more SVG artifacts lack validated visible-text metadata",
+            }
+        needle = " ".join(text.lower().split())
+        containing = [
+            artifact
+            for artifact in inspectable
+            if needle in " ".join(str(artifact.get("visible_text") or "").lower().split())
         ]
         if kind == "svg_contains":
             return {
                 "text": raw,
                 "passed": bool(containing),
-                "evidence": f"{containing[0].get('path')} contains text" if containing else "no SVG contained text",
+                "evidence": (
+                    f"{containing[0].get('path')} contains visible text"
+                    if containing
+                    else "no SVG contained visible text"
+                ),
             }
         return {
             "text": raw,
             "passed": not containing,
-            "evidence": "forbidden text absent" if not containing else f"{containing[0].get('path')} contains forbidden text",
+            "evidence": (
+                "forbidden visible text absent"
+                if not containing
+                else f"{containing[0].get('path')} contains forbidden visible text"
+            ),
         }
 
     return {"text": raw, "passed": False, "evidence": f"unsupported visual assertion kind {kind!r}"}
@@ -232,6 +443,9 @@ class AgentSkillsEvaluator:
     def __init__(self, config=None):
         self.config = dict(config or {})
         self.judge_backend = str(self.config.get("judge_backend") or "heuristic").strip().lower()
+        self.optimizer_backend = str(
+            self.config.get("optimizer_backend") or "openai_chat"
+        ).strip().lower()
         self.codex_path = str(self.config.get("codex_exec_path") or "codex")
         self.codex_model = str(
             self.config.get("codex_cli_judge_model")
@@ -264,12 +478,15 @@ class AgentSkillsEvaluator:
             deterministic = self._score_deterministic(case, response)
             visual = self._score_visual(case, rollout)
             hard_assertions = self._combine_hard_assertions(deterministic, visual)
-            if hard_assertions:
+            if hard_assertions and not hard_assertions["passed"]:
                 result = hard_assertions
             elif self.judge_backend == "codex_cli":
                 result = self._score_with_codex_cli(case, response, expected, hard_assertions)
+            elif self.judge_backend == "provider":
+                result = self._score_with_provider(case, response, expected, hard_assertions)
             else:
-                result = self._score_with_heuristic(response, expected)
+                semantic = self._score_with_heuristic(response, expected)
+                result = self._merge_passed_hard_assertions(semantic, hard_assertions)
 
         hard = 1 if result["passed"] else 0
         soft = _float_score(result.get("score", hard))
@@ -369,6 +586,26 @@ class AgentSkillsEvaluator:
             "reason": "hard assertions passed" if passed else "hard assertion failed",
         }
 
+    def _merge_passed_hard_assertions(self, semantic, hard_assertions):
+        if not hard_assertions:
+            return semantic
+        results = list(hard_assertions.get("assertion_results") or [])
+        results.extend(semantic.get("assertion_results") or [])
+        passed = bool(hard_assertions.get("passed")) and bool(semantic.get("passed"))
+        return {
+            "passed": passed,
+            "score": min(
+                _float_score(hard_assertions.get("score", 0.0)),
+                _float_score(semantic.get("score", 0.0)),
+            ),
+            "assertion_results": results,
+            "judge_backend": (
+                f"{hard_assertions.get('judge_backend', 'deterministic')}+"
+                f"{semantic.get('judge_backend', 'heuristic')}"
+            ),
+            "reason": semantic.get("reason", "semantic evaluation completed"),
+        }
+
     def _score_with_codex_cli(self, case, response, expected, deterministic=None):
         if not response.strip():
             return {
@@ -387,17 +624,33 @@ class AgentSkillsEvaluator:
 
         with tempfile.TemporaryDirectory(prefix="skillopt-codex-judge-") as tmp:
             out = Path(tmp) / "judge.json"
+            process_env = _minimal_codex_environment()
+            shell_env = _shell_environment(tmp, process_env)
             command = [
                 self.codex_path,
                 "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
                 "--skip-git-repo-check",
                 "--ephemeral",
                 "--color",
                 "never",
-                "--sandbox",
-                self.codex_sandbox,
                 "--output-last-message",
                 str(out),
+                "--strict-config",
+                "-c",
+                f"default_permissions={_toml_string(JUDGE_PERMISSION_PROFILE)}",
+                "-c",
+                (
+                    f"permissions.{JUDGE_PERMISSION_PROFILE}.filesystem="
+                    f"{_text_filesystem_permissions(self.codex_path)}"
+                ),
+                "-c",
+                f"permissions.{JUDGE_PERMISSION_PROFILE}.network.enabled=false",
+                "-c",
+                'shell_environment_policy.inherit="none"',
+                "-c",
+                f"shell_environment_policy.set={_toml_inline_string_map(shell_env)}",
             ]
             if self.codex_model:
                 command.extend(["--model", self.codex_model])
@@ -405,13 +658,11 @@ class AgentSkillsEvaluator:
                 command.extend(["--profile", self.codex_profile])
             command.append(self._judge_prompt(case, response, expected))
             try:
-                completed = subprocess.run(
+                completed = _run_isolated_codex(
                     command,
-                    cwd=tmp,
-                    text=True,
-                    capture_output=True,
-                    timeout=self.codex_timeout,
-                    check=False,
+                    tmp,
+                    process_env,
+                    self.codex_timeout,
                 )
             except (OSError, subprocess.TimeoutExpired) as error:
                 return self._judge_failure(f"Codex judge failed: {_short(error, 500)}")
@@ -423,9 +674,42 @@ class AgentSkillsEvaluator:
 
             try:
                 payload = _extract_json(out.read_text(encoding="utf-8") if out.exists() else completed.stdout)
-                return self._normalise_judge_payload(payload, expected, deterministic)
+                return self._normalise_judge_payload(
+                    payload, expected, deterministic, backend="codex_cli"
+                )
             except Exception as error:
                 return self._judge_failure(f"Codex judge returned invalid JSON: {_short(error, 500)}")
+
+    def _score_with_provider(self, case, response, expected, deterministic=None):
+        if not response.strip():
+            return self._judge_failure("Provider judge received an empty response", backend="provider")
+        if self.optimizer_backend not in {"openai_chat", "qwen_chat"}:
+            return self._judge_failure(
+                f"Provider semantic judge does not support optimizer_backend={self.optimizer_backend}",
+                backend="provider",
+            )
+        try:
+            from skillopt.model import chat_optimizer
+
+            payload_text, _usage = chat_optimizer(
+                system=(
+                    "You are a strict semantic evaluator for Agent Skill optimization. "
+                    "Return only the requested JSON and do not execute tools."
+                ),
+                user=self._judge_prompt(case, response, expected),
+                max_completion_tokens=2048,
+                retries=2,
+                stage="judge",
+                timeout=self.codex_timeout,
+            )
+            payload = _extract_json(str(payload_text or ""))
+            return self._normalise_judge_payload(
+                payload, expected, deterministic, backend="provider"
+            )
+        except Exception as error:
+            return self._judge_failure(
+                f"Provider judge failed: {_short(error, 500)}", backend="provider"
+            )
 
     def _judge_prompt(self, case, response, expected):
         payload = {
@@ -447,7 +731,9 @@ class AgentSkillsEvaluator:
             f"Evaluation input:\n{json.dumps(payload, ensure_ascii=False)}"
         )
 
-    def _normalise_judge_payload(self, payload, expected, deterministic=None):
+    def _normalise_judge_payload(
+        self, payload, expected, deterministic=None, backend="codex_cli"
+    ):
         if not isinstance(payload, dict):
             raise ValueError("judge payload is not an object")
         passed = _bool(payload.get("passed"))
@@ -490,21 +776,23 @@ class AgentSkillsEvaluator:
             "passed": passed,
             "score": score,
             "assertion_results": normalised,
-            "judge_backend": "codex_cli",
+            "judge_backend": backend,
             "reason": _short(payload.get("reason") or "", 500),
         }
 
-    def _judge_failure(self, evidence):
+    def _judge_failure(self, evidence, backend="codex_cli"):
+        evidence = _short(_redact_sensitive(evidence), 500)
+        label = "Provider semantic judge completed" if backend == "provider" else "Codex CLI judge completed"
         return {
             "passed": False,
             "score": 0.0,
             "assertion_results": [
                 {
-                    "text": "Codex CLI judge completed",
+                    "text": label,
                     "passed": False,
                     "evidence": evidence,
                 }
             ],
-            "judge_backend": "codex_cli",
+            "judge_backend": backend,
             "reason": evidence,
         }
