@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # drawio-diagrams

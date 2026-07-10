@@ -21,7 +21,7 @@ Yes
 - Add an editable Audit Log node connected to API on the Data Path page.
 - Keep API and Database visible and readable in the edited page.
 - Validate all pages after the edit.
-- Run `render-drawio.mjs` to produce a dark SVG artifact and treat missing draw.io Desktop CLI as an eval-environment failure.
+- Run `render-drawio.mjs` with `--page-index 2` to export the edited Data Path page as a dark SVG artifact and treat missing draw.io Desktop CLI as an eval-environment failure.
 - Inspect the dark SVG artifact for label readability and theme-aware styling.
 
 ## Deterministic Assertions
@@ -31,11 +31,12 @@ Yes
 - contains: Audit Log
 - contains: dark SVG
 - contains: render-drawio.mjs
+- contains: --page-index 2
 
 ## Visual Assertions
 
-- artifact_exists: *.svg
-- svg_valid: *.svg
-- svg_contains: *.svg API
-- svg_contains: *.svg Database
-- svg_contains: *.svg Audit Log
+- artifact_exists: \*.svg
+- svg_valid: \*.svg
+- svg_contains: \*.svg API
+- svg_contains: \*.svg Database
+- svg_contains: \*.svg Audit Log

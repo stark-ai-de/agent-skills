@@ -11,6 +11,7 @@ const modes = new Set(["native-provider", "hybrid-codex-target", "codex-cli-all"
 const runProfiles = new Set(["official-parity", "exploratory"]);
 const pythonManagers = new Set(["auto", "uv", "local"]);
 const existingSetupChoices = new Set(["reuse"]);
+const visualEvalPolicies = new Set(["auto", "full", "text-only"]);
 
 function defaultRunProfile(mode) {
   return mode === "codex-cli-all" ? "exploratory" : "official-parity";
@@ -36,11 +37,13 @@ function parseArgs(argv) {
     installUv: false,
     skipInstall: false,
     probeCodex: false,
+    strictTrainingReady: false,
     resetExisting: false,
     cleanupOnly: false,
     existingSetupChoice: null,
     seed: "42",
     runProfile: null,
+    visualEvalPolicy: "auto",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -63,10 +66,12 @@ function parseArgs(argv) {
     else if (arg === "--skip-install") args.skipInstall = true;
     else if (arg === "--probe-codex") args.probeCodex = true;
     else if (arg === "--no-codex-probe") args.probeCodex = false;
+    else if (arg === "--strict-training-ready") args.strictTrainingReady = true;
     else if (arg === "--reset-existing") args.resetExisting = true;
     else if (arg === "--cleanup-only") args.cleanupOnly = true;
     else if (arg === "--existing-setup-choice") args.existingSetupChoice = argv[++i];
     else if (arg === "--run-profile") args.runProfile = argv[++i];
+    else if (arg === "--visual-eval-policy") args.visualEvalPolicy = argv[++i];
     else if (arg === "--seed") args.seed = argv[++i];
     else fail(`Unknown argument: ${arg}`);
   }
@@ -75,6 +80,9 @@ function parseArgs(argv) {
   if (!modes.has(args.mode)) fail(`Unsupported mode: ${args.mode}`);
   if (!pythonManagers.has(args.pythonManager))
     fail(`Unsupported python manager: ${args.pythonManager}`);
+  if (!visualEvalPolicies.has(args.visualEvalPolicy)) {
+    fail(`Unsupported visual eval policy: ${args.visualEvalPolicy}`);
+  }
   if (args.existingSetupChoice && !existingSetupChoices.has(args.existingSetupChoice)) {
     fail(`Unsupported existing setup choice: ${args.existingSetupChoice}`);
   }
@@ -101,8 +109,10 @@ Options:
   --cleanup-only
   --existing-setup-choice <reuse>
   --run-profile <official-parity|exploratory>
+  --visual-eval-policy <auto|full|text-only>
   --probe-codex
   --no-codex-probe
+  --strict-training-ready
   --skip-install
   --run-name <name>
   --skillopt <path>
@@ -170,6 +180,91 @@ function commandExists(command) {
     return commandResult("where", [command]).ok;
   }
   return commandResult("sh", ["-lc", `command -v ${command}`]).ok;
+}
+
+function commandPath(command) {
+  const result =
+    process.platform === "win32"
+      ? commandResult("where", [command])
+      : commandResult("sh", ["-lc", `command -v ${command}`]);
+  return result.ok ? result.stdout.split(/\r?\n/)[0] || null : null;
+}
+
+function detectDrawioCli() {
+  for (const command of ["drawio", "diagrams.net"]) {
+    const found = commandPath(command);
+    if (found) return { installed: true, command, path: found };
+  }
+  return { installed: false, command: null, path: null };
+}
+
+function section(text, heading) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex(
+    (line) => line.trim().toLowerCase() === `## ${heading}`.toLowerCase(),
+  );
+  if (start === -1) return "";
+  const collected = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s+/.test(line)) break;
+    collected.push(line);
+  }
+  return collected.join("\n").trim();
+}
+
+function bullets(text) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*[-*]\s+(.+)$/)?.[1]?.trim())
+    .filter(Boolean);
+}
+
+function isNoneAssertion(value) {
+  return /^none\.?$/i.test(String(value || "").trim());
+}
+
+function visualAssertionBullets(text) {
+  return bullets(text).filter((bullet) => !isNoneAssertion(bullet));
+}
+
+function shouldTrigger(text) {
+  const value = section(text, "Should Trigger")
+    .trim()
+    .split(/\s+/)[0]
+    ?.replace(/[.]/g, "")
+    .toLowerCase();
+  return value !== "no" && value !== "false";
+}
+
+function walk(dir, predicate) {
+  if (!fs.existsSync(dir)) return [];
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...walk(full, predicate));
+    else if (predicate(full)) files.push(full);
+  }
+  return files;
+}
+
+function visualEvalCaseCount(skill) {
+  const casesDir = path.join(root, "skill-evals", skill, "cases");
+  return walk(casesDir, (file) => file.endsWith(".md")).filter((file) => {
+    const text = fs.readFileSync(file, "utf8");
+    return shouldTrigger(text) && visualAssertionBullets(section(text, "Visual Assertions")).length > 0;
+  }).length;
+}
+
+function effectiveVisualPolicy(args) {
+  if (args.visualEvalPolicy !== "auto") return args.visualEvalPolicy;
+  const visualCases = visualEvalCaseCount(args.skill);
+  if (visualCases > 0 && args.mode === "native-provider") return "text-only";
+  if (visualCases > 0 && !detectDrawioCli().installed) return "text-only";
+  return "full";
+}
+
+function trainingSplitDir(args) {
+  return effectiveVisualPolicy(args) === "text-only" ? "data-text-only" : "data";
 }
 
 function resolveUvCommand() {
@@ -321,6 +416,9 @@ function commandPlan(args, skillOptPath) {
     local_workspace: relative(path.dirname(skillOptPath)),
     existing_setup: existingSetup,
     run_profile: args.runProfile,
+    visual_eval_policy_requested: args.visualEvalPolicy,
+    visual_eval_policy_effective: effectiveVisualPolicy(args),
+    split_dir: `.agents/skillopt-work/${args.skill}/${trainingSplitDir(args)}`,
     python_alternatives: {
       install_uv: "ask for approval to install uv, then rerun production-grade setup with --install-uv",
       use_local_python:
@@ -412,6 +510,7 @@ function trainingCommandParts(args) {
     ["--workers", defaults.workers],
   ];
   const workRoot = `../../skillopt-work/${args.skill}`;
+  const splitDir = `${workRoot}/${trainingSplitDir(args)}`;
   const outputRoot = `${workRoot}/outputs/${args.runName}`;
   const repoRun = `.agents/skillopt-work/${args.skill}/outputs/${args.runName}`;
   const summarizeCommand = `node ${skillScriptCommand("summarize-skillopt-run.mjs")} --skill ${args.skill} --run ${repoRun} --terminal`;
@@ -432,7 +531,7 @@ function trainingCommandParts(args) {
     `  echo "If output pauses, a rollout, judge, or reflection subprocess is probably running."`,
     continueLine("  python -u scripts/train.py"),
     continueLine(`    --config ${workRoot}/configs/${configFile}`),
-    continueLine(`    --split_dir ${workRoot}/data`),
+    continueLine(`    --split_dir ${splitDir}`),
     continueLine(`    --skill_init ${workRoot}/initial/skill-body.md`),
     continueLine(`    --out_root ${outputRoot}`),
     ...workerArgs.map(([name, value]) => continueLine(`    ${name} ${value}`)),
@@ -477,6 +576,7 @@ function terminalTrainingCommand(args) {
 function evalOnlyCommand(args) {
   const configFile = `agent-skills.${args.mode}.yaml`;
   const workRoot = `../../skillopt-work/${args.skill}`;
+  const splitDir = `${workRoot}/${trainingSplitDir(args)}`;
   const outputRoot = `${workRoot}/outputs/${args.runName}`;
   const continueLine = (line) => `${line} \\`;
   return [
@@ -490,7 +590,7 @@ function evalOnlyCommand(args) {
     continueLine(`    --config ${workRoot}/configs/${configFile}`),
     continueLine(`    --skill ${outputRoot}/best_skill.md`),
     continueLine("    --split all"),
-    `    --split_dir ${workRoot}/data 2>&1 | tee ${outputRoot}/eval-only.log`,
+    `    --split_dir ${splitDir} 2>&1 | tee ${outputRoot}/eval-only.log`,
     "  status=$?",
     '  cd "$skillopt_repo_root" || return',
     '  return "$status"',
@@ -690,10 +790,15 @@ function readinessSummary(args) {
         : "official floor not met",
       benchmark_classification: readiness.benchmarkQuality?.classification,
       dataset_counts: readiness.datasetCounts,
+      visual_artifact_readiness: readiness.visualArtifactReadiness || null,
       model_pin_blockers: [...new Set(modelPinBlockers)],
       adapter_manifest: readiness.adapterManifestCheck || null,
       codex_probe: args.mode.includes("codex")
-        ? "not run during dry-run; ask before running the login probe"
+        ? readiness.codex?.probe?.ok
+          ? readiness.codex.probe.cached
+            ? "passed using existing ignored readiness diagnostics"
+            : "passed"
+          : "not run during dry-run; ask before running the login probe"
         : "not required",
       provider_free_alternative:
         args.mode !== "codex-cli-all" &&
@@ -710,6 +815,39 @@ function readinessSummary(args) {
       error: redact(`Readiness JSON could not be parsed: ${error.message}`),
     };
   }
+}
+
+function strictTrainingReadiness(args) {
+  const commandArgs = [
+    path.join(skillRoot, "scripts/check-skillopt-readiness.mjs"),
+    "--skill",
+    args.skill,
+    "--mode",
+    args.mode,
+    "--run-profile",
+    args.runProfile,
+    "--python-manager",
+    args.pythonManager,
+    "--python",
+    args.python,
+    "--strict-training-ready",
+    "--json",
+  ];
+  commandArgs.push(args.probeCodex && args.mode.includes("codex") ? "--codex-probe" : "--no-codex-probe");
+  const result = commandResult(process.execPath, commandArgs, { timeout: 300000 });
+  let parsed = null;
+  try {
+    parsed = result.stdout ? JSON.parse(result.stdout) : null;
+  } catch {
+    // The raw output is redacted below.
+  }
+  if (!result.ok) {
+    const blockers = parsed?.trainingBlockers?.length
+      ? parsed.trainingBlockers.join("; ")
+      : result.stderr || result.stdout || "strict readiness failed";
+    throw new Error(`Strict training readiness failed: ${blockers}`);
+  }
+  return parsed;
 }
 
 function productionQuestion(args, plan) {
@@ -748,6 +886,14 @@ function printReadinessSummary(summary) {
     console.log(
       `- Data: ${summary.dataset_counts.eval_positive} positive, ${summary.dataset_counts.eval_negative} negative; generated split train ${generated.train}, val ${generated.val}, test ${generated.test}`,
     );
+  }
+  if (summary.visual_artifact_readiness?.visualAssertionCases > 0) {
+    console.log(
+      `- Visual artifact readiness: ${summary.visual_artifact_readiness.status}; active visual cases ${summary.visual_artifact_readiness.activeVisualAssertionCases}`,
+    );
+    if (summary.visual_artifact_readiness.activeSplitDir) {
+      console.log(`- Active split dir: ${summary.visual_artifact_readiness.activeSplitDir}`);
+    }
   }
   if (summary.model_pin_blockers.length) {
     console.log(`- Missing model pin env: ${summary.model_pin_blockers.join(", ")}`);
@@ -814,6 +960,9 @@ function dryRunPlan(plan) {
     existing_setup: plan.existing_setup,
     run_profile: plan.run_profile,
     runProfile: plan.run_profile,
+    visual_eval_policy_requested: plan.visual_eval_policy_requested,
+    visual_eval_policy_effective: plan.visual_eval_policy_effective,
+    split_dir: plan.split_dir,
     python_alternatives: plan.python_alternatives,
   };
 }
@@ -926,7 +1075,7 @@ try {
   setupSkillOpt(args, skillOptPath, steps);
 
   runBundledScript("prepare-skillopt-split.mjs", ["--skill", args.skill, "--seed", args.seed], {
-    inherit: true,
+    inherit: !args.json,
   });
   steps.push("prepared split data");
 
@@ -943,14 +1092,24 @@ try {
       args.runProfile,
       "--run-name",
       args.runName,
+      "--visual-eval-policy",
+      args.visualEvalPolicy,
     ],
-    { inherit: true },
+    { inherit: !args.json },
   );
   steps.push("prepared local adapter and configs");
 
   if (args.probeCodex && args.mode.includes("codex")) {
-    runBundledScript("probe-codex-cli.mjs", ["--json"], { inherit: true, timeout: 300000 });
+    runBundledScript("probe-codex-cli.mjs", ["--json"], {
+      inherit: !args.json,
+      timeout: 300000,
+    });
     steps.push("ran Codex CLI login probe");
+  }
+
+  if (args.strictTrainingReady) {
+    strictTrainingReadiness(args);
+    steps.push("strict training readiness passed");
   }
 
   const result = {
@@ -960,6 +1119,7 @@ try {
     run_profile: args.runProfile,
     runProfile: args.runProfile,
     target_skill: args.skill,
+    strict_training_ready: args.strictTrainingReady,
     skillopt_path: relative(skillOptPath),
     steps,
     recommended_training_location: plan.recommended_training_location,

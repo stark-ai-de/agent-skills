@@ -16,7 +16,7 @@ A generated draw.io benchmark case had deterministic assertions and visual asser
 - Capture rollout artifacts with PNG/SVG metadata when target work produces visual outputs.
 - Evaluate deterministic and visual assertions as hard gates before semantic LLM judging.
 - Fail the item when any hard assertion fails, including missing visual artifacts or blank PNG output.
-- Run the semantic Codex judge only when hard assertions are absent or when an explicitly safe fallback path is documented.
+- Run the configured semantic judge only after all active deterministic and visual hard assertions pass; failed hard evidence must short-circuit judging.
 - Stratify visual-assertion cases into validation or test splits when possible so they are not all hidden in training.
 - Do not let an LLM judge override failed deterministic or visual evidence.
 

@@ -108,6 +108,10 @@ function bullets(text) {
     .filter(Boolean);
 }
 
+function isNoneAssertion(value) {
+  return /^none\.?$/i.test(String(value || "").trim());
+}
+
 function shouldTrigger(text) {
   const value = section(text, "Should Trigger")
     .trim()
@@ -127,7 +131,7 @@ function deterministicAssertions(text) {
 }
 
 function visualAssertions(text) {
-  return bullets(section(text, "Visual Assertions"));
+  return bullets(section(text, "Visual Assertions")).filter((assertion) => !isNoneAssertion(assertion));
 }
 
 function expectedArtifactPaths(text, skillName) {
@@ -192,7 +196,7 @@ function splitItems(items, ratios) {
 }
 
 function hasVisualAssertions(item) {
-  return (item.visual_assertions || []).length > 0;
+  return (item.visual_assertions || []).some((assertion) => !isNoneAssertion(assertion));
 }
 
 function ensureTaggedSplit(splits, targetName, predicate, sourceNames) {
@@ -222,9 +226,84 @@ function stratifyVisualAssertions(splits) {
   return splits;
 }
 
+function buildSplits(items, args, options = {}) {
+  const shuffled = seededShuffle(items, args.seed);
+  const splits = splitItems(shuffled, args);
+  if (options.stratifyVisual) stratifyVisualAssertions(splits);
+  return splits;
+}
+
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+}
+
+function writeSplits(dataDir, splits) {
+  for (const [split, items] of Object.entries(splits)) {
+    writeJson(path.join(dataDir, split, "items.json"), items);
+  }
+}
+
+function splitCounts(splits) {
+  return {
+    train: splits.train.length,
+    val: splits.val.length,
+    test: splits.test.length,
+  };
+}
+
+function splitWarnings(items, splits, label) {
+  const warnings = [];
+  if (items.length < EXPLORATORY_MIN.positive) {
+    warnings.push(
+      `${label}: ${items.length} positive case(s); ${EXPLORATORY_MIN.positive}+ recommended before treating optimization as more than exploratory.`,
+    );
+  }
+  if (splits.val.length < EXPLORATORY_MIN.val || splits.test.length < EXPLORATORY_MIN.test) {
+    warnings.push(
+      `${label}: train=${splits.train.length}, val=${splits.val.length}, test=${splits.test.length}; at least ${EXPLORATORY_MIN.val} validation and ${EXPLORATORY_MIN.test} test cases are recommended.`,
+    );
+  }
+  if (
+    items.length < OFFICIAL_RECOMMENDED.positive ||
+    splits.val.length < OFFICIAL_RECOMMENDED.val ||
+    splits.test.length < OFFICIAL_RECOMMENDED.test
+  ) {
+    warnings.push(
+      `${label}: below official-parity recommendation of ${OFFICIAL_RECOMMENDED.positive}+ positive cases with ${OFFICIAL_RECOMMENDED.val}+ validation and ${OFFICIAL_RECOMMENDED.test}+ test cases.`,
+    );
+  }
+  return warnings;
+}
+
+function qualityFor(items, splits, activationNegativeCases, extra = {}) {
+  const warnings = splitWarnings(items, splits, extra.label || "dataset");
+  return {
+    classification:
+      warnings.length === 0 &&
+      items.length >= OFFICIAL_RECOMMENDED.positive &&
+      splits.val.length >= OFFICIAL_RECOMMENDED.val &&
+      splits.test.length >= OFFICIAL_RECOMMENDED.test
+        ? "official-parity-candidate"
+        : "exploratory",
+    proofStatus:
+      warnings.length === 0 &&
+      items.length >= OFFICIAL_RECOMMENDED.positive &&
+      splits.val.length >= OFFICIAL_RECOMMENDED.val &&
+      splits.test.length >= OFFICIAL_RECOMMENDED.test
+        ? "official-parity-candidate"
+        : "blocked",
+    thresholds: {
+      exploratory_minimum: EXPLORATORY_MIN,
+      official_recommended: OFFICIAL_RECOMMENDED,
+    },
+    positive_cases: items.length,
+    split_counts: splitCounts(splits),
+    activation_negative_cases: activationNegativeCases.length,
+    positive_with_visual_assertions: items.filter(hasVisualAssertions).length,
+    warnings,
+    ...extra,
+  };
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -285,7 +364,8 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
     visual_assertions: visual,
     tags: trigger ? ["positive"] : ["negative", "activation"],
     should_trigger: trigger,
-    workspace_policy: "workspace-write",
+    workspace_policy:
+      visual.length > 0 ? "isolated-artifact-write" : "text-only",
     source_hash: sha256(text),
   };
 
@@ -300,67 +380,48 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
   }
 }
 
-const shuffled = seededShuffle(trainingItems, args.seed);
-const splits = splitItems(shuffled, args);
-stratifyVisualAssertions(splits);
-for (const [split, items] of Object.entries(splits)) {
-  writeJson(path.join(dataDir, split, "items.json"), items);
-}
+const splits = buildSplits(trainingItems, args, { stratifyVisual: true });
+writeSplits(dataDir, splits);
+
+const textOnlyItems = trainingItems.filter((item) => !hasVisualAssertions(item));
+const textOnlyDataDir = path.join(workDir, "data-text-only");
+const textOnlySplits = buildSplits(textOnlyItems, args);
+writeSplits(textOnlyDataDir, textOnlySplits);
+const excludedVisualPositiveCases = trainingItems.length - textOnlyItems.length;
+const textOnly = {
+  data_dir: path.relative(root, textOnlyDataDir).replaceAll("\\", "/"),
+  excluded_visual_positive_cases: excludedVisualPositiveCases,
+  counts: splitCounts(textOnlySplits),
+  quality: qualityFor(textOnlyItems, textOnlySplits, activationNegativeCases, {
+    label: "text-only dataset",
+    variant: "text-only",
+  }),
+};
 writeJson(path.join(activationDir, "negative-cases.json"), activationNegativeCases);
 
-const warnings = [];
-if (trainingItems.length < EXPLORATORY_MIN.positive) {
-  warnings.push(
-    `Exploratory dataset: ${trainingItems.length} positive case(s); ${EXPLORATORY_MIN.positive}+ recommended before treating optimization as more than exploratory.`,
-  );
-}
-if (splits.val.length < EXPLORATORY_MIN.val || splits.test.length < EXPLORATORY_MIN.test) {
-  warnings.push(
-    `Exploratory split: train=${splits.train.length}, val=${splits.val.length}, test=${splits.test.length}; at least ${EXPLORATORY_MIN.val} validation and ${EXPLORATORY_MIN.test} test cases are recommended.`,
-  );
-}
-if (
-  trainingItems.length < OFFICIAL_RECOMMENDED.positive ||
-  splits.val.length < OFFICIAL_RECOMMENDED.val ||
-  splits.test.length < OFFICIAL_RECOMMENDED.test
-) {
-  warnings.push(
-    `Below official-parity recommendation: ${OFFICIAL_RECOMMENDED.positive}+ positive cases with ${OFFICIAL_RECOMMENDED.val}+ validation and ${OFFICIAL_RECOMMENDED.test}+ test cases.`,
-  );
-}
+const warnings = splitWarnings(trainingItems, splits, "full dataset");
+if (excludedVisualPositiveCases > 0) warnings.push(...textOnly.quality.warnings);
 
 const quality = {
-  classification:
-    warnings.length === 0 &&
-    trainingItems.length >= OFFICIAL_RECOMMENDED.positive &&
-    splits.val.length >= OFFICIAL_RECOMMENDED.val &&
-    splits.test.length >= OFFICIAL_RECOMMENDED.test
-      ? "official-parity-candidate"
-      : "exploratory",
-  proofStatus:
-    warnings.length === 0 &&
-    trainingItems.length >= OFFICIAL_RECOMMENDED.positive &&
-    splits.val.length >= OFFICIAL_RECOMMENDED.val &&
-    splits.test.length >= OFFICIAL_RECOMMENDED.test
-      ? "official-parity-candidate"
-      : "blocked",
-  thresholds: {
-    exploratory_minimum: EXPLORATORY_MIN,
-    official_recommended: OFFICIAL_RECOMMENDED,
-  },
-  positive_cases: trainingItems.length,
-  split_counts: {
-    train: splits.train.length,
-    val: splits.val.length,
-    test: splits.test.length,
-  },
-  activation_negative_cases: activationNegativeCases.length,
+  ...qualityFor(trainingItems, splits, activationNegativeCases, {
+    label: "full dataset",
+    variant: "full",
+  }),
   ...qualityCounters,
+  variants: {
+    full: {
+      data_dir: path.relative(root, dataDir).replaceAll("\\", "/"),
+      counts: splitCounts(splits),
+      positive_with_visual_assertions: trainingItems.filter(hasVisualAssertions).length,
+    },
+    text_only: textOnly,
+  },
   notes: [
     "Activation-only negative cases are excluded from body optimization training.",
     "Negative cases remain useful for readiness and adoption safety review.",
     "Deterministic assertions are used by the local evaluator before semantic LLM judging when present.",
     "Visual assertions are checked against rollout artifacts before semantic LLM judging when present.",
+    "A companion data-text-only split is always generated; when visual assertion cases exist, that split excludes them for environments without render tooling.",
   ],
 };
 writeJson(path.join(workDir, "dataset-metadata.json"), quality);
@@ -376,6 +437,7 @@ const result = {
     test: splits.test.length,
     activation_negative: activationNegativeCases.length,
   },
+  text_only: textOnly,
   quality,
   warnings,
 };

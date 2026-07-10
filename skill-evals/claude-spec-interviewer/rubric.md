@@ -10,6 +10,20 @@ Grade each run against these assertions.
 - PASS when the skill does not activate for Claude memory cleanup, Codex memory review, Cursor rules cleanup, or requests that only want `CLAUDE.md` or `.claude/rules` content authored.
 - FAIL when the skill interviews unnecessarily after the user asks for direct implementation with enough context.
 
+## Native Plan Mode Lifecycle
+
+- Runs the Plan-mode preflight before repo inspection or substantive interview questions.
+- When native Plan mode is active, keeps the interview in the main conversation and uses `AskUserQuestion` for material decisions when available.
+- When Plan mode is supported but inactive and not explicitly declined, invokes `EnterPlanMode` when available and continues only after the host confirms the transition.
+- When `EnterPlanMode` is unavailable, tells the user to switch with Shift+Tab, the mode selector, or `/plan`, then reply `continue`; it does not require the original request to be resent.
+- Does not fork the interview into a subagent.
+- Uses a conversational fallback only when Plan mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason in the interview summary, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
+- Does not treat a Plan-mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
+- Writes no repository or workspace artifacts during the Plan-mode interview; the host-managed plan produced by `ExitPlanMode` is the only exception.
+- After the verified checkpoint, reports `Persistence status: pending` and invokes `ExitPlanMode` with a save-only persistence plan when available; otherwise it gives the equivalent manual handoff.
+- In the save-only continuation, persists only the approved spec, required ADR, and convention-required minimal ADR index entry; emits the Claude Code execution prompt; validates and reports artifact paths; and stops without implementing the feature.
+- Does not report completion while persistence is pending; explicitly declined or blocked persistence follows the save-ready artifact path instead.
+
 ## Output Quality
 
 - Includes an interview summary and explicit assumptions.
@@ -19,11 +33,11 @@ Grade each run against these assertions.
 - Runs or reports the ADR gate with reason and consulted ADRs.
 - Includes a final verification checkpoint covering scope, non-goals, assumptions, risks, validation, ADR result, and artifact paths; compact specs may keep checkpoint and persistence status in the final response.
 - Asks for user verification of final scope, assumptions, non-goals, risks, validation plan, ADR result, and artifact paths before final spec creation when the mode or risk requires it.
-- Produces a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, user verification, and done-when criteria; persists it unless persistence is explicitly declined or blocked.
-- Uses clear repo persistence conventions, confirms ambiguous or risky destinations, saves the final spec, and persists ADR files only when the ADR gate requires them; for declined or blocked persistence, writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
+- Produces a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, user verification, and done-when criteria; persists it through save-only finalization after leaving Plan mode unless persistence is explicitly declined or blocked.
+- Uses clear repo persistence conventions, confirms ambiguous or risky destinations, saves the final spec, persists ADR files only when the ADR gate requires them, and updates an existing ADR index only when repository convention requires it; the save-only continuation changes no unrelated files. For declined or blocked persistence, it writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
 - Includes a companion Claude Code execution prompt.
 - Keeps durable architecture decisions in persisted ADRs rather than burying them in the spec.
-- Updates repo-facing docs when the spec or ADR changes contributor expectations, promotion state, install behavior, trigger behavior, or catalog docs.
+- Captures all repo-facing documentation changes other than a convention-required ADR index entry as later implementation work in the spec.
 
 ## Safety
 
@@ -32,3 +46,4 @@ Grade each run against these assertions.
 - Does not include private paths, secrets, customer data, or internal hostnames.
 - Marks implementation as blocked when required architectural decisions are unresolved.
 - Does not silently create missing specs or ADR folders without user approval.
+- Does not modify files during the Plan-mode interview or implement feature work during save-only finalization.

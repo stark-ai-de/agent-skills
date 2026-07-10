@@ -26,10 +26,10 @@ Yes
 
 ## Visual Assertions
 
-- artifact_exists: *.svg
-- svg_valid: *.svg
-- svg_contains: *.svg Client
-- svg_contains: *.svg API
-- svg_contains: *.svg Queue
-- svg_contains: *.svg Worker
-- svg_contains: *.svg Database
+- artifact_exists: \*.svg
+- svg_valid: \*.svg
+- svg_contains: \*.svg Client
+- svg_contains: \*.svg API
+- svg_contains: \*.svg Queue
+- svg_contains: \*.svg Worker
+- svg_contains: \*.svg Database

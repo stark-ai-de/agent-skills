@@ -2,11 +2,11 @@
 name: codex-spec-interviewer
 description: Interview, source-challenge, verify, save, and ADR-gate fuzzy coding requests into Codex-ready implementation specs. Use when a feature, bugfix, refactor, migration, repo-wide change, or architecture task needs user-verified requirements, source-backed decisions, durable architecture decisions, acceptance criteria, validation commands, rollout notes, saved spec/ADR files, and a Codex execution prompt. Do not use when already fully specified or when the user wants direct implementation now.
 license: Apache-2.0
-compatibility: Designed for Codex CLI, IDE extension, and Codex app. Works best with repo-local AGENTS.md and project docs.
+compatibility: Designed for Codex CLI, IDE extension, and Codex app. Native Plan mode is required when the current surface supports it; use the documented fallback only when Plan mode is unavailable or explicitly declined.
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Codex Spec Interviewer
@@ -41,26 +41,54 @@ Produce a user-verified implementation spec that Codex can execute with minimal 
 - Current framework, library, API, or platform documentation through available MCP tools or web search when a decision depends on up-to-date behavior.
 - Error messages, screenshots, logs, PR feedback, or example files the user supplied.
 
+## Native Plan mode preflight
+
+Run this preflight before substantive interviewing or repository exploration. A skill cannot change the host's collaboration mode during an active turn, and the user's use of the word "plan" does not prove that native Plan mode is active.
+
+1. Inspect the host-provided mode context and available tools.
+2. If native Plan mode is active, continue the workflow. Use `request_user_input` for material user decisions whenever it is available; otherwise ask one concise question at a time.
+3. If native Plan mode is supported but inactive, do not interview, inspect the repository, or write files. Stop the turn with a brief explanation and this copy-ready command, replacing the placeholder with the user's complete original request:
+
+   ```text
+   /plan Use $codex-spec-interviewer to continue this request: <original request>
+   ```
+
+4. If native Plan mode is unavailable, or the user explicitly declines it after the recommendation, continue with the conversational workflow and record `Plan-mode fallback: unavailable - <evidence>` or `Plan-mode fallback: explicitly declined - <user statement>` in the interview summary. Never treat silence or an unknown mode state as a decline. If mode support or state cannot be determined, use the supported-but-inactive handoff instead of falling back.
+
+The active Plan-mode interview is read-only. It may inspect repository and external evidence, but it must not create, edit, or persist specs, ADRs, documentation, source files, or other files.
+
 ## Workflow
 
-1. Classify the requested effort as `compact`, `standard`, or `deep` using the mode table in `references/spec-rubric.md`.
-2. Inspect only the minimum repo context needed to avoid low-value questions. During this pass, note spec and ADR destinations by following `references/artifact-destinations.md`; defer destination confirmation to the final checkpoint unless that reference requires earlier confirmation.
-3. Ask one high-impact question at a time when the answer affects the next decision; batch up to 3 questions only when they are independent and low-friction. Prefer answering discoverable questions from repo files, ADRs, code search, MCP tools, or web sources instead of asking the user. Use `references/question-bank.md` for question selection.
-4. After each answer or evidence pass, summarize the current understanding, explicit assumptions, and remaining unknowns.
-5. Continue until every material requirement, non-goal, edge case, validation path, rollout concern, and ADR implication is source-backed, answered by the user, or explicitly accepted as non-blocking.
-6. Draft a spec hypothesis, then challenge it against sources using `references/source-challenge.md`. Challenge only decisions that materially affect correctness, safety, maintainability, or implementation strategy.
-7. Run the ADR gate using `references/adr-gate.md`. If a durable architectural decision is required, draft the ADR, identify the required ADR path, and mark implementation blocked until acceptance when the spec depends on that decision.
-8. If the challenge invalidates a requirement or prior assumption, revise the spec, mark the conflict, or propose a preceding ADR or spec step before implementation.
-9. Before saving, present a final checkpoint with scope, non-goals, assumptions, open questions, risks, validation plan, ADR result, and artifact path basis. Ask whether anything material is missing or wrong; pause for an explicit answer when a material decision, ambiguous destination, overwrite, new directory, or ADR write is involved. Continue interviewing if a material gap appears.
-10. Produce the final spec from `assets/spec-template.compact.md`, `assets/spec-template.standard.md`, or `assets/spec-template.deep.md`. Convert ambiguous requirements into testable acceptance criteria; prefer EARS-like phrasing when behavior must be testable. For compact specs, use `artifact_path` as the only persisted artifact field and report verification and persistence status in the final response unless risk requires a fuller section.
-11. Save the final spec unless the user explicitly declined persistence; save ADR files only when the ADR gate requires one. Report saved paths. If a write is declined, blocked, or unavailable, return the save-ready artifact and the reason.
-12. Update only existing, relevant repo-facing docs when the new spec or ADR changes how the repo is operated; ask before creating missing docs or indexes.
-13. Produce a companion Codex execution prompt using `assets/codex-execution-prompt.md`.
-14. Run a final self-check against `references/spec-rubric.md`.
+1. Run the native Plan mode preflight above.
+2. Classify the requested effort as `compact`, `standard`, or `deep` using the mode table in `references/spec-rubric.md`.
+3. Inspect only the minimum repo context needed to avoid low-value questions. During this pass, note spec and ADR destinations by following `references/artifact-destinations.md`; defer destination confirmation to the final checkpoint unless that reference requires earlier confirmation.
+4. Ask one high-impact question at a time when the answer affects the next decision; batch up to 3 questions only when they are independent and low-friction. In active Plan mode, use `request_user_input` whenever available. Prefer answering discoverable questions from repo files, ADRs, code search, MCP tools, or web sources instead of asking the user. Use `references/question-bank.md` for question selection.
+5. After each answer or evidence pass, summarize the current understanding, explicit assumptions, and remaining unknowns.
+6. Continue until every material requirement, non-goal, edge case, validation path, rollout concern, and ADR implication is source-backed, answered by the user, or explicitly accepted as non-blocking.
+7. Draft a spec hypothesis, then challenge it against sources using `references/source-challenge.md`. Challenge only decisions that materially affect correctness, safety, maintainability, or implementation strategy.
+8. Run the ADR gate using `references/adr-gate.md`. If a durable architectural decision is required, draft the ADR, identify the required ADR path, and mark implementation blocked until acceptance when the spec depends on that decision.
+9. If the challenge invalidates a requirement or prior assumption, revise the spec, mark the conflict, or propose a preceding ADR or spec step before implementation.
+10. Present a final checkpoint with scope, non-goals, assumptions, open questions, risks, validation plan, source challenge, ADR result, and artifact path basis. Ask whether anything material is missing or wrong. Pause for an explicit answer when a material decision, ambiguous destination, overwrite, new directory, or ADR write is involved, and continue interviewing if a material gap appears.
+11. After the checkpoint is verified, prepare the approved spec from `assets/spec-template.compact.md`, `assets/spec-template.standard.md`, or `assets/spec-template.deep.md`. Convert ambiguous requirements into testable acceptance criteria; prefer EARS-like phrasing when behavior must be testable. For compact specs, use `artifact_path` as the only persisted artifact field.
+12. If the user explicitly declined persistence, write no files. Return the full approved spec and any ADR draft in chat, include the companion Codex execution prompt, report `Persistence status: declined`, and state that normal persistence completion was not met.
+13. If native Plan mode is active, do not write the approved artifacts. Report `Persistence status: pending Plan-mode exit`, then provide this copy-ready save-only continuation with the approved paths substituted:
+
+    ```text
+    Exit Plan mode, then persist the approved spec from this conversation to <spec-path>, any required ADR, and the minimal ADR index entry required by the repository's existing convention. Do not implement the feature. Validate the saved artifacts, emit the companion Codex execution prompt, report the persisted paths, and stop.
+    ```
+
+    Stop the turn. This is an approved planning result, not completion of the persistence workflow.
+
+14. On the user's save-only continuation outside Plan mode, persist only the approved spec, any required ADR, and the minimal ADR index entry required by the repository's existing convention. Do not implement the feature or make other repo-facing changes. Validate and report the artifacts, produce the companion Codex execution prompt from `assets/codex-execution-prompt.md`, and stop.
+15. In the documented conversational fallback, save the final spec after checkpoint verification, save an ADR only when the ADR gate requires one, and make the minimal ADR index entry required by the repository's existing convention. If persistence is blocked, return the full save-ready artifact and reason without writing files, include the companion Codex execution prompt, and report normal completion as unmet.
+16. Record all repo-facing documentation work other than a convention-required ADR index entry in the spec for later implementation; do not perform it during the Plan interview or save-only continuation.
+17. Run a final self-check against `references/spec-rubric.md`.
 
 ## Codex integration
 
-- The interview can run in any Codex surface: CLI, IDE extension, or the Codex app. Treat the saved spec file as the durable artifact that outlives session plans and chat context.
+- Native Plan mode is host-controlled. The skill must request a user-initiated `/plan` transition when supported and inactive; it must not claim to switch modes itself.
+- Use `request_user_input` in active Plan mode when available so material choices require explicit user action.
+- Treat the saved spec file as the durable artifact that outlives Plan mode and chat context. An approved in-chat plan with persistence still pending is not the final artifact.
 - Treat `AGENTS.md`, `docs/agents/`, and Codex memories as repo and user evidence, not as the artifact format. Do not write spec content into memories or `AGENTS.md` unless the user explicitly asks for it after the tradeoff is stated.
 
 ## Safety rules
@@ -70,6 +98,8 @@ Produce a user-verified implementation spec that Codex can execute with minimal 
 - Do not broaden scope beyond what the user asked for; prefer minimal, reversible implementation scope when intent is unclear.
 - Do not prescribe destructive migrations, data rewrites, or secret handling without explicit callouts and rollback notes.
 - Do not include secrets, credentials, private identifiers, or internal-only data in examples.
+- Do not write any file while native Plan mode is active.
+- Do not implement the feature during the save-only persistence continuation.
 - Do not use an ambiguous destination, overwrite existing files, create new artifact directories, or write ADR files without confirmation.
 - Do not use web or MCP lookup as ceremony. Use it when current facts can materially change the spec, and prefer official documentation, primary sources, repo-local docs, and source code over secondary commentary.
 - Follow `references/adr-gate.md` for when ADRs must and must not be created. Do not silently override an existing ADR; propose a superseding ADR when a durable decision changes.
@@ -96,7 +126,21 @@ No bundled scripts.
 
 ## Output format
 
-Return in this order:
+When supported native Plan mode is inactive, return only the brief transition explanation and copy-ready `/plan` command from the preflight.
+
+After a verified checkpoint in active Plan mode, return in this order:
+
+1. Interview summary and verification result
+2. Assumptions and unresolved questions
+3. Source challenge summary
+4. ADR gate result and proposed ADR path when needed
+5. Approved spec path and concise summary
+6. `Persistence status: pending Plan-mode exit`
+7. Copy-ready save-only continuation
+
+Do not claim persisted paths or normal completion, and do not emit the implementation execution prompt before the save-only continuation completes. The exception is an explicit persistence decline, which returns the full save-ready artifacts and execution prompt in chat with completion reported as unmet.
+
+After persistence, or in a non-Plan fallback, return in this order:
 
 1. Persisted artifact paths
 2. Interview summary and verification result
@@ -115,20 +159,25 @@ Do not paste the full final spec or ADR by default after they are saved. Print f
 
 - The final artifact is a concrete markdown spec, not a prose brainstorm or chat-only plan.
 - The spec has explicit scope, constraints, validation, and done-when criteria, and acceptance criteria are testable.
-- The spec is saved in the repository with a reported path, or is ready to save when persistence is explicitly declined or blocked.
+- The spec is saved in the repository with a reported path. An approved spec that is still pending Plan-mode exit is not complete.
 - Required ADRs are saved using the repo's ADR path and filename pattern, or implementation is explicitly blocked before ADR creation.
 - Missing facts are labeled as `unspecified`, and no unresolved blocking decision is hidden as a non-blocking assumption.
 - Important requirements and implementation decisions were challenged against relevant repo evidence and current sources, or the reason for skipping the challenge is stated.
-- Relevant existing repo-facing docs are updated when the spec or ADR changes repo operation or contributor expectations.
+- A required ADR is indexed during save-only persistence when the repository convention requires it; all other repo-facing documentation changes are captured in the implementation spec for later work.
 - A Codex execution prompt is included.
+- The save-only continuation performs no feature implementation or unrelated repository changes; a minimal convention-required ADR index entry is related ADR persistence.
 
 ## Failure modes
 
 - If the repository context is unavailable, produce a repo-agnostic spec and mark repo-specific details as `unspecified`.
+- If native Plan mode is supported but inactive, stop with the preflight's copy-ready `/plan` command; do not silently fall back.
+- If native Plan mode is unavailable or explicitly declined, record the fallback reason and continue conversationally.
+- If the user remains in Plan mode after approving the checkpoint, keep persistence marked pending, repeat the save-only handoff if useful, and do not claim completion.
+- If a save-only continuation lacks enough conversation context to reproduce the approved artifact exactly, stop and ask the user to resume the original conversation or provide the approved artifact; do not invent missing content.
 - If the user's goal is internally inconsistent, stop and surface the conflict clearly.
 - If validation commands cannot be determined, include a placeholder section labeled `unspecified`.
 - If the requested scope is too large for one safe spec, split it into phases and say so.
-- If the user declines persistence or a save is blocked, return the spec and any ADR draft in chat with the proposed path and the blocker.
+- If the user declines persistence or a save is blocked, return the spec and any ADR draft in chat with the proposed path and the blocker, and report that normal persistence completion was not met.
 - If a proposed artifact path already exists, ask before overwriting it.
 - If current external docs cannot be reached, continue with repo evidence and mark the external-source check as unavailable.
 - If a prior ADR or named requirement appears stale or wrong, propose a preceding ADR, spec update, or explicit maintainer decision instead of silently overriding it.

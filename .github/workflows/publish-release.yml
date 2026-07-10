@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      release_sha: ${{ steps.version.outputs.release_sha }}
 
     steps:
       - uses: actions/checkout@v6
@@ -47,6 +48,7 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - run: node scripts/validate-release.mjs
 
@@ -67,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: main
+          ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v6
@@ -85,6 +87,20 @@ jobs:
       - run: pnpm lint
 
       - run: node scripts/validate-release.mjs
+
+      - name: Verify validated release identity
+        env:
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+        run: |
+          test "$(git rev-parse HEAD)" = "${RELEASE_SHA}"
+          test "$(node -p "require('./package.json').version")" = "${VERSION}"
+
+          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "${main_sha}" != "${RELEASE_SHA}" ]; then
+            echo "main advanced after release readiness; rerun the workflow."
+            exit 1
+          fi
 
       - name: Verify tag and release do not exist
         env:
@@ -109,13 +125,14 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           tag="v${VERSION}"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${tag}" -m "${tag}"
+          git tag -a "${tag}" "${RELEASE_SHA}" -m "${tag}"
           git push origin "${tag}"
 
           latest_flag=("--latest=false")

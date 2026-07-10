@@ -14,5 +14,5 @@ An ADR is expected for durable changes to package boundaries, runtime choices, p
 
 An ADR is not expected for tiny edits, feature-specific behavior under existing architecture, test cases, validation commands, or temporary experiments.
 
-When a required ADR is saved, the spec should link it and the repository ADR index should be updated when one exists.
+When a required ADR is saved, the spec should link it and the existing ADR index should be updated during save-only finalization when repository convention requires it.
 When a required ADR folder is missing, the skill should ask before creating `docs/adrs/` or choosing another path.

@@ -1,6 +1,6 @@
 # Data Schema
 
-`prepare-skillopt-split.mjs` converts `skill-evals/<skill>/cases/*.md` into split JSON under `.agents/skillopt-work/<skill>/data/`.
+`prepare-skillopt-split.mjs` converts `skill-evals/<skill>/cases/*.md` into split JSON under `.agents/skillopt-work/<skill>/data/`. It also writes `.agents/skillopt-work/<skill>/data-text-only/`; when visual assertions exist, that companion split excludes those visual cases.
 
 Each item has this shape:
 
@@ -18,7 +18,7 @@ Each item has this shape:
   "visual_assertions": [],
   "tags": ["positive"],
   "should_trigger": true,
-  "workspace_policy": "workspace-write",
+  "workspace_policy": "text-only",
   "source_hash": "sha256:..."
 }
 ```
@@ -35,6 +35,7 @@ Each item has this shape:
 - Link `rubric.md` and `expected/` artifacts when present.
 - Exclude raw run transcripts from generated JSON.
 - Put activation-only negative cases in `.agents/skillopt-work/<skill>/activation/negative-cases.json`.
+- Set `workspace_policy` to `text-only` when the case has no active visual assertions, or to `isolated-artifact-write` when a visual case requires bounded writes inside its temporary rollout workspace. This field describes the enforced case policy; it never authorizes legacy broad `workspace-write` execution.
 
 Default split policy starts from 60 percent train, 20 percent validation, 20 percent test, seed 42. When enough cases exist, the splitter preserves the documented held-out floors: at least 3 validation and 3 test cases for exploratory-quality data, and at least 5 validation and 5 test cases for official-parity-candidate data.
 
@@ -57,4 +58,6 @@ Supported visual assertion prefixes are:
 - `svg_contains: <glob> <text>`
 - `svg_not_contains: <glob> <text>`
 
-Visual assertions are evaluated against artifacts captured from the rollout workspace. They are intended for image-generating eval environments where draw.io Desktop export is available; if required artifacts are missing, the item fails deterministically.
+Visual assertions are evaluated against artifacts captured from the isolated rollout workspace. They are intended for image-generating eval environments where draw.io Desktop export is available; if required artifacts are missing, the item fails deterministically. Readiness reports these cases through `visualArtifactReadiness`; when `drawio`/`diagrams.net` is unavailable and `visual_eval_policy` is `auto`, the active config should point at `data-text-only` and report `text_only_ready`.
+
+Markdown punctuation escapes in artifact globs are decoded before matching, so formatter output such as `\*.png` retains the wildcard meaning of `*.png` in both JavaScript and Python evaluators.

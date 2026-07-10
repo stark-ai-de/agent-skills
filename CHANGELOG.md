@@ -12,22 +12,45 @@
 
 ### Removed
 
-## v0.6.3 - 2026-07-09
+### Security
+
+## v0.7.0 - 2026-07-10
 
 ### Added
 
-- Added `drawio-diagrams` architecture readability guidance for connector-label gutters, fan-out lanes, package/detail row treatment, component-card hierarchy, whitespace balancing, and icon-chip consistency.
-- Added a `drawio-diagrams` architecture readability eval case and rubric criteria for dense architecture diagrams and logo fidelity.
+- Added the incubating `skillopt-setup` workflow with local Microsoft SkillOpt installation and readiness checks, per-skill train/validation/test preparation, provider-backed, hybrid, and Codex CLI execution profiles, run artifact verification and summaries, and guarded `best_skill.md` adoption.
+- Added a local `.agents/` artifact audit and a loopback-only Codex-backed OpenAI Chat Completions gateway with an end-to-end compatibility probe for SkillOpt experiments.
+- Added deterministic draw.io visual-eval support with six PNG/SVG artifact cases, fixture-backed assertions, generated full and text-only split variants, page-index export, `DRAWIO_BIN` overrides, and `diagrams.net` executable discovery.
+- Added runtime-specific native Plan-mode lifecycle and fallback eval coverage for the Codex, Cursor, and Claude spec interviewers.
+- Added `drawio-diagrams` architecture-readability guidance and eval coverage for connector-label gutters, fan-out lanes, hierarchy, whitespace, dark-mode labels, and logo fidelity.
+- Added repository validation for SkillOpt helper and adapter contracts and draw.io visual assertions.
 
 ### Changed
 
-- Expanded `drawio-diagrams` XML authoring, routing, theming, icon, and verification references to keep labels off section borders, separate worker/outbound routes, preserve real logo artwork, and distinguish component titles from metadata.
+- Updated all three public spec interviewers to require native Plan mode when supported, route transitions through each host's native controls, use structured clarification when available, and record conversational fallback only when Plan mode is unavailable or explicitly declined.
+- Made Plan-mode interviewing read-only and moved approved spec and required ADR persistence to a save-only continuation after mode exit that stops before feature implementation.
+- Strengthened SkillOpt setup and readiness reporting with strict training-ready checks, target/mode/profile-specific fresh manifests, active-split data floors, explicit model and credential blockers, and visual renderer readiness.
+- Expanded `drawio-diagrams` XML authoring, routing, theming, icon, and verification guidance to improve dense architecture readability and preserve real logo artwork.
+- Updated public usage examples for each runtime's native Plan-mode lifecycle.
 
 ### Fixed
+
+- Fixed save-only spec-interviewer persistence so a required ADR also receives the minimal index entry mandated by the repository's existing convention, while all other repo-facing documentation remains deferred to implementation.
+- Fixed `drawio-diagrams` connector-crossing validation to honor explicit waypoints and side ports and calculate nested cell bounds before warning about callout overlaps.
+- Fixed draw.io visual assertion globs so Markdown escapes such as `\*.png` and `\*.svg` retain wildcard semantics in both JavaScript and Python matchers.
+- Fixed SkillOpt readiness to score the configured active split, ignore `None` visual sentinels, reject missing configured split directories, and block stale or mismatched adapter manifests.
+- Fixed generated SkillOpt case metadata to distinguish `text-only` execution from `isolated-artifact-write` visual execution instead of advertising legacy broad workspace writes.
 
 ### Deprecated
 
 ### Removed
+
+### Security
+
+- Isolated every Codex-backed SkillOpt target, judge, and reflection launch with strict network-disabled permissions and minimal runtime reads; visual cases alone receive bounded temporary-workspace artifact writes, with protected control output and symlink rejection.
+- Restricted the bundled Codex gateway to loopback-only, text-only operation that denies workspace reads and rejects all writes, host config/rules, inherited environments, and profiles; it also terminates full Codex process trees on success, timeout, or client disconnect. Remote deployment remains prohibited without OS/container host-read isolation.
+- Hardened provider endpoint probes, optimized-skill adoption, and local-artifact promotion against leaked URL/auth secrets, raw transcripts and private paths, stale proof, and regressing test scores.
+- Pinned release publication and annotated tags to the exact validated `main` commit, making the workflow fail closed if `main` advances between readiness and publication.
 
 ## v0.6.2 - 2026-07-08
 

@@ -1,14 +1,18 @@
 import json
 import hashlib
 import os
+import re
 import shutil
 import signal
+import stat
 import subprocess
 import struct
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
+from threading import Thread
 
 
 def redact(text):
@@ -40,6 +44,26 @@ def config_bool(value):
     if isinstance(value, bool):
         return value
     return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def has_visual_assertions(case):
+    assertions = case.get("visual_assertions") or []
+    if not isinstance(assertions, list):
+        return False
+    return any(str(assertion or "").strip() for assertion in assertions)
+
+
+def find_drawio_cli():
+    for command in ("drawio", "diagrams.net"):
+        executable = shutil.which(command)
+        if executable:
+            try:
+                resolved = Path(executable).resolve(strict=True)
+            except OSError:
+                continue
+            if resolved.is_file():
+                return {"command": command, "path": str(resolved)}
+    return None
 
 
 def toml_string(value):
@@ -82,14 +106,276 @@ def communicate_after_signal(process, timeout):
         return as_text(error.stdout), as_text(error.stderr), True
 
 
+def wait_for_process_group_exit(pgid, timeout):
+    deadline = time.monotonic() + max(0, timeout)
+    while process_group_alive(pgid) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    return not process_group_alive(pgid)
+
+
+def reap_process_group(process, grace_seconds=1):
+    notes = []
+    pgid = process.pid
+    had_remaining_processes = process_group_alive(pgid)
+    if not had_remaining_processes:
+        return notes, False, False
+
+    term_error = signal_process_group(process, signal.SIGTERM)
+    if term_error and term_error != "already exited":
+        notes.append(f"SIGTERM: {term_error}")
+    if not wait_for_process_group_exit(pgid, grace_seconds):
+        kill_error = signal_process_group(process, signal.SIGKILL)
+        if kill_error and kill_error != "already exited":
+            notes.append(f"SIGKILL: {kill_error}")
+        wait_for_process_group_exit(pgid, 5)
+    still_alive = process_group_alive(pgid)
+    if still_alive:
+        notes.append("process group remained alive after SIGKILL")
+    return notes, still_alive, had_remaining_processes
+
+
+def start_process_group_reaper(process, grace_seconds=0):
+    state = {}
+
+    def wait_and_reap():
+        process.wait()
+        state["result"] = reap_process_group(process, grace_seconds)
+
+    thread = Thread(target=wait_and_reap, name="skillopt-process-group-reaper", daemon=True)
+    thread.start()
+    return thread, state
+
+
+PACKAGE_DIRS_TO_SEED = ("scripts", "references", "assets", "agents")
+ROLLOUT_CONTROL_DIR = ".skillopt-control"
+ROLLOUT_BIN_DIR = ".skillopt-bin"
+VISUAL_ROLLOUT_PERMISSION_PROFILE = "skillopt_visual_rollout"
+TEXT_ROLLOUT_PERMISSION_PROFILE = "skillopt_text_rollout"
+MAX_WORKSPACE_ENTRIES = 4096
+MAX_ARTIFACT_COUNT = 32
+MAX_ARTIFACT_FILE_BYTES = 20 * 1024 * 1024
+MAX_ARTIFACT_TOTAL_BYTES = 64 * 1024 * 1024
+MAX_SVG_FILE_BYTES = 5 * 1024 * 1024
+MAX_PNG_DIMENSION = 16384
+MAX_PNG_PIXELS = 2_000_000
+MAX_PNG_INFLATED_BYTES = 16 * 1024 * 1024
+MAX_DISTINCT_PIXEL_SAMPLES = 1024
+MAX_PROVIDER_CONTEXT_FILES = 64
+MAX_PROVIDER_CONTEXT_FILE_BYTES = 128 * 1024
+MAX_PROVIDER_FIXTURE_BYTES = 64 * 1024
+MAX_PROVIDER_CONTEXT_TOTAL_BYTES = 768 * 1024
+
+
+class ArtifactPolicyError(ValueError):
+    pass
+
+
+class ProviderContextError(ValueError):
+    pass
+
+
+def path_is_within(path, root):
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def codex_runtime_read_path(command):
+    candidate = Path(str(command or "codex")).expanduser()
+    if not candidate.is_absolute():
+        resolved_command = shutil.which(str(candidate))
+        if not resolved_command:
+            return None
+        candidate = Path(resolved_command)
+    try:
+        executable = candidate.resolve(strict=True)
+    except OSError:
+        return None
+
+    runtime_path = executable
+    for parent in executable.parents:
+        package_json = parent / "package.json"
+        if not package_json.is_file():
+            continue
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        package_name = str(package.get("name") or "")
+        if package_name == "@openai/codex" or package_name.startswith("@openai/codex-"):
+            runtime_path = parent
+            break
+
+    forbidden_roots = [(Path.home() / ".codex").resolve()]
+    if os.environ.get("CODEX_HOME"):
+        forbidden_roots.append(Path(os.environ["CODEX_HOME"]).expanduser().resolve())
+    if runtime_path == Path(runtime_path.anchor) or runtime_path == Path.home():
+        return None
+    if any(path_is_within(runtime_path, root) for root in forbidden_roots):
+        return None
+    return runtime_path
+
+
+def drawio_runtime_read_path(command):
+    executable = Path(command).resolve(strict=True)
+    for parent in executable.parents:
+        name = parent.name.lower()
+        if "drawio" in name or "draw.io" in name or "diagrams" in name:
+            return parent
+    return executable
+
+
+def visual_rollout_filesystem_permissions(codex_command, drawio_cli=None):
+    entries = [
+        '":minimal"="read"',
+        (
+            '":workspace_roots"={"."="write",'
+            f'"{ROLLOUT_CONTROL_DIR}"="deny"'
+            "}"
+        ),
+    ]
+    runtime_path = codex_runtime_read_path(codex_command)
+    if runtime_path is not None:
+        entries.append(f"{toml_string(runtime_path)}=\"read\"")
+    if drawio_cli:
+        entries.append(f"{toml_string(drawio_runtime_read_path(drawio_cli))}=\"read\"")
+    return "{" + ",".join(entries) + "}"
+
+
+def text_rollout_filesystem_permissions(codex_command):
+    entries = [
+        '":minimal"="read"',
+        (
+            '":workspace_roots"={"."="deny",'
+            f'"{ROLLOUT_CONTROL_DIR}"="deny"'
+            "}"
+        ),
+    ]
+    runtime_path = codex_runtime_read_path(codex_command)
+    if runtime_path is not None:
+        entries.append(f"{toml_string(runtime_path)}=\"read\"")
+    return "{" + ",".join(entries) + "}"
+
+
+def prepare_drawio_command_alias(workspace, drawio_cli):
+    if not drawio_cli or drawio_cli.get("command") == "drawio":
+        return None
+    alias_dir = workspace / ROLLOUT_BIN_DIR
+    alias_dir.mkdir(mode=0o700)
+    alias = alias_dir / "drawio"
+    alias.symlink_to(Path(drawio_cli["path"]))
+    return alias_dir
+
+
+def minimal_rollout_environment(path_prefix=None):
+    allowed = (
+        "HOME",
+        "PATH",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "TERM",
+        "COLORTERM",
+        "NO_COLOR",
+        "CODEX_HOME",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+    )
+    env = {key: os.environ[key] for key in allowed if os.environ.get(key)}
+    if path_prefix is not None:
+        current_path = env.get("PATH", os.defpath)
+        env["PATH"] = f"{path_prefix}{os.pathsep}{current_path}"
+    return env
+
+
+def shell_environment_for_workspace(workspace, process_env):
+    temp_dir = workspace / ".tmp"
+    temp_dir.mkdir(mode=0o700)
+    values = {
+        "HOME": str(workspace),
+        "PATH": process_env.get("PATH", os.defpath),
+        "TMPDIR": str(temp_dir),
+        "TMP": str(temp_dir),
+        "TEMP": str(temp_dir),
+        "XDG_CACHE_HOME": str(workspace / ".cache"),
+        "XDG_CONFIG_HOME": str(workspace / ".config"),
+        "XDG_DATA_HOME": str(workspace / ".local" / "share"),
+    }
+    for key in ("LANG", "LC_ALL", "LC_CTYPE", "TERM", "COLORTERM", "NO_COLOR"):
+        if process_env.get(key):
+            values[key] = process_env[key]
+    return values
+
+
+def toml_inline_string_map(values):
+    return "{" + ",".join(
+        f"{toml_string(key)}={toml_string(value)}" for key, value in sorted(values.items())
+    ) + "}"
+
+
 def find_repo_root():
     for candidate in [Path.cwd(), *Path.cwd().parents]:
-        if (candidate / "skills" / "engineering-workflows" / "drawio-diagrams").is_dir():
+        has_skill_tree = (candidate / "skills").is_dir() or (
+            candidate / "incubator" / "skills"
+        ).is_dir()
+        has_repo_sentinel = any(
+            (candidate / name).exists() for name in ("AGENTS.md", "package.json", "skill-evals")
+        )
+        if has_skill_tree and has_repo_sentinel:
             return candidate
     return None
 
 
+def find_skill_dir(repo_root, skill_name):
+    matches = []
+    for search_root in (repo_root / "skills", repo_root / "incubator" / "skills"):
+        if not search_root.is_dir():
+            continue
+        for skill_file in search_root.rglob("SKILL.md"):
+            if skill_file.parent.name == skill_name:
+                matches.append(skill_file.parent)
+
+    matches = sorted(set(matches), key=lambda item: item.as_posix())
+    if len(matches) == 1:
+        return matches[0], ""
+    if not matches:
+        return (
+            None,
+            f"No target skill package named {skill_name!r} was found under skills/ or incubator/skills.",
+        )
+
+    relative_matches = ", ".join(str(match.relative_to(repo_root)) for match in matches)
+    return (
+        None,
+        f"Multiple target skill packages named {skill_name!r} were found: {relative_matches}. "
+        "Cannot seed rollout helpers safely.",
+    )
+
+
 def copy_tree(src, dst):
+    for root, directories, files in os.walk(src, followlinks=False):
+        for name in [*directories, *files]:
+            candidate = Path(root) / name
+            try:
+                mode = candidate.stat(follow_symlinks=False).st_mode
+            except OSError as error:
+                raise ValueError(
+                    f"skill package resource cannot be inspected safely: {candidate}"
+                ) from error
+            if stat.S_ISLNK(mode):
+                raise ValueError(f"skill package resources may not contain symlinks: {candidate}")
+            if not (stat.S_ISDIR(mode) or stat.S_ISREG(mode)):
+                raise ValueError(
+                    f"skill package resources must be regular files or directories: {candidate}"
+                )
     shutil.copytree(
         src,
         dst,
@@ -98,28 +384,60 @@ def copy_tree(src, dst):
     )
 
 
+def fixture_source(repo_root, fixture):
+    if not isinstance(fixture, str) or not fixture.strip():
+        raise ValueError("fixture paths must be non-empty strings")
+    relative = Path(fixture)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ValueError(f"fixture path must stay relative to the repository: {fixture!r}")
+
+    candidate = repo_root / relative
+    current = repo_root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError(f"fixture path may not contain symlinks: {fixture!r}")
+
+    try:
+        resolved = candidate.resolve(strict=True)
+        mode = candidate.stat(follow_symlinks=False).st_mode
+    except OSError as error:
+        raise ValueError(f"fixture does not exist or cannot be inspected: {fixture!r}") from error
+    if not path_is_within(resolved, repo_root) or not stat.S_ISREG(mode):
+        raise ValueError(f"fixture must be a regular repository file: {fixture!r}")
+    return resolved
+
+
 def seed_workspace(workspace, case, skill_name):
     repo_root = find_repo_root()
     if repo_root is None:
         return "No repository helper files were found for this isolated rollout."
+    repo_root = repo_root.resolve(strict=True)
 
-    skill_dir = repo_root / "skills" / "engineering-workflows" / skill_name
     notes = []
-    for dirname in ("scripts", "references"):
-        src = skill_dir / dirname
-        if src.is_dir():
-            copy_tree(src, workspace / dirname)
-            notes.append(f"- ./{dirname}/ from the target skill package")
+    skill_dir, skill_error = find_skill_dir(repo_root, skill_name)
+    if skill_error:
+        notes.append(skill_error)
+    if skill_dir is not None:
+        for dirname in PACKAGE_DIRS_TO_SEED:
+            src = skill_dir / dirname
+            if src.is_dir():
+                copy_tree(src, workspace / dirname)
+                notes.append(f"- ./{dirname}/ from the target skill package")
 
     fixture_notes = []
     fixture_dir = workspace / "fixtures"
-    for fixture in case.get("fixtures") or []:
-        src = repo_root / fixture
-        if not src.is_file():
-            fixture_notes.append(f"- missing fixture: {fixture}")
-            continue
+    fixtures = case.get("fixtures") or []
+    if not isinstance(fixtures, list):
+        raise ValueError("case fixtures must be a list of repository-relative paths")
+    for fixture in fixtures:
+        src = fixture_source(repo_root, fixture)
         fixture_dir.mkdir(parents=True, exist_ok=True)
         dst = fixture_dir / src.name
+        if dst.exists():
+            raise ValueError(
+                f"fixture basename collision would overwrite {dst.name!r}; use unique names"
+            )
         shutil.copy2(src, dst)
         fixture_notes.append(f"- ./fixtures/{dst.name} copied from {fixture}")
 
@@ -129,6 +447,90 @@ def seed_workspace(workspace, case, skill_name):
     if not notes:
         return "No case-specific helper files were required for this isolated rollout."
     return "\n".join(notes)
+
+
+def sanitize_provider_context(text):
+    value = redact(text)
+    value = re.sub(r"/(?:home|Users)/[A-Za-z0-9._-]+/", "~/", value)
+    value = re.sub(
+        r"(?i)(https?://)[^/@\s]+:[^/@\s]+@",
+        r"\1[redacted-credentials]@",
+        value,
+    )
+    value = re.sub(r"(?i)\b(Bearer\s+)[^\s,;]+", r"\1[redacted-token]", value)
+    value = re.sub(
+        r"(?i)([?&](?:api[_-]?key|access[_-]?token|token|secret|password|signature)=)[^&\s]+",
+        r"\1[redacted-token]",
+        value,
+    )
+    value = re.sub(r"sk-[A-Za-z0-9_-]{20,}", "[redacted-token]", value)
+    value = re.sub(
+        r"\b(?:ghp_|github_pat_|xox[baprs]-|AKIA|ASIA)[A-Za-z0-9_/-]{12,}\b",
+        "[redacted-token]",
+        value,
+    )
+    return value
+
+
+def provider_resource_snapshot(workspace):
+    roots = [workspace / name for name in (*PACKAGE_DIRS_TO_SEED, "fixtures")]
+    files = []
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for candidate in root.rglob("*"):
+            if candidate.is_symlink() or not candidate.is_file():
+                continue
+            files.append(candidate)
+    files = sorted(set(files), key=lambda item: item.relative_to(workspace).as_posix())
+    if len(files) > MAX_PROVIDER_CONTEXT_FILES:
+        raise ProviderContextError(
+            f"provider resource snapshot exceeds {MAX_PROVIDER_CONTEXT_FILES} files"
+        )
+
+    sections = []
+    total_bytes = 0
+    for candidate in files:
+        relative = candidate.relative_to(workspace).as_posix()
+        file_size = candidate.stat(follow_symlinks=False).st_size
+        is_fixture = relative.startswith("fixtures/")
+        file_limit = (
+            MAX_PROVIDER_FIXTURE_BYTES if is_fixture else MAX_PROVIDER_CONTEXT_FILE_BYTES
+        )
+        if file_size > file_limit:
+            raise ProviderContextError(
+                f"provider resource {relative} exceeds {file_limit} bytes"
+            )
+        content = candidate.read_bytes()
+        if b"\x00" in content:
+            if is_fixture:
+                raise ProviderContextError(
+                    f"provider target cannot inline binary fixture {relative}"
+                )
+            sections.append(f"<resource path={json.dumps(relative)}>\n[non-text resource omitted]\n</resource>")
+            continue
+        try:
+            decoded = content.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as error:
+            if is_fixture:
+                raise ProviderContextError(
+                    f"provider target cannot inline non-UTF-8 fixture {relative}"
+                ) from error
+            sections.append(f"<resource path={json.dumps(relative)}>\n[non-text resource omitted]\n</resource>")
+            continue
+        sanitized = sanitize_provider_context(decoded)
+        encoded_size = len(sanitized.encode("utf-8"))
+        total_bytes += encoded_size
+        if total_bytes > MAX_PROVIDER_CONTEXT_TOTAL_BYTES:
+            raise ProviderContextError(
+                f"provider resource snapshot exceeds {MAX_PROVIDER_CONTEXT_TOTAL_BYTES} total bytes"
+            )
+        sections.append(
+            f"<resource path={json.dumps(relative)}>\n{sanitized}\n</resource>"
+        )
+    if not sections:
+        return "No textual helper resources or fixtures were required."
+    return "\n\n".join(sections)
 
 
 def paeth_predictor(left, up, upper_left):
@@ -167,14 +569,16 @@ def png_pixel_sample(row, x, bit_depth, pixel_stride):
 
 
 def sample_has_value(data):
-    return any(byte != 0 for byte in data)
+    return any(data)
 
 
 def sample_equals(data, expected):
     return expected is not None and bytes(data) == bytes(expected)
 
 
-def png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transparency):
+def png_visible_pixel_sample(
+    row, x, bit_depth, color_type, pixel_stride, transparency, palette
+):
     if bit_depth >= 8:
         start = x * pixel_stride
         bytes_per_sample = (bit_depth + 7) // 8
@@ -190,10 +594,10 @@ def png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transp
             return bytes(sample).hex()
         if color_type == 3:
             palette_index = row[start]
-            alpha = transparency.get("palette", {}).get(palette_index)
+            alpha = transparency.get("palette", {}).get(palette_index, 255)
             if alpha == 0:
                 return None
-            return str(palette_index)
+            return (palette[palette_index] + bytes([alpha])).hex()
         if color_type == 4:
             alpha_start = start + bytes_per_sample
             alpha = row[alpha_start : alpha_start + bytes_per_sample]
@@ -214,10 +618,10 @@ def png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transp
         return sample
     if color_type == 3:
         palette_index = int(png_pixel_sample(row, x, bit_depth, pixel_stride))
-        alpha = transparency.get("palette", {}).get(palette_index)
+        alpha = transparency.get("palette", {}).get(palette_index, 255)
         if alpha == 0:
             return None
-        return str(palette_index)
+        return (palette[palette_index] + bytes([alpha])).hex()
     return png_pixel_sample(row, x, bit_depth, pixel_stride)
 
 
@@ -227,9 +631,175 @@ def png_transparency_sample_bytes(data, bit_depth, sample_index):
     return bytes(data[sample_start + 2 - bytes_per_sample : sample_start + 2])
 
 
-def png_metadata(path):
+def decompress_png_rows(idat_chunks, expected_bytes):
+    if expected_bytes > MAX_PNG_INFLATED_BYTES:
+        raise ValueError(
+            f"PNG decoded rows exceed {MAX_PNG_INFLATED_BYTES} byte safety limit"
+        )
+    compressed = b"".join(idat_chunks)
+    decompressor = zlib.decompressobj()
+    inflated = bytearray()
+    pending = compressed
+    while pending:
+        remaining = expected_bytes + 1 - len(inflated)
+        if remaining <= 0:
+            raise ValueError("PNG IDAT data expands beyond expected image rows")
+        before = len(pending)
+        inflated.extend(decompressor.decompress(pending, remaining))
+        if len(inflated) > expected_bytes:
+            raise ValueError("PNG IDAT data expands beyond expected image rows")
+        pending = decompressor.unconsumed_tail
+        if pending and len(pending) == before and not decompressor.eof:
+            raise ValueError("PNG IDAT decompressor made no progress")
+
+    if not decompressor.eof:
+        raise ValueError("PNG IDAT stream is truncated")
+    if decompressor.unused_data:
+        raise ValueError("PNG IDAT stream contains trailing compressed data")
+    if len(inflated) != expected_bytes:
+        raise ValueError(
+            f"PNG IDAT decoded {len(inflated)} bytes; expected {expected_bytes}"
+        )
+    return bytes(inflated)
+
+
+ADAM7_PASSES = (
+    (0, 0, 8, 8),
+    (4, 0, 8, 8),
+    (0, 4, 4, 8),
+    (2, 0, 4, 4),
+    (0, 2, 2, 4),
+    (1, 0, 2, 2),
+    (0, 1, 1, 2),
+)
+
+
+def adam7_extent(size, start, step):
+    return 0 if size <= start else (size - start + step - 1) // step
+
+
+def png_passes(width, height, interlace_method):
+    if interlace_method == 0:
+        return ((0, 0, 1, 1, width, height),)
+    return tuple(
+        (
+            x_start,
+            y_start,
+            x_step,
+            y_step,
+            adam7_extent(width, x_start, x_step),
+            adam7_extent(height, y_start, y_step),
+        )
+        for x_start, y_start, x_step, y_step in ADAM7_PASSES
+    )
+
+
+def png_expected_inflated_bytes(width, height, bits_per_pixel, interlace_method):
+    total = 0
+    for _, _, _, _, pass_width, pass_height in png_passes(
+        width, height, interlace_method
+    ):
+        if pass_width and pass_height:
+            pass_row_bytes = (pass_width * bits_per_pixel + 7) // 8
+            total += pass_height * (pass_row_bytes + 1)
+    return total
+
+
+def unfilter_png_row(encoded, previous, filter_stride, row_filter):
+    row = bytearray(len(encoded))
+    for index, value in enumerate(encoded):
+        left = row[index - filter_stride] if index >= filter_stride else 0
+        up = previous[index] if index < len(previous) else 0
+        upper_left = previous[index - filter_stride] if index >= filter_stride else 0
+        if row_filter == 0:
+            predictor = 0
+        elif row_filter == 1:
+            predictor = left
+        elif row_filter == 2:
+            predictor = up
+        elif row_filter == 3:
+            predictor = (left + up) // 2
+        elif row_filter == 4:
+            predictor = paeth_predictor(left, up, upper_left)
+        else:
+            raise ValueError(f"unsupported PNG row filter {row_filter}")
+        row[index] = (value + predictor) & 0xFF
+    return row
+
+
+def packed_png_sample(row, x, bit_depth):
+    bit_offset = x * bit_depth
+    byte_index = bit_offset // 8
+    shift = 8 - bit_depth - (bit_offset % 8)
+    return (row[byte_index] >> shift) & ((1 << bit_depth) - 1)
+
+
+def set_packed_png_sample(row, x, bit_depth, value):
+    bit_offset = x * bit_depth
+    byte_index = bit_offset // 8
+    shift = 8 - bit_depth - (bit_offset % 8)
+    mask = ((1 << bit_depth) - 1) << shift
+    row[byte_index] = (row[byte_index] & ~mask) | ((value << shift) & mask)
+
+
+def decode_png_rows(inflated, width, height, bits_per_pixel, filter_stride, interlace_method):
+    full_row_bytes = (width * bits_per_pixel + 7) // 8
+    if interlace_method == 0:
+        rows = []
+        previous = bytearray(full_row_bytes)
+        offset = 0
+        for _ in range(height):
+            row_filter = inflated[offset]
+            encoded = inflated[offset + 1 : offset + 1 + full_row_bytes]
+            offset += full_row_bytes + 1
+            decoded = unfilter_png_row(encoded, previous, filter_stride, row_filter)
+            rows.append(decoded)
+            previous = decoded
+        if offset != len(inflated):
+            raise ValueError("PNG decoded row data has unexpected trailing bytes")
+        return rows
+
+    rows = [bytearray(full_row_bytes) for _ in range(height)]
+    offset = 0
+    for x_start, y_start, x_step, y_step, pass_width, pass_height in png_passes(
+        width, height, interlace_method
+    ):
+        if not pass_width or not pass_height:
+            continue
+        pass_row_bytes = (pass_width * bits_per_pixel + 7) // 8
+        previous = bytearray(pass_row_bytes)
+        for pass_y in range(pass_height):
+            row_filter = inflated[offset]
+            encoded = inflated[offset + 1 : offset + 1 + pass_row_bytes]
+            offset += pass_row_bytes + 1
+            decoded = unfilter_png_row(encoded, previous, filter_stride, row_filter)
+            target = rows[y_start + pass_y * y_step]
+            if bits_per_pixel >= 8:
+                pixel_bytes = bits_per_pixel // 8
+                for pass_x in range(pass_width):
+                    source_start = pass_x * pixel_bytes
+                    target_start = (x_start + pass_x * x_step) * pixel_bytes
+                    target[target_start : target_start + pixel_bytes] = decoded[
+                        source_start : source_start + pixel_bytes
+                    ]
+            else:
+                for pass_x in range(pass_width):
+                    sample = packed_png_sample(decoded, pass_x, bits_per_pixel)
+                    set_packed_png_sample(
+                        target, x_start + pass_x * x_step, bits_per_pixel, sample
+                    )
+            previous = decoded
+    if offset != len(inflated):
+        raise ValueError("PNG decoded row data has unexpected trailing bytes")
+    return rows
+
+
+def png_metadata(path, data=None):
     try:
-        data = path.read_bytes()
+        if data is None:
+            data = path.read_bytes()
+        if len(data) > MAX_ARTIFACT_FILE_BYTES:
+            raise ValueError(f"PNG exceeds {MAX_ARTIFACT_FILE_BYTES} byte safety limit")
         if len(data) < 33 or data[:8] != b"\x89PNG\r\n\x1a\n":
             return {"valid": False, "error": "invalid PNG signature"}
 
@@ -238,27 +808,97 @@ def png_metadata(path):
         height = None
         bit_depth = None
         color_type = None
+        interlace_method = None
         transparency = {}
         idat_chunks = []
+        palette = []
+        palette_entries = 0
+        seen_ihdr = False
+        seen_plte = False
+        seen_trns = False
+        seen_idat = False
+        idat_ended = False
+        seen_iend = False
+        chunk_index = 0
         while offset + 12 <= len(data):
             length = struct.unpack(">I", data[offset : offset + 4])[0]
-            chunk_type = data[offset + 4 : offset + 8].decode("ascii", errors="replace")
+            chunk_type_bytes = data[offset + 4 : offset + 8]
+            try:
+                chunk_type = chunk_type_bytes.decode("ascii")
+            except UnicodeDecodeError as error:
+                raise ValueError("PNG chunk type is not ASCII") from error
+            if len(chunk_type) != 4 or not chunk_type.isalpha():
+                raise ValueError(f"invalid PNG chunk type {chunk_type!r}")
+            if chunk_type_bytes[2] & 0x20:
+                raise ValueError(f"PNG chunk {chunk_type} uses a lowercase reserved bit")
             data_start = offset + 8
             data_end = data_start + length
             if data_end + 4 > len(data):
                 raise ValueError("truncated PNG chunk")
             chunk = data[data_start:data_end]
+            stored_crc = struct.unpack(">I", data[data_end : data_end + 4])[0]
+            calculated_crc = zlib.crc32(chunk_type_bytes)
+            calculated_crc = zlib.crc32(chunk, calculated_crc) & 0xFFFFFFFF
+            if stored_crc != calculated_crc:
+                raise ValueError(f"PNG {chunk_type} chunk CRC mismatch")
+
+            if chunk_index == 0 and chunk_type != "IHDR":
+                raise ValueError("PNG IHDR must be the first chunk")
+            if chunk_type != "IDAT" and seen_idat:
+                idat_ended = True
             if chunk_type == "IHDR":
+                if seen_ihdr or chunk_index != 0:
+                    raise ValueError("PNG must contain exactly one leading IHDR")
                 if length != 13:
                     raise ValueError("invalid PNG IHDR length")
                 width, height = struct.unpack(">II", chunk[:8])
                 bit_depth = chunk[8]
                 color_type = chunk[9]
-                if chunk[10] != 0 or chunk[11] != 0 or chunk[12] != 0:
+                if chunk[10] != 0 or chunk[11] != 0 or chunk[12] not in {0, 1}:
                     raise ValueError("unsupported PNG compression, filter, or interlace method")
+                interlace_method = chunk[12]
+                legal_depths = {
+                    0: {1, 2, 4, 8, 16},
+                    2: {8, 16},
+                    3: {1, 2, 4, 8},
+                    4: {8, 16},
+                    6: {8, 16},
+                }
+                if color_type not in legal_depths or bit_depth not in legal_depths[color_type]:
+                    raise ValueError(
+                        f"invalid PNG bit depth {bit_depth} for color type {color_type}"
+                    )
+                if width <= 0 or height <= 0:
+                    raise ValueError("PNG dimensions must be positive")
+                if width > MAX_PNG_DIMENSION or height > MAX_PNG_DIMENSION:
+                    raise ValueError(
+                        f"PNG dimensions exceed {MAX_PNG_DIMENSION} pixel safety limit"
+                    )
+                if width * height > MAX_PNG_PIXELS:
+                    raise ValueError(f"PNG exceeds {MAX_PNG_PIXELS} pixel safety limit")
+                seen_ihdr = True
+            elif chunk_type == "PLTE":
+                if not seen_ihdr or seen_idat or seen_plte or seen_trns:
+                    raise ValueError("PNG PLTE chunk is duplicated or out of order")
+                if color_type in {0, 4}:
+                    raise ValueError(f"PNG color type {color_type} may not contain PLTE")
+                if length == 0 or length > 768 or length % 3 != 0:
+                    raise ValueError("invalid PNG PLTE length")
+                palette_entries = length // 3
+                palette = [chunk[index : index + 3] for index in range(0, length, 3)]
+                if color_type == 3 and palette_entries > 2**bit_depth:
+                    raise ValueError("PNG PLTE has more entries than indexed bit depth permits")
+                seen_plte = True
             elif chunk_type == "IDAT":
+                if not seen_ihdr or seen_iend or idat_ended:
+                    raise ValueError("PNG IDAT chunks must be consecutive and precede IEND")
+                if color_type == 3 and not seen_plte:
+                    raise ValueError("indexed PNG is missing PLTE before IDAT")
                 idat_chunks.append(chunk)
+                seen_idat = True
             elif chunk_type == "tRNS":
+                if not seen_ihdr or seen_idat or seen_trns:
+                    raise ValueError("PNG tRNS chunk is duplicated or does not precede IDAT")
                 if color_type == 0:
                     if length != 2:
                         raise ValueError("invalid PNG tRNS length for grayscale image")
@@ -272,76 +912,117 @@ def png_metadata(path):
                         for sample_index in range(3)
                     )
                 elif color_type == 3:
+                    if not seen_plte or length == 0 or length > palette_entries:
+                        raise ValueError("invalid PNG tRNS length for indexed image")
                     transparency["palette"] = {index: alpha for index, alpha in enumerate(chunk)}
+                else:
+                    raise ValueError(f"PNG color type {color_type} may not contain tRNS")
+                seen_trns = True
             elif chunk_type == "IEND":
+                if length != 0 or not seen_idat or seen_iend:
+                    raise ValueError("invalid or duplicate PNG IEND chunk")
+                seen_iend = True
+                offset = data_end + 4
                 break
+            elif chunk_type_bytes[0] & 0x20 == 0:
+                raise ValueError(f"unsupported critical PNG chunk {chunk_type}")
             offset = data_end + 4
+            chunk_index += 1
 
-        if not width or not height or bit_depth is None or color_type is None:
+        if not seen_ihdr or width is None or height is None:
             raise ValueError("PNG missing IHDR")
-        if not idat_chunks:
+        if not seen_idat or not idat_chunks:
             raise ValueError("PNG missing IDAT data")
+        if not seen_iend:
+            raise ValueError("PNG missing IEND")
+        if offset != len(data):
+            raise ValueError("PNG contains trailing data after IEND")
 
         channels = png_channels(color_type)
         bits_per_pixel = channels * bit_depth
-        row_bytes = (width * bits_per_pixel + 7) // 8
         filter_stride = max(1, (bits_per_pixel + 7) // 8)
         pixel_stride = filter_stride if bit_depth >= 8 else 1
-        inflated = zlib.decompress(b"".join(idat_chunks))
-        if len(inflated) < height * (row_bytes + 1):
-            raise ValueError("PNG IDAT data is shorter than expected image rows")
-
-        offset = 0
-        previous = bytearray(row_bytes)
+        expected_bytes = png_expected_inflated_bytes(
+            width, height, bits_per_pixel, interlace_method
+        )
+        inflated = decompress_png_rows(idat_chunks, expected_bytes)
+        rows = decode_png_rows(
+            inflated, width, height, bits_per_pixel, filter_stride, interlace_method
+        )
         distinct_pixels = set()
         visible_distinct_pixels = set()
         visible_pixel_count = 0
         transparent_pixel_count = 0
-        for _ in range(height):
-            row_filter = inflated[offset]
-            encoded = inflated[offset + 1 : offset + 1 + row_bytes]
-            row = bytearray(row_bytes)
-            offset += row_bytes + 1
-            for x in range(row_bytes):
-                left = row[x - filter_stride] if x >= filter_stride else 0
-                up = previous[x] if x < len(previous) else 0
-                upper_left = previous[x - filter_stride] if x >= filter_stride else 0
-                predictor = 0
-                if row_filter == 1:
-                    predictor = left
-                elif row_filter == 2:
-                    predictor = up
-                elif row_filter == 3:
-                    predictor = (left + up) // 2
-                elif row_filter == 4:
-                    predictor = paeth_predictor(left, up, upper_left)
-                elif row_filter != 0:
-                    raise ValueError(f"unsupported PNG row filter {row_filter}")
-                row[x] = (encoded[x] + predictor) & 0xFF
-
-            for x in range(width):
-                distinct_pixels.add(png_pixel_sample(row, x, bit_depth, pixel_stride))
-                visible_sample = png_visible_pixel_sample(row, x, bit_depth, color_type, pixel_stride, transparency)
-                if visible_sample is None:
-                    transparent_pixel_count += 1
-                else:
-                    visible_pixel_count += 1
-                    visible_distinct_pixels.add(visible_sample)
-            previous = row
-
-        nonblank = (
-            visible_pixel_count > 0
-            if transparent_pixel_count > 0
-            else len(visible_distinct_pixels) > 1
-        )
+        nonblank = False
+        for row in rows:
+            if color_type == 3:
+                for x in range(width):
+                    if int(png_pixel_sample(row, x, bit_depth, pixel_stride)) >= palette_entries:
+                        raise ValueError("indexed PNG references a missing palette entry")
+            if not nonblank and bit_depth == 8 and color_type == 6:
+                alpha_values = row[3::4]
+                transparent_in_row = alpha_values.count(0)
+                visible_in_row = width - transparent_in_row
+                transparent_pixel_count += transparent_in_row
+                visible_pixel_count += visible_in_row
+                if visible_pixel_count > 0 and transparent_pixel_count > 0:
+                    if visible_in_row and not visible_distinct_pixels:
+                        first_visible = next(
+                            index for index, alpha in enumerate(alpha_values) if alpha != 0
+                        )
+                        start = first_visible * 4
+                        visible_distinct_pixels.add(bytes(row[start : start + 3]).hex())
+                    nonblank = True
+                elif visible_in_row:
+                    for x in range(width):
+                        start = x * 4
+                        pixel_sample = bytes(row[start : start + 4]).hex()
+                        visible_sample = bytes(row[start : start + 3]).hex()
+                        if len(distinct_pixels) < MAX_DISTINCT_PIXEL_SAMPLES:
+                            distinct_pixels.add(pixel_sample)
+                        if len(visible_distinct_pixels) < MAX_DISTINCT_PIXEL_SAMPLES:
+                            visible_distinct_pixels.add(visible_sample)
+                        if len(visible_distinct_pixels) > 1:
+                            nonblank = True
+                            break
+            elif not nonblank:
+                for x in range(width):
+                    pixel_sample = png_pixel_sample(row, x, bit_depth, pixel_stride)
+                    if len(distinct_pixels) < MAX_DISTINCT_PIXEL_SAMPLES:
+                        distinct_pixels.add(pixel_sample)
+                    visible_sample = png_visible_pixel_sample(
+                        row,
+                        x,
+                        bit_depth,
+                        color_type,
+                        pixel_stride,
+                        transparency,
+                        palette,
+                    )
+                    if visible_sample is None:
+                        transparent_pixel_count += 1
+                    else:
+                        visible_pixel_count += 1
+                        if len(visible_distinct_pixels) < MAX_DISTINCT_PIXEL_SAMPLES:
+                            visible_distinct_pixels.add(visible_sample)
+                    if (
+                        visible_pixel_count > 0 and transparent_pixel_count > 0
+                    ) or len(visible_distinct_pixels) > 1:
+                        nonblank = True
+                        break
         return {
             "valid": True,
             "width": width,
             "height": height,
             "bit_depth": bit_depth,
             "color_type": color_type,
+            "interlace_method": interlace_method,
             "distinct_pixels": len(distinct_pixels),
             "visible_distinct_pixels": len(visible_distinct_pixels),
+            "distinct_pixel_samples_capped": (
+                len(distinct_pixels) == MAX_DISTINCT_PIXEL_SAMPLES
+                or len(visible_distinct_pixels) == MAX_DISTINCT_PIXEL_SAMPLES
+            ),
             "visible_pixel_count": visible_pixel_count,
             "transparent_pixel_count": transparent_pixel_count,
             "nonblank": nonblank,
@@ -350,14 +1031,190 @@ def png_metadata(path):
         return {"valid": False, "error": short(error, 300)}
 
 
-def svg_metadata(path):
+NON_RENDERED_SVG_ELEMENTS = {
+    "clipPath",
+    "defs",
+    "desc",
+    "marker",
+    "mask",
+    "metadata",
+    "pattern",
+    "script",
+    "style",
+    "symbol",
+    "title",
+}
+SVG_TEXT_CONTAINERS = {"foreignObject", "text", "textPath", "tspan"}
+SVG_11_DOCTYPE = re.compile(
+    r'''<!DOCTYPE\s+svg\s+PUBLIC\s+["']-//W3C//DTD\s+SVG\s+1\.1//EN["']\s+'''
+    r'''["']http://www\.w3\.org/Graphics/SVG/1\.1/DTD/svg11\.dtd["']\s*>''',
+    flags=re.IGNORECASE,
+)
+
+
+def svg_local_name(value):
+    if not isinstance(value, str):
+        return ""
+    return value.rsplit("}", 1)[-1].split(":")[-1]
+
+
+def svg_style_properties(element):
+    properties = {}
+    for item in str(element.attrib.get("style") or "").split(";"):
+        name, separator, value = item.partition(":")
+        if separator:
+            properties[name.strip().lower()] = value.strip().lower().split("!important", 1)[0].strip()
+    return properties
+
+
+def svg_properties(element):
+    attributes = {
+        svg_local_name(name).lower(): str(value).strip().lower()
+        for name, value in element.attrib.items()
+    }
+    attributes.update(svg_style_properties(element))
+    return attributes
+
+
+def svg_number(value, fallback):
+    text = str(value or "").strip().lower()
+    if not text:
+        return fallback
     try:
-        text = path.read_text(encoding="utf-8", errors="replace")
+        if text.endswith("%"):
+            return float(text[:-1]) / 100
+        match = re.match(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)", text)
+        return float(match.group(0)) if match else fallback
+    except ValueError:
+        return fallback
+
+
+def svg_render_state(element, parent):
+    properties = svg_properties(element)
+    display = properties.get("display", "")
+    visibility = properties.get("visibility", parent["visibility"])
+    if visibility == "inherit":
+        visibility = parent["visibility"]
+    own_opacity = max(0.0, svg_number(properties.get("opacity"), 1.0))
+
+    def inherited(name):
+        value = properties.get(name)
+        return parent[name.replace("-", "_")] if not value or value == "inherit" else value
+
+    return {
+        "displayed": parent["displayed"] and display != "none",
+        "visibility": visibility,
+        "opacity": parent["opacity"] * own_opacity,
+        "fill": inherited("fill"),
+        "fill_opacity": max(
+            0.0,
+            svg_number(inherited("fill-opacity"), parent["fill_opacity"]),
+        ),
+        "stroke": inherited("stroke"),
+        "stroke_opacity": max(
+            0.0,
+            svg_number(inherited("stroke-opacity"), parent["stroke_opacity"]),
+        ),
+        "stroke_width": max(
+            0.0,
+            svg_number(inherited("stroke-width"), parent["stroke_width"]),
+        ),
+        "hidden_attribute": parent["hidden_attribute"]
+        or "hidden" in properties
+        and properties.get("hidden") in {"", "hidden", "true"}
+        or properties.get("aria-hidden") == "true",
+    }
+
+
+def svg_state_is_visible(state, foreign_text=False):
+    if (
+        not state["displayed"]
+        or state["hidden_attribute"]
+        or state["visibility"] in {"hidden", "collapse"}
+        or state["opacity"] <= 0
+    ):
+        return False
+    if foreign_text:
+        return True
+    fill_visible = state["fill"] not in {"none", "transparent"} and state["fill_opacity"] > 0
+    stroke_visible = (
+        state["stroke"] not in {"none", "transparent"}
+        and state["stroke_opacity"] > 0
+        and state["stroke_width"] > 0
+    )
+    return fill_visible or stroke_visible
+
+
+def svg_visible_text(root):
+    parts = []
+    initial_state = {
+        "displayed": True,
+        "visibility": "visible",
+        "opacity": 1.0,
+        "fill": "black",
+        "fill_opacity": 1.0,
+        "stroke": "none",
+        "stroke_opacity": 1.0,
+        "stroke_width": 1.0,
+        "hidden_attribute": False,
+    }
+
+    def visit(element, parent_state, text_context=""):
+        local_name = svg_local_name(element.tag)
+        state = svg_render_state(element, parent_state)
+        non_rendered = local_name in NON_RENDERED_SVG_ELEMENTS
+        child_text_context = text_context
+        if local_name == "foreignObject":
+            child_text_context = "foreign"
+        elif local_name in SVG_TEXT_CONTAINERS and not child_text_context:
+            child_text_context = "svg"
+        visible = not non_rendered and svg_state_is_visible(
+            state, foreign_text=child_text_context == "foreign"
+        )
+        if visible and child_text_context and element.text:
+            parts.append(element.text)
+        for child in element:
+            visit(
+                child,
+                state if not non_rendered else {**state, "displayed": False},
+                child_text_context,
+            )
+            if visible and child_text_context and child.tail:
+                parts.append(child.tail)
+
+    visit(root, initial_state)
+    return " ".join(" ".join(parts).split())
+
+
+def validate_svg_doctype(text):
+    if re.search(r"<!ENTITY\b", text, flags=re.IGNORECASE):
+        raise ValueError("SVG entity declarations are not allowed")
+    doctypes = list(re.finditer(r"<!DOCTYPE\b", text, flags=re.IGNORECASE))
+    if not doctypes:
+        return
+    if len(doctypes) != 1:
+        raise ValueError("SVG may contain at most one doctype")
+    match = SVG_11_DOCTYPE.search(text)
+    if match is None or match.start() != doctypes[0].start():
+        raise ValueError("unsupported SVG doctype or internal subset")
+    if "[" in match.group(0) or "]" in match.group(0):
+        raise ValueError("SVG doctype internal subsets are not allowed")
+
+
+def svg_metadata(path, data=None):
+    try:
+        if data is None:
+            data = path.read_bytes()
+        if len(data) > MAX_SVG_FILE_BYTES:
+            raise ValueError(f"SVG exceeds {MAX_SVG_FILE_BYTES} byte safety limit")
+        text = data.decode("utf-8", errors="strict")
+        validate_svg_doctype(text)
         root = ET.fromstring(text)
-        local_name = root.tag.rsplit("}", 1)[-1].split(":")[-1]
+        local_name = svg_local_name(root.tag)
         return {
             "valid": local_name == "svg",
-            "text_sample": text[:200000],
+            "text_sample": text,
+            "visible_text": svg_visible_text(root),
         }
     except Exception as error:
         return {"valid": False, "error": short(error, 300), "text_sample": ""}
@@ -365,16 +1222,53 @@ def svg_metadata(path):
 
 def collect_artifacts(workspace):
     artifacts = []
-    for path in sorted(workspace.rglob("*")):
-        if not path.is_file():
-            continue
-        suffix = path.suffix.lower()
-        if suffix not in {".png", ".svg"}:
-            continue
+    artifact_paths = []
+    scanned_entries = 0
+    for root, dirs, files in os.walk(workspace, topdown=True, followlinks=False):
+        root_path = Path(root)
+        raw_dirs = sorted(dirs)
+        scanned_entries += len(raw_dirs)
+        if scanned_entries > MAX_WORKSPACE_ENTRIES:
+            raise ArtifactPolicyError(
+                f"rollout workspace exceeds {MAX_WORKSPACE_ENTRIES} inspected entries"
+            )
+        dirs[:] = [name for name in raw_dirs if not (root_path / name).is_symlink()]
+        for name in sorted(files):
+            scanned_entries += 1
+            if scanned_entries > MAX_WORKSPACE_ENTRIES:
+                raise ArtifactPolicyError(
+                    f"rollout workspace exceeds {MAX_WORKSPACE_ENTRIES} inspected entries"
+                )
+            path = root_path / name
+            if path.is_symlink() or path.suffix.lower() not in {".png", ".svg"}:
+                continue
+            artifact_paths.append(path)
+            if len(artifact_paths) > MAX_ARTIFACT_COUNT:
+                raise ArtifactPolicyError(
+                    f"rollout produced more than {MAX_ARTIFACT_COUNT} visual artifacts"
+                )
+
+    total_bytes = 0
+    for path in sorted(artifact_paths):
         try:
-            content = path.read_bytes()
-        except OSError:
-            continue
+            file_stat = path.stat(follow_symlinks=False)
+        except OSError as error:
+            raise ArtifactPolicyError(f"could not inspect artifact {path.name}: {error}") from error
+        if not stat.S_ISREG(file_stat.st_mode):
+            raise ArtifactPolicyError(f"artifact is not a regular file: {path.name}")
+        if file_stat.st_size > MAX_ARTIFACT_FILE_BYTES:
+            raise ArtifactPolicyError(
+                f"artifact {path.name} exceeds {MAX_ARTIFACT_FILE_BYTES} byte limit"
+            )
+        total_bytes += file_stat.st_size
+        if total_bytes > MAX_ARTIFACT_TOTAL_BYTES:
+            raise ArtifactPolicyError(
+                f"visual artifacts exceed {MAX_ARTIFACT_TOTAL_BYTES} total byte limit"
+            )
+        content = path.read_bytes()
+        if len(content) != file_stat.st_size:
+            raise ArtifactPolicyError(f"artifact changed while being inspected: {path.name}")
+        suffix = path.suffix.lower()
         item = {
             "path": path.relative_to(workspace).as_posix(),
             "kind": suffix[1:],
@@ -382,9 +1276,9 @@ def collect_artifacts(workspace):
             "sha256": hashlib.sha256(content).hexdigest(),
         }
         if suffix == ".png":
-            item.update(png_metadata(path))
+            item.update(png_metadata(path, content))
         elif suffix == ".svg":
-            item.update(svg_metadata(path))
+            item.update(svg_metadata(path, content))
         artifacts.append(item)
     return artifacts
 
@@ -393,12 +1287,105 @@ class AgentSkillsRollout:
     def __init__(self, config):
         self.config = config
         self.timeout = int(config.get("exec_timeout", 240))
+        self.visual_exec_timeout = int(config.get("visual_exec_timeout") or min(self.timeout, 120))
+        self.tool_rollout_for_visual_assertions = config_bool(
+            config.get("tool_rollout_for_visual_assertions", True)
+        )
+        self.require_drawio_cli_for_visual_rollouts = config_bool(
+            config.get("require_drawio_cli_for_visual_rollouts", True)
+        )
+        self.target_backend = str(config.get("target_backend") or "codex_exec").strip().lower()
+        self.target_max_completion_tokens = max(
+            1, int(config.get("target_max_completion_tokens") or 16384)
+        )
+        self.target_retries = max(0, int(config.get("target_retries") or 5))
         self.model = str(config.get("target_model") or config.get("target") or "").strip()
         self.profile = str(config.get("codex_exec_profile") or "").strip()
         self.reasoning_effort = str(config.get("codex_exec_reasoning_effort") or "").strip()
         self.approval_policy = str(config.get("codex_exec_approval_policy") or "never").strip()
         self.web_search = config_bool(config.get("codex_exec_web_search"))
         self.network_access = config_bool(config.get("codex_exec_network_access"))
+
+    def allow_workspace_tools(self, case):
+        return self.tool_rollout_for_visual_assertions and has_visual_assertions(case)
+
+    def rollout_bounds(self, case):
+        if self.allow_workspace_tools(case):
+            return {
+                "timeout": self.visual_exec_timeout,
+                "tool_rollout_enabled": True,
+                "policy": (
+                    "This eval case declares visual assertions, so the nested rollout may create "
+                    "and edit files only inside the current working directory and may run local "
+                    "shell commands only for copied helper scripts, draw.io XML files, deterministic "
+                    "XML/rule validation, and requested PNG/SVG artifact export. Browser tools, "
+                    "package managers, network access, installs, MCP tools, and reads outside the "
+                    "current working directory remain forbidden. Run at most two validation/export "
+                    "attempts before reporting skipped or unavailable capabilities honestly."
+                ),
+            }
+        return {
+            "timeout": self.timeout,
+            "tool_rollout_enabled": False,
+            "policy": (
+                "Do not call shell commands, file-editing tools, browser tools, or external tools "
+                "in this nested rollout environment; provide the final response text directly, "
+                "describing the minimal files, commands, validations, and skipped capabilities "
+                "that the skill would use for the task."
+            ),
+        }
+
+    def uses_chat_target(self):
+        return self.target_backend in {
+            "openai_chat",
+            "qwen_chat",
+            "minimax_chat",
+        }
+
+    def run_chat_target(self, case, system_prompt, user_prompt, timeout):
+        try:
+            from skillopt.model import chat_target
+
+            response, usage = chat_target(
+                system=system_prompt,
+                user=user_prompt,
+                max_completion_tokens=self.target_max_completion_tokens,
+                retries=self.target_retries,
+                stage="target",
+                reasoning_effort=self.reasoning_effort or None,
+                timeout=timeout,
+            )
+            normalized_usage = {}
+            if isinstance(usage, dict):
+                for key, value in usage.items():
+                    if isinstance(value, (int, float)) and not isinstance(value, bool):
+                        normalized_usage[str(key)] = int(value)
+            return {
+                "id": case["id"],
+                "case_id": case["id"],
+                "response": redact(as_text(response)),
+                "returncode": 0,
+                "stderr": "",
+                "stdout": "",
+                "artifacts": [],
+                "tool_rollout_enabled": False,
+                "target_backend": self.target_backend,
+                "usage": normalized_usage,
+            }
+        except Exception as error:
+            return {
+                "id": case["id"],
+                "case_id": case["id"],
+                "response": "",
+                "returncode": 1,
+                "stderr": short(
+                    sanitize_provider_context(f"provider target failed: {error}"), 1000
+                ),
+                "stdout": "",
+                "artifacts": [],
+                "tool_rollout_enabled": False,
+                "target_backend": self.target_backend,
+            }
 
     def run(self, case, skill_body):
         workspace = Path(tempfile.mkdtemp(prefix="skillopt-agent-skill-"))
@@ -409,7 +1396,81 @@ class AgentSkillsRollout:
             skill_name = str(case.get("skill_name") or "drawio-diagrams")
             task_prompt = normalize_task_prompt(case["prompt"], skill_name)
             workspace_note = seed_workspace(workspace, case, skill_name)
-            prompt = (
+            bounds = self.rollout_bounds(case)
+            if self.uses_chat_target() and has_visual_assertions(case):
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": (
+                        "Provider-backed chat targets cannot create or inspect local visual "
+                        "artifacts. Use the generated data-text-only split or select the "
+                        "read-isolated codex_exec target for visual assertions."
+                    ),
+                    "returncode": 126,
+                    "stderr": "visual assertions require a local artifact-capable target",
+                    "stdout": "",
+                    "artifacts": [],
+                    "tool_rollout_enabled": False,
+                    "target_backend": self.target_backend,
+                    "visual_rollout_blocker": "provider chat target cannot produce local artifacts",
+                }
+                return outcome
+            if self.target_backend != "codex_exec" and not self.uses_chat_target():
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": "",
+                    "returncode": 2,
+                    "stderr": f"unsupported target_backend: {self.target_backend}",
+                    "stdout": "",
+                    "artifacts": [],
+                    "tool_rollout_enabled": False,
+                    "target_backend": self.target_backend,
+                }
+                return outcome
+            resource_snapshot = ""
+            if self.uses_chat_target() or not bounds["tool_rollout_enabled"]:
+                try:
+                    resource_snapshot = provider_resource_snapshot(workspace)
+                except ProviderContextError as error:
+                    outcome = {
+                        "id": case["id"],
+                        "case_id": case["id"],
+                        "response": "",
+                        "returncode": 127,
+                        "stderr": short(error, 1000),
+                        "stdout": "",
+                        "artifacts": [],
+                        "tool_rollout_enabled": False,
+                        "target_backend": self.target_backend,
+                        "resource_snapshot_blocker": short(error, 1000),
+                    }
+                    return outcome
+            drawio_cli = None
+            drawio_alias_dir = None
+            if bounds["tool_rollout_enabled"]:
+                drawio_cli = find_drawio_cli()
+                if drawio_cli is None and self.require_drawio_cli_for_visual_rollouts:
+                    response = (
+                        "Visual artifact rollout could not run because draw.io Desktop CLI was "
+                        "not found on PATH. Install or expose `drawio`/`diagrams.net`, or run an "
+                        "explicitly text-only split before scaling SkillOpt."
+                    )
+                    outcome = {
+                        "id": case["id"],
+                        "case_id": case["id"],
+                        "response": response,
+                        "returncode": 0,
+                        "stderr": "",
+                        "stdout": "",
+                        "artifacts": [],
+                        "tool_rollout_enabled": False,
+                        "visual_rollout_blocker": "draw.io Desktop CLI not found",
+                    }
+                    return outcome
+                if drawio_cli is not None:
+                    drawio_alias_dir = prepare_drawio_command_alias(workspace, drawio_cli)
+            system_prompt = (
                 "Use only the following Agent Skill body as the active operating procedure. "
                 "Do not read or load installed skill files from ~/.agents/skills, ~/.codex/skills, "
                 "the workspace, or any other skill registry. If the task prompt names a skill, "
@@ -419,20 +1480,34 @@ class AgentSkillsRollout:
                 "outside the workspace.\n\n"
                 "This is a bounded SkillOpt rollout. Keep the implementation minimal and finish "
                 "with a concise delivery summary. Do not perform open-ended environment searches, "
-                "do not wait for unavailable optional tools, and run at most one validation/export "
-                "attempt before reporting skipped or unavailable capabilities honestly. Do not call "
-                "shell commands, file-editing tools, browser tools, or external tools in this nested "
-                "rollout environment; provide the final response text directly, describing the "
-                "minimal files, commands, validations, and skipped capabilities that the skill would "
-                "use for the task.\n\n"
-                f"{skill_body}\n\n"
-                "Rollout workspace files:\n"
-                f"{workspace_note}\n\n"
-                "Task prompt:\n"
-                f"{task_prompt}\n"
+                "do not wait for unavailable optional tools, and follow the validation/export "
+                "bounds below before reporting skipped or unavailable capabilities honestly. "
+                f"{bounds['policy']}\n\n"
+                f"{skill_body}"
             )
+            user_parts = ["Rollout workspace files:\n", f"{workspace_note}\n\n"]
+            if resource_snapshot:
+                user_parts.extend([
+                    "Bounded textual helper resources and fixtures:\n",
+                    f"{resource_snapshot}\n\n",
+                ])
+            user_parts.extend(["Task prompt:\n", f"{task_prompt}\n"])
+            user_prompt = "".join(user_parts)
+            if self.uses_chat_target():
+                outcome = self.run_chat_target(
+                    case, system_prompt, user_prompt, bounds["timeout"]
+                )
+                return outcome
+
+            prompt = f"{system_prompt}\n\n{user_prompt}"
+            control_dir = workspace / ROLLOUT_CONTROL_DIR
+            control_dir.mkdir(mode=0o700)
+            final = control_dir / "final.md"
+            codex_command = self.config.get("codex_exec_path", "codex")
+            process_env = minimal_rollout_environment(drawio_alias_dir)
+            shell_env = shell_environment_for_workspace(workspace, process_env)
             command = [
-                self.config.get("codex_exec_path", "codex"),
+                codex_command,
                 "exec",
                 "--ignore-user-config",
                 "--ignore-rules",
@@ -440,27 +1515,48 @@ class AgentSkillsRollout:
                 "--ephemeral",
                 "--color",
                 "never",
-                "--sandbox",
-                self.config.get("codex_exec_sandbox", "workspace-write"),
                 "--output-last-message",
-                str(workspace / "final.md"),
+                str(final),
             ]
+            # Legacy Codex sandboxes limit writes but still permit host-wide reads. Every rollout
+            # therefore uses a strict permission profile. Text-only cases receive only minimal
+            # runtime reads; visual cases additionally receive scoped rollout-workspace writes.
+            permission_profile = (
+                VISUAL_ROLLOUT_PERMISSION_PROFILE
+                if bounds["tool_rollout_enabled"]
+                else TEXT_ROLLOUT_PERMISSION_PROFILE
+            )
+            filesystem_permissions = (
+                visual_rollout_filesystem_permissions(
+                    codex_command, drawio_cli["path"] if drawio_cli else None
+                )
+                if bounds["tool_rollout_enabled"]
+                else text_rollout_filesystem_permissions(codex_command)
+            )
+            command.extend([
+                "--strict-config",
+                "-c",
+                f"default_permissions={toml_string(permission_profile)}",
+                "-c",
+                f"permissions.{permission_profile}.filesystem={filesystem_permissions}",
+                "-c",
+                f"permissions.{permission_profile}.network.enabled=false",
+            ])
+            command.extend([
+                "-c",
+                'shell_environment_policy.inherit="none"',
+                "-c",
+                f"shell_environment_policy.set={toml_inline_string_map(shell_env)}",
+            ])
             if self.model:
                 command.extend(["--model", self.model])
             if self.reasoning_effort:
                 command.extend(["-c", f'model_reasoning_effort="{self.reasoning_effort}"'])
             if self.approval_policy:
                 command.extend(["-c", f"approval_policy={toml_string(self.approval_policy)}"])
-            command.extend([
-                "-c",
-                f"sandbox_workspace_write.network_access={'true' if self.network_access else 'false'}",
-            ])
-            if self.web_search:
-                command.append("--search")
             if self.profile:
                 command.extend(["--profile", self.profile])
             command.append(prompt)
-            final = workspace / "final.md"
             try:
                 process = subprocess.Popen(
                     command,
@@ -470,22 +1566,64 @@ class AgentSkillsRollout:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     start_new_session=True,
+                    env=process_env,
                 )
-                stdout, stderr = process.communicate(timeout=self.timeout)
+                reaper_thread, reaper_state = start_process_group_reaper(process)
+                stdout, stderr = process.communicate(timeout=bounds["timeout"])
+                reaper_thread.join(timeout=7)
+                process_notes, process_group_still_alive, reaped_descendants = (
+                    reaper_state.get("result") or reap_process_group(process)
+                )
+                if process_group_still_alive:
+                    keep_workspace = True
+                    outcome = {
+                        "id": case["id"],
+                        "case_id": case["id"],
+                        "response": redact(stdout),
+                        "returncode": 125,
+                        "stderr": short(
+                            "rollout process group could not be terminated: "
+                            + "; ".join(process_notes)
+                        ),
+                        "stdout": short(stdout),
+                        "artifacts": [],
+                        "tool_rollout_enabled": bounds["tool_rollout_enabled"],
+                        "process_group_alive": True,
+                    }
+                    return outcome
                 response = final.read_text(encoding="utf-8") if final.exists() else stdout
+                artifacts = []
+                artifact_error = ""
+                if process.returncode == 0:
+                    try:
+                        artifacts = collect_artifacts(workspace)
+                    except ArtifactPolicyError as error:
+                        artifact_error = short(error, 1000)
                 outcome = {
                     "id": case["id"],
                     "case_id": case["id"],
                     "response": redact(response),
-                    "returncode": process.returncode,
-                    "stderr": short(stderr),
+                    "returncode": 125 if artifact_error else process.returncode,
+                    "stderr": short(
+                        f"{stderr}\nartifact policy error: {artifact_error}"
+                        if artifact_error
+                        else stderr
+                    ),
                     "stdout": short(stdout),
-                    "artifacts": collect_artifacts(workspace),
+                    "artifacts": artifacts,
+                    "tool_rollout_enabled": bounds["tool_rollout_enabled"],
                 }
+                if reaped_descendants:
+                    outcome["reaped_descendants"] = True
+                if process_notes:
+                    outcome["process_cleanup_notes"] = process_notes
+                if artifact_error:
+                    outcome["artifact_policy_error"] = artifact_error
             except subprocess.TimeoutExpired as error:
                 stdout = as_text(error.stdout)
                 stderr = as_text(error.stderr)
                 termination_notes = []
+                process_alive_after_kill = False
                 term_error = signal_process_group(process, signal.SIGTERM)
                 if term_error:
                     termination_notes.append(f"SIGTERM: {term_error}")
@@ -496,9 +1634,15 @@ class AgentSkillsRollout:
                     kill_error = signal_process_group(process, signal.SIGKILL)
                     if kill_error:
                         termination_notes.append(f"SIGKILL: {kill_error}")
-                    kill_stdout, kill_stderr, still_running = communicate_after_signal(process, 5)
+                    kill_stdout, kill_stderr, process_alive_after_kill = communicate_after_signal(process, 5)
                     stdout = kill_stdout or stdout
                     stderr = kill_stderr or stderr
+                reaper_thread.join(timeout=7)
+                process_notes, group_alive, _ = (
+                    reaper_state.get("result") or reap_process_group(process)
+                )
+                termination_notes.extend(process_notes)
+                process_alive_after_kill = process_alive_after_kill or group_alive
                 # On timeout, avoid inspecting or deleting the workspace. Some
                 # failed Codex/tool subprocesses can leave cwd/file handles in a
                 # kernel-blocked state; walking the tree or rmtree can wedge the
@@ -506,8 +1650,8 @@ class AgentSkillsRollout:
                 keep_workspace = True
                 response = stdout
                 stderr_text = (
-                    f"codex exec timed out after {self.timeout} seconds\n"
-                    f"process_alive_after_kill={keep_workspace}\n"
+                    f"codex exec timed out after {bounds['timeout']} seconds\n"
+                    f"process_alive_after_kill={process_alive_after_kill}\n"
                     f"termination_notes={termination_notes}\n"
                     f"stdout before timeout:\n{stdout}\n"
                     f"stderr before timeout:\n{stderr}"
@@ -521,6 +1665,7 @@ class AgentSkillsRollout:
                     "stdout": short(stdout),
                     "artifacts": [],
                     "timeout": True,
+                    "tool_rollout_enabled": bounds["tool_rollout_enabled"],
                 }
                 if keep_workspace:
                     outcome["workspace_preserved"] = redact(str(workspace))

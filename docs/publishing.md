@@ -160,7 +160,7 @@ node scripts/validate-release.mjs --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`. It validates the repo, checks release invariants, and prints the version it would release. It creates an annotated tag and GitHub Release only when manually dispatched with `dry_run: false`.
+The workflow reads the release version from `package.json`, records the exact validated `main` commit, validates the repo, checks release invariants, and prints the version it would release. With `dry_run: false`, the publish job checks out and tags that exact commit and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 

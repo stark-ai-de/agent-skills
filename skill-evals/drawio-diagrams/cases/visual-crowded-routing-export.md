@@ -30,6 +30,6 @@ Yes
 
 ## Visual Assertions
 
-- artifact_exists: *.png
-- png_nonblank: *.png min_size=1000
-- png_dimensions: *.png min_width=400 min_height=200
+- artifact_exists: \*.png
+- png_nonblank: \*.png min_size=1000
+- png_dimensions: \*.png min_width=400 min_height=200

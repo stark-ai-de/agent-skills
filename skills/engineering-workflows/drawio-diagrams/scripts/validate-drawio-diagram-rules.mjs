@@ -76,8 +76,9 @@ function parseCells(xml) {
     const geo = body.match(/<mxGeometry\b([^>]*)>/);
     const geoAttrs = geo ? parseAttrs(geo[1]) : {};
     const points = parseWaypoints(body);
+    const offset = parseGeometryOffset(body);
     const parsedStyle = styleMap(attrs.style || "");
-    cells.push({ attrs, body, geo: geoAttrs, points, style: parsedStyle });
+    cells.push({ attrs, body, geo: geoAttrs, offset, points, style: parsedStyle });
   }
   return cells;
 }
@@ -96,6 +97,15 @@ function parseWaypoints(body = "") {
     }
   }
   return points;
+}
+
+function parseGeometryOffset(body = "") {
+  for (const pointMatch of body.matchAll(/<mxPoint\b([^>]*?)\/?>/g)) {
+    const attrs = parseAttrs(pointMatch[1]);
+    if (attrs.as !== "offset") continue;
+    return { x: number(attrs.x) || 0, y: number(attrs.y) || 0 };
+  }
+  return { x: 0, y: 0 };
 }
 
 function number(value) {
@@ -117,26 +127,25 @@ function center(box) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-function absoluteBbox(cell, byId) {
+function absoluteBbox(cell, byId, seen = new Set(), depth = 0) {
   const box = bbox(cell);
   if (!box) return null;
-  let x = box.x;
-  let y = box.y;
-  let parent = byId.get(cell.attrs.parent || "");
-  let depth = 0;
-  const seen = new Set();
-  while (parent && !["0", "1"].includes(parent.attrs.id) && depth < 20) {
-    if (seen.has(parent.attrs.id)) break;
-    seen.add(parent.attrs.id);
-    const parentBox = bbox(parent);
-    if (parentBox) {
-      x += parentBox.x;
-      y += parentBox.y;
-    }
-    parent = byId.get(parent.attrs.parent || "");
-    depth += 1;
+  const id = cell.attrs.id || "";
+  if (depth >= 20 || seen.has(id)) return box;
+  const parent = byId.get(cell.attrs.parent || "");
+  if (!parent || ["0", "1"].includes(parent.attrs.id)) return box;
+  const nextSeen = new Set(seen);
+  if (id) nextSeen.add(id);
+  const parentBox = absoluteBbox(parent, byId, nextSeen, depth + 1);
+  if (!parentBox) return box;
+  if (cell.geo.relative === "1") {
+    return {
+      ...box,
+      x: parentBox.x + box.x * parentBox.width + cell.offset.x,
+      y: parentBox.y + box.y * parentBox.height + cell.offset.y,
+    };
   }
-  return { ...box, x, y };
+  return { ...box, x: parentBox.x + box.x, y: parentBox.y + box.y };
 }
 
 function portPoint(box, style, prefix) {
@@ -149,10 +158,19 @@ function portPoint(box, style, prefix) {
   };
 }
 
-function routePoints(edge, sourceBox, targetBox) {
-  const start = portPoint(sourceBox, edge.style, "exit");
-  const end = portPoint(targetBox, edge.style, "entry");
-  return [start, ...edge.points, end];
+function edgeParentOrigin(edge, byId) {
+  const parent = byId.get(edge.attrs.parent || "");
+  if (!parent || ["0", "1"].includes(parent.attrs.id)) return { x: 0, y: 0 };
+  const parentBox = absoluteBbox(parent, byId);
+  return parentBox ? { x: parentBox.x, y: parentBox.y } : { x: 0, y: 0 };
+}
+
+function routePoints(edge, sourceBox, targetBox, byId, sourceUsesPort, targetUsesPort) {
+  const start = sourceUsesPort ? center(sourceBox) : portPoint(sourceBox, edge.style, "exit");
+  const end = targetUsesPort ? center(targetBox) : portPoint(targetBox, edge.style, "entry");
+  const origin = edgeParentOrigin(edge, byId);
+  const points = edge.points.map((point) => ({ x: point.x + origin.x, y: point.y + origin.y }));
+  return [start, ...points, end];
 }
 
 function segmentIntersectsBox(a, b, box, padding = 0) {
@@ -235,18 +253,41 @@ function validatePage(page) {
         );
         continue;
       }
-      const source = byId.get(cell.attrs.source);
-      const target = byId.get(cell.attrs.target);
+      const sourcePortId = cell.style.sourcePort || "";
+      const targetPortId = cell.style.targetPort || "";
+      const sourcePort = sourcePortId ? byId.get(sourcePortId) : null;
+      const targetPort = targetPortId ? byId.get(targetPortId) : null;
+      for (const [role, portId, port] of [
+        ["sourcePort", sourcePortId, sourcePort],
+        ["targetPort", targetPortId, targetPort],
+      ]) {
+        if (portId && (!port || port.attrs.vertex !== "1")) {
+          errors.push(
+            `ERROR [${cellRef(page, id)}] ${role}=${JSON.stringify(portId)} must reference a vertex`,
+          );
+        }
+      }
+      const source = sourcePort || byId.get(cell.attrs.source);
+      const target = targetPort || byId.get(cell.attrs.target);
       const sourceBox = source ? absoluteBbox(source, byId) : null;
       const targetBox = target ? absoluteBbox(target, byId) : null;
       if (!source || !target || !sourceBox || !targetBox) continue;
-      const route = routePoints(cell, sourceBox, targetBox);
+      const route = routePoints(
+        cell,
+        sourceBox,
+        targetBox,
+        byId,
+        Boolean(sourcePort),
+        Boolean(targetPort),
+      );
       for (const obstacle of cells) {
         const oid = obstacle.attrs.id;
         if (
           !oid ||
           oid === cell.attrs.source ||
           oid === cell.attrs.target ||
+          oid === sourcePortId ||
+          oid === targetPortId ||
           !isObstacle(obstacle)
         ) {
           continue;
