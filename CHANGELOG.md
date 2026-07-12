@@ -14,6 +14,31 @@
 
 ### Security
 
+## v0.8.0 - 2026-07-12
+
+### Added
+
+- Added capability-detected Codex, Cursor, Claude, and unknown-host collaboration adapters to the portable `architecture-compass` workflow.
+- Added Architecture Compass lifecycle evaluation cases for conditional planning, ADR conflicts, stack deviations, fallbacks, no-write decision phases, bounded execution, audits, and PR reviews.
+
+### Changed
+
+- Updated `architecture-compass` to use a read-only planning phase for unresolved durable choices or broad, multi-boundary, behavior-changing, or phased refactors while keeping narrow behavior-preserving ADR-backed work direct, audits read-only, and diff reviews on the host review surface.
+- Added explicit planning, read-only-enforcement, architecture-decision, and execution fields; a pending-write-permission gate; exact route-matching continuations; and repository-state rechecks before approved changes are applied.
+- Documented portable Architecture Compass installation and usage for Codex, Cursor, and Claude.
+
+### Fixed
+
+- Replaced the release workflow's cross-runtime wildcard verification command with the explicit Codex-ready public skill list.
+- Fixed SkillOpt split generation to preserve wrapped expected-behavior bullets instead of truncating semantic judge requirements.
+- Corrected Cursor Plan evidence classification so behavioral no-write instructions are not reported as an enforced filesystem sandbox.
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.7.0 - 2026-07-10
 
 ### Added

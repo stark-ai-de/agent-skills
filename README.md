@@ -29,7 +29,7 @@ This only lists skills; it does not install them or create a skills.sh install e
 Install all Cursor-ready public skills globally for Cursor:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass -g -a cursor -y
 ```
 
 Install the Cursor-native spec interviewer project-locally for Cursor:
@@ -50,6 +50,7 @@ Install the Claude Code public skills from a repository clone into project-local
 mkdir -p .claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
 cp -R skills/claude-operations/claude-memory-curator .claude/skills/
+cp -R skills/engineering-workflows/architecture-compass .claude/skills/
 ```
 
 Install them user-wide for Claude Code:
@@ -58,6 +59,7 @@ Install them user-wide for Claude Code:
 mkdir -p ~/.claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
 cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
+cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
 ```
 
 Install all Codex-ready public skills globally for Codex:
@@ -96,6 +98,12 @@ Install the same portable skill for Cursor when a Cursor project needs CodeGraph
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a cursor -y
+```
+
+Install the portable Architecture Compass for Cursor:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor -y
 ```
 
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
@@ -139,6 +147,8 @@ Use `architecture-compass` when a repository needs ADR guardrails or ADR-guided 
 ```text
 Use $architecture-compass in setup mode to install ADR guardrails, or refactor mode to align code with repo ADRs, stack rules, and examples.
 ```
+
+Architecture Compass uses a planning phase for unresolved durable choices or broad, multi-boundary, behavior-changing, or phased refactors. Narrow behavior-preserving ADR-backed changes remain direct, audits stay read-only, and PR or diff checks prefer the host review surface. The skill detects the current host's available planning, review, and permission controls instead of assuming one runtime command works everywhere.
 
 Use `drawio-diagrams` when a task needs editable draw.io / diagrams.net output:
 

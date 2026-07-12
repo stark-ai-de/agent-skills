@@ -23,11 +23,38 @@ Use this reference to choose the top-level user action and the right internal op
 | `docs-sync`           | Code or rules changed and repo docs must be aligned.                      | Minimal docs and index updates.                                            |
 | `stack-deviation`     | A task may require a new library or pattern.                              | Preferred-stack check and deviation rationale.                             |
 
+## Decision routing matrix
+
+Classify the route before any mutation. Planning means the native host mode when it is active or available, otherwise the portable no-write decision gate in `host-collaboration-modes.md`.
+
+| Internal mode                            | Use a decision phase when                                                                   | Otherwise                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `setup-new-repo` or `new-repo-bootstrap` | Stack, deployable units, ownership, or guardrail adoption is unresolved.                    | Run the fully specified minimal setup directly.                      |
+| `setup-existing-repo`                    | Adoption needs an `adapt` or `reject` decision, or governing ADRs are stale or conflicting. | Apply a mechanical guardrail refresh under accepted ADRs.            |
+| `refactor`                               | Work is broad, multi-boundary, behavior-changing, or needs phases.                          | Apply narrow behavior-preserving ADR alignment directly.             |
+| `new-implementation`                     | Placement, request, runtime, package, or public-contract boundaries are unresolved.         | Apply the fully placed ADR-backed implementation directly.           |
+| `stack-deviation`                        | The task needs an actual durable deviation or new ADR.                                      | Stay direct when the existing stack is sufficient.                   |
+| `audit`                                  | Never solely because an audit was requested.                                                | Perform a read-only audit.                                           |
+| `pr-review`                              | Never for the review itself.                                                                | Prefer the host review surface, otherwise return read-only findings. |
+| `docs-sync`                              | A new durable decision appears during synchronization.                                      | Synchronize an already approved decision directly.                   |
+
+## Decision-to-execution lifecycle
+
+1. Classify the preliminary route from the request without repository inspection or writes.
+2. Resolve only route-relevant host controls. For a decision phase, detect planning capability and read-only enforcement separately and request each available but inactive control independently. For an audit, preserve the read-only boundary without requesting Plan. For a review, prefer the host review surface without requesting Plan and resolve read-only enforcement when that surface does not establish a no-write boundary. Direct execution does not request Plan or Read Only merely because either is available. Do not claim prompt text changed a control, and do not treat silence as a decline.
+3. Under the confirmed route, inspect only enough repository evidence to validate the classification. Use only non-mutating operations and index-safe Git status while the route remains provisional. If that evidence changes the route, stop before decision work or mutation, resolve the newly required host controls, and continue under the reclassified route.
+4. During a decision phase, build the rule, adoption, or placement map and resolve only material choices. Keep repository, untracked, ignored, index, artifact, and external state unchanged.
+5. At the verified checkpoint, return explicit planning-capability and read-only-enforcement fields plus the exact architecture and execution statuses. If implementation was requested, also return allowed target paths, validation commands, any required write-capable permission or control transition, and the bounded continuation from `host-collaboration-modes.md`. Otherwise return `Execution status: not requested` without an implementation continuation.
+6. Before direct execution, after native Plan mode exits, or after explicit implementation approval in the portable fallback, confirm any separately required write-capable permission or control transition. While a known required transition remains inactive or unconfirmed, return `Execution status: pending write permission`, include the matching direct, native, or portable-fallback continuation, and stop. Once confirmed, re-read repository state with index-safe Git status, governing ADRs, and target paths. Stop on material drift.
+7. Apply only the approved slice and path allowlist, then run only the approved validation.
+
 ## Setup action
 
 Use setup when the user explicitly asks to make a repository rely on ADRs. Setup is allowed to create standard guardrail files because the action itself is approval to install the governance layer.
 
 ### Existing repository setup
+
+Use a decision phase for disputed adoption, adaptation, rejection, or stale ADRs. A mechanical refresh that follows accepted decisions may proceed directly.
 
 1. Discover current ADR locations, architecture docs, stack rules, agent instructions, README/contribution docs, and approved examples.
 2. Preserve the repo's existing ADR directory and naming convention. If none exists, prefer `docs/adr/` unless the repo already uses another convention.
@@ -44,6 +71,8 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
 8. Return a setup report and the canonical prompts future agents should use.
 
 ### New repository setup
+
+Use a decision phase unless the intended stack, deployable units, ownership, guardrail decisions, target paths, and validation are already specified.
 
 1. Identify the intended stack and deployable units.
 2. Create the smallest useful governance set:
@@ -64,6 +93,7 @@ Use setup when the user explicitly asks to make a repository rely on ADRs. Setup
 Use `assets/setup-report-template.md`. Include:
 
 - action and internal setup mode,
+- collaboration route, capability evidence, and exact decision/execution statuses,
 - files created or changed,
 - ADR discovery paths,
 - active ADRs or starter ADRs,
@@ -74,6 +104,8 @@ Use `assets/setup-report-template.md`. Include:
 - validation performed or skipped.
 
 ## Existing repository audit
+
+Remain read-only. Do not require Plan mode solely for an audit, and do not turn findings into edits without a separate implementation request.
 
 1. Read target ADRs and repo rules.
 2. Identify the accepted source-structure pattern.
@@ -87,6 +119,8 @@ Use `assets/setup-report-template.md`. Include:
 
 ## Existing repository refactor
 
+Use a decision phase for broad, multi-boundary, behavior-changing, or phased refactors. A narrow behavior-preserving change prescribed by accepted ADRs may proceed directly.
+
 1. Start from the audit or create a compact gap report first.
 2. Choose a vertical slice that keeps behavior stable.
 3. Move code to the owner layer before changing behavior.
@@ -99,7 +133,7 @@ Avoid broad churn. Do not rename or move unrelated files just because they are n
 
 ## New implementation guardrail
 
-Before adding a feature:
+Before adding a feature, use a decision phase when placement, request, runtime, package, or public-contract boundaries are unresolved. Otherwise use the direct route.
 
 1. Identify the target route, package, backend service, or app.
 2. Select the file pattern:
@@ -117,6 +151,8 @@ Before adding a feature:
 
 Use this internal mode when the `setup` action targets a new repository or when no target repo rules exist yet.
 
+Resolve stack, deployable-unit, ownership, and first-slice decisions in a read-only phase before creating files unless all are already explicit.
+
 Create or propose:
 
 - `AGENTS.md` or equivalent agent instructions, using `assets/agent-instructions-template.md` as a starting point.
@@ -132,6 +168,8 @@ Do not assume every bundled pattern is part of the first implementation slice. D
 ## PR review for architecture drift
 
 Focus on architecture rules, not general code style.
+
+Prefer the host review surface when available; otherwise inspect and return findings read-only. Do not require Plan mode or apply fixes as part of the review itself.
 
 Check:
 
@@ -153,6 +191,8 @@ Output findings as `blocking`, `important`, or `cleanup`.
 
 Update only existing, relevant repo-facing files when architecture-facing behavior changes.
 
+Synchronize accepted decisions directly. If synchronization reveals a new durable choice, stop and route that choice through the decision phase first.
+
 Common docs that may need updates:
 
 - ADR index.
@@ -167,6 +207,8 @@ When multiple docs need the same explanation, put durable policy in one canonica
 Ask before creating missing docs or indexes.
 
 ## Stack-deviation gate
+
+Use a decision phase only when the result is an actual durable deviation or a new ADR. A check that concludes the existing stack is sufficient remains direct.
 
 Use target stack rules first. Default decision order:
 

@@ -9,6 +9,7 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 ## Tracked Specs
 
 - [`architecture-compass-oxc-tooling-policy-spec.md`](architecture-compass-oxc-tooling-policy-spec.md) - Oxc formatting and linting policy for Architecture Compass guidance.
+- [`architecture-compass-portable-plan-routing-spec.md`](architecture-compass-portable-plan-routing-spec.md) - conditional portable planning and execution lifecycle for Architecture Compass.
 - [`cursor-codex-operations-skills-spec.md`](cursor-codex-operations-skills-spec.md) - Cursor-native support and runtime category boundaries.
 - [`drawio-diagrams-public-release-spec.md`](drawio-diagrams-public-release-spec.md) - public release contract for `drawio-diagrams`.
 - [`github-pages-skill-catalog-spec.md`](github-pages-skill-catalog-spec.md) - generated GitHub Pages catalog.

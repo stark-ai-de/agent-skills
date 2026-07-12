@@ -2,6 +2,16 @@
 
 Use this template for the first-implementation layout plan after guardrail adoption has been recorded in `setup-report-template.md`.
 
+## Collaboration route
+
+- Host capability evidence:
+- Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
+- Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
+- Route: `<native decision phase | portable no-write fallback | direct execution>`
+- Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
+- Architecture decision status: `<not required | pending | approved | blocked>`
+- Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+
 ## Selected stack
 
 - Workspace:
@@ -33,7 +43,7 @@ Delete unused folders from the starter plan. Do not create backend or package fo
 
 - Source-structure ADR: `docs/adr/NNNN-repository-source-structure.md`
 - ADR index: `docs/adr/index.md` or target convention
-- Agent instructions: `AGENTS.md`
+- Agent instructions: `AGENTS.md` by default, or the approved target-runtime convention
 - Stack rules: `STACK_RULES.md` or target convention
 - Validation docs:
 
@@ -107,6 +117,17 @@ Keep formatter and linter config in repo-root Oxc config files unless target rep
 # test
 # docs
 ```
+
+## Approved implementation boundary
+
+Include this section only when implementation was requested; otherwise omit it.
+
+- Approved first slice:
+- Allowed target paths:
+- Validation commands:
+- Material assumptions:
+- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
+- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
 
 ## Open decisions
 

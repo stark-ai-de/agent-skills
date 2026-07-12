@@ -1,5 +1,31 @@
 # Checklists
 
+## Collaboration routing checklist
+
+- [ ] The action and internal mode were classified before any mutation.
+- [ ] The routing matrix was applied: decision phase, direct execution, read-only audit, or review.
+- [ ] Route-relevant host planning/review capability and read-only enforcement were recorded separately from observed evidence rather than assumed.
+- [ ] The output includes explicit `Planning capability` and `Read-only enforcement` fields, using `Not applicable` only when the selected route does not use that control.
+- [ ] A Plan instruction that forbids edits was treated as behavioral no-write evidence, not as proof of an active read-only permission or sandbox.
+- [ ] Plan mode was not treated as a permission or filesystem boundary.
+- [ ] Native Plan mode was requested rather than claimed when available but inactive and the selected decision route required it.
+- [ ] Available host read-only enforcement was requested and confirmed independently when the selected decision, audit, or review-fallback route required it; unavailable, explicitly declined, or indeterminate enforcement was reported with evidence.
+- [ ] An explicitly declined read-only transition was not requested again; the behavioral no-write gate remained active.
+- [ ] Direct execution did not request Plan or Read Only merely because either control was available.
+- [ ] Preliminary route validation used only non-mutating operations and index-safe Git status.
+- [ ] Repository evidence that invalidated the preliminary route stopped progress until the newly required host controls were resolved.
+- [ ] When a selected decision route required planning, unavailable or explicitly declined Plan mode used the portable no-write fallback with the required evidence string.
+- [ ] When a selected decision route required planning, indeterminate capability was not treated as a decline, and no write occurred while the safe route was unresolved.
+- [ ] The decision phase left tracked, untracked, ignored, index, and external state unchanged.
+- [ ] `Architecture decision status` and `Execution status` use only the public values.
+- [ ] An approved checkpoint records durable decisions and material assumptions; when execution was requested, it also enumerates target paths and validation commands.
+- [ ] When execution was requested, the checkpoint identifies any separately required pre-execution write-capable permission transition and its direct, native, or fallback timing.
+- [ ] `ready for direct execution` is used only after required write permission is confirmed or found unnecessary; a known inactive or unconfirmed write control returns `pending write permission`.
+- [ ] Requested execution includes the matching exact direct, native, or portable-fallback continuation from `host-collaboration-modes.md`.
+- [ ] Direct-route readiness, native Plan exit, or portable-fallback implementation approval, plus any required write-capable permission transition, was confirmed before repository state, governing ADRs, and target paths were re-read for execution.
+- [ ] Material drift stopped execution, and applied paths stayed within the approved allowlist.
+- [ ] Audit and PR-review work remained read-only and did not require Plan mode solely because of their mode.
+
 ## Setup checklist
 
 - [ ] The top-level action is `setup`.

@@ -3085,6 +3085,84 @@ Create a visual result.
   }
 }
 
+function validateWrappedExpectedBehaviorSplit() {
+  const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-wrapped-behavior-"));
+  const skillName = "wrapped-behavior-skill";
+  try {
+    writeFile(path.join(tempRepo, "package.json"), "{}\n");
+    writeFile(path.join(tempRepo, ".gitignore"), ".agents/\n");
+    writeFile(
+      path.join(tempRepo, "incubator/skills", skillName, "SKILL.md"),
+      `---
+name: ${skillName}
+description: Temporary wrapped behavior skill used only by the SkillOpt validator.
+---
+
+# Wrapped Behavior Skill
+`,
+    );
+    writeFile(
+      path.join(tempRepo, "skill-evals", skillName, "cases/wrapped.md"),
+      `# Wrapped Behavior
+
+## Should Trigger
+
+Yes.
+
+## Prompt
+
+Prepare a wrapped expected-behavior split.
+
+## Expected Behavior
+
+- Preserve the first line and fold
+  the wrapped safety qualifier.
+- Keep the second behavior intact.
+
+## Deterministic Assertions
+
+- contains: wrapped
+`,
+    );
+    const split = spawnSync(
+      process.execPath,
+      [
+        path.join(skillRoot, "scripts/prepare-skillopt-split.mjs"),
+        "--skill",
+        skillName,
+        "--seed",
+        "42",
+        "--json",
+      ],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (split.status !== 0) {
+      fail(
+        `wrapped behavior split smoke failed: ${split.status}\n${split.stdout}\n${split.stderr}`,
+      );
+    }
+    const items = ["train", "val", "test"].flatMap((splitName) =>
+      JSON.parse(
+        fs.readFileSync(
+          path.join(tempRepo, ".agents/skillopt-work", skillName, "data", splitName, "items.json"),
+          "utf8",
+        ),
+      ),
+    );
+    const expected = [
+      "Preserve the first line and fold the wrapped safety qualifier.",
+      "Keep the second behavior intact.",
+    ];
+    if (JSON.stringify(items[0]?.expected_behavior) !== JSON.stringify(expected)) {
+      fail(
+        `wrapped expected behavior was truncated: ${JSON.stringify(items[0]?.expected_behavior)}`,
+      );
+    }
+  } finally {
+    fs.rmSync(tempRepo, { recursive: true, force: true });
+  }
+}
+
 function validateLocalArtifactAudit() {
   const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-artifact-audit-"));
   const skillName = "audit-skill";
@@ -4153,6 +4231,7 @@ validateLiveAdapterPatchProof();
 validateVisualPermissionCapabilityGate();
 validateNoneVisualAssertionsIgnored();
 validateTextOnlySplitExistsWithoutVisualAssertions();
+validateWrappedExpectedBehaviorSplit();
 validateLocalArtifactAudit();
 validateLocalArtifactAuditFreshGlobalCompatibility();
 
