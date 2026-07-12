@@ -29,7 +29,7 @@ This only lists skills; it does not install them or create a skills.sh install e
 Install all Cursor-ready public skills globally for Cursor:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -g -a cursor -y
 ```
 
 Install the Cursor-native spec interviewer project-locally for Cursor:
@@ -51,6 +51,7 @@ mkdir -p .claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
 cp -R skills/claude-operations/claude-memory-curator .claude/skills/
 cp -R skills/engineering-workflows/architecture-compass .claude/skills/
+cp -R skills/engineering-workflows/animated-readme-logo .claude/skills/
 ```
 
 Install them user-wide for Claude Code:
@@ -60,12 +61,13 @@ mkdir -p ~/.claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
 cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
 cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
+cp -R skills/engineering-workflows/animated-readme-logo ~/.claude/skills/
 ```
 
 Install all Codex-ready public skills globally for Codex:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams animated-readme-logo -g -a codex -y
 ```
 
 Avoid `--skill '*'` for a single runtime: the wildcard selects every public skill, so it would also install Cursor- and Claude-specific skills such as `cursor-spec-interviewer`, `cursor-memory-curator`, and `claude-spec-interviewer` into Codex.
@@ -78,6 +80,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a codex
 ```
 
 Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, runtime-specific MCP guidance, exploration, structural search, or refactor planning:
@@ -104,6 +107,12 @@ Install the portable Architecture Compass for Cursor:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor -y
+```
+
+Install the portable animated README logo workflow for Cursor:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor -y
 ```
 
 Use `codex-spec-interviewer` when a coding request is still fuzzy:
@@ -156,21 +165,28 @@ Use `drawio-diagrams` when a task needs editable draw.io / diagrams.net output:
 Use $drawio-diagrams to create, edit, verify, or export an editable .drawio architecture diagram.
 ```
 
+Use `animated-readme-logo` when a README needs a new, transformed, animated, or reviewed logo pipeline:
+
+```text
+Use $animated-readme-logo to create a validated README logo source, check Recraft V4.1 only when the task needs a new mark, and prepare accessible fallback markup without spending credits until I approve the quoted cost.
+```
+
 ## Public Catalog
 
 The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
 
-| Skill                                                                                  | Use when                                                                                                                                                           | Proof                                                                                   |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)   | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.                 | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)       |
-| [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)     | Claude Code durable context is stale, noisy, conflicting, sensitive, misplaced, unenforced, or needs review, cleanup plans, or destination classification.         | [`skill-evals/claude-memory-curator/`](skill-evals/claude-memory-curator/README.md)     |
-| [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Claude Code task needs a persisted Claude-ready spec first.                 | [`skill-evals/claude-spec-interviewer/`](skill-evals/claude-spec-interviewer/README.md) |
-| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need setup, runtime-specific MCP guidance, repo exploration, structural search, impact analysis, or safe refactor planning.                 | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
-| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)        | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning.           | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)       |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)    | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Codex task needs a user-verified, persisted Codex-ready spec first.         | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md)   |
-| [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md)     | Cursor durable context is stale, noisy, ignored, sensitive, conflicting, or needs review, cleanup plans, destination classification, or settings action guidance.  | [`skill-evals/cursor-memory-curator/`](skill-evals/cursor-memory-curator/README.md)     |
-| [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Cursor Agent task needs a user-verified, persisted Cursor-ready spec first. | [`skill-evals/cursor-spec-interviewer/`](skill-evals/cursor-spec-interviewer/README.md) |
-| [`drawio-diagrams`](skills/engineering-workflows/drawio-diagrams/SKILL.md)             | Editable draw.io / diagrams.net diagrams need to be created, edited, verified, repaired, or exported as `.drawio`, PNG, SVG, or PDF.                               | [`skill-evals/drawio-diagrams/`](skill-evals/drawio-diagrams/README.md)                 |
+| Skill                                                                                  | Use when                                                                                                                                                                     | Proof                                                                                   |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`animated-readme-logo`](skills/engineering-workflows/animated-readme-logo/SKILL.md)   | A README logo needs review, creation, transformation, validated SVG authoring, provider-aware source routing, accessible motion planning, or honest raster-export readiness. | [`skill-evals/animated-readme-logo/`](skill-evals/animated-readme-logo/README.md)       |
+| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)   | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.                           | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)       |
+| [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)     | Claude Code durable context is stale, noisy, conflicting, sensitive, misplaced, unenforced, or needs review, cleanup plans, or destination classification.                   | [`skill-evals/claude-memory-curator/`](skill-evals/claude-memory-curator/README.md)     |
+| [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Claude Code task needs a persisted Claude-ready spec first.                           | [`skill-evals/claude-spec-interviewer/`](skill-evals/claude-spec-interviewer/README.md) |
+| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need setup, runtime-specific MCP guidance, repo exploration, structural search, impact analysis, or safe refactor planning.                           | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
+| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)        | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning.                     | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)       |
+| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)    | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Codex task needs a user-verified, persisted Codex-ready spec first.                   | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md)   |
+| [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md)     | Cursor durable context is stale, noisy, ignored, sensitive, conflicting, or needs review, cleanup plans, destination classification, or settings action guidance.            | [`skill-evals/cursor-memory-curator/`](skill-evals/cursor-memory-curator/README.md)     |
+| [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Cursor Agent task needs a user-verified, persisted Cursor-ready spec first.           | [`skill-evals/cursor-spec-interviewer/`](skill-evals/cursor-spec-interviewer/README.md) |
+| [`drawio-diagrams`](skills/engineering-workflows/drawio-diagrams/SKILL.md)             | Editable draw.io / diagrams.net diagrams need to be created, edited, verified, repaired, or exported as `.drawio`, PNG, SVG, or PDF.                                         | [`skill-evals/drawio-diagrams/`](skill-evals/drawio-diagrams/README.md)                 |
 
 ## Repository Layout
 

@@ -14,6 +14,31 @@
 
 ### Security
 
+## v0.9.0 - 2026-07-12
+
+### Added
+
+- Promoted `animated-readme-logo` 0.2.0 with live Recraft V4.1 discovery and cost approval, a deterministic local SVG fallback, explicit task/provider/export statuses, and README-safe delivery guidance.
+- Added dependency-free strict SVG and GIF/APNG/WebP inspection with hidden-metadata rejection, a focused animated-logo fixture harness, and reusable bounded visual assertions shared with draw.io evaluation.
+
+### Changed
+
+- Kept animated-logo routing portable across Codex, Cursor, Claude, and other Agent Skills hosts; provider capability and output contracts drive the route instead of agent-specific forks.
+- Refactored draw.io visual evaluation behind a reusable six-assertion library without changing its public grammar.
+
+### Fixed
+
+- Made README logo audits resolve assets inside an explicit repository root, parse bounded live Markdown/HTML image references, verify SVG and raster content, enforce meaningful reduced-motion/static fallbacks, and report readiness without fabricating unavailable artifacts.
+
+### Deprecated
+
+### Removed
+
+### Security
+
+- Rejected absolute, UNC, root-escaping traversal, encoded scheme/entity, duplicate-attribute, and symlink-escaped README asset paths before reading files.
+- Rejected symlinked or oversized visual-artifact trees, active/foreign/metadata-bearing SVG content, hidden raster metadata, and non-regular animated-image inputs before release proof.
+
 ## v0.8.0 - 2026-07-12
 
 ### Added
