@@ -102,10 +102,26 @@ function section(text, heading) {
 }
 
 function bullets(text) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.match(/^\s*[-*]\s+(.+)$/)?.[1]?.trim())
-    .filter(Boolean);
+  const items = [];
+  let current = null;
+  for (const line of text.split(/\r?\n/)) {
+    const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+    if (bullet) {
+      if (current) items.push(current);
+      current = bullet[1].trim();
+      continue;
+    }
+    if (current && /^\s+\S/.test(line)) {
+      current = `${current} ${line.trim()}`;
+      continue;
+    }
+    if (current) {
+      items.push(current);
+      current = null;
+    }
+  }
+  if (current) items.push(current);
+  return items;
 }
 
 function isNoneAssertion(value) {

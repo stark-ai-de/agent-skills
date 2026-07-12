@@ -8,6 +8,22 @@ Internal mode:
 
 `audit | refactor | new-implementation | new-repo-bootstrap | pr-review | docs-sync | stack-deviation`
 
+Collaboration route:
+
+`native decision phase | portable no-write fallback | direct execution | read-only audit | review`
+
+Host capability evidence:
+
+Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
+
+Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
+
+Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
+
+Architecture decision status: `<not required | pending | approved | blocked>`
+
+Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+
 ## Inspected evidence
 
 | Evidence                | Status                                | Notes |
@@ -37,6 +53,18 @@ Internal mode:
    - Files:
    - Behavior change: yes/no
    - Validation:
+
+## Approved execution boundary
+
+Include this section only when implementation was requested; otherwise omit it.
+
+- Approved slice:
+- Allowed target paths:
+- Validation commands:
+- Material assumptions:
+- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
+- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
+- Pre-execution state recheck: passed / material drift found / not applicable
 
 ## Docs or ADR updates
 

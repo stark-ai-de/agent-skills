@@ -150,5 +150,5 @@ jobs:
         run: |
           echo "After publishing, verify:"
           echo "npx skills@latest add stark-ai-de/agent-skills --list"
-          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill '*' -a codex --copy -y"
+          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams -a codex --copy -y"
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"

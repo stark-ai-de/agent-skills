@@ -40,11 +40,12 @@ Use:
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass -g -a cursor -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
 ```
 
@@ -54,10 +55,12 @@ Install Claude Code public skills from a repository clone into project-local or 
 mkdir -p .claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
 cp -R skills/claude-operations/claude-memory-curator .claude/skills/
+cp -R skills/engineering-workflows/architecture-compass .claude/skills/
 
 mkdir -p ~/.claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
 cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
+cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -186,9 +189,10 @@ npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a c
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a cursor --copy -y
 ```
 
-For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer` and `skills/claude-operations/claude-memory-curator`, then use the manual copy commands above from a tag checkout.
+For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, and the portable `skills/engineering-workflows/architecture-compass`, then use the manual copy commands above from a tag checkout.
 
 ## Release Update Process
 

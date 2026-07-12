@@ -4,6 +4,13 @@
 
 - Top-level action: `setup`
 - Internal mode: `<setup-existing-repo | setup-new-repo>`
+- Collaboration route: `<native decision phase | portable no-write fallback | direct execution>`
+- Host capability evidence:
+- Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
+- Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
+- Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
+- Architecture decision status: `<not required | pending | approved | blocked>`
+- Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
 
 ## Inspected evidence
 
@@ -67,11 +74,24 @@ For feature work:
 Use Architecture Compass in refactor mode. Read the relevant ADRs first, then create an implementation placement map before editing code.
 ```
 
+When that map requires a durable decision, use the host's planning and read-only controls when available and do not edit until the architecture checkpoint is approved.
+
 ## Open decisions
 
 | Decision | Why unresolved | Recommended owner |
 | -------- | -------------- | ----------------- |
 |          |                |                   |
+
+## Approved execution boundary
+
+Include this section only when implementation was requested; otherwise omit it.
+
+- Approved setup slice:
+- Allowed target paths:
+- Validation commands:
+- Material assumptions:
+- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
+- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
 
 ## Validation
 
