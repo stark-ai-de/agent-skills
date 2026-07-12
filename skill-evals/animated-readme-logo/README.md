@@ -46,3 +46,8 @@ Negative activation:
 Use `rubric.md` to grade outputs. Positive runs must emit all six public status fields. Automated evals must not make a paid provider call; the approved live Recraft batch is a separate maintainer-gated release proof.
 
 The v0.9.0 eval schema intentionally adds no GIF, APNG, or WebP visual-assertion prefixes. Animated-format behavior is covered by deterministic fixture tests for the focused inspector.
+
+## Release proofs
+
+- [`runs/2026-07-12-forced-local-proof.md`](runs/2026-07-12-forced-local-proof.md)
+- [`runs/2026-07-12-recraft-live-proof.md`](runs/2026-07-12-recraft-live-proof.md)
