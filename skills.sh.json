@@ -18,8 +18,13 @@
     },
     {
       "title": "Engineering Workflows",
-      "description": "Portable skills for ADR governance, repo exploration, refactoring, and editable diagrams.",
-      "skills": ["architecture-compass", "codegraph-ast-grep", "drawio-diagrams"]
+      "description": "Portable skills for ADR governance, repo exploration, refactoring, editable diagrams, and README branding pipelines.",
+      "skills": [
+        "animated-readme-logo",
+        "architecture-compass",
+        "codegraph-ast-grep",
+        "drawio-diagrams"
+      ]
     }
   ]
 }

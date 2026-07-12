@@ -53,3 +53,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0022 | Accepted   | Allow dependency-free Python helpers by exception.                  |
 | 0023 | Proposed   | Use a local SkillOpt workspace for Agent Skill optimization.        |
 | 0024 | Accepted   | Keep Architecture Compass portable with host mode adapters.         |
+| 0025 | Accepted   | Keep Animated README Logo portable with provider routing.           |

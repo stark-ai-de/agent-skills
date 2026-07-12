@@ -1,6 +1,6 @@
 # README Snippets
 
-Use these snippets as starting points. Replace paths, dimensions, and alt text with project-specific values.
+Use these snippets as starting points. Replace paths, dimensions, and alt text with project-specific values. Use the quality-first variant only after the committed GitHub README renders every candidate source correctly; otherwise use the conservative or static-only variant.
 
 ## Quality-first `<picture>`
 

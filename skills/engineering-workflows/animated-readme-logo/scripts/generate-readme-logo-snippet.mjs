@@ -61,6 +61,43 @@ function requireOption(args, key) {
     );
 }
 
+function hasControlCharacters(value) {
+  return [...String(value)].some((character) => {
+    const code = character.codePointAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
+function validateAssetPath(value, option) {
+  let decoded = value;
+  for (let iteration = 0; iteration < 4; iteration += 1) {
+    let next;
+    try {
+      next = decodeURIComponent(decoded);
+    } catch {
+      throw new Error(`${option} contains invalid percent encoding`);
+    }
+    if (next === decoded) break;
+    decoded = next;
+  }
+  if (/%[0-9a-f]{2}/i.test(decoded)) throw new Error(`${option} is over-encoded`);
+  if (hasControlCharacters(decoded)) {
+    throw new Error(`${option} contains control characters`);
+  }
+  if (decoded !== decoded.trim()) throw new Error(`${option} contains URL whitespace`);
+  decoded = decoded.replaceAll("\\", "/");
+  if (
+    !decoded ||
+    decoded.startsWith("/") ||
+    decoded.startsWith("//") ||
+    /^[a-z][a-z0-9+.-]*:/i.test(decoded) ||
+    /^[a-z]:\//i.test(decoded) ||
+    decoded.split("/").includes("..")
+  ) {
+    throw new Error(`${option} must be a safe relative repository path`);
+  }
+}
+
 function validate(args) {
   for (const key of ["fallback", "alt", "width", "height"]) requireOption(args, key);
   if (!["quality-first", "conservative", "static-only"].includes(args.mode)) {
@@ -68,6 +105,14 @@ function validate(args) {
   }
   for (const key of ["width", "height"]) {
     if (!/^[1-9]\d*$/.test(args[key])) throw new Error(`--${key} must be a positive integer`);
+  }
+  for (const [key, value] of Object.entries(args)) {
+    if (!/(?:fallback|staticWebp|staticPng|animatedWebp|animatedApng|animatedGif)/.test(key))
+      continue;
+    validateAssetPath(value, `--${key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`);
+  }
+  if (hasControlCharacters(args.alt)) {
+    throw new Error("--alt must not contain control characters");
   }
   if (
     args.mode === "quality-first" &&
