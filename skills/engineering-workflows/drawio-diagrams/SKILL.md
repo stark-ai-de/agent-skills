@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # drawio-diagrams
@@ -40,7 +40,7 @@ Inspect the user's prompt, existing `.drawio` files, requested output formats, t
 5. Author or patch `.drawio` XML. Preserve unknown cells, IDs, pages, layers, and manual coordinates when editing; create a backup before overwriting an existing diagram.
 6. Apply light/dark-compatible styling with `adaptiveColors="auto"` and `light-dark(...)` where explicit colors are needed. Give dense edge labels small filled label backgrounds that work in both modes.
 7. Resolve icons in `brand-logos` mode by default: use real logos for all recognized brands where approved sources allow it, preserve aspect ratio, keep logo color mode consistent, use consistent neutral chips, and fall back to `simplified-icons` only when the user chooses it or sources are unavailable/denied. Do not recolor or invert original logos; change the chip/background instead.
-8. Route edges with concrete `source` and `target` ids. Arrows must not overlap text boxes, callouts, labels, icon chips, or container borders; use side ports, label backgrounds, dedicated lanes, and branch points between elements when needed.
+8. Route edges with concrete `source` and `target` ids. Treat intervening text, annotations, and callouts as obstacles; for orthogonal avoidance, store explicit waypoints under `<Array as="points">` in the edge's `<mxGeometry>` and route around them. Arrows must not overlap text boxes, callouts, labels, icon chips, or container borders; use side ports, label backgrounds, dedicated lanes, and branch points between elements when needed.
 9. Run `scripts/preflight-drawio-xml.mjs`, `scripts/validate_drawio.py`, and `scripts/validate-drawio-diagram-rules.mjs` (dependency-free helpers allowed by ADR-0022). Fix every ERROR and justify or fix every WARN.
 10. If draw.io Desktop CLI is available, run `scripts/render-drawio.mjs`, inspect the light PNG and dark SVG, and fix visual issues for at most three cycles. Inspect for label-on-border collisions, crowded rails, uneven whitespace, indistinct component title/detail text, icon-chip inconsistency, and dark-mode logo/label contrast.
 11. Deliver `.drawio`, optional exports, chosen path, validation status, visual/dark verification status, and remaining warnings.
@@ -72,7 +72,7 @@ Never install tools, write MCP config, download indexes, fetch remote icons, or 
 
 ## Output format
 
-Return paths to generated files, chosen authoring path, toolset used, icon mode and sources used, lint summary, visual verification summary, dark-mode verification summary, and any warnings left with justification.
+Return paths to generated files, chosen authoring path, toolset used, icon mode and sources used, lint summary, visual verification summary, dark-mode verification summary, and any warnings left with justification. Explicitly name `validate_drawio.py` and `validate-drawio-diagram-rules.mjs` in the lint summary. For architecture or dense diagrams, report connector rails, label backgrounds, and how labels were spaced.
 
 ## Completion criteria
 
