@@ -14,6 +14,24 @@
 
 ### Security
 
+## v0.9.1 - 2026-07-13
+
+### Added
+
+- Added a concise public SkillOpt run summary for the accepted `drawio-diagrams` routing and readability optimization.
+
+### Changed
+
+- Updated `drawio-diagrams` to require explicit orthogonal waypoints around text and callout obstacles and to report validator names, connector rails, label backgrounds, and label spacing for dense diagrams.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.9.0 - 2026-07-12
 
 ### Added
