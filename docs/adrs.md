@@ -54,4 +54,5 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0023 | Proposed   | Use a local SkillOpt workspace for Agent Skill optimization.        |
 | 0024 | Accepted   | Keep Architecture Compass portable with host mode adapters.         |
 | 0025 | Accepted   | Keep Animated README Logo portable with provider routing.           |
-| 0026 | Accepted   | Gate logo tool installs and reuse configured browser fallbacks.     |
+| 0026 | Accepted   | Distinguish the execution host from the target runtime.             |
+| 0027 | Accepted   | Gate logo tool installs and reuse configured browser fallbacks.     |

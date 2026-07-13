@@ -6,6 +6,30 @@ import { spawnSync } from "node:child_process";
 const root = process.cwd();
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "skills-smoke-"));
 const copyRoot = path.join(tmpRoot, "repo");
+const installRoot = path.join(tmpRoot, "installs");
+const smokeEnvironment = {
+  ...process.env,
+  CI: "1",
+  DISABLE_TELEMETRY: "1",
+  DO_NOT_TRACK: "1",
+};
+const installCases = [
+  {
+    agent: "codex",
+    destination: path.join(".agents", "skills", "codex-spec-interviewer"),
+    skill: "codex-spec-interviewer",
+  },
+  {
+    agent: "cursor",
+    destination: path.join(".agents", "skills", "cursor-spec-interviewer"),
+    skill: "cursor-spec-interviewer",
+  },
+  {
+    agent: "claude-code",
+    destination: path.join(".claude", "skills", "claude-spec-interviewer"),
+    skill: "claude-spec-interviewer",
+  },
+];
 
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
@@ -25,6 +49,74 @@ function walk(dir, predicate = () => true) {
 function parseSkillName(file) {
   const text = fs.readFileSync(file, "utf8");
   return text.match(/^name:\s*([a-z0-9-]+)$/m)?.[1] ?? null;
+}
+
+function installAndAssertDestination({ agent, destination, skill }) {
+  const projectRoot = path.join(installRoot, agent);
+  fs.mkdirSync(projectRoot, { recursive: true });
+  fs.writeFileSync(
+    path.join(projectRoot, "package.json"),
+    `${JSON.stringify({ name: `smoke-${agent}`, private: true }, null, 2)}\n`,
+  );
+
+  const result = spawnSync(
+    "npx",
+    [
+      "--yes",
+      "skills@latest",
+      "add",
+      copyRoot,
+      "--skill",
+      skill,
+      "--agent",
+      agent,
+      "--yes",
+      "--copy",
+    ],
+    {
+      cwd: projectRoot,
+      encoding: "utf8",
+      env: smokeEnvironment,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+
+  if (result.status !== 0) {
+    const output = `${result.stdout}\n${result.stderr}`.trim();
+    console.error(output);
+    console.error(`Smoke install failed for ${skill} with --agent ${agent}.`);
+    process.exit(result.status ?? 1);
+  }
+
+  const installedSkillFile = path.join(projectRoot, destination, "SKILL.md");
+  if (!fs.existsSync(installedSkillFile)) {
+    console.error(
+      `Smoke install placed ${skill} outside the expected ${path.relative(projectRoot, path.dirname(installedSkillFile))} destination for --agent ${agent}.`,
+    );
+    process.exit(1);
+  }
+
+  if (parseSkillName(installedSkillFile) !== skill) {
+    console.error(`Smoke install destination for --agent ${agent} does not contain ${skill}.`);
+    process.exit(1);
+  }
+
+  const alternativeDestinations = [
+    path.join(".agents", "skills", skill),
+    path.join(".claude", "skills", skill),
+    path.join(".cursor", "skills", skill),
+  ].filter((candidate) => candidate !== destination);
+  const unexpected = alternativeDestinations.find((candidate) =>
+    fs.existsSync(path.join(projectRoot, candidate)),
+  );
+  if (unexpected) {
+    console.error(
+      `Smoke install unexpectedly placed ${skill} at ${unexpected} for --agent ${agent}.`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`Smoke installed ${skill} for ${agent} at ${destination}.`);
 }
 
 try {
@@ -52,9 +144,10 @@ try {
     .filter(Boolean)
     .sort();
 
-  const result = spawnSync("npx", ["skills@latest", "add", ".", "--list"], {
+  const result = spawnSync("npx", ["--yes", "skills@latest", "add", ".", "--list"], {
     cwd: copyRoot,
     encoding: "utf8",
+    env: smokeEnvironment,
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -93,6 +186,10 @@ try {
     console.log("Smoke install found no public skills and no incubator/helper skill leaks.");
   } else {
     console.log(`Smoke install listed ${names.length} public skill(s) from a clean copy.`);
+  }
+
+  for (const installCase of installCases) {
+    installAndAssertDestination(installCase);
   }
 } finally {
   fs.rmSync(tmpRoot, { force: true, recursive: true });

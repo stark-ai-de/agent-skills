@@ -1,6 +1,6 @@
 interface:
   display_name: "Architecture Compass"
-  short_description: "Sets up ADR guardrails or refactors repositories from ADRs, stack rules, and examples"
+  short_description: "Sets ADR guardrails and refactors repositories from decisions"
   default_prompt: "Use $architecture-compass in setup mode to install ADR guardrails, or refactor mode to align code with repo ADRs, stack rules, and examples. Classify the collaboration route and host controls first, then inspect repo evidence under that route."
 policy:
   allow_implicit_invocation: true

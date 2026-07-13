@@ -20,6 +20,7 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 - `cases/plan-before-coding-trigger.md`
 - `cases/native-plan-mode-lifecycle.md`
 - `cases/native-plan-mode-fallbacks.md`
+- `cases/codex-execution-host.md`
 - `cases/architecture-change-needs-adr.md`
 - `cases/cursor-rules-adr-implications.md`
 - `cases/rule-artifact-request.md`

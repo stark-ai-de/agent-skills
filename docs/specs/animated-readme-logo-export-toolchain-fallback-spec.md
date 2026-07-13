@@ -40,7 +40,7 @@ Turn missing export and preview capabilities into explicit, minimal installation
 
 ## ADR gate
 
-- Governing ADRs: ADR-0025 and ADR-0026.
+- Governing ADRs: ADR-0025 and ADR-0027.
 - Result: accepted; browser and install behavior is durable public workflow policy.
 
 ## Source challenge

@@ -1,4 +1,4 @@
-# ADR-0026: Gate logo tool installs and browser fallbacks
+# ADR-0027: Gate logo tool installs and browser fallbacks
 
 Status: Accepted
 Date: 2026-07-13

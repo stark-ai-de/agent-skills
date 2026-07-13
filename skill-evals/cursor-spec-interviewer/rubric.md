@@ -12,6 +12,7 @@ Grade each run against these assertions.
 
 ## Output Quality
 
+- When another Agent Skills host executes the skill, uses that execution host's equivalent planning, structured-question, transition, and plan-exit controls while preserving Cursor evidence and output contracts; it does not redirect solely because the execution host differs.
 - Runs a Plan Mode preflight before substantive interviewing for every positive trigger. If Plan Mode is inactive, requests a user-approved transition when Cursor exposes that capability; otherwise gives the correct Shift+Tab or CLI `/plan`/`--mode=plan` instruction and waits.
 - Never claims the skill switched modes. Uses the conversational fallback only when Plan Mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
 - Does not treat a Plan Mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.

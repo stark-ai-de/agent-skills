@@ -61,6 +61,7 @@ assertMarkdownNormalizationBehavior();
 assertSummaryBehavior();
 
 export type SkillKind = "public" | "incubator";
+export type SkillInstallAgent = "claude-code" | "codex" | "cursor";
 
 export interface SkillMetadata {
   author?: string;
@@ -81,6 +82,7 @@ export interface CatalogSkill {
   fileTree: SkillTreeNode;
   hasOpenAiMetadata: boolean;
   html: string;
+  installAgent: SkillInstallAgent;
   installCommand?: string;
   kind: SkillKind;
   license: string;
@@ -165,6 +167,17 @@ export function collectionLabel(kind: SkillKind) {
   return kind === "public" ? "Public catalog" : "Incubator";
 }
 
+export function installAgentLabel(agent: SkillInstallAgent) {
+  switch (agent) {
+    case "claude-code":
+      return "Claude Code";
+    case "cursor":
+      return "Cursor";
+    default:
+      return "Codex";
+  }
+}
+
 async function readSkills(kind: SkillKind) {
   const files = await fg(skillGlobFor(kind), {
     cwd: repoRoot,
@@ -209,6 +222,7 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
   }
 
   const category = metadata.category ?? categoryFromPath(kind, sourcePath);
+  const installAgent = installAgentForCategory(category);
   const skillDir = path.dirname(sourcePath);
   const fileTree = buildSkillTree(skillDir);
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
@@ -227,16 +241,17 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     fileTree,
     hasOpenAiMetadata,
     html,
+    installAgent,
     installCommand:
       kind === "public"
-        ? `npx skills add https://github.com/${REPO_NAME} --skill ${name} -g -a codex`
+        ? `npx skills add https://github.com/${REPO_NAME} --skill ${name} -g -a ${installAgent}`
         : undefined,
     kind,
     license: asString(data.license) ?? "Unspecified",
     localUsageCommand:
       kind === "incubator"
-        ? `INSTALL_INTERNAL_SKILLS=1 npx skills add ./incubator/skills --skill ${name} -a codex --copy -y`
-        : `npx skills add ./skills --skill ${name} -a codex --copy -y`,
+        ? `INSTALL_INTERNAL_SKILLS=1 npx skills add ./incubator/skills --skill ${name} -a ${installAgent} --copy -y`
+        : `npx skills add ./skills --skill ${name} -a ${installAgent} --copy -y`,
     metadata,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
@@ -297,6 +312,18 @@ function publicEvalPath(name: string) {
 function categoryFromPath(kind: SkillKind, sourcePath: string) {
   const segments = sourcePath.split("/");
   return kind === "public" ? segments[1] : segments[2];
+}
+
+function installAgentForCategory(category: string): SkillInstallAgent {
+  switch (category) {
+    case "claude-operations":
+      return "claude-code";
+    case "cursor-operations":
+      return "cursor";
+    case "codex-operations":
+    default:
+      return "codex";
+  }
 }
 
 function normalizeMetadata(value: unknown): SkillMetadata {

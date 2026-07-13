@@ -12,6 +12,7 @@ Grade each run against these assertions.
 
 ## Native Plan Mode Lifecycle
 
+- When another Agent Skills host executes the skill, uses that execution host's equivalent planning, structured-question, and plan-exit controls while preserving Claude Code evidence and output contracts; it does not redirect solely because the execution host differs.
 - Runs the Plan-mode preflight before repo inspection or substantive interview questions.
 - When native Plan mode is active, keeps the interview in the main conversation and uses `AskUserQuestion` for material decisions when available.
 - When Plan mode is supported but inactive and not explicitly declined, invokes `EnterPlanMode` when available and continues only after the host confirms the transition.

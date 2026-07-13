@@ -2,7 +2,7 @@
 import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import type { CatalogSkill } from "../lib/skills";
-import { collectionLabel } from "../lib/skills";
+import { collectionLabel, installAgentLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
@@ -14,6 +14,7 @@ const { compact = false, skill } = Astro.props;
 const href =
   skill.kind === "public" ? `/skills/${skill.name}/` : `/incubator/${skill.name}/`;
 const command = skill.installCommand ?? skill.localUsageCommand;
+const installTarget = installAgentLabel(skill.installAgent);
 ---
 
 <article
@@ -49,9 +50,13 @@ const command = skill.installCommand ?? skill.localUsageCommand;
   )}
   <ul class="skill-card__meta" aria-label={`${skill.name} metadata`}>
     {skill.version && <li class="skill-card__version">v{skill.version}</li>}
+    <li>Default target: {installTarget}</li>
+    {skill.hasOpenAiMetadata && <li>Codex metadata</li>}
     {skill.evalUrl && <li class="skill-card__proof">Eval proof</li>}
   </ul>
-  {!compact && command && <CommandBlock command={command} label={`${skill.name} install command`} />}
+  {!compact && command && (
+    <CommandBlock command={command} label={`${skill.name} ${installTarget} install command`} />
+  )}
   <div class="skill-card__links">
     <a href={withBase(href)}>View skill</a>
     <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Source</a>

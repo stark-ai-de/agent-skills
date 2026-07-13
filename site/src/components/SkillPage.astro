@@ -3,7 +3,7 @@ import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
 import type { CatalogSkill } from "../lib/skills";
-import { collectionLabel } from "../lib/skills";
+import { collectionLabel, installAgentLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
@@ -12,7 +12,9 @@ interface Props {
 
 const { skill } = Astro.props;
 const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
-const commandLabel = skill.kind === "public" ? "Install command" : "Local test command";
+const installTarget = installAgentLabel(skill.installAgent);
+const commandLabel =
+  skill.kind === "public" ? `Install for ${installTarget}` : `Local ${installTarget} test command`;
 const command = skill.installCommand ?? skill.localUsageCommand;
 ---
 
@@ -31,6 +33,8 @@ const command = skill.installCommand ?? skill.localUsageCommand;
     <OperationBadge label={skill.categoryLabel} tag="li" />
     {skill.version && <li>Version {skill.version}</li>}
     <li>{skill.license}</li>
+    <li>Default install target: {installTarget}</li>
+    {skill.hasOpenAiMetadata && <li>Codex/OpenAI metadata available</li>}
   </ul>
 </section>
 
