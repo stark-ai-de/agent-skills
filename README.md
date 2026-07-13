@@ -44,26 +44,16 @@ Install the Cursor-native memory curator project-locally for Cursor:
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor
 ```
 
-Install the Claude Code public skills from a repository clone into project-local Claude skills:
+Install all Claude Code-ready public skills project-locally for Claude Code:
 
 ```bash
-mkdir -p .claude/skills
-cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
-cp -R skills/claude-operations/claude-memory-curator .claude/skills/
-cp -R skills/engineering-workflows/architecture-compass .claude/skills/
-cp -R skills/engineering-workflows/animated-readme-logo .claude/skills/
-cp -R skills/engineering-workflows/codegraph-ast-grep .claude/skills/
+npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer claude-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -a claude-code -y
 ```
 
-Install them user-wide for Claude Code:
+Install them globally for Claude Code:
 
 ```bash
-mkdir -p ~/.claude/skills
-cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
-cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
-cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
-cp -R skills/engineering-workflows/animated-readme-logo ~/.claude/skills/
-cp -R skills/engineering-workflows/codegraph-ast-grep ~/.claude/skills/
+npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer claude-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -g -a claude-code -y
 ```
 
 Install all Codex-ready public skills globally for Codex:

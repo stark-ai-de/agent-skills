@@ -1,7 +1,7 @@
 ---
 import CommandBlock from "./CommandBlock.astro";
 import type { CatalogSkill } from "../lib/skills";
-import { collectionLabel } from "../lib/skills";
+import { collectionLabel, installAgentLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
@@ -10,7 +10,9 @@ interface Props {
 
 const { skill } = Astro.props;
 const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
-const commandLabel = skill.kind === "public" ? "Install command" : "Local test command";
+const installTarget = installAgentLabel(skill.installAgent);
+const commandLabel =
+  skill.kind === "public" ? `Install for ${installTarget}` : `Local ${installTarget} test command`;
 const command = skill.installCommand ?? skill.localUsageCommand;
 ---
 
@@ -27,6 +29,7 @@ const command = skill.installCommand ?? skill.localUsageCommand;
     <span>{skill.categoryLabel}</span>
     {skill.version && <span>Version {skill.version}</span>}
     <span>{skill.license}</span>
+    <span>Default install target: {installTarget}</span>
     {skill.hasOpenAiMetadata && <span>Codex/OpenAI metadata available</span>}
   </div>
 </section>

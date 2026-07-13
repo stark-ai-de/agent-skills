@@ -12,6 +12,27 @@
 
 ### Removed
 
+## v0.10.1 - 2026-07-13
+
+### Added
+
+- Added ADR-0026 guidance that separates the executing client from the target agent ecosystem, keeps independently valuable skills unconstrained by catalog size, and leaves backend gateways with their owning workflow until reuse and isolation are proven.
+- Added real disposable Codex, Cursor, and Claude Code destination-install smoke coverage plus live Claude- and Cursor-target-on-Codex activation evidence.
+
+### Changed
+
+- Updated `claude-spec-interviewer` to `0.2.1` so cross-host execution adapts planning and question controls without changing Claude Code evidence or output artifacts.
+- Updated `cursor-spec-interviewer` to `0.2.1` with execution-host control translation and a matching OpenAI default prompt, and updated `architecture-compass` to `0.2.1` with valid concise OpenAI metadata.
+- Made catalog install commands target-correct by category and replaced manual Claude skill copies with supported `-a claude-code` installation commands.
+
+### Fixed
+
+- Validated every existing `agents/openai.yaml` file and rejected OpenAI prompts that require foreign-host-only planning or question controls.
+
+### Deprecated
+
+### Removed
+
 ### Security
 
 ## v0.10.0 - 2026-07-13

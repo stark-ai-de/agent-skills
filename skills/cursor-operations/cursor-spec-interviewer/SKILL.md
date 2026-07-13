@@ -2,11 +2,11 @@
 name: cursor-spec-interviewer
 description: Interview fuzzy Cursor Agent coding requests into user-verified, Cursor-ready implementation specs. Use when the user asks for a spec, implementation plan, PRD, requirements, or a plan before coding for a feature, bugfix, refactor, migration, repo-wide change, or architecture task, or needs acceptance criteria, validation commands, ADR decisions, or rollout notes. Saves the spec and a Cursor execution prompt. Do not use for fully specified tasks or direct implementation requests.
 license: Apache-2.0
-compatibility: Designed for Cursor Agent and Cursor Agent Skills. Requires native Cursor Plan Mode when supported; falls back only when unavailable or explicitly declined. Works best with repo-local AGENTS.md, .cursor/rules, and project docs.
+compatibility: Targets Cursor Agent evidence and artifacts. Use native Cursor Plan Mode only when Cursor is the execution host; from another host, use that host's equivalent planning and question controls or the recorded fallback. Works best with repo-local AGENTS.md, .cursor/rules, and project docs.
 metadata:
   author: stark-ai-de
   category: cursor-operations
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Cursor Spec Interviewer
@@ -44,10 +44,12 @@ Produce a user-verified implementation spec that Cursor Agent can execute with m
 
 ## Workflow
 
-1. Before any substantive interview, run the Plan Mode preflight under Cursor integration. Do not apply this preflight to requests that do not meet the skill's trigger boundary.
+When another Agent Skills host executes this skill, substitute that host's equivalent planning, structured-question, transition, and plan-exit controls throughout this workflow; use the recorded fallback when an equivalent is unavailable, and keep Cursor evidence and output contracts unchanged.
+
+1. Before any substantive interview, run the current execution host's equivalent of the Plan Mode preflight under Cursor integration. Do not apply this preflight to requests that do not meet the skill's trigger boundary.
 2. Classify the requested effort as `compact`, `standard`, or `deep` using the mode table in `references/spec-rubric.md`.
 3. Inspect only the minimum repo context needed to avoid low-value questions. During this pass, note spec and ADR destinations by following `references/artifact-destinations.md`; defer destination confirmation to the final checkpoint unless that reference requires earlier confirmation.
-4. Ask one high-impact question at a time when the answer affects the next decision; batch up to 3 questions only when they are independent and low-friction. In Plan Mode, use Cursor's structured question tool when available. Prefer answering discoverable questions from repo files, ADRs, code search, MCP tools, or web sources instead of asking the user. Use `references/question-bank.md` for question selection.
+4. Ask one high-impact question at a time when the answer affects the next decision; batch up to 3 questions only when they are independent and low-friction. In Plan Mode, use the current execution host's structured question tool when available; in Cursor, this is Cursor's structured question tool. Prefer answering discoverable questions from repo files, ADRs, code search, MCP tools, or web sources instead of asking the user. Use `references/question-bank.md` for question selection.
 5. After each answer or evidence pass, summarize the current understanding, explicit assumptions, and remaining unknowns.
 6. Continue until every material requirement, non-goal, edge case, validation path, rollout concern, and ADR implication is source-backed, answered by the user, or explicitly accepted as non-blocking.
 7. Draft a spec hypothesis, then challenge it against sources using `references/source-challenge.md`. Challenge only decisions that materially affect correctness, safety, maintainability, or implementation strategy.
@@ -60,6 +62,8 @@ Produce a user-verified implementation spec that Cursor Agent can execute with m
 14. If Plan Mode is unavailable or the user explicitly declined it, complete the same interview conversationally, record the fallback reason, then save the final spec, required ADR, and convention-required minimal ADR index entry under the normal confirmation rules. If persistence is declined, blocked, or unavailable, return the save-ready artifacts and mark the workflow incomplete.
 
 ## Cursor integration
+
+The Cursor-native controls below apply only when Cursor is the execution host. Another host follows the workflow-level substitution rule instead.
 
 - Native Cursor Plan Mode is required when the active Cursor surface supports it. If Plan Mode is already active, continue and use Cursor's structured question tool (AskQuestion) for material user decisions when it is available.
 - If Plan Mode is supported but inactive and Cursor exposes a mode-transition request, request the transition and pause for the user's approval. Never claim that this skill switched modes; continue only after Cursor confirms Plan Mode is active.
