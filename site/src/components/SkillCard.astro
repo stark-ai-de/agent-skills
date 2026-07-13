@@ -1,36 +1,59 @@
 ---
 import CommandBlock from "./CommandBlock.astro";
+import OperationBadge from "./OperationBadge.astro";
 import type { CatalogSkill } from "../lib/skills";
 import { collectionLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
+  compact?: boolean;
   skill: CatalogSkill;
 }
 
-const { skill } = Astro.props;
+const { compact = false, skill } = Astro.props;
 const href =
   skill.kind === "public" ? `/skills/${skill.name}/` : `/incubator/${skill.name}/`;
 const command = skill.installCommand ?? skill.localUsageCommand;
 ---
 
-<article class="skill-card">
+<article
+  class:list={[
+    "skill-card",
+    `skill-card--${skill.kind}`,
+    { "skill-card--compact": compact }
+  ]}
+  data-reveal
+>
   <div class="skill-card__topline">
     <span>{collectionLabel(skill.kind)}</span>
-    <span>{skill.categoryLabel}</span>
+    <OperationBadge
+      label={skill.categoryLabel}
+      multiAgent={skill.category === "engineering-workflows"}
+    />
   </div>
   <h3>
     <a href={withBase(href)}>{skill.name}</a>
   </h3>
-  <p>{skill.description}</p>
-  <div class="skill-card__meta" aria-label={`${skill.name} metadata`}>
-    {skill.version && <span>v{skill.version}</span>}
-    {skill.hasOpenAiMetadata && <span>Codex metadata</span>}
-    {skill.evalUrl && <span>Eval proof</span>}
-  </div>
-  {command && <CommandBlock command={command} label={`${skill.name} install command`} />}
+  {compact ? (
+    <>
+      <p class="skill-card__summary">{skill.summary}</p>
+      {skill.summary !== skill.description && (
+        <details class="skill-card__description" data-description-disclosure>
+          <summary>Full description</summary>
+          <p data-description-content>{skill.description}</p>
+        </details>
+      )}
+    </>
+  ) : (
+    <p>{skill.description}</p>
+  )}
+  <ul class="skill-card__meta" aria-label={`${skill.name} metadata`}>
+    {skill.version && <li class="skill-card__version">v{skill.version}</li>}
+    {skill.evalUrl && <li class="skill-card__proof">Eval proof</li>}
+  </ul>
+  {!compact && command && <CommandBlock command={command} label={`${skill.name} install command`} />}
   <div class="skill-card__links">
-    <a href={withBase(href)}>Open page</a>
+    <a href={withBase(href)}>View skill</a>
     <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Source</a>
     {skill.evalUrl && <a href={skill.evalUrl} rel="noreferrer" target="_blank">Proof</a>}
   </div>

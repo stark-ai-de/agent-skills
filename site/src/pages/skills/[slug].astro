@@ -35,6 +35,7 @@ const structuredData = [
   webPageStructuredData({
     canonicalUrl,
     description: skill.description,
+    mainEntityId: `${canonicalUrl}#article`,
     title: pageTitle
   }),
   breadcrumbStructuredData([
@@ -50,6 +51,7 @@ const structuredData = [
   title={pageTitle}
   description={skill.description}
   canonicalPath={canonicalPath}
+  imageAlt={`${skill.title} Agent Skill catalog preview`}
   ogType="article"
   structuredData={structuredData}
 >

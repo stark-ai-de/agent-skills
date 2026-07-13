@@ -1,16 +1,28 @@
 {
   "name": "Agent Skills by stark AI",
   "short_name": "Agent Skills",
-  "description": "Public and incubator Agent Skills from stark-ai-de, generated from SKILL.md source files.",
+  "description": "Browse and install source-backed Agent Skills for Codex, Claude Code, Cursor, diagrams, and repository workflows.",
   "start_url": "/agent-skills/",
   "scope": "/agent-skills/",
   "display": "standalone",
-  "background_color": "#f8f9ff",
+  "background_color": "#f6f8ff",
   "theme_color": "#0021c7",
   "categories": ["business", "developer-tools", "productivity", "technology"],
   "lang": "en-US",
   "id": "/agent-skills/",
   "icons": [
+    {
+      "src": "/agent-skills/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/agent-skills/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/agent-skills/favicon.svg",
       "sizes": "any",

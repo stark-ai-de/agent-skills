@@ -39,8 +39,9 @@ Use:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams animated-readme-logo -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
@@ -51,22 +52,13 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor
 ```
 
-Install Claude Code public skills from a repository clone into project-local or user-level Claude skills:
+Each runtime bundle contains that runtime's matching `*-operations` skills plus every public skill outside the operations categories.
+
+Install Claude Code public skills project-locally or globally with the skills CLI:
 
 ```bash
-mkdir -p .claude/skills
-cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
-cp -R skills/claude-operations/claude-memory-curator .claude/skills/
-cp -R skills/engineering-workflows/architecture-compass .claude/skills/
-cp -R skills/engineering-workflows/animated-readme-logo .claude/skills/
-cp -R skills/engineering-workflows/codegraph-ast-grep .claude/skills/
-
-mkdir -p ~/.claude/skills
-cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
-cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
-cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
-cp -R skills/engineering-workflows/animated-readme-logo ~/.claude/skills/
-cp -R skills/engineering-workflows/codegraph-ast-grep ~/.claude/skills/
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -197,10 +189,18 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a c
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a claude-code --copy -y
 ```
 
-For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, and the portable `skills/engineering-workflows/architecture-compass`, `skills/engineering-workflows/codegraph-ast-grep`, and `skills/engineering-workflows/animated-readme-logo`, then use the manual copy commands above from a tag checkout.
+For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, and every public skill under `skills/engineering-workflows/`, then verify installation with the `-a claude-code` commands above.
 
 ## Release Update Process
 

@@ -6,11 +6,15 @@ import {
   DEFAULT_OG_IMAGE_HEIGHT,
   DEFAULT_OG_IMAGE_PATH,
   DEFAULT_OG_IMAGE_WIDTH,
+  GITHUB_ORG_URL,
   GITHUB_REPO_URL,
+  LOOPLATCH_URL,
   SEO_KEYWORDS,
   SITE_DESCRIPTION,
   SITE_TITLE,
+  STARK_AI_URL,
   toSeoDescription,
+  toSeoTitle,
   withBase
 } from "../lib/site";
 import { baseStructuredData, type JsonLdNode } from "../lib/seo";
@@ -37,7 +41,7 @@ const {
   title
 } = Astro.props;
 
-const pageTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
+const pageTitle = title ? toSeoTitle(title) : SITE_TITLE;
 const canonicalUrl = absoluteSiteUrl(canonicalPath);
 const metaDescription = toSeoDescription(description);
 const ogImage = absoluteSiteUrl(imagePath);
@@ -48,8 +52,18 @@ const googlebotContent = noindex
   : "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1";
 const schema = {
   "@context": "https://schema.org",
-  "@graph": [...baseStructuredData(metaDescription), ...structuredData]
+  "@graph": [...baseStructuredData(), ...structuredData]
 };
+const isCatalogHome = canonicalPath === "/";
+const isPublicRoute = canonicalPath === "/skills/" || canonicalPath.startsWith("/skills/");
+const isIncubatorRoute =
+  canonicalPath === "/incubator/" || canonicalPath.startsWith("/incubator/");
+const tracingMode =
+  canonicalPath === "/skills/" || canonicalPath === "/incubator/"
+    ? "listing"
+    : isPublicRoute || isIncubatorRoute
+      ? "detail"
+      : undefined;
 ---
 
 <!doctype html>
@@ -92,7 +106,7 @@ const schema = {
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f8f9ff" data-theme-color />
+    <meta name="theme-color" content="#f6f8ff" data-theme-color />
     <link rel="author" href="https://stark-ai.de/" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" hreflang="en" href={canonicalUrl} />
@@ -118,7 +132,7 @@ const schema = {
     <meta property="og:image:width" content={String(DEFAULT_OG_IMAGE_WIDTH)} />
     <meta property="og:image:height" content={String(DEFAULT_OG_IMAGE_HEIGHT)} />
     <meta property="og:image:alt" content={imageAlt} />
-    {ogType === "article" && <meta property="article:author" content="stark AI" />}
+    {ogType === "article" && <meta property="article:author" content="https://stark-ai.de/" />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={metaDescription} />
@@ -128,40 +142,131 @@ const schema = {
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>
   <body>
+    <div class="grainient-layer" aria-hidden="true"></div>
+    {
+      tracingMode && (
+        <div
+          class="tracing-beam"
+          data-tracing-beam
+          data-tracing-mode={tracingMode}
+          aria-hidden="true"
+          hidden
+        >
+          <svg data-tracing-svg focusable="false" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="tracing-beam-gradient" gradientUnits="userSpaceOnUse">
+                <stop class="tracing-beam__stop tracing-beam__stop--primary" offset="0%" />
+                <stop class="tracing-beam__stop tracing-beam__stop--secondary" offset="58%" />
+                <stop class="tracing-beam__stop tracing-beam__stop--accent" offset="100%" />
+              </linearGradient>
+            </defs>
+            <path class="tracing-beam__track" data-tracing-track pathLength="1" />
+            <path class="tracing-beam__progress" data-tracing-progress pathLength="1" />
+          </svg>
+        </div>
+      )
+    }
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header">
       <nav class="topbar" aria-label="Primary navigation">
-        <a class="brand-link" href={withBase("/")}>
+        <a class="brand-link" href={withBase("/")} aria-current={isCatalogHome ? "page" : undefined}>
           <img
             src={withBase("/stark-ai-de-agent-skills-logo.svg")}
             alt="Agent Skills by stark AI"
             width="217"
             height="72"
+            fetchpriority="high"
           />
         </a>
-        <div class="nav-links">
-          <a href={withBase("/skills/")}>Public</a>
-          <a href={withBase("/incubator/")}>Incubator</a>
-          <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">GitHub</a>
+        <div class="nav-capsule">
+          <div class="nav-links nav-links--desktop">
+            <a href={withBase("/skills/")} aria-current={isPublicRoute ? "page" : undefined}>
+              Public
+            </a>
+            <a href={withBase("/incubator/")} aria-current={isIncubatorRoute ? "page" : undefined}>
+              Incubator
+            </a>
+          </div>
+          <a
+            class="github-link"
+            href={GITHUB_REPO_URL}
+            rel="noreferrer"
+            target="_blank"
+            aria-label="Open agent-skills on GitHub"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <ThemeToggle />
+          <details class="mobile-nav">
+            <summary aria-label="Navigation menu">
+              <svg class="mobile-nav__menu-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+              <svg class="mobile-nav__close-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="m6 6 12 12M18 6 6 18" />
+              </svg>
+              <span class="sr-only">Navigation menu</span>
+            </summary>
+            <div class="mobile-nav__panel">
+              <a href={withBase("/skills/")} aria-current={isPublicRoute ? "page" : undefined}>
+                Public skills
+              </a>
+              <a href={withBase("/incubator/")} aria-current={isIncubatorRoute ? "page" : undefined}>
+                Incubator
+              </a>
+            </div>
+          </details>
         </div>
-        <ThemeToggle />
       </nav>
     </header>
-    <main id="content">
+    <main id="content" tabindex="-1">
       <slot />
     </main>
     <footer class="site-footer">
-      <div>
-        <img src={withBase("/logo-alternative.svg")} alt="" width="56" height="56" loading="lazy" />
-        <p>Agent Skills by stark AI</p>
+      <div class="site-footer__identity">
+        <a
+          class="site-footer__mark"
+          href={STARK_AI_URL}
+          rel="noreferrer"
+          target="_blank"
+          aria-label="Open stark AI website"
+        >
+          <img src={withBase("/logo-alternative.svg")} alt="" width="56" height="56" loading="lazy" />
+        </a>
+        <p>
+          agent-skills by
+          <a class="site-footer__brand" href={STARK_AI_URL} rel="noreferrer" target="_blank">
+            <strong>stark AI</strong>
+          </a>
+        </p>
       </div>
-      <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">Source on GitHub</a>
+      <div class="site-footer__links">
+        <a class="site-footer__product" href={LOOPLATCH_URL}>
+          LoopLatch for bounded Codex loops
+        </a>
+        <a
+          class="site-footer__github"
+          href={GITHUB_ORG_URL}
+          rel="noreferrer"
+          target="_blank"
+          aria-label="Open stark AI on GitHub"
+          title="Open stark AI on GitHub"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
+          </svg>
+        </a>
+      </div>
     </footer>
     <script is:inline>
       (() => {
         const themeStorageKey = "agent-skills-theme";
         const resetTimers = new WeakMap();
         const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+        const reducedMotionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
         const root = document.documentElement;
 
         const readStoredTheme = () => {
@@ -209,7 +314,7 @@ const schema = {
 
           const themeColor = document.querySelector("[data-theme-color]");
           if (themeColor instanceof HTMLMetaElement) {
-            themeColor.content = theme === "dark" ? "#071422" : "#f8f9ff";
+            themeColor.content = theme === "dark" ? "#030810" : "#f6f8ff";
           }
 
           if (persist) {
@@ -279,7 +384,9 @@ const schema = {
             return;
           }
 
-          const status = button.querySelector("[data-copy-status]");
+          const block = button.closest("[data-command-block]");
+          const status = block?.querySelector("[data-copy-status]");
+          const buttonLabel = button.querySelector("[data-copy-button-label]");
           clearTimeout(resetTimers.get(button));
           delete button.dataset.copyFailed;
 
@@ -287,13 +394,19 @@ const schema = {
             await copyWithFallback(command);
             button.dataset.copied = "true";
             if (status) {
-              status.textContent = "Copied command";
+              status.textContent = "Command copied to clipboard.";
+            }
+            if (buttonLabel) {
+              buttonLabel.textContent = "Copied";
             }
           } catch {
             delete button.dataset.copied;
             button.dataset.copyFailed = "true";
             if (status) {
-              status.textContent = "Copy failed";
+              status.textContent = "Copy failed. Select the command and copy it manually.";
+            }
+            if (buttonLabel) {
+              buttonLabel.textContent = "Retry";
             }
           }
 
@@ -303,11 +416,446 @@ const schema = {
               delete button.dataset.copied;
               delete button.dataset.copyFailed;
               if (status) {
-                status.textContent = "Copy command";
+                status.textContent = "";
+              }
+              if (buttonLabel) {
+                buttonLabel.textContent = "Copy";
               }
             }, 1800)
           );
         });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape") {
+            return;
+          }
+
+          document.querySelectorAll(".mobile-nav[open]").forEach((menu) => {
+            menu.removeAttribute("open");
+          });
+
+          document
+            .querySelectorAll(".context-tip:hover, .context-tip:focus-within, .context-tip[data-open='true']")
+            .forEach((tip) => {
+              tip.dataset.dismissed = "true";
+              delete tip.dataset.open;
+              tip
+                .querySelector("[data-context-tip-trigger]")
+                ?.setAttribute("aria-expanded", "false");
+            });
+        });
+
+        const clearDismissedTipWhenInactive = (tip) => {
+          if (!(tip instanceof HTMLElement)) {
+            return;
+          }
+
+          window.requestAnimationFrame(() => {
+            if (!tip.matches(":hover") && !tip.contains(document.activeElement)) {
+              delete tip.dataset.dismissed;
+            }
+          });
+        };
+
+        document.addEventListener("pointerout", (event) => {
+          const target = event.target;
+          const relatedTarget = event.relatedTarget;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const tip = target.closest(".context-tip");
+          if (tip && (!(relatedTarget instanceof Node) || !tip.contains(relatedTarget))) {
+            clearDismissedTipWhenInactive(tip);
+          }
+        });
+
+        document.addEventListener("focusout", (event) => {
+          const target = event.target;
+          const relatedTarget = event.relatedTarget;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const tip = target.closest(".context-tip");
+          if (
+            tip instanceof HTMLElement &&
+            (!(relatedTarget instanceof Node) || !tip.contains(relatedTarget))
+          ) {
+            tip.dataset.dismissed = "true";
+            delete tip.dataset.open;
+            tip
+              .querySelector("[data-context-tip-trigger]")
+              ?.setAttribute("aria-expanded", "false");
+            clearDismissedTipWhenInactive(tip);
+          }
+        });
+
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          if (!target.closest(".mobile-nav")) {
+            document.querySelectorAll(".mobile-nav[open]").forEach((menu) => {
+              menu.removeAttribute("open");
+            });
+          }
+
+          const trigger = target.closest("[data-context-tip-trigger]");
+          const activeTip = trigger?.closest(".context-tip");
+          const shouldOpen = activeTip instanceof HTMLElement && activeTip.dataset.open !== "true";
+
+          document.querySelectorAll(".context-tip[data-open='true']").forEach((tip) => {
+            delete tip.dataset.open;
+            tip.querySelector("[data-context-tip-trigger]")?.setAttribute("aria-expanded", "false");
+          });
+
+          if (shouldOpen && activeTip instanceof HTMLElement && trigger instanceof HTMLElement) {
+            delete activeTip.dataset.dismissed;
+            activeTip.dataset.open = "true";
+            trigger.setAttribute("aria-expanded", "true");
+          } else if (activeTip instanceof HTMLElement) {
+            activeTip.dataset.dismissed = "true";
+          }
+        });
+
+        const setupTracingBeam = () => {
+          const beam = document.querySelector("[data-tracing-beam]");
+          const svg = beam?.querySelector("[data-tracing-svg]");
+          const track = beam?.querySelector("[data-tracing-track]");
+          const progressPath = beam?.querySelector("[data-tracing-progress]");
+          const gradient = beam?.querySelector("#tracing-beam-gradient");
+
+          if (
+            !(beam instanceof HTMLElement) ||
+            !(svg instanceof SVGElement) ||
+            !(track instanceof SVGPathElement) ||
+            !(progressPath instanceof SVGPathElement) ||
+            !(gradient instanceof SVGLinearGradientElement)
+          ) {
+            return;
+          }
+
+          const forcedColorsMedia = window.matchMedia("(forced-colors: active)");
+          const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
+          let paintScheduled = false;
+          let measureScheduled = false;
+          let measuredPath = "";
+          let measuredLength = 0;
+
+          const deactivate = () => {
+            beam.hidden = true;
+          };
+
+          const paint = () => {
+            paintScheduled = false;
+            const scrollRange = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+            const shouldShow =
+              !forcedColorsMedia.matches &&
+              scrollRange > window.innerHeight * 0.35 &&
+              measuredPath.length > 0 &&
+              measuredLength > 0;
+
+            if (!shouldShow) {
+              deactivate();
+              return;
+            }
+
+            const progress = clamp(window.scrollY / scrollRange, 0, 1);
+            beam.hidden = false;
+            root.style.setProperty("--scroll-progress", String(progress));
+          };
+
+          const schedulePaint = () => {
+            if (paintScheduled) {
+              return;
+            }
+
+            paintScheduled = true;
+            window.requestAnimationFrame(paint);
+          };
+
+          const setPath = ({ d, height, length, width, x1, x2, y1, y2, orientation }) => {
+            measuredPath = d;
+            measuredLength = length;
+            beam.dataset.orientation = orientation;
+            beam.style.height = `${height}px`;
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            track.setAttribute("d", d);
+            progressPath.setAttribute("d", d);
+            gradient.setAttribute("x1", String(x1));
+            gradient.setAttribute("x2", String(x2));
+            gradient.setAttribute("y1", String(y1));
+            gradient.setAttribute("y2", String(y2));
+          };
+
+          const measureHorizontal = (header) => {
+            const width = Math.max(document.documentElement.clientWidth, 1);
+            const height = 5;
+            const notchStart = Math.round(width * 0.42);
+            const notchEnd = Math.min(notchStart + 18, width);
+            const d = [
+              "M 0 1.5",
+              `H ${notchStart}`,
+              `L ${Math.min(notchStart + 5, width)} 3.5`,
+              `H ${Math.max(notchEnd - 5, notchStart)}`,
+              `L ${notchEnd} 1.5`,
+              `H ${width}`
+            ].join(" ");
+
+            root.style.setProperty("--header-height", `${header?.offsetHeight ?? 72}px`);
+            setPath({
+              d,
+              height,
+              length: width + 4,
+              width,
+              x1: 0,
+              x2: width,
+              y1: 1.5,
+              y2: 1.5,
+              orientation: "horizontal"
+            });
+          };
+
+          const measureListing = (width, height, scrollY) => {
+            const main = document.querySelector("main");
+            const hero = document.querySelector(".collection-hero");
+
+            if (!(main instanceof HTMLElement) || !(hero instanceof HTMLElement)) {
+              measuredPath = "";
+              return;
+            }
+
+            const mainRect = main.getBoundingClientRect();
+            const heroRect = hero.getBoundingClientRect();
+            const x0 = clamp(heroRect.left - 30, 6, width - 6);
+            const x1 = clamp(Math.min(heroRect.left - 6, x0 + 14), 6, width - 6);
+            const y0 = heroRect.top + scrollY + 24;
+            const y1 = Math.max(mainRect.bottom + scrollY - 24, y0 + 180);
+            const kinkY = y0 + clamp((y1 - y0) * 0.12, 96, 180);
+            const kinkRadius = 12;
+            const d = [
+              `M ${x0} ${y0}`,
+              `V ${kinkY - kinkRadius}`,
+              `L ${x1} ${kinkY + kinkRadius}`,
+              `V ${y1}`
+            ].join(" ");
+
+            setPath({
+              d,
+              height,
+              length: y1 - y0 + Math.abs(x1 - x0),
+              width,
+              x1: x0,
+              x2: x1,
+              y1: y0,
+              y2: y1,
+              orientation: "document"
+            });
+          };
+
+          const measureDetail = (width, height, scrollY) => {
+            const hero = document.querySelector("[data-tracing-hero]");
+            const layout = document.querySelector("[data-tracing-detail]");
+            const sidebar = document.querySelector("[data-tracing-sidebar]");
+            const content = document.querySelector("[data-tracing-content]");
+
+            if (
+              !(hero instanceof HTMLElement) ||
+              !(layout instanceof HTMLElement) ||
+              !(sidebar instanceof HTMLElement) ||
+              !(content instanceof HTMLElement)
+            ) {
+              measuredPath = "";
+              return;
+            }
+
+            const heroRect = hero.getBoundingClientRect();
+            const layoutRect = layout.getBoundingClientRect();
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const contentRect = content.getBoundingClientRect();
+            const xOuter = clamp(Math.min(heroRect.left, layoutRect.left) - 18, 6, width - 6);
+            const gap = contentRect.left - sidebarRect.right;
+            const yStart = heroRect.top + scrollY + 24;
+            const yEnd = Math.max(contentRect.bottom + scrollY, sidebarRect.bottom + scrollY + 80);
+
+            if (gap < 10 || yEnd <= yStart + 128) {
+              const d = `M ${xOuter} ${yStart} V ${yEnd}`;
+              setPath({
+                d,
+                height,
+                length: yEnd - yStart,
+                width,
+                x1: xOuter,
+                x2: xOuter,
+                y1: yStart,
+                y2: yEnd,
+                orientation: "document"
+              });
+              return;
+            }
+
+            const xInner = sidebarRect.right + gap / 2;
+            const yBend = clamp(
+              sidebarRect.bottom + scrollY + 16,
+              yStart + 64,
+              yEnd - 64
+            );
+            const radius = Math.min(12, Math.max((xInner - xOuter) / 4, 4));
+            const d = [
+              `M ${xOuter} ${yStart}`,
+              `V ${yBend - radius}`,
+              `Q ${xOuter} ${yBend} ${xOuter + radius} ${yBend}`,
+              `H ${xInner - radius}`,
+              `Q ${xInner} ${yBend} ${xInner} ${yBend + radius}`,
+              `V ${yEnd}`
+            ].join(" ");
+
+            setPath({
+              d,
+              height,
+              length: yEnd - yStart + xInner - xOuter,
+              width,
+              x1: xOuter,
+              x2: xInner,
+              y1: yStart,
+              y2: yEnd,
+              orientation: "document"
+            });
+          };
+
+          const measure = () => {
+            measureScheduled = false;
+            const header = document.querySelector(".site-header");
+            const width = Math.max(document.documentElement.clientWidth, 1);
+            const height = Math.max(document.documentElement.scrollHeight, 1);
+            const scrollY = window.scrollY;
+
+            if (header instanceof HTMLElement) {
+              root.style.setProperty("--header-height", `${header.offsetHeight}px`);
+            }
+
+            if (window.innerWidth < 960) {
+              measureHorizontal(header instanceof HTMLElement ? header : undefined);
+            } else if (beam.dataset.tracingMode === "detail") {
+              measureDetail(width, height, scrollY);
+            } else {
+              measureListing(width, height, scrollY);
+            }
+
+            schedulePaint();
+          };
+
+          const scheduleMeasure = () => {
+            if (measureScheduled) {
+              return;
+            }
+
+            measureScheduled = true;
+            window.requestAnimationFrame(measure);
+          };
+
+          window.addEventListener("scroll", schedulePaint, { passive: true });
+          window.addEventListener("resize", scheduleMeasure, { passive: true });
+          window.addEventListener("orientationchange", scheduleMeasure, { passive: true });
+          forcedColorsMedia.addEventListener("change", scheduleMeasure);
+          if ("ResizeObserver" in window) {
+            const resizeObserver = new ResizeObserver(scheduleMeasure);
+            resizeObserver.observe(document.body);
+            document
+              .querySelectorAll(
+                ".site-header, [data-tracing-hero], [data-tracing-detail], [data-tracing-sidebar], [data-tracing-content]"
+              )
+              .forEach((element) => resizeObserver.observe(element));
+          }
+
+          document.fonts?.ready.then(scheduleMeasure);
+          measure();
+        };
+
+        const setupReveals = () => {
+          if (reducedMotionMedia.matches || !("IntersectionObserver" in window)) {
+            return;
+          }
+
+          const revealTargets = document.querySelectorAll("[data-reveal]");
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (!entry.isIntersecting) {
+                  continue;
+                }
+
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            },
+            { rootMargin: "0px 0px -8%", threshold: 0.08 }
+          );
+
+          revealTargets.forEach((target) => {
+            target.classList.add("reveal-ready");
+            observer.observe(target);
+          });
+
+          window.setTimeout(() => {
+            revealTargets.forEach((target) => target.classList.add("is-visible"));
+          }, 1600);
+        };
+
+        const setupDescriptionDisclosures = () => {
+          const disclosures = document.querySelectorAll("[data-description-disclosure]");
+
+          const keepExpandedDescriptionVisible = (disclosure) => {
+            if (!(disclosure instanceof HTMLDetailsElement) || !disclosure.open) {
+              return;
+            }
+
+            window.requestAnimationFrame(() => {
+              if (!disclosure.open) {
+                return;
+              }
+
+              const header = document.querySelector(".site-header");
+              const headerBottom =
+                header instanceof HTMLElement ? header.getBoundingClientRect().bottom : 0;
+              const viewportTop = Math.max(headerBottom + 12, 12);
+              const viewportBottom = window.innerHeight - 12;
+              const viewportHeight = viewportBottom - viewportTop;
+              const rect = disclosure.getBoundingClientRect();
+              let scrollDelta = 0;
+
+              if (rect.height > viewportHeight) {
+                scrollDelta = rect.top - viewportTop;
+              } else if (rect.bottom > viewportBottom) {
+                scrollDelta = rect.bottom - viewportBottom;
+              } else if (rect.top < viewportTop) {
+                scrollDelta = rect.top - viewportTop;
+              }
+
+              if (Math.abs(scrollDelta) < 1) {
+                return;
+              }
+
+              window.scrollBy({
+                top: scrollDelta,
+                behavior: reducedMotionMedia.matches ? "auto" : "smooth"
+              });
+            });
+          };
+
+          disclosures.forEach((disclosure) => {
+            disclosure.addEventListener("toggle", () => {
+              keepExpandedDescriptionVisible(disclosure);
+            });
+          });
+        };
+
+        setupTracingBeam();
+        setupReveals();
+        setupDescriptionDisclosures();
       })();
     </script>
   </body>

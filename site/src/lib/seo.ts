@@ -47,11 +47,13 @@ export function baseStructuredData(description = SITE_DESCRIPTION): JsonLdNode[]
 export function webPageStructuredData({
   canonicalUrl,
   description,
+  mainEntityId,
   title,
   type = "WebPage",
 }: {
   canonicalUrl: string;
   description: string;
+  mainEntityId?: string;
   title: string;
   type?: "WebPage" | "CollectionPage";
 }): JsonLdNode {
@@ -67,6 +69,13 @@ export function webPageStructuredData({
     isPartOf: {
       "@id": WEBSITE_ID,
     },
+    ...(mainEntityId
+      ? {
+          mainEntity: {
+            "@id": mainEntityId,
+          },
+        }
+      : {}),
     publisher: {
       "@id": ORGANIZATION_ID,
     },
@@ -124,6 +133,9 @@ export function skillStructuredData(skill: CatalogSkill, canonicalUrl: string): 
     },
     isPartOf: {
       "@id": WEBSITE_ID,
+    },
+    mainEntityOfPage: {
+      "@id": `${canonicalUrl}#webpage`,
     },
     mainEntity: {
       "@type": "SoftwareSourceCode",

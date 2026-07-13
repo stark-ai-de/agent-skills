@@ -9,7 +9,9 @@ const casesDir = path.join(root, "skill-evals/animated-readme-logo/cases");
 const expectedCaseNames = [
   "animated-gif-only.md",
   "app-animation-negative.md",
+  "browser-preview-fallback.md",
   "export-capability-unavailable.md",
+  "export-install-approval.md",
   "expressive-mark-style.md",
   "lottie-readme-request.md",
   "no-initial-asset.md",

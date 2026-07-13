@@ -5,10 +5,13 @@ import { fileURLToPath } from "node:url";
 const SITE_ORIGIN = "https://stark-ai-de.github.io";
 const SITE_BASE_PATH = "/agent-skills";
 const SITE_URL_PREFIX = `${SITE_ORIGIN}${SITE_BASE_PATH}/`;
+const LOOPLATCH_URL = "https://loop-latch-opal.vercel.app/";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(dirname, "..");
+const repoRoot = path.resolve(siteRoot, "..");
 const distRoot = path.join(siteRoot, "dist");
 const htmlCache = new Map();
+const titleOwners = new Map();
 
 function assert(condition, message) {
   if (!condition) {
@@ -24,7 +27,21 @@ function walkHtmlFiles(directory) {
       return walkHtmlFiles(entryPath);
     }
 
-    return entry.isFile() && entry.name === "index.html" ? [entryPath] : [];
+    return entry.isFile() && (entry.name === "index.html" || entry.name === "404.html")
+      ? [entryPath]
+      : [];
+  });
+}
+
+function walkSkillFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      return walkSkillFiles(entryPath);
+    }
+
+    return entry.isFile() && entry.name === "SKILL.md" ? [entryPath] : [];
   });
 }
 
@@ -224,8 +241,22 @@ function validateHtmlPage(filePath) {
   const description = getMetaContent(metaTags, "name", "description");
   const canonicalUrl = getLinkHref(linkTags, "canonical");
   const jsonLdBlocks = getJsonLdBlocks(html);
+  const title = titleMatch?.[1]?.trim();
 
-  assert(titleMatch?.[1]?.trim(), `${relativePath}: missing <title>`);
+  assert(title, `${relativePath}: missing <title>`);
+  assert(title.length <= 65, `${relativePath}: title exceeds 65 characters`);
+  assert(
+    !titleOwners.has(title),
+    `${relativePath}: duplicate title also used by ${titleOwners.get(title)}`,
+  );
+  titleOwners.set(title, relativePath);
+  assert(
+    (html.match(/<h1\b/gi) ?? []).length === 1,
+    `${relativePath}: page must contain exactly one h1`,
+  );
+  for (const image of getTags(html, "img")) {
+    assert(Object.hasOwn(image, "alt"), `${relativePath}: image is missing alt text`);
+  }
   assert(description, `${relativePath}: missing meta description`);
   assert(description.length <= 160, `${relativePath}: meta description exceeds 160 characters`);
   assert(canonicalUrl?.startsWith(SITE_URL_PREFIX), `${relativePath}: invalid canonical URL`);
@@ -265,6 +296,10 @@ function validateHtmlPage(filePath) {
     `${relativePath}: missing og image height`,
   );
   assert(
+    getMetaContent(metaTags, "property", "og:image:alt"),
+    `${relativePath}: missing og image alt text`,
+  );
+  assert(
     getMetaContent(metaTags, "name", "twitter:card") === "summary_large_image",
     `${relativePath}: missing Twitter card`,
   );
@@ -279,6 +314,10 @@ function validateHtmlPage(filePath) {
   assert(
     getMetaContent(metaTags, "name", "twitter:image")?.startsWith(SITE_URL_PREFIX),
     `${relativePath}: missing Twitter image`,
+  );
+  assert(
+    getMetaContent(metaTags, "name", "twitter:image:alt"),
+    `${relativePath}: missing Twitter image alt text`,
   );
   assert(jsonLdBlocks.length > 0, `${relativePath}: missing JSON-LD`);
 
@@ -301,10 +340,6 @@ function validateHtmlPage(filePath) {
     );
   }
 
-  assert(
-    !html.includes("skillopt-setup"),
-    `${relativePath}: skillopt-setup leaked into generated HTML`,
-  );
   validateRenderedMarkdown(html, relativePath);
   validateLocalReferences(filePath, html, linkTags, metaTags);
 }
@@ -322,10 +357,49 @@ function validateManifest() {
   }
 
   assert(Array.isArray(manifest.icons), "site.webmanifest: icons must be an array.");
+  const iconSizes = new Set(manifest.icons.map((icon) => icon.sizes));
+  assert(iconSizes.has("192x192"), "site.webmanifest: missing 192x192 icon.");
+  assert(iconSizes.has("512x512"), "site.webmanifest: missing 512x512 icon.");
   for (const icon of manifest.icons) {
     assert(typeof icon.src === "string", "site.webmanifest: icon is missing src.");
     validateSiteReference(icon.src, manifestPath, `site.webmanifest: icon ${icon.src}`);
   }
+}
+
+function validateCatalogCoverage() {
+  for (const [sourceRoot, routeRoot] of [
+    ["skills", "skills"],
+    ["incubator/skills", "incubator"],
+  ]) {
+    const sourceDirectory = path.join(repoRoot, sourceRoot);
+
+    for (const skillFile of walkSkillFiles(sourceDirectory)) {
+      const skillName = path.basename(path.dirname(skillFile));
+      const generatedPage = path.join(distRoot, routeRoot, skillName, "index.html");
+      assert(
+        existsSync(generatedPage),
+        `${sourceRoot}/${skillName}: missing generated catalog page ${routeRoot}/${skillName}/`,
+      );
+    }
+  }
+}
+
+function validateLoopLatchBacklinks(htmlFiles) {
+  for (const htmlFile of htmlFiles) {
+    const links = getTags(readCached(htmlFile), "a").filter(({ href }) => href === LOOPLATCH_URL);
+    assert(links.length > 0, `${normalizeRelativePath(htmlFile)}: missing LoopLatch backlink`);
+
+    for (const link of links) {
+      assert(
+        !/(?:^|\s)(?:nofollow|sponsored)(?:\s|$)/i.test(link.rel ?? ""),
+        `${normalizeRelativePath(htmlFile)}: LoopLatch backlink must be followable`,
+      );
+    }
+  }
+
+  const homePath = path.join(distRoot, "index.html");
+  const homeLinks = getTags(readCached(homePath), "a").filter(({ href }) => href === LOOPLATCH_URL);
+  assert(homeLinks.length >= 2, "index.html must include contextual and sitewide LoopLatch links");
 }
 
 function sitemapLocations(xml) {
@@ -375,6 +449,8 @@ assert(
   "robots.txt does not point to the generated sitemap.",
 );
 validateManifest();
+validateCatalogCoverage();
+validateLoopLatchBacklinks(htmlFiles);
 validateSitemaps(sitemapPath);
 
 console.log(`SEO validated for ${htmlFiles.length} HTML page(s).`);

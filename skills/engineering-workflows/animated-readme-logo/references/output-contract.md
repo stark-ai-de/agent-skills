@@ -20,7 +20,7 @@ Report these fields for every activated task, including blocked and review-only 
 - Use `Approval state: not-required` for an ineligible, unavailable, or indeterminate provider route.
 - Use `Approval state: declined` when the user rejects an available batch, then take the direct local route without repeating the request.
 - Use `SVG readiness: ready` only when the canonical SVG exists and passes strict validation.
-- Use `Export status: completed` only for requested raster artifacts that exist and pass inspection. Report `capability-unavailable` when the exporter or inspector is missing.
+- Use `Export status: completed` only for requested raster artifacts that exist and pass inspection. Use `blocked` while an explicitly itemized local-tool installation awaits approval. Report `capability-unavailable` when installation is declined, forbidden, unavailable, or still cannot provide the required exporter or inspector.
 - A review can report `SVG readiness: invalid` or `not-evaluated`, but must state that the pipeline is not complete and provide remediation.
 
 After the fields, list:
@@ -30,3 +30,5 @@ After the fields, list:
 3. README markup or delivery recommendation.
 4. Commands run and concise validation evidence.
 5. Remaining blockers and the next approval, capability, or manual-preview step.
+
+When a local installation is proposed, also report `Local-tool approval: pending | approved | declined | not-required`. This detail is separate from the public `Approval state`, which continues to describe provider spending.

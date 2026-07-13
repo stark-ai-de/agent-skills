@@ -1,0 +1,110 @@
+---
+import { withBase } from "../lib/site";
+
+interface Props {
+  bare?: boolean;
+  label: string;
+  multiAgent?: boolean;
+  tag?: "li" | "span";
+}
+
+interface Operation {
+  agent: "claude" | "codex" | "cursor";
+  icon: string;
+  iconDark?: string;
+  text: string;
+}
+
+const { bare = false, label, multiAgent = false, tag = "span" } = Astro.props;
+const Tag = tag;
+
+const operations = {
+  claude: {
+    agent: "claude",
+    icon: withBase("/brands/claude-spark-clay.svg"),
+    text: "Claude Operation"
+  },
+  codex: {
+    agent: "codex",
+    icon:
+      "https://images.ctfassets.net/kftzwdyauwt9/77tJ5U1tgxHMZflZ5m4Z24/ace4d8b6ad200d87ebcb69c466344343/Blossom_4k_Icon_1.png",
+    text: "Codex Operation"
+  },
+  cursor: {
+    agent: "cursor",
+    icon: withBase("/brands/cursor-cube-light.svg"),
+    iconDark: withBase("/brands/cursor-cube-dark.svg"),
+    text: "Cursor Operation"
+  }
+} satisfies Record<string, Operation>;
+
+const operation =
+  label === "Claude Operations"
+    ? operations.claude
+    : label === "Codex Operations"
+      ? operations.codex
+      : label === "Cursor Operations"
+        ? operations.cursor
+        : undefined;
+const visibleOperations = multiAgent
+  ? [operations.codex, operations.claude, operations.cursor]
+  : operation
+    ? [operation]
+    : [];
+const badgeLabel = multiAgent ? "Operations" : operation?.text;
+---
+
+<Tag
+  class:list={[
+    "operation-badge",
+    {
+      "operation-badge--bare": bare,
+      "operation-badge--multi": multiAgent,
+      [`operation-badge--${operation?.agent}`]: operation && !multiAgent
+    }
+  ]}
+  aria-label={multiAgent ? "Codex, Claude Code, and Cursor Operations" : undefined}
+>
+  {
+    visibleOperations.length ? (
+      <>
+        <span class="operation-badge__marks" aria-hidden="true">
+          {visibleOperations.map((item) => (
+            <span
+              class:list={[
+                "operation-badge__mark",
+                `operation-badge__mark--${item.agent}`
+              ]}
+              data-operation-agent={item.agent}
+            >
+              <img
+                class:list={[{ "operation-badge__mark--light": item.iconDark }]}
+                src={item.icon}
+                alt=""
+                width="18"
+                height="18"
+                loading="lazy"
+                decoding="async"
+                referrerpolicy={item.agent === "codex" ? "no-referrer" : undefined}
+              />
+              {item.iconDark && (
+                <img
+                  class="operation-badge__mark--dark"
+                  src={item.iconDark}
+                  alt=""
+                  width="18"
+                  height="18"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </span>
+          ))}
+        </span>
+        <span class="operation-badge__label">{badgeLabel}</span>
+      </>
+    ) : (
+      label
+    )
+  }
+</Tag>

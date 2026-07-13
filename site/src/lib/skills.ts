@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -10,12 +10,7 @@ import sanitizeHtml from "sanitize-html";
 const REPO_NAME = "stark-ai-de/agent-skills";
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
 const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
-
-const EXCLUDED_SKILL_NAMES = new Set(["skillopt-setup"]);
-const EXCLUDED_GLOB_PATHS = [
-  "incubator/skills/skill-maintenance/skillopt-setup/**",
-  "skill-evals/skillopt-setup/**",
-];
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
 
 const repoRoot = findRepoRoot();
 
@@ -62,6 +57,8 @@ const skillHtmlSanitizerOptions: sanitizeHtml.IOptions = {
 };
 
 assertSanitizerBehavior();
+assertMarkdownNormalizationBehavior();
+assertSummaryBehavior();
 
 export type SkillKind = "public" | "incubator";
 
@@ -81,6 +78,7 @@ export interface CatalogSkill {
   description: string;
   evalPath?: string;
   evalUrl?: string;
+  fileTree: SkillTreeNode;
   hasOpenAiMetadata: boolean;
   html: string;
   installCommand?: string;
@@ -93,8 +91,17 @@ export interface CatalogSkill {
   openAiMetadataUrl?: string;
   sourcePath: string;
   sourceUrl: string;
+  summary: string;
   title: string;
   version?: string;
+}
+
+export interface SkillTreeNode {
+  children?: SkillTreeNode[];
+  kind: "directory" | "file";
+  name: string;
+  path: string;
+  url: string;
 }
 
 export interface CategoryGroup {
@@ -106,6 +113,11 @@ export interface CategoryGroup {
 export function repoUrl(pathname = "") {
   const cleanPath = pathname.replace(/^\/+/, "");
   return cleanPath ? `${REPO_BLOB_URL}/${cleanPath}` : REPO_SOURCE_URL;
+}
+
+export function repoTreeUrl(pathname = "") {
+  const cleanPath = pathname.replace(/^\/+/, "");
+  return cleanPath ? `${REPO_TREE_URL}/${cleanPath}` : REPO_SOURCE_URL;
 }
 
 export async function getPublicSkills() {
@@ -158,7 +170,6 @@ async function readSkills(kind: SkillKind) {
     cwd: repoRoot,
     onlyFiles: true,
     dot: false,
-    ignore: EXCLUDED_GLOB_PATHS,
   });
 
   const skills = (await Promise.all(files.sort().map((file) => readSkillFile(kind, file)))).filter(
@@ -187,10 +198,6 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     throw new Error(`Missing frontmatter name in ${sourcePath}`);
   }
 
-  if (EXCLUDED_SKILL_NAMES.has(name)) {
-    return undefined;
-  }
-
   const folderName = path.basename(path.dirname(sourcePath));
   if (name !== folderName) {
     throw new Error(`Skill name ${name} does not match folder ${folderName}`);
@@ -203,10 +210,11 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
 
   const category = metadata.category ?? categoryFromPath(kind, sourcePath);
   const skillDir = path.dirname(sourcePath);
+  const fileTree = buildSkillTree(skillDir);
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
   const hasOpenAiMetadata = existsSync(path.join(repoRoot, openAiMetadataPath));
   const evalPath = publicEvalPath(name);
-  const html = sanitizeSkillHtml(await marked.parse(stripFirstHeading(parsed.content)));
+  const html = sanitizeSkillHtml(await marked.parse(normalizeSkillMarkdown(parsed.content)));
 
   return {
     body: parsed.content,
@@ -216,6 +224,7 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     description,
     evalPath,
     evalUrl: evalPath ? repoUrl(evalPath) : undefined,
+    fileTree,
     hasOpenAiMetadata,
     html,
     installCommand:
@@ -234,16 +243,51 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     openAiMetadataUrl: hasOpenAiMetadata ? repoUrl(openAiMetadataPath) : undefined,
     sourcePath,
     sourceUrl: repoUrl(sourcePath),
+    summary: summarizeDescription(description),
     title: firstMarkdownHeading(parsed.content) ?? toTitleCase(name),
     version: metadata.version,
   } satisfies CatalogSkill;
 }
 
-function publicEvalPath(name: string) {
-  if (EXCLUDED_SKILL_NAMES.has(name)) {
-    return undefined;
+function buildSkillTree(relativeDir: string): SkillTreeNode {
+  const normalizedDir = normalizePath(relativeDir);
+  const absoluteDir = path.join(repoRoot, normalizedDir);
+  const children = readdirSync(absoluteDir, { withFileTypes: true })
+    .filter((entry) => entry.name !== ".DS_Store")
+    .map((entry) => {
+      const childPath = normalizePath(path.join(normalizedDir, entry.name));
+
+      if (entry.isDirectory()) {
+        return buildSkillTree(childPath);
+      }
+
+      return {
+        kind: "file",
+        name: entry.name,
+        path: childPath,
+        url: repoUrl(childPath),
+      } satisfies SkillTreeNode;
+    })
+    .sort(compareTreeNodes);
+
+  return {
+    children,
+    kind: "directory",
+    name: path.basename(normalizedDir),
+    path: normalizedDir,
+    url: repoTreeUrl(normalizedDir),
+  } satisfies SkillTreeNode;
+}
+
+function compareTreeNodes(a: SkillTreeNode, b: SkillTreeNode) {
+  if (a.kind !== b.kind) {
+    return a.kind === "directory" ? -1 : 1;
   }
 
+  return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function publicEvalPath(name: string) {
   const relativePath = normalizePath(path.join("skill-evals", name, "README.md"));
   const fullPath = path.join(repoRoot, relativePath);
 
@@ -284,6 +328,88 @@ function firstMarkdownHeading(markdown: string) {
 
 function stripFirstHeading(markdown: string) {
   return markdown.trimStart().replace(/^#\s+.+(?:\n+|$)/, "");
+}
+
+function normalizeSkillMarkdown(markdown: string) {
+  let activeFence: { marker: string; length: number } | undefined;
+
+  return stripFirstHeading(markdown)
+    .split("\n")
+    .map((line) => {
+      const fenceMatch = /^\s*(`{3,}|~{3,})/.exec(line);
+
+      if (fenceMatch) {
+        const fence = fenceMatch[1];
+
+        if (!activeFence) {
+          activeFence = { marker: fence[0], length: fence.length };
+        } else if (fence[0] === activeFence.marker && fence.length >= activeFence.length) {
+          activeFence = undefined;
+        }
+
+        return line;
+      }
+
+      return activeFence ? line : line.replace(/^#\s+/, "## ");
+    })
+    .join("\n");
+}
+
+function assertMarkdownNormalizationBehavior() {
+  const fixture = ["# Page title", "", "# Section", "", "```md", "# Example heading", "```"].join(
+    "\n",
+  );
+  const normalized = normalizeSkillMarkdown(fixture);
+
+  if (!normalized.includes("## Section") || !normalized.includes("```md\n# Example heading\n```")) {
+    throw new Error("Skill Markdown heading normalization changed fenced example content.");
+  }
+}
+
+function summarizeDescription(value: string, maxLength = 116) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const sentenceMatch = normalized.match(/[.!?](?=\s|$)/);
+  const firstSentence =
+    sentenceMatch?.index === undefined ? normalized : normalized.slice(0, sentenceMatch.index + 1);
+
+  if (firstSentence.length <= maxLength) {
+    return firstSentence;
+  }
+
+  const clauseEnds = Array.from(
+    firstSentence.slice(0, maxLength).matchAll(/[,;]/g),
+    (match) => match.index,
+  );
+  const clauseEnd = clauseEnds.findLast((index) => index >= Math.floor(maxLength * 0.45));
+
+  if (clauseEnd !== undefined) {
+    return `${firstSentence.slice(0, clauseEnd).trimEnd()}.`;
+  }
+
+  const candidate = firstSentence.slice(0, maxLength - 1);
+  const wordBoundary = candidate.lastIndexOf(" ");
+  const summary =
+    wordBoundary >= Math.floor(maxLength * 0.65) ? candidate.slice(0, wordBoundary) : candidate;
+
+  return `${summary.trimEnd()}…`;
+}
+
+function assertSummaryBehavior() {
+  const multiSentence = summarizeDescription(
+    "First sentence. A second sentence must not appear in the compact catalog card.",
+  );
+  const longSentence = summarizeDescription("A ".repeat(90).trim());
+  const longClause = summarizeDescription(
+    "Build reliable skills from explicit evidence, long templates, and additional implementation details that do not belong in a compact card.",
+  );
+
+  if (
+    multiSentence !== "First sentence." ||
+    longSentence.length > 116 ||
+    longClause !== "Build reliable skills from explicit evidence, long templates."
+  ) {
+    throw new Error("Compact skill summaries must remain one short sentence.");
+  }
 }
 
 function sanitizeSkillHtml(html: string) {

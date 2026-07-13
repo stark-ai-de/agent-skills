@@ -24,13 +24,13 @@ Use the repository's established asset folder instead of `docs/assets/` when one
 
 ## Capability-gated export
 
-1. Detect the available local exporter and animation inspector.
+1. Detect the available local exporter and animation inspector. Read `local-tooling.md` when a requested capability is missing.
 2. Record the exact source, settings, and command before export.
 3. Export only formats the tool actually supports.
 4. Inspect every animated raster with the bundled inspector. It rejects non-regular inputs, malformed animation structure, hidden text/comment/application/EXIF/XMP/ICC metadata, and unsupported ancillary chunks.
 5. Claim `Export status: completed` only when requested outputs exist and pass inspection.
 
-When an exporter or inspector is missing, keep the validated SVG and motion spec, set `Export status: capability-unavailable`, and provide an exact next step. Do not create placeholder files or claim an export succeeded.
+When a required exporter is missing, present the minimal installation preflight from `local-tooling.md` and ask for explicit approval immediately. Use `Export status: blocked` while approval is pending. If installation is declined, forbidden, or unavailable, keep the validated SVG and motion spec, set `Export status: capability-unavailable`, and provide an exact next step. Do not create placeholder files or claim an export succeeded.
 
 ## Transparency and delivery checks
 

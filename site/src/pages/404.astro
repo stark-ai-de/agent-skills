@@ -1,0 +1,102 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { webPageStructuredData } from "../lib/seo";
+import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+
+const canonicalPath = "/404.html";
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const description = "The requested Agent Skills catalog page could not be found.";
+---
+
+<BaseLayout
+  title="Page not found"
+  description={description}
+  canonicalPath={canonicalPath}
+  noindex
+  structuredData={[
+    webPageStructuredData({
+      canonicalUrl,
+      description,
+      title: "Page not found"
+    })
+  ]}
+>
+  <section class="not-found-page" data-reveal>
+    <div class="not-found__copy">
+      <p class="not-found__kicker">
+        <span class="not-found__kicker-dot" aria-hidden="true"></span>
+        Route unresolved
+      </p>
+      <p class="not-found__code" aria-hidden="true">404</p>
+      <h1>This path isn’t in the catalog.</h1>
+      <p class="not-found__lede">
+        The address points to a branch we can’t resolve. It may have moved, changed status, or
+        never existed here.
+      </p>
+      <div class="not-found__actions">
+        <a class="button button--primary button--signal" href={withBase("/")}>
+          <span>Return to catalog</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h13"></path>
+            <path d="m12 6 6 6-6 6"></path>
+          </svg>
+        </a>
+        <a class="button button--secondary" href={withBase("/skills/")}>Browse public skills</a>
+      </div>
+      <nav class="not-found__links" aria-label="Recovery links">
+        <a href={withBase("/incubator/")}>Open the incubator</a>
+        <span aria-hidden="true">·</span>
+        <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">Inspect repository source</a>
+      </nav>
+    </div>
+
+    <figure class="not-found__route" aria-labelledby="route-trace-title">
+      <div class="not-found__route-header">
+        <figcaption id="route-trace-title">
+          <span class="not-found__route-signal" aria-hidden="true"></span>
+          route.trace
+        </figcaption>
+        <span class="not-found__route-status">status 404</span>
+      </div>
+      <div class="not-found__diagram">
+        <svg aria-hidden="true" viewBox="0 0 520 300" fill="none" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="not-found-route-gradient" x1="32" y1="198" x2="490" y2="198" gradientUnits="userSpaceOnUse">
+              <stop stop-color="var(--primary)"></stop>
+              <stop offset="0.56" stop-color="var(--secondary)"></stop>
+              <stop offset="1" stop-color="var(--primary-bright)"></stop>
+            </linearGradient>
+          </defs>
+          <path class="not-found__diagram-grid" d="M32 54h456M32 102h456M32 150h456M32 198h456M32 246h456M80 30v240M160 30v240M240 30v240M320 30v240M400 30v240M480 30v240"></path>
+          <path class="not-found__route-base" d="M32 198h124v-82h92"></path>
+          <path class="not-found__route-live" d="M32 198h124v-82h92"></path>
+          <path class="not-found__route-broken" d="M248 116h44M316 116h76v82h36"></path>
+          <path class="not-found__route-fallback" d="M316 116v118h80"></path>
+          <circle class="not-found__route-node" cx="32" cy="198" r="6"></circle>
+          <circle class="not-found__route-node" cx="156" cy="198" r="6"></circle>
+          <circle class="not-found__route-node" cx="156" cy="116" r="6"></circle>
+          <circle class="not-found__route-node" cx="228" cy="116" r="6"></circle>
+          <circle class="not-found__route-node" cx="392" cy="198" r="6"></circle>
+          <circle class="not-found__route-node" cx="428" cy="198" r="6"></circle>
+          <g class="not-found__route-alert">
+            <rect x="244" y="73" width="76" height="86" rx="10"></rect>
+            <text x="282" y="112" text-anchor="middle">404</text>
+            <text class="not-found__route-alert-label" x="282" y="133" text-anchor="middle">no route</text>
+          </g>
+          <g class="not-found__route-label not-found__route-label--entry">
+            <rect x="24" y="218" width="64" height="24" rx="6"></rect>
+            <text x="56" y="234" text-anchor="middle">entry</text>
+          </g>
+          <g class="not-found__route-label not-found__route-label--fallback">
+            <rect x="382" y="246" width="86" height="24" rx="6"></rect>
+            <text x="425" y="262" text-anchor="middle">fallback</text>
+          </g>
+        </svg>
+      </div>
+      <div class="not-found__route-footer">
+        <code>GET /requested-path</code>
+        <span>no matching skill route</span>
+      </div>
+    </figure>
+  </section>
+</BaseLayout>

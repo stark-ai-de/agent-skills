@@ -1,6 +1,8 @@
 ---
 import CategoryNav from "../components/CategoryNav.astro";
 import CommandBlock from "../components/CommandBlock.astro";
+import ContextTooltip from "../components/ContextTooltip.astro";
+import HeroLogo from "../components/HeroLogo.astro";
 import SkillCard from "../components/SkillCard.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import {
@@ -9,7 +11,13 @@ import {
   webPageStructuredData
 } from "../lib/seo";
 import { getIncubatorSkills, getPublicSkills, groupByCategory } from "../lib/skills";
-import { absoluteSiteUrl, GITHUB_REPO_URL, SITE_DESCRIPTION, withBase } from "../lib/site";
+import {
+  absoluteSiteUrl,
+  GITHUB_REPO_URL,
+  LOOPLATCH_URL,
+  SITE_DESCRIPTION,
+  withBase
+} from "../lib/site";
 
 const [publicSkills, incubatorSkills] = await Promise.all([
   getPublicSkills(),
@@ -25,48 +33,70 @@ const structuredData = [
     title: "Agent Skills Catalog"
   }),
   breadcrumbStructuredData([{ name: "Catalog", url: canonicalUrl }]),
-  skillListStructuredData([...publicSkills, ...incubatorSkills], canonicalUrl)
+  skillListStructuredData(publicSkills, canonicalUrl)
 ];
 ---
 
 <BaseLayout
-  title="Catalog"
+  title="Agent Skills Catalog"
   description={SITE_DESCRIPTION}
   canonicalPath="/"
   structuredData={structuredData}
 >
   <section class="hero-section">
-    <div class="hero-copy">
+    <div class="hero-copy" data-reveal>
       <p class="eyebrow">stark-ai-de/agent-skills</p>
       <h1>Agent Skills Catalog</h1>
-      <p>
-        Public Codex-ready skills and clearly separated incubator candidates,
-        generated directly from repository <code>SKILL.md</code> files.
+      <p class="hero-copy__lead">
+        Discover and install source-backed skills for Codex, Claude Code, Cursor,
+        diagrams, and repository workflows.
       </p>
       <div class="hero-actions">
-        <a class="button button--primary" href={withBase("/skills/")}>Browse public skills</a>
+        <a class="button button--primary button--signal" href={withBase("/skills/")}>
+          <span>Browse public skills</span>
+        </a>
         <a class="button button--secondary" href={withBase("/incubator/")}>Review incubator</a>
       </div>
     </div>
-    <div class="hero-panel" aria-label="Catalog summary">
-      <img
-        class="hero-panel__logo"
-        src={withBase("/stark-ai-de-agent-skills-logo.svg")}
-        alt=""
-        width="300"
-        height="100"
-      />
+    <div class="hero-brand" data-reveal aria-hidden="true">
+      <HeroLogo />
+    </div>
+    <aside class="hero-panel" aria-labelledby="catalog-summary-title" data-reveal>
+      <h2 class="sr-only" id="catalog-summary-title">Catalog summary and install command</h2>
       <dl>
         <div>
-          <dt>Public</dt>
+          <dt>
+            Public
+            <ContextTooltip
+              align="start"
+              id="public-catalog-tip"
+              label="Public catalog"
+              text="Promoted skills available through the public catalog."
+            />
+          </dt>
           <dd>{publicSkills.length}</dd>
         </div>
         <div>
-          <dt>Incubator</dt>
+          <dt>
+            Incubator
+            <ContextTooltip
+              id="incubator-catalog-tip"
+              label="Incubator"
+              text="Candidates visible for review and local testing, but not publicly promoted."
+            />
+          </dt>
           <dd>{incubatorSkills.length}</dd>
         </div>
         <div>
-          <dt>Source</dt>
+          <dt>
+            Source
+            <ContextTooltip
+              align="end"
+              id="source-catalog-tip"
+              label="Source-backed"
+              text="Repository SKILL.md files build the catalog at compile time."
+            />
+          </dt>
           <dd>SKILL.md</dd>
         </div>
       </dl>
@@ -74,7 +104,7 @@ const structuredData = [
         command="npx skills@latest add stark-ai-de/agent-skills --list"
         label="List public skills command"
       />
-    </div>
+    </aside>
   </section>
 
   <section class="catalog-band">
@@ -85,7 +115,7 @@ const structuredData = [
     </header>
     <CategoryNav basePath="/skills/" groups={publicGroups} label="Public skill categories" />
     <div class="skill-grid">
-      {publicSkills.map((skill) => <SkillCard skill={skill} />)}
+      {publicSkills.map((skill) => <SkillCard skill={skill} compact />)}
     </div>
   </section>
 
@@ -104,6 +134,22 @@ const structuredData = [
       Incubator pages are marked as candidate/internal and are not presented as
       promoted public catalog entries.
     </p>
+  </section>
+
+  <section class="companion-band" aria-labelledby="looplatch-heading">
+    <div class="companion-band__copy">
+      <p class="eyebrow">Companion workflow</p>
+      <h2 id="looplatch-heading">Pair reusable skills with a bounded local loop.</h2>
+      <p>
+        Agent Skills shape how an agent approaches a repository task. LoopLatch complements them by
+        turning a task, verifier, and stop conditions into an auditable local Codex CLI loop prompt.
+        The catalog remains the source for skills; LoopLatch does not install them or change their
+        files.
+      </p>
+    </div>
+    <a class="button button--primary" href={LOOPLATCH_URL}>
+      Build a bounded Codex loop with LoopLatch
+    </a>
   </section>
 
   <section class="source-band">
