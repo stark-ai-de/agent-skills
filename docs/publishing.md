@@ -59,12 +59,14 @@ cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
 cp -R skills/claude-operations/claude-memory-curator .claude/skills/
 cp -R skills/engineering-workflows/architecture-compass .claude/skills/
 cp -R skills/engineering-workflows/animated-readme-logo .claude/skills/
+cp -R skills/engineering-workflows/codegraph-ast-grep .claude/skills/
 
 mkdir -p ~/.claude/skills
 cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
 cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
 cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
 cp -R skills/engineering-workflows/animated-readme-logo ~/.claude/skills/
+cp -R skills/engineering-workflows/codegraph-ast-grep ~/.claude/skills/
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -198,7 +200,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a c
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a cursor --copy -y
 ```
 
-For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, `skills/engineering-workflows/architecture-compass`, and `skills/engineering-workflows/animated-readme-logo`, then use the manual copy commands above from a tag checkout.
+For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, and the portable `skills/engineering-workflows/architecture-compass`, `skills/engineering-workflows/codegraph-ast-grep`, and `skills/engineering-workflows/animated-readme-logo`, then use the manual copy commands above from a tag checkout.
 
 ## Release Update Process
 

@@ -14,6 +14,36 @@
 
 ### Security
 
+## v0.10.0 - 2026-07-13
+
+### Added
+
+- Added once-per-task stable update checks for the selected CodeGraph/ast-grep analysis stack, with one itemized per-tool approval checkpoint, offline and opt-out handling, versioned actions, verification, and rollback disclosure.
+- Added capability guidance for current and legacy CodeGraph releases, a focused optional-tool escalation guide, and expanded eval scenarios for update consent, runtime boundaries, legacy behavior, native LSP fallback, advanced codemods, security-policy routing, and bounded rewrites.
+- Added deterministic `codegraph-ast-grep` contract validation, command-safety regression fixtures, and machine-regraded captured behavioral evals to the repository validation pipeline.
+
+### Changed
+
+- Updated `codegraph-ast-grep` to `0.2.0` with installed-help-first command selection, consolidated semantic exploration when exposed, watcher-aware graph freshness, capability-gated ast-grep outline, evidence reconciliation, and reviewed rewrite staging.
+- Reworked setup for exact package or checksum-verified release provenance, reproducible project-local launches, effective `CODEGRAPH_DIR` handling, and explicit Codex, Cursor, Claude Code, and generic MCP configuration boundaries.
+- Expanded Claude Code install documentation to include the portable `codegraph-ast-grep` workflow.
+
+### Fixed
+
+- Removed unconditional assumptions about `codegraph_trace`, CLI `explore`, `codegraph init -i`, universal auto-sync, npm-only CodeGraph installation, and unpinned persistent ast-grep MCP execution.
+- Separated analysis-tool binary/package updates from runtime configuration refresh, prompt hooks, telemetry choices, graph operations, and unrelated application dependency updates.
+- Made project-local ast-grep verification fail closed instead of allowing npm to fetch a missing command, and required affirmative approval before project-opening CodeGraph diagnostics that may migrate generated state.
+- Preserved Team-pinned CodeGraph update scope and made native Windows checks, updates, and verification restore prior process environment state after telemetry/config guards.
+
+### Deprecated
+
+### Removed
+
+### Security
+
+- Prevented automatic or blanket tool updates, pipe-to-execution installer defaults, unreviewed optional-tool installs, and rewrite snapshot/update-all shortcuts.
+- Required stable-source provenance, exact update scope, checksum/build-policy disclosure, redaction, telemetry-disabled update checks unless separately approved, and explicit approval for every side-effect class.
+
 ## v0.9.1 - 2026-07-13
 
 ### Added

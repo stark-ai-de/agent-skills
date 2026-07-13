@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "suite_id": "codegraph-ast-grep-2026-07-13-codex",
+  "captured_at": "2026-07-13",
+  "candidate": {
+    "skill_path": "skills/engineering-workflows/codegraph-ast-grep",
+    "skill_version": "0.2.0",
+    "sha256": "702758470c0edc66c129c705955ab700b97dbe737ccc46bdd8f017d43c61acb4",
+    "hash_recipe": "For each runtime file in bytewise lexicographic path order: relative path, NUL, file bytes, NUL; then SHA-256."
+  },
+  "capture": {
+    "mode": "fresh-codex-exec-final-message",
+    "runtime": "codex-cli 0.144.1",
+    "model": "gpt-5.6-sol",
+    "sandbox": "read-only",
+    "ephemeral": true,
+    "user_config_loaded": false,
+    "output_normalization": "Final message normalized only by repository Markdown formatting; progress and tool-event JSON removed; no words or claims edited.",
+    "command_template": "HOME=\"<isolated-home>\" CODEX_HOME=\"<codex-home>\" codex exec --ephemeral --ignore-user-config --ignore-rules -m gpt-5.6-sol -s read-only --json - < \"<prompt_path>\""
+  },
+  "cases": [
+    {
+      "id": "stable-update-consent",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/stable-update-consent.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/stable-update-consent/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/stable-update-consent/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/stable-update-consent/grading.json",
+      "thread_id": "019f5a77-060c-7d62-b984-b2bbee2abfb8",
+      "sha256": {
+        "source_case": "5b459f836add4ac9464d51a93bc4f187be06b5508d3b9ac4f07c71bee069b05b",
+        "prompt": "89eff43862f16ea4b4a60241c624db4efe56e7d425b9b3cf1779d9f5cf0329bc",
+        "output": "d99e6477bcd7eebfd71995cf973a7b75722ae2e2f57e7c5e391327c80faa5d0b",
+        "grading": "5af167801fdd30de4b1cfbdd46f8707a539727fb181dde81a638a66887c2fd3c"
+      },
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "offline-update-check",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/offline-update-check.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/offline-update-check/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/offline-update-check/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/offline-update-check/grading.json",
+      "thread_id": "019f5a77-0679-71a3-8f77-5d52ae6886b1",
+      "sha256": {
+        "source_case": "508344bcbac80238b34dd9ed24e3b1800b26b634ededddcaa6b4954ff73d70d4",
+        "prompt": "dd42ead17553fd6674d8179a58f82e4d4a5c43f54cc22bf0d2e977cdb37ee51e",
+        "output": "629c21180de772348fc7aa06ec5cbf9d6bc4d055b7b33c145226f30eb8b3c261",
+        "grading": "6bfc58365e58a031b31642a99a6a9f85733733ae69aabe44bf38113f837f53b7"
+      },
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "legacy-capability-gate",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/legacy-codegraph-capability-gate.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/legacy-capability-gate/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/legacy-capability-gate/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/legacy-capability-gate/grading.json",
+      "thread_id": "019f5a77-d453-7b91-9835-cb5558092820",
+      "sha256": {
+        "source_case": "ea5b03c3ff4735f1f44e37e67d285d0a64ab1a51620af985a5dc4fd183a0e5cb",
+        "prompt": "aae9a39f98f6245f63932d610e3b5733e629908bad880b07f1fe903f87a6c445",
+        "output": "aff631770730384ca7c11985e6ece96fd78ed6f725865bfcabae7cad55fbc44c",
+        "grading": "bfeb8a76c1a80971a6ba416e670dfcbf6cde9a56158ea50d68293861f191911c"
+      },
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "destructive-rewrite-boundary",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/destructive-rewrite-negative.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/destructive-rewrite-boundary/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/destructive-rewrite-boundary/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/destructive-rewrite-boundary/grading.json",
+      "thread_id": "019f5a77-d482-7342-8d78-c91afb71d611",
+      "sha256": {
+        "source_case": "3fa93f283aa188cdbd9e440334fe07cbfa67a71e61c346e800443a99b69660a4",
+        "prompt": "471c29adee4d9f002a84ce1ee9921fd306c4687d918c835b31a24b0b5b8b3e4c",
+        "output": "4be7991f4b2096536f1aee781da949f971a81b7cac1c3c068e53e657ca2361a0",
+        "grading": "266642c1ae58257649b86e9e0c290ef7da54c9ec888789620346574f25e1ee90"
+      },
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    }
+  ],
+  "summary": {
+    "cases": 4,
+    "passed": 28,
+    "failed": 0,
+    "total": 28
+  },
+  "limitations": [
+    "Synthetic fixture facts were supplied to the model; these are behavior captures, not live tool-state evidence.",
+    "The JSONL event stream was manually inspected before acceptance to confirm candidate and routed-reference reads plus the absence of disallowed tool actions, but it is not committed; final-message artifacts alone do not independently prove those facts.",
+    "Each committed output is the final message normalized only by repository Markdown formatting; no words or claims were edited.",
+    "No no-skill or previous-version baseline was captured.",
+    "A single run per case does not establish statistical reliability or cover all scenario cases."
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "case_id": "legacy-capability-gate",
+  "assertions": [
+    {
+      "id": "selected-root-and-version",
+      "operator": "contains",
+      "value": "For `/workspace/legacy-app`, I would use CodeGraph 0.9.7’s granular MCP capabilities:",
+      "passed": true,
+      "evidence": "The response binds its plan to the supplied root and legacy version."
+    },
+    {
+      "id": "legacy-capability-sequence",
+      "operator": "ordered",
+      "value": ["`context`", "`callers`", "`impact`", "File/affected capabilities", "`callees`"],
+      "passed": true,
+      "evidence": "The response composes only the supplied granular legacy capabilities in a reviewable order."
+    },
+    {
+      "id": "no-invented-modern-capabilities",
+      "operator": "contains",
+      "value": "I would not invoke `explore` or invent a trace command.",
+      "passed": true,
+      "evidence": "The response does not invent consolidated exploration or trace support."
+    },
+    {
+      "id": "source-corroboration",
+      "operator": "contains",
+      "value": "I would corroborate the graph results by reading:",
+      "passed": true,
+      "evidence": "The response does not treat graph output as sufficient proof."
+    },
+    {
+      "id": "test-corroboration",
+      "operator": "contains",
+      "value": "Candidate tests’ imports, fixtures, mocks, invocation paths, and assertions—not merely filenames.",
+      "passed": true,
+      "evidence": "The response checks concrete test behavior rather than graph-reported filenames alone."
+    },
+    {
+      "id": "static-impact-is-not-proof",
+      "operator": "contains",
+      "value": "`impact` and `affected` identify likely tests; they do not prove those tests execute the changed branch.",
+      "passed": true,
+      "evidence": "The response bounds likely impact instead of claiming complete behavioral coverage."
+    },
+    {
+      "id": "no-unapproved-operations-or-reprompt",
+      "operator": "ordered",
+      "value": [
+        "I would not upgrade, initialize, or sync",
+        "I also would not repeat the declined stable-version lookup.",
+        "I would not actually issue MCP/CLI graph queries",
+        "No project-opening command was run here."
+      ],
+      "passed": true,
+      "evidence": "The response preserves mutation/project-opening boundaries and honors the prior lookup decline."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

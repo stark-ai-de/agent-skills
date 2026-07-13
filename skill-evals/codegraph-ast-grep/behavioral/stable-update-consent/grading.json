@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "case_id": "stable-update-consent",
+  "assertions": [
+    {
+      "id": "update-state-and-pause",
+      "operator": "contains",
+      "value": "Stable updates were checked once from official package metadata. Impact analysis is paused pending your independent choices.",
+      "passed": true,
+      "evidence": "The response reports one completed check and pauses before analysis."
+    },
+    {
+      "id": "codegraph-exact-guarded-action",
+      "operator": "count_exact",
+      "value": "CODEGRAPH_TELEMETRY=0 CODEGRAPH_NO_INSTALL_REFRESH=1 CODEGRAPH_NO_PROMPT_HOOK=1 npm install -g @colbymchenry/codegraph@1.4.1",
+      "expected_count": 1,
+      "passed": true,
+      "evidence": "The exact target action appears once with telemetry, refresh, and prompt-hook guards."
+    },
+    {
+      "id": "ast-grep-exact-action",
+      "operator": "count_exact",
+      "value": "pnpm add -D @ast-grep/cli@0.44.1",
+      "expected_count": 1,
+      "passed": true,
+      "evidence": "The exact project-channel ast-grep target action appears once."
+    },
+    {
+      "id": "independent-choices",
+      "operator": "ordered",
+      "value": [
+        "Reply with an independent choice for each",
+        "`CodeGraph: update` or `CodeGraph: skip`",
+        "`ast-grep: update` or `ast-grep: skip`"
+      ],
+      "passed": true,
+      "evidence": "The response offers separate update or skip choices for both eligible tools."
+    },
+    {
+      "id": "side-effect-separation",
+      "operator": "contains",
+      "value": "It does not approve telemetry, prompt hooks, MCP/config refresh, Serena changes, graph opening/sync/reindex, or other dependencies.",
+      "passed": true,
+      "evidence": "Package approval remains separate from runtime, optional-tool, graph, and unrelated dependency effects."
+    },
+    {
+      "id": "skip-preserves-analysis-and-is-not-reasked",
+      "operator": "contains",
+      "value": "Skipping either update will not block analysis with its installed version, and skipped updates will not be offered again during this task.",
+      "passed": true,
+      "evidence": "A decline preserves diagnostics and is not repeatedly prompted."
+    },
+    {
+      "id": "serena-not-selected",
+      "operator": "contains",
+      "value": "Serena’s unsupported-language configuration is noted but is not an eligible update because no Serena update or configuration change was selected.",
+      "passed": true,
+      "evidence": "The unselected Serena change stays outside the update checkpoint."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

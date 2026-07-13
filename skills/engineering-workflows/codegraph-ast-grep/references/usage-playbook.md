@@ -1,89 +1,124 @@
 # Usage Playbook
 
-Use CodeGraph for semantic scope. Use ast-grep for syntax-exact matches. Use project validation for correctness.
+Use CodeGraph for semantic scope, ast-grep for syntax-exact coverage, targeted source reads for confirmation, and project-native validation for correctness.
 
-## Simple use cases
+## Contents
 
-| User need                                | How the workflow helps                                                                   |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Explain why validation or build fails    | CodeGraph maps the command path, then targeted reads inspect only the failing surface.   |
-| Change a shared function safely          | CodeGraph finds callers, callees, and likely impact before any patch is written.         |
-| Trace a route, request, event, or action | CodeGraph trace follows the path between the start symbol and destination behavior.      |
-| Find risky or repeated code shapes       | ast-grep matches syntax such as file writes, deprecated calls, or duplicate handlers.    |
-| Plan a mechanical refactor               | CodeGraph scopes the subsystem; ast-grep verifies exact matches before edits.            |
-| Review generated or unfamiliar code      | CodeGraph identifies entry points; ast-grep checks specific patterns without grep noise. |
+- [Choose the smallest workflow](#choose-the-smallest-workflow)
+- [Semantic exploration](#semantic-exploration)
+- [Structural search and rules](#structural-search-and-rules)
+- [Impact and refactor planning](#impact-and-refactor-planning)
+- [Evidence reconciliation](#evidence-reconciliation)
+- [Fallback ladder](#fallback-ladder)
+- [Output discipline](#output-discipline)
 
-## Tool choice
+## Choose the smallest workflow
 
-| Need                       | First choice                           | Follow-up                  |
-| -------------------------- | -------------------------------------- | -------------------------- |
-| Understand repo structure  | CodeGraph files/status                 | targeted file reads        |
-| Find a symbol by name      | CodeGraph search                       | CodeGraph node             |
-| Trace callers/callees      | CodeGraph callers/callees              | MCP `codegraph_trace`      |
-| Explain a path from X to Y | MCP `codegraph_trace`                  | targeted file reads        |
-| Estimate impact radius     | CodeGraph impact/affected              | tests/typecheck            |
-| Find syntax pattern        | ast-grep pattern                       | ast-grep YAML rule         |
-| Test a complex AST rule    | ast-grep MCP `test_match_code_rule`    | CLI `ast-grep scan --rule` |
-| Perform rewrite            | ast-grep interactive or reviewed patch | typecheck/lint/tests       |
+| User need                  | First useful evidence                           | Follow-up only when needed                         |
+| -------------------------- | ----------------------------------------------- | -------------------------------------------------- |
+| Explain a flow             | Focused CodeGraph explore result                | Targeted source and one narrow call follow-up      |
+| Change a shared symbol     | CodeGraph callers/impact surface                | ast-grep variants, project tests/typecheck         |
+| Find an exact code shape   | Narrow ast-grep pattern                         | YAML rule/tests and semantic ownership             |
+| Author a reusable rule     | Known positive/negative examples                | Repo scan and CI/project validation                |
+| Plan a mechanical refactor | Semantic ownership plus structural inventory    | Bounded patch batches and validation               |
+| Repair setup               | Current state/capabilities                      | Approval-gated minimum install/config/index action |
+| Perform a reviewed rewrite | Tested match inventory and approved exact scope | Diff review, project validation, rollback          |
 
-## Exploration flow
+Do not run every tool because it exists. Use only evidence that changes the answer, scope, or safety decision.
 
-1. Check graph health:
+## Semantic exploration
 
-```bash
-codegraph status
-```
+1. Confirm the project root and graph health.
+2. Complete the selected-stack stable update check once or record the offline/opt-out boundary.
+3. Enumerate the actual MCP/CLI capabilities.
+4. Ask one focused question through exposed `codegraph_explore` or help-confirmed CLI fallback.
+5. Capture the relevant entry point, symbols, call paths, likely dependents/tests, and unsupported/dynamic boundaries.
+6. Read only source needed to confirm the explanation or prepare an edit.
 
-2. Search likely symbols or files:
+Good questions identify a behavior and boundary:
 
-```bash
-codegraph query AuthService
-codegraph files --filter "**/*auth*"
-```
+- “How does request validation reach persistence?”
+- “What calls this authorization decision, and which tests are in its blast radius?”
+- “Where does this route enter the application and hand off to domain logic?”
 
-3. Inspect call flow and impact:
+Avoid “dump the whole architecture.” Narrow broad results by symbol, path, route, or subsystem.
 
-```bash
-codegraph context "explain login flow"
-codegraph affected src/auth.ts --filter "**/*.{test,spec}.*"
-```
+## Structural search and rules
 
-When CodeGraph MCP is available, use `codegraph_trace` for a specific path such as how `AuthMiddleware` reaches `handleRequest`.
+1. Identify one known positive source example and its language.
+2. Start with the smallest ast-grep CLI pattern against one file or directory.
+3. Inventory syntax variants: imports, aliases, optional chaining, wrappers, JSX/TSX, generated code, or language-specific shapes.
+4. Bound paths and output. Do not assume every subcommand supports the same result-limit flag.
+5. Convert to YAML only when `inside`, `has`, `follows`, `precedes`, `all`, `any`, `not`, utilities, or reuse justifies it.
+6. Add positive and negative rule fixtures before claiming complete coverage.
+7. Run the rule across the approved scope and report counts/paths plus parser gaps.
 
-4. Read only the specific files or ranges needed for edits.
+Use [ast-grep-rule-recipes.md](ast-grep-rule-recipes.md) for exact examples.
 
-## Refactor flow
+## Impact and refactor planning
 
-1. Use CodeGraph to identify the subsystem and impact radius.
-2. Use ast-grep to match the exact code shape.
-3. Convert ad-hoc patterns into YAML rules when the match requires `has`, `inside`, `not`, `all`, or `any`.
-4. Preview matches before editing.
-5. Apply a small patch or interactive rewrite.
-6. Run validation.
+Use this sequence for changes that are more than a local edit:
 
-## TypeScript/Turbo validation examples
+1. **Ownership:** CodeGraph identifies the entry point, implementation, callers, dependents, and likely tests.
+2. **Exact inventory:** ast-grep counts the syntax forms that will or will not change.
+3. **Disagreement check:** graph and structural/path evidence are reconciled before scope is fixed.
+4. **Patch boundary:** group the smallest reviewable file/symbol batches and identify shared-contract or generated-code boundaries.
+5. **Rewrite proof:** for a mechanical rewrite, add rule fixtures and preview the exact reviewed scope.
+6. **Approval:** obtain approval for the proposed files/pattern/rewrite, not a generic repository-wide permission.
+7. **Apply and inspect:** make the smallest patch, inspect `git diff`, and verify no unrelated matches changed.
+8. **Project validation:** run actual repository scripts such as targeted tests, typecheck, lint, or build.
 
-Prefer project scripts from `package.json`. Common examples:
+If approval was already granted for the exact tested rewrite and unchanged scope, do not ask again. Any expanded path, rule, target version, or side effect requires renewed approval.
 
-```bash
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
-```
+## Evidence reconciliation
 
-For a Turbo repo, inspect available tasks first:
+Use a small evidence map:
 
-```bash
-cat package.json | sed -n '1,220p'
-find apps packages -maxdepth 2 -name package.json -print
-```
+| Evidence                 | What it proves                                              | Common blind spot                                               |
+| ------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| CodeGraph                | Indexed semantic relationships and likely impact            | Dynamic/reflection/generated/unsupported code, stale root/index |
+| ast-grep                 | Parser-backed syntax matches for the rule/language          | Semantic aliases/types/runtime dispatch, missed syntax variants |
+| Runtime-native LSP       | Symbols, references, types supported by the language server | Generated/dynamic code, incomplete workspace/project config     |
+| Text search/source reads | Literal presence and exact implementation                   | High noise, no semantic or AST guarantee                        |
+| Project validation       | Compiler/test/runtime contract exercised by the repo        | Coverage gaps and tests that do not exist/run                   |
 
-Then run the smallest relevant validation command.
+When results disagree:
 
-## Context discipline
+1. verify CodeGraph root, status, watcher/pending state, and ignored/configured paths;
+2. verify ast-grep language, parser, pattern, selector, and positive/negative fixtures;
+3. inspect aliases, string-based registration, dependency injection, reflection, macros, generated files, and runtime loading;
+4. read the smallest targeted source surface;
+5. report the unresolved boundary instead of silently choosing the larger result.
 
-- Do not dump broad CodeGraph context into the main response unless it directly answers the user.
-- Prefer status/search/callers/callees/trace/impact before large context generation.
-- Cap ast-grep result counts where the MCP tool supports it.
-- Summarize findings and only read source files that are candidates for editing.
+Do not broaden immediately to repeated full-repository grep. A targeted text search is useful only when it tests a named gap.
+
+## Fallback ladder
+
+Use the first available trustworthy layer:
+
+1. Exposed CodeGraph semantic MCP capability.
+2. Help-confirmed CodeGraph CLI capability.
+3. Runtime-native LSP symbol/reference/type tools.
+4. Capability-gated `ast-grep outline` for lightweight structure.
+5. ast-grep structural query/rule.
+6. Bounded `rg`/file reads for literal or unsupported syntax.
+7. Project-native compiler, tests, lint, or build for correctness.
+
+State the degraded layer. Do not propose installing an optional server when a native LSP or existing tool already answers the task.
+
+Read [extensions-and-escalation.md](extensions-and-escalation.md) only when this ladder cannot safely express a dedicated semantic backend, security/policy query, or multi-step migration.
+
+## Output discipline
+
+Return the minimum proof the user can act on:
+
+- selected root and capability/version provenance;
+- update state only when relevant or unavailable;
+- focused findings with paths/symbols and evidence source;
+- structural counts/variants and rule test state;
+- disagreement or unsupported boundaries;
+- proposed writes with approval state;
+- commands actually run versus commands merely proposed;
+- project validation and remaining risk.
+
+Do not paste full configs, broad graph dumps, or hundreds of match lines. Summarize counts, give representative matches, and offer exact artifact paths or narrower follow-ups.
