@@ -28,6 +28,17 @@ Do not add `agents/openai.yaml` as boilerplate to every skill. Keep routing and 
 
 See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy decision.
 
+## Execution Host and Target Runtime
+
+- Treat the execution host as the client running the skill and the target runtime as the agent whose evidence or artifacts the user wants to manage.
+- Keep a workflow portable when its evidence and output contracts match. Specialize only when its name, trigger, configuration, evidence, or output materially differs.
+- When a target-specific skill runs from another host, preserve its target contract and adapt only planning, questions, permissions, and handoff to available host controls.
+- Use descriptions for implicit discovery and explicit invocation, where supported, when deterministic selection matters. Do not add a catch-all router or custom metadata that claims to guarantee activation.
+- Create an independent skill when it has a distinct trigger and outcome; do not impose a catalog-size quota.
+- Keep a backend gateway with its owning skill until a second independent consumer or a separately proven, fail-closed backend justifies extraction.
+
+See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.md) and [ADR-0026](adrs/0026-distinguish-execution-host-from-target-runtime.md).
+
 ## Body Shape
 
 Every skill should include:

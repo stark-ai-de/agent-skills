@@ -21,6 +21,74 @@ const requiredSkillSections = [
 ];
 const namePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const semverPattern = /^\d+\.\d+\.\d+$/;
+const foreignHostControlRequirements = [
+  {
+    label: "Cursor Plan Mode",
+    pattern:
+      /\b(?:in|using|use|enter|run in|switch(?:ing)? to|require[sd]?|required to use|must(?: use| enter| run in)?)\s+(?:native\s+)?Cursor(?:'s)? Plan Mode\b/i,
+  },
+  {
+    label: "Cursor AskQuestion",
+    pattern:
+      /\b(?:use|invoke|call|require[sd]?|required to use|must(?: use| invoke| call)?)\s+(?:the\s+)?AskQuestion\b/i,
+  },
+  {
+    label: "Claude Code plan or question tools",
+    pattern:
+      /\b(?:use|invoke|call|require[sd]?|required to use|must(?: use| invoke| call)?)\s+(?:the\s+)?(?:EnterPlanMode|ExitPlanMode|AskUserQuestion)\b/i,
+  },
+];
+const directControlNegationPattern =
+  /\b(?:do not|don't|never|must not|should not|cannot|can't|avoid|prohibit(?:s|ed)?)\b/i;
+const controlClauseBoundaryPattern =
+  /(?:[.;:!?](?:\s+|$)|,\s*(?:but|however|instead|yet)\b|\b(?:but|however|instead|yet)\b)/gi;
+const promptControlRegressionCases = [
+  {
+    expected: true,
+    name: "reject required Cursor mode",
+    prompt: "Use $example in native Cursor Plan Mode to prepare the result.",
+  },
+  {
+    expected: true,
+    name: "reject required Claude tool",
+    prompt: "Invoke EnterPlanMode before continuing.",
+  },
+  {
+    expected: false,
+    name: "allow audit mention",
+    prompt: "Audit documentation that mentions EnterPlanMode and report drift.",
+  },
+  {
+    expected: false,
+    name: "allow current-host translation",
+    prompt: "Use current execution host controls to translate EnterPlanMode behavior.",
+  },
+  {
+    expected: true,
+    name: "reject contradictory current-host instruction",
+    prompt: "Use current execution host controls, but you must invoke EnterPlanMode.",
+  },
+  {
+    expected: false,
+    name: "allow direct prohibition",
+    prompt: "Do not invoke EnterPlanMode from this host.",
+  },
+  {
+    expected: false,
+    name: "allow never-use prohibition",
+    prompt: "Never use AskUserQuestion from this host.",
+  },
+  {
+    expected: false,
+    name: "allow multiword Cursor-mode prohibition",
+    prompt: "Do not use $example in native Cursor Plan Mode.",
+  },
+  {
+    expected: true,
+    name: "reject requirement after prohibition",
+    prompt: "Do not invoke EnterPlanMode, but use AskUserQuestion instead.",
+  },
+];
 const projectLocalOnlySkillNames = new Set([
   "agent-browser",
   "grill-me",
@@ -192,9 +260,7 @@ function validateSkillFile(file, skillRoot) {
     errors.push(`${rel}: do not tell agents to read all references by default`);
   }
 
-  if (skillRoot.openAiMetadataCategories?.has(category)) {
-    validateOpenAiMetadata(file, name, skillRoot, category);
-  }
+  validateOpenAiMetadata(file, name, skillRoot, category);
 
   return { category, description, name, rel };
 }
@@ -203,9 +269,12 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
   const skillDir = path.dirname(file);
   const metadataFile = path.join(skillDir, "agents", "openai.yaml");
   const rel = path.relative(root, metadataFile);
+  const isRequired = skillRoot.openAiMetadataCategories?.has(category);
 
   if (!fs.existsSync(metadataFile)) {
-    errors.push(`${rel}: ${skillRoot.label} ${category} skills must include agents/openai.yaml`);
+    if (isRequired) {
+      errors.push(`${rel}: ${skillRoot.label} ${category} skills must include agents/openai.yaml`);
+    }
     return;
   }
 
@@ -226,8 +295,16 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
   }
   if (!defaultPrompt) {
     errors.push(`${rel}: missing quoted interface.default_prompt`);
-  } else if (name && !defaultPrompt.includes(`$${name}`)) {
-    errors.push(`${rel}: interface.default_prompt must mention $${name}`);
+  } else {
+    if (name && !defaultPrompt.includes(`$${name}`)) {
+      errors.push(`${rel}: interface.default_prompt must mention $${name}`);
+    }
+
+    for (const label of requiredForeignHostControls(defaultPrompt)) {
+      errors.push(
+        `${rel}: interface.default_prompt must adapt required ${label} behavior to current execution-host controls`,
+      );
+    }
   }
   if (!/^policy:\s*$/m.test(text)) {
     errors.push(`${rel}: missing policy block`);
@@ -240,6 +317,38 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
   }
   if (!/^\s+tools:\s*\[\]\s*$/m.test(text)) {
     errors.push(`${rel}: dependencies.tools must be present, use [] when empty`);
+  }
+}
+
+function requiredForeignHostControls(prompt) {
+  return foreignHostControlRequirements
+    .filter(({ pattern }) => hasUnnegatedControlRequirement(prompt, pattern))
+    .map(({ label }) => label);
+}
+
+function hasUnnegatedControlRequirement(prompt, pattern) {
+  const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
+  const matcher = new RegExp(pattern.source, flags);
+
+  for (const match of prompt.matchAll(matcher)) {
+    const promptPrefix = prompt.slice(0, match.index);
+    let clauseStart = 0;
+    for (const boundary of promptPrefix.matchAll(controlClauseBoundaryPattern)) {
+      clauseStart = boundary.index + boundary[0].length;
+    }
+    const prefix = promptPrefix.slice(clauseStart);
+    if (!directControlNegationPattern.test(prefix)) return true;
+  }
+
+  return false;
+}
+
+for (const regressionCase of promptControlRegressionCases) {
+  const actual = requiredForeignHostControls(regressionCase.prompt).length > 0;
+  if (actual !== regressionCase.expected) {
+    errors.push(
+      `OpenAI prompt-control regression failed: ${regressionCase.name} expected ${regressionCase.expected}, got ${actual}`,
+    );
   }
 }
 
