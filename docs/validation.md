@@ -40,6 +40,18 @@ Validate script syntax:
 npm run validate:scripts
 ```
 
+Validate the CodeGraph + ast-grep runtime contract and captured behavior:
+
+```bash
+npm run validate:codegraph-ast-grep
+```
+
+This dedicated gate is offline and deterministic. It statically checks the
+installed skill contract and scenario catalog, verifies captured behavioral
+artifact hashes, regrades assertions from committed final responses, and
+reconciles grading totals. It does not invoke a model, query the network, or
+execute CodeGraph/ast-grep.
+
 Validate SkillOpt setup helper contracts:
 
 ```bash
@@ -115,6 +127,7 @@ node scripts/print-release-notes.mjs
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
 - Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
+- CodeGraph + ast-grep contract validation checks the explicit installed-payload allowlist, fenced Markdown/config command snippets and their scanner fixtures, scenario structure, capability/update/rewrite safety invariants, captured behavioral artifact and candidate hashes, and machine-regraded assertion totals without executing analysis tools or a model.
 - SkillOpt setup validation checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.
 
 ## Continuous Integration

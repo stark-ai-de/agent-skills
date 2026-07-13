@@ -52,6 +52,7 @@ cp -R skills/claude-operations/claude-spec-interviewer .claude/skills/
 cp -R skills/claude-operations/claude-memory-curator .claude/skills/
 cp -R skills/engineering-workflows/architecture-compass .claude/skills/
 cp -R skills/engineering-workflows/animated-readme-logo .claude/skills/
+cp -R skills/engineering-workflows/codegraph-ast-grep .claude/skills/
 ```
 
 Install them user-wide for Claude Code:
@@ -62,6 +63,7 @@ cp -R skills/claude-operations/claude-spec-interviewer ~/.claude/skills/
 cp -R skills/claude-operations/claude-memory-curator ~/.claude/skills/
 cp -R skills/engineering-workflows/architecture-compass ~/.claude/skills/
 cp -R skills/engineering-workflows/animated-readme-logo ~/.claude/skills/
+cp -R skills/engineering-workflows/codegraph-ast-grep ~/.claude/skills/
 ```
 
 Install all Codex-ready public skills globally for Codex:
@@ -83,10 +85,10 @@ npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a cod
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a codex
 ```
 
-Use `codegraph-ast-grep` when a repo needs CodeGraph plus ast-grep setup, runtime-specific MCP guidance, exploration, structural search, or refactor planning:
+Use `codegraph-ast-grep` when a repo needs reliable CodeGraph plus ast-grep setup, stable analysis-tool update checks, semantic exploration, structural search, impact analysis, or refactor planning:
 
 ```text
-Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning.
+Use $codegraph-ast-grep to check the selected analysis tools, map semantic impact with CodeGraph, confirm syntax with ast-grep, and keep setup or refactors approval-gated.
 ```
 
 Typical use cases:
@@ -95,7 +97,8 @@ Typical use cases:
 - find callers, callees, and likely impact before changing a shared function,
 - trace how one symbol or request path reaches another,
 - find exact code shapes such as unsafe writes, repeated handlers, or deprecated API calls,
-- combine semantic scope from CodeGraph with syntax-exact ast-grep matches for small refactors.
+- combine semantic scope from CodeGraph with syntax-exact ast-grep matches for small refactors,
+- check selected analysis tools once per task and ask before any itemized update.
 
 Install the same portable skill for Cursor when a Cursor project needs CodeGraph plus ast-grep guidance:
 
@@ -181,7 +184,7 @@ The public catalog lives under [`skills/`](skills/README.md). Candidate, experim
 | [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)   | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.                           | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)       |
 | [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)     | Claude Code durable context is stale, noisy, conflicting, sensitive, misplaced, unenforced, or needs review, cleanup plans, or destination classification.                   | [`skill-evals/claude-memory-curator/`](skill-evals/claude-memory-curator/README.md)     |
 | [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Claude Code task needs a persisted Claude-ready spec first.                           | [`skill-evals/claude-spec-interviewer/`](skill-evals/claude-spec-interviewer/README.md) |
-| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need setup, runtime-specific MCP guidance, repo exploration, structural search, impact analysis, or safe refactor planning.                           | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
+| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need portable setup, stable update checks, semantic exploration, structural evidence, impact analysis, or safe refactors.                             | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
 | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)        | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning.                     | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)       |
 | [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)    | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Codex task needs a user-verified, persisted Codex-ready spec first.                   | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md)   |
 | [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md)     | Cursor durable context is stale, noisy, ignored, sensitive, conflicting, or needs review, cleanup plans, destination classification, or settings action guidance.            | [`skill-evals/cursor-memory-curator/`](skill-evals/cursor-memory-curator/README.md)     |

@@ -1,185 +1,235 @@
-# Setup and MCP Config
+# Setup and MCP Configuration
 
-Use this reference when the task is installation, MCP setup, or repository initialization.
+Use this reference for installation, MCP setup, project initialization, or setup repair. Use [update-and-provenance.md](update-and-provenance.md) for an already-installed tool's stable-update check and update approval.
 
-## Runtime boundary
+## Contents
 
-The executable MCP commands in this reference are Codex commands unless explicitly labeled otherwise. Codex MCP commands and `~/.codex/config.toml` snippets are Codex-only. When the user is installing the skill for Cursor, use `npx skills ... -a cursor` for the skill install and do not write Codex MCP config as if it were Cursor config. For Cursor or another runtime's MCP setup, inspect the target repo's runtime configuration or current runtime docs before proposing config writes.
+- [Setup principles](#setup-principles)
+- [Read-only preflight](#read-only-preflight)
+- [Choose a setup profile](#choose-a-setup-profile)
+- [Install channels](#install-channels)
+- [CodeGraph runtime configuration](#codegraph-runtime-configuration)
+- [Project initialization and configuration](#project-initialization-and-configuration)
+- [ast-grep project setup](#ast-grep-project-setup)
+- [Experimental ast-grep MCP](#experimental-ast-grep-mcp)
+- [Approval and verification](#approval-and-verification)
 
-## Preflight
+## Setup principles
 
-From the target repository root:
+1. Prefer a healthy existing install.
+2. Discover the installed command surface before choosing examples.
+3. Preserve the user's current package manager, installer channel, scope, trust policy, and declarative configuration.
+4. Show exact versions, destinations, remote execution, lifecycle scripts, telemetry behavior, and rollback limits before approval. Treat update-network permission and telemetry consent separately; default-on telemetry is not affirmative consent.
+5. Keep the CLI/package decision separate from MCP registration, agent instructions/hooks, project initialization, and repository config.
+6. Never install a package manager just to install either tool unless the user asks.
+
+`npx`, `uvx`, package installs, archive extraction, MCP registration, `codegraph install`, graph initialization, configuration writes, and ignore-file edits are side-effectful. Do not run them from diagnostic intent.
+
+## Read-only preflight
+
+Start from the intended project root. Avoid echoing full runtime config or unrelated environment variables; the non-secret CodeGraph state-directory selector is relevant here.
 
 ```bash
-git status --short
 pwd
-node --version
-npm --version
-codex mcp --help || true
-```
+git status --short 2>/dev/null || true
+printf 'Configured CODEGRAPH_DIR: %s\n' "${CODEGRAPH_DIR:-<default .codegraph>}"
 
-Inspect available package managers and tools before recommending an install path:
-
-```bash
-for tool in pnpm npm yarn bun brew cargo pip pipx uvx codegraph ast-grep; do
+for tool in codegraph ast-grep pnpm npm yarn bun brew port cargo pip pipx uv nix codex cursor-agent claude; do
   command -v "$tool" >/dev/null 2>&1 && printf '%s: %s\n' "$tool" "$(command -v "$tool")"
 done
 ```
 
-Check existing Codex config before editing anything when Codex MCP is in scope:
+Probe installed tools without assuming newer subcommands:
 
 ```bash
-ls -la .codex .codegraph 2>/dev/null || true
-test -f .codex/config.toml && grep -n '^\[mcp_servers' .codex/config.toml || true
-test -f ~/.codex/config.toml && grep -n '^\[mcp_servers' ~/.codex/config.toml || true
+codegraph --version 2>/dev/null || true
+codegraph --help 2>/dev/null || true
+codegraph help init 2>/dev/null || true
+codegraph help install 2>/dev/null || true
+
+ast-grep --version 2>/dev/null || true
+ast-grep --help 2>/dev/null || true
 ```
 
-Read full MCP config only when needed, and redact tokens, static headers, customer hostnames, and private paths before echoing snippets back to the user.
+`codegraph --version` is the portable first probe across reviewed legacy and current releases. Use `codegraph version` only after help exposes it. Prefix skill-invoked CodeGraph commands with `CODEGRAPH_TELEMETRY=0` unless the user separately chose to keep telemetry enabled for that action. Preserve `DO_NOT_TRACK=1` when present or requested; do not weaken it merely to permit an update lookup.
 
-Respect the selected package manager's freshness, trust, and build-script policy. If the package manager installs an older mature version or blocks lifecycle scripts, report that behavior and ask before bypassing it.
+Version/help probes are the safest no-write checks. `codegraph status`, MCP graph queries, and other project-opening diagnostics can repair or migrate metadata in the effective state directory (`CODEGRAPH_DIR`, default `.codegraph/`) in some versions. Explain that boundary and obtain affirmative approval for the selected root before running one, or use an approved disposable copy. Under a strict no-write request, skip project-opening commands unless the disposable-copy path was approved.
 
-For npm-family installs, these checks can help distinguish registry latest from policy-selected versions:
+Inspect only relevant config names and paths before reading content:
 
 ```bash
-pnpm config get minimumReleaseAge 2>/dev/null || true
-pnpm config get --json allowBuilds 2>/dev/null || true
-npm view @colbymchenry/codegraph version dist-tags --json
-npm view @ast-grep/cli version dist-tags --json
+find . -maxdepth 3 \
+  \( -path '*/.codex/config.toml' -o -path '*/.cursor/mcp.json' -o -name '.mcp.json' \
+     -o -name 'codegraph.json' -o -name 'sgconfig.yml' -o -name 'sgconfig.yaml' \) \
+  -print 2>/dev/null
 ```
 
-## Setup decisions
+When content inspection is necessary, redact credentials, headers, private service URLs, customer names, and unrelated server entries before reporting it.
 
-Before running install or config-writing commands, present this table and ask the user whether to continue with the recommended global setup or choose a repo-local/diagnostics-only path:
+## Choose a setup profile
 
-| Layer                      | Recommended default            | Repo-local alternative                      | Use repo-local when                                                        |
-| -------------------------- | ------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------- |
-| `codegraph-ast-grep` skill | Global install after release   | Project-local `.agents/skills/` copy        | Developing or testing unreleased skill changes in this repo                |
-| CodeGraph CLI              | Global/user-wide               | One-time runner where practical             | A repo must avoid global workstation tools                                 |
-| CodeGraph MCP              | Global/user-level registration | Project-local config                        | A repo needs pinned server commands or isolated MCP behavior               |
-| CodeGraph index            | Per-repo `.codegraph/`         | None                                        | Always keep index data local to the repo and ignored by Git                |
-| ast-grep CLI               | Global/user-wide               | Project-local dev dependency                | CI, committed rules, or team-reproducible ast-grep behavior                |
-| ast-grep MCP               | Global/user-level registration | Project-local config with `AST_GREP_CONFIG` | The repo has custom `sgconfig.yml`, rule directories, or language mappings |
+Present the applicable profile and obtain approval before executing it.
 
-Global is the recommended default for personal multi-repo use because it keeps the same workflow available everywhere while CodeGraph still stores indexes per repo. Repo-local is better for reproducibility, CI, or unreleased skill development.
+| Profile          | CLI/tool scope                                                            | MCP/config scope                 | Best fit                                               |
+| ---------------- | ------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------ |
+| Personal         | Existing or user-wide installation                                        | User/global runtime config       | One trusted workstation across many repositories       |
+| Team-pinned      | Project dependency, Nix/devbox/toolchain pin, or documented exact release | Project runtime config           | Reproducible team and CI behavior                      |
+| Ephemeral        | Exact package or verified archive in a temp/sandbox path                  | Printed or temporary config only | CI, evaluation, locked-down hosts                      |
+| Diagnostics-only | Existing executables only                                                 | No writes                        | Exploration or repair assessment before setup approval |
 
-Then confirm:
+The CodeGraph index is always per selected project root even when the CLI/MCP registration is user-wide. ast-grep can be user-wide for ad-hoc use or project-local when rules/CI require a reproducible version.
 
-- Install scope: global or user-wide for use across many repos, project-local for one repo or evaluation, or diagnostics-only when tools are already available.
-- Package manager per tool: choose from package managers found in preflight; do not install a new package manager unless the user asks.
-- MCP config location: printed snippet only, CodeGraph-managed local install when supported, user-level Codex registration, or a runtime-specific path after its current config shape is verified.
+## Install channels
 
-CodeGraph and ast-grep do not have identical install channels. If both tools need installation, ask separately for the CodeGraph install path and the ast-grep install path.
-
-| Tool         | Supported choices to offer                                                                                                                                          | Do not imply                                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| CodeGraph    | `npx @colbymchenry/codegraph` for one-time setup, `pnpm add -g @colbymchenry/codegraph`, or `npm install -g @colbymchenry/codegraph` for user-wide CLI availability | Do not offer `brew`, `cargo`, `pip`, `pipx`, `yarn`, or `bun` CodeGraph commands unless upstream documents them. |
-| ast-grep CLI | Project-local `pnpm`, `npm`, `yarn`, or `bun`; user-wide `pnpm`, `npm`, `brew`, `cargo`, `pipx`, or `pip`                                                           | Do not assume a global install when the user only wants to test one repo.                                        |
-| ast-grep MCP | `uvx` runner plus Codex MCP registration when Codex is the target                                                                                                   | Do not treat `uvx` as installing the normal ast-grep CLI.                                                        |
-
-## Global vs project-local MCP registration
-
-Global or user-level runtime MCP registration is the right default when the user wants the same server available across many repositories. For Codex, this avoids repeating `codex mcp add` in each checkout, keeps the Codex server list consistent, and works well for servers that infer the active project from the client root URI or current repo context, such as CodeGraph.
-
-Project-local MCP config is better when a server needs repo-specific environment, pinned commands, or team-reproducible behavior. It avoids leaking experimental tools into unrelated work and can point at a repo `sgconfig.yml`, but each repo needs its own config and the path can become stale after moving a checkout.
-
-For CodeGraph, global MCP plus per-repo `.codegraph/` indexes is usually a good multi-project setup. For ast-grep MCP, global registration without `AST_GREP_CONFIG` is useful for generic structural search; prefer project-local config only when the repo has custom language mappings or rule directories.
-
-Give hints for every package manager found in preflight:
-
-| Package manager | Good fit                         | Hint                                                                                          |
-| --------------- | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `pnpm`          | Project-local or global Node CLI | Good when the user prefers pnpm across repos; global installs may need `pnpm setup` first.    |
-| `npm`           | One-time runners or global CLI   | Broadly available; global installs write to the configured npm prefix.                        |
-| `yarn`          | Project-local CLI                | Good when the repo already uses Yarn; global install behavior depends on the Yarn generation. |
-| `bun`           | Project-local CLI                | Use only if the repo already trusts Bun; verify binary execution after install.               |
-| `brew`          | User-wide binary                 | Good on macOS or Linuxbrew when the user wants a shared CLI outside project lockfiles.        |
-| `cargo`         | User-wide Rust binary            | Good for Rust users; may compile locally and take longer than binary package managers.        |
-| `pipx`          | Isolated Python CLI              | Prefer over `pip` for user-scoped Python CLI installs when available.                         |
-| `pip`           | Python environment install       | Use only when the user explicitly wants the CLI in the active Python environment.             |
-| `uvx`           | One-time MCP server runner       | Useful for ast-grep MCP experiments; it does not install the ast-grep CLI for normal use.     |
-
-When setup is complete, explain the practical improvement in one or two sentences: CodeGraph gives the agent a semantic map for symbols, callers, callees, traces, and impact; ast-grep adds syntax-aware search and rule testing so refactors can start from exact matches instead of broad text search.
-
-## Approval-required command matrix
-
-Run only the selected command or commands after explicit approval. This matrix is the command source of truth for setup; do not repeat or invent install/config/init commands elsewhere.
+Resolve `<version>` from an authoritative stable source and local policy before proposing a command. Do not use an unqualified mutable `latest` in an approved persistent install.
 
 ### CodeGraph
 
-Make CodeGraph available with one of these documented Node/npm-family options:
+Preferred choices, in order:
+
+1. Existing working executable.
+2. Existing npm-family channel with an exact package version.
+3. Exact standalone GitHub release asset plus its published `SHA256SUMS`.
+4. Approved one-time `npx` execution when persistence is unwanted and remote execution is acceptable.
+
+Exact npm-family examples:
 
 ```bash
-npx @colbymchenry/codegraph
-pnpm add -g @colbymchenry/codegraph
-npm install -g @colbymchenry/codegraph
+npm install -g @colbymchenry/codegraph@<version>
+pnpm add -g @colbymchenry/codegraph@<version>
 ```
 
-If the user chooses `brew`, `cargo`, `pipx`, `pip`, `yarn`, or `bun` for ast-grep, still choose one of the CodeGraph options above for CodeGraph itself.
-
-Configure CodeGraph MCP after CodeGraph is on `PATH`:
+For project/declarative setups, use the repository's existing package/toolchain mechanism rather than inventing a global install. For an approved Team-pinned npm-family setup, save an exact manifest pin and the matching lockfile resolution:
 
 ```bash
-codegraph install --target=codex --location=local
-codex mcp add codegraph -- codegraph serve --mcp
+pnpm add --save-dev --save-exact @colbymchenry/codegraph@<version>
+npm install --save-dev --save-exact @colbymchenry/codegraph@<version>
 ```
 
-Use `codegraph install --target=codex --location=local` for CodeGraph-managed local setup when supported. Use `codex mcp add` for manual user-level Codex CLI registration, then verify with `/mcp`.
-
-Initialize a project graph:
+These are separate alternatives, not commands to run together. They write the manifest and lockfile and can run package lifecycle scripts; show that scope and the package manager's trust policy before approval. On POSIX, verify the exact project-local shim rather than a bare package-manager `exec`, which can fall through to another binary on `PATH`:
 
 ```bash
-codegraph init -i
+project_root="<approved-project-root>"
+codegraph_bin="$project_root/node_modules/.bin/codegraph"
+if [ -x "$codegraph_bin" ]; then
+  CODEGRAPH_TELEMETRY=0 "$codegraph_bin" --version
+else
+  printf 'Missing project-local CodeGraph shim: %s\n' "$codegraph_bin" >&2
+  false
+fi
 ```
 
-After initialization, `.codegraph/` stores local index data. If `git status --short` shows it as untracked, ask before editing `.gitignore`; after approval, add `.codegraph/` to the repo `.gitignore` before finalizing.
+Native Windows equivalent:
+
+```powershell
+$projectRoot = "<approved-project-root>"
+$codegraphBin = Join-Path $projectRoot "node_modules\.bin\codegraph.cmd"
+if (-not (Test-Path -LiteralPath $codegraphBin -PathType Leaf)) {
+  throw "Missing project-local CodeGraph shim: $codegraphBin"
+}
+$env:CODEGRAPH_TELEMETRY = "0"
+& $codegraphBin --version
+if ($LASTEXITCODE -ne 0) { throw "Project-local CodeGraph version check failed" }
+```
+
+Confirm that the reported CLI version equals the approved pin and that the manifest/lockfile diff contains only the reviewed dependency change. Use this exact shim for `--help`, `help init`, and `serve --help` too. Never fall back to a global `codegraph` when the local shim is missing.
+
+A reviewable Linux standalone download looks like this; select the asset for the actual architecture and inspect the archive before extraction:
+
+```bash
+set -euo pipefail
+
+version=vX.Y.Z
+asset=codegraph-linux-x64.tar.gz
+base="https://github.com/colbymchenry/codegraph/releases/download/${version}"
+workdir="$(mktemp -d)"
+cd "$workdir"
+
+curl -fL -o "$asset" "$base/$asset"
+curl -fL -o SHA256SUMS "$base/SHA256SUMS"
+grep "  $asset\$" SHA256SUMS | sha256sum -c -
+tar -tzf "$asset"
+printf 'Verified archive: %s/%s\n' "$workdir" "$asset"
+```
+
+Archive extraction and PATH linking require a second approved write step with the chosen destination. On macOS, use the matching Darwin asset and verify the selected checksum with `shasum -a 256` before inspecting the archive. On Windows, download the matching ZIP and `SHA256SUMS`, compare `Get-FileHash -Algorithm SHA256`, inspect the ZIP, then extract only after approval.
+
+Do not default to upstream `curl ... | sh` or `irm ... | iex`. A one-time runner such as `npx @colbymchenry/codegraph@<version>` is also remote code execution and requires approval.
 
 ### ast-grep CLI
 
-Install project-locally with the chosen repo package manager:
+Choose the channel already trusted by the user or repository:
+
+| Channel           | Exact/setup form                                                  | Important policy                                                        |
+| ----------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Project pnpm      | `pnpm add -D @ast-grep/cli@<version>`                             | Includes manifest/lockfile writes and may require build-script approval |
+| Project npm       | `npm install --save-dev @ast-grep/cli@<version>`                  | Includes manifest/lockfile writes                                       |
+| User pnpm         | `pnpm add -g --allow-build=@ast-grep/cli @ast-grep/cli@<version>` | Do not bypass pnpm build policy silently                                |
+| User npm          | `npm install -g @ast-grep/cli@<version>`                          | Writes to configured npm prefix                                         |
+| Cargo             | `cargo install ast-grep --locked --version <version>`             | Compiles locally; preserve Cargo's install root                         |
+| pipx              | `pipx install 'ast-grep-cli==<version>'`                          | Isolated Python CLI environment                                         |
+| pip               | `python -m pip install 'ast-grep-cli==<version>'`                 | Use only in the explicitly selected environment                         |
+| Homebrew/MacPorts | Formula/port install                                              | Usually tracks repository channel; disclose weak exact pin/rollback     |
+| Nix/declarative   | Edit the existing input/package declaration                       | Do not imperatively mutate a declarative environment                    |
+
+The npm package materializes the native executable through its install lifecycle. If a package manager blocks that step, report it and ask before changing trust/build policy. On Linux, use `ast-grep`; `sg` can resolve to the system `setgroups` utility.
+
+For either project npm-family install, verify the exact local shim. Do not use bare `pnpm exec` or `npm exec`: a missing shim must fail instead of searching `PATH`, fetching a package, or executing anything other than the approved `@ast-grep/cli` dependency.
 
 ```bash
-pnpm add -D @ast-grep/cli
-npm install --save-dev @ast-grep/cli
-yarn add --dev @ast-grep/cli
-bun add --dev @ast-grep/cli
+project_root="<approved-project-root>"
+ast_grep_bin="$project_root/node_modules/.bin/ast-grep"
+if [ -x "$ast_grep_bin" ]; then
+  "$ast_grep_bin" --version
+else
+  printf 'Missing project-local ast-grep shim: %s\n' "$ast_grep_bin" >&2
+  false
+fi
 ```
 
-Install user-wide with the chosen package manager:
+On native Windows, require `<approved-project-root>\node_modules\.bin\ast-grep.cmd` with `Test-Path -PathType Leaf`, then invoke that exact path with `& $astGrepBin --version`.
+
+## CodeGraph runtime configuration
+
+First inspect generated MCP configuration without changing runtime config when the installed version supports it:
 
 ```bash
-pnpm add -g --allow-build=@ast-grep/cli @ast-grep/cli
-brew install ast-grep
-cargo install ast-grep --locked
-npm i @ast-grep/cli -g
-pipx install ast-grep-cli
-pip install ast-grep-cli
+DO_NOT_TRACK=1 codegraph install --print-config codex
+DO_NOT_TRACK=1 codegraph install --print-config cursor
+DO_NOT_TRACK=1 codegraph install --print-config claude
 ```
 
-For pnpm global installs, `approve-builds` is not supported after the fact. Use `--allow-build=@ast-grep/cli` during install so the native ast-grep binary is prepared and the CLI does not fall back to runtime binary resolution on every invocation.
+`--print-config` shows an MCP snippet, not every side effect of `codegraph install`. Reviewed CodeGraph 1.4.1 installer behavior can also alter runtime config, legacy instruction markers/hooks, permissions, telemetry choices, global package state, or a Claude prompt hook. Prefer runtime-native MCP-only configuration when that is the user's intent.
 
-### ast-grep MCP
+Generic stdio shape for a verified executable already on the runtime's `PATH`:
 
-`ast-grep-mcp` is experimental. Prefer ast-grep CLI for the fallback path when MCP setup is blocked.
-
-Run or register the MCP server with `uvx`:
-
-```bash
-uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server
-codex mcp add ast-grep -- uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server
-codex mcp add ast-grep \
-  --env AST_GREP_CONFIG="$PWD/sgconfig.yml" \
-  -- uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server
+```json
+{
+  "command": "codegraph",
+  "args": ["serve", "--mcp"]
+}
 ```
 
-## CodeGraph config notes
+Add `--path <approved-project-root>` only when the client does not reliably provide roots/current working directory. Do not persist private absolute paths in public examples.
 
-For non-writing inspection, print the Codex config snippet:
+For a Team-pinned project dependency, do not use bare `codegraph`, `npx`, or bare package-manager `exec`. After installed help confirms `serve --mcp --path`, configure the selected runtime with the exact local shim verified above:
 
-```bash
-codegraph install --print-config codex
-```
+| Runtime environment  | `command`                                                 | `args`                                                    |
+| -------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| POSIX, including WSL | `<approved-project-root>/node_modules/.bin/codegraph`     | `["serve", "--mcp", "--path", "<approved-project-root>"]` |
+| Native Windows       | `<approved-project-root>\node_modules\.bin\codegraph.cmd` | `["serve", "--mcp", "--path", "<approved-project-root>"]` |
 
-Equivalent CodeGraph config shape:
+Use the same native absolute project path in the shim and `--path`; this makes local dependency resolution independent of the client's launch directory and fails if the reviewed dependency is absent. Set `CODEGRAPH_DIR` to the approved plain directory name and `CODEGRAPH_TELEMETRY=0` in the MCP environment unless the user separately opted into telemetry. Before writing runtime config, run the platform-specific version check from the Team-pinned install section. After writing it, reconnect/restart and verify both the stored command/args/environment and the exposed CodeGraph tool list. If the project moves, regenerate the path after approval. If the runtime does not expose a server version, report that limitation instead of claiming MCP itself returned one.
+
+For native Windows JSON/TOML, use a correctly serialized absolute path: forward slashes or escaped backslashes, never a raw backslash string copied from PowerShell output.
+
+### Codex
+
+- Project scope: trusted `.codex/config.toml`.
+- User scope: `~/.codex/config.toml` or `codex mcp add` after approval.
+- Verify with `codex mcp list`, `codex mcp get codegraph`, and `/mcp` when the TUI is available.
+
+Project/user TOML shape:
 
 ```toml
 [mcp_servers.codegraph]
@@ -187,68 +237,230 @@ command = "codegraph"
 args = ["serve", "--mcp"]
 ```
 
-CodeGraph is zero-config for language detection and default excludes. The `.codegraph/` directory stores project index data; do not create or edit `.codegraph/config.json`. To exclude additional generated or build output, update `.gitignore`, then run `codegraph sync` and check `codegraph status`.
-
-Verify in Codex TUI:
-
-```text
-/mcp
-```
-
-## ast-grep CLI notes
-
-Use the package manager and install scope selected by the user. Prefer project-local for one repo or reproducible team use. Prefer global or user-scoped only when the user wants one CLI available across repositories.
-
-Run a project-local install through the package manager:
-
-```bash
-pnpm exec ast-grep --version
-npm exec -- ast-grep --version
-yarn ast-grep --version
-bunx ast-grep --version
-```
-
-Verify:
-
-```bash
-ast-grep --version
-ast-grep --help
-```
-
-On Linux, prefer `ast-grep` instead of `sg` because `sg` can conflict with the system `setgroups` command.
-
-## ast-grep MCP config notes
-
-Without project-specific ast-grep config:
+Approved Team-pinned POSIX project shape; use the native Windows shim from the table when applicable:
 
 ```toml
-[mcp_servers.ast-grep]
-command = "uvx"
-args = ["--from", "git+https://github.com/ast-grep/ast-grep-mcp", "ast-grep-server"]
+[mcp_servers.codegraph]
+command = "<approved-project-root>/node_modules/.bin/codegraph"
+args = ["serve", "--mcp", "--path", "<approved-project-root>"]
+env = { CODEGRAPH_DIR = "<approved-state-directory>", CODEGRAPH_TELEMETRY = "0" }
 ```
 
-With project-specific ast-grep config:
+Codex also supports an MCP `cwd`, but the exact absolute shim above does not depend on launch-directory behavior and binds execution to the reviewed project dependency. Project `.codex/config.toml` is loaded only for a trusted project.
 
-```toml
-[mcp_servers.ast-grep]
-command = "uvx"
-args = ["--from", "git+https://github.com/ast-grep/ast-grep-mcp", "ast-grep-server"]
+Do not use CodeGraph's first-party Codex installer for project-scope or MCP-only intent without inspecting its current target/scope behavior; reviewed 1.4.1 treats Codex setup as user/global and can touch more than the MCP entry.
 
-[mcp_servers.ast-grep.env]
-AST_GREP_CONFIG = "/absolute/path/to/repo/sgconfig.yml"
+### Cursor
+
+- Project scope: `.cursor/mcp.json`.
+- User scope: `~/.cursor/mcp.json`.
+- Verify with Cursor's MCP settings or `cursor-agent mcp list`/`cursor-agent mcp list-tools codegraph` when available.
+
+Cursor may launch MCP subprocesses outside the project root. Use the runtime's workspace variable for global config or an approved absolute project path for local config only after current Cursor behavior is verified. Reviewed CodeGraph 1.4.1 first-party Cursor output accounts for this with `--path`; inspect it before writing.
+
+Approved Team-pinned POSIX project shape; use the native Windows shim from the table when applicable:
+
+```json
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "<approved-project-root>/node_modules/.bin/codegraph",
+      "args": ["serve", "--mcp", "--path", "<approved-project-root>"],
+      "env": {
+        "CODEGRAPH_DIR": "<approved-state-directory>",
+        "CODEGRAPH_TELEMETRY": "0"
+      }
+    }
+  }
+}
 ```
 
-## Approval levels
+### Claude Code
 
-Safe to run without special approval when the user asked for diagnostics:
+- Project/team scope: `.mcp.json` through current `claude mcp add --scope project` behavior.
+- Local/user behavior: inspect current `claude mcp` help and `~/.claude.json` rather than guessing its storage boundary.
+- Verify with `claude mcp list`, `claude mcp get codegraph`, or `/mcp` when available.
+
+Reviewed first-party CodeGraph setup can touch `CLAUDE.md`, permissions, legacy hooks, or a prompt hook in addition to MCP configuration. Use runtime-native MCP-only configuration when those writes were not requested. This path is documentation-verified when a Claude CLI is unavailable locally.
+
+For a Team-pinned Claude project, use the same approved JSON `mcpServers.codegraph` entry shown for Cursor in project `.mcp.json`, then verify the stored entry and connected tools with current Claude CLI/UI behavior. Do not translate the Codex TOML shape into Claude JSON.
+
+### Other MCP clients
+
+Read the client's current MCP documentation, choose its project/user scope, show the stdio entry and destination, and verify the server/tool list. Do not transpose Codex TOML, Cursor JSON, or Claude scope commands into another client.
+
+## Project initialization and configuration
+
+Select the actual indexed root before initialization. In a monorepo, decide whether one root graph or separate package graphs best matches the task.
+
+Current CodeGraph versions that document `CODEGRAPH_DIR` accept only a plain directory name in the project root; the default is `.codegraph`. Record the effective value with the project root and use it in every CLI invocation and MCP environment. If installed/current documentation does not establish this capability, do not assume the override works: use one environment only or offer an approved version update.
+
+When native Windows and WSL share one working tree, never share one index. After separate config approval, use distinct names such as `.codegraph-win` for the native Windows client/CLI and `.codegraph-wsl` for the WSL client/CLI. Keep each runtime, package manager, repository path, `CODEGRAPH_DIR`, and ast-grep invocation in that same environment.
 
 ```bash
-git status --short
-codegraph status
-ast-grep --version
-ast-grep --help
-codex mcp --help
-codegraph install --print-config codex
+codegraph help init
 ```
 
-All install, external runner, MCP registration, config-writing, and graph-initialization commands in the command matrix require explicit approval.
+Then run only the form installed help documents. For example:
+
+```bash
+# Current releases where init performs indexing:
+codegraph init
+
+# Help-confirmed legacy releases where -i requests the initial index:
+codegraph init -i
+```
+
+For an approved Team-pinned POSIX initialization, validate the state-directory value before CodeGraph can fall back to its default, require the exact local shim, and stop on the first failure:
+
+```bash
+set -euo pipefail
+
+project_root="<approved-project-root>"
+codegraph_dir="<approved-state-directory>"
+codegraph_dir="${codegraph_dir#"${codegraph_dir%%[![:space:]]*}"}"
+codegraph_dir="${codegraph_dir%"${codegraph_dir##*[![:space:]]}"}"
+case "$codegraph_dir" in
+  ""|"."|*..*|*/*|*\\*)
+    printf 'Invalid CODEGRAPH_DIR: plain directory name required\n' >&2
+    exit 1
+    ;;
+esac
+
+codegraph_bin="$project_root/node_modules/.bin/codegraph"
+if [ ! -x "$codegraph_bin" ]; then
+  printf 'Missing project-local CodeGraph shim: %s\n' "$codegraph_bin" >&2
+  exit 1
+fi
+
+CODEGRAPH_TELEMETRY=0 CODEGRAPH_DIR="$codegraph_dir" \
+  "$codegraph_bin" init "$project_root"
+```
+
+Use the help-confirmed legacy `-i` form only with a legacy pin. Native Windows validates the selected state directory and exact shim before initialization and checks the command result:
+
+```powershell
+$projectRoot = "<approved-project-root>"
+$codegraphDir = ("<approved-state-directory>").Trim()
+if ([string]::IsNullOrWhiteSpace($codegraphDir) -or $codegraphDir -eq "." -or $codegraphDir.Contains("..") -or $codegraphDir.Contains("/") -or $codegraphDir.Contains("\")) {
+  throw "CODEGRAPH_DIR must be a plain directory name"
+}
+$codegraphBin = Join-Path $projectRoot "node_modules\.bin\codegraph.cmd"
+if (-not (Test-Path -LiteralPath $codegraphBin -PathType Leaf)) {
+  throw "Missing project-local CodeGraph shim: $codegraphBin"
+}
+$env:CODEGRAPH_DIR = $codegraphDir
+$env:CODEGRAPH_TELEMETRY = "0"
+& $codegraphBin init $projectRoot
+if ($LASTEXITCODE -ne 0) { throw "Project-local CodeGraph initialization failed" }
+```
+
+Only after project-opening status verification is separately approved, restate the exact approved root and state directory and bind the executable to that root again:
+
+```bash
+set -euo pipefail
+project_root="<approved-project-root>"
+codegraph_dir="<approved-state-directory>"
+codegraph_dir="${codegraph_dir#"${codegraph_dir%%[![:space:]]*}"}"
+codegraph_dir="${codegraph_dir%"${codegraph_dir##*[![:space:]]}"}"
+case "$codegraph_dir" in
+  ""|"."|*..*|*/*|*\\*) exit 1 ;;
+esac
+codegraph_bin="$project_root/node_modules/.bin/codegraph"
+[ -x "$codegraph_bin" ]
+CODEGRAPH_TELEMETRY=0 CODEGRAPH_DIR="$codegraph_dir" \
+  "$codegraph_bin" status "$project_root"
+```
+
+```powershell
+$projectRoot = "<approved-project-root>"
+$codegraphDir = ("<approved-state-directory>").Trim()
+if ([string]::IsNullOrWhiteSpace($codegraphDir) -or $codegraphDir -eq "." -or $codegraphDir.Contains("..") -or $codegraphDir.Contains("/") -or $codegraphDir.Contains("\")) {
+  throw "CODEGRAPH_DIR must be a plain directory name"
+}
+$codegraphBin = Join-Path $projectRoot "node_modules\.bin\codegraph.cmd"
+if (-not (Test-Path -LiteralPath $codegraphBin -PathType Leaf)) {
+  throw "Missing project-local CodeGraph shim: $codegraphBin"
+}
+$env:CODEGRAPH_DIR = $codegraphDir
+$env:CODEGRAPH_TELEMETRY = "0"
+& $codegraphBin status $projectRoot
+if ($LASTEXITCODE -ne 0) { throw "Project-local CodeGraph status failed" }
+```
+
+Initialization creates index state in the effective directory. In the same environment where the approved `CODEGRAPH_DIR` is set, validate that it is a plain name, then inspect that exact path rather than assuming `.codegraph/`:
+
+```bash
+codegraph_dir="${CODEGRAPH_DIR:-}"
+codegraph_dir="${codegraph_dir#"${codegraph_dir%%[![:space:]]*}"}"
+codegraph_dir="${codegraph_dir%"${codegraph_dir##*[![:space:]]}"}"
+: "${codegraph_dir:=.codegraph}"
+case "$codegraph_dir" in
+  "."|*..*|*/*|*\\*)
+    printf 'Invalid CODEGRAPH_DIR: plain directory name required\n' >&2
+    exit 1
+    ;;
+  *) git check-ignore -q -- "$codegraph_dir/" ||
+     git status --short --untracked-files=all -- "$codegraph_dir/" ;;
+esac
+```
+
+Native PowerShell equivalent:
+
+```powershell
+$codegraphDir = if ([string]::IsNullOrWhiteSpace($env:CODEGRAPH_DIR)) { ".codegraph" } else { $env:CODEGRAPH_DIR.Trim() }
+if ($codegraphDir -eq "." -or $codegraphDir.Contains("..") -or $codegraphDir.Contains("/") -or $codegraphDir.Contains("\")) {
+  throw "CODEGRAPH_DIR must be a plain directory name"
+}
+git check-ignore -q -- "$codegraphDir/"
+if ($LASTEXITCODE -ne 0) { git status --short --untracked-files=all -- "$codegraphDir/" }
+```
+
+Ask before editing `.gitignore`. Never delete, reinitialize, or share an existing index just because its version differs.
+
+When installed/current documentation exposes root `codegraph.json`, use it only for a real project need such as custom extensions, tracked-source excludes, explicitly included first-party ignored source, or selected nested repositories. Show the proposed diff and obtain approval. Configuration changes can require a full re-index; inspect installed help before proposing it.
+
+Do not create `.codegraph/config.json`.
+
+## ast-grep project setup
+
+Inspect existing config first:
+
+```bash
+test -f sgconfig.yml && sed -n '1,220p' sgconfig.yml
+test -f sgconfig.yaml && sed -n '1,220p' sgconfig.yaml
+find . -maxdepth 4 -type d \( -name rules -o -name rule-tests -o -name tests \) -print
+```
+
+Do not create `sgconfig.yml`, rule directories, or test fixtures for an ad-hoc search. Create them only when the user wants reusable rules/CI, show the intended paths, and follow existing repository conventions.
+
+## Experimental ast-grep MCP
+
+Prefer ast-grep CLI. The upstream ast-grep MCP server is experimental, has no stable release line, requires Python plus ast-grep on `PATH`, and should not be persisted from an unpinned Git branch.
+
+For an approved experiment:
+
+1. review and select a full upstream commit;
+2. clone/check out that commit into the approved scope;
+3. run `uv sync --locked` in the reviewed checkout;
+4. configure the runtime to launch that checkout;
+5. record the commit and ast-grep CLI version;
+6. verify exposed tools and keep CLI fallback.
+
+Do not publish an unpinned `uvx --from git+...` MCP entry as a durable default.
+
+## Approval and verification
+
+Treat these as separate approval classes:
+
+| Action                                                | Separate approval           | Verify afterward                                   |
+| ----------------------------------------------------- | --------------------------- | -------------------------------------------------- |
+| Install/update CLI package or archive                 | Yes, per tool               | Executable path, version, help, install provenance |
+| Change package-manager/build trust                    | Yes                         | Effective config and native executable             |
+| Register/edit MCP server                              | Yes, per runtime/scope      | Server list, tool list, restart/reconnect          |
+| Run `codegraph install`                               | Yes, with full side effects | Every touched config/instruction/hook surface      |
+| Open a project for status/graph diagnostics           | Yes, per root or copy       | Intended generated-state boundary and freshness    |
+| Initialize/sync/rebuild graph                         | Yes                         | Selected root, `status`, freshness, ignore state   |
+| Create/edit `codegraph.json` or ast-grep config/rules | Yes                         | Diff, parse/test, index/rule behavior              |
+
+The approval for initialize/sync/rebuild may include its project-opening `status` verification only when that verification and root are named in the checkpoint. After setup, report exact installed versions and scopes, runtime verification, approved graph-status evidence or why it was skipped, ast-grep availability, any unverified path, and the next safe usage command. Do not claim setup complete from file presence alone.

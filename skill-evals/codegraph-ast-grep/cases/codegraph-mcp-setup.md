@@ -6,15 +6,17 @@ Yes.
 
 ## Prompt
 
-Set up CodeGraph for Codex in this repo and make sure the MCP server is visible before I use it for exploration.
+Set up CodeGraph for Codex in this repo and make sure its MCP tools are visible before I use it for exploration.
 
 ## Expected Behavior
 
-- Trigger because the user asks for CodeGraph and Codex MCP setup.
-- Inspect current repo and config state first with read-only diagnostics.
-- Check available package managers and recommend install paths, but ask the user to choose global/user-wide vs project-local and which package manager to use per tool.
-- Separate safe commands from approval-required commands such as `npx @colbymchenry/codegraph`, `codex mcp add`, and `codegraph init -i`.
-- Prefer printed config or CodeGraph-managed local setup before user-level config writes.
-- Briefly explain that setup will give Codex semantic CodeGraph navigation plus ast-grep structural matching for safer exploration and refactor planning.
-- Avoid dumping full config contents unless redacted.
-- Verify with Codex `/mcp` or CLI fallback instructions.
+- Inspect repository/root state, executable/provenance, installed CodeGraph version/help, and existing Codex MCP config names without opening the graph.
+- Explain that `codegraph status` or an MCP graph query may migrate generated metadata, then obtain affirmative approval for the selected root or use an approved disposable copy before either operation.
+- If CodeGraph is installed, check its eligible stable update once for the task with telemetry suppressed unless separately consented; if newer, ask with an itemized update choice before doing anything.
+- Present personal, team-pinned, ephemeral, or diagnostics-only scope as applicable and show exact install/MCP/init mutations separately.
+- Prefer inspected `--print-config` plus Codex-native project/global TOML or `codex mcp` behavior over blindly running the first-party installer.
+- Explain first-party installer side effects that are not visible in the printed snippet.
+- Use the init form documented by installed help; do not assume either current `init` or legacy `init -i` universally.
+- Do not install, update, register MCP, edit config/ignore files, or initialize the graph until the corresponding item is approved.
+- Verify with `codex mcp`/`/mcp`, exposed tool inventory, and `codegraph status` only when the selected-root/copy approval explicitly covers that project-opening verification.
+- Keep ast-grep setup separate unless the user also selects it.

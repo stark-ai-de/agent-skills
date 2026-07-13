@@ -1,7 +1,7 @@
 interface:
-  display_name: "CodeGraph ast-grep"
-  short_description: "CodeGraph and ast-grep setup for agent workflows"
-  default_prompt: "Use $codegraph-ast-grep to set up CodeGraph with ast-grep and use it for repo exploration or safe refactor planning."
+  display_name: "CodeGraph + ast-grep"
+  short_description: "Semantic and structural repo analysis with safe setup"
+  default_prompt: "Use $codegraph-ast-grep to check the selected analysis tools, map semantic impact with CodeGraph, confirm syntax with ast-grep, and keep setup or refactors approval-gated."
 policy:
   allow_implicit_invocation: true
 dependencies:

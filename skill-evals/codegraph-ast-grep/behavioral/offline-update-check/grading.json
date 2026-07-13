@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "case_id": "offline-update-check",
+  "assertions": [
+    {
+      "id": "selected-root",
+      "operator": "contains",
+      "value": "Selected root: `/workspace/offline-app`.",
+      "passed": true,
+      "evidence": "The response makes the synthetic project boundary explicit."
+    },
+    {
+      "id": "installed-capabilities",
+      "operator": "ordered",
+      "value": [
+        "CodeGraph: `/opt/tools/codegraph` 0.9.7",
+        "ast-grep: `/opt/tools/ast-grep` 0.43.0"
+      ],
+      "passed": true,
+      "evidence": "The response identifies both installed tools, versions, and degraded capability surfaces."
+    },
+    {
+      "id": "offline-opt-out",
+      "operator": "contains",
+      "value": "Remote update state: **not checked** because the machine is offline and `DO_NOT_TRACK=1`. No registry, GitHub, update, or fallback API calls will be attempted.",
+      "passed": true,
+      "evidence": "The response honors the offline state, explicit opt-out, and every supplied remote lookup boundary."
+    },
+    {
+      "id": "graph-opening-boundary",
+      "operator": "contains",
+      "value": "I will not run `status`, initialize, sync, rebuild, or query the graph without approval for that possibility.",
+      "passed": true,
+      "evidence": "Potentially migrating graph operations remain approval-gated under strict no-write policy."
+    },
+    {
+      "id": "no-file-or-graph-mutation",
+      "operator": "contains",
+      "value": "No files, configuration, graph state, or source will be changed.",
+      "passed": true,
+      "evidence": "The response preserves every supplied mutation boundary."
+    },
+    {
+      "id": "bounded-structural-inventory",
+      "operator": "count_exact",
+      "value": "/opt/tools/ast-grep run",
+      "expected_count": 4,
+      "passed": true,
+      "evidence": "The proposed local-only fallback contains four bounded ast-grep match commands and no rewrite."
+    },
+    {
+      "id": "semantic-limit-and-residual-risk",
+      "operator": "contains",
+      "value": "These establish syntax occurrences, not semantic callers or complete impact.",
+      "passed": true,
+      "evidence": "The response does not overstate structural matches as semantic proof."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

@@ -1,0 +1,15 @@
+Stable updates were checked once from official package metadata. Impact analysis is paused pending your independent choices.
+
+| Component | Installed                                                                             | Stable target                                     | Exact update                                                                                                                   | Scope / expected changes                                                                                | Validation                                                                                                    | Rollback                                       |
+| --------- | ------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| CodeGraph | 1.3.0 at `/opt/tools/codegraph`; user-wide npm install                                | 1.4.1, official `@colbymchenry/codegraph` package | `CODEGRAPH_TELEMETRY=0 CODEGRAPH_NO_INSTALL_REFRESH=1 CODEGRAPH_NO_PROMPT_HOOK=1 npm install -g @colbymchenry/codegraph@1.4.1` | Network access; replaces the user-wide package and may require npm-prefix privileges. No project files. | Verify resolved PATH and `codegraph --version`; no project-opening status check yet.                          | `npm install -g @colbymchenry/codegraph@1.3.0` |
+| ast-grep  | 0.43.0 at `/workspace/sample-app/node_modules/.bin/ast-grep`; project pnpm dependency | 0.44.1, official `@ast-grep/cli` package          | `pnpm add -D @ast-grep/cli@0.44.1`                                                                                             | Changes `/workspace/sample-app/package.json` and `pnpm-lock.yaml`.                                      | Verify version, run ast-grep rule tests and project-native validation, and review the manifest/lockfile diff. | `pnpm add -D @ast-grep/cli@0.43.0`             |
+
+Reply with an independent choice for each, for example:
+
+- `CodeGraph: update` or `CodeGraph: skip`
+- `ast-grep: update` or `ast-grep: skip`
+
+Approval applies only to the named package update. It does not approve telemetry, prompt hooks, MCP/config refresh, Serena changes, graph opening/sync/reindex, or other dependencies. Skipping either update will not block analysis with its installed version, and skipped updates will not be offered again during this task.
+
+Selected root: `/workspace/sample-app`; effective default graph-state directory: `/workspace/sample-app/.codegraph/`. Serena’s unsupported-language configuration is noted but is not an eligible update because no Serena update or configuration change was selected.
