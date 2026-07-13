@@ -1,6 +1,7 @@
 ---
 import type { CategoryGroup } from "../lib/skills";
 import { withBase } from "../lib/site";
+import OperationBadge from "./OperationBadge.astro";
 
 interface Props {
   basePath?: string;
@@ -18,8 +19,8 @@ const hrefForCategory = (category: string) =>
   groups.length > 0 && (
     <nav class="category-nav" aria-label={label}>
       {groups.map((group) => (
-        <a href={hrefForCategory(group.category)}>
-          <span>{group.label}</span>
+        <a href={hrefForCategory(group.category)} data-focus-target>
+          <OperationBadge bare label={group.label} />
           <small>{group.skills.length}</small>
         </a>
       ))}

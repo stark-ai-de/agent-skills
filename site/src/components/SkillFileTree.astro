@@ -1,0 +1,23 @@
+---
+import type { SkillTreeNode } from "../lib/skills";
+import SkillTreeNodes from "./SkillTreeNodes.astro";
+
+interface Props {
+  tree: SkillTreeNode;
+}
+
+const { tree } = Astro.props;
+---
+
+<section class="skill-tree" aria-labelledby="skill-tree-title">
+  <div class="skill-tree__heading">
+    <div>
+      <p class="skill-tree__eyebrow">Repository map</p>
+      <h2 id="skill-tree-title">Skill files</h2>
+    </div>
+    <p class="skill-tree__hint">Expand or collapse folders. Select a file or marker to open it on GitHub.</p>
+  </div>
+  <div class="skill-tree__surface">
+    <SkillTreeNodes nodes={[tree]} root />
+  </div>
+</section>

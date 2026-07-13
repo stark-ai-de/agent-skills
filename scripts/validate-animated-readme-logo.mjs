@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +26,10 @@ const svgValidator = path.join(skillRoot, "scripts/validate_logo_svg.py");
 const animatedCli = path.join(skillRoot, "scripts/inspect-animated-image.mjs");
 const auditCli = path.join(skillRoot, "scripts/audit-readme-logo-assets.mjs");
 const snippetCli = path.join(skillRoot, "scripts/generate-readme-logo-snippet.mjs");
+const skillMarkdown = path.join(skillRoot, "SKILL.md");
+const localToolingReference = path.join(skillRoot, "references/local-tooling.md");
+const assetPipelineReference = path.join(skillRoot, "references/asset-pipeline.md");
+const outputContractReference = path.join(skillRoot, "references/output-contract.md");
 const temp = mkdtempSync(path.join(tmpdir(), "animated-readme-logo-validator-"));
 let checkCount = 0;
 
@@ -255,6 +267,28 @@ function snippetArgs(assetPath) {
 }
 
 try {
+  check("local-tool installation and browser fallback contract", () => {
+    const skill = readFileSync(skillMarkdown, "utf8");
+    const localTooling = readFileSync(localToolingReference, "utf8");
+    const assetPipeline = readFileSync(assetPipelineReference, "utf8");
+    const outputContract = readFileSync(outputContractReference, "utf8");
+
+    assert.match(skill, /requested export or inspection needs a missing local command/);
+    assert.match(skill, /Keep provider approval and local-tool installation approval as separate/);
+    assert.match(localTooling, /Ask for explicit approval of that exact installation/);
+    assert.match(
+      localTooling,
+      /Verify executable versions and the requested encoder, muxer, and filter support/,
+    );
+    assert.match(localTooling, /agent-browser skills get core/);
+    assert.match(localTooling, /Only when no compatible local browser exists/);
+    assert.match(assetPipeline, /required exporter or inspector command/);
+    assert.match(
+      outputContract,
+      /Local-tool approval: pending \| approved \| declined \| not-required/,
+    );
+  });
+
   const formats = [
     {
       name: "gif",

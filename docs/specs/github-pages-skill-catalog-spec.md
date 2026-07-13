@@ -7,7 +7,7 @@ status: "draft"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-05-26"
-updated: "2026-05-26"
+updated: "2026-07-13"
 source_request: "Generate a Codex-ready spec for a GitHub Pages setup in this repo using the style, metadata, icons, favicons, and related brand assets of stark-ai.de."
 ---
 
@@ -25,7 +25,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 
 - Add an Astro static site under `site/`.
 - Generate one page for every public skill under `skills/**/SKILL.md`.
-- Generate one page for every incubator skill under `incubator/skills/**/SKILL.md`, except `skillopt-setup` for this GitHub Pages release.
+- Generate one page for every incubator skill under `incubator/skills/**/SKILL.md`.
 - Add catalog index pages for public and incubator skills.
 - Add a focused home page that makes the skill catalog the first screen.
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
@@ -42,15 +42,14 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Do not add a runtime API, server rendering, search backend, contact form, analytics, or tracking.
 - Do not make the site depend on the sibling `stark-ai.de` checkout during CI or local builds.
 - Do not change the Agent Skills runtime format or skill promotion rules.
-- Do not include, modify, stage, or release files related to `skillopt-setup`; that skill is planned for a separate later release.
 
 ## Repo context
 
 - Relevant files/directories:
   - `skills/**/SKILL.md`
   - `incubator/skills/**/SKILL.md`
-  - `incubator/skills/skill-maintenance/skillopt-setup/` is explicitly excluded for this release.
-  - `skill-evals/skillopt-setup/` is explicitly excluded for this release.
+  - `incubator/skills/skill-maintenance/skillopt-setup/` is cataloged as an incubator candidate.
+  - `skill-evals/skillopt-setup/` provides eval proof linked from that candidate page.
   - `README.md`
   - `docs/assets/stark-ai-de-agent-skills-logo.svg`
   - `docs/adrs.md`
@@ -99,12 +98,11 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 ### Functional requirements
 
 - WHEN the site builds, THE SYSTEM SHALL discover public skills from `skills/**/SKILL.md`.
-- WHEN the site builds, THE SYSTEM SHALL discover incubator skills from `incubator/skills/**/SKILL.md` except `incubator/skills/skill-maintenance/skillopt-setup/SKILL.md`.
+- WHEN the site builds, THE SYSTEM SHALL discover incubator skills from `incubator/skills/**/SKILL.md`.
 - WHEN a public skill exists, THE SYSTEM SHALL generate `/skills/<skill-name>/`.
 - WHEN an incubator skill exists, THE SYSTEM SHALL generate `/incubator/<skill-name>/`.
 - WHEN a skill page renders, THE SYSTEM SHALL show the skill name, description, category, source path, install or local usage guidance, and key metadata available from frontmatter.
-- WHEN a public skill has eval proof under `skill-evals/<skill-name>/`, THE SYSTEM SHALL link to that proof.
-- WHEN skill or eval discovery runs, THE SYSTEM SHALL ignore `skillopt-setup` and `skill-evals/skillopt-setup/` for this release.
+- WHEN a cataloged skill has eval proof under `skill-evals/<skill-name>/`, THE SYSTEM SHALL link to that proof.
 - WHEN a skill has `agents/openai.yaml`, THE SYSTEM SHALL indicate Codex/OpenAI metadata is available without requiring every skill to have it.
 - WHEN a user views incubator pages, THE SYSTEM SHALL clearly label them as candidate skills outside the promoted public catalog.
 - WHEN the site is deployed under GitHub Pages, THE SYSTEM SHALL load routes and assets correctly under `/agent-skills/`.
@@ -193,8 +191,6 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - `incubator/skills/**/SKILL.md`, except for explicitly approved metadata fixes.
 - `.agents/`
 - `docs/specs/do-not-publish/`
-- `incubator/skills/skill-maintenance/skillopt-setup/`
-- `skill-evals/skillopt-setup/`
 - Release scripts and skill validation behavior unless needed to add site validation commands.
 
 ## Execution plan
@@ -202,7 +198,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 1. Read accepted ADR-0017 and keep the implementation within that decision.
 2. Add the Astro site structure under `site/` and wire it into the root pnpm workspace.
 3. Copy approved static brand assets from `stark-ai.de` into `site/public/`.
-4. Implement build-time skill discovery from `skills/` and `incubator/skills/`, excluding `skillopt-setup` for this release.
+4. Implement build-time skill discovery from `skills/` and `incubator/skills/`, including `skillopt-setup` as an incubator candidate with eval proof.
 5. Implement the home page, public skill index, incubator index, and skill detail pages.
 6. Implement brand styling using the `stark-ai.de` visual language:
    - primary `#0021c7`
@@ -243,7 +239,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - Use Astro instead of Next.js for this repository because the target is a static catalog and GitHub Pages site.
   - Treat the sibling website as the design source, not a build dependency.
   - Require a short ADR before implementation because this changes repo build/deploy policy.
-  - Exclude `skillopt-setup` files from this GitHub Pages release because that skill is planned for a separate later release.
+  - Include `skillopt-setup` as an incubator candidate now that its public skill and eval proof are available, without presenting it as a promoted skill.
 - Requirements preserved:
   - Each skill gets a separate page.
   - Website styling, metadata, icons, and favicons should align with `stark-ai.de`.
@@ -338,14 +334,14 @@ npm run smoke:install
   - After merge, verify the deployed Pages URL and add or adjust README links if the URL differs from the assumed project URL.
 - Later adjustment guidance:
   - Do not write a follow-up spec just to enable Pages settings or update the verified deployed URL; treat those as rollout tasks.
-  - Write a compact follow-up spec when the later work changes scope, such as including `skillopt-setup`, moving to a custom domain or `stark-ai.de` subpath, adding search/analytics/runtime behavior, or introducing an automated brand-asset sync.
+  - Write a compact follow-up spec when later work changes scope, such as moving to a custom domain or `stark-ai.de` subpath, adding search/analytics/runtime behavior, or introducing an automated brand-asset sync.
 
 ## Done when
 
 - [x] ADR-0017 is accepted.
 - [ ] The Astro site builds locally.
 - [ ] Public and incubator skill pages are generated from current `SKILL.md` files.
-- [ ] `skillopt-setup` skill and eval files are not modified, staged, or included in generated site content for this release.
+- [ ] `skillopt-setup` is generated only as an incubator candidate and links to its eval proof without changing the skill or eval source files.
 - [ ] Brand assets, favicons, manifest, SEO metadata, and social metadata are present.
 - [ ] GitHub Pages workflow builds on PRs and deploys only from `main`.
 - [ ] README and validation docs reflect the new site and commands.

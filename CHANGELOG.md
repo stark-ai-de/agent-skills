@@ -12,6 +12,24 @@
 
 ### Removed
 
+## v0.11.0 - 2026-07-13
+
+### Added
+
+### Changed
+
+- Updated `animated-readme-logo` to 0.3.0 with an approval-gated minimal exporter preflight and a configured Chromium/`agent-browser` preview fallback before any browser download.
+
+### Fixed
+
+- Separated browser-preview failures from raster-export readiness and provider approval from local-tool installation approval.
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.10.1 - 2026-07-13
 
 ### Added

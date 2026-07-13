@@ -1,8 +1,33 @@
 <p align="center">
-  <img src="docs/assets/stark-ai-de-agent-skills-logo.svg" alt="Agent Skills by stark-ai-de" width="760">
+  <picture>
+    <source
+      srcset="docs/assets/stark-ai-de-agent-skills-logo-static.svg"
+      media="(prefers-reduced-motion: reduce)"
+    />
+    <source
+      srcset="docs/assets/stark-ai-de-agent-skills-logo-animated.gif"
+      type="image/gif"
+    />
+    <img
+      src="docs/assets/stark-ai-de-agent-skills-logo-static.svg"
+      alt="Agent Skills by stark-ai-de"
+      width="720"
+      height="240"
+    />
+  </picture>
 </p>
 
-# Agent Skills
+<h1 align="center">Agent Skills</h1>
+
+<p align="center">
+  Reviewed workflows for Codex, Cursor, Claude Code, and portable engineering tasks.
+  <br />
+  <a href="https://stark-ai-de.github.io/agent-skills/">Browse the catalog</a>
+  ·
+  <a href="skills/README.md">Explore public skills</a>
+  ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
 
 [![skills.sh](https://skills.sh/b/stark-ai-de/agent-skills)](https://www.skills.sh/stark-ai-de/agent-skills)
 [![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
@@ -10,298 +35,139 @@
 [![GitHub Pages](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml)
 [![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
-Public Agent Skills for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.
+Public skills are reviewed before promotion. Draft and experimental workflows stay in the incubator until they have enough evaluation proof and a clear maintenance path.
 
-Skills in this repository are reviewed before they are added to the public catalog. Draft and experimental skills live in the incubator until they have enough evaluation proof and maintenance clarity.
+## Quick start
 
-Browse the generated GitHub Pages catalog at <https://stark-ai-de.github.io/agent-skills/>.
-
-## Install
-
-Check available public skills:
+List the public catalog without installing anything:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
 ```
 
-This only lists skills; it does not install them or create a skills.sh install event.
-
-Install all Cursor-ready public skills globally for Cursor:
+Install one skill into the agent detected for the current project:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass
 ```
 
-Install the Cursor-native spec interviewer project-locally for Cursor:
+Update installed skills:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor
+npx skills@latest update
 ```
-
-Install the Cursor-native memory curator project-locally for Cursor:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor
-```
-
-Install all Claude Code-ready public skills project-locally for Claude Code:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer claude-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -a claude-code -y
-```
-
-Install them globally for Claude Code:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer claude-memory-curator codegraph-ast-grep architecture-compass animated-readme-logo -g -a claude-code -y
-```
-
-Install all Codex-ready public skills globally for Codex:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams animated-readme-logo -g -a codex -y
-```
-
-Avoid `--skill '*'` for a single runtime: the wildcard selects every public skill, so it would also install Cursor- and Claude-specific skills such as `cursor-spec-interviewer`, `cursor-memory-curator`, and `claude-spec-interviewer` into Codex.
-
-Install a promoted public skill for Codex:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a codex
-```
-
-Use `codegraph-ast-grep` when a repo needs reliable CodeGraph plus ast-grep setup, stable analysis-tool update checks, semantic exploration, structural search, impact analysis, or refactor planning:
-
-```text
-Use $codegraph-ast-grep to check the selected analysis tools, map semantic impact with CodeGraph, confirm syntax with ast-grep, and keep setup or refactors approval-gated.
-```
-
-Typical use cases:
-
-- explain how a validation, build, route, or feature flow works before editing it,
-- find callers, callees, and likely impact before changing a shared function,
-- trace how one symbol or request path reaches another,
-- find exact code shapes such as unsafe writes, repeated handlers, or deprecated API calls,
-- combine semantic scope from CodeGraph with syntax-exact ast-grep matches for small refactors,
-- check selected analysis tools once per task and ask before any itemized update.
-
-Install the same portable skill for Cursor when a Cursor project needs CodeGraph plus ast-grep guidance:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a cursor -y
-```
-
-Install the portable Architecture Compass for Cursor:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor -y
-```
-
-Install the portable animated README logo workflow for Cursor:
-
-```bash
-npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor -y
-```
-
-Use `codex-spec-interviewer` when a coding request is still fuzzy:
-
-```text
-/plan Use $codex-spec-interviewer to turn this refactor idea into a Codex-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
-```
-
-Use `codex-memory-curator` when Codex memory state needs review or cleanup:
-
-```text
-Use $codex-memory-curator to audit my Codex memories for stale repo rules, sensitive entries, and cleanup candidates.
-```
-
-Use `cursor-spec-interviewer` when a Cursor Agent coding request is still fuzzy:
-
-```text
-Switch to Plan Mode, then use /cursor-spec-interviewer to turn this Cursor refactor idea into a Cursor-ready implementation spec with acceptance criteria, validation commands, and an ADR gate result.
-```
-
-Use `cursor-memory-curator` when Cursor durable context needs review or cleanup:
-
-```text
-Use $cursor-memory-curator to audit my Cursor rules, stale persistent context, and cleanup candidates.
-```
-
-Use `claude-spec-interviewer` when a Claude Code coding request is still fuzzy:
-
-```text
-/claude-spec-interviewer Turn this Claude Code refactor idea into a persisted implementation spec with acceptance criteria, validation commands, and an ADR gate result; enter native Plan mode first when the host tool is available.
-```
-
-Use `claude-memory-curator` when Claude Code durable context needs review or cleanup:
-
-```text
-Use $claude-memory-curator to audit my CLAUDE.md files, Claude rules, auto memory, stale instructions, and cleanup candidates.
-```
-
-Use `architecture-compass` when a repository needs ADR guardrails or ADR-guided refactoring:
-
-```text
-Use $architecture-compass in setup mode to install ADR guardrails, or refactor mode to align code with repo ADRs, stack rules, and examples.
-```
-
-Architecture Compass uses a planning phase for unresolved durable choices or broad, multi-boundary, behavior-changing, or phased refactors. Narrow behavior-preserving ADR-backed changes remain direct, audits stay read-only, and PR or diff checks prefer the host review surface. The skill detects the current host's available planning, review, and permission controls instead of assuming one runtime command works everywhere.
-
-Use `drawio-diagrams` when a task needs editable draw.io / diagrams.net output:
-
-```text
-Use $drawio-diagrams to create, edit, verify, or export an editable .drawio architecture diagram.
-```
-
-Use `animated-readme-logo` when a README needs a new, transformed, animated, or reviewed logo pipeline:
-
-```text
-Use $animated-readme-logo to create a validated README logo source, check Recraft V4.1 only when the task needs a new mark, and prepare accessible fallback markup without spending credits until I approve the quoted cost.
-```
-
-## Public Catalog
-
-The public catalog lives under [`skills/`](skills/README.md). Candidate, experimental, personal, private, or third-party helper skills do not belong in this tree.
-
-| Skill                                                                                  | Use when                                                                                                                                                                     | Proof                                                                                   |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`animated-readme-logo`](skills/engineering-workflows/animated-readme-logo/SKILL.md)   | A README logo needs review, creation, transformation, validated SVG authoring, provider-aware source routing, accessible motion planning, or honest raster-export readiness. | [`skill-evals/animated-readme-logo/`](skill-evals/animated-readme-logo/README.md)       |
-| [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)   | A repository needs ADR governance setup, or code/diffs/new implementation must follow ADRs, stack rules, source structure, and runtime boundaries.                           | [`skill-evals/architecture-compass/`](skill-evals/architecture-compass/README.md)       |
-| [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)     | Claude Code durable context is stale, noisy, conflicting, sensitive, misplaced, unenforced, or needs review, cleanup plans, or destination classification.                   | [`skill-evals/claude-memory-curator/`](skill-evals/claude-memory-curator/README.md)     |
-| [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Claude Code task needs a persisted Claude-ready spec first.                           | [`skill-evals/claude-spec-interviewer/`](skill-evals/claude-spec-interviewer/README.md) |
-| [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)       | CodeGraph and ast-grep need portable setup, stable update checks, semantic exploration, structural evidence, impact analysis, or safe refactors.                             | [`skill-evals/codegraph-ast-grep/`](skill-evals/codegraph-ast-grep/README.md)           |
-| [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md)        | Codex memory state is stale, noisy, repo-specific, sensitive, conflicting, or needs review, cleanup plans, destination classification, or config tuning.                     | [`skill-evals/codex-memory-curator/`](skill-evals/codex-memory-curator/README.md)       |
-| [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md)    | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Codex task needs a user-verified, persisted Codex-ready spec first.                   | [`skill-evals/codex-spec-interviewer/`](skill-evals/codex-spec-interviewer/README.md)   |
-| [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md)     | Cursor durable context is stale, noisy, ignored, sensitive, conflicting, or needs review, cleanup plans, destination classification, or settings action guidance.            | [`skill-evals/cursor-memory-curator/`](skill-evals/cursor-memory-curator/README.md)     |
-| [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md) | The user asks for a spec, implementation plan, PRD, or plan before coding, and a fuzzy Cursor Agent task needs a user-verified, persisted Cursor-ready spec first.           | [`skill-evals/cursor-spec-interviewer/`](skill-evals/cursor-spec-interviewer/README.md) |
-| [`drawio-diagrams`](skills/engineering-workflows/drawio-diagrams/SKILL.md)             | Editable draw.io / diagrams.net diagrams need to be created, edited, verified, repaired, or exported as `.drawio`, PNG, SVG, or PDF.                                         | [`skill-evals/drawio-diagrams/`](skill-evals/drawio-diagrams/README.md)                 |
-
-## Repository Layout
-
-- [`skills/`](skills/README.md) - promoted public skills installable through `npx skills`.
-- [`incubator/skills/`](incubator/README.md) - candidate skills with `metadata.internal: true`; not public catalog entries.
-- [`skill-evals/`](skill-evals/README.md) - maintainer proof for promotion decisions, kept outside runtime skill payloads.
-- [`docs/specs/`](docs/specs/README.md) - publishable implementation specs; private, exploratory, sensitive, or not-yet-public specs belong in ignored `do-not-publish/`.
-- [`docs/specs.md`](docs/specs.md) - repository policy for persisted implementation specs.
-- [`docs/adrs/`](docs/adrs/README.md) - short decision record files for repo-level policy.
-- [`docs/adrs.md`](docs/adrs.md) - ADR policy and index.
-- [`site/`](site/) - Astro static GitHub Pages site generated from public and incubator `SKILL.md` files.
-- `.agents/skills/` - ignored maintainer-local helper installs; not part of this catalog.
-- `.claude/skills/` - optional ignored Claude Code project-local installs; not part of this catalog.
-
-## Specs and ADRs
-
-See [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples, ADR linkage, and repo-facing documentation update rules. See [`docs/adrs.md`](docs/adrs.md) for ADR policy and the index.
 
 <details>
-<summary>Incubator map</summary>
+<summary><strong>Install the Codex bundle</strong></summary>
 
-| Problem                                     | Candidate skills                                                                                                                                                                       |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent loses context                         | [`codex-context-guard`](incubator/skills/codex-operations/codex-context-guard/SKILL.md), [`handoff`](incubator/skills/productivity/handoff/SKILL.md)                                   |
-| Repo maintenance is unclear                 | [`repo-health-audit`](incubator/skills/repo-maintenance/repo-health-audit/SKILL.md)                                                                                                    |
-| Pull request review is too shallow          | [`pr-review`](incubator/skills/repo-maintenance/pr-review/SKILL.md)                                                                                                                    |
-| Issues are messy                            | [`issue-triage`](incubator/skills/repo-maintenance/issue-triage/SKILL.md)                                                                                                              |
-| Skill quality or installability is drifting | [`skill-repo-curator`](incubator/skills/skill-maintenance/skill-repo-curator/SKILL.md), [`skill-authoring-review`](incubator/skills/skill-maintenance/skill-authoring-review/SKILL.md) |
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
+```
 
 </details>
 
-## Promotion Model
+<details>
+<summary><strong>Install the Cursor bundle</strong></summary>
 
-Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`.
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a cursor -y
+```
 
-Before promotion, a skill needs:
+</details>
 
-- evidence that it improves work quality,
-- activation tests for when it should and should not trigger,
-- a general or high-value use case,
-- manageable maintenance cost,
-- reviewable proof under `skill-evals/<skill>/`.
+<details>
+<summary><strong>Install the Claude Code bundle</strong></summary>
 
-For promotion and public-contract documentation updates, see [`docs/specs.md`](docs/specs.md#documentation-updates).
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+```
+
+</details>
+
+Each bundle contains the skills from its matching `*-operations` category plus every public skill outside the operations categories. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
+
+## Choose a skill
+
+| When you need to…                                                    | Use                                                                                                                                                                                                                                                                    | Scope                |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Turn a fuzzy coding request into an implementation-ready spec        | [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md), [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md), or [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | Runtime-specific     |
+| Audit or clean persistent agent context                              | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md), [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md), or [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)             | Runtime-specific     |
+| Set up ADR guardrails or align a refactor with accepted decisions    | [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)                                                                                                                                                                                   | Cross-runtime        |
+| Combine semantic impact analysis with syntax-exact structural search | [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)                                                                                                                                                                                       | Cross-runtime        |
+| Create, edit, validate, or export an editable diagram                | [`drawio-diagrams`](skills/engineering-workflows/drawio-diagrams/SKILL.md)                                                                                                                                                                                             | Engineering workflow |
+| Create or transform an accessible README logo pipeline               | [`animated-readme-logo`](skills/engineering-workflows/animated-readme-logo/SKILL.md)                                                                                                                                                                                   | Engineering workflow |
+
+See the [complete public catalog](skills/README.md) for exact trigger descriptions and [`skill-evals/`](skill-evals/README.md) for maintainer proof.
+
+## How the catalog works
+
+| Path                                       | Purpose                                               | Published?            |
+| ------------------------------------------ | ----------------------------------------------------- | --------------------- |
+| [`skills/`](skills/README.md)              | Reviewed skills discoverable through `npx skills`     | Yes                   |
+| [`incubator/skills/`](incubator/README.md) | Candidate, experimental, or not-yet-public skills     | No                    |
+| [`skill-evals/`](skill-evals/README.md)    | Activation cases, comparisons, and promotion evidence | Maintainer proof only |
+| [`site/`](site/)                           | Astro source for the generated catalog                | GitHub Pages          |
+
+Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`, backed by demonstrated value, activation tests, a reusable use case, manageable maintenance, and reviewable evaluation proof. See the [spec policy](docs/specs.md#documentation-updates) for public-contract updates.
 
 ## Development
 
-Install dependencies:
-
 ```bash
 pnpm install
+npm run validate
 ```
 
-Common commands:
+<details>
+<summary><strong>Common maintainer commands</strong></summary>
 
-| Command                                 | Purpose                                                             |
-| --------------------------------------- | ------------------------------------------------------------------- |
-| `npm run list`                          | List promoted public skills.                                        |
-| `npm run list:incubator`                | List incubator skills.                                              |
-| `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts.           |
-| `npm run smoke:install`                 | Test public install discovery from a clean copy without `.agents/`. |
-| `npx skills@latest add ./skills --list` | Check local public skill discovery.                                 |
-| `pnpm --filter ./site build`            | Build the generated GitHub Pages catalog.                           |
-| `pnpm format:check`                     | Check formatting.                                                   |
-| `pnpm lint`                             | Lint scripts.                                                       |
-| `node scripts/validate-release.mjs`     | Validate release readiness from `package.json`.                     |
-| `node scripts/print-release-notes.mjs`  | Print release notes from `CHANGELOG.md`.                            |
+| Command                                 | Purpose                                                  |
+| --------------------------------------- | -------------------------------------------------------- |
+| `npm run list`                          | List promoted public skills                              |
+| `npm run list:incubator`                | List incubator skills                                    |
+| `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts |
+| `npm run smoke:install`                 | Test public discovery from a clean copy                  |
+| `npx skills@latest add ./skills --list` | Check local public skill discovery                       |
+| `pnpm --filter ./site build`            | Build the generated catalog                              |
+| `pnpm format:check`                     | Check formatting                                         |
+| `pnpm lint`                             | Lint repository scripts                                  |
+| `node scripts/validate-release.mjs`     | Validate release readiness                               |
 
-Scaffold a promoted skill only when promotion proof is ready:
+Scaffold a skill only when its destination is clear:
 
 ```bash
 npm run scaffold repo-maintenance/my-new-skill
-```
-
-Scaffold an incubator skill:
-
-```bash
 npm run scaffold:incubator engineering-workflows/my-candidate-skill
 ```
 
-## Maintainer Docs
+</details>
 
-- [Domain glossary](CONTEXT.md)
-- [Validation](docs/validation.md)
-- [Publishing](docs/publishing.md)
-- [Skill examples](docs/examples/README.md)
-- [Out-of-scope boundaries](docs/out-of-scope/README.md)
-- [Decision records](docs/adrs.md)
+## Documentation
 
-## Relevant Sources
+| Topic                                | Reference                                                                   |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| Naming, safety, and review rules     | [Contributing](CONTRIBUTING.md)                                             |
+| Validation and CI                    | [Validation](docs/validation.md)                                            |
+| Publishing and release flow          | [Publishing](docs/publishing.md)                                            |
+| Specs and durable decisions          | [Spec policy](docs/specs.md) · [ADR index](docs/adrs.md)                    |
+| Domain language and boundaries       | [Glossary](CONTEXT.md) · [Out of scope](docs/out-of-scope/README.md)        |
+| Logo animation and fallback behavior | [Motion specification](docs/assets/stark-ai-de-agent-skills-logo-motion.md) |
 
-- [Agent Skills specification](https://agentskills.io/specification) - canonical `SKILL.md` format, frontmatter constraints, optional `scripts/`, `references/`, and `assets/`, progressive disclosure, and validation.
-- [Agent Skills evaluation guide](https://agentskills.io/skill-creation/evaluating-skills) - upstream guidance for skill eval cases, with-skill versus baseline runs, assertions, grading evidence, timing, and benchmark summaries.
-- [Agent Skills description optimization](https://agentskills.io/skill-creation/optimizing-descriptions) - upstream guidance for trigger eval queries, positive and negative cases, repeated runs, and train/validation splits.
-- [Agent Skills client implementation guide](https://agentskills.io/client-implementation/adding-skills-support) - discovery, activation, `.agents/skills/` conventions, and progressive disclosure behavior across clients.
-- [Vercel Agent Skills docs](https://vercel.com/docs/agent-resources/skills) - `npx skills` installation flow and public skill discovery.
-- [Vercel skills CLI README](https://github.com/vercel-labs/skills/blob/main/README.md) - CLI source formats and `metadata.internal: true` behavior for hiding work-in-progress skills from normal discovery.
-- [OpenAI agent evals guide](https://developers.openai.com/api/docs/guides/agent-evals) and [OpenAI evaluation best practices](https://developers.openai.com/api/docs/guides/evaluation-best-practices) - broader guidance for traces, graders, datasets, repeatable eval runs, and continuous evaluation.
-- [Anthropic evaluation guidance](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests) - broader guidance for success criteria, task-specific evals, edge cases, and grading methods.
+<details>
+<summary><strong>Standards and upstream references</strong></summary>
 
-## Compatibility
+- [Agent Skills specification](https://agentskills.io/specification)
+- [Agent Skills evaluation guide](https://agentskills.io/skill-creation/evaluating-skills)
+- [Agent Skills description optimization](https://agentskills.io/skill-creation/optimizing-descriptions)
+- [Vercel skills CLI](https://github.com/vercel-labs/skills)
 
-This repo follows the open Agent Skills specification:
+</details>
 
-https://agentskills.io/specification
+## Compatibility and safety
 
-Each skill is a directory with a required `SKILL.md` file containing `name` and `description` frontmatter, plus optional `references/`, `scripts/`, and `assets/`.
+This repository follows the open Agent Skills specification. Individual compatibility varies by skill and host; read a skill's `SKILL.md` before installing it. Runtime-specific skills stay in their runtime category, while reusable workflows live under `engineering-workflows`.
 
-Codex CLI is the primary runtime, but the skills are kept portable for Vercel skills CLI, Claude Code, Cursor, GitHub Copilot agent environments where compatible, and other agents that support the open Agent Skills format. Claude-specific plugin metadata is intentionally omitted until an ADR makes it a supported publishing surface.
-
-Public skill helper scripts prefer dependency-free Node.js `.mjs` files for macOS, Linux, Windows, WSL, and CI portability. See [ADR-0014](docs/adrs/0014-prefer-node-skill-helper-scripts.md).
-
-## Safety
-
-Skills are executable context. Review any skill before installing it into an agent runtime.
-
-This repository avoids destructive scripts in v1. Helper scripts are read-only unless their own documentation explicitly says otherwise. Do not add secrets, tokens, customer data, private repo paths, or internal hostnames to skills, references, assets, tests, or examples.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for naming, frontmatter, safety, validation, and review rules. Every skill must keep `SKILL.md` concise and move long rubrics, examples, and templates into `references/` or `assets/`.
+Skills are executable context. Helper scripts are read-only unless their documentation explicitly says otherwise. Never add secrets, tokens, customer data, private repository paths, or internal hostnames to public skills, references, assets, tests, or examples.
 
 ## License
 
-Apache-2.0 for the skills and repository material published from this repo.
+[Apache-2.0](LICENSE) for the skills and repository material published here.

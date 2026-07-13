@@ -1,6 +1,6 @@
 # animated-readme-logo Eval Proof
 
-This folder contains self-contained routing and safety cases for `animated-readme-logo` v0.2.0 and its v0.9.0 promotion candidate.
+This folder contains self-contained routing and safety cases for `animated-readme-logo` v0.3.0. Historical v0.2.0 promotion proofs remain under `runs/`.
 
 ## What the set proves
 
@@ -10,6 +10,7 @@ This folder contains self-contained routing and safety cases for `animated-readm
 - No credit-consuming call while approval is pending, declined, unavailable, indeterminate, or not required.
 - Equivalent direct local SVG fallback and optional draw.io assistance only when materially useful.
 - Strict SVG readiness, deterministic motion, capability-gated export, and honest status reporting.
+- Explicit approval before minimal exporter installation and configured-browser fallback before any browser download.
 - Root-bounded README audits that reject absolute, UNC, traversal, and symlink escapes.
 - One portable workflow without agent-specific commands or forks.
 
@@ -35,6 +36,8 @@ Existing assets, review, and transformation:
 Capability, portability, and safety:
 
 - `cases/export-capability-unavailable.md`
+- `cases/export-install-approval.md`
+- `cases/browser-preview-fallback.md`
 - `cases/readme-path-safety.md`
 - `cases/portable-agent-host.md`
 

@@ -9,7 +9,9 @@ const casesDir = path.join(root, "skill-evals/animated-readme-logo/cases");
 const expectedCaseNames = [
   "animated-gif-only.md",
   "app-animation-negative.md",
+  "browser-preview-fallback.md",
   "export-capability-unavailable.md",
+  "export-install-approval.md",
   "expressive-mark-style.md",
   "lottie-readme-request.md",
   "no-initial-asset.md",
@@ -32,6 +34,28 @@ const publicFields = [
   "SVG readiness",
   "Export status",
 ];
+const caseTextRequirements = new Map([
+  [
+    "browser-preview-fallback.md",
+    [
+      "managed Chrome or Chromium executable",
+      "agent-browser skills get core",
+      "separate explicit approval",
+      "manual committed-GitHub preview",
+    ],
+  ],
+  [
+    "export-install-approval.md",
+    [
+      "exact install command",
+      "persistence scope",
+      "disk impact",
+      "verification commands",
+      "Local-tool approval: pending",
+      "install nothing while pending",
+    ],
+  ],
+]);
 
 function parseArgs(argv) {
   const args = { caseFile: null, artifactsDir: null };
@@ -175,6 +199,12 @@ function validateCaseSchema(caseFile) {
       if (!expected.includes(field)) {
         errors.push(`${relative}: positive case must assert the ${field} public field`);
       }
+    }
+  }
+
+  for (const requiredText of caseTextRequirements.get(path.basename(caseFile)) || []) {
+    if (!markdown.includes(requiredText)) {
+      errors.push(`${relative}: expected case-specific contract text: ${requiredText}`);
     }
   }
 

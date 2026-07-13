@@ -1,20 +1,25 @@
 ---
 interface Props {
   command: string;
+  iconOnly?: boolean;
   label?: string;
 }
 
-const { command, label = "Command" } = Astro.props;
+const { command, iconOnly = false, label = "Command" } = Astro.props;
 ---
 
-<div class="command-copy">
+<div class="command-copy" data-command-block>
   <div class="command-copy__toolbar">
+    <span class="command-copy__label">
+      <span class="command-copy__prompt" aria-hidden="true">$</span>
+      <span class="command-copy__label-text">{label}</span>
+    </span>
     <button
-      class="copy-command-button"
+      class:list={["copy-command-button", { "copy-command-button--icon-only": iconOnly }]}
       type="button"
       data-copy-command={command}
-      aria-label="Copy command"
-      title="Copy command"
+      aria-label={`Copy ${label.toLowerCase()}`}
+      title={`Copy ${label.toLowerCase()}`}
     >
       <svg
         class="copy-command-button__icon copy-command-button__icon--copy"
@@ -41,8 +46,9 @@ const { command, label = "Command" } = Astro.props;
       >
         <path d="M20 6 9 17l-5-5"></path>
       </svg>
-      <span class="sr-only" data-copy-status>Copy command</span>
+      {!iconOnly && <span data-copy-button-label>Copy</span>}
     </button>
   </div>
-  <pre class="command-line" aria-label={label}><code>{command}</code></pre>
+  <pre class="command-line" data-command-line aria-label={label}><code>{command}</code></pre>
+  <span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
 </div>

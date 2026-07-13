@@ -1,0 +1,28 @@
+---
+interface Props {
+  align?: "start" | "center" | "end";
+  id: string;
+  label: string;
+  text: string;
+}
+
+const { align = "center", id, label, text } = Astro.props;
+---
+
+<span class={`context-tip context-tip--${align}`}>
+  <button
+    class="context-tip__trigger"
+    type="button"
+    data-context-tip-trigger
+    aria-controls={id}
+    aria-describedby={id}
+    aria-expanded="false"
+    aria-label={`About ${label}`}
+  >
+    <span aria-hidden="true">i</span>
+  </button>
+  <span class="context-tip__card" id={id} role="tooltip">
+    <strong>{label}</strong>
+    <span>{text}</span>
+  </span>
+</span>

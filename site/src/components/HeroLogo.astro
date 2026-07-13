@@ -1,0 +1,17 @@
+---
+import { withBase } from "../lib/site";
+
+const logoUrl = withBase("/stark-ai-de-agent-skills-logo.svg");
+---
+
+<div class="hero-brand__motion">
+  <img
+    class="hero-brand__logo"
+    src={logoUrl}
+    alt=""
+    width="720"
+    height="240"
+    fetchpriority="high"
+    decoding="async"
+  />
+</div>
