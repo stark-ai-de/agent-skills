@@ -2,10 +2,11 @@
 interface Props {
   command: string;
   iconOnly?: boolean;
-  label?: string;
+  label: string;
 }
 
-const { command, iconOnly = false, label = "Command" } = Astro.props;
+const { command, iconOnly = false, label } = Astro.props;
+const copyLabel = `Copy ${label}`;
 ---
 
 <div class="command-copy" data-command-block>
@@ -18,8 +19,8 @@ const { command, iconOnly = false, label = "Command" } = Astro.props;
       class:list={["copy-command-button", { "copy-command-button--icon-only": iconOnly }]}
       type="button"
       data-copy-command={command}
-      aria-label={`Copy ${label.toLowerCase()}`}
-      title={`Copy ${label.toLowerCase()}`}
+      aria-label={copyLabel}
+      title={copyLabel}
     >
       <svg
         class="copy-command-button__icon copy-command-button__icon--copy"

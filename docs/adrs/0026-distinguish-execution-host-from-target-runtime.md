@@ -1,9 +1,11 @@
 # ADR-0026: Distinguish execution host from target runtime
 
-Status: Accepted
+Status: Superseded
 Date: 2026-07-13
 Owner: stark-ai-de
 Gist: Preserve target-specific behavior while adapting only to the host that executes the skill.
+
+Superseded by [ADR-0028](0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md).
 
 ## Decision
 
@@ -29,4 +31,4 @@ We will distinguish the execution host from the target runtime, specialize only 
 
 ## Follow-up
 
-- Keep a gateway with its owning skill until a second independent consumer exists or another backend proves fail-closed filesystem, process, tool, and environment isolation.
+- See [ADR-0028](0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md) for the current gateway extraction gate.

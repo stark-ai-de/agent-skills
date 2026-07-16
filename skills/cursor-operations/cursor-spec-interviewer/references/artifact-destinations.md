@@ -27,13 +27,13 @@ Spec filenames must be lowercase kebab-case and end in `-spec.md`. Do not add se
 
 ## Persistence Rules
 
-- While native Cursor Plan Mode is active, do not create, edit, or persist any file. After the verified checkpoint, report the approved paths and persistence as pending, then issue the save-only continuation defined in `SKILL.md`.
+- While the current execution host's Plan Mode is active, do not create, edit, or persist any repository or workspace file. After the verified checkpoint, report the approved paths and persistence as pending, then use that host's plan-exit control or the host-accurate manual handoff defined in `SKILL.md`; only a plan artifact created by the host control is allowed.
 - Save every final spec file after the destination is selected from a clear repo convention or confirmed by the user.
 - If the target directory is missing, create it only after confirmation unless repo instructions explicitly require that directory.
 - If the selected specs folder is ignored by version control and the user expects a shared repo artifact, ask whether to keep it local-only, unignore that path, or choose a tracked docs path.
 - If the target file exists, ask before overwriting. Prefer a clearer slug over automatic suffixes.
 - Save ADR files only when the ADR gate requires a new or superseding ADR.
-- During the save-only continuation, persist only the approved spec, any required ADR, and the minimal ADR index entry required by the repository's existing convention. Defer all other repo-facing documentation updates to later implementation, and record that work in the spec.
+- During the save-only continuation, persist only the repository-owned approved spec, any required ADR, and the minimal ADR index entry required by the repository's existing convention. Defer all other repo-facing documentation updates to later implementation, and record that work in the spec.
 - Report every saved path in the final response.
 - Avoid pasting full persisted artifacts unless the user requests it or file persistence was blocked.
 
@@ -60,4 +60,4 @@ Before saving final artifacts, summarize:
 - ADR gate result,
 - spec path basis and any required ADR paths.
 
-Ask whether anything material is missing or wrong. Continue interviewing if the answer reveals a material gap. If the user explicitly declined persistence, return the complete approved artifacts in chat and write nothing. Otherwise, in active Plan Mode, prepare the approved artifact content without writing, report persistence as pending, and provide the save-only continuation. Outside Plan Mode, save the spec by convention, save any required ADR only after explicit confirmation, and make the minimal ADR index update required by the repository's existing convention. Defer all other repo-facing documentation changes to later implementation.
+Ask whether anything material is missing or wrong. Continue interviewing if the answer reveals a material gap. If the user explicitly declined persistence, return the complete approved artifacts in chat and write nothing. Otherwise, in the current execution host's active Plan Mode, prepare the approved artifact content without writing repository or workspace files, report persistence as pending, and use that host's plan-exit control with a save-only plan; use a host-accurate manual handoff only when no such control exists. Outside Plan Mode, save the repository-owned spec by convention, save any required ADR only after explicit confirmation, make the minimal repository-owned ADR index update required by the existing convention, and emit the Cursor-targeted execution prompt. Defer all other repo-facing documentation changes to later implementation.

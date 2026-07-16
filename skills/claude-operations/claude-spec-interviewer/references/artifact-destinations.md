@@ -27,7 +27,7 @@ Spec filenames must be lowercase kebab-case and end in `-spec.md`. Do not add se
 
 ## Persistence Rules
 
-- While native Claude Code Plan mode is active, do not create, edit, or persist any file. After the verified checkpoint, report the approved paths and persistence as pending, then issue the save-only continuation defined in `SKILL.md`.
+- While the current execution host's Plan mode is active, do not create, edit, or persist any repository or workspace file. After the verified checkpoint, report the approved paths and persistence as pending, then issue the save-only continuation defined in `SKILL.md`.
 - Save every final spec file after the destination is selected from a clear repo convention or confirmed by the user.
 - If the target directory is missing, create it only after confirmation unless repo instructions explicitly require that directory.
 - If the selected specs folder is ignored by version control and the user expects a shared repo artifact, ask whether to keep it local-only, unignore that path, or choose a tracked docs path.
@@ -60,4 +60,4 @@ Before saving final artifacts, summarize:
 - ADR gate result,
 - spec path basis and any required ADR paths.
 
-Ask whether anything material is missing or wrong. Continue interviewing if the answer reveals a material gap. If the user explicitly declined persistence, return the complete approved artifacts in chat and write nothing. Otherwise, in active Plan mode, prepare the approved content without writing repository or workspace artifacts, report persistence as pending, and provide the save-only continuation; a host-managed `ExitPlanMode` plan file is allowed. Outside Plan mode, save the spec by convention, save any required ADR only after explicit confirmation, and make the minimal ADR index update required by the repository's existing convention. Defer all other repo-facing documentation changes to later implementation.
+Ask whether anything material is missing or wrong. Continue interviewing if the answer reveals a material gap. If the user explicitly declined persistence, return the complete approved artifacts in chat and write nothing. Otherwise, in the current execution host's active Plan mode, prepare the approved content without writing repository or workspace artifacts, report persistence as pending, and provide the save-only continuation; only a plan artifact created by that host's plan-exit control is allowed. In Claude Code, that control is `ExitPlanMode`. Outside Plan mode, save the spec by convention, save any required ADR only after explicit confirmation, and make the minimal ADR index update required by the repository's existing convention. Defer all other repo-facing documentation changes to later implementation.

@@ -7,7 +7,7 @@ Live Codex CLI proof that a Cursor-targeted skill can be installed and selected 
 ## Environment
 
 - Codex CLI `0.144.3` with an ephemeral session and read-only sandbox.
-- Disposable project and home directories with only `cursor-spec-interviewer` installed project-locally for the Codex target.
+- Disposable project and home directories with only `cursor-spec-interviewer` installed project-locally, with Codex as the execution host.
 - No repository writes, global skill changes, or persisted sessions.
 
 ## Evidence
@@ -19,4 +19,6 @@ Live Codex CLI proof that a Cursor-targeted skill can be installed and selected 
 
 ## Result
 
-Pass for `0.2.1` after removing the contradictory early routing instructions. No router skill, shared host-routing reference, or custom frontmatter was needed.
+Pass for the `0.2.1` routing and control-translation scope after removing the contradictory early instructions. No router skill, shared host-routing reference, or custom frontmatter was needed.
+
+This read-only run installed no competing interviewer and did not exercise checkpoint verification, Plan-mode exit, or save-only persistence. It therefore does not prove the full cross-host lifecycle. The Cursor execution prompt remains target-specific; any implementation spec, ADR, or ADR index entry remains repository-owned.

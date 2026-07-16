@@ -12,6 +12,41 @@
 
 ### Removed
 
+## v0.12.0 - 2026-07-15
+
+### Added
+
+- Added a dependency-free, root-bounded static-PNG and animated-GIF exporter for trusted repository-owned README logo recipes, with non-exporting contract checks, strict XML and artifact inspection, commit-time no-clobber protection, exact per-frame GIF timing validation, sanitized failures, deterministic fake-tool coverage, and transactional replacement.
+- Added explicit target-contract and install-host data to the generated catalog so contract-backed cross-host installs are discoverable without changing runtime-specific artifacts.
+- Added focused Claude and Cursor lifecycle evals with competing interviewer skills and repository-owned persistence checks.
+
+### Changed
+
+- Updated `animated-readme-logo` to 0.4.0 so product repositories retain only brand-specific source, motion, timing, palette, and path decisions while the skill owns reusable export mechanics.
+- Updated `drawio-diagrams` to 0.4.0 with default native animation for new directed runtime, process, and data flows, explicit opt-out, a technical-geominimalist default plus four bounded adaptive design profiles, bounded reference-style adaptation, architecture content gating, compact ER/UML/C4/BPMN/SysML/ML notation recipes, icon-first logo/service coverage, Lobe Icons and Simple Icons provider routing, a single user-responsibility rights notice, improved local shape search, conditional discovery, bounded three-pass self-review, and a fair head-to-head benchmark protocol.
+- Updated `claude-spec-interviewer` and `cursor-spec-interviewer` to 0.2.2 so planning, question, transition, and plan-exit instructions follow the execution host while target-specific evidence and execution output remain unchanged.
+- Updated incubator `skillopt-setup` to 0.1.1, keeping the Codex OpenAI-compatible gateway local to that workflow until reuse and isolation justify extraction.
+- Updated incubator `handoff` to 0.1.1 with agent-neutral trigger wording.
+
+### Fixed
+
+- Superseded ADR-0026 with ADR-0028 so both proven reuse and fail-closed backend isolation are required before a gateway can be extracted from its owning skill.
+- Removed natural-language directive classification from validation; OpenAI prompts now use a small fail-closed foreign-control-name check.
+- Made complete skill frontmatter validation YAML-aware, including nested metadata, comments, quoted keys, and flow mappings.
+- Parsed `agents/openai.yaml` as YAML before validating nested types and checking the resolved default prompt.
+- Separated target runtime from installation host throughout catalog labels and commands, synchronized the documented host-ready install sets with the portable public catalog, and required every generated install command to have a host-specific accessible copy label.
+- Hardened `drawio-diagrams` export verification so exit-zero Desktop runs cannot publish missing, stale, symlinked, structurally invalid, or concurrently changed artifacts; both outputs validate before commit, destination installation is no-clobber, and interrupted or replacement commits preserve recovery backups instead of deleting raced data. Portable-image validation now checks every HTML/CSS/srcset source, rejects missing and fragment-only image cells plus obfuscated active schemes, ignores navigation links, and stays in parity with SkillOpt. Also removed unsupported Desktop Mermaid-import and `--layout` assumptions, corrected eval regexes, and added guarded implicit-activation coverage.
+- Hardened `animated-readme-logo` export with descriptor-bound output-parent creation, cumulative frame-byte limits, two complete deterministic render passes with verified-byte reuse, digest-bound multi-output commits, and retained replacement recovery that cannot delete same-inode concurrent updates.
+- Fixed SkillOpt Codex CLI target, judge, and reflector prompt transport to use explicit UTF-8 stdin, redact prompt echoes from captured streams, and reap large no-read timeouts, so large skill/resource snapshots no longer exceed argument limits or leak through process arguments and logs.
+
+### Deprecated
+
+### Removed
+
+### Security
+
+- Kept fail-closed filesystem, process, tool, network, and environment isolation mandatory for every extracted or shared backend gateway.
+
 ## v0.11.0 - 2026-07-13
 
 ### Added

@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable Kubernetes cluster diagram with ingress, service, deployment, pods, config map, secret, and persistent volume.
+Create an editable draw.io Kubernetes cluster diagram with ingress, service, deployment, pods, config map, secret, and persistent volume.
 ```
 
 ## Should Trigger

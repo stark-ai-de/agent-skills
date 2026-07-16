@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to give me a browser-openable diagrams.net URL for a small editable flowchart when the local app is not installed.
+Give me a browser-openable diagrams.net URL for a small editable flowchart when the local app is not installed.
 ```
 
 ## Should Trigger

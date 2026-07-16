@@ -1,5 +1,6 @@
-import json
 import fnmatch
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -7,11 +8,30 @@ import signal
 import subprocess
 import tempfile
 import time
+import urllib.parse
 from pathlib import Path
 from threading import Thread
 
 
 JUDGE_PERMISSION_PROFILE = "skillopt_judge"
+DRAWIO_PROFILE_STYLE_KEYS = frozenset(
+    {
+        "designProfile",
+        "shape",
+        "dataRole",
+        "strokeColor",
+        "fillColor",
+        "gradientColor",
+        "gradientDirection",
+        "shadow",
+        "glass",
+        "arcSize",
+        "strokeWidth",
+        "fontColor",
+        "fontSize",
+        "profileRole",
+    }
+)
 
 
 def _toml_string(value):
@@ -150,21 +170,117 @@ def _start_process_group_reaper(process):
     return thread
 
 
-def _run_isolated_codex(command, cwd, env, timeout):
+_PROMPT_ECHO_MARKER = "[redacted-prompt]"
+_PROMPT_ECHO_SEED_CHARS = 16
+_PROMPT_ECHO_SEED_POSITIONS = 8
+
+
+def _prompt_echo_spans(value, transported):
+    """Return exact prompt-derived spans without suppressing unrelated diagnostics."""
+    spans = []
+    if not value or not transported:
+        return spans
+    if value in transported:
+        return [(0, len(value))]
+    for match in re.finditer(r"[^\r\n]+", value):
+        line = match.group(0)
+        stripped = line.strip()
+        if stripped and stripped in transported:
+            offset = line.find(stripped)
+            spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+
+    seed_size = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
+    if seed_size <= 0 or len(value) < seed_size:
+        return spans
+    positions_by_seed = {}
+    for index in range(len(transported) - seed_size + 1):
+        positions = positions_by_seed.setdefault(
+            transported[index : index + seed_size], []
+        )
+        if len(positions) < _PROMPT_ECHO_SEED_POSITIONS:
+            positions.append(index)
+
+    cursor = 0
+    last_seed_start = len(value) - seed_size
+    while cursor <= last_seed_start:
+        prompt_positions = positions_by_seed.get(value[cursor : cursor + seed_size])
+        if not prompt_positions:
+            cursor += 1
+            continue
+        best_start = cursor
+        best_end = cursor + seed_size
+        for prompt_start in prompt_positions:
+            output_start = cursor
+            candidate_prompt_start = prompt_start
+            while (
+                output_start > 0
+                and candidate_prompt_start > 0
+                and value[output_start - 1] == transported[candidate_prompt_start - 1]
+            ):
+                output_start -= 1
+                candidate_prompt_start -= 1
+            output_end = cursor + seed_size
+            candidate_prompt_end = prompt_start + seed_size
+            while (
+                output_end < len(value)
+                and candidate_prompt_end < len(transported)
+                and value[output_end] == transported[candidate_prompt_end]
+            ):
+                output_end += 1
+                candidate_prompt_end += 1
+            if output_end - output_start > best_end - best_start:
+                best_start, best_end = output_start, output_end
+        spans.append((best_start, best_end))
+        cursor = best_end
+    return spans
+
+
+def _redact_prompt(text, prompt):
+    value = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
+    spans = _prompt_echo_spans(value, transported)
+    if not spans:
+        return value
+    merged = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    parts = []
+    cursor = 0
+    for start, end in merged:
+        parts.extend((value[cursor:start], _PROMPT_ECHO_MARKER))
+        cursor = end
+    parts.append(value[cursor:])
+    return "".join(parts)
+
+
+def _redact_timeout_stream(text):
+    return _PROMPT_ECHO_MARKER if (
+        text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    ) else ""
+
+
+def _run_isolated_codex(command, prompt, cwd, env, timeout):
     process = subprocess.Popen(
         command,
         cwd=cwd,
         env=env,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         start_new_session=True,
     )
     reaper = _start_process_group_reaper(process)
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
+        stdout, stderr = process.communicate(input=prompt, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        error.stdout = _redact_timeout_stream(error.stdout)
+        error.stderr = _redact_timeout_stream(error.stderr)
         _reap_process_group(process)
         try:
             process.communicate(timeout=1)
@@ -175,7 +291,12 @@ def _run_isolated_codex(command, cwd, env, timeout):
         reaper.join(timeout=7)
         if reaper.is_alive() or _process_group_alive(process.pid):
             _reap_process_group(process)
-    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    return subprocess.CompletedProcess(
+        command,
+        process.returncode,
+        _redact_prompt(stdout, prompt),
+        _redact_prompt(stderr, prompt),
+    )
 
 
 def _short(text, limit=1000):
@@ -436,6 +557,477 @@ def _match_visual_assertion(artifacts, assertion):
             ),
         }
 
+    if kind == "svg_has_flow_animation":
+        if parsed["parts"]:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "svg_has_flow_animation accepts only an artifact glob",
+            }
+        passing = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") == "svg"
+            and artifact.get("valid")
+            and artifact.get("flow_animation")
+            and int(artifact.get("external_references") or 0) == 0
+            and int(artifact.get("unsupported_images") or 0) == 0
+        ]
+        return {
+            "text": raw,
+            "passed": bool(passing),
+            "evidence": (
+                f"{passing[0].get('path')} has active connector flow animation"
+                if passing
+                else "no SVG has active connector flow animation"
+            ),
+        }
+
+    if kind == "svg_self_contained_images":
+        passing = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") == "svg"
+            and artifact.get("valid")
+            and int(artifact.get("embedded_svg_images") or 0) > 0
+            and int(artifact.get("external_references") or 0) == 0
+            and int(artifact.get("unsupported_images") or 0) == 0
+        ]
+        return {
+            "text": raw,
+            "passed": bool(passing),
+            "evidence": (
+                f"{passing[0].get('path')} has self-contained embedded SVG images"
+                if passing
+                else "no SVG has self-contained embedded SVG images"
+            ),
+        }
+
+    if kind == "drawio_valid":
+        try:
+            options = _parse_visual_options(parsed["parts"])
+        except ValueError as error:
+            return {"text": raw, "passed": False, "evidence": str(error)}
+        allowed = {
+            "animation_on",
+            "animation_off",
+            "adaptive_colors",
+            "min_pages",
+            "min_native_stencils",
+            "self_contained_svg",
+            "uncompressed",
+        }
+        unsupported = sorted(set(options) - allowed)
+        if unsupported:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": f"drawio_valid does not support option {unsupported[0]}",
+            }
+        if options.get("animation_on") and options.get("animation_off"):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid cannot require animation_on and animation_off together",
+            }
+        for name in (
+            "animation_on",
+            "animation_off",
+            "adaptive_colors",
+            "self_contained_svg",
+            "uncompressed",
+        ):
+            if name in options and options[name] != 1:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": f"drawio_valid option {name} must equal 1",
+                }
+        if "min_pages" in options and options["min_pages"] < 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid option min_pages must be positive",
+            }
+        if "min_native_stencils" in options and options["min_native_stencils"] < 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid option min_native_stencils must be positive",
+            }
+        if "min_native_stencils" in options and options.get("uncompressed") != 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid min_native_stencils requires uncompressed=1",
+            }
+
+        invalid = []
+        for artifact in matches:
+            if artifact.get("kind") != "drawio" or not artifact.get("valid"):
+                invalid.append(artifact)
+                continue
+            if int(artifact.get("page_count") or 0) < int(options.get("min_pages") or 1):
+                invalid.append(artifact)
+                continue
+            if int(artifact.get("native_stencil_count") or 0) < int(
+                options.get("min_native_stencils") or 0
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("adaptive_colors") and (
+                artifact.get("adaptive_colors") is not True
+                or not artifact.get("page_graphs")
+                or any(
+                    page.get("adaptive_colors") is not True
+                    for page in artifact.get("page_graphs") or []
+                )
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("animation_on") and (
+                not artifact.get("animation_on")
+                or int(artifact.get("directed_flow_edges") or 0) < 1
+                or int(artifact.get("animated_edges") or 0) < 1
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("animation_off") and not artifact.get("animation_off"):
+                invalid.append(artifact)
+                continue
+            if options.get("self_contained_svg") and not artifact.get("self_contained_svg"):
+                invalid.append(artifact)
+                continue
+            if options.get("uncompressed") and not artifact.get("uncompressed"):
+                invalid.append(artifact)
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts passed bounded validation"
+                if not invalid
+                else "one or more draw.io artifacts failed validation or required options"
+            ),
+        }
+
+    if kind == "drawio_embeds_svg_sha256":
+        parts = parsed["parts"]
+        if (
+            len(parts) not in (1, 2)
+            or re.fullmatch(r"[0-9a-f]{64}", parts[0]) is None
+            or (
+                len(parts) == 2
+                and re.fullmatch(r"cell=[A-Za-z0-9_.:-]{1,128}", parts[1]) is None
+            )
+        ):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": (
+                    "drawio_embeds_svg_sha256 requires one lowercase SHA-256 digest "
+                    "and optional cell=<stable-id>"
+                ),
+            }
+        expected = parts[0]
+        cell_id = parts[1][5:] if len(parts) == 2 else None
+        expected_cell_digest = (
+            hashlib.sha256(f"{cell_id}\0{expected}".encode("utf-8")).hexdigest()
+            if cell_id
+            else None
+        )
+        invalid = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") != "drawio"
+            or not artifact.get("valid")
+            or not isinstance(artifact.get("embedded_svg_sha256s"), list)
+            or expected not in artifact["embedded_svg_sha256s"]
+            or (
+                expected_cell_digest is not None
+                and (
+                    not isinstance(artifact.get("embedded_svg_cell_sha256s"), list)
+                    or expected_cell_digest not in artifact["embedded_svg_cell_sha256s"]
+                )
+            )
+        ]
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts embed the expected SVG digest"
+                if not invalid
+                else "one or more draw.io artifacts lack the expected embedded SVG digest"
+            ),
+        }
+
+    if kind == "drawio_graph":
+        options = {}
+        for part in parsed["parts"]:
+            match = re.fullmatch(
+                r"(ids|native_ids|edges|not_edges|edge_roles|profile_styles|links|page)=(.+)",
+                part,
+            )
+            if match is None or match.group(1) in options:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": f"drawio_graph has invalid or repeated option {part}",
+                }
+            options[match.group(1)] = match.group(2)
+        if not options or not any(
+            name in options
+            for name in (
+                "ids",
+                "native_ids",
+                "edges",
+                "not_edges",
+                "edge_roles",
+                "profile_styles",
+                "links",
+            )
+        ):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": (
+                    "drawio_graph requires ids=..., native_ids=..., edges=..., not_edges=..., "
+                    "edge_roles=..., profile_styles=..., or links=..."
+                ),
+            }
+
+        identifiers = options.get("ids", "").split(",") if "ids" in options else []
+        native_identifiers = (
+            options.get("native_ids", "").split(",") if "native_ids" in options else []
+        )
+        raw_edges = options.get("edges", "").split(",") if "edges" in options else []
+        raw_not_edges = options.get("not_edges", "").split(",") if "not_edges" in options else []
+        raw_edge_roles = (
+            options.get("edge_roles", "").split(",") if "edge_roles" in options else []
+        )
+        raw_profile_styles = (
+            options.get("profile_styles", "").split(",")
+            if "profile_styles" in options
+            else []
+        )
+        links = options.get("links", "").split(",") if "links" in options else []
+        if any(
+            len(values) > 128
+            for values in (
+                identifiers,
+                native_identifiers,
+                raw_edges,
+                raw_not_edges,
+                raw_edge_roles,
+                raw_profile_styles,
+                links,
+            )
+        ):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph exceeds 128 entries"}
+        identifier_pattern = re.compile(r"[A-Za-z0-9_.:-]{1,128}")
+        edges = []
+        not_edges = []
+        edge_roles = []
+        profile_styles = []
+        if any(
+            identifier_pattern.fullmatch(identifier) is None
+            for identifier in (*identifiers, *native_identifiers)
+        ):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid ID"}
+        for raw_values, target in ((raw_edges, edges), (raw_not_edges, not_edges)):
+            for edge in raw_values:
+                match = re.fullmatch(r"([^>]+)>([^>]+)", edge)
+                if match is None or any(
+                    identifier_pattern.fullmatch(identifier) is None for identifier in match.groups()
+                ):
+                    return {
+                        "text": raw,
+                        "passed": False,
+                        "evidence": "drawio_graph has an invalid directed edge pair",
+                    }
+                target.append(match.groups())
+        for edge_role in raw_edge_roles:
+            match = re.fullmatch(r"(.+):([a-z][a-z0-9_-]{0,63})", edge_role)
+            if match is None or identifier_pattern.fullmatch(match.group(1)) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid edge role mapping",
+                }
+            edge_roles.append(match.groups())
+        encoded_component_pattern = re.compile(
+            r"(?:[A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+"
+        )
+        style_key_pattern = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,63}")
+        for raw_profile_style in raw_profile_styles:
+            parts = raw_profile_style.split(":")
+            if (
+                len(raw_profile_style) > 8192
+                or len(parts) != 3
+                or any(encoded_component_pattern.fullmatch(part) is None for part in parts)
+            ):
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style mapping",
+                }
+            try:
+                cell_id, style_key, style_value = (
+                    urllib.parse.unquote(part, encoding="utf-8", errors="strict")
+                    for part in parts
+                )
+            except UnicodeDecodeError:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style mapping",
+                }
+            contains_control = any(
+                ord(char) < 32 or 127 <= ord(char) <= 159
+                for value in (cell_id, style_key, style_value)
+                for char in value
+            )
+            if identifier_pattern.fullmatch(cell_id) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style ID",
+                }
+            if style_key_pattern.fullmatch(style_key) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style key",
+                }
+            if style_key not in DRAWIO_PROFILE_STYLE_KEYS:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an unsupported profile style key",
+                }
+            if (
+                not style_value
+                or len(style_value) > 2048
+                or contains_control
+            ):
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style value",
+                }
+            profile_styles.append((cell_id, style_key, style_value))
+        if any(len(link) > 2048 or re.fullmatch(r"https?://[^\s,]+", link) is None for link in links):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid link"}
+        page_name = None
+        if "page" in options:
+            encoded_page = options["page"]
+            if (
+                len(encoded_page) > 384
+                or re.fullmatch(r"(?:[A-Za-z0-9_.:-]|%[0-9A-Fa-f]{2})+", encoded_page)
+                is None
+            ):
+                return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid page"}
+            page_name = urllib.parse.unquote(encoded_page)
+            if not page_name or len(page_name) > 128 or any(ord(char) < 32 for char in page_name):
+                return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid page"}
+
+        expected_ids = {
+            hashlib.sha256(identifier.encode("utf-8")).hexdigest()
+            for identifier in identifiers
+        }
+        expected_native_ids = {
+            hashlib.sha256(identifier.encode("utf-8")).hexdigest()
+            for identifier in native_identifiers
+        }
+        expected_edges = {
+            hashlib.sha256(f"{source}\0{target}".encode("utf-8")).hexdigest()
+            for source, target in edges
+        }
+        forbidden_edges = {
+            hashlib.sha256(f"{source}\0{target}".encode("utf-8")).hexdigest()
+            for source, target in not_edges
+        }
+        expected_links = {hashlib.sha256(link.encode("utf-8")).hexdigest() for link in links}
+        expected_edge_roles = {
+            hashlib.sha256(f"{edge_id}\0{role}".encode("utf-8")).hexdigest()
+            for edge_id, role in edge_roles
+        }
+        expected_profile_styles = {
+            hashlib.sha256(f"{cell_id}\0{key}\0{value}".encode("utf-8")).hexdigest()
+            for cell_id, key, value in profile_styles
+        }
+        expected_page = (
+            hashlib.sha256(page_name.encode("utf-8")).hexdigest() if page_name is not None else None
+        )
+        invalid = []
+        for artifact in matches:
+            graph = artifact
+            if expected_page is not None:
+                graph = next(
+                    (
+                        page
+                        for page in artifact.get("page_graphs") or []
+                        if page.get("page_name_sha256") == expected_page
+                    ),
+                    None,
+                )
+            id_hashes = set((graph or {}).get("cell_id_sha256s") or [])
+            native_id_hashes = set((graph or {}).get("native_stencil_cell_id_sha256s") or [])
+            edge_hashes = set((graph or {}).get("directed_edge_sha256s") or [])
+            edge_role_hashes = set((graph or {}).get("edge_role_sha256s") or [])
+            if expected_page is not None:
+                profile_styles_satisfied = expected_profile_styles.issubset(
+                    set((graph or {}).get("profile_style_sha256s") or [])
+                )
+            else:
+                profile_styles_satisfied = not expected_profile_styles or any(
+                    expected_profile_styles.issubset(
+                        set(page.get("profile_style_sha256s") or [])
+                    )
+                    for page in artifact.get("page_graphs") or []
+                )
+            link_hashes = set((graph or {}).get("link_sha256s") or [])
+            if (
+                artifact.get("kind") != "drawio"
+                or not artifact.get("valid")
+                or graph is None
+                or not expected_ids.issubset(id_hashes)
+                or not expected_native_ids.issubset(native_id_hashes)
+                or not expected_edges.issubset(edge_hashes)
+                or bool(forbidden_edges & edge_hashes)
+                or not expected_edge_roles.issubset(edge_role_hashes)
+                or not profile_styles_satisfied
+                or not expected_links.issubset(link_hashes)
+            ):
+                invalid.append(artifact)
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts contain the required graph invariants"
+                if not invalid
+                else "one or more draw.io artifacts lack required graph invariants"
+            ),
+        }
+
+    if kind == "drawio_self_contained_svg":
+        invalid = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") != "drawio"
+            or not artifact.get("valid")
+            or not artifact.get("uncompressed")
+            or not artifact.get("self_contained_svg")
+        ]
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts contain validated embedded SVG images"
+                if not invalid
+                else "one or more draw.io artifacts are invalid, compressed, or not self-contained"
+            ),
+        }
+
     return {"text": raw, "passed": False, "evidence": f"unsupported visual assertion kind {kind!r}"}
 
 
@@ -656,10 +1248,12 @@ class AgentSkillsEvaluator:
                 command.extend(["--model", self.codex_model])
             if self.codex_profile:
                 command.extend(["--profile", self.codex_profile])
-            command.append(self._judge_prompt(case, response, expected))
+            prompt = self._judge_prompt(case, response, expected)
+            command.append("-")
             try:
                 completed = _run_isolated_codex(
                     command,
+                    prompt,
                     tmp,
                     process_env,
                     self.codex_timeout,

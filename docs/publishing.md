@@ -48,6 +48,8 @@ npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a cursor
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a claude-code
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor
 ```
@@ -63,6 +65,8 @@ npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator cla
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
 
+The `-a` option selects the installation host, not the skill's target runtime. An intentionally cross-host install preserves the target-specific evidence and output contract while adapting collaboration controls to the selected host.
+
 `--list` is a discovery check only. It does not install skills and should not be treated as a skills.sh indexing trigger. skills.sh ranks and discovers repository pages from anonymous successful-install telemetry when telemetry is enabled. A root `skills.sh.json` customizes display after the repository has been seen by that service.
 
 ## Local Smoke Test
@@ -76,7 +80,7 @@ npx skills@latest add ./skills --list
 npm run smoke:install
 ```
 
-`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/`, `.codegraph/`, and `skills-lock.json`, runs `npx skills@latest add . --list`, verifies every public skill is listed when present, verifies incubator skills are not listed, and removes the temporary copy. It does not install global skills.
+`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/`, `.codegraph/`, and `skills-lock.json`, and disables install telemetry. It verifies public discovery without incubator leaks, then performs disposable project-local Codex, Cursor, and Claude Code installs and asserts their exact destinations before removing the temporary tree. It does not install global skills.
 
 Do not publish, push, tag, send telemetry-triggering installs, or install globally unless the maintainer explicitly asks for that action.
 

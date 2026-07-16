@@ -36,6 +36,8 @@ Zones should clarify the architecture rather than create large empty bands:
 - Keep connector rails inside a zone or inside a deliberate inter-zone gutter. Avoid routing a rail exactly along a section boundary because it reads like a border.
 - Keep section titles clear of incoming/outgoing connectors. If an edge crosses a section boundary, keep the edge label well inside one section or in a dedicated gutter.
 - Prefer a compact, balanced page over a single very wide diagram with one empty half.
+- Keep external providers and actors outside the owned runtime/deployment boundary. Development-only substitutes belong in a separately labelled zone and use a second static cue such as a dashed border or connector.
+- Use zones only for real scope, trust, deployment, environment, or responsibility boundaries. Do not use a large colored panel merely to fill the canvas.
 
 ## Detail and package rows
 
@@ -53,6 +55,7 @@ Avoid formatting every line of a component card identically:
 - When feasible, build cards from child cells: title, icon well, role text, and metadata. This makes future edits and collapsible detail layers easier.
 - Keep icon chips in a consistent location and reserve text padding so centered labels do not visually collide with the icon well.
 - Use badges or muted secondary lines for ports and local-only notes instead of giving them the same emphasis as service names.
+- Follow the technical-geominimalist scale: 14 px card titles and 12 px detail/connector text where space allows. If the page only works with 9-10 px text, split or simplify it before shrinking further.
 
 ## Icon and logo consistency
 
@@ -73,5 +76,7 @@ Before delivery, inspect the rendered light and dark exports and answer these qu
 4. Are detail/package boxes visually connected to the runtime diagram or moved to a detail page/layer?
 5. Can the reader distinguish component names from descriptions, ports, and metadata at a glance?
 6. Are logo chips, logo sources, and dark-mode behavior consistent?
+7. Are external, development-only, optional, blocked, current, and target elements in the correct zones and understandable without color or motion?
+8. Does the page answer one stakeholder question at one abstraction level, or should secondary content move to a detail page?
 
 Sources: integrated from architecture-diagram visual review feedback for connector label placement, fan-out lane separation, section whitespace, package row treatment, text hierarchy, and logo consistency.

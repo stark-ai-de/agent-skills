@@ -1,33 +1,33 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Runtime">
-    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel adaptiveColors="auto" iconMode="icon-first" dx="800" dy="600" grid="1" gridSize="8" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="runtime-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ecfeff,#164e63);strokeColor=light-dark(#0891b2,#67e8f9);fontColor=light-dark(#083344,#ecfeff);" vertex="1" parent="1">
-          <mxGeometry x="40" y="80" width="140" height="60" as="geometry"/>
+        <mxCell id="runtime-client" value="Client" style="shape=mxgraph.networks2.laptop;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fillColor=light-dark(#ecfeff,#164e63);strokeColor=light-dark(#0891b2,#67e8f9);fontColor=light-dark(#083344,#ecfeff);fontSize=14;fontStyle=1;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="72" y="72" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="runtime-api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
-          <mxGeometry x="260" y="80" width="140" height="60" as="geometry"/>
+        <mxCell id="runtime-api" value="API" style="shape=mxgraph.networks2.application;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);fontSize=14;fontStyle=1;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="292" y="72" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="runtime-edge" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="runtime-client" target="runtime-api">
+        <mxCell id="runtime-edge" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=request;flowAnimation=1;" edge="1" parent="1" source="runtime-client" target="runtime-api">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram name="Data Path">
-    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel adaptiveColors="auto" iconMode="icon-first" dx="800" dy="600" grid="1" gridSize="8" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="data-api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
-          <mxGeometry x="40" y="80" width="140" height="60" as="geometry"/>
+        <mxCell id="data-api" value="API" style="shape=mxgraph.networks2.application;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);fontSize=14;fontStyle=1;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="72" y="72" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="data-db" value="Database" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#dcfce7,#14532d);strokeColor=light-dark(#16a34a,#86efac);fontColor=light-dark(#052e16,#f0fdf4);" vertex="1" parent="1">
-          <mxGeometry x="260" y="75" width="100" height="70" as="geometry"/>
+        <mxCell id="data-db" value="Database" style="shape=mxgraph.flowchart.database;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#dcfce7,#14532d);strokeColor=light-dark(#16a34a,#86efac);fontColor=light-dark(#052e16,#f0fdf4);fontSize=12;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="292" y="72" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="data-edge" value="SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="data-api" target="data-db">
+        <mxCell id="data-edge" value="SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=data-flow;flowAnimation=1;" edge="1" parent="1" source="data-api" target="data-db">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

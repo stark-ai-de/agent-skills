@@ -61,7 +61,25 @@ assertMarkdownNormalizationBehavior();
 assertSummaryBehavior();
 
 export type SkillKind = "public" | "incubator";
-export type SkillInstallAgent = "claude-code" | "codex" | "cursor";
+export type SkillInstallHost = "claude-code" | "codex" | "cursor";
+export type SkillTargetRuntime = "claude-code" | "codex" | "cursor";
+
+const ALL_INSTALL_HOSTS: readonly SkillInstallHost[] = ["codex", "cursor", "claude-code"];
+
+// Runtime-targeted skills need an explicit cross-host contract; portable categories use every host.
+const CROSS_HOST_INSTALL_HOSTS_BY_SKILL: Readonly<Record<string, readonly SkillInstallHost[]>> = {
+  "claude-memory-curator": ALL_INSTALL_HOSTS,
+  "claude-spec-interviewer": ALL_INSTALL_HOSTS,
+  "codex-memory-curator": ["codex", "cursor"],
+  "cursor-memory-curator": ALL_INSTALL_HOSTS,
+  "cursor-spec-interviewer": ALL_INSTALL_HOSTS,
+};
+
+const TARGET_RUNTIME_BY_CATEGORY: Readonly<Partial<Record<string, SkillTargetRuntime>>> = {
+  "claude-operations": "claude-code",
+  "codex-operations": "codex",
+  "cursor-operations": "cursor",
+};
 
 export interface SkillMetadata {
   author?: string;
@@ -76,17 +94,16 @@ export interface CatalogSkill {
   category: string;
   categoryLabel: string;
   compatibility?: string;
+  defaultInstallHost: SkillInstallHost;
   description: string;
   evalPath?: string;
   evalUrl?: string;
   fileTree: SkillTreeNode;
   hasOpenAiMetadata: boolean;
   html: string;
-  installAgent: SkillInstallAgent;
-  installCommand?: string;
+  installCommands: SkillInstallCommand[];
   kind: SkillKind;
   license: string;
-  localUsageCommand?: string;
   metadata: SkillMetadata;
   name: string;
   openAiMetadataPath?: string;
@@ -94,8 +111,15 @@ export interface CatalogSkill {
   sourcePath: string;
   sourceUrl: string;
   summary: string;
+  supportedInstallHosts: SkillInstallHost[];
+  targetRuntime?: SkillTargetRuntime;
   title: string;
   version?: string;
+}
+
+export interface SkillInstallCommand {
+  command: string;
+  host: SkillInstallHost;
 }
 
 export interface SkillTreeNode {
@@ -167,14 +191,16 @@ export function collectionLabel(kind: SkillKind) {
   return kind === "public" ? "Public catalog" : "Incubator";
 }
 
-export function installAgentLabel(agent: SkillInstallAgent) {
-  switch (agent) {
+export function installHostLabel(host: SkillInstallHost) {
+  switch (host) {
     case "claude-code":
       return "Claude Code";
+    case "codex":
+      return "Codex";
     case "cursor":
       return "Cursor";
     default:
-      return "Codex";
+      throw new Error(`Unknown install host: ${String(host)}`);
   }
 }
 
@@ -190,6 +216,9 @@ async function readSkills(kind: SkillKind) {
   );
 
   assertUniqueSlugs(kind, skills);
+  if (kind === "public") {
+    assertCrossHostInstallMatrix(skills);
+  }
 
   return skills.sort(compareSkillNames);
 }
@@ -221,8 +250,11 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     throw new Error(`Missing frontmatter description in ${sourcePath}`);
   }
 
+  const compatibility = asString(data.compatibility);
   const category = metadata.category ?? categoryFromPath(kind, sourcePath);
-  const installAgent = installAgentForCategory(category);
+  const targetRuntime = targetRuntimeForCategory(category);
+  const defaultInstallHost = targetRuntime ?? "codex";
+  const supportedInstallHosts = supportedInstallHostsFor(name, targetRuntime);
   const skillDir = path.dirname(sourcePath);
   const fileTree = buildSkillTree(skillDir);
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
@@ -234,24 +266,17 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     body: parsed.content,
     category,
     categoryLabel: toTitleCase(category),
-    compatibility: asString(data.compatibility),
+    compatibility,
+    defaultInstallHost,
     description,
     evalPath,
     evalUrl: evalPath ? repoUrl(evalPath) : undefined,
     fileTree,
     hasOpenAiMetadata,
     html,
-    installAgent,
-    installCommand:
-      kind === "public"
-        ? `npx skills add https://github.com/${REPO_NAME} --skill ${name} -g -a ${installAgent}`
-        : undefined,
+    installCommands: installCommandsFor(kind, name, defaultInstallHost, supportedInstallHosts),
     kind,
     license: asString(data.license) ?? "Unspecified",
-    localUsageCommand:
-      kind === "incubator"
-        ? `INSTALL_INTERNAL_SKILLS=1 npx skills add ./incubator/skills --skill ${name} -a ${installAgent} --copy -y`
-        : `npx skills add ./skills --skill ${name} -a ${installAgent} --copy -y`,
     metadata,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
@@ -259,6 +284,8 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     sourcePath,
     sourceUrl: repoUrl(sourcePath),
     summary: summarizeDescription(description),
+    supportedInstallHosts,
+    targetRuntime,
     title: firstMarkdownHeading(parsed.content) ?? toTitleCase(name),
     version: metadata.version,
   } satisfies CatalogSkill;
@@ -314,16 +341,58 @@ function categoryFromPath(kind: SkillKind, sourcePath: string) {
   return kind === "public" ? segments[1] : segments[2];
 }
 
-function installAgentForCategory(category: string): SkillInstallAgent {
-  switch (category) {
-    case "claude-operations":
-      return "claude-code";
-    case "cursor-operations":
-      return "cursor";
-    case "codex-operations":
-    default:
-      return "codex";
+function targetRuntimeForCategory(category: string) {
+  const targetRuntime = TARGET_RUNTIME_BY_CATEGORY[category];
+
+  if (!targetRuntime && category.endsWith("-operations")) {
+    throw new Error(`Unknown target runtime category: ${category}`);
   }
+
+  return targetRuntime;
+}
+
+function supportedInstallHostsFor(name: string, targetRuntime: SkillTargetRuntime | undefined) {
+  if (!targetRuntime) {
+    return [...ALL_INSTALL_HOSTS];
+  }
+
+  const explicitHosts = CROSS_HOST_INSTALL_HOSTS_BY_SKILL[name];
+  if (!explicitHosts) {
+    return [targetRuntime];
+  }
+
+  if (!explicitHosts.includes(targetRuntime)) {
+    throw new Error(`Cross-host install matrix for ${name} omits its target runtime.`);
+  }
+
+  return [...explicitHosts];
+}
+
+function installCommandsFor(
+  kind: SkillKind,
+  name: string,
+  defaultInstallHost: SkillInstallHost,
+  supportedInstallHosts: readonly SkillInstallHost[],
+) {
+  return orderInstallHosts(defaultInstallHost, supportedInstallHosts).map(
+    (host): SkillInstallCommand => ({
+      command:
+        kind === "public"
+          ? `npx skills add https://github.com/${REPO_NAME} --skill ${name} -g -a ${host}`
+          : `INSTALL_INTERNAL_SKILLS=1 npx skills add ./incubator/skills --skill ${name} -a ${host} --copy -y`,
+      host,
+    }),
+  );
+}
+
+function orderInstallHosts(
+  defaultInstallHost: SkillInstallHost,
+  supportedInstallHosts: readonly SkillInstallHost[],
+) {
+  return [
+    defaultInstallHost,
+    ...supportedInstallHosts.filter((host) => host !== defaultInstallHost),
+  ];
 }
 
 function normalizeMetadata(value: unknown): SkillMetadata {
@@ -472,6 +541,40 @@ function assertUniqueSlugs(kind: SkillKind, skills: CatalogSkill[]) {
       throw new Error(`Duplicate ${kind} skill route for ${skill.name}`);
     }
     seen.add(skill.name);
+  }
+}
+
+function assertCrossHostInstallMatrix(publicSkills: CatalogSkill[]) {
+  const knownHosts = new Set(ALL_INSTALL_HOSTS);
+  const skillsByName = new Map(publicSkills.map((skill) => [skill.name, skill]));
+
+  for (const [name, hosts] of Object.entries(CROSS_HOST_INSTALL_HOSTS_BY_SKILL)) {
+    const skill = skillsByName.get(name);
+    if (!skill || skill.kind !== "public" || !skill.targetRuntime) {
+      throw new Error(
+        `Cross-host install matrix key ${name} must resolve to a runtime-targeted public skill.`,
+      );
+    }
+
+    const seenHosts = new Set<SkillInstallHost>();
+    for (const host of hosts) {
+      if (!knownHosts.has(host)) {
+        throw new Error(
+          `Cross-host install matrix for ${name} contains unknown host: ${String(host)}`,
+        );
+      }
+      if (seenHosts.has(host)) {
+        throw new Error(`Cross-host install matrix for ${name} contains duplicate host: ${host}`);
+      }
+      seenHosts.add(host);
+    }
+
+    if (!seenHosts.has(skill.targetRuntime)) {
+      throw new Error(`Cross-host install matrix for ${name} omits its target runtime.`);
+    }
+    if (seenHosts.size < 2) {
+      throw new Error(`Cross-host install matrix for ${name} must include a non-target host.`);
+    }
   }
 }
 

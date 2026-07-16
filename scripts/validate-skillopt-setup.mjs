@@ -4,6 +4,8 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import { evaluateAssertion, listArtifacts, parseAssertion } from "./lib/visual-assertions.mjs";
+
 const root = process.cwd();
 const skillRoot = path.join(root, "incubator/skills/skill-maintenance/skillopt-setup");
 const assetRoot = path.join(skillRoot, "assets/agent-skills-benchmark");
@@ -98,11 +100,38 @@ function validateHelp() {
     assertIncludes(`${scriptName} --help`, output, "Usage:");
     assertIncludes(`${scriptName} --help`, output, scriptName);
   }
+  const readinessScript = fs.readFileSync(
+    path.join(skillRoot, "scripts/check-skillopt-readiness.mjs"),
+    "utf8",
+  );
+  assertIncludes("readiness JSON flush", readinessScript, "process.exitCode =");
+  assertNotIncludes("readiness JSON flush", readinessScript, "process.exit(result.safe_to_setup");
 }
 
 function validatePythonTemplates() {
   const files = pythonTemplates.map((name) => path.join(assetRoot, name));
   for (const file of files) assertFile(file);
+  for (const templateName of [
+    "rollout.py.template",
+    "evaluator.py.template",
+    "codex_cli_reflector.py.template",
+  ]) {
+    const source = fs.readFileSync(path.join(assetRoot, templateName), "utf8");
+    assertIncludes(`${templateName} stdin transport`, source, 'command.append("-")');
+    assertIncludes(`${templateName} stdin transport`, source, "stdin=subprocess.PIPE");
+    assertIncludes(`${templateName} stdin transport`, source, "input=prompt");
+    assertIncludes(`${templateName} stdin transport`, source, 'encoding="utf-8"');
+    assertIncludes(`${templateName} stdin transport`, source, 'errors="replace"');
+    assertIncludes(`${templateName} prompt redaction`, source, "[redacted-prompt]");
+    assertNotIncludes(`${templateName} stdin transport`, source, "stdin=subprocess.DEVNULL");
+    assertNotIncludes(`${templateName} stdin transport`, source, "command.append(prompt)");
+    assertNotIncludes(
+      `${templateName} stdin transport`,
+      source,
+      "command.append(self._judge_prompt",
+    );
+  }
+
   if (!hasPython3()) {
     console.warn("python3 unavailable; skipping SkillOpt Python template parse check");
     return;
@@ -114,6 +143,42 @@ function validatePythonTemplates() {
     ...files,
   ]);
 
+  run("SkillOpt prompt-fragment redaction regression", "python3", [
+    "-c",
+    `import runpy, sys
+templates = (
+    (sys.argv[1], "redact_prompt", "redact_timeout_stream"),
+    (sys.argv[2], "_redact_prompt", "_redact_timeout_stream"),
+    (sys.argv[3], "_redact_prompt", "_redact_timeout_stream"),
+)
+prompt = (
+    "System header\\n"
+    "Task prompt:\\nTASK-CONTENT-71f0e9\\n"
+    "Skill body:\\nSKILL-BODY-CONTENT-32ac47\\n"
+    "Resource snapshot:\\nRESOURCE-CONTENT-885bd1\\n"
+)
+harmless = "child diagnostic: renderer unavailable"
+for path, redact_name, timeout_name in templates:
+    module = runpy.run_path(path)
+    redact = module[redact_name]
+    redact_timeout = module[timeout_name]
+    prefix = prompt[:19]
+    chunk = prompt[prompt.index("SKILL-BODY"):prompt.index("SKILL-BODY") + 19]
+    mixed = f"safe-prefix:{prefix}:safe-middle:{chunk}:safe-suffix"
+    result = redact(mixed, prompt)
+    assert prefix not in result and chunk not in result, (path, result)
+    assert "safe-prefix:" in result and ":safe-middle:" in result and ":safe-suffix" in result, (path, result)
+    assert result.count("[redacted-prompt]") == 2, (path, result)
+    assert redact(harmless, prompt) == harmless, (path, redact(harmless, prompt))
+    assert redact_timeout("x") == "[redacted-prompt]", path
+    assert redact_timeout(b"y") == "[redacted-prompt]", path
+    assert redact_timeout("") == "", path
+`,
+    path.join(assetRoot, "rollout.py.template"),
+    path.join(assetRoot, "evaluator.py.template"),
+    path.join(assetRoot, "codex_cli_reflector.py.template"),
+  ]);
+
   const evaluator = path.join(assetRoot, "evaluator.py.template");
   run("SkillOpt Markdown-escaped visual glob regression", "python3", [
     "-c",
@@ -122,7 +187,7 @@ function validatePythonTemplates() {
   ]);
   run("SkillOpt hard-gate semantic merge regression", "python3", [
     "-c",
-    `import runpy, sys
+    `import hashlib, runpy, sys
 module = runpy.run_path(sys.argv[1])
 evaluator = module['AgentSkillsEvaluator']({'judge_backend': 'heuristic'})
 result = evaluator.score(
@@ -149,9 +214,462 @@ metadata_only = module['_match_visual_assertion'](
     'svg_contains: *.svg MetadataOnly',
 )
 assert not metadata_only['passed'], metadata_only
+self_contained_svg = {
+    'path': 'result.svg',
+    'kind': 'svg',
+    'valid': True,
+    'embedded_svg_images': 1,
+    'external_references': 0,
+    'unsupported_images': 0,
+    'flow_animation': True,
+}
+assert module['_match_visual_assertion'](
+    [self_contained_svg],
+    'svg_self_contained_images: *.svg',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{**self_contained_svg, 'external_references': 1}],
+    'svg_self_contained_images: *.svg',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_svg],
+    'svg_has_flow_animation: *.svg',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{**self_contained_svg, 'flow_animation': False}],
+    'svg_has_flow_animation: *.svg',
+)['passed']
+self_contained_drawio = {
+    'path': 'result.drawio',
+    'kind': 'drawio',
+    'valid': True,
+    'page_count': 2,
+    'adaptive_colors': True,
+    'native_stencil_count': 2,
+    'uncompressed': True,
+    'self_contained_svg': True,
+    'embedded_svg_sha256s': ['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+    'embedded_svg_cell_sha256s': [
+        hashlib.sha256(
+            'logo\\0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'.encode('utf-8')
+        ).hexdigest(),
+    ],
+    'animation_on': True,
+    'animation_off': False,
+    'directed_flow_edges': 1,
+    'animated_edges': 1,
+    'animated_static_edges': 0,
+    'cell_id_sha256s': [
+        hashlib.sha256(value.encode('utf-8')).hexdigest()
+        for value in ('client', 'api', 'cache')
+    ],
+    'native_stencil_cell_id_sha256s': [
+        hashlib.sha256('cache'.encode('utf-8')).hexdigest(),
+    ],
+    'directed_edge_sha256s': [
+        hashlib.sha256('client\\0api'.encode('utf-8')).hexdigest(),
+        hashlib.sha256('api\\0cache'.encode('utf-8')).hexdigest(),
+    ],
+    'link_sha256s': [
+        hashlib.sha256('https://docs.example.invalid/product'.encode('utf-8')).hexdigest(),
+    ],
+    'edge_role_sha256s': [
+        hashlib.sha256('edge-client-api\\0request'.encode('utf-8')).hexdigest(),
+    ],
+    'profile_style_sha256s': [
+        hashlib.sha256(value.encode('utf-8')).hexdigest()
+        for value in (
+            'api\\0designProfile\\0neon-hub',
+            'api\\0strokeColor\\0light-dark(#4D7C0F,#D7FF00)',
+        )
+    ],
+    'page_graphs': [
+        {
+            'page_name_sha256': hashlib.sha256('Runtime'.encode('utf-8')).hexdigest(),
+            'adaptive_colors': True,
+            'cell_id_sha256s': [
+                hashlib.sha256(value.encode('utf-8')).hexdigest()
+                for value in ('client', 'api')
+            ],
+            'native_stencil_cell_id_sha256s': [],
+            'directed_edge_sha256s': [
+                hashlib.sha256('client\\0api'.encode('utf-8')).hexdigest(),
+            ],
+            'edge_role_sha256s': [
+                hashlib.sha256('edge-client-api\\0request'.encode('utf-8')).hexdigest(),
+            ],
+            'profile_style_sha256s': [
+                hashlib.sha256(value.encode('utf-8')).hexdigest()
+                for value in (
+                    'api\\0designProfile\\0neon-hub',
+                    'api\\0strokeColor\\0light-dark(#4D7C0F,#D7FF00)',
+                )
+            ],
+            'link_sha256s': [],
+        },
+        {
+            'page_name_sha256': hashlib.sha256('Data Path'.encode('utf-8')).hexdigest(),
+            'adaptive_colors': True,
+            'cell_id_sha256s': [hashlib.sha256('cache'.encode('utf-8')).hexdigest()],
+            'native_stencil_cell_id_sha256s': [
+                hashlib.sha256('cache'.encode('utf-8')).hexdigest(),
+            ],
+            'directed_edge_sha256s': [],
+            'edge_role_sha256s': [],
+            'profile_style_sha256s': [],
+            'link_sha256s': [
+                hashlib.sha256(
+                    'https://docs.example.invalid/product'.encode('utf-8')
+                ).hexdigest(),
+            ],
+        },
+    ],
+}
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio min_pages=2 min_native_stencils=2 uncompressed=1 self_contained_svg=1 animation_on=1 adaptive_colors=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{
+        **self_contained_drawio,
+        'adaptive_colors': False,
+        'page_graphs': [
+            self_contained_drawio['page_graphs'][0],
+            {**self_contained_drawio['page_graphs'][1], 'adaptive_colors': False},
+        ],
+    }],
+    'drawio_valid: *.drawio adaptive_colors=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio animation_off=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{**self_contained_drawio, 'directed_flow_edges': 0, 'animated_edges': 0}],
+    'drawio_valid: *.drawio animation_on=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio animation_on=1 animation_off=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio unsupported=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio uncompressed=2',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio adaptive_colors=2',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio min_pages=0',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio min_native_stencils=3',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_valid: *.drawio min_native_stencils=3 uncompressed=1',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_self_contained_svg: *.drawio',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{**self_contained_drawio, 'self_contained_svg': False}],
+    'drawio_self_contained_svg: *.drawio',
+)['passed']
+compressed_self_contained_drawio = {**self_contained_drawio, 'uncompressed': False}
+assert module['_match_visual_assertion'](
+    [compressed_self_contained_drawio],
+    'drawio_valid: *.drawio self_contained_svg=1',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [compressed_self_contained_drawio],
+    'drawio_self_contained_svg: *.drawio',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa cell=logo',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa cell=other-logo',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_embeds_svg_sha256: *.drawio abc',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [{**self_contained_drawio, 'embedded_svg_sha256s': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}],
+    'drawio_embeds_svg_sha256: *.drawio aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio ids=client,api,cache native_ids=cache edges=client>api,api>cache not_edges=api>client edge_roles=edge-client-api:request profile_styles=api:designProfile:neon-hub,api:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29 links=https://docs.example.invalid/product',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio page=Runtime ids=client,api edges=client>api edge_roles=edge-client-api:request profile_styles=api:designProfile:neon-hub',
+)['passed']
+assert module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio page=Data%20Path ids=cache native_ids=cache links=https://docs.example.invalid/product',
+)['passed']
+split_profile_digests = {
+    name: hashlib.sha256(value.encode('utf-8')).hexdigest()
+    for name, value in {
+        'profile': 'api\\0designProfile\\0neon-hub',
+        'stroke': 'api\\0strokeColor\\0light-dark(#4D7C0F,#D7FF00)',
+        'shadow': f'api\\0shadow\\0{0}',
+    }.items()
+}
+split_profile_drawio = {
+    **self_contained_drawio,
+    'profile_style_sha256s': sorted(split_profile_digests.values()),
+    'page_graphs': [
+        {
+            **self_contained_drawio['page_graphs'][0],
+            'profile_style_sha256s': [
+                split_profile_digests['profile'],
+                split_profile_digests['stroke'],
+            ],
+        },
+        {
+            **self_contained_drawio['page_graphs'][1],
+            'cell_id_sha256s': [hashlib.sha256('api'.encode('utf-8')).hexdigest()],
+            'profile_style_sha256s': [
+                split_profile_digests['profile'],
+                split_profile_digests['shadow'],
+            ],
+        },
+    ],
+}
+assert not module['_match_visual_assertion'](
+    [split_profile_drawio],
+    'drawio_graph: *.drawio profile_styles=api:designProfile:neon-hub,api:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29,api:shadow:0',
+)['passed']
+assert module['_match_visual_assertion'](
+    [split_profile_drawio],
+    'drawio_graph: *.drawio page=Runtime profile_styles=api:designProfile:neon-hub,api:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29',
+)['passed']
+assert module['_match_visual_assertion'](
+    [split_profile_drawio],
+    'drawio_graph: *.drawio page=Data%20Path profile_styles=api:designProfile:neon-hub,api:shadow:0',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio page=Runtime ids=cache',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio page=Missing ids=client',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio native_ids=api',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio edge_roles=edge-client-api:event',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio ids=database edges=api>client',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio not_edges=client>api',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio links=https://docs.example.invalid/missing',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio page=Data%20Path profile_styles=api:designProfile:neon-hub',
+)['passed']
+assert not module['_match_visual_assertion'](
+    [self_contained_drawio],
+    'drawio_graph: *.drawio profile_styles=api:strokeColor:%23FFFFFF',
+)['passed']
+for invalid_profile_styles in (
+    'bad%20id:designProfile:neon-hub',
+    'api:bad%3Dkey:value',
+    'api:image:value',
+    'api:strokeColor:%00',
+    'api:strokeColor:%FF',
+    f"api:strokeColor:{'a' * 2049}",
+    ','.join(f'profile-{index}:designProfile:technical' for index in range(129)),
+):
+    assert not module['_match_visual_assertion'](
+        [self_contained_drawio],
+        f'drawio_graph: *.drawio profile_styles={invalid_profile_styles}',
+    )['passed']
 `,
     evaluator,
   ]);
+}
+
+function validateDataloaderSetupBoundary() {
+  if (!hasPython3()) return;
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-dataloader-boundary-"));
+  try {
+    run("SkillOpt dataloader setup boundary regression", "python3", [
+      "-c",
+      `import json
+import runpy
+import sys
+import types
+from pathlib import Path
+
+base = types.ModuleType("skillopt.datasets.base")
+
+class SplitDataLoader:
+    def __init__(self, split_dir="", **kwargs):
+        self.split_dir = split_dir
+        self._splits = {}
+
+    def setup(self, cfg):
+        if not self.split_dir:
+            self.split_dir = cfg.get("split_dir", "")
+        for name in ("train", "val", "test"):
+            self._splits[name] = self.load_split_items(Path(self.split_dir) / name)
+
+    def get_split_items(self, split):
+        return list(self._splits.get(split, []))
+
+base.SplitDataLoader = SplitDataLoader
+skillopt = types.ModuleType("skillopt")
+datasets = types.ModuleType("skillopt.datasets")
+sys.modules["skillopt"] = skillopt
+sys.modules["skillopt.datasets"] = datasets
+sys.modules["skillopt.datasets.base"] = base
+
+module = runpy.run_path(sys.argv[1])
+root = Path(sys.argv[2])
+
+def item(identifier, family, group, fixtures=None, skill_name="test-skill"):
+    return {
+        "id": f"{skill_name}/{identifier}",
+        "skill_name": skill_name,
+        "case_path": f"cases/{identifier}.md",
+        "prompt": "Test prompt",
+        "expected_behavior": ["Produce a result."],
+        "rubric_path": None,
+        "fixtures": list(fixtures or []),
+        "split_family": family,
+        "split_group": f"sha256:{group * 64}",
+        "expected_artifacts": [],
+        "deterministic_assertions": ["contains: result"],
+        "visual_assertions": [],
+        "tags": ["positive"],
+        "should_trigger": True,
+        "workspace_policy": "text-only",
+        "source_hash": f"sha256:{identifier}",
+    }
+
+def scenario(name, train, val, test, expected=None):
+    split_root = root / name
+    for split, values in (("train", train), ("val", val), ("test", test)):
+        target = split_root / split / "items.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(values), encoding="utf-8")
+    loader = module["AgentSkillsDataLoader"](split_dir=str(split_root))
+    try:
+        loader.setup({})
+    except ValueError as error:
+        if expected is None:
+            raise
+        assert expected in str(error), error
+    else:
+        if expected is not None:
+            raise AssertionError(f"setup accepted invalid {name} dataset")
+
+scenario(
+    "valid",
+    [item("train", "family-train", "a", ["fixtures/train.svg"])],
+    [item("val", "family-val", "b", ["fixtures/val.svg"])],
+    [item("test", "family-test", "c", ["fixtures/test.svg"])],
+)
+scenario(
+    "group-crossing",
+    [item("train", "family-train", "a")],
+    [item("val", "family-val", "a")],
+    [item("test", "family-test", "c")],
+    "split_group",
+)
+scenario(
+    "fixture-alias",
+    [item("train", "family-train", "a", ["fixtures/shared.svg"])],
+    [item("val", "family-val", "b", ["./fixtures/shared.svg"])],
+    [item("test", "family-test", "c")],
+    "fixture",
+)
+scenario(
+    "family-bridge",
+    [
+        item("train-a", "family-one", "a", ["fixtures/shared.svg"]),
+        item("train-b", "family-two", "a", ["fixtures/shared.svg"]),
+    ],
+    [item("val", "family-two", "b", ["fixtures/other.svg"])],
+    [item("test", "family-test", "c")],
+    "split_family",
+)
+for index, invalid_fixture in enumerate((
+    " ./fixtures/shared.svg",
+    "fixtures/shared.svg ",
+    "C:/private.svg",
+    "https://example.invalid/icon.svg",
+    "../outside.svg",
+    "fixtures\\shared.svg",
+    "fixtures/a|b.svg",
+)):
+    scenario(
+        f"invalid-fixture-{index}",
+        [item("train", "family-train", "a", [invalid_fixture])],
+        [item("val", "family-val", "b")],
+        [item("test", "family-test", "c")],
+        "fixture",
+    )
+scenario(
+    "family-whitespace",
+    [item("train", " family-train", "a")],
+    [item("val", "family-val", "b")],
+    [item("test", "family-test", "c")],
+    "split_family",
+)
+scenario(
+    "skill-name-mismatch",
+    [item("train", "family-train", "a")],
+    [item("val", "family-val", "b", skill_name="other-skill")],
+    [item("test", "family-test", "c")],
+    "skill_name",
+)
+`,
+      path.join(assetRoot, "dataloader.py.template"),
+      temp,
+    ]);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
 }
 
 function validateRolloutArtifactPolicy() {
@@ -161,14 +679,28 @@ function validateRolloutArtifactPolicy() {
   }
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-artifact-policy-"));
   const template = path.join(assetRoot, "rollout.py.template");
+  const templateText = fs.readFileSync(template, "utf8");
+  assertNotIncludes("rollout-owned artifact validation", templateText, "runpy");
+  assertNotIncludes(
+    "rollout-owned artifact validation",
+    templateText,
+    "prepare_trusted_drawio_validator",
+  );
+  assertNotIncludes("rollout-owned artifact validation", templateText, "drawio_validator");
   const python = `
+import base64
+import hashlib
+import html
 import os
 import runpy
 import struct
+import urllib.parse
+import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
 
 module = runpy.run_path(os.environ["ROLLOUT_TEMPLATE"])
+public_validator = runpy.run_path(os.environ["PUBLIC_DRAWIO_VALIDATOR"])
 root = Path(os.environ["TEST_ROOT"])
 
 def chunk(kind, payload):
@@ -254,9 +786,932 @@ late_plte = module["png_metadata"](
 )
 assert not late_plte["valid"], late_plte
 
-assert module["svg_metadata"](root / "valid.svg", b'<svg xmlns="http://www.w3.org/2000/svg"><text>visible</text></svg>')["valid"]
+valid_svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><text>visible</text></svg>'
+assert module["svg_metadata"](root / "valid.svg", valid_svg)["valid"]
+assert module["svg_metadata"](
+    root / "no-namespace.svg",
+    b'<svg viewBox="0 0 16 16"><rect width="16" height="16"/></svg>',
+)["valid"]
 assert not module["svg_metadata"](root / "bad-utf8.svg", b'<svg>\\xff</svg>')["valid"]
 assert not module["svg_metadata"](root / "dtd.svg", b'<!DOCTYPE svg><svg/>')["valid"]
+assert not module["svg_metadata"](root / "empty.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"/>')["valid"]
+assert not module["svg_metadata"](
+    root / "wrong-namespace.svg",
+    b'<svg xmlns="urn:not-svg" viewBox="0 0 16 16"><rect width="16" height="16"/></svg>',
+)["valid"]
+assert not module["svg_metadata"](
+    root / "no-bounds.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg"><rect width="16" height="16"/></svg>',
+)["valid"]
+assert not module["svg_metadata"](
+    root / "processing.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><?unsafe?><rect width="16" height="16"/></svg>',
+)["valid"]
+
+original_svg_element_limit = module["svg_metadata"].__globals__["MAX_SVG_ELEMENTS"]
+module["svg_metadata"].__globals__["MAX_SVG_ELEMENTS"] = 2
+assert not module["svg_metadata"](
+    root / "too-many-elements.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g><rect width="16" height="16"/></g></svg>',
+)["valid"]
+module["svg_metadata"].__globals__["MAX_SVG_ELEMENTS"] = original_svg_element_limit
+original_svg_depth_limit = module["svg_metadata"].__globals__["MAX_SVG_DEPTH"]
+module["svg_metadata"].__globals__["MAX_SVG_DEPTH"] = 2
+assert not module["svg_metadata"](
+    root / "too-deep.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g><rect width="16" height="16"/></g></svg>',
+)["valid"]
+module["svg_metadata"].__globals__["MAX_SVG_DEPTH"] = original_svg_depth_limit
+assert not module["svg_metadata"](
+    root / "malformed-path.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0 L" stroke="#111827" fill="none"/></svg>',
+)["valid"]
+assert not module["svg_metadata"](
+    root / "trailing-path-data.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0 L10 10 garbage" stroke="#111827" fill="none"/></svg>',
+)["valid"]
+assert not module["svg_metadata"](
+    root / "unstroked-line.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><line x1="0" y1="0" x2="10" y2="10"/></svg>',
+)["valid"]
+assert module["svg_metadata"](
+    root / "stroked-line.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><line x1="0" y1="0" x2="10" y2="10" stroke="#111827"/></svg>',
+)["valid"]
+valid_path_metadata = module["svg_metadata"](
+    root / "filled-path.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 0 L10 0 L5 10 Z"/></svg>',
+)
+assert valid_path_metadata["valid"] and "text_sample" not in valid_path_metadata
+for name, unsafe_svg in (
+    ("stylesheet-hidden.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><style>.mark{display:none}</style><rect class="mark" width="16" height="16"/></svg>'),
+    ("stylesheet-transparent.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><style>.mark{fill:transparent}</style><rect class="mark" width="16" height="16"/></svg>'),
+    ("unresolved-paint.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="url(#missing)" d="M0 0h16v16H0z"/></svg>'),
+    ("rgb-alpha-zero.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="rgb(0 0 0 / 0)"/></svg>'),
+    ("current-color-transparent.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g color="transparent"><rect width="16" height="16" fill="currentColor"/></g></svg>'),
+    ("nonfinite-path.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="none" stroke="#111827" d="M0 0L1e999 10"/></svg>'),
+    ("nonfinite-polyline.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polyline fill="none" stroke="#111827" points="0,0 1e999,10"/></svg>'),
+    ("nonfinite-polygon.svg", b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon fill="none" stroke="#111827" points="0,0 10,0 1e999,10"/></svg>'),
+):
+    assert not module["svg_metadata"](root / name, unsafe_svg)["valid"], name
+
+def flow_svg(duration="500ms", delay="0s", start="16", keyframe_offsets="to { stroke-dashoffset: 0; }"):
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 16"><defs><style>@keyframes ge-flow-test {{ {keyframe_offsets} }}</style></defs><path d="M1 8L31 8" fill="none" stroke="#2563eb" stroke-dasharray="8" stroke-dashoffset="{start}" style="animation:{duration} linear {delay} infinite normal none running ge-flow-test"/></svg>'''.encode("utf-8")
+
+animated_svg = module["svg_metadata"](root / "animated.svg", flow_svg())
+assert animated_svg["valid"] and animated_svg["flow_animation"], animated_svg
+zero_offset_svg = module["svg_metadata"](
+    root / "zero-offset.svg",
+    flow_svg(start="16", keyframe_offsets="from { stroke-dashoffset: 0; } to { stroke-dashoffset: 0; }"),
+)
+assert zero_offset_svg["valid"] and not zero_offset_svg["flow_animation"], zero_offset_svg
+delay_only_svg = module["svg_metadata"](root / "delay-only.svg", flow_svg(duration="0s", delay="5s"))
+assert delay_only_svg["valid"] and not delay_only_svg["flow_animation"], delay_only_svg
+for name, invisible_flow in (
+    ("transparent-rgba-flow.svg", flow_svg().replace(b'<path ', b'<rect width="4" height="4" fill="#111827"/><path ').replace(b'stroke="#2563eb"', b'stroke="rgba(37, 99, 235, 0)"')),
+    ("transparent-hex-flow.svg", flow_svg().replace(b'<path ', b'<rect width="4" height="4" fill="#111827"/><path ').replace(b'stroke="#2563eb"', b'stroke="#2563eb00"')),
+    ("transparent-current-color-flow.svg", flow_svg().replace(b'<path ', b'<rect width="4" height="4" fill="#111827"/><g color="transparent"><path ').replace(b'stroke="#2563eb"', b'stroke="currentColor"').replace(b'</svg>', b'</g></svg>')),
+):
+    invisible_metadata = module["svg_metadata"](root / name, invisible_flow)
+    assert invisible_metadata["valid"] and not invisible_metadata["flow_animation"], invisible_metadata
+
+embedded_svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#111827"/></svg>'
+embedded_uri = "data:image/svg+xml;base64," + base64.b64encode(embedded_svg).decode("ascii")
+embedded_markerless_uri = "data:image/svg+xml," + base64.b64encode(embedded_svg).decode("ascii")
+embedded_style_uri = "data:image/svg+xml," + urllib.parse.quote_from_bytes(embedded_svg, safe="")
+exported_svg = (
+    '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 16">'
+    f'<image width="16" height="16" xlink:href="{embedded_uri}"/><text>Northstar</text></svg>'
+).encode("utf-8")
+exported_metadata = module["svg_metadata"](root / "self-contained.svg", exported_svg)
+assert exported_metadata["valid"], exported_metadata
+assert exported_metadata["embedded_svg_images"] == 1, exported_metadata
+assert exported_metadata["external_references"] == 0, exported_metadata
+assert exported_metadata["unsupported_images"] == 0, exported_metadata
+remote_metadata = module["svg_metadata"](
+    root / "remote.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><image width="16" height="16" href="https://example.invalid/logo.svg"/></svg>',
+)
+assert remote_metadata["external_references"] == 1, remote_metadata
+
+for invalid_embedded in (
+    "data:image/svg+xml," + urllib.parse.quote('<!DOCTYPE svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><?unsafe?><rect width="1" height="1"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="urn:not-svg" viewBox="0 0 1 1"><rect width="1" height="1"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><style>.mark{display:none}</style><rect class="mark" width="1" height="1"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="rgb(0 0 0 / 0)"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><g color="transparent"><rect width="1" height="1" fill="currentColor"/></g></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path fill="none" stroke="#000" d="M0 0L1e999 1"/></svg>'),
+    "data:image/svg+xml," + urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><defs><path id="route" d="M0 0L1 1"/></defs><rect width="1" height="1"/><mpath href="#route"/></svg>'),
+    "data:image/svg+xml,%GG",
+):
+    try:
+        module["validate_embedded_image"](invalid_embedded)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unsafe or empty embedded SVG passed harness validation")
+
+def drawio(image_source, *, animated=True, pages=1, animation_suffix="", role="request"):
+    models = []
+    for index in range(pages):
+        animation = "1" if animated else "0"
+        models.append(f'''  <diagram name="Page {index + 1}">
+    <mxGraphModel iconMode="icon-first" adaptiveColors="auto" grid="1" gridSize="8" page="1" pageWidth="827" pageHeight="1169">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="source" value="Source" style="shape=mxgraph.aws4.compute;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="target" value="Target" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="160" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile-operator-grid" value="Profile" style="rounded=1;designProfile=operator-grid;shape=rect;strokeColor=light-dark(#718096,#5B6B80);" vertex="1" parent="1">
+          <mxGeometry x="400" y="160" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="logo" value="Northstar" link="https://docs.example.invalid/product" style="shape=image;image={image_source};aspect=fixed;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="64" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dataRole={role};flowAnimation={animation}{animation_suffix};" edge="1" source="source" target="target" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>''')
+    return '<mxfile host="app.diagrams.net">\\n' + "\\n".join(models) + '\\n</mxfile>'
+
+def compressed_payload(xml):
+    encoded = urllib.parse.quote(xml, safe="").encode("utf-8")
+    compressor = zlib.compressobj(level=9, wbits=-15)
+    compressed = compressor.compress(encoded) + compressor.flush()
+    return base64.b64encode(compressed).decode("ascii")
+
+def compressed_drawio(image_source, *, animated=True):
+    source = ET.fromstring(drawio(image_source, animated=animated))
+    model = source.find("diagram/mxGraphModel")
+    payload = compressed_payload(ET.tostring(model, encoding="unicode"))
+    return f'<mxfile host="app.diagrams.net"><diagram name="Compressed">{payload}</diagram></mxfile>'
+
+drawio_workspace = root / "drawio-workspace"
+drawio_workspace.mkdir()
+(drawio_workspace / "valid.drawio").write_text(drawio(embedded_uri, pages=2), encoding="utf-8")
+(drawio_workspace / "remote.drawio").write_text(
+    drawio("https://example.invalid/logo.svg", animated=False),
+    encoding="utf-8",
+)
+(drawio_workspace / "fixtures").mkdir()
+(drawio_workspace / "fixtures" / "input.drawio").write_text(drawio(embedded_style_uri), encoding="utf-8")
+(drawio_workspace / "fixtures" / "input.svg").write_text(
+    '<svg xmlns="http://www.w3.org/2000/svg"><text>fixture</text></svg>',
+    encoding="utf-8",
+)
+(drawio_workspace / "assets").mkdir()
+(drawio_workspace / "assets" / "helper.svg").write_text(
+    '<svg xmlns="http://www.w3.org/2000/svg"><text>helper</text></svg>',
+    encoding="utf-8",
+)
+drawio_artifacts = module["collect_artifacts"](drawio_workspace)
+assert [item["path"] for item in drawio_artifacts] == ["remote.drawio", "valid.drawio"], drawio_artifacts
+valid_drawio = next(item for item in drawio_artifacts if item["path"] == "valid.drawio")
+remote_drawio = next(item for item in drawio_artifacts if item["path"] == "remote.drawio")
+assert valid_drawio["kind"] == "drawio" and valid_drawio["self_contained_svg"], valid_drawio
+assert valid_drawio["page_count"] == 2 and valid_drawio["uncompressed"], valid_drawio
+assert valid_drawio["adaptive_colors"], valid_drawio
+assert valid_drawio["animation_on"] and not valid_drawio["animation_off"], valid_drawio
+assert valid_drawio["directed_flow_edges"] == 2 and valid_drawio["animated_edges"] == 2, valid_drawio
+assert valid_drawio["native_stencil_count"] == 2, valid_drawio
+assert valid_drawio["embedded_svg_sha256s"] == [hashlib.sha256(embedded_svg).hexdigest()], valid_drawio
+assert valid_drawio["embedded_svg_cell_sha256s"] == [
+    hashlib.sha256(f"logo\\0{hashlib.sha256(embedded_svg).hexdigest()}".encode("utf-8")).hexdigest()
+], valid_drawio
+assert valid_drawio["native_stencil_cell_id_sha256s"] == [
+    hashlib.sha256(b"source").hexdigest()
+], valid_drawio
+assert valid_drawio["edge_role_sha256s"] == [
+    hashlib.sha256(b"flow\\0request").hexdigest()
+], valid_drawio
+expected_profile_styles = {
+    hashlib.sha256(f"{cell_id}\\0{key}\\0{value}".encode("utf-8")).hexdigest()
+    for cell_id, key, value in (
+        ("profile-operator-grid", "designProfile", "operator-grid"),
+        ("profile-operator-grid", "shape", "rect"),
+        ("profile-operator-grid", "strokeColor", "light-dark(#718096,#5B6B80)"),
+    )
+}
+assert set(valid_drawio["profile_style_sha256s"]) == expected_profile_styles, valid_drawio
+assert hashlib.sha256(b"source\\0shape\\0mxgraph.aws4.compute").hexdigest() not in set(
+    valid_drawio["profile_style_sha256s"]
+), valid_drawio
+assert valid_drawio["link_sha256s"] == [hashlib.sha256(b"https://docs.example.invalid/product").hexdigest()], valid_drawio
+assert len(valid_drawio["page_graphs"]) == 2, valid_drawio
+assert {
+    graph["page_name_sha256"] for graph in valid_drawio["page_graphs"]
+} == {
+    hashlib.sha256(b"Page 1").hexdigest(),
+    hashlib.sha256(b"Page 2").hexdigest(),
+}, valid_drawio
+for page_graph in valid_drawio["page_graphs"]:
+    assert page_graph["adaptive_colors"] is True
+    assert hashlib.sha256(b"source").hexdigest() in page_graph["native_stencil_cell_id_sha256s"]
+    assert hashlib.sha256(b"flow\\0request").hexdigest() in page_graph["edge_role_sha256s"]
+    assert set(page_graph["profile_style_sha256s"]) == expected_profile_styles
+assert not remote_drawio["self_contained_svg"], remote_drawio
+assert remote_drawio["animation_off"] and not remote_drawio["animation_on"], remote_drawio
+
+partially_adaptive_source = drawio(embedded_style_uri, pages=2).replace(
+    ' adaptiveColors="auto"',
+    '',
+    1,
+)
+partially_adaptive_metadata = module["drawio_metadata"](
+    root / "partially-adaptive.drawio",
+    partially_adaptive_source.encode("utf-8"),
+)
+assert partially_adaptive_metadata["valid"], partially_adaptive_metadata
+assert not partially_adaptive_metadata["adaptive_colors"], partially_adaptive_metadata
+assert [
+    page["adaptive_colors"] for page in partially_adaptive_metadata["page_graphs"]
+] == [False, True], partially_adaptive_metadata
+
+safe_drawio = drawio(embedded_style_uri)
+markerless_metadata = module["drawio_metadata"](
+    root / "markerless-base64.drawio",
+    drawio(embedded_markerless_uri).encode("utf-8"),
+)
+assert markerless_metadata["valid"], markerless_metadata
+assert markerless_metadata["self_contained_svg"], markerless_metadata
+assert markerless_metadata["external_references"] == 0, markerless_metadata
+assert markerless_metadata["embedded_svg_sha256s"] == [
+    hashlib.sha256(embedded_svg).hexdigest()
+], markerless_metadata
+
+fragment_image_source = safe_drawio.replace(
+    '<mxCell id="target" value="Target" style="rounded=1;"',
+    '<mxCell id="target" value="Target" style="shape=image;image=#missing;aspect=fixed;"',
+)
+fragment_image_metadata = module["drawio_metadata"](
+    root / "fragment-image-source.drawio",
+    fragment_image_source.encode("utf-8"),
+)
+assert fragment_image_metadata["valid"], fragment_image_metadata
+assert fragment_image_metadata["embedded_svg_images"] == 1, fragment_image_metadata
+assert fragment_image_metadata["unsupported_images"] == 1, fragment_image_metadata
+assert not fragment_image_metadata["self_contained_svg"], fragment_image_metadata
+
+empty_image_source = safe_drawio.replace(
+    '<mxCell id="target" value="Target" style="rounded=1;"',
+    '<mxCell id="target" value="Target" style="shape=image;aspect=fixed;"',
+)
+empty_image_metadata = module["drawio_metadata"](
+    root / "empty-image-source.drawio",
+    empty_image_source.encode("utf-8"),
+)
+assert not empty_image_metadata["valid"], empty_image_metadata
+assert "empty or truncated image source" in empty_image_metadata["error"], empty_image_metadata
+
+empty_image_declaration = safe_drawio.replace(
+    '<mxCell id="target" value="Target" style="rounded=1;"',
+    '<mxCell id="target" value="Target" style="image=;aspect=fixed;"',
+)
+empty_image_declaration_metadata = module["drawio_metadata"](
+    root / "empty-image-declaration.drawio",
+    empty_image_declaration.encode("utf-8"),
+)
+assert not empty_image_declaration_metadata["valid"], empty_image_declaration_metadata
+assert "empty or truncated image source" in empty_image_declaration_metadata["error"], empty_image_declaration_metadata
+
+empty_bare_image = safe_drawio.replace(
+    '<mxCell id="target" value="Target" style="rounded=1;"',
+    '<mxCell id="target" value="Target" style="image;aspect=fixed;"',
+)
+empty_bare_image_metadata = module["drawio_metadata"](
+    root / "empty-bare-image.drawio",
+    empty_bare_image.encode("utf-8"),
+)
+assert not empty_bare_image_metadata["valid"], empty_bare_image_metadata
+assert "empty or truncated image source" in empty_bare_image_metadata["error"], empty_bare_image_metadata
+assert module["drawio_is_image_style"]("image;aspect=fixed;")
+
+for public_empty_source in (empty_image_source, empty_image_declaration, empty_bare_image):
+    public_empty_model = ET.fromstring(public_empty_source).find("diagram/mxGraphModel")
+    public_empty_report = public_validator["validate_model"](
+        "Empty image",
+        public_empty_model,
+        "generic",
+        None,
+        "preserve",
+        True,
+    )
+    assert any(
+        "image cell has an empty or missing image source" in error
+        for error in public_empty_report["errors"]
+    ), public_empty_report
+
+embedded_then_remote = safe_drawio.replace(
+    f"image={embedded_style_uri};aspect=fixed;",
+    f"image={embedded_style_uri};image=https://last.example.invalid/icon.svg;aspect=fixed;",
+)
+embedded_then_remote_metadata = module["drawio_metadata"](
+    root / "last-image-remote.drawio",
+    embedded_then_remote.encode("utf-8"),
+)
+assert embedded_then_remote_metadata["valid"], embedded_then_remote_metadata
+assert embedded_then_remote_metadata["embedded_svg_images"] == 0, embedded_then_remote_metadata
+assert embedded_then_remote_metadata["external_references"] == 1, embedded_then_remote_metadata
+assert not embedded_then_remote_metadata["self_contained_svg"], embedded_then_remote_metadata
+
+remote_then_embedded = safe_drawio.replace(
+    f"image={embedded_style_uri};aspect=fixed;",
+    f"image=https://first.example.invalid/icon.svg;image={embedded_style_uri};aspect=fixed;",
+)
+remote_then_embedded_metadata = module["drawio_metadata"](
+    root / "last-image-embedded.drawio",
+    remote_then_embedded.encode("utf-8"),
+)
+assert remote_then_embedded_metadata["valid"], remote_then_embedded_metadata
+assert remote_then_embedded_metadata["embedded_svg_images"] == 1, remote_then_embedded_metadata
+assert remote_then_embedded_metadata["external_references"] == 0, remote_then_embedded_metadata
+assert remote_then_embedded_metadata["self_contained_svg"], remote_then_embedded_metadata
+
+html_remote_value = (
+    '&lt;picture&gt;'
+    '&lt;source srcset=&quot;#logo 1x, https://cdn.example.invalid/icon.svg 2x&quot;&gt;'
+    '&lt;img src=&quot;#logo&quot; style=&quot;background-image:url(https://assets.example.invalid/icon.svg)&quot;&gt;'
+    '&lt;/picture&gt;'
+)
+html_remote_drawio = safe_drawio.replace(
+    'id="target" value="Target"',
+    f'id="target" value="{html_remote_value}"',
+)
+html_remote_metadata = module["drawio_metadata"](
+    root / "html-remote-sources.drawio",
+    html_remote_drawio.encode("utf-8"),
+)
+assert html_remote_metadata["valid"], html_remote_metadata
+assert html_remote_metadata["embedded_svg_images"] == 1, html_remote_metadata
+assert html_remote_metadata["external_references"] == 2, html_remote_metadata
+assert html_remote_metadata["unsupported_images"] == 1, html_remote_metadata
+assert not html_remote_metadata["self_contained_svg"], html_remote_metadata
+duplicate_srcset_value = (
+    '&lt;source srcset=&quot;https://duplicate.example.invalid/icon.svg 2x&quot; '
+    'srcset=&quot;#logo 1x&quot;&gt;'
+)
+duplicate_srcset_drawio = safe_drawio.replace(
+    'id="target" value="Target"',
+    f'id="target" value="{duplicate_srcset_value}"',
+)
+duplicate_srcset_metadata = module["drawio_metadata"](
+    root / "duplicate-srcset.drawio",
+    duplicate_srcset_drawio.encode("utf-8"),
+)
+assert duplicate_srcset_metadata["valid"], duplicate_srcset_metadata
+assert duplicate_srcset_metadata["external_references"] == 1, duplicate_srcset_metadata
+assert duplicate_srcset_metadata["unsupported_images"] == 1, duplicate_srcset_metadata
+assert not duplicate_srcset_metadata["self_contained_svg"], duplicate_srcset_metadata
+assert module["drawio_srcset_sources"](
+    "#logo 1x, https://cdn.example.invalid/icon.svg 2x"
+) == ["#logo", "https://cdn.example.invalid/icon.svg"]
+assert module["drawio_srcset_sources"](
+    f"{embedded_markerless_uri} 1x, https://cdn.example.invalid/fallback.svg 2x"
+) == [embedded_markerless_uri, "https://cdn.example.invalid/fallback.svg"]
+active_parser = module["DrawioImageSourceParser"]()
+active_parser.feed('<mpath href="#logo"/>')
+assert "active-content:mpath" in active_parser.sources, active_parser.sources
+
+for navigation_href in (
+    "docs/guide.html",
+    "../guide.html#install",
+    "/docs/guide.html",
+    "https://docs.example.invalid/guide",
+    "mailto:docs@example.invalid",
+    "tel:+123456",
+    "sms:+123456",
+    "ftp://downloads.example.invalid/guide.pdf",
+    "geo:0,0",
+):
+    navigation_value = html.escape(
+        f'<a href="{navigation_href}">Docs</a>',
+        quote=True,
+    )
+    navigation_drawio = safe_drawio.replace(
+        'id="target" value="Target"',
+        f'id="target" value="{navigation_value}"',
+    )
+    navigation_metadata = module["drawio_metadata"](
+        root / "navigation.drawio",
+        navigation_drawio.encode("utf-8"),
+    )
+    assert navigation_metadata["valid"], navigation_metadata
+    assert navigation_metadata["external_references"] == 0, navigation_metadata
+    assert navigation_metadata["unsupported_images"] == 0, navigation_metadata
+    assert navigation_metadata["self_contained_svg"], navigation_metadata
+
+resource_parser = module["DrawioImageSourceParser"]()
+resource_parser.feed(
+    '<a href="docs/guide.html">Docs</a>'
+    '<svg><image href="https://cdn.example.invalid/image.svg"/>'
+    '<use href="https://cdn.example.invalid/sprite.svg#mark"/></svg>'
+)
+assert "docs/guide.html" not in resource_parser.sources, resource_parser.sources
+assert "https://cdn.example.invalid/image.svg" in resource_parser.sources, resource_parser.sources
+assert "https://cdn.example.invalid/sprite.svg#mark" in resource_parser.sources, resource_parser.sources
+
+unsafe_navigation_parser = module["DrawioImageSourceParser"]()
+unsafe_navigation_parser.feed('<a href="javascript:alert(1)">Unsafe</a>')
+assert "javascript:alert(1)" in unsafe_navigation_parser.sources, unsafe_navigation_parser.sources
+
+def html_resource_drawio(markup):
+    escaped_markup = html.escape(markup, quote=True)
+    return safe_drawio.replace(
+        'id="target" value="Target"',
+        f'id="target" value="{escaped_markup}"',
+    )
+
+missing_html_resources = (
+    "<img>",
+    '<img src="" srcset="">',
+    "<image>",
+    '<image href="" xlink:href="">',
+    "<source>",
+    '<source src="" srcset="">',
+)
+fallback_html_resources = (
+    f'<img src="" srcset="{embedded_markerless_uri} 1x">',
+    f'<image href="" xlink:href="{embedded_markerless_uri}">',
+    f'<source src="" srcset="{embedded_markerless_uri} 1x">',
+)
+for parser_name, parser_type in (
+    ("rollout", module["DrawioImageSourceParser"]),
+    ("public", public_validator["ImageSourceParser"]),
+):
+    for markup in missing_html_resources:
+        parser = parser_type()
+        parser.feed(markup)
+        parser.close()
+        assert any(
+            source.startswith("missing-image-source:") for source in parser.sources
+        ), (parser_name, markup, parser.sources)
+    for markup in fallback_html_resources:
+        parser = parser_type()
+        parser.feed(markup)
+        parser.close()
+        assert not any(
+            source.startswith("missing-image-source:") for source in parser.sources
+        ), (parser_name, markup, parser.sources)
+        assert embedded_markerless_uri in parser.sources, (parser_name, markup, parser.sources)
+
+for markup in missing_html_resources:
+    missing_html_metadata = module["drawio_metadata"](
+        root / "missing-html-resource.drawio",
+        html_resource_drawio(markup).encode("utf-8"),
+    )
+    assert missing_html_metadata["valid"], missing_html_metadata
+    assert missing_html_metadata["unsupported_images"] == 1, missing_html_metadata
+    assert not missing_html_metadata["self_contained_svg"], missing_html_metadata
+
+for markup in fallback_html_resources:
+    fallback_html_metadata = module["drawio_metadata"](
+        root / "fallback-html-resource.drawio",
+        html_resource_drawio(markup).encode("utf-8"),
+    )
+    assert fallback_html_metadata["valid"], fallback_html_metadata
+    assert fallback_html_metadata["unsupported_images"] == 0, fallback_html_metadata
+    assert fallback_html_metadata["self_contained_svg"], fallback_html_metadata
+
+escaped_css_url = "u" + chr(92) + "72l(https://cdn.example.invalid/escaped.svg)"
+unsafe_css_cases = (
+    f'<span style="background:{escaped_css_url}">Escaped</span>',
+    '<span style="@import url(https://cdn.example.invalid/import.css);">Import</span>',
+    f'<style>.mark{{background:{escaped_css_url}}}</style><span class="mark">Escaped</span>',
+    '<style>@import "https://cdn.example.invalid/import.css";.mark{background:url(https://cdn.example.invalid/visible.svg)}</style><span class="mark">Import</span>',
+)
+image_set_css_cases = (
+    '<span style="background-image:image-set(&quot;https://cdn.example.invalid/one.png&quot; 1x, &quot;https://cdn.example.invalid/two.png&quot; 2x)">Image set</span>',
+    '<style>.mark{background-image:-webkit-image-set("https://cdn.example.invalid/one.png" 1x)}</style><span class="mark">Image set</span>',
+)
+for parser_name, parser_type in (
+    ("rollout", module["DrawioImageSourceParser"]),
+    ("public", public_validator["ImageSourceParser"]),
+):
+    for markup in unsafe_css_cases:
+        parser = parser_type()
+        parser.feed(markup)
+        parser.close()
+        assert any(source.startswith("unsafe-css:") for source in parser.sources), (
+            parser_name,
+            markup,
+            parser.sources,
+        )
+    mixed_parser = parser_type()
+    mixed_parser.feed(unsafe_css_cases[-1])
+    mixed_parser.close()
+    assert "https://cdn.example.invalid/visible.svg" in mixed_parser.sources, (
+        parser_name,
+        mixed_parser.sources,
+    )
+    for markup in image_set_css_cases:
+        parser = parser_type()
+        parser.feed(markup)
+        parser.close()
+        assert "unsupported-css:image-set" in parser.sources, (
+            parser_name,
+            markup,
+            parser.sources,
+        )
+
+for markup in unsafe_css_cases + image_set_css_cases:
+    unsafe_css_metadata = module["drawio_metadata"](
+        root / "unsafe-css.drawio",
+        html_resource_drawio(markup).encode("utf-8"),
+    )
+    assert unsafe_css_metadata["valid"], unsafe_css_metadata
+    assert unsafe_css_metadata["unsupported_images"] >= 1, unsafe_css_metadata
+    assert not unsafe_css_metadata["self_contained_svg"], unsafe_css_metadata
+
+for raw_url, normalized_url in (
+    (chr(0) + " " + chr(9) + "java" + chr(10) + "script:alert(1)" + chr(13) + chr(31), "javascript:alert(1)"),
+    ("java" + chr(9) + "script:alert(1)", "javascript:alert(1)"),
+    ("vb" + chr(13) + "script:msgbox(1)", "vbscript:msgbox(1)"),
+    ("data:" + chr(10) + "text/html,unsafe", "data:text/html,unsafe"),
+):
+    assert module["normalize_url_for_scheme"](raw_url) == normalized_url
+    assert public_validator["normalize_url_for_scheme"](raw_url) == normalized_url
+    for parser_name, parser_type in (
+        ("rollout", module["DrawioImageSourceParser"]),
+        ("public", public_validator["ImageSourceParser"]),
+    ):
+        parser = parser_type()
+        parser.feed(f'<a href="{raw_url}">Unsafe</a>')
+        parser.close()
+        assert parser.sources, (parser_name, raw_url, parser.sources)
+
+for unsafe_name, unsafe_href in (
+    ("javascript-lf", "java&#10;script:alert(1)"),
+    ("javascript-tab", "java&#9;script:alert(1)"),
+    ("vbscript-cr", "vb&#13;script:msgbox(1)"),
+    ("data-html-lf", "data:&#10;text/html,unsafe"),
+    ("trimmed-c0", " &#9;javascript:alert(1)&#13; "),
+):
+    unsafe_navigation_value = (
+        f'&lt;a href=&quot;{unsafe_href}&quot;&gt;Unsafe&lt;/a&gt;'
+    )
+    unsafe_navigation_drawio = safe_drawio.replace(
+        'id="target" value="Target"',
+        f'id="target" value="{unsafe_navigation_value}"',
+    )
+    unsafe_navigation_metadata = module["drawio_metadata"](
+        root / f"unsafe-navigation-{unsafe_name}.drawio",
+        unsafe_navigation_drawio.encode("utf-8"),
+    )
+    assert unsafe_navigation_metadata["valid"], unsafe_navigation_metadata
+    assert unsafe_navigation_metadata["unsupported_images"] == 1, unsafe_navigation_metadata
+    assert not unsafe_navigation_metadata["self_contained_svg"], unsafe_navigation_metadata
+
+for profile_visibility_name, profile_visibility_source in (
+    (
+        "hidden-profile-cell",
+        safe_drawio.replace(
+            '<mxCell id="profile-operator-grid"',
+            '<mxCell id="profile-operator-grid" visible="0"',
+        ),
+    ),
+    (
+        "hidden-profile-layer",
+        safe_drawio.replace(
+            '<mxCell id="1" parent="0"/>',
+            '<mxCell id="1" parent="0" visible="0"/>',
+        ),
+    ),
+    (
+        "zero-size-profile-cell",
+        safe_drawio.replace(
+            '<mxGeometry x="400" y="160" width="120" height="60" as="geometry"/>',
+            '<mxGeometry x="400" y="160" width="0" height="0" as="geometry"/>',
+        ),
+    ),
+):
+    profile_visibility_metadata = module["drawio_metadata"](
+        root / f"{profile_visibility_name}.drawio",
+        profile_visibility_source.encode("utf-8"),
+    )
+    assert profile_visibility_metadata["valid"], profile_visibility_metadata
+    assert not profile_visibility_metadata["profile_style_sha256s"], profile_visibility_metadata
+    assert not profile_visibility_metadata["page_graphs"][0]["profile_style_sha256s"], profile_visibility_metadata
+
+terminal_image_style = safe_drawio.replace(
+    f'image={embedded_style_uri};aspect=fixed;dataRole=component;',
+    f'aspect=fixed;dataRole=component;image={embedded_style_uri};',
+)
+terminal_image_metadata = module["drawio_metadata"](
+    root / "terminal-image-style.drawio",
+    terminal_image_style.encode("utf-8"),
+)
+assert terminal_image_metadata["valid"] and terminal_image_metadata["self_contained_svg"], terminal_image_metadata
+
+wrapped_cell = f'''        <object id="logo" label="Northstar" link="https://docs.example.invalid/product"><mxCell style="shape=image;image={embedded_style_uri};aspect=fixed;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="64" height="64" as="geometry"/>
+        </mxCell></object>'''
+plain_logo_cell = f'''        <mxCell id="logo" value="Northstar" link="https://docs.example.invalid/product" style="shape=image;image={embedded_style_uri};aspect=fixed;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="64" height="64" as="geometry"/>
+        </mxCell>'''
+wrapped_drawio = safe_drawio.replace(plain_logo_cell, wrapped_cell)
+assert wrapped_drawio != safe_drawio
+wrapped_metadata = module["drawio_metadata"](
+    root / "wrapped.drawio",
+    wrapped_drawio.encode("utf-8"),
+)
+assert wrapped_metadata["valid"] and wrapped_metadata["self_contained_svg"], wrapped_metadata
+assert hashlib.sha256(b"logo").hexdigest() in wrapped_metadata["cell_id_sha256s"], wrapped_metadata
+wrapped_remote_metadata = module["drawio_metadata"](
+    root / "wrapped-remote.drawio",
+    wrapped_drawio.replace(embedded_style_uri, "https://example.invalid/logo.svg").encode("utf-8"),
+)
+assert wrapped_remote_metadata["valid"] and not wrapped_remote_metadata["self_contained_svg"], wrapped_remote_metadata
+assert not module["drawio_metadata"](
+    root / "wrapped-missing-geometry.drawio",
+    wrapped_drawio.replace('<mxGeometry x="40" y="40" width="64" height="64" as="geometry"/>', "").encode("utf-8"),
+)["valid"]
+near_empty_drawio = b'''<mxfile><diagram name="Empty"><mxGraphModel><root>
+  <mxCell id="0"/><mxCell id="1" parent="0"/>
+</root></mxGraphModel></diagram></mxfile>'''
+assert not module["drawio_metadata"](root / "near-empty.drawio", near_empty_drawio)["valid"]
+assert not module["drawio_metadata"](
+    root / "missing-vertex-geometry.drawio",
+    safe_drawio.replace(
+        '<mxGeometry x="40" y="160" width="120" height="60" as="geometry"/>',
+        '',
+        1,
+    ).encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "nonfinite-vertex.drawio",
+    safe_drawio.replace('x="40" y="160"', 'x="NaN" y="160"', 1).encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "missing-relative-edge.drawio",
+    safe_drawio.replace(
+        '<mxGeometry relative="1" as="geometry"/>',
+        '<mxGeometry as="geometry"/>',
+        1,
+    ).encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "nonvertex-endpoint.drawio",
+    safe_drawio.replace('source="source"', 'source="1"', 1).encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "missing-terminal.drawio",
+    safe_drawio.replace(' target="target"', '', 1).encode("utf-8"),
+)["valid"]
+explicit_terminals = safe_drawio.replace(
+    ' source="source" target="target"',
+    '',
+    1,
+).replace(
+    '<mxGeometry relative="1" as="geometry"/>',
+    '<mxGeometry relative="1" as="geometry"><mxPoint x="160" y="190" as="sourcePoint"/><mxPoint x="240" y="190" as="targetPoint"/></mxGeometry>',
+    1,
+)
+assert module["drawio_metadata"](
+    root / "explicit-terminals.drawio",
+    explicit_terminals.encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "nonfinite-terminal.drawio",
+    explicit_terminals.replace('x="160"', 'x="Infinity"', 1).encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "missing-parent.drawio",
+    safe_drawio.replace(
+        'id="source" value="Source" style="shape=mxgraph.aws4.compute;" vertex="1" parent="1"',
+        'id="source" value="Source" style="shape=mxgraph.aws4.compute;" vertex="1" parent="missing"',
+        1,
+    ).encode("utf-8"),
+)["valid"]
+parent_cycle = safe_drawio.replace(
+    'id="source" value="Source" style="shape=mxgraph.aws4.compute;" vertex="1" parent="1"',
+    'id="source" value="Source" style="shape=mxgraph.aws4.compute;" vertex="1" parent="target"',
+    1,
+).replace(
+    'id="target" value="Target" style="rounded=1;" vertex="1" parent="1"',
+    'id="target" value="Target" style="rounded=1;" vertex="1" parent="source"',
+    1,
+)
+assert not module["drawio_metadata"](
+    root / "parent-cycle.drawio",
+    parent_cycle.encode("utf-8"),
+)["valid"]
+
+compressed_metadata = module["drawio_metadata"](
+    root / "compressed.drawio",
+    compressed_drawio(embedded_uri).encode("utf-8"),
+)
+assert compressed_metadata["valid"] and not compressed_metadata["uncompressed"], compressed_metadata
+assert compressed_metadata["self_contained_svg"], compressed_metadata
+assert compressed_metadata["animation_on"] and not compressed_metadata["animation_off"], compressed_metadata
+assert compressed_metadata["embedded_svg_sha256s"] == [hashlib.sha256(embedded_svg).hexdigest()]
+encoded_malformed_percent = urllib.parse.quote(
+    ET.tostring(ET.fromstring(safe_drawio).find("diagram/mxGraphModel"), encoding="unicode"),
+    safe="",
+).replace("Source", "%GG", 1)
+compressor = zlib.compressobj(level=9, wbits=-15)
+malformed_percent_payload = base64.b64encode(
+    compressor.compress(encoded_malformed_percent.encode("utf-8")) + compressor.flush()
+).decode("ascii")
+malformed_percent_drawio = f'<mxfile><diagram name="Broken">{malformed_percent_payload}</diagram></mxfile>'
+assert not module["drawio_metadata"](
+    root / "malformed-percent.drawio",
+    malformed_percent_drawio.encode("utf-8"),
+)["valid"]
+assert not module["drawio_metadata"](
+    root / "garbage-compressed.drawio",
+    b'<mxfile><diagram name="Broken">not-valid-base64!</diagram></mxfile>',
+)["valid"]
+for unsafe_inner_xml in (
+    '<!DOCTYPE mxGraphModel [<!ENTITY x "boom">]><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel>',
+    '<mxGraphModel><?unsafe?><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel>',
+):
+    unsafe_compressed = (
+        '<mxfile><diagram name="Unsafe">'
+        + compressed_payload(unsafe_inner_xml)
+        + '</diagram></mxfile>'
+    ).encode("utf-8")
+    assert not module["drawio_metadata"](
+        root / "unsafe-compressed.drawio",
+        unsafe_compressed,
+    )["valid"]
+original_inflated_drawio_limit = module["drawio_metadata"].__globals__["MAX_INFLATED_DRAWIO_BYTES"]
+module["drawio_metadata"].__globals__["MAX_INFLATED_DRAWIO_BYTES"] = 64
+assert not module["drawio_metadata"](
+    root / "inflated-limit.drawio",
+    compressed_drawio(embedded_uri).encode("utf-8"),
+)["valid"]
+module["drawio_metadata"].__globals__["MAX_INFLATED_DRAWIO_BYTES"] = original_inflated_drawio_limit
+
+static_animation = module["drawio_metadata"](
+    root / "static-animation.drawio",
+    drawio(embedded_style_uri, role="ownership").encode("utf-8"),
+)
+assert static_animation["valid"] and static_animation["animated_static_edges"] == 1
+assert not static_animation["animation_on"] and not static_animation["animation_off"]
+assert hashlib.sha256(b"source\\0target").hexdigest() in static_animation["directed_edge_sha256s"]
+no_arrow_animation = module["drawio_metadata"](
+    root / "no-arrow-animation.drawio",
+    drawio(embedded_style_uri).replace("endArrow=block;", "endArrow=none;startArrow=none;").encode("utf-8"),
+)
+assert no_arrow_animation["valid"] and not no_arrow_animation["animation_on"], no_arrow_animation
+
+bom_metadata = module["drawio_metadata"](
+    root / "bom.drawio",
+    b'\\xef\\xbb\\xbf<?xml version="1.0" encoding="UTF-8"?>' + drawio(embedded_style_uri).encode("utf-8"),
+)
+assert bom_metadata["valid"], bom_metadata
+
+invalid_animation = module["drawio_metadata"](
+    root / "invalid-animation.drawio",
+    drawio(embedded_style_uri, animation_suffix=";flowAnimationUnknown=1").encode("utf-8"),
+)
+assert not invalid_animation["valid"], invalid_animation
+malformed_image = module["drawio_metadata"](
+    root / "malformed-image.drawio",
+    drawio("data:image/svg+xml,%3Csvg%2F%3E").encode("utf-8"),
+)
+assert not malformed_image["valid"], malformed_image
+truncated_image = module["drawio_metadata"](
+    root / "truncated-image-data-uri.drawio",
+    drawio("data:image/svg+xml;base64,").encode("utf-8"),
+)
+assert not truncated_image["valid"], truncated_image
+malformed_percent_image = module["drawio_metadata"](
+    root / "malformed-percent-image.drawio",
+    drawio("data:image/svg+xml,%GG").encode("utf-8"),
+)
+assert not malformed_percent_image["valid"], malformed_percent_image
+original_drawio_element_limit = module["drawio_metadata"].__globals__["MAX_DRAWIO_ELEMENTS"]
+module["drawio_metadata"].__globals__["MAX_DRAWIO_ELEMENTS"] = 4
+assert not module["drawio_metadata"](
+    root / "too-many-drawio-elements.drawio",
+    drawio(embedded_style_uri).encode("utf-8"),
+)["valid"]
+module["drawio_metadata"].__globals__["MAX_DRAWIO_ELEMENTS"] = original_drawio_element_limit
+
+compressed_source = ET.fromstring(safe_drawio)
+compressed_model = ET.tostring(compressed_source.find("diagram/mxGraphModel"), encoding="unicode")
+compressed_model_payload = compressed_payload(compressed_model)
+two_compressed_pages = (
+    '<mxfile><diagram name="One">'
+    + compressed_model_payload
+    + '</diagram><diagram name="Two">'
+    + compressed_model_payload
+    + '</diagram></mxfile>'
+)
+outer_elements = len(list(ET.fromstring(two_compressed_pages).iter()))
+model_elements = len(list(ET.fromstring(compressed_model).iter()))
+module["drawio_metadata"].__globals__["MAX_DRAWIO_ELEMENTS"] = outer_elements + model_elements
+assert not module["drawio_metadata"](
+    root / "aggregate-element-limit.drawio",
+    two_compressed_pages.encode("utf-8"),
+)["valid"]
+module["drawio_metadata"].__globals__["MAX_DRAWIO_ELEMENTS"] = original_drawio_element_limit
+
+public_source = root / "public-validator.drawio"
+public_source.write_text(safe_drawio, encoding="utf-8")
+assert len(public_validator["parse_models"](public_source)) == 1
+public_globals = public_validator["parse_models"].__globals__
+for limit_name, low_limit in (
+    ("MAX_DRAWIO_SOURCE_BYTES", 64),
+    ("MAX_DRAWIO_ELEMENTS", 4),
+    ("MAX_DRAWIO_DEPTH", 2),
+):
+    original_limit = public_globals[limit_name]
+    public_globals[limit_name] = low_limit
+    try:
+        public_validator["parse_models"](public_source)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(f"public validator did not enforce {limit_name}")
+    finally:
+        public_globals[limit_name] = original_limit
+
+public_malformed_percent = root / "public-malformed-percent.drawio"
+public_malformed_percent.write_text(malformed_percent_drawio, encoding="utf-8")
+try:
+    public_validator["parse_models"](public_malformed_percent)
+except ValueError:
+    pass
+else:
+    raise AssertionError("public validator accepted malformed compressed percent encoding")
+
+for public_name, public_xml, expected_fragment in (
+    (
+        "public-nonfinite-geometry.drawio",
+        safe_drawio.replace('x="40" y="160"', 'x="NaN" y="160"', 1),
+        "mxGeometry x must be finite",
+    ),
+    (
+        "public-nonfinite-point.drawio",
+        explicit_terminals.replace('x="160"', 'x="Infinity"', 1),
+        "mxPoint x must be finite",
+    ),
+):
+    public_path = root / public_name
+    public_path.write_text(public_xml, encoding="utf-8")
+    page_name, model = public_validator["parse_models"](public_path)[0]
+    public_report = public_validator["validate_model"](
+        page_name,
+        model,
+        "generic",
+        None,
+        "preserve",
+        False,
+    )
+    assert any(expected_fragment in error for error in public_report["errors"]), public_report
+
+public_two_pages = root / "public-two-compressed.drawio"
+public_two_pages.write_text(two_compressed_pages, encoding="utf-8")
+encoded_model_bytes = len(urllib.parse.quote(compressed_model, safe="").encode("utf-8"))
+original_public_inflated_limit = public_globals["MAX_INFLATED_DIAGRAM_BYTES"]
+public_globals["MAX_INFLATED_DIAGRAM_BYTES"] = encoded_model_bytes * 2 - 1
+try:
+    public_validator["parse_models"](public_two_pages)
+except ValueError:
+    pass
+else:
+    raise AssertionError("public validator did not enforce aggregate inflated bytes")
+finally:
+    public_globals["MAX_INFLATED_DIAGRAM_BYTES"] = original_public_inflated_limit
+
+outer_public_elements = len(list(ET.fromstring(two_compressed_pages).iter()))
+decoded_public_elements = len(list(ET.fromstring(compressed_model).iter()))
+original_public_element_limit = public_globals["MAX_DRAWIO_ELEMENTS"]
+public_globals["MAX_DRAWIO_ELEMENTS"] = outer_public_elements + decoded_public_elements
+try:
+    public_validator["parse_models"](public_two_pages)
+except ValueError:
+    pass
+else:
+    raise AssertionError("public validator did not enforce aggregate decoded elements")
+finally:
+    public_globals["MAX_DRAWIO_ELEMENTS"] = original_public_element_limit
+
+old_workspace_limit = module["collect_artifacts"].__globals__["MAX_WORKSPACE_ENTRIES"]
+module["collect_artifacts"].__globals__["MAX_WORKSPACE_ENTRIES"] = 2
+assert len(module["collect_artifacts"](drawio_workspace)) == 2
+module["collect_artifacts"].__globals__["MAX_WORKSPACE_ENTRIES"] = old_workspace_limit
+
+drawio_quota = root / "drawio-quota"
+drawio_quota.mkdir()
+(drawio_quota / "large.drawio").write_text("x" * 64, encoding="utf-8")
+module["collect_artifacts"].__globals__["MAX_ARTIFACT_TOTAL_BYTES"] = 32
+try:
+    module["collect_artifacts"](drawio_quota)
+except module["ArtifactPolicyError"]:
+    pass
+else:
+    raise AssertionError("draw.io artifacts did not use the aggregate byte quota")
 
 quota = root / "quota"
 quota.mkdir()
@@ -282,6 +1737,51 @@ except module["ArtifactPolicyError"]:
 else:
     raise AssertionError("artifact count quota was not enforced")
 
+snapshot_workspace = root / "snapshot-workspace"
+snapshot_workspace.mkdir()
+snapshot_path = snapshot_workspace / "result.svg"
+snapshot_bytes = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><text>Original</text></svg>'
+replacement_bytes = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><text>Changed!</text></svg>'
+snapshot_path.write_bytes(snapshot_bytes)
+original_svg_metadata = module["collect_artifacts"].__globals__["svg_metadata"]
+
+def mutate_after_snapshot(path, data):
+    assert data == snapshot_bytes
+    path.write_bytes(replacement_bytes)
+    return original_svg_metadata(path, data)
+
+module["collect_artifacts"].__globals__["svg_metadata"] = mutate_after_snapshot
+snapshot_artifact = module["collect_artifacts"](snapshot_workspace)[0]
+module["collect_artifacts"].__globals__["svg_metadata"] = original_svg_metadata
+assert snapshot_artifact["sha256"] == hashlib.sha256(snapshot_bytes).hexdigest(), snapshot_artifact
+assert snapshot_artifact["visible_text"] == "Original", snapshot_artifact
+
+changing_workspace = root / "changing-workspace"
+changing_workspace.mkdir()
+changing_path = changing_workspace / "result.svg"
+changing_path.write_bytes(snapshot_bytes)
+module_os = module["read_artifact_snapshot"].__globals__["os"]
+original_read = module_os.read
+changed = False
+
+def change_during_read(descriptor, size):
+    global changed
+    data = original_read(descriptor, size)
+    if data and not changed:
+        changed = True
+        changing_path.write_bytes(replacement_bytes)
+    return data
+
+module_os.read = change_during_read
+try:
+    module["collect_artifacts"](changing_workspace)
+except module["ArtifactPolicyError"]:
+    pass
+else:
+    raise AssertionError("artifact mutation during the descriptor read was not detected")
+finally:
+    module_os.read = original_read
+
 outside_dir = root / "outside-dir"
 outside_dir.mkdir()
 (outside_dir / "outside.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"><text>outside</text></svg>', encoding="utf-8")
@@ -289,10 +1789,35 @@ symlink_workspace = root / "symlink-workspace"
 symlink_workspace.mkdir()
 (symlink_workspace / "linked-dir").symlink_to(outside_dir, target_is_directory=True)
 assert module["collect_artifacts"](symlink_workspace) == []
+
+symlink_file_workspace = root / "symlink-file-workspace"
+symlink_file_workspace.mkdir()
+(symlink_file_workspace / "outside.svg").symlink_to(outside_dir / "outside.svg")
+assert module["collect_artifacts"](symlink_file_workspace) == []
+assert "O_NOFOLLOW" in module["read_artifact_snapshot"].__code__.co_names
+assert "O_NONBLOCK" in module["read_artifact_snapshot"].__code__.co_names
+if hasattr(os, "mkfifo"):
+    fifo_workspace = root / "fifo-workspace"
+    fifo_workspace.mkdir()
+    os.mkfifo(fifo_workspace / "blocked.svg")
+    try:
+        module["collect_artifacts"](fifo_workspace)
+    except module["ArtifactPolicyError"]:
+        pass
+    else:
+        raise AssertionError("FIFO artifact did not fail closed")
 `;
   try {
     run("SkillOpt rollout artifact-policy smoke", "python3", ["-c", python], {
-      env: { ...process.env, ROLLOUT_TEMPLATE: template, TEST_ROOT: tempDir },
+      env: {
+        ...process.env,
+        ROLLOUT_TEMPLATE: template,
+        PUBLIC_DRAWIO_VALIDATOR: path.join(
+          root,
+          "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py",
+        ),
+        TEST_ROOT: tempDir,
+      },
     });
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -509,11 +2034,18 @@ async function validateCodexJudgeAndReflectorIsolation() {
   }
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-codex-analysis-isolation-"));
   const fakeCodex = path.join(tempDir, "fake-codex");
+  const noReadCodex = path.join(tempDir, "fake-codex-no-read");
+  const partialEchoCodex = path.join(tempDir, "fake-codex-partial-echo");
+  const noReadChildPidFile = path.join(tempDir, "no-read-child.pid");
+  const expectationsFile = path.join(tempDir, "prompt-expectations.json");
   const reportDir = path.join(tempDir, "reports");
+  const promptMarker = "stdin-only-marker-7f3b2c91";
+  const failureMarker = "stdin-judge-failure-marker-45a8";
   fs.mkdirSync(reportDir, { recursive: true });
   writeFile(
     fakeCodex,
     `#!/usr/bin/env python3
+import hashlib
 import json
 import os
 import pathlib
@@ -521,16 +2053,29 @@ import subprocess
 import sys
 
 args = sys.argv[1:]
+prompt_bytes = sys.stdin.buffer.read()
+prompt = prompt_bytes.decode("utf-8", errors="strict")
 output_index = args.index("--output-last-message")
 output = pathlib.Path(args[output_index + 1])
-kind = "judge" if output.name == "judge.json" else "reflector"
+kind = "judge" if output.name == "judge.json" else ("reflector" if output.name == "patch.json" else "direct")
 helper = subprocess.Popen(
     [sys.executable, "-c", "import signal,time; signal.signal(signal.SIGTERM, lambda *_: None); time.sleep(3600)"],
 )
 pathlib.Path(${JSON.stringify(reportDir)}, kind + ".json").write_text(
-    json.dumps({"args": args, "environment_keys": sorted(os.environ), "child_pid": helper.pid}),
+    json.dumps({
+        "args": args,
+        "environment_keys": sorted(os.environ),
+        "child_pid": helper.pid,
+        "stdin_bytes": len(prompt_bytes),
+        "stdin_sha256": hashlib.sha256(prompt_bytes).hexdigest(),
+        "stdin_has_marker": ${JSON.stringify(promptMarker)} in prompt,
+    }),
     encoding="utf-8",
 )
+sys.stdout.buffer.write(b"child-stdout-prefix\\n" + prompt_bytes + b"\\nchild-stdout-suffix\\n")
+sys.stderr.buffer.write(b"child-stderr-prefix\\n" + prompt_bytes + b"\\nchild-stderr-suffix\\n")
+if ${JSON.stringify(failureMarker)} in prompt:
+    raise SystemExit(9)
 payload = (
     {"passed": True, "score": 1.0, "reason": "semantic pass", "assertions": []}
     if kind == "judge"
@@ -539,9 +2084,48 @@ payload = (
 output.write_text(json.dumps(payload), encoding="utf-8")
 `,
   );
+  writeFile(
+    noReadCodex,
+    `#!/usr/bin/env python3
+import pathlib
+import signal
+import subprocess
+import sys
+import time
+
+signal.signal(signal.SIGTERM, lambda *_: None)
+helper = subprocess.Popen(
+    [sys.executable, "-c", "import signal,time; signal.signal(signal.SIGTERM, lambda *_: None); time.sleep(3600)"],
+)
+pathlib.Path(${JSON.stringify(noReadChildPidFile)}).write_text(str(helper.pid), encoding="utf-8")
+while True:
+    time.sleep(3600)
+`,
+  );
+  writeFile(
+    partialEchoCodex,
+    `#!/usr/bin/env python3
+import sys
+import time
+
+prompt = sys.stdin.read()
+sys.stdout.write("stdout-diagnostic:" + prompt[:1] + ":stdout-tail")
+sys.stdout.flush()
+middle = max(0, len(prompt) // 2)
+sys.stderr.write("stderr-diagnostic:" + prompt[middle:middle + 7] + ":stderr-tail")
+sys.stderr.flush()
+time.sleep(3600)
+`,
+  );
   fs.chmodSync(fakeCodex, 0o755);
+  fs.chmodSync(noReadCodex, 0o755);
+  fs.chmodSync(partialEchoCodex, 0o755);
   const python = `
+import hashlib
+import json
+import os
 import runpy
+import subprocess
 import sys
 from pathlib import Path
 
@@ -549,16 +2133,49 @@ evaluator_module = runpy.run_path(sys.argv[1])
 reflector_module = runpy.run_path(sys.argv[2])
 fake_codex = sys.argv[3]
 out_dir = Path(sys.argv[4])
+no_read_codex = sys.argv[5]
+expectations_path = Path(sys.argv[6])
+partial_echo_codex = sys.argv[7]
+out_dir.mkdir(parents=True, exist_ok=True)
+prompt_marker = ${JSON.stringify(promptMarker)}
+failure_marker = ${JSON.stringify(failureMarker)}
+unicode_suffix = "Gr\\u00fc\\u00dfe \\U0001f44b"
+large_prompt = prompt_marker + ":" + unicode_suffix + ":" + ("j" * (140 * 1024))
 
 evaluator = evaluator_module["AgentSkillsEvaluator"]({
     "judge_backend": "codex_cli",
     "codex_exec_path": fake_codex,
     "codex_cli_judge_timeout": 10,
 })
-score = evaluator.score(
-    {"id": "judge-isolation", "skill_name": "test", "expected_behavior": ["semantic pass"]},
+failure_case = {
+    "id": "judge-echo-failure",
+    "skill_name": "test",
+    "prompt": failure_marker + ":" + unicode_suffix,
+    "expected_behavior": ["semantic pass"],
+}
+failure_score = evaluator.score(
+    failure_case,
     {"returncode": 0, "response": "candidate response", "artifacts": []},
 )
+assert failure_score["hard"] == 0, failure_score
+assert failure_marker not in failure_score["judge_reason"], failure_score
+assert "[redacted-prompt]" in failure_score["judge_reason"], failure_score
+assert "child-stderr-prefix" in failure_score["judge_reason"], failure_score
+assert "child-stderr-suffix" in failure_score["judge_reason"], failure_score
+
+judge_case = {
+    "id": "judge-isolation",
+    "skill_name": "test",
+    "prompt": large_prompt,
+    "expected_behavior": ["semantic pass"],
+}
+judge_response = {"returncode": 0, "response": "candidate response", "artifacts": []}
+expected_judge_prompt = evaluator._judge_prompt(
+    judge_case,
+    judge_response["response"],
+    judge_case["expected_behavior"],
+)
+score = evaluator.score(judge_case, judge_response)
 assert score["hard"] == 1, score
 
 reflector = reflector_module["CodexCliReflector"]({
@@ -566,12 +2183,71 @@ reflector = reflector_module["CodexCliReflector"]({
     "codex_cli_reflection_timeout": 10,
     "edit_budget": 2,
 })
-patches = reflector.reflect(
-    [{"id": "failed", "hard": 0, "prediction": "old"}],
-    "# Skill\\n\\nold\\n",
+reflection_results = [{"id": "failed", "hard": 0, "prediction": "old"}]
+skill_content = "# Skill\\n\\n" + prompt_marker + ":" + unicode_suffix + "\\nold\\n"
+expected_reflection_prompt = reflector._prompt(reflection_results, skill_content, {})
+
+direct_prompt = "reflector-direct-marker:" + unicode_suffix
+direct_output = out_dir / "direct.json"
+completed = reflector_module["_run_isolated_codex"](
+    [fake_codex, "exec", "--output-last-message", str(direct_output), "-"],
+    direct_prompt,
     out_dir,
+    os.environ.copy(),
+    10,
 )
+assert direct_prompt not in completed.stdout, completed.stdout
+assert direct_prompt not in completed.stderr, completed.stderr
+assert "[redacted-prompt]" in completed.stdout, completed.stdout
+assert "[redacted-prompt]" in completed.stderr, completed.stderr
+assert "child-stdout-prefix" in completed.stdout and "child-stdout-suffix" in completed.stdout
+assert "child-stderr-prefix" in completed.stderr and "child-stderr-suffix" in completed.stderr
+
+patches = reflector.reflect(reflection_results, skill_content, out_dir)
 assert len(patches) == 1, patches
+
+def prompt_summary(value):
+    encoded = value.encode("utf-8")
+    return {"stdin_bytes": len(encoded), "stdin_sha256": hashlib.sha256(encoded).hexdigest()}
+
+expectations_path.write_text(
+    json.dumps({
+        "judge": prompt_summary(expected_judge_prompt),
+        "reflector": prompt_summary(expected_reflection_prompt),
+    }),
+    encoding="utf-8",
+)
+
+timeout_dir = out_dir / "timeout"
+timeout_dir.mkdir()
+try:
+    evaluator_module["_run_isolated_codex"](
+        [no_read_codex, "exec", "-"],
+        "no-read:" + unicode_suffix + ":" + ("t" * (256 * 1024)),
+        timeout_dir,
+        os.environ.copy(),
+        1,
+    )
+except subprocess.TimeoutExpired:
+    pass
+else:
+    raise AssertionError("large no-read stdin child did not time out")
+
+partial_prompt = "partial-timeout-prompt:" + unicode_suffix
+for module in (evaluator_module, reflector_module):
+    try:
+        module["_run_isolated_codex"](
+            [partial_echo_codex, "exec", "-"],
+            partial_prompt,
+            timeout_dir,
+            os.environ.copy(),
+            1,
+        )
+    except subprocess.TimeoutExpired as error:
+        assert error.stdout == "[redacted-prompt]", error.stdout
+        assert error.stderr == "[redacted-prompt]", error.stderr
+    else:
+        raise AssertionError("partial prompt echo child did not time out")
 `;
   try {
     const smoke = spawnSync(
@@ -583,12 +2259,19 @@ assert len(patches) == 1, patches
         path.join(assetRoot, "codex_cli_reflector.py.template"),
         fakeCodex,
         path.join(tempDir, "output"),
+        noReadCodex,
+        expectationsFile,
+        partialEchoCodex,
       ],
       {
         cwd: root,
         env: {
           ...process.env,
           SKILLOPT_SENTINEL_SECRET: "must-not-reach-analysis-child",
+          LC_ALL: "C",
+          LANG: "C",
+          PYTHONCOERCECLOCALE: "0",
+          PYTHONUTF8: "0",
         },
         encoding: "utf8",
         timeout: 30000,
@@ -599,6 +2282,13 @@ assert len(patches) == 1, patches
         `Codex judge/reflector isolation smoke failed: ${smoke.status}\n${smoke.stdout}\n${smoke.stderr}`,
       );
     }
+    if (
+      `${smoke.stdout || ""}\n${smoke.stderr || ""}`.includes(promptMarker) ||
+      `${smoke.stdout || ""}\n${smoke.stderr || ""}`.includes(failureMarker)
+    ) {
+      fail("Codex judge/reflector prompt leaked into subprocess logs");
+    }
+    const expectations = JSON.parse(fs.readFileSync(expectationsFile, "utf8"));
     for (const kind of ["judge", "reflector"]) {
       const report = JSON.parse(fs.readFileSync(path.join(reportDir, `${kind}.json`), "utf8"));
       for (const expected of [
@@ -614,12 +2304,35 @@ assert len(patches) == 1, patches
       if (report.args.includes("--sandbox")) {
         fail(`${kind} Codex invocation retained a host-readable legacy sandbox`);
       }
+      if (report.args.at(-1) !== "-") {
+        fail(`${kind} Codex invocation did not select stdin with a trailing '-' argument`);
+      }
+      if (report.args.some((arg) => arg.includes(promptMarker))) {
+        fail(`${kind} Codex invocation leaked its prompt into argv`);
+      }
+      if (!report.stdin_has_marker || report.stdin_bytes <= 0) {
+        fail(`${kind} Codex invocation did not receive its prompt through stdin`);
+      }
+      if (
+        report.stdin_bytes !== expectations[kind].stdin_bytes ||
+        report.stdin_sha256 !== expectations[kind].stdin_sha256
+      ) {
+        fail(`${kind} Codex stdin changed or truncated the exact UTF-8 prompt`);
+      }
+      if (kind === "judge" && report.stdin_bytes <= 128 * 1024) {
+        fail(`judge Codex stdin regression did not exceed 128 KiB: ${report.stdin_bytes}`);
+      }
       if (report.environment_keys.includes("SKILLOPT_SENTINEL_SECRET")) {
         fail(`${kind} Codex invocation inherited an unrelated trainer secret`);
       }
       if (!(await waitForProcessExit(Number(report.child_pid)))) {
         fail(`${kind} Codex invocation left descendant process ${report.child_pid} alive`);
       }
+    }
+    await waitForFile(noReadChildPidFile);
+    const noReadChildPid = Number(fs.readFileSync(noReadChildPidFile, "utf8"));
+    if (!Number.isInteger(noReadChildPid) || !(await waitForProcessExit(noReadChildPid))) {
+      fail(`large no-read stdin timeout left descendant process ${noReadChildPid} alive`);
     }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -833,8 +2546,10 @@ async function validateVisualRolloutReadIsolation() {
   const codexPackage = path.join(tempDir, "codex-package");
   const fakeCodex = path.join(codexPackage, "bin", "codex");
   const childPidFile = path.join(codexPackage, "rollout-child.pid");
+  const childReportFile = path.join(codexPackage, "rollout-report.json");
   const fakeDrawio = path.join(binDir, "drawio");
   const template = path.join(assetRoot, "rollout.py.template");
+  const promptMarker = "stdin-only-rollout-marker-91c2e7a4";
   try {
     writeFile(
       path.join(codexPackage, "package.json"),
@@ -843,6 +2558,7 @@ async function validateVisualRolloutReadIsolation() {
     writeFile(
       fakeCodex,
       `#!/usr/bin/env python3
+import hashlib
 import json
 import os
 import pathlib
@@ -850,13 +2566,23 @@ import subprocess
 import sys
 
 args = sys.argv[1:]
+prompt_bytes = sys.stdin.buffer.read()
+prompt = prompt_bytes.decode("utf-8", errors="strict")
 output_index = args.index("--output-last-message")
 pathlib.Path(args[output_index + 1]).write_text("VISUAL_ISOLATION_READY\\n", encoding="utf-8")
 helper = subprocess.Popen(
     [sys.executable, "-c", "import signal,time; signal.signal(signal.SIGTERM, lambda *_: None); time.sleep(3600)"],
 )
 pathlib.Path(${JSON.stringify(childPidFile)}).write_text(str(helper.pid), encoding="utf-8")
-print(json.dumps({"args": args, "environment_keys": sorted(os.environ)}))
+pathlib.Path(${JSON.stringify(childReportFile)}).write_text(json.dumps({
+    "args": args,
+    "environment_keys": sorted(os.environ),
+    "stdin_bytes": len(prompt_bytes),
+    "stdin_sha256": hashlib.sha256(prompt_bytes).hexdigest(),
+    "stdin_has_marker": ${JSON.stringify(promptMarker)} in prompt,
+}), encoding="utf-8")
+sys.stdout.buffer.write(b"child-stdout-prefix\\n" + prompt_bytes + b"\\nchild-stdout-suffix\\n")
+sys.stderr.buffer.write(b"child-stderr-prefix\\n" + prompt_bytes + b"\\nchild-stderr-suffix\\n")
 `,
     );
     writeFile(fakeDrawio, "#!/bin/sh\nexit 0\n");
@@ -864,12 +2590,15 @@ print(json.dumps({"args": args, "environment_keys": sorted(os.environ)}))
     fs.chmodSync(fakeDrawio, 0o755);
 
     const python = `
+import hashlib
 import json
 import os
 import runpy
 from pathlib import Path
 
 module = runpy.run_path(os.environ["ROLLOUT_TEMPLATE"])
+prompt_marker = ${JSON.stringify(promptMarker)}
+unicode_suffix = "Gr\\u00fc\\u00dfe \\U0001f44b"
 artifact_workspace = Path(os.environ["TEST_ROOT"]) / "artifact-workspace"
 artifact_workspace.mkdir()
 (artifact_workspace / "genuine.svg").write_text(
@@ -886,18 +2615,41 @@ rollout = module["AgentSkillsRollout"]({
     "require_drawio_cli_for_visual_rollouts": True,
     "visual_exec_timeout": 10,
 })
-outcome = rollout.run(
-    {
-        "id": "visual-isolation-smoke",
-        "skill_name": "missing-test-skill",
-        "prompt": "Create one visual artifact.",
-        "fixtures": [],
-        "visual_assertions": ["artifact_exists: *.svg"],
-    },
-    "# Test Skill",
-)
+real_popen = module["subprocess"].Popen
+transport = {}
+
+class RecordingPopen:
+    def __init__(self, *args, **kwargs):
+        self._process = real_popen(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._process, name)
+
+    def communicate(self, *args, **kwargs):
+        prompt = kwargs.get("input")
+        if prompt is not None:
+            encoded = prompt.encode("utf-8")
+            transport["stdin_bytes"] = len(encoded)
+            transport["stdin_sha256"] = hashlib.sha256(encoded).hexdigest()
+        return self._process.communicate(*args, **kwargs)
+
+module["subprocess"].Popen = RecordingPopen
+try:
+    outcome = rollout.run(
+        {
+            "id": "visual-isolation-smoke",
+            "skill_name": "missing-test-skill",
+            "prompt": prompt_marker + ":" + unicode_suffix + ":" + ("r" * (140 * 1024)),
+            "fixtures": [],
+            "visual_assertions": ["artifact_exists: *.svg"],
+        },
+        "# Test Skill",
+    )
+finally:
+    module["subprocess"].Popen = real_popen
 print(json.dumps({
     "outcome": outcome,
+    "transport": transport,
     "artifact_paths": [item["path"] for item in module["collect_artifacts"](artifact_workspace)],
 }))
 `;
@@ -911,6 +2663,10 @@ print(json.dumps({
         TEST_ROOT: tempDir,
         FAKE_CODEX: fakeCodex,
         SKILLOPT_SENTINEL_SECRET: "must-not-reach-child",
+        LC_ALL: "C",
+        LANG: "C",
+        PYTHONCOERCECLOCALE: "0",
+        PYTHONUTF8: "0",
       },
       encoding: "utf8",
       timeout: 30000,
@@ -920,6 +2676,9 @@ print(json.dumps({
         `visual rollout read-isolation smoke failed: ${smoke.status}\n${smoke.stdout}\n${smoke.stderr}`,
       );
     }
+    if (`${smoke.stdout || ""}\n${smoke.stderr || ""}`.includes(promptMarker)) {
+      fail("target rollout prompt leaked into subprocess logs");
+    }
     if (Date.now() - smokeStarted > 5_000) {
       fail("successful visual rollout waited for an inherited helper pipe timeout");
     }
@@ -928,8 +2687,33 @@ print(json.dumps({
     if (outcome.returncode !== 0 || outcome.response.trim() !== "VISUAL_ISOLATION_READY") {
       fail(`visual rollout fake Codex failed: ${JSON.stringify(outcome)}`);
     }
-    const childReport = JSON.parse(outcome.stdout);
+    for (const stream of [outcome.stdout, outcome.stderr]) {
+      if (
+        !stream.includes("[redacted-prompt]") ||
+        !stream.includes("child-") ||
+        !stream.includes("-prefix") ||
+        !stream.includes("-suffix")
+      ) {
+        fail(`target rollout prompt redaction destroyed child diagnostics: ${stream}`);
+      }
+    }
+    const childReport = JSON.parse(fs.readFileSync(childReportFile, "utf8"));
     const codexArgs = childReport.args;
+    if (codexArgs.at(-1) !== "-") {
+      fail("target rollout Codex invocation did not select stdin with a trailing '-' argument");
+    }
+    if (codexArgs.some((arg) => arg.includes(promptMarker))) {
+      fail("target rollout Codex invocation leaked its prompt into argv");
+    }
+    if (!childReport.stdin_has_marker || childReport.stdin_bytes <= 128 * 1024) {
+      fail(`target rollout Codex stdin did not carry a >128 KiB prompt: ${outcome.stdout}`);
+    }
+    if (
+      childReport.stdin_bytes !== parsed.transport.stdin_bytes ||
+      childReport.stdin_sha256 !== parsed.transport.stdin_sha256
+    ) {
+      fail("target rollout Codex stdin changed or truncated the exact UTF-8 prompt");
+    }
     for (const expected of [
       "--strict-config",
       'default_permissions="skillopt_visual_rollout"',
@@ -972,6 +2756,114 @@ print(json.dumps({
     const childPid = Number(fs.readFileSync(childPidFile, "utf8"));
     if (!Number.isInteger(childPid) || !(await waitForProcessExit(childPid))) {
       fail(`successful visual rollout left descendant process ${childPid} alive`);
+    }
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+function validateRolloutTimeoutPromptRedaction() {
+  if (!hasPython3()) {
+    console.warn("python3 unavailable; skipping rollout timeout prompt-redaction smoke");
+    return;
+  }
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-timeout-redaction-"));
+  const codexPackage = path.join(tempDir, "codex-package");
+  const fakeCodex = path.join(codexPackage, "bin", "codex");
+  const taskMarker = "TASK-71f0e9";
+  const skillMarker = "SKILL-32ac47";
+  const resourceMarker = "RESOURCE-885bd1";
+  try {
+    writeFile(
+      path.join(codexPackage, "package.json"),
+      `${JSON.stringify({ name: "@openai/codex" })}\n`,
+    );
+    writeFile(
+      fakeCodex,
+      `#!/usr/bin/env python3
+import sys
+import time
+
+prompt = sys.stdin.read()
+for marker in (${JSON.stringify(taskMarker)}, ${JSON.stringify(skillMarker)}, ${JSON.stringify(resourceMarker)}):
+    assert marker in prompt, marker
+sys.stdout.write("stdout-diagnostic:" + ${JSON.stringify(taskMarker)}[:1] + ":" + ${JSON.stringify(skillMarker)}[:5])
+sys.stdout.flush()
+sys.stderr.write("stderr-diagnostic:" + ${JSON.stringify(resourceMarker)}[3:10])
+sys.stderr.flush()
+time.sleep(3600)
+`,
+    );
+    fs.chmodSync(fakeCodex, 0o755);
+    const python = `
+import json
+import os
+import runpy
+import shutil
+from pathlib import Path
+
+module = runpy.run_path(os.environ["ROLLOUT_TEMPLATE"])
+rollout_globals = module["AgentSkillsRollout"].run.__globals__
+rollout_globals["seed_workspace"] = lambda workspace, case, skill_name: "seeded helper note"
+rollout_globals["provider_resource_snapshot"] = lambda workspace: ${JSON.stringify(resourceMarker)} + " resource snapshot body"
+rollout = module["AgentSkillsRollout"]({
+    "codex_exec_path": os.environ["FAKE_CODEX"],
+    "exec_timeout": 1,
+    "tool_rollout_for_visual_assertions": False,
+})
+outcome = rollout.run(
+    {
+        "id": "timeout-partial-echo",
+        "skill_name": "test-skill",
+        "prompt": ${JSON.stringify(taskMarker)} + " task body",
+        "fixtures": [],
+        "visual_assertions": [],
+    },
+    "# Skill\\n\\n" + ${JSON.stringify(skillMarker)} + " skill body",
+)
+preserved = outcome.get("workspace_preserved")
+if preserved and Path(preserved).is_dir():
+    shutil.rmtree(preserved)
+print(json.dumps(outcome))
+`;
+    const smoke = spawnSync("python3", ["-c", python], {
+      cwd: root,
+      env: {
+        ...process.env,
+        ROLLOUT_TEMPLATE: path.join(assetRoot, "rollout.py.template"),
+        FAKE_CODEX: fakeCodex,
+      },
+      encoding: "utf8",
+      timeout: 30000,
+    });
+    if (smoke.status !== 0) {
+      fail(
+        `rollout timeout prompt-redaction smoke failed: ${smoke.status}\n${smoke.stdout}\n${smoke.stderr}`,
+      );
+    }
+    const outcome = JSON.parse(smoke.stdout);
+    if (outcome.returncode !== 124 || !outcome.timeout) {
+      fail(`partial prompt echo did not exercise rollout timeout: ${smoke.stdout}`);
+    }
+    if (outcome.response !== "[redacted-prompt]" || outcome.stdout !== "[redacted-prompt]") {
+      fail(`rollout timeout retained captured stdout: ${smoke.stdout}`);
+    }
+    if (!outcome.stderr.includes("[redacted-prompt]")) {
+      fail(`rollout timeout omitted redaction evidence: ${smoke.stdout}`);
+    }
+    const serialized = JSON.stringify({
+      response: outcome.response,
+      stdout: outcome.stdout,
+      stderr: outcome.stderr,
+    });
+    for (const fragment of [
+      taskMarker.slice(0, 1),
+      skillMarker.slice(0, 5),
+      resourceMarker.slice(3, 10),
+    ]) {
+      if (serialized.includes(fragment)) {
+        fail(`rollout timeout leaked partial prompt fragment ${JSON.stringify(fragment)}`);
+      }
     }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -1116,12 +3008,12 @@ function validateVisualArtifactRolloutContract() {
   );
 }
 
-function validateGatewayTopologyGuidance() {
+function validateGatewayOwnershipGuidance() {
   const reference = path.join(skillRoot, "references/local-openai-gateway.md");
   const runbook = path.join(skillRoot, "references/runbook.md");
   const evalCase = path.join(
     root,
-    "skill-evals/skillopt-setup/cases/local-gateway-deployment-topology.md",
+    "skill-evals/skillopt-setup/cases/local-gateway-ownership-and-extraction.md",
   );
   assertFile(reference);
   assertFile(runbook);
@@ -1133,15 +3025,24 @@ function validateGatewayTopologyGuidance() {
   for (const [name, text] of [
     ["local-openai-gateway reference", referenceText],
     ["runbook", runbookText],
-    ["gateway topology eval", evalText],
+    ["gateway ownership eval", evalText],
   ]) {
-    assertIncludes(name, text, "shared route layer");
-    assertIncludes(name, text, "monolithic service");
-    assertIncludes(name, text, "separate gateway deployments");
+    assertIncludes(name, text, "skillopt-setup");
+    assertIncludes(name, text, "second independent consumer");
+    assertIncludes(name, text, "fail-closed");
     assertIncludes(name, text, "loopback-only");
-    assertIncludes(name, text, "host-read isolation");
+    assertIncludes(name, text, "OS/container");
   }
-  assertIncludes("local-openai-gateway reference", referenceText, "backend and trust boundary");
+  for (const [name, text] of [
+    ["local-openai-gateway reference", referenceText],
+    ["gateway ownership eval", evalText],
+  ]) {
+    assertIncludes(
+      name,
+      text,
+      "filesystem, process, tool, network, and inherited-environment isolation",
+    );
+  }
   assertIncludes("local-openai-gateway reference", referenceText, "/v1/chat/completions");
   assertIncludes("local-openai-gateway reference", referenceText, "infrastructure source of truth");
 }
@@ -2502,6 +4403,8 @@ ${visualSection}`,
       expected_behavior: ["uses SkillOpt"],
       rubric_path: null,
       fixtures: [],
+      split_family: `case:case-${index}`,
+      split_group: `sha256:test-group-${index}`,
       tags: ["positive"],
       should_trigger: true,
       workspace_policy: visual ? "isolated-artifact-write" : "text-only",
@@ -2610,6 +4513,67 @@ ${visualSection}`,
         fail(`active split readiness did not include model pin blocker ${needle}`);
       }
     }
+
+    const staleItem = makeItem(10);
+    delete staleItem.split_group;
+    writeTextOnlyItems("train", [staleItem]);
+    const staleSplitReadiness = spawnSync(
+      process.execPath,
+      [
+        path.join(skillRoot, "scripts/check-skillopt-readiness.mjs"),
+        "--skill",
+        skillName,
+        "--mode",
+        "hybrid-codex-target",
+        "--run-profile",
+        "official-parity",
+        "--no-codex-probe",
+        "--json",
+      ],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    const staleParsed = JSON.parse(staleSplitReadiness.stdout);
+    if (
+      !staleParsed.trainingBlockers?.some((blocker) => blocker.includes("missing required fields"))
+    ) {
+      fail("readiness accepted stale split items without split_group metadata");
+    }
+    writeTextOnlyItems("train", [makeItem(10)]);
+
+    const crossingTrain = makeItem(10);
+    const crossingVal = makeItem(11);
+    crossingVal.split_family = crossingTrain.split_family;
+    crossingVal.split_group = crossingTrain.split_group;
+    writeTextOnlyItems("train", [crossingTrain]);
+    writeTextOnlyItems("val", [crossingVal]);
+    const crossingReadiness = spawnSync(
+      process.execPath,
+      [
+        path.join(skillRoot, "scripts/check-skillopt-readiness.mjs"),
+        "--skill",
+        skillName,
+        "--mode",
+        "hybrid-codex-target",
+        "--run-profile",
+        "official-parity",
+        "--no-codex-probe",
+        "--json",
+      ],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    const crossingParsed = JSON.parse(crossingReadiness.stdout);
+    if (
+      !crossingParsed.trainingBlockers?.some((blocker) =>
+        blocker.includes("split_group value(s) across"),
+      ) ||
+      !crossingParsed.trainingBlockers?.some((blocker) =>
+        blocker.includes("split_family value(s) across"),
+      )
+    ) {
+      fail("readiness accepted split_group/split_family leakage across heldout boundaries");
+    }
+    writeTextOnlyItems("train", [makeItem(10)]);
+    writeTextOnlyItems("val", [makeItem(11)]);
 
     const missingSplitConfig = configSource.replaceAll(
       `.agents/skillopt-work/${skillName}/data-text-only`,
@@ -2787,6 +4751,508 @@ Prepare a visual SkillOpt setup.
     }
     if (fullItems.some((item) => item.workspace_policy === "workspace-write")) {
       fail("generated split retained legacy broad workspace-write metadata");
+    }
+  } finally {
+    fs.rmSync(tempRepo, { recursive: true, force: true });
+  }
+}
+
+function validateGroupedSplitsAndTextOnlyMembership() {
+  const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-grouped-split-"));
+  const skillName = "grouped-split-skill";
+  try {
+    writeFile(path.join(tempRepo, "package.json"), "{}\n");
+    writeFile(path.join(tempRepo, ".gitignore"), ".agents/\n");
+    writeFile(
+      path.join(tempRepo, "incubator/skills", skillName, "SKILL.md"),
+      `---
+name: ${skillName}
+description: Temporary skill used only by the grouped SkillOpt split validator.
+---
+
+# Grouped Split Skill
+`,
+    );
+    const fixture = `skill-evals/${skillName}/fixtures/shared.txt`;
+    writeFile(path.join(tempRepo, fixture), "shared fixture\n");
+
+    const writeCase = (name, { family = "", fixturePath = "", visual = false } = {}) => {
+      writeFile(
+        path.join(tempRepo, "skill-evals", skillName, "cases", `${name}.md`),
+        `# ${name}
+
+## Prompt
+
+Prepare ${name}.
+
+## Should Trigger
+
+Yes
+${family ? `\n## Split Family\n\n${family}\n` : ""}${fixturePath ? `\n## Fixtures\n\n- ${fixturePath}\n` : ""}
+## Expected Behavior
+
+- Produce a result.
+
+## Deterministic Assertions
+
+- contains: result
+${visual ? `\n## Visual Assertions\n\n- artifact_exists: ${name}.png\n` : ""}`,
+      );
+    };
+
+    writeCase("family-text", { family: "paired-behavior" });
+    writeCase("family-visual", { family: "paired-behavior", visual: true });
+    writeCase("fixture-text", { fixturePath: fixture });
+    writeCase("fixture-visual", { fixturePath: fixture, visual: true });
+    writeCase("transitive-family-a", {
+      family: "transitive-alpha",
+      fixturePath: fixture,
+    });
+    writeCase("transitive-bridge", {
+      family: "transitive-beta",
+      fixturePath: `./${fixture}`,
+    });
+    writeCase("transitive-family-b", { family: "transitive-beta" });
+    for (let index = 0; index < 8; index += 1) writeCase(`independent-${index}`);
+
+    const split = spawnSync(
+      process.execPath,
+      [
+        path.join(skillRoot, "scripts/prepare-skillopt-split.mjs"),
+        "--skill",
+        skillName,
+        "--seed",
+        "42",
+        "--json",
+      ],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (split.status !== 0) {
+      fail(`grouped split smoke failed: ${split.status}\n${split.stdout}\n${split.stderr}`);
+    }
+
+    const loadSplits = (variant) =>
+      Object.fromEntries(
+        ["train", "val", "test"].map((splitName) => [
+          splitName,
+          JSON.parse(
+            fs.readFileSync(
+              path.join(
+                tempRepo,
+                ".agents/skillopt-work",
+                skillName,
+                variant,
+                splitName,
+                "items.json",
+              ),
+              "utf8",
+            ),
+          ),
+        ]),
+      );
+    const full = loadSplits("data");
+    const textOnly = loadSplits("data-text-only");
+    const membership = (splits, id) =>
+      Object.entries(splits).find(([, items]) =>
+        items.some((item) => item.id.endsWith(`/${id}`)),
+      )?.[0];
+
+    if (membership(full, "family-text") !== membership(full, "family-visual")) {
+      fail("explicit split family crossed a train/validation/test boundary");
+    }
+    if (membership(full, "fixture-text") !== membership(full, "fixture-visual")) {
+      fail("shared fixture cases crossed a train/validation/test boundary");
+    }
+    const transitiveIds = ["transitive-family-a", "transitive-bridge", "transitive-family-b"];
+    if (new Set(transitiveIds.map((id) => membership(full, id))).size !== 1) {
+      fail("transitively related family/fixture cases crossed a split boundary");
+    }
+    const transitiveItems = Object.values(full)
+      .flat()
+      .filter((item) => transitiveIds.some((id) => item.id.endsWith(`/${id}`)));
+    if (new Set(transitiveItems.map((item) => item.split_group)).size !== 1) {
+      fail("transitively related family/fixture cases did not share split_group metadata");
+    }
+    for (const [splitName, items] of Object.entries(textOnly)) {
+      for (const item of items) {
+        if (membership(full, item.id.split("/").at(-1)) !== splitName) {
+          fail(`text-only case ${item.id} changed full-split membership`);
+        }
+        if (!item.split_family) fail(`text-only case ${item.id} omitted split_family metadata`);
+        if (!item.split_group) fail(`text-only case ${item.id} omitted split_group metadata`);
+      }
+    }
+    if (
+      Object.values(textOnly)
+        .flat()
+        .some((item) => item.id.endsWith("/family-visual") || item.id.endsWith("/fixture-visual"))
+    ) {
+      fail("text-only split retained a visual assertion case");
+    }
+  } finally {
+    fs.rmSync(tempRepo, { recursive: true, force: true });
+  }
+}
+
+function validateGroupedSplitFloorsAndNumericArgs() {
+  const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-group-floor-"));
+  const skillName = "group-floor-skill";
+  try {
+    writeFile(path.join(tempRepo, "package.json"), "{}\n");
+    writeFile(path.join(tempRepo, ".gitignore"), ".agents/\n");
+    writeFile(
+      path.join(tempRepo, "incubator/skills", skillName, "SKILL.md"),
+      `---
+name: ${skillName}
+description: Temporary skill used only by the group floor SkillOpt validator.
+---
+
+# Group Floor Skill
+`,
+    );
+    const groupSizes = [6, 6, 4, 4];
+    for (const [groupIndex, groupSize] of groupSizes.entries()) {
+      for (let caseIndex = 0; caseIndex < groupSize; caseIndex += 1) {
+        const visual = groupSize === 4;
+        writeFile(
+          path.join(
+            tempRepo,
+            "skill-evals",
+            skillName,
+            "cases",
+            `group-${groupIndex}-case-${caseIndex}.md`,
+          ),
+          `# Group ${groupIndex} case ${caseIndex}
+
+## Prompt
+
+Prepare the grouped result.
+
+## Should Trigger
+
+Yes
+
+## Split Family
+
+floor-group-${groupIndex}
+
+## Expected Behavior
+
+- Produce a result.
+
+## Deterministic Assertions
+
+- contains: result
+${visual ? "\n## Visual Assertions\n\n- artifact_exists: grouped.png\n" : ""}`,
+        );
+      }
+    }
+
+    const splitScript = path.join(skillRoot, "scripts/prepare-skillopt-split.mjs");
+    const split = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", skillName, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (split.status !== 0) {
+      fail(`group floor split failed: ${split.status}\n${split.stdout}\n${split.stderr}`);
+    }
+    const result = JSON.parse(split.stdout);
+    if (result.counts.train < 1 || result.counts.val < 5 || result.counts.test < 5) {
+      fail(
+        `group-aware allocation missed feasible 5/5 heldout floors: ${JSON.stringify(result.counts)}`,
+      );
+    }
+    const repeatedSplit = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", skillName, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (repeatedSplit.status !== 0 || repeatedSplit.stdout !== split.stdout) {
+      fail("group-aware official-floor allocation was not deterministic for the same seed");
+    }
+
+    for (const invalidArgs of [
+      ["--seed", "1.5"],
+      ["--seed", "4294967296"],
+      ["--seed", ""],
+      ["--seed"],
+      ["--train", "-1"],
+      ["--val", "0"],
+      ["--test", "NaN"],
+    ]) {
+      const invalid = spawnSync(
+        process.execPath,
+        [splitScript, "--skill", skillName, ...invalidArgs, "--json"],
+        { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+      );
+      if (invalid.status !== 2) {
+        fail(
+          `invalid split arguments ${invalidArgs.join(" ")} exited ${invalid.status}: ${invalid.stdout}\n${invalid.stderr}`,
+        );
+      }
+    }
+
+    const visualSkill = "visual-dp-adversary-skill";
+    writeFile(
+      path.join(tempRepo, "incubator/skills", visualSkill, "SKILL.md"),
+      `---
+name: ${visualSkill}
+description: Temporary skill used only by the visual DP split validator.
+---
+
+# Visual DP Adversary Skill
+`,
+    );
+    const adversaryGroups = [
+      { family: "one-visual", size: 1, visual: true },
+      { family: "one-nonvisual", size: 1, visual: false },
+      { family: "three-visual", size: 3, visual: true },
+      { family: "five-nonvisual", size: 5, visual: false },
+    ];
+    for (const group of adversaryGroups) {
+      for (let index = 0; index < group.size; index += 1) {
+        writeFile(
+          path.join(tempRepo, "skill-evals", visualSkill, "cases", `${group.family}-${index}.md`),
+          `# ${group.family} ${index}
+
+## Prompt
+
+Prepare ${group.family} case ${index}.
+
+## Should Trigger
+
+Yes
+
+## Split Family
+
+${group.family}
+
+## Expected Behavior
+
+- Produce a result.
+
+## Deterministic Assertions
+
+- contains: result
+${group.visual ? "\n## Visual Assertions\n\n- artifact_exists: result.png\n" : ""}`,
+        );
+      }
+    }
+    const visualSplit = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", visualSkill, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (visualSplit.status !== 0) {
+      fail(
+        `visual redistribution split failed: ${visualSplit.status}\n${visualSplit.stdout}\n${visualSplit.stderr}`,
+      );
+    }
+    for (const splitName of ["val", "test"]) {
+      const items = JSON.parse(
+        fs.readFileSync(
+          path.join(
+            tempRepo,
+            ".agents/skillopt-work",
+            visualSkill,
+            "data",
+            splitName,
+            "items.json",
+          ),
+          "utf8",
+        ),
+      );
+      if (!items.some((item) => item.visual_assertions.length > 0)) {
+        fail(`visual DP adversary left ${splitName} without a visual case`);
+      }
+      if (items.length < 3) {
+        fail(`visual DP adversary broke the exploratory floor for ${splitName}`);
+      }
+    }
+
+    const singleVisualSkill = "single-visual-group-skill";
+    writeFile(
+      path.join(tempRepo, "incubator/skills", singleVisualSkill, "SKILL.md"),
+      `---
+name: ${singleVisualSkill}
+description: Temporary skill used only by the single visual group validator.
+---
+
+# Single Visual Group Skill
+`,
+    );
+    for (let index = 0; index < 10; index += 1) {
+      writeFile(
+        path.join(tempRepo, "skill-evals", singleVisualSkill, "cases", `case-${index}.md`),
+        `# Case ${index}
+
+## Prompt
+
+Prepare case ${index}.
+
+## Should Trigger
+
+Yes
+
+## Expected Behavior
+
+- Produce a result.
+
+## Deterministic Assertions
+
+- contains: result
+${index === 0 ? "\n## Visual Assertions\n\n- artifact_exists: result.png\n" : ""}`,
+      );
+    }
+    const singleVisualSplit = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", singleVisualSkill, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (singleVisualSplit.status !== 0) {
+      fail(
+        `single visual group split failed: ${singleVisualSplit.status}\n${singleVisualSplit.stdout}\n${singleVisualSplit.stderr}`,
+      );
+    }
+    const singleVisualHeldout = ["val", "test"].map((splitName) =>
+      JSON.parse(
+        fs.readFileSync(
+          path.join(
+            tempRepo,
+            ".agents/skillopt-work",
+            singleVisualSkill,
+            "data",
+            splitName,
+            "items.json",
+          ),
+          "utf8",
+        ),
+      ),
+    );
+    if (
+      singleVisualHeldout.some((items) => items.length < 3) ||
+      singleVisualHeldout.filter((items) => items.some((item) => item.visual_assertions.length > 0))
+        .length !== 1
+    ) {
+      fail("single visual group allocation did not maximize feasible heldout visual coverage");
+    }
+
+    const duplicateSkill = "duplicate-case-id-skill";
+    writeFile(
+      path.join(tempRepo, "incubator/skills", duplicateSkill, "SKILL.md"),
+      `---
+name: ${duplicateSkill}
+description: Temporary skill used only by the duplicate case ID validator.
+---
+
+# Duplicate Case ID Skill
+`,
+    );
+    const duplicateCase = (label) => `# ${label}
+
+## Prompt
+
+Prepare ${label}.
+
+## Should Trigger
+
+Yes
+
+## Expected Behavior
+
+- Produce a result.
+
+## Deterministic Assertions
+
+- contains: result
+`;
+    writeFile(
+      path.join(tempRepo, "skill-evals", duplicateSkill, "cases/a/duplicate.md"),
+      duplicateCase("A"),
+    );
+    writeFile(
+      path.join(tempRepo, "skill-evals", duplicateSkill, "cases/b/duplicate.md"),
+      duplicateCase("B"),
+    );
+    const duplicateSplit = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", duplicateSkill, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (duplicateSplit.status !== 2 || !duplicateSplit.stderr.includes("Duplicate eval case ID")) {
+      fail("split preparation accepted recursive duplicate case basenames");
+    }
+    if (fs.existsSync(path.join(tempRepo, ".agents/skillopt-work", duplicateSkill))) {
+      fail("duplicate case ID validation mutated the SkillOpt work directory before failing");
+    }
+
+    const invalidCaseNameSkill = "invalid-case-name-skill";
+    writeFile(
+      path.join(tempRepo, "incubator/skills", invalidCaseNameSkill, "SKILL.md"),
+      `---
+name: ${invalidCaseNameSkill}
+description: Temporary skill used only by the case filename validator.
+---
+
+# Invalid Case Name Skill
+`,
+    );
+    writeFile(
+      path.join(tempRepo, "skill-evals", invalidCaseNameSkill, "cases/under_score.md"),
+      duplicateCase("Invalid basename"),
+    );
+    const invalidCaseName = spawnSync(
+      process.execPath,
+      [splitScript, "--skill", invalidCaseNameSkill, "--seed", "42", "--json"],
+      { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+    );
+    if (
+      invalidCaseName.status !== 2 ||
+      !invalidCaseName.stderr.includes("lowercase kebab-case") ||
+      fs.existsSync(path.join(tempRepo, ".agents/skillopt-work", invalidCaseNameSkill))
+    ) {
+      fail("split preparation accepted a non-kebab eval case basename or wrote partial output");
+    }
+
+    for (const [index, fixture] of [
+      "C:/private.svg",
+      "https://example.invalid/icon.svg",
+      "../outside.svg",
+      "fixtures\\icon.svg",
+      "fixtures/a|b.svg",
+    ].entries()) {
+      const invalidFixtureSkill = `invalid-fixture-${index}-skill`;
+      writeFile(
+        path.join(tempRepo, "incubator/skills", invalidFixtureSkill, "SKILL.md"),
+        `---
+name: ${invalidFixtureSkill}
+description: Temporary skill used only by the fixture path validator.
+---
+
+# Invalid Fixture Skill
+`,
+      );
+      writeFile(
+        path.join(tempRepo, "skill-evals", invalidFixtureSkill, "cases/case-one.md"),
+        `${duplicateCase("Invalid fixture")}
+## Fixtures
+
+- ${fixture}
+`,
+      );
+      const invalidFixture = spawnSync(
+        process.execPath,
+        [splitScript, "--skill", invalidFixtureSkill, "--seed", "42", "--json"],
+        { cwd: tempRepo, encoding: "utf8", timeout: 30000 },
+      );
+      if (
+        invalidFixture.status !== 2 ||
+        !invalidFixture.stderr.includes("Fixture paths must") ||
+        fs.existsSync(path.join(tempRepo, ".agents/skillopt-work", invalidFixtureSkill))
+      ) {
+        fail(`split preparation accepted invalid fixture class ${index} or wrote partial output`);
+      }
     }
   } finally {
     fs.rmSync(tempRepo, { recursive: true, force: true });
@@ -3659,6 +6125,12 @@ function validateGeneratedDataFreshnessAndRunnability() {
   const skillPath = path.join(tempRepo, "incubator/skills", skillName, "SKILL.md");
   const casesDir = path.join(tempRepo, "skill-evals", skillName, "cases");
   const splitRoot = path.join(tempRepo, ".agents/skillopt-work", skillName, "data");
+  const activationPath = path.join(
+    tempRepo,
+    ".agents/skillopt-work",
+    skillName,
+    "activation/negative-cases.json",
+  );
   const caseText = (index) => `# Case ${index}
 
 ## Should Trigger
@@ -3671,11 +6143,31 @@ Prepare freshness case ${index}.
 
 ## Expected Behavior
 
-- Preserve current proof.
+- Preserve current proof
+  across a wrapped bullet line.
 
 ## Deterministic Assertions
 
 - contains: freshness
+  marker
+${index === 0 ? "\n## Visual Assertions\n\n- artifact_exists: result.png\n" : ""}`;
+  const negativeCaseText = (index) => `# Negative case ${index}
+
+## Should Trigger
+
+No
+
+## Prompt
+
+Prepare unrelated negative case ${index}.
+
+## Expected Behavior
+
+- Do not activate the skill.
+
+## Deterministic Assertions
+
+- contains: unrelated
 `;
   const prepare = () => {
     const result = spawnSync(
@@ -3718,6 +6210,9 @@ description: Temporary freshness skill used only by the SkillOpt validator.
     for (let index = 0; index < 8; index += 1) {
       writeFile(path.join(casesDir, `case-${index}.md`), caseText(index));
     }
+    for (let index = 0; index < 2; index += 1) {
+      writeFile(path.join(casesDir, `negative-${index}.md`), negativeCaseText(index));
+    }
     prepare();
     const config = fs
       .readFileSync(path.join(assetRoot, "config.codex-cli-all.yaml"), "utf8")
@@ -3740,8 +6235,103 @@ description: Temporary freshness skill used only by the SkillOpt validator.
       fail("freshly generated split and initial skill proof did not match source state");
     }
 
-    writeFile(path.join(casesDir, "case-0.md"), `${caseText(0)}\nChanged source.\n`);
+    const mutatePositiveItem = (id, mutate) => {
+      for (const splitName of ["train", "val", "test"]) {
+        const itemFile = path.join(splitRoot, splitName, "items.json");
+        const splitItems = JSON.parse(fs.readFileSync(itemFile, "utf8"));
+        const target = splitItems.find((item) => item.id === `${skillName}/${id}`);
+        if (!target) continue;
+        mutate(target);
+        writeFile(itemFile, `${JSON.stringify(splitItems, null, 2)}\n`);
+        return;
+      }
+      fail(`freshness mutation target not found: ${id}`);
+    };
+
+    mutatePositiveItem("case-0", (item) => {
+      item.visual_assertions = [];
+      item.workspace_policy = "text-only";
+    });
+    let tampered = readiness().parsed;
+    if (
+      tampered.datasetFreshness?.status !== "refresh_required" ||
+      !tampered.datasetFreshness.blockers.some((blocker) =>
+        blocker.includes("visual_assertions is stale"),
+      ) ||
+      tampered.trainingReadiness !== "blocked"
+    ) {
+      fail("removed visual assertions did not invalidate dataset freshness and training proof");
+    }
+    prepare();
+
+    mutatePositiveItem("case-1", (item) => {
+      item.skill_name = "wrong-skill";
+    });
+    tampered = readiness().parsed;
+    if (
+      tampered.datasetFreshness?.status !== "refresh_required" ||
+      !tampered.datasetFreshness.blockers.some((blocker) => blocker.includes("skill_name is stale"))
+    ) {
+      fail("mutated skill_name did not invalidate dataset freshness");
+    }
+    prepare();
+
+    mutatePositiveItem("case-2", (item) => {
+      item.deterministic_assertions = [];
+    });
+    tampered = readiness().parsed;
+    if (
+      tampered.datasetFreshness?.status !== "refresh_required" ||
+      !tampered.datasetFreshness.blockers.some((blocker) =>
+        blocker.includes("deterministic_assertions is stale"),
+      )
+    ) {
+      fail("removed deterministic assertions did not invalidate dataset freshness");
+    }
+    prepare();
+
+    writeFile(
+      path.join(casesDir, "negative-0.md"),
+      `${negativeCaseText(0)}\nChanged activation source.\n`,
+    );
     let current = readiness().parsed.datasetFreshness;
+    if (
+      current?.status !== "refresh_required" ||
+      !current.blockers.some((blocker) => blocker.includes("activation source hash is stale"))
+    ) {
+      fail("changed activation source hash did not invalidate generated negative proof");
+    }
+    writeFile(path.join(casesDir, "negative-0.md"), negativeCaseText(0));
+
+    const activationItems = JSON.parse(fs.readFileSync(activationPath, "utf8"));
+    activationItems[0].case_path = "stale/negative-path.md";
+    writeFile(activationPath, `${JSON.stringify(activationItems, null, 2)}\n`);
+    current = readiness().parsed.datasetFreshness;
+    if (!current.blockers.some((blocker) => blocker.includes("activation case path is stale"))) {
+      fail("stale activation case path did not invalidate generated negative proof");
+    }
+    prepare();
+
+    writeFile(path.join(casesDir, "negative-added.md"), negativeCaseText("added"));
+    current = readiness().parsed.datasetFreshness;
+    if (!current.blockers.some((blocker) => blocker.includes("missing current negative cases"))) {
+      fail("added activation case did not invalidate generated negative IDs");
+    }
+    fs.rmSync(path.join(casesDir, "negative-added.md"));
+    fs.rmSync(path.join(casesDir, "negative-1.md"));
+    current = readiness().parsed.datasetFreshness;
+    if (
+      !current.blockers.some((blocker) =>
+        blocker.includes("activation split contains stale or unexpected cases"),
+      )
+    ) {
+      fail("removed activation case did not invalidate generated negative IDs");
+    }
+    writeFile(path.join(casesDir, "negative-1.md"), negativeCaseText(1));
+    prepare();
+
+    writeFile(path.join(casesDir, "case-0.md"), `${caseText(0)}\nChanged source.\n`);
+    current = readiness().parsed.datasetFreshness;
     if (
       current?.status !== "refresh_required" ||
       !current.blockers.some((blocker) => blocker.includes("source hash is stale"))
@@ -4205,16 +6795,62 @@ function walk(dir) {
   return files;
 }
 
+function validateNativeStencilAssertionEvidence() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-native-stencil-evidence-"));
+  try {
+    writeFile(
+      path.join(tempDir, "inert-label.drawio"),
+      `<mxfile host="app.diagrams.net">
+  <diagram name="Page 1">
+    <mxGraphModel adaptiveColors="auto" grid="1" page="1" pageWidth="827" pageHeight="1169">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="label" value="shape=mxgraph.fake" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="180" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+`,
+    );
+    const artifacts = listArtifacts(tempDir);
+    evaluateAssertion(parseAssertion("drawio_valid: inert-label.drawio uncompressed=1"), artifacts);
+    let accepted = false;
+    let rejection = "";
+    try {
+      evaluateAssertion(
+        parseAssertion("drawio_valid: inert-label.drawio min_native_stencils=1 uncompressed=1"),
+        artifacts,
+      );
+      accepted = true;
+    } catch (error) {
+      accepted = false;
+      rejection = String(error?.message || error);
+    }
+    if (accepted) {
+      fail("min_native_stencils accepted inert label text instead of parsed stencil cells");
+    }
+    assertIncludes("parsed native stencil evidence", rejection, "has 0 native stencil cell(s)");
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 validateHelp();
 validatePythonTemplates();
+validateNativeStencilAssertionEvidence();
+validateDataloaderSetupBoundary();
 validateRolloutArtifactPolicy();
 validateProviderTargetRollout();
 await validateCodexJudgeAndReflectorIsolation();
 validateRolloutWorkspaceSeedingContract();
 await validateVisualRolloutReadIsolation();
+validateRolloutTimeoutPromptRedaction();
 validateConfigContracts();
 validateVisualArtifactRolloutContract();
-validateGatewayTopologyGuidance();
+validateGatewayOwnershipGuidance();
 validateBenchmarkAssertions();
 validateAdoptionSafety();
 validateNoPrivatePayload();
@@ -4230,6 +6866,8 @@ validateGeneratedDataFreshnessAndRunnability();
 validateLiveAdapterPatchProof();
 validateVisualPermissionCapabilityGate();
 validateNoneVisualAssertionsIgnored();
+validateGroupedSplitsAndTextOnlyMembership();
+validateGroupedSplitFloorsAndNumericArgs();
 validateTextOnlySplitExistsWithoutVisualAssertions();
 validateWrappedExpectedBehaviorSplit();
 validateLocalArtifactAudit();

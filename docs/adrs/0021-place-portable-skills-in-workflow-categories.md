@@ -7,7 +7,7 @@ Gist: Portable skills belong in workflow categories, not runtime operation categ
 
 ## Decision
 
-We will place public skills by durable workflow scope and reserve runtime operation categories for skills whose name, trigger, configuration, evidence model, or output contract is runtime-specific.
+We will place public skills by durable workflow scope and reserve runtime operation categories for independent skills whose target-specific name, configuration, evidence, or output makes both their trigger and outcome materially distinct.
 
 ## Why
 

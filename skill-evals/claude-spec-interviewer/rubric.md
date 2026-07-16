@@ -10,19 +10,19 @@ Grade each run against these assertions.
 - PASS when the skill does not activate for Claude memory cleanup, Codex memory review, Cursor rules cleanup, or requests that only want `CLAUDE.md` or `.claude/rules` content authored.
 - FAIL when the skill interviews unnecessarily after the user asks for direct implementation with enough context.
 
-## Native Plan Mode Lifecycle
+## Execution-Host Plan Mode Lifecycle
 
-- When another Agent Skills host executes the skill, uses that execution host's equivalent planning, structured-question, and plan-exit controls while preserving Claude Code evidence and output contracts; it does not redirect solely because the execution host differs.
-- Runs the Plan-mode preflight before repo inspection or substantive interview questions.
-- When native Plan mode is active, keeps the interview in the main conversation and uses `AskUserQuestion` for material decisions when available.
-- When Plan mode is supported but inactive and not explicitly declined, invokes `EnterPlanMode` when available and continues only after the host confirms the transition.
-- When `EnterPlanMode` is unavailable, tells the user to switch with Shift+Tab, the mode selector, or `/plan`, then reply `continue`; it does not require the original request to be resent.
+- When another Agent Skills host executes the skill, uses that execution host's planning, structured-question, transition, and plan-exit controls while preserving Claude Code evidence and output contracts; it does not redirect solely because the execution host differs or a competing interviewer is installed.
+- Identifies the current execution host and runs that host's Plan-mode preflight before repo inspection or substantive interview questions.
+- When the current host's Plan mode is active, keeps the interview in the main conversation and uses that host's structured-question control for material decisions when available. `AskUserQuestion` applies only when Claude Code executes the skill.
+- When the current host supports Plan mode but it is inactive and not explicitly declined, invokes that host's transition control and continues only after the host confirms the transition. `EnterPlanMode` applies only when Claude Code executes the skill.
+- When the current host exposes no transition control, gives accurate manual activation instructions for that host, asks the user to reply `continue`, and waits; it does not require the original request to be resent.
 - Does not fork the interview into a subagent.
 - Uses a conversational fallback only when Plan mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason in the interview summary, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
 - Does not treat a Plan-mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
-- Writes no repository or workspace artifacts during the Plan-mode interview; the host-managed plan produced by `ExitPlanMode` is the only exception.
-- After the verified checkpoint, reports `Persistence status: pending` and invokes `ExitPlanMode` with a save-only persistence plan when available; otherwise it gives the equivalent manual handoff.
-- In the save-only continuation, persists only the approved spec, required ADR, and convention-required minimal ADR index entry; emits the Claude Code execution prompt; validates and reports artifact paths; and stops without implementing the feature.
+- Writes no repository or workspace artifacts during the Plan-mode interview; only a plan artifact created by the current host's plan-exit control is allowed. `ExitPlanMode` applies only when Claude Code executes the skill.
+- After the verified checkpoint, reports `Persistence status: pending` and invokes the current host's plan-exit control with a save-only persistence plan when available; otherwise it gives an accurate manual handoff for that host.
+- In the save-only continuation, persists only the repository-owned approved spec, required ADR, and convention-required minimal ADR index entry; emits the Claude Code-targeted execution prompt; validates and reports artifact paths; and stops without implementing the feature.
 - Does not report completion while persistence is pending; explicitly declined or blocked persistence follows the save-ready artifact path instead.
 
 ## Output Quality
@@ -35,7 +35,7 @@ Grade each run against these assertions.
 - Includes a final verification checkpoint covering scope, non-goals, assumptions, risks, validation, ADR result, and artifact paths; compact specs may keep checkpoint and persistence status in the final response.
 - Asks for user verification of final scope, assumptions, non-goals, risks, validation plan, ADR result, and artifact paths before final spec creation when the mode or risk requires it.
 - Produces a concrete markdown implementation spec with scope, non-goals, acceptance criteria, validation commands, risks, rollout notes, user verification, and done-when criteria; persists it through save-only finalization after leaving Plan mode unless persistence is explicitly declined or blocked.
-- Uses clear repo persistence conventions, confirms ambiguous or risky destinations, saves the final spec, persists ADR files only when the ADR gate requires them, and updates an existing ADR index only when repository convention requires it; the save-only continuation changes no unrelated files. For declined or blocked persistence, it writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
+- Uses clear repository persistence conventions, confirms ambiguous or risky destinations, saves the final spec, persists ADR files only when the ADR gate requires them, and updates an existing ADR index only when repository convention requires it. Specs, ADRs, and ADR indexes belong to the repository rather than the Claude Code target ecosystem; the save-only continuation changes no unrelated files. For declined or blocked persistence, it writes no files and returns the complete save-ready artifacts in chat with proposed paths and the decline or blocker.
 - Includes a companion Claude Code execution prompt.
 - Keeps durable architecture decisions in persisted ADRs rather than burying them in the spec.
 - Captures all repo-facing documentation changes other than a convention-required ADR index entry as later implementation work in the spec.

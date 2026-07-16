@@ -9,22 +9,40 @@ const OFFICIAL_RECOMMENDED = { positive: 20, val: 5, test: 5 };
 
 function parseArgs(argv) {
   const args = { seed: 42, train: 0.6, val: 0.2, test: 0.2, json: false };
+  const readNumber = (option, index) => {
+    const raw = argv[index + 1];
+    if (raw === undefined || !raw.trim() || raw.startsWith("--")) {
+      fail(`${option} requires a number`);
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value)) fail(`${option} must be a finite number`);
+    return value;
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") {
       printUsage();
       process.exit(0);
     } else if (arg === "--json") args.json = true;
-    else if (arg === "--skill") args.skill = argv[++i];
-    else if (arg === "--seed") args.seed = Number(argv[++i]);
-    else if (arg === "--train") args.train = Number(argv[++i]);
-    else if (arg === "--val") args.val = Number(argv[++i]);
-    else if (arg === "--test") args.test = Number(argv[++i]);
+    else if (arg === "--skill") {
+      const value = argv[++i];
+      if (!value || value.startsWith("--")) fail("--skill requires a value");
+      args.skill = value;
+    } else if (arg === "--seed") args.seed = readNumber(arg, i++);
+    else if (arg === "--train") args.train = readNumber(arg, i++);
+    else if (arg === "--val") args.val = readNumber(arg, i++);
+    else if (arg === "--test") args.test = readNumber(arg, i++);
     else fail(`Unknown argument: ${arg}`);
   }
   if (!args.skill) fail("--skill is required");
+  if (!Number.isSafeInteger(args.seed) || args.seed < 0 || args.seed > 0xffffffff) {
+    fail("--seed must be an integer between 0 and 4294967295");
+  }
+  for (const name of ["train", "val", "test"]) {
+    if (!(args[name] > 0)) fail("Split ratios must each be positive numbers");
+  }
   const total = args.train + args.val + args.test;
-  if (!Number.isFinite(total) || total <= 0) fail("Split ratios must be positive numbers");
+  if (!Number.isFinite(total)) fail("Split ratio total must be finite");
   args.train /= total;
   args.val /= total;
   args.test /= total;
@@ -35,10 +53,10 @@ function printUsage() {
   console.log(`Usage: node prepare-skillopt-split.mjs --skill <skill> [options]
 
 Options:
-  --seed <number>
-  --train <ratio>
-  --val <ratio>
-  --test <ratio>
+  --seed <uint32>
+  --train <positive-ratio>
+  --val <positive-ratio>
+  --test <positive-ratio>
   --json
   --help`);
 }
@@ -142,12 +160,45 @@ function fixturePaths(text) {
   return [...bullets(section(text, "Fixture")), ...bullets(section(text, "Fixtures"))];
 }
 
+function normalizedFixtureIdentity(value) {
+  const raw = String(value || "");
+  if (
+    !raw ||
+    raw !== raw.trim() ||
+    raw.includes("\\") ||
+    raw.includes("|") ||
+    /[\0-\x1f\x7f]/.test(raw) ||
+    /^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) ||
+    path.posix.isAbsolute(raw)
+  ) {
+    fail("Fixture paths must be trimmed, relative, repository-local POSIX paths without pipes");
+  }
+  const normalized = path.posix.normalize(raw);
+  if (normalized === "." || normalized === ".." || normalized.startsWith("../")) {
+    fail("Fixture paths must stay inside the repository");
+  }
+  return normalized;
+}
+
 function deterministicAssertions(text) {
   return bullets(section(text, "Deterministic Assertions"));
 }
 
 function visualAssertions(text) {
-  return bullets(section(text, "Visual Assertions")).filter((assertion) => !isNoneAssertion(assertion));
+  return bullets(section(text, "Visual Assertions")).filter(
+    (assertion) => !isNoneAssertion(assertion),
+  );
+}
+
+function explicitSplitFamily(text, caseFile) {
+  const value = section(text, "Split Family").trim();
+  if (!value) return null;
+  if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(value)) {
+    fail(
+      `${path.relative(root, caseFile)}: Split Family must be a lowercase kebab-case identifier`,
+    );
+  }
+  return value;
 }
 
 function expectedArtifactPaths(text, skillName) {
@@ -160,9 +211,9 @@ function expectedArtifactPaths(text, skillName) {
 
 function listExpectedArtifacts(skillName) {
   const expectedDir = path.join(root, "skill-evals", skillName, "expected");
-  return walk(expectedDir, (file) => fs.statSync(file).isFile()).map((file) =>
-    path.relative(root, file).replaceAll("\\", "/"),
-  );
+  return walk(expectedDir, (file) => fs.statSync(file).isFile())
+    .map((file) => path.relative(root, file).replaceAll("\\", "/"))
+    .sort();
 }
 
 function seededShuffle(items, seed) {
@@ -179,21 +230,16 @@ function seededShuffle(items, seed) {
   return copy;
 }
 
-function splitItems(items, ratios) {
+function targetSplitCounts(items, ratios) {
   const n = items.length;
-  if (n === 0) return { train: [], val: [], test: [] };
-  if (n === 1) return { train: items, val: [], test: [] };
-  if (n === 2) return { train: [items[0]], val: [items[1]], test: [] };
+  if (n === 0) return { train: 0, val: 0, test: 0 };
+  if (n === 1) return { train: 1, val: 0, test: 0 };
+  if (n === 2) return { train: 1, val: 1, test: 0 };
 
   let trainCount = Math.round(n * ratios.train);
   let valCount = Math.round(n * ratios.val);
   let testCount = n - trainCount - valCount;
-  const heldoutFloor =
-    n >= OFFICIAL_RECOMMENDED.positive
-      ? OFFICIAL_RECOMMENDED.val
-      : n >= EXPLORATORY_MIN.positive
-        ? EXPLORATORY_MIN.val
-        : 1;
+  const heldoutFloor = heldoutFloorFor(n);
 
   valCount = Math.max(heldoutFloor, valCount);
   testCount = Math.max(heldoutFloor, testCount);
@@ -204,49 +250,173 @@ function splitItems(items, ratios) {
   }
   trainCount = n - valCount - testCount;
 
-  return {
-    train: items.slice(0, trainCount),
-    val: items.slice(trainCount, trainCount + valCount),
-    test: items.slice(trainCount + valCount, trainCount + valCount + testCount),
+  return { train: trainCount, val: valCount, test: testCount };
+}
+
+function heldoutFloorFor(itemCount) {
+  if (itemCount >= OFFICIAL_RECOMMENDED.positive) return OFFICIAL_RECOMMENDED.val;
+  if (itemCount >= EXPLORATORY_MIN.positive) return EXPLORATORY_MIN.val;
+  return itemCount >= 3 ? 1 : 0;
+}
+
+function assignSplitGroups(items) {
+  const parent = new Map(items.map((item) => [item.id, item.id]));
+  const ownerByRelation = new Map();
+  const find = (id) => {
+    let current = id;
+    while (parent.get(current) !== current) current = parent.get(current);
+    let cursor = id;
+    while (parent.get(cursor) !== current) {
+      const next = parent.get(cursor);
+      parent.set(cursor, current);
+      cursor = next;
+    }
+    return current;
   };
+  const union = (left, right) => {
+    const leftRoot = find(left);
+    const rightRoot = find(right);
+    if (leftRoot === rightRoot) return;
+    const [first, second] = [leftRoot, rightRoot].sort();
+    parent.set(second, first);
+  };
+
+  for (const item of items) {
+    const relations = [];
+    if (!item.split_family.startsWith("case:") && !item.split_family.startsWith("fixture:")) {
+      relations.push(`family:${item.split_family}`);
+    }
+    for (const fixture of item.fixtures) {
+      const identity = normalizedFixtureIdentity(fixture);
+      if (identity) relations.push(`fixture:${identity}`);
+    }
+    for (const relation of new Set(relations)) {
+      const owner = ownerByRelation.get(relation);
+      if (owner) union(item.id, owner);
+      else ownerByRelation.set(relation, item.id);
+    }
+  }
+
+  const membersByRoot = new Map();
+  for (const item of items) {
+    const component = find(item.id);
+    if (!membersByRoot.has(component)) membersByRoot.set(component, []);
+    membersByRoot.get(component).push(item);
+  }
+  for (const members of membersByRoot.values()) {
+    const splitGroup = sha256(
+      members
+        .map((item) => item.id)
+        .sort()
+        .join("\n"),
+    );
+    for (const item of members) item.split_group = splitGroup;
+  }
+}
+
+function splitGroupKey(item) {
+  return item.split_group || item.split_family || item.id;
+}
+
+function groupItems(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = splitGroupKey(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return [...groups.values()];
+}
+
+function splitGroups(groups, items, ratios) {
+  const targets = targetSplitCounts(items, ratios);
+  const itemCount = items.length;
+  const heldoutFloor = heldoutFloorFor(itemCount);
+  let states = new Map([["0,0,0,0", ""]]);
+
+  for (const group of groups) {
+    const groupHasVisual = group.some(hasVisualAssertions);
+    const next = new Map();
+    for (const [key, assignment] of states) {
+      const [valCount, testCount, valHasVisual, testHasVisual] = key.split(",").map(Number);
+      for (const [choice, nextVal, nextTest, nextValVisual, nextTestVisual] of [
+        ["r", valCount, testCount, valHasVisual, testHasVisual],
+        [
+          "v",
+          valCount + group.length,
+          testCount,
+          valHasVisual || groupHasVisual ? 1 : 0,
+          testHasVisual,
+        ],
+        [
+          "e",
+          valCount,
+          testCount + group.length,
+          valHasVisual,
+          testHasVisual || groupHasVisual ? 1 : 0,
+        ],
+      ]) {
+        if (nextVal + nextTest > itemCount - 1) continue;
+        const nextKey = `${nextVal},${nextTest},${nextValVisual},${nextTestVisual}`;
+        if (!next.has(nextKey)) next.set(nextKey, `${assignment}${choice}`);
+      }
+    }
+    states = next;
+  }
+
+  const candidates = [...states.entries()].map(([key, assignment]) => {
+    const [val, test, valHasVisual, testHasVisual] = key.split(",").map(Number);
+    return {
+      assignment,
+      train: itemCount - val - test,
+      val,
+      test,
+      heldoutDeficit: Math.max(0, heldoutFloor - val) + Math.max(0, heldoutFloor - test),
+      visualCoverage: valHasVisual + testHasVisual,
+    };
+  });
+  const floorFeasible = candidates.filter(
+    (candidate) => candidate.val >= heldoutFloor && candidate.test >= heldoutFloor,
+  );
+  let ranked = floorFeasible.length ? floorFeasible : candidates;
+  const minimumHeldoutDeficit = ranked.reduce(
+    (minimum, candidate) => Math.min(minimum, candidate.heldoutDeficit),
+    Infinity,
+  );
+  ranked = ranked.filter((candidate) => candidate.heldoutDeficit === minimumHeldoutDeficit);
+  const maximumVisualCoverage = ranked.reduce(
+    (maximum, candidate) => Math.max(maximum, candidate.visualCoverage),
+    0,
+  );
+  ranked = ranked.filter((candidate) => candidate.visualCoverage === maximumVisualCoverage);
+  const targetDistance = (candidate) =>
+    Math.abs(candidate.train - targets.train) +
+    Math.abs(candidate.val - targets.val) +
+    Math.abs(candidate.test - targets.test);
+  ranked.sort(
+    (left, right) =>
+      left.heldoutDeficit - right.heldoutDeficit ||
+      targetDistance(left) - targetDistance(right) ||
+      Math.abs(left.val - left.test) - Math.abs(right.val - right.test) ||
+      left.assignment.localeCompare(right.assignment),
+  );
+
+  const splits = { train: [], val: [], test: [] };
+  const splitByChoice = { r: "train", v: "val", e: "test" };
+  const winner = ranked[0]?.assignment || "";
+  for (let index = 0; index < groups.length; index += 1) {
+    splits[splitByChoice[winner[index]] || "train"].push(...groups[index]);
+  }
+  return splits;
 }
 
 function hasVisualAssertions(item) {
   return (item.visual_assertions || []).some((assertion) => !isNoneAssertion(assertion));
 }
 
-function ensureTaggedSplit(splits, targetName, predicate, sourceNames) {
-  if (splits[targetName].some(predicate)) return false;
-  const replacementIndex = splits[targetName].findIndex((item) => !predicate(item));
-  if (replacementIndex === -1) return false;
-
-  for (const sourceName of sourceNames) {
-    if (sourceName === targetName) continue;
-    const sourceIndex = splits[sourceName].findIndex(predicate);
-    if (sourceIndex === -1) continue;
-
-    const tagged = splits[sourceName][sourceIndex];
-    splits[sourceName][sourceIndex] = splits[targetName][replacementIndex];
-    splits[targetName][replacementIndex] = tagged;
-    return true;
-  }
-  return false;
-}
-
-function stratifyVisualAssertions(splits) {
-  const allItems = [...splits.train, ...splits.val, ...splits.test];
-  if (!allItems.some(hasVisualAssertions)) return splits;
-
-  ensureTaggedSplit(splits, "test", hasVisualAssertions, ["train", "val"]);
-  ensureTaggedSplit(splits, "val", hasVisualAssertions, ["train"]);
-  return splits;
-}
-
-function buildSplits(items, args, options = {}) {
-  const shuffled = seededShuffle(items, args.seed);
-  const splits = splitItems(shuffled, args);
-  if (options.stratifyVisual) stratifyVisualAssertions(splits);
-  return splits;
+function buildSplits(items, args) {
+  const shuffledGroups = seededShuffle(groupItems(items), args.seed);
+  return splitGroups(shuffledGroups, items, args);
 }
 
 function writeJson(file, value) {
@@ -330,6 +500,25 @@ const skillName = path.basename(path.dirname(skillPath));
 const evalDir = path.join(root, "skill-evals", skillName);
 const casesDir = path.join(evalDir, "cases");
 if (!fs.existsSync(casesDir)) fail(`Missing eval cases: ${path.relative(root, casesDir)}`);
+const caseFiles = walk(casesDir, (file) => file.endsWith(".md")).sort();
+const casePathById = new Map();
+for (const caseFile of caseFiles) {
+  const slug = slugFromFile(caseFile);
+  if (!/^[a-z0-9][a-z0-9-]{0,127}$/.test(slug)) {
+    fail(`${path.relative(root, caseFile)}: Eval case basenames must be lowercase kebab-case`);
+  }
+  const id = `${skillName}/${slug}`;
+  const previous = casePathById.get(id);
+  if (previous) {
+    fail(
+      `Duplicate eval case ID ${id}: ${path.relative(root, previous)} and ${path.relative(root, caseFile)}. Case basenames must be unique within one skill.`,
+    );
+  }
+  casePathById.set(id, caseFile);
+  const text = fs.readFileSync(caseFile, "utf8");
+  for (const fixture of fixturePaths(text)) normalizedFixtureIdentity(fixture);
+  explicitSplitFamily(text, caseFile);
+}
 
 const workDir = path.join(root, ".agents/skillopt-work", skillName);
 const initialDir = path.join(workDir, "initial");
@@ -359,11 +548,19 @@ const qualityCounters = {
   positive_with_expected_artifacts: 0,
 };
 
-for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
+for (const caseFile of caseFiles) {
   const text = fs.readFileSync(caseFile, "utf8");
   const trigger = shouldTrigger(text);
   const relCasePath = path.relative(root, caseFile).replaceAll("\\", "/");
   const fixtures = fixturePaths(text);
+  const normalizedFixtures = [
+    ...new Set(fixtures.map(normalizedFixtureIdentity).filter(Boolean)),
+  ].sort();
+  const splitFamily =
+    explicitSplitFamily(text, caseFile) ||
+    (normalizedFixtures.length
+      ? `fixture:${normalizedFixtures.join("|")}`
+      : `case:${slugFromFile(caseFile)}`);
   const expectedArtifacts = expectedArtifactPaths(text, skillName);
   const deterministic = deterministicAssertions(text);
   const visual = visualAssertions(text);
@@ -374,14 +571,14 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
     prompt: section(text, "Prompt"),
     expected_behavior: bullets(section(text, "Expected Behavior")),
     rubric_path: rubricPath,
-    fixtures,
+    fixtures: normalizedFixtures,
+    split_family: splitFamily,
     expected_artifacts: expectedArtifacts,
     deterministic_assertions: deterministic,
     visual_assertions: visual,
     tags: trigger ? ["positive"] : ["negative", "activation"],
     should_trigger: trigger,
-    workspace_policy:
-      visual.length > 0 ? "isolated-artifact-write" : "text-only",
+    workspace_policy: visual.length > 0 ? "isolated-artifact-write" : "text-only",
     source_hash: sha256(text),
   };
 
@@ -396,12 +593,20 @@ for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
   }
 }
 
-const splits = buildSplits(trainingItems, args, { stratifyVisual: true });
+assignSplitGroups(trainingItems);
+assignSplitGroups(activationNegativeCases);
+
+const splits = buildSplits(trainingItems, args);
 writeSplits(dataDir, splits);
 
 const textOnlyItems = trainingItems.filter((item) => !hasVisualAssertions(item));
 const textOnlyDataDir = path.join(workDir, "data-text-only");
-const textOnlySplits = buildSplits(textOnlyItems, args);
+const textOnlySplits = Object.fromEntries(
+  Object.entries(splits).map(([name, items]) => [
+    name,
+    items.filter((item) => !hasVisualAssertions(item)),
+  ]),
+);
 writeSplits(textOnlyDataDir, textOnlySplits);
 const excludedVisualPositiveCases = trainingItems.length - textOnlyItems.length;
 const textOnly = {
@@ -435,6 +640,9 @@ const quality = {
   notes: [
     "Activation-only negative cases are excluded from body optimization training.",
     "Negative cases remain useful for readiness and adoption safety review.",
+    "Cases connected transitively by explicit split families or normalized shared fixture paths stay in one split.",
+    "Split allocation preserves feasible heldout floors before maximizing validation and test visual coverage.",
+    "The text-only variant filters the full split without changing train, validation, or test membership.",
     "Deterministic assertions are used by the local evaluator before semantic LLM judging when present.",
     "Visual assertions are checked against rollout artifacts before semantic LLM judging when present.",
     "A companion data-text-only split is always generated; when visual assertion cases exist, that split excludes them for environments without render tooling.",

@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable ER diagram for User, Organization, Membership, Invoice, and Payment with relationship labels that do not overlap connectors.
+Create an editable draw.io ER diagram for User, Organization, Membership, Invoice, and Payment with relationship labels that do not overlap connectors.
 ```
 
 ## Should Trigger

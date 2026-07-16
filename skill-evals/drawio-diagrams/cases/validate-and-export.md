@@ -3,12 +3,16 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to validate this .drawio file and export PNG and dark SVG if the local draw.io CLI is available.
+Validate this `.drawio` file and export PNG and dark SVG if the local draw.io CLI is available.
 ```
 
 ## Should Trigger
 
 Yes
+
+## Split Family
+
+basic-export
 
 ## Fixtures
 

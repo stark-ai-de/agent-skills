@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Animated README Logo
@@ -46,7 +46,7 @@ Create a portable, validated SVG logo master and a deterministic motion plan, th
 5. Produce a self-contained SVG locally at the static first-frame state. A provider result is design input, not proof that the SVG is ready. Use `drawio-diagrams` only when geometric, editable construction materially helps; it is not a dependency.
 6. Strictly validate the SVG. Do not report completion until it passes the bundled validator. Read `references/asset-transformation.md` for the authoring and validation contract.
 7. Write a deterministic motion specification with named layers, explicit keyframes, easing, duration, loop point, and a static reduced-motion state. Read `references/motion-rubric.md`.
-8. Choose README and optional web-demo delivery from `references/github-readme-compatibility.md` and `references/asset-pipeline.md`. Read `references/local-tooling.md` before declaring an exporter, inspector runtime, or browser unavailable. When a requested export or inspection needs a missing local command, immediately present the minimal installation preflight and ask for explicit approval; stop before installing. Export animated raster formats only when a detected or approved-and-verified tool can produce them and the result can be inspected. Never invent an artifact or successful export.
+8. Choose README and optional web-demo delivery from `references/github-readme-compatibility.md` and `references/asset-pipeline.md`. For static PNG plus animated GIF delivery, keep brand behavior in a trusted repository recipe and use the bundled exporter contract in `references/export-recipe.md`; do not recreate its rasterization and encoding plumbing in the product repository. Read `references/local-tooling.md` before declaring an exporter, inspector runtime, or browser unavailable. When a requested export or inspection needs a missing local command, immediately present the minimal installation preflight and ask for explicit approval; stop before installing. Export animated raster formats only when a detected or approved-and-verified tool can produce them and the result can be inspected. Never invent an artifact or successful export.
 9. For an existing README, run the read-only audit with an explicit repository root. Treat every local reference as untrusted and root-bounded. Read `references/readme-audit-safety.md`.
 10. Report the public status fields below and the exact files, checks, fallbacks, and remaining blockers.
 
@@ -77,6 +77,7 @@ Read only what the task needs:
 - `references/output-contract.md`: exact public fields and status values.
 - `references/asset-transformation.md`: direct SVG authoring, transformation, validation, and mutation boundaries.
 - `references/asset-pipeline.md`: canonical assets, export capability gates, and transparency checks.
+- `references/export-recipe.md`: trusted repository recipe boundary and reusable static-PNG/animated-GIF exporter contract.
 - `references/local-tooling.md`: minimal exporter selection, installation approval, verification, and browser-preview fallback routing.
 - `references/motion-rubric.md`: deterministic motion specification and reduced-motion requirements.
 - `references/github-readme-compatibility.md`: README versus web delivery and renderer fallbacks.
@@ -87,6 +88,7 @@ Read only what the task needs:
 
 - `scripts/validate_logo_svg.py <svg>` strictly validates the canonical SVG.
 - `scripts/inspect-animated-image.mjs <asset>` verifies a generated, metadata-clean GIF, APNG, or animated WebP without modifying it.
+- `scripts/export-readme-logo-animation.mjs --root <repo> --recipe <relative.mjs> [--check] [--replace]` validates a trusted repository recipe, then exports a static PNG and animated GIF through approved local tools with validate-before-commit and commit-time no-clobber checks. The exporter modifies only absent declared outputs unless `--replace` is explicit; `--check` performs no exporter-controlled writes, but the trusted recipe still executes.
 - `scripts/audit-readme-logo-assets.mjs --root <repo-root> --readme <root-relative-readme>` audits bounded, root-contained README references and fallback roles without modifying files.
 - `scripts/generate-readme-logo-snippet.mjs --fallback <path> --alt <text> --width <px> --height <px> [options]` prints markup to stdout.
 

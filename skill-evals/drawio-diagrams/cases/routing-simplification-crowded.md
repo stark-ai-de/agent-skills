@@ -10,6 +10,10 @@ Use $drawio-diagrams to simplify the provided crowded architecture diagram with 
 
 Yes
 
+## Split Family
+
+routing-geometry
+
 ## Fixtures
 
 - skills/engineering-workflows/drawio-diagrams/references/examples/crowded-routing-before.drawio

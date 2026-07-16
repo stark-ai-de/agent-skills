@@ -1,0 +1,13 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Offline icons">
+    <mxGraphModel iconMode="icon-first" grid="1" gridSize="8" page="1" pageWidth="827" pageHeight="1169">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="postgres" value="PostgreSQL" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cellipse%20cx%3D%2232%22%20cy%3D%2214%22%20rx%3D%2222%22%20ry%3D%229%22%20fill%3D%22%233b82f6%22%2F%3E%3Cpath%20d%3D%22M10%2014v32c0%205%2010%209%2022%209s22-4%2022-9V14%22%20fill%3D%22%23dbeafe%22%20stroke%3D%22%233b82f6%22%20stroke-width%3D%224%22%2F%3E%3C%2Fsvg%3E;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="72" height="72" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

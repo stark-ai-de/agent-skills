@@ -1,12 +1,12 @@
 ---
 name: handoff
-description: Write a compact handoff document so a fresh agent or new Codex thread can continue. Use when context is long, the user wants to switch threads, work must be paused, or the agent needs to summarize current state without duplicating existing docs or diffs.
+description: Write a compact handoff document so a fresh agent, thread, or session can continue. Use when context is long, the user wants to switch threads, work must be paused, or the agent needs to summarize current state without duplicating existing docs or diffs.
 license: Apache-2.0
 metadata:
   internal: true
   author: stark-ai-de
   category: productivity
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Handoff

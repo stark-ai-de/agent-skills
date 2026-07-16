@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create a simple editable dependency graph even though draw.io Desktop and MCP tools are unavailable.
+Create a simple editable draw.io dependency graph even though draw.io Desktop and MCP tools are unavailable.
 ```
 
 ## Should Trigger

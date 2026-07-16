@@ -86,6 +86,8 @@ npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator cla
 
 Each bundle contains the skills from its matching `*-operations` category plus every public skill outside the operations categories. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
 
+The `-a` option selects the host where a skill is installed; it does not change that skill's target contract. An intentionally cross-host install preserves target-specific evidence and output while adapting collaboration controls to the selected host.
+
 ## Choose a skill
 
 | When you need to…                                                    | Use                                                                                                                                                                                                                                                                    | Scope                |
@@ -125,7 +127,7 @@ npm run validate
 | `npm run list`                          | List promoted public skills                              |
 | `npm run list:incubator`                | List incubator skills                                    |
 | `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts |
-| `npm run smoke:install`                 | Test public discovery from a clean copy                  |
+| `npm run smoke:install`                 | Test clean-copy discovery and exact host destinations    |
 | `npx skills@latest add ./skills --list` | Check local public skill discovery                       |
 | `pnpm --filter ./site build`            | Build the generated catalog                              |
 | `pnpm format:check`                     | Check formatting                                         |

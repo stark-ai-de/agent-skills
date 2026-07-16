@@ -46,7 +46,7 @@ Include this result before the final spec:
 3. Mark status as `Proposed` unless the maintainer explicitly accepts it.
 4. Use the repo ADR filename pattern. If no pattern exists, use `NNNN-kebab-title.md` with the next sequential number.
 5. If the ADR folder is missing, ask the user whether to create `docs/adrs/` or use another path before writing.
-6. Persist the ADR when required and report its path. While native Plan mode is active, defer this write to the save-only continuation. During persistence, update the repository's existing ADR index when its convention requires one; treat that minimal entry as part of ADR persistence, not unrelated documentation.
+6. Persist the ADR when required and report its path. While the current execution host's Plan mode is active, defer this write to the save-only continuation. During persistence, update the repository's existing ADR index when its convention requires one; treat that minimal entry as part of ADR persistence, not unrelated documentation.
 7. Reference the ADR from the implementation spec.
 8. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
 

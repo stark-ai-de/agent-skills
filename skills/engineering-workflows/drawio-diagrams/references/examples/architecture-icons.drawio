@@ -1,41 +1,58 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Architecture Icons">
-    <mxGraphModel adaptiveColors="auto" dx="1000" dy="700" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel adaptiveColors="auto" iconMode="icon-first" dx="1000" dy="700" grid="1" gridSize="8" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="zone-services" value="Services" style="swimlane;html=1;rounded=1;container=1;collapsible=0;startSize=24;fillColor=light-dark(#f8fafc,#0f172a);strokeColor=light-dark(#94a3b8,#64748b);fontColor=light-dark(#0f172a,#f8fafc);" vertex="1" parent="1">
-          <mxGeometry x="210" y="20" width="330" height="220" as="geometry"/>
+        <mxCell id="zone-services" value="Services" style="swimlane;html=1;rounded=1;container=1;collapsible=0;startSize=24;fillColor=light-dark(#f8fafc,#0f172a);strokeColor=light-dark(#94a3b8,#64748b);fontColor=light-dark(#0f172a,#f8fafc);fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="272" y="24" width="352" height="304" as="geometry"/>
         </mxCell>
-        <mxCell id="zone-data" value="Data" style="swimlane;html=1;rounded=1;container=1;collapsible=0;startSize=24;fillColor=light-dark(#f8fafc,#0f172a);strokeColor=light-dark(#94a3b8,#64748b);fontColor=light-dark(#0f172a,#f8fafc);" vertex="1" parent="1">
-          <mxGeometry x="580" y="20" width="330" height="220" as="geometry"/>
+        <mxCell id="zone-data" value="Data" style="swimlane;html=1;rounded=1;container=1;collapsible=0;startSize=24;fillColor=light-dark(#f8fafc,#0f172a);strokeColor=light-dark(#94a3b8,#64748b);fontColor=light-dark(#0f172a,#f8fafc);fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="24" width="360" height="304" as="geometry"/>
         </mxCell>
-        <mxCell id="client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ecfeff,#164e63);strokeColor=light-dark(#0891b2,#67e8f9);fontColor=light-dark(#083344,#ecfeff);" vertex="1" parent="1">
-          <mxGeometry x="40" y="100" width="140" height="60" as="geometry"/>
+        <mxCell id="client" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;outlineConnect=0;aspect=fixed;fontColor=light-dark(#0f172a,#f8fafc);fontSize=12;dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="88" y="104" width="48" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="api" value="API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="zone-services">
-          <mxGeometry x="40" y="80" width="140" height="60" as="geometry"/>
+        <mxCell id="api" value="API Gateway" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="zone-services">
+          <mxGeometry x="64" y="88" width="64" height="64" as="geometry"/>
         </mxCell>
-        <mxCell id="lambda" value="Lambda" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);" vertex="1" parent="zone-services">
-          <mxGeometry x="230" y="80" width="60" height="60" as="geometry"/>
+        <mxCell id="lambda" value="Lambda" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="zone-services">
+          <mxGeometry x="240" y="88" width="64" height="64" as="geometry"/>
         </mxCell>
-        <mxCell id="postgres" value="PostgreSQL" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="zone-data">
-          <mxGeometry x="40" y="75" width="100" height="70" as="geometry"/>
+        <mxCell id="postgres" value="RDS (PostgreSQL)" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="zone-data">
+          <mxGeometry x="48" y="56" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="redis" value="Redis" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#fee2e2,#7f1d1d);strokeColor=light-dark(#ef4444,#fca5a5);fontColor=light-dark(#450a0a,#fef2f2);" vertex="1" parent="zone-data">
-          <mxGeometry x="190" y="75" width="100" height="70" as="geometry"/>
+        <mxCell id="redis" value="ElastiCache (Redis)" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elasticache;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="zone-data">
+          <mxGeometry x="216" y="168" width="72" height="72" as="geometry"/>
         </mxCell>
-        <mxCell id="edge-client-api" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="client" target="api">
+        <mxCell id="edge-client-api" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=request;flowAnimation=1;" edge="1" parent="1" source="client" target="api">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="edge-api-lambda" value="Invoke" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="api" target="lambda">
+        <mxCell id="edge-api-lambda" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=runtime-flow;flowAnimation=1;" edge="1" parent="1" source="api" target="lambda">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="edge-lambda-postgres" value="SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="lambda" target="postgres">
+        <mxCell id="edge-lambda-postgres" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=data-flow;flowAnimation=1;" edge="1" parent="1" source="lambda" target="postgres">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="edge-lambda-redis" value="Cache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="lambda" target="redis">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="edge-lambda-redis" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);fontSize=12;dataRole=data-flow;flowAnimation=1;" edge="1" parent="1" source="lambda" target="redis">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="544" y="224"/>
+              <mxPoint x="848" y="224"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label-https" value="HTTPS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=12;spacing=2;fillColor=light-dark(#ffffff,#0f172a);strokeColor=none;fontColor=light-dark(#0f172a,#f8fafc);dataRole=label;" vertex="1" parent="1">
+          <mxGeometry x="208" y="104" width="56" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-invoke" value="Invoke" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=12;spacing=2;fillColor=light-dark(#ffffff,#0f172a);strokeColor=none;fontColor=light-dark(#0f172a,#f8fafc);dataRole=label;" vertex="1" parent="1">
+          <mxGeometry x="456" y="80" width="48" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-sql" value="SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=12;spacing=2;fillColor=light-dark(#ffffff,#0f172a);strokeColor=none;fontColor=light-dark(#0f172a,#f8fafc);dataRole=label;" vertex="1" parent="1">
+          <mxGeometry x="632" y="80" width="40" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-cache" value="Cache" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=12;spacing=2;fillColor=light-dark(#ffffff,#0f172a);strokeColor=none;fontColor=light-dark(#0f172a,#f8fafc);dataRole=label;" vertex="1" parent="1">
+          <mxGeometry x="632" y="184" width="40" height="24" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>

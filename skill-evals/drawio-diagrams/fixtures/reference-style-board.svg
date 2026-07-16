@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Graphite and cyan technical style reference</title>
+  <desc id="desc">An original abstract style board with square graphite cards, thin cyan routes, compact labels, and one soft shadow tier.</desc>
+  <defs>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#020617" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+  <rect width="480" height="320" fill="#111827"/>
+  <g fill="none" stroke="#334155" stroke-width="1" opacity="0.45">
+    <path d="M0 40h480M0 80h480M0 120h480M0 160h480M0 200h480M0 240h480M0 280h480"/>
+    <path d="M40 0v320M80 0v320M120 0v320M160 0v320M200 0v320M240 0v320M280 0v320M320 0v320M360 0v320M400 0v320M440 0v320"/>
+  </g>
+  <g fill="none" stroke="#22D3EE" stroke-width="2">
+    <path d="M142 112h70v96h70"/>
+    <path d="M338 208h48"/>
+  </g>
+  <g fill="#1E293B" stroke="#475569" filter="url(#soft-shadow)">
+    <rect x="54" y="72" width="88" height="80" rx="6"/>
+    <rect x="212" y="168" width="126" height="80" rx="6"/>
+  </g>
+  <rect x="386" y="168" width="56" height="80" rx="6" fill="#172554" stroke="#22D3EE"/>
+  <g fill="#E2E8F0" font-family="Arial, sans-serif" font-size="13" font-weight="700">
+    <text x="70" y="101">INPUT</text>
+    <text x="228" y="197">PROCESS</text>
+    <text x="399" y="197">OUT</text>
+  </g>
+  <g fill="#94A3B8" font-family="monospace" font-size="10">
+    <text x="70" y="126">compact · 01</text>
+    <text x="228" y="222">square · active</text>
+    <text x="399" y="222">02</text>
+  </g>
+</svg>

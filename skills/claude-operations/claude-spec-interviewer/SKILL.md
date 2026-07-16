@@ -2,11 +2,11 @@
 name: claude-spec-interviewer
 description: Interview fuzzy Claude Code coding requests into user-verified implementation specs with source challenge, ADR gate, validation plan, and execution prompt. Use when the user asks for /claude-spec-interviewer, a Claude Code implementation plan, PRD, requirements, plan before coding, Plan Mode planning, persisted spec, ADR decision, CLAUDE.md evidence, or .claude/rules evidence. Do not use for direct implementation, pure brainstorming, memory cleanup, or authoring Claude instruction files only.
 license: Apache-2.0
-compatibility: Designed for Claude Code and Claude Code skills. Native Plan mode is required when supported unless the user explicitly declines it; otherwise use a recorded conversational fallback. Works best with repo-local AGENTS.md, CLAUDE.md, .claude/rules, and project docs.
+compatibility: Designed for Claude Code-targeted planning across Agent Skills hosts. Use the current execution host's Plan mode and lifecycle controls when supported unless the user explicitly declines them; otherwise use a recorded conversational fallback. Use Claude-only controls only when Claude Code executes the skill. Works best with repo-local AGENTS.md, CLAUDE.md, .claude/rules, and project docs.
 metadata:
   author: stark-ai-de
   category: claude-operations
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # Claude Spec Interviewer
@@ -44,21 +44,19 @@ Produce a user-verified implementation spec with bounded scope, explicit assumpt
 - Claude Code project or personal skill folders such as `.claude/skills/` and `~/.claude/skills/` only when the spec depends on local Claude Code skill behavior.
 - Claude Code auto-memory evidence only when it is surfaced by the user, available through `/memory`, or materially relevant to the requested implementation plan.
 
-## Native Plan mode preflight
+## Execution-host Plan mode preflight
 
-Before repo inspection or substantive questions:
+Before repo inspection or substantive questions, identify the current execution host and use only its planning, structured-question, transition, and plan-exit controls. The Claude Code target determines evidence and output contracts, not which host controls are available.
 
-When another Agent Skills host executes this skill, substitute that host's equivalent planning, structured-question, transition, and plan-exit controls throughout this workflow; use the recorded fallback when an equivalent is unavailable, and keep Claude Code evidence and output contracts unchanged.
-
-1. Determine whether Plan mode is supported and active; if support exists but state is unknown, treat it as inactive.
-2. If active, continue in the main conversation and use `AskUserQuestion` for material decisions when available.
-3. If supported but inactive and not explicitly declined, invoke `EnterPlanMode` when available and wait for host confirmation. If that tool is unavailable, stop with: `Switch to Plan mode with Shift+Tab, the mode selector, or /plan, then reply continue.` Do not ask the user to resend the request or claim prompt text changed the mode. An explicit decline skips transition and enters the recorded fallback in step 4.
+1. Determine whether the current execution host supports Plan mode and whether it is active; if support exists but state is unknown, treat it as inactive.
+2. If active, continue in the main conversation and use the current host's structured-question control for material decisions when available. In Claude Code, that control is `AskUserQuestion`.
+3. If supported but inactive and not explicitly declined, invoke the current host's Plan-mode transition control and wait for host confirmation. In Claude Code, that control is `EnterPlanMode`. If the current host exposes no transition control, give accurate manual activation instructions for that host, ask the user to reply `continue`, and wait. When Claude Code is the execution host, say: `Switch to Plan mode with Shift+Tab, the mode selector, or /plan, then reply continue.` Do not ask the user to resend the request or claim prompt text changed the mode. An explicit decline skips transition and enters the recorded fallback in step 4.
 4. Never fork the interview. Use conversational fallback only when Plan mode is unavailable or explicitly declined, recording `Plan mode fallback: unavailable` or `Plan mode fallback: declined`.
-5. Keep repository and workspace artifacts read-only in Plan mode. Inspection and non-mutating validation are allowed; the host-managed plan written by `ExitPlanMode` is the only permitted Plan-mode file output.
+5. Keep repository and workspace artifacts read-only in Plan mode. Inspection and non-mutating validation are allowed; only a plan artifact created by the current host's plan-exit control is permitted. In Claude Code, that control is `ExitPlanMode`.
 
 ## Workflow
 
-1. Run the native Plan mode preflight above. Do not begin the substantive interview until Plan mode is active or a permitted fallback is recorded.
+1. Run the execution-host Plan mode preflight above. Do not begin the substantive interview until Plan mode is active or a permitted fallback is recorded.
 2. Classify the requested effort as `compact`, `standard`, or `deep` using the mode table in `references/spec-rubric.md`.
 3. Inspect only the minimum repo context needed to avoid low-value questions. During this pass, note spec and ADR destinations by following `references/artifact-destinations.md`; defer destination confirmation to the final checkpoint unless that reference requires earlier confirmation.
 4. Ask one high-impact question at a time; batch up to 3 only when independent. Resolve discoverable facts from repo evidence or current primary sources. Use the current execution host's structured-question tool when available; in Claude Code, this is `AskUserQuestion`. Use `references/question-bank.md` for question selection.
@@ -68,20 +66,14 @@ When another Agent Skills host executes this skill, substitute that host's equiv
 8. If the challenge invalidates a requirement or assumption, revise it, mark the conflict, or propose a preceding ADR or spec step.
 9. Present a checkpoint covering scope, non-goals, assumptions, open questions, risks, validation, ADR result, and path basis. Wait for explicit verification; continue interviewing if a material gap appears.
 10. Prepare the approved spec from the matching template in `assets/`. Convert ambiguity into testable acceptance criteria; for compact specs, use `artifact_path` as the only persisted artifact field.
-11. While Plan mode is active, write no repository or workspace artifact and mark persistence pending. Use the current execution host's plan-exit control with a save-only plan to persist the approved spec, required ADR, and the minimal ADR index entry required by the repository's existing convention; in Claude Code, this is `ExitPlanMode`. Emit the Claude execution prompt, validate and report paths, then stop. Its host-managed plan file is allowed. If no equivalent plan-exit control is available, say: `Exit Plan mode, then reply continue. Continue in save-only mode: persist the approved spec to <path>, any required ADR, and the minimal ADR index entry required by the repository's existing convention; emit the Claude Code execution prompt, validate and report the artifact paths, then stop. Do not implement the feature.`
+11. While Plan mode is active, write no repository or workspace artifact and mark persistence pending. Use the current execution host's plan-exit control with a save-only plan to persist the approved spec, required ADR, and the minimal ADR index entry required by the repository's existing convention; in Claude Code, that control is `ExitPlanMode`. Emit the Claude execution prompt, validate and report paths, then stop. A plan artifact created by that host control is allowed. If the current host exposes no plan-exit control, give accurate manual exit instructions for that host and wait for `continue` before the save-only handoff. When Claude Code is the execution host, say: `Exit Plan mode with Shift+Tab or the mode selector, then reply continue. Continue in save-only mode: persist the approved spec to <path>, any required ADR, and the minimal ADR index entry required by the repository's existing convention; emit the Claude Code execution prompt, validate and report the artifact paths, then stop. Do not implement the feature.`
 12. After approved exit, perform only that handoff using `assets/claude-execution-prompt.md`; make no implementation or unrelated documentation edits. A minimal convention-required ADR index entry is related ADR persistence. If persistence is declined or blocked, write nothing and return save-ready artifacts, proposed paths, and the reason.
 13. In a recorded conversational fallback, perform the same save-only finalization after the verified checkpoint when writes are allowed; do not implement the feature.
 14. Run a final self-check against `references/spec-rubric.md`.
 
 ## Claude Code integration
 
-The Claude-native controls below apply only when Claude Code is the execution host. Another host follows the workflow-level substitution rule instead.
-
-- Support `/claude-spec-interviewer` and automatic loading. Keep the interaction in the main conversation so answers and mode transitions stay attached to the request.
-- Require Plan mode when supported unless explicitly declined. Prefer `EnterPlanMode` and `ExitPlanMode`; give manual switch guidance only when the corresponding host tool is unavailable.
-- Use `AskUserQuestion` for structured decisions when it is available. Treat the saved spec file as the durable artifact that outlives Plan mode, but persist it only through the save-only continuation after leaving Plan mode.
-- Treat `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**/*.md`, `~/.claude/rules/**/*.md`, and auto memory as evidence and constraints, not as the artifact format. Save implementation specs as spec files unless the user explicitly asks for a Claude Code rule and the repo convention supports it.
-- Do not save implementation specs into `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules`, or auto memory by default. Offer to distill durable Claude instructions into a separate rule or memory artifact only when the user explicitly wants that.
+Claude-native controls apply only when Claude Code executes the skill; other hosts follow the preflight and workflow above. Support `/claude-spec-interviewer` and automatic loading in the main conversation. Treat `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**/*.md`, `~/.claude/rules/**/*.md`, and auto memory as target evidence, not the spec format. Save repository-owned spec and ADR artifacts; create a Claude rule or memory artifact only when explicitly requested and supported by repo convention.
 
 ## Safety rules
 
@@ -98,17 +90,9 @@ The Claude-native controls below apply only when Claude Code is the execution ho
 
 Read only when needed:
 
-- `references/question-bank.md` for interview questions.
-- `references/spec-rubric.md` for mode selection and the final self-check.
-- `references/source-challenge.md` for the source-backed challenge pass.
-- `references/adr-gate.md` before deciding whether the spec needs a preceding ADR.
-- `references/artifact-destinations.md` before proposing or saving spec and ADR paths.
-- `references/rollout-checklist.md` when writing validation, rollout, and rollback sections.
-- `assets/spec-template.compact.md` for small, low-risk work.
-- `assets/spec-template.standard.md` for default feature, bugfix, refactor, or migration specs.
-- `assets/spec-template.deep.md` for repo-wide, architectural, or phased work.
-- `assets/claude-execution-prompt.md` for the companion implementation prompt.
-- `assets/example-small-task.spec.md` and `assets/example-repo-refactor.spec.md` for output shape examples.
+- Interview: `references/question-bank.md`, `references/spec-rubric.md`, and `references/source-challenge.md`.
+- Persistence and architecture: `references/adr-gate.md`, `references/artifact-destinations.md`, and `references/rollout-checklist.md`.
+- Output: the matching `assets/spec-template.*.md`, `assets/claude-execution-prompt.md`, and the bundled example specs.
 
 ## Scripts
 
@@ -116,7 +100,7 @@ No bundled scripts.
 
 ## Output format
 
-While Plan mode is active, report the checkpoint, proposed paths, and `Persistence status: pending`; invoke `ExitPlanMode` with the save-only plan or give the step 11 fallback. Do not claim a save.
+While Plan mode is active, report the checkpoint, proposed paths, and `Persistence status: pending`; invoke the current execution host's plan-exit control with the save-only plan or give the step 11 fallback. In Claude Code, that control is `ExitPlanMode`. Do not claim a save.
 
 After the save-only continuation, or when using a recorded fallback, return in this order:
 
@@ -135,16 +119,12 @@ Do not paste the full final spec or ADR by default after they are saved. Print f
 
 ## Completion criteria
 
-- The final artifact is a concrete markdown spec, not a prose brainstorm or chat-only plan.
-- The spec has explicit scope, constraints, validation, and done-when criteria, and acceptance criteria are testable.
-- The spec is saved in the repository with a reported path. A save-ready artifact after declined or blocked persistence is useful output but does not complete the workflow.
-- `Persistence status: pending` because Plan mode is still active is not completion. Continue only after `ExitPlanMode` is approved or the user manually exits Plan mode for the save-only handoff.
-- Required ADRs are saved using the repo's ADR path and filename pattern, or implementation is explicitly blocked before ADR creation.
-- Missing facts are labeled as `unspecified`, and no unresolved blocking decision is hidden as a non-blocking assumption.
-- Important requirements and implementation decisions were challenged against relevant repo evidence and current sources, or the reason for skipping the challenge is stated.
+- The final artifact is a saved, concrete markdown spec with explicit scope, constraints, testable acceptance criteria, validation, and done-when criteria; report its repository path.
+- `Persistence status: pending` because Plan mode is still active is not completion. Continue only after the current execution host confirms plan exit or the user manually exits Plan mode for the save-only handoff. In Claude Code, approval of `ExitPlanMode` provides that confirmation.
+- Required ADRs follow repo conventions or block implementation; missing facts remain `unspecified`, and no blocking decision is hidden.
+- Important decisions were challenged against relevant repo evidence and current sources, or the reason for skipping the challenge is stated.
 - A required ADR is indexed during save-only persistence when the repository convention requires it; all other repo-facing documentation changes are captured as implementation work in the spec.
-- A Claude Code execution prompt is included.
-- Save-only finalization does not implement the requested feature or modify files beyond the approved spec, required ADR, and minimal convention-required ADR index entry.
+- Include the Claude Code execution prompt. Save-only finalization changes only the approved spec, required ADR, and minimal convention-required ADR index entry; it never implements the feature.
 
 ## Failure modes
 
@@ -158,8 +138,6 @@ Do not paste the full final spec or ADR by default after they are saved. Print f
 - If a prior ADR or named requirement appears stale or wrong, propose a preceding ADR, spec update, or explicit maintainer decision instead of silently overriding it.
 - If the ADR gate is uncertain, produce the spec with `ADR required: unresolved` and make implementation blocked on a maintainer decision.
 - If the checkpoint is not verified, keep interviewing or stop with the spec uncreated.
-- If Plan mode is supported but inactive and not explicitly declined, invoke `EnterPlanMode` when available. If the tool is unavailable, stop before substantive interviewing and wait for the user to switch modes and reply `continue`; do not request the full prompt again.
-- If Plan mode is unavailable or explicitly declined, record the fallback reason and continue inline without forking.
-- If `ExitPlanMode` is denied or the user otherwise remains in Plan mode after approving the checkpoint, report persistence as pending and repeat the save-only handoff if useful; do not claim completion or write files.
+- If Plan mode transition, fallback, or exit cannot proceed, follow the preflight and step 11 exactly; keep persistence pending and write nothing until the host confirms exit.
 - If the specs or ADR folder does not exist and the user does not approve creating or selecting one, stop before creating final artifacts.
 - If the user asks to store the entire implementation spec in a Claude Code rule or memory file, explain the tradeoff and ask for explicit confirmation before doing so.

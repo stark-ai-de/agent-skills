@@ -7,6 +7,7 @@ Use this reference when a requested raster export, inspection, or visual preview
 - SVG rasterizer: prefer `rsvg-convert` from librsvg for deterministic SVG-to-PNG frames.
 - Animation encoder and probe: prefer headless FFmpeg with `ffmpeg` and `ffprobe` for GIF, APNG, and animated WebP.
 - Structural inspection: use the bundled strict SVG validator and animated-image inspector; do not replace them with exporter self-reporting.
+- Reusable GIF path: use the bundled `export-readme-logo-animation.mjs` after reviewing and checking the repository-owned recipe; the script performs no installation and preserves existing outputs on failure.
 - Browser preview: use a configured Chrome or Chromium executable. It is not an exporter or inspector.
 
 Do not report the whole pipeline unavailable because only a screenshot browser is missing.

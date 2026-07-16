@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Animation off">
+    <mxGraphModel adaptiveColors="auto" dx="600" dy="300" grid="1" gridSize="8" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#f8fafc,#172033);strokeColor=light-dark(#64748b,#94a3b8);fontColor=light-dark(#0f172a,#f8fafc);" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="140" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#eff6ff,#172554);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="140" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="request" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=light-dark(#2563eb,#93c5fd);labelBackgroundColor=light-dark(#ffffff,#0f172a);dataRole=request;flowAnimation=0;" edge="1" parent="1" source="client" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

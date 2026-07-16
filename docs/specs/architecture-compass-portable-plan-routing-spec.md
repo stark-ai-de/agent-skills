@@ -7,7 +7,7 @@ status: "accepted"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-07-11"
-updated: "2026-07-12"
+updated: "2026-07-13"
 source_request: "Implement the approved conditional Plan-mode recommendations for Architecture Compass and publish the release."
 phases: ["governance", "skill-lifecycle", "evaluation", "release"]
 ---
@@ -43,6 +43,13 @@ Add a portable decision-to-execution lifecycle to Architecture Compass so unreso
 - Treating Plan mode as a filesystem or security boundary.
 - Prefixing the implicitly invokable OpenAI default prompt with `/plan`.
 - Refactoring release helpers, adding an automated behavioral runner, or publishing an npm package.
+
+### Cross-host clarification
+
+- Keep `host-collaboration-modes.md` inside Architecture Compass: its route states, architecture checkpoint, and re-entry contract are workflow-specific, not a general activation layer.
+- Do not create a router skill. Agent Skills clients discover from skill names and descriptions before loading skill bodies, so another skill cannot guarantee activation.
+- Cross-host installation changes only the execution host; Architecture Compass remains portable because its evidence and outputs are host-neutral.
+- Backend gateways such as SkillOpt's Codex adapter are unrelated to collaboration-mode routing and remain with their owning workflow under [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md).
 
 ## Repo context
 

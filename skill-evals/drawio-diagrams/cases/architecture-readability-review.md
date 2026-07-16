@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create or revise an editable draw.io architecture diagram with external clients, API, Redis/BullMQ, a worker, browser lanes, storage, local mocks, queue dashboards, external webhooks, and a bottom row of shared package boundaries. Export light and dark renders if the local draw.io CLI is available.
+Use $drawio-diagrams to create or revise an editable draw.io architecture diagram with these relationships: external clients and external webhooks call the API; the API publishes through Redis/BullMQ to a worker; the worker fans out to browser lanes, storage, and local mocks; queue dashboards observe Redis/BullMQ; shared packages are dependencies of API and worker. Keep package boundaries in a bottom row or detail view. Export light and dark renders if the local draw.io CLI is available.
 ```
 
 ## Should Trigger

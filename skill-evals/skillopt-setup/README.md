@@ -24,7 +24,7 @@ Cases cover setup, data conversion, credential handling, Codex CLI probing, conf
 - `cases/hybrid-codex-target-config.md`
 - `cases/codex-cli-all-mode-reflection.md`
 - `cases/local-openai-gateway-preflight.md`
-- `cases/local-gateway-deployment-topology.md`
+- `cases/local-gateway-ownership-and-extraction.md`
 - `cases/local-artifact-audit-before-promotion.md`
 - `cases/local-adapter-config-and-registry.md`
 - `cases/strict-training-ready-refresh.md`

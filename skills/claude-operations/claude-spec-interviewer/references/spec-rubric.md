@@ -39,7 +39,7 @@ Use this before finalizing the implementation spec.
 - Source fit: important decisions are checked against repo instructions, ADRs, current code, and current external docs when relevant.
 - ADR fit: durable architectural decisions are captured in ADRs, while feature-specific details remain in the spec.
 - Persistence fit: the skill uses clear repo conventions without ceremony, confirms ambiguous or risky destinations, saves the spec by default, keeps compact specs to an artifact path line, saves ADR files only when required, and uses chat output only after an explicit persistence decline or blocker.
-- Plan-mode fit: when supported, the interview runs in native Plan mode with structured user input, writes no repository or workspace artifacts apart from the host-managed `ExitPlanMode` plan, and hands approved artifacts to a separate save-only continuation. Any fallback is explicitly justified and recorded.
+- Plan-mode fit: when supported, the interview uses the current execution host's Plan mode and structured-question controls, writes no repository or workspace artifacts apart from a plan artifact created by that host's plan-exit control, and hands approved artifacts to a separate save-only continuation. Any fallback is explicitly justified and recorded. `AskUserQuestion` and `ExitPlanMode` apply only when Claude Code is the execution host.
 - Safety: risky changes have migration or rollback notes.
 - Claude Code readiness: Claude Code can act without another discovery loop, including clear treatment of `CLAUDE.md`, `.claude/rules`, and Plan Mode when they matter.
 - User verification: the final scope, non-goals, assumptions, risks, validation plan, ADR result, and artifact paths were confirmed by the user before final spec creation.
@@ -58,8 +58,8 @@ Use this before finalizing the implementation spec.
 - Did the ADR gate classify architectural decisions correctly?
 - Does the spec reference ADRs instead of duplicating durable architecture rationale?
 - Did the final checkpoint verify scope, non-goals, assumptions, risks, validation, ADR status, and artifact paths?
-- Was native Plan mode used when supported, or was an unavailable/explicitly-declined fallback recorded?
-- Were all repository and workspace artifact writes deferred until the user exited Plan mode and invoked the save-only continuation, apart from the host-managed `ExitPlanMode` plan?
+- Was the current execution host's Plan mode used when supported, or was an unavailable/explicitly-declined fallback recorded?
+- Were all repository and workspace artifact writes deferred until the current execution host confirmed Plan-mode exit and invoked the save-only continuation, apart from a plan artifact created by that host's plan-exit control? In Claude Code, that control is `ExitPlanMode`.
 - Are any unresolved decisions clearly blocking, non-blocking, or accepted by the user?
 - Was any required ADR persisted to the repo and indexed when the repository convention requires it?
 - Are all other repo-facing documentation changes explicitly deferred and recorded as later implementation work?

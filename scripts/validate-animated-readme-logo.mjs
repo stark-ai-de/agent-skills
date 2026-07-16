@@ -1,17 +1,21 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
+  renameSync,
   rmSync,
   symlinkSync,
+  truncateSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import zlib from "node:zlib";
 import { inspectAnimatedImageFile } from "./lib/animated-image.mjs";
 
@@ -24,11 +28,16 @@ if (!skillRoot) throw new Error("animated-readme-logo skill directory was not fo
 
 const svgValidator = path.join(skillRoot, "scripts/validate_logo_svg.py");
 const animatedCli = path.join(skillRoot, "scripts/inspect-animated-image.mjs");
+const exporterCli = path.join(skillRoot, "scripts/export-readme-logo-animation.mjs");
+const { removeAnchoredStageDirectory, replaceOutputsAtomically } = await import(
+  pathToFileURL(path.join(skillRoot, "scripts/lib/transactional-output.mjs")).href
+);
 const auditCli = path.join(skillRoot, "scripts/audit-readme-logo-assets.mjs");
 const snippetCli = path.join(skillRoot, "scripts/generate-readme-logo-snippet.mjs");
 const skillMarkdown = path.join(skillRoot, "SKILL.md");
 const localToolingReference = path.join(skillRoot, "references/local-tooling.md");
 const assetPipelineReference = path.join(skillRoot, "references/asset-pipeline.md");
+const exportRecipeReference = path.join(skillRoot, "references/export-recipe.md");
 const outputContractReference = path.join(skillRoot, "references/output-contract.md");
 const temp = mkdtempSync(path.join(tmpdir(), "animated-readme-logo-validator-"));
 let checkCount = 0;
@@ -43,10 +52,34 @@ function check(name, callback) {
   }
 }
 
-function run(command, args) {
+function mappedRegularFileStats(files, file) {
+  if (!files.has(file)) {
+    const error = new Error("missing fake file");
+    error.code = "ENOENT";
+    throw error;
+  }
+  const value = files.get(file);
+  const content = typeof value === "object" && value !== null ? value.content : value;
+  return {
+    dev: 1,
+    ino: typeof value === "object" && value !== null ? value.inode : value,
+    size: Buffer.byteLength(content),
+    isFile: () => true,
+    isSymbolicLink: () => false,
+  };
+}
+
+function mappedRegularFileBytes(files, file) {
+  mappedRegularFileStats(files, file);
+  const value = files.get(file);
+  return Buffer.from(typeof value === "object" && value !== null ? value.content : value);
+}
+
+function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
-    cwd: root,
+    cwd: options.cwd ?? root,
     encoding: "utf8",
+    env: options.env ?? process.env,
     timeout: 15_000,
   });
   if (result.error) throw result.error;
@@ -136,19 +169,23 @@ function makePng({ animated, width = 2, height = 1 }) {
   ]);
 }
 
-function gifFrame(width, height) {
+function gifFrame(width, height, delayCentiseconds) {
   const descriptor = Buffer.alloc(10);
   descriptor[0] = 0x2c;
   descriptor.writeUInt16LE(width, 5);
   descriptor.writeUInt16LE(height, 7);
-  return Buffer.concat([
-    Buffer.from([0x21, 0xf9, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00]),
-    descriptor,
-    Buffer.from([0x02, 0x02, 0x44, 0x0a, 0x00]),
-  ]);
+  const graphicControl = Buffer.from([0x21, 0xf9, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00]);
+  graphicControl.writeUInt16LE(delayCentiseconds, 4);
+  return Buffer.concat([graphicControl, descriptor, Buffer.from([0x02, 0x02, 0x44, 0x0a, 0x00])]);
 }
 
-function makeGif({ animated, width = 2, height = 1 }) {
+function makeGif({
+  animated,
+  width = 2,
+  height = 1,
+  delayCentiseconds = 1,
+  frameDelaysCentiseconds,
+}) {
   const header = Buffer.alloc(13);
   header.write("GIF89a", 0, "ascii");
   header.writeUInt16LE(width, 6);
@@ -166,12 +203,13 @@ function makeGif({ animated, width = 2, height = 1 }) {
     0x00,
     0x00,
   ]);
+  const delays =
+    frameDelaysCentiseconds ?? Array.from({ length: animated ? 2 : 1 }, () => delayCentiseconds);
   return Buffer.concat([
     header,
     globalColorTable,
     ...(animated ? [loop] : []),
-    gifFrame(width, height),
-    ...(animated ? [gifFrame(width, height)] : []),
+    ...delays.map((delay) => gifFrame(width, height, delay)),
     Buffer.from([0x3b]),
   ]);
 }
@@ -271,6 +309,7 @@ try {
     const skill = readFileSync(skillMarkdown, "utf8");
     const localTooling = readFileSync(localToolingReference, "utf8");
     const assetPipeline = readFileSync(assetPipelineReference, "utf8");
+    const exportRecipe = readFileSync(exportRecipeReference, "utf8");
     const outputContract = readFileSync(outputContractReference, "utf8");
 
     assert.match(skill, /requested export or inspection needs a missing local command/);
@@ -284,9 +323,2168 @@ try {
     assert.match(localTooling, /Only when no compatible local browser exists/);
     assert.match(assetPipeline, /required exporter or inspector command/);
     assert.match(
+      assetPipeline,
+      /run the bundled exporter with `--check` before the mutating export/,
+    );
+    assert.match(skill, /The exporter modifies only absent declared outputs unless `--replace`/);
+    assert.match(exportRecipe, /trusted executable repository code/);
+    assert.match(exportRecipe, /`--check` is not a sandbox/);
+    assert.match(exportRecipe, /preserves existing outputs when generation fails/);
+    assert.match(
       outputContract,
       /Local-tool approval: pending \| approved \| declined \| not-required/,
     );
+  });
+
+  expectRun(
+    "README logo exporter help",
+    "node",
+    [exporterCli, "--help"],
+    0,
+    /trusted, repository-owned JavaScript recipe/,
+  );
+
+  check("README logo exporter retains recovery state after a partial replacement", () => {
+    const stagedStatic = path.join(temp, "transaction-static", "new.png");
+    const stagedAnimated = path.join(temp, "transaction-animated", "new.gif");
+    const destinationStatic = path.join(temp, "transaction-output", "logo.png");
+    const destinationAnimated = path.join(temp, "transaction-output", "logo.gif");
+    const staticBackup = path.join(path.dirname(stagedStatic), "backup-logo.png");
+    const animatedBackup = path.join(path.dirname(stagedAnimated), "backup-logo.gif");
+    const files = new Map([
+      [stagedStatic, "new-static"],
+      [stagedAnimated, "new-animated"],
+      [destinationStatic, "old-static"],
+      [destinationAnimated, "old-animated"],
+    ]);
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      renameSync(from, to) {
+        assert.equal(files.has(from), true);
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      linkSync(from, to) {
+        if (from === stagedAnimated && to === destinationAnimated) throw new Error("injected");
+        assert.equal(files.has(from), true);
+        assert.equal(files.has(to), false);
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(destinationStatic), "new-static");
+    assert.equal(files.has(destinationAnimated), false);
+    assert.equal(files.get(staticBackup), "old-static");
+    assert.equal(files.get(animatedBackup), "old-animated");
+    assert.equal(files.get(stagedStatic), "new-static");
+    assert.equal(files.get(stagedAnimated), "new-animated");
+  });
+
+  check("README logo exporter retains successful replacement recovery links", () => {
+    const stagedStatic = path.join(temp, "cleanup-static", "new.png");
+    const stagedAnimated = path.join(temp, "cleanup-animated", "new.gif");
+    const destinationStatic = path.join(temp, "cleanup-output", "logo.png");
+    const destinationAnimated = path.join(temp, "cleanup-output", "logo.gif");
+    const retainedStaticBackup = path.join(path.dirname(stagedStatic), "backup-logo.png");
+    const retainedAnimatedBackup = path.join(path.dirname(stagedAnimated), "backup-logo.gif");
+    const files = new Map([
+      [stagedStatic, "new-static"],
+      [stagedAnimated, "new-animated"],
+      [destinationStatic, "old-static"],
+      [destinationAnimated, "old-animated"],
+    ]);
+    const removed = [];
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      renameSync(from, to) {
+        assert.equal(files.has(from), true);
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      linkSync(from, to) {
+        assert.equal(files.has(from), true);
+        assert.equal(files.has(to), false);
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        removed.push(file);
+        files.delete(file);
+      },
+    };
+    assert.deepEqual(
+      replaceOutputsAtomically(
+        [
+          { staged: stagedStatic, destination: destinationStatic },
+          { staged: stagedAnimated, destination: destinationAnimated },
+        ],
+        { operations },
+      ),
+      { preserveStageDirectories: true, retainedRecovery: true },
+    );
+    assert.equal(files.get(destinationStatic), "new-static");
+    assert.equal(files.get(destinationAnimated), "new-animated");
+    assert.equal(files.get(retainedStaticBackup), "old-static");
+    assert.equal(files.get(retainedAnimatedBackup), "old-animated");
+    assert.equal(files.get(stagedStatic), "new-static");
+    assert.equal(files.get(stagedAnimated), "new-animated");
+    assert.deepEqual(removed, []);
+  });
+
+  check("README logo exporter never deletes a concurrent replacement during recovery", () => {
+    const stagedStatic = path.join(temp, "incomplete-static", "new.png");
+    const stagedAnimated = path.join(temp, "incomplete-animated", "new.gif");
+    const destinationStatic = path.join(temp, "incomplete-output", "logo.png");
+    const destinationAnimated = path.join(temp, "incomplete-output", "logo.gif");
+    const retainedStaticBackup = path.join(path.dirname(stagedStatic), "backup-logo.png");
+    const retainedAnimatedBackup = path.join(path.dirname(stagedAnimated), "backup-logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "new-static", inode: 31 }],
+      [stagedAnimated, { content: "new-animated", inode: 32 }],
+      [destinationStatic, { content: "old-static", inode: 33 }],
+      [destinationAnimated, { content: "old-animated", inode: 34 }],
+    ]);
+    const removed = [];
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      renameSync(from, to) {
+        assert.equal(files.has(from), true);
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      linkSync(from, to) {
+        if (from === stagedAnimated && to === destinationAnimated) {
+          files.set(destinationStatic, { content: "concurrent-static", inode: 35 });
+          throw new Error("injected after concurrent replacement");
+        }
+        assert.equal(files.has(from), true);
+        assert.equal(files.has(to), false);
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        removed.push(file);
+        files.delete(file);
+      },
+    };
+    let failure;
+    try {
+      replaceOutputsAtomically(
+        [
+          { staged: stagedStatic, destination: destinationStatic },
+          { staged: stagedAnimated, destination: destinationAnimated },
+        ],
+        { operations },
+      );
+    } catch (error) {
+      failure = error;
+    }
+    assert.equal(failure?.code, "OUTPUT_ROLLBACK_INCOMPLETE");
+    assert.equal(failure?.preserveStageDirectories, true);
+    assert.equal(files.get(destinationStatic).content, "concurrent-static");
+    assert.equal(files.has(destinationAnimated), false);
+    assert.equal(files.get(retainedStaticBackup).content, "old-static");
+    assert.equal(files.get(retainedAnimatedBackup).content, "old-animated");
+    assert.equal(files.get(stagedStatic).content, "new-static");
+    assert.equal(files.get(stagedAnimated).content, "new-animated");
+    assert.deepEqual(removed, []);
+  });
+
+  check("README logo exporter preserves a partial commit-time collision for recovery", () => {
+    const stagedStatic = path.join(temp, "no-clobber-static", "new.png");
+    const stagedAnimated = path.join(temp, "no-clobber-animated", "new.gif");
+    const destinationStatic = path.join(temp, "no-clobber-output", "logo.png");
+    const destinationAnimated = path.join(temp, "no-clobber-output", "logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "new-static", inode: 1 }],
+      [stagedAnimated, { content: "new-animated", inode: 2 }],
+    ]);
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      linkSync(from, to) {
+        if (to === destinationAnimated) {
+          files.set(to, { content: "concurrent-animated", inode: 3 });
+          const error = new Error("injected collision");
+          error.code = "EEXIST";
+          throw error;
+        }
+        assert.equal(files.has(to), false);
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        files.delete(file);
+      },
+      renameSync(from, to) {
+        assert.equal(files.has(from), true);
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: false },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(destinationStatic).content, "new-static");
+    assert.equal(files.get(destinationAnimated).content, "concurrent-animated");
+    assert.equal(files.get(stagedStatic).content, "new-static");
+    assert.equal(files.get(stagedAnimated).content, "new-animated");
+  });
+
+  check("README logo exporter never deletes a replacement that races with rollback", () => {
+    const stagedStatic = path.join(temp, "rollback-race-static", "new.png");
+    const stagedAnimated = path.join(temp, "rollback-race-animated", "new.gif");
+    const destinationStatic = path.join(temp, "rollback-race-output", "logo.png");
+    const destinationAnimated = path.join(temp, "rollback-race-output", "logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "new-static", inode: 11 }],
+      [stagedAnimated, { content: "new-animated", inode: 12 }],
+    ]);
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      linkSync(from, to) {
+        if (from === stagedAnimated) {
+          files.set(destinationStatic, { content: "concurrent-static", inode: 13 });
+          files.set(destinationAnimated, { content: "concurrent-animated", inode: 14 });
+          const error = new Error("injected collision after replacement");
+          error.code = "EEXIST";
+          throw error;
+        }
+        if (files.has(to)) {
+          const error = new Error("destination exists");
+          error.code = "EEXIST";
+          throw error;
+        }
+        files.set(to, files.get(from));
+      },
+      renameSync(from, to) {
+        assert.equal(files.has(from), true);
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      rmSync(file) {
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: false },
+        ),
+      (error) => error.code === "OUTPUT_ROLLBACK_INCOMPLETE",
+    );
+    assert.equal(files.get(destinationStatic).content, "concurrent-static");
+    assert.equal(files.get(destinationAnimated).content, "concurrent-animated");
+    assert.equal(files.get(stagedStatic).content, "new-static");
+  });
+
+  check("README logo exporter preserves shared-inode data changed during commit", () => {
+    const stagedStatic = path.join(temp, "in-place-race-static", "new.png");
+    const stagedAnimated = path.join(temp, "in-place-race-animated", "new.gif");
+    const destinationStatic = path.join(temp, "in-place-race-output", "logo.png");
+    const destinationAnimated = path.join(temp, "in-place-race-output", "logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "new-static", inode: 21 }],
+      [stagedAnimated, { content: "new-animated", inode: 22 }],
+    ]);
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      linkSync(from, to) {
+        if (from === stagedAnimated) {
+          files.get(destinationStatic).content = "concurrent-in-place-static";
+          files.set(destinationAnimated, { content: "concurrent-animated", inode: 23 });
+          const error = new Error("injected collision after in-place write");
+          error.code = "EEXIST";
+          throw error;
+        }
+        files.set(to, files.get(from));
+      },
+      renameSync() {
+        throw new Error("no-replace recovery must not rename a shared inode");
+      },
+      rmSync() {
+        throw new Error("no-replace recovery must not unlink a shared inode");
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: false },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(destinationStatic).content, "concurrent-in-place-static");
+    assert.equal(files.get(stagedStatic).content, "concurrent-in-place-static");
+    assert.equal(files.get(destinationAnimated).content, "concurrent-animated");
+  });
+
+  check("README logo exporter rejects validated hard-link bytes changed during install", () => {
+    const stagedStatic = path.join(temp, "content-race-static", "new.png");
+    const stagedAnimated = path.join(temp, "content-race-animated", "new.gif");
+    const destinationStatic = path.join(temp, "content-race-output", "logo.png");
+    const destinationAnimated = path.join(temp, "content-race-output", "logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "validated-static", inode: 41 }],
+      [stagedAnimated, { content: "validated-animated", inode: 42 }],
+    ]);
+    const removed = [];
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      linkSync(from, to) {
+        files.set(to, files.get(from));
+        if (from === stagedAnimated) {
+          files.get(destinationStatic).content = "concurrent-public-write";
+        }
+      },
+      renameSync(from, to) {
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      rmSync(file) {
+        removed.push(file);
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: false },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(destinationStatic).content, "concurrent-public-write");
+    assert.equal(files.get(stagedStatic).content, "concurrent-public-write");
+    assert.equal(files.get(destinationAnimated).content, "validated-animated");
+    assert.deepEqual(removed, []);
+  });
+
+  check("README logo exporter retains a same-inode backup changed during rename", () => {
+    const stagedStatic = path.join(temp, "backup-race-static", "new.png");
+    const stagedAnimated = path.join(temp, "backup-race-animated", "new.gif");
+    const destinationStatic = path.join(temp, "backup-race-output", "logo.png");
+    const destinationAnimated = path.join(temp, "backup-race-output", "logo.gif");
+    const staticBackup = path.join(path.dirname(stagedStatic), "backup-logo.png");
+    const files = new Map([
+      [stagedStatic, { content: "validated-static", inode: 51 }],
+      [stagedAnimated, { content: "validated-animated", inode: 52 }],
+      [destinationStatic, { content: "prior-static", inode: 53 }],
+      [destinationAnimated, { content: "prior-animated", inode: 54 }],
+    ]);
+    const removed = [];
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      linkSync(from, to) {
+        files.set(to, files.get(from));
+      },
+      renameSync(from, to) {
+        files.set(to, files.get(from));
+        files.delete(from);
+        if (from === destinationStatic) files.get(to).content = "concurrent-backup-write";
+      },
+      rmSync(file) {
+        removed.push(file);
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: true },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(staticBackup).content, "concurrent-backup-write");
+    assert.equal(files.get(destinationAnimated).content, "prior-animated");
+    assert.deepEqual(removed, []);
+  });
+
+  check("README logo exporter rechecks every public link after all backup reads", () => {
+    const stagedStatic = path.join(temp, "late-backup-static", "new.png");
+    const stagedAnimated = path.join(temp, "late-backup-animated", "new.gif");
+    const destinationStatic = path.join(temp, "late-backup-output", "logo.png");
+    const destinationAnimated = path.join(temp, "late-backup-output", "logo.gif");
+    const staticBackup = path.join(path.dirname(stagedStatic), "backup-logo.png");
+    const animatedBackup = path.join(path.dirname(stagedAnimated), "backup-logo.gif");
+    const files = new Map([
+      [stagedStatic, { content: "validated-static", inode: 81 }],
+      [stagedAnimated, { content: "validated-animated", inode: 82 }],
+      [destinationStatic, { content: "prior-static", inode: 83 }],
+      [destinationAnimated, { content: "prior-animated", inode: 84 }],
+    ]);
+    let animatedBackupReads = 0;
+    const removed = [];
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync(file) {
+        if (file === animatedBackup) {
+          animatedBackupReads += 1;
+          if (animatedBackupReads === 2) {
+            files.get(destinationStatic).content = "concurrent-public-write";
+          }
+        }
+        return mappedRegularFileBytes(files, file);
+      },
+      renameSync(from, to) {
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      linkSync(from, to) {
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        removed.push(file);
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            { staged: stagedStatic, destination: destinationStatic },
+            { staged: stagedAnimated, destination: destinationAnimated },
+          ],
+          { operations, replace: true },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(animatedBackupReads, 2);
+    assert.equal(files.get(destinationStatic).content, "concurrent-public-write");
+    assert.equal(files.get(stagedStatic).content, "concurrent-public-write");
+    assert.equal(files.get(staticBackup).content, "prior-static");
+    assert.equal(files.get(animatedBackup).content, "prior-animated");
+    assert.deepEqual(removed, []);
+  });
+
+  check("README logo exporter binds stage and output directory chains during commit", () => {
+    for (const swappedDirectory of ["stage", "output"]) {
+      const stagedStatic = path.join(temp, `${swappedDirectory}-swap-static`, "new.png");
+      const stagedAnimated = path.join(temp, `${swappedDirectory}-swap-animated`, "new.gif");
+      const destinationStatic = path.join(temp, `${swappedDirectory}-swap-output`, "logo.png");
+      const destinationAnimated = path.join(temp, `${swappedDirectory}-swap-output`, "logo.gif");
+      const stagedStaticAnchor = path.join(temp, "anchor", `${swappedDirectory}-static.png`);
+      const stagedAnimatedAnchor = path.join(temp, "anchor", `${swappedDirectory}-animated.gif`);
+      const destinationStaticAnchor = path.join(
+        temp,
+        "anchor",
+        `${swappedDirectory}-destination.png`,
+      );
+      const destinationAnimatedAnchor = path.join(
+        temp,
+        "anchor",
+        `${swappedDirectory}-destination.gif`,
+      );
+      const foreignStatic = path.join(temp, "foreign", `${swappedDirectory}-logo.png`);
+      const files = new Map([
+        [stagedStaticAnchor, { content: "validated-static", inode: 61 }],
+        [stagedAnimatedAnchor, { content: "validated-animated", inode: 62 }],
+        [foreignStatic, { content: "foreign-output", inode: 63 }],
+      ]);
+      let swapped = false;
+      const removed = [];
+      const operations = {
+        existsSync: (file) => files.has(file),
+        lstatSync: (file) => mappedRegularFileStats(files, file),
+        readFileSync: (file) => mappedRegularFileBytes(files, file),
+        snapshotDirectoryChainSync(directory) {
+          if (
+            swapped &&
+            ((swappedDirectory === "stage" && directory === path.dirname(stagedStatic)) ||
+              (swappedDirectory === "output" && directory === path.dirname(destinationStatic)))
+          ) {
+            throw new Error("directory path was rebound through a symlink");
+          }
+          return [{ path: directory, dev: 1, ino: directory }];
+        },
+        linkSync(from, to) {
+          files.set(to, files.get(from));
+          swapped = true;
+        },
+        renameSync(from, to) {
+          files.set(to, files.get(from));
+          files.delete(from);
+        },
+        rmSync(file) {
+          removed.push(file);
+          files.delete(file);
+        },
+      };
+      assert.throws(
+        () =>
+          replaceOutputsAtomically(
+            [
+              {
+                staged: stagedStatic,
+                stagedMutationPath: stagedStaticAnchor,
+                destination: destinationStatic,
+                destinationMutationPath: destinationStaticAnchor,
+              },
+              {
+                staged: stagedAnimated,
+                stagedMutationPath: stagedAnimatedAnchor,
+                destination: destinationAnimated,
+                destinationMutationPath: destinationAnimatedAnchor,
+              },
+            ],
+            { operations, replace: false },
+          ),
+        (error) =>
+          error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+      );
+      assert.equal(files.get(destinationStaticAnchor).content, "validated-static");
+      assert.equal(files.get(stagedStaticAnchor).content, "validated-static");
+      assert.equal(files.has(destinationAnimatedAnchor), false);
+      assert.equal(files.get(foreignStatic).content, "foreign-output");
+      assert.deepEqual(removed, []);
+    }
+  });
+
+  check("README logo exporter uses anchored paths when a parent swaps during backup rename", () => {
+    const stagedStatic = path.join(temp, "rename-swap-static", "new.png");
+    const stagedAnimated = path.join(temp, "rename-swap-animated", "new.gif");
+    const destinationStatic = path.join(temp, "rename-swap-output", "logo.png");
+    const destinationAnimated = path.join(temp, "rename-swap-output", "logo.gif");
+    const stagedStaticAnchor = path.join(temp, "anchor", "rename-static.png");
+    const stagedAnimatedAnchor = path.join(temp, "anchor", "rename-animated.gif");
+    const destinationStaticAnchor = path.join(temp, "anchor", "rename-destination.png");
+    const destinationAnimatedAnchor = path.join(temp, "anchor", "rename-destination.gif");
+    const backupStaticAnchor = path.join(temp, "anchor", "backup-logo.png");
+    const foreignStatic = path.join(temp, "foreign", "rename-logo.png");
+    const files = new Map([
+      [stagedStaticAnchor, { content: "validated-static", inode: 71 }],
+      [stagedAnimatedAnchor, { content: "validated-animated", inode: 72 }],
+      [destinationStaticAnchor, { content: "prior-static", inode: 73 }],
+      [destinationAnimatedAnchor, { content: "prior-animated", inode: 74 }],
+      [foreignStatic, { content: "foreign-output", inode: 75 }],
+    ]);
+    let swapped = false;
+    const operations = {
+      existsSync: (file) => files.has(file),
+      lstatSync: (file) => mappedRegularFileStats(files, file),
+      readFileSync: (file) => mappedRegularFileBytes(files, file),
+      snapshotDirectoryChainSync(directory) {
+        if (swapped && directory === path.dirname(destinationStatic)) {
+          throw new Error("output parent was rebound through a symlink");
+        }
+        return [{ path: directory, dev: 1, ino: directory }];
+      },
+      renameSync(from, to) {
+        assert.equal(from, destinationStaticAnchor);
+        assert.equal(to, backupStaticAnchor);
+        files.set(to, files.get(from));
+        files.delete(from);
+        swapped = true;
+      },
+      linkSync(from, to) {
+        files.set(to, files.get(from));
+      },
+      rmSync(file) {
+        files.delete(file);
+      },
+    };
+    assert.throws(
+      () =>
+        replaceOutputsAtomically(
+          [
+            {
+              staged: stagedStatic,
+              stagedMutationPath: stagedStaticAnchor,
+              destination: destinationStatic,
+              destinationMutationPath: destinationStaticAnchor,
+            },
+            {
+              staged: stagedAnimated,
+              stagedMutationPath: stagedAnimatedAnchor,
+              destination: destinationAnimated,
+              destinationMutationPath: destinationAnimatedAnchor,
+            },
+          ],
+          { operations, replace: true },
+        ),
+      (error) =>
+        error.code === "OUTPUT_ROLLBACK_INCOMPLETE" && error.preserveStageDirectories === true,
+    );
+    assert.equal(files.get(backupStaticAnchor).content, "prior-static");
+    assert.equal(files.get(foreignStatic).content, "foreign-output");
+  });
+
+  check("README logo exporter cleanup never traverses a swapped stage entry", () => {
+    const stage = {
+      anchorPath: path.join(temp, "anchor", "cleanup-stage"),
+      entryPath: path.join(temp, "anchor", "cleanup-parent", "stage-entry"),
+    };
+    const stagedFile = path.join(stage.anchorPath, "logo.png");
+    const foreignFile = path.join(temp, "foreign", "cleanup-logo.png");
+    const files = new Map([
+      [stagedFile, "validated-static"],
+      [foreignFile, "foreign-output"],
+    ]);
+    let swapped = false;
+    const removed = [];
+    assert.throws(
+      () =>
+        removeAnchoredStageDirectory(stage, ["logo.png"], {
+          operations: {
+            rmSync(file) {
+              assert.equal(file, stagedFile);
+              files.delete(file);
+              removed.push(file);
+              swapped = true;
+            },
+            rmdirSync(file) {
+              assert.equal(file, stage.entryPath);
+              assert.equal(swapped, true);
+              const error = new Error("stage entry is now a symlink");
+              error.code = "ENOTDIR";
+              throw error;
+            },
+          },
+        }),
+      (error) => error.code === "ENOTDIR",
+    );
+    assert.equal(files.get(foreignFile), "foreign-output");
+    assert.deepEqual(removed, [stagedFile]);
+  });
+
+  const exportRoot = path.join(temp, "export-root");
+  const exportAssets = path.join(exportRoot, "assets");
+  const fakeTools = path.join(temp, "fake-export-tools");
+  mkdirSync(exportAssets, { recursive: true });
+  mkdirSync(fakeTools, { recursive: true });
+  writeFileSync(
+    path.join(exportRoot, "logo.svg"),
+    '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1" viewBox="0 0 2 1"><rect width="1" height="1" fill="#0764e6" /></svg>',
+  );
+  writeFileSync(
+    path.join(exportRoot, "recipe.mjs"),
+    `export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/logo-static.png",
+  animatedOutput: "assets/logo-animated.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  preserveTransparency: true,
+  renderFrame({ frameIndex, width, height }) {
+    return \`<svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}" viewBox="0 0 2 1"><rect x="\${frameIndex}" width="1" height="1" fill="#0764e6" /></svg>\`;
+  },
+};\n`,
+  );
+
+  const exporterPng = fixture("exporter-static.png", makePng({ animated: false }));
+  const pngWithoutImageData = fixture(
+    "exporter-static-without-idat.png",
+    Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      pngIhdr(2, 1),
+      pngChunk("IEND"),
+    ]),
+  );
+  const exporterGif = fixture(
+    "exporter-animated.gif",
+    makeGif({ animated: true, delayCentiseconds: 10 }),
+  );
+  const fpsThreeGif = fixture(
+    "exporter-fps-3.gif",
+    makeGif({ animated: true, frameDelaysCentiseconds: [33, 33] }),
+  );
+  const fpsTwelveGif = fixture(
+    "exporter-fps-12.gif",
+    makeGif({ animated: true, frameDelaysCentiseconds: [8, 9, 8] }),
+  );
+  const wrongDistributionGif = fixture(
+    "exporter-wrong-distribution.gif",
+    makeGif({ animated: true, frameDelaysCentiseconds: [9, 8, 8] }),
+  );
+  const wrongTimingGif = fixture("exporter-wrong-timing.gif", makeGif({ animated: true }));
+  const exporterLog = path.join(temp, "exporter-tools.jsonl");
+  const fakeRsvg = path.join(fakeTools, "rsvg-convert");
+  const fakeFfmpeg = path.join(fakeTools, "ffmpeg");
+  const fakeToolHeader = `#!${process.execPath}\n`;
+  writeFileSync(
+    fakeRsvg,
+    `${fakeToolHeader}import { appendFileSync, copyFileSync, existsSync, symlinkSync } from "node:fs";
+const args = process.argv.slice(2);
+if (args.includes("--version")) {
+  console.log("rsvg-convert fake-1.0");
+} else {
+  appendFileSync(process.env.LOGO_EXPORT_LOG, JSON.stringify({ tool: "rsvg", args, env: { LANG: process.env.LANG, LC_ALL: process.env.LC_ALL, SOURCE_DATE_EPOCH: process.env.SOURCE_DATE_EPOCH, TZ: process.env.TZ } }) + "\\n");
+  const output = args[args.indexOf("--output") + 1];
+  if (process.env.LOGO_EXPORT_RACE_PARENT && !existsSync(process.env.LOGO_EXPORT_RACE_PARENT)) {
+    symlinkSync(process.env.LOGO_EXPORT_RACE_PARENT_FOREIGN, process.env.LOGO_EXPORT_RACE_PARENT, "dir");
+  }
+  copyFileSync(process.env.LOGO_EXPORT_PNG, output);
+}
+`,
+  );
+  writeFileSync(
+    fakeFfmpeg,
+    `${fakeToolHeader}import { appendFileSync, copyFileSync, mkdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+const args = process.argv.slice(2);
+if (args.includes("-version")) {
+  console.log("ffmpeg fake-1.0");
+} else if (args.includes("-filters")) {
+  console.log(process.env.LOGO_EXPORT_MISSING_FILTERS === "1" ? " ... scale ..." : " ... palettegen ...\\n ... paletteuse ...");
+} else if (args.includes("-muxers")) {
+  console.log(" E  gif             CompuServe Graphics Interchange Format (GIF)");
+} else if (args.includes("-encoders")) {
+  console.log(" V..... gif             GIF image");
+} else {
+  const output = args.at(-1);
+  appendFileSync(process.env.LOGO_EXPORT_LOG, JSON.stringify({ tool: "ffmpeg", args, env: { FFREPORT: process.env.FFREPORT } }) + "\\n");
+  if (process.env.LOGO_EXPORT_FAIL_GIF === "1" && output.endsWith(".gif")) process.exit(9);
+  if (process.env.LOGO_EXPORT_CONCURRENT_DESTINATION && output.endsWith(".gif")) writeFileSync(process.env.LOGO_EXPORT_CONCURRENT_DESTINATION, "concurrent-output");
+  if (process.env.LOGO_EXPORT_CONCURRENT_DIRECTORY && output.endsWith(".gif")) {
+    rmSync(process.env.LOGO_EXPORT_CONCURRENT_DIRECTORY, { recursive: true, force: true });
+    mkdirSync(process.env.LOGO_EXPORT_CONCURRENT_DIRECTORY);
+    writeFileSync(join(process.env.LOGO_EXPORT_CONCURRENT_DIRECTORY, "keep.txt"), "foreign-directory-output");
+  }
+  if (process.env.LOGO_EXPORT_SWAP_PARENT && output.endsWith(".gif")) {
+    renameSync(process.env.LOGO_EXPORT_SWAP_PARENT, process.env.LOGO_EXPORT_SWAP_PARENT_BACKUP);
+    symlinkSync(process.env.LOGO_EXPORT_SWAP_PARENT_FOREIGN, process.env.LOGO_EXPORT_SWAP_PARENT, "dir");
+  }
+  copyFileSync(output.endsWith(".gif") ? process.env.LOGO_EXPORT_GIF : process.env.LOGO_EXPORT_PNG, output);
+}
+`,
+  );
+  chmodSync(fakeRsvg, 0o755);
+  chmodSync(fakeFfmpeg, 0o755);
+
+  check("README logo exporter read-only recipe check", () => {
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "recipe.mjs", "--check", "--json"],
+      { cwd: temp },
+    );
+    assert.equal(result.status, 0, result.output);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.status, "checked");
+    assert.equal(payload.frameCount, 2);
+    assert.equal(existsSync(path.join(exportAssets, "logo-static.png")), false);
+    assert.equal(existsSync(path.join(exportAssets, "logo-animated.gif")), false);
+  });
+
+  check("README logo exporter enforces the cumulative UTF-8 frame-byte budget", () => {
+    const frame =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><text x="0" y="1">é</text></svg>';
+    const exactBudget = Buffer.byteLength(frame, "utf8") * 2;
+    for (const { name, budget, expectedStatus } of [
+      { name: "frame-budget-boundary", budget: exactBudget, expectedStatus: 0 },
+      { name: "frame-budget-exceeded", budget: exactBudget - 1, expectedStatus: 1 },
+    ]) {
+      writeFileSync(
+        path.join(exportRoot, `${name}-recipe.mjs`),
+        `export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/${name}.png",
+  animatedOutput: "assets/${name}.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  maxTotalFrameBytes: ${budget},
+  renderFrame() { return ${JSON.stringify(frame)}; },
+};\n`,
+      );
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        `${name}-recipe.mjs`,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, expectedStatus, result.output);
+      const payload = JSON.parse(result.stdout);
+      if (expectedStatus === 0) {
+        assert.equal(payload.maxTotalFrameBytes, exactBudget);
+      } else {
+        assert.deepEqual(
+          payload.errors.map(({ code }) => code),
+          ["INVALID_FRAME"],
+        );
+      }
+      assert.equal(existsSync(path.join(exportAssets, `${name}.png`)), false);
+      assert.equal(existsSync(path.join(exportAssets, `${name}.gif`)), false);
+    }
+  });
+
+  check("README logo exporter parses canonical and rendered SVG XML", () => {
+    writeFileSync(
+      path.join(exportRoot, "malformed-source.svg"),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><g></svg>',
+    );
+    writeFileSync(
+      path.join(exportRoot, "malformed-source-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'source: "logo.svg"',
+        'source: "malformed-source.svg"',
+      ),
+    );
+    writeFileSync(
+      path.join(exportRoot, "malformed-frame-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/malformed-frame.png",
+  animatedOutput: "assets/malformed-frame.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame({ width, height }) {
+    return \`<svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}"><g></svg>\`;
+  },
+};\n`,
+    );
+    for (const [recipe, code] of [
+      ["malformed-source-recipe.mjs", "INVALID_SOURCE"],
+      ["malformed-frame-recipe.mjs", "INVALID_FRAME"],
+    ]) {
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        recipe,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, new RegExp(`"code":"${code}"`));
+    }
+  });
+
+  check("README logo exporter rejects declarative SVG animation in rendered frames", () => {
+    const svgPrefix =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><defs><rect id="mark" width="1" height="1"/><path id="motion" d="M0 0h1"/></defs>';
+    const frames = [
+      [
+        "set-external-href",
+        `${svgPrefix}<use href="#mark"><set attributeName="href" to="https://example.invalid/mark.svg"/></use></svg>`,
+      ],
+      [
+        "animate-external-href",
+        `${svgPrefix}<use href="#mark"><animate attributeName="href" values="#mark;https://example.invalid/mark.svg"/></use></svg>`,
+      ],
+      ["animate-color", `${svgPrefix}<rect><animateColor attributeName="fill"/></rect></svg>`],
+      ["animate-motion", `${svgPrefix}<rect><animateMotion path="M0 0h1"/></rect></svg>`],
+      [
+        "animate-transform",
+        `${svgPrefix}<rect><animateTransform attributeName="transform"/></rect></svg>`,
+      ],
+      ["discard", `${svgPrefix}<rect><discard begin="1s"/></rect></svg>`],
+      ["mpath", `${svgPrefix}<mpath href="#motion"/></svg>`],
+    ];
+    for (const [name, frame] of frames) {
+      writeFileSync(
+        path.join(exportRoot, `${name}-frame-recipe.mjs`),
+        `export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/${name}-frame.png",
+  animatedOutput: "assets/${name}-frame.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(frame)}; },
+};\n`,
+      );
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        `${name}-frame-recipe.mjs`,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, /"code":"INVALID_FRAME"/);
+    }
+  });
+
+  check("README logo exporter enforces XML character and SVG namespace rules", () => {
+    const invalidSources = [
+      [
+        "invalid-character-reference",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><text>&#0;</text></svg>',
+      ],
+      [
+        "wrong-root-namespace",
+        '<svg xmlns="urn:not-svg" width="2" height="1"><rect width="1" height="1"/></svg>',
+      ],
+      [
+        "raw-cdata-terminator",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><text>bad]]>text</text></svg>',
+      ],
+      [
+        "malformed-comment-ending",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><!--bad---></svg>',
+      ],
+      [
+        "malformed-xml-declaration",
+        '<?xml garbage?><svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"/>',
+      ],
+      [
+        "undeclared-xlink-prefix",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><defs><rect id="mark" width="1" height="1"/></defs><use xlink:href="#mark"/></svg>',
+      ],
+      [
+        "aliased-external-xlink",
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:foo="http://www.w3.org/1999/xlink" width="2" height="1"><use foo:href="https://example.invalid/mark.svg#mark"/></svg>',
+      ],
+      [
+        "external-xml-base",
+        '<svg xmlns="http://www.w3.org/2000/svg" xml:base="https://example.invalid/"><defs><rect id="mark" width="1" height="1"/></defs><use href="#mark"/></svg>',
+      ],
+      [
+        "foreign-default-namespace-child",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><g xmlns="urn:not-svg"><rect width="1" height="1"/></g></svg>',
+      ],
+      [
+        "reset-default-namespace-child",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><g xmlns=""><rect width="1" height="1"/></g></svg>',
+      ],
+      [
+        "split-style-external-reference",
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><style>.mark{fill:u<!--split-->rl(https://example.invalid/paint.svg#paint)}</style><rect class="mark" width="1" height="1"/></svg>',
+      ],
+    ];
+    for (const [name, svg] of invalidSources) {
+      writeFileSync(path.join(exportRoot, `${name}.svg`), svg);
+      writeFileSync(
+        path.join(exportRoot, `${name}-recipe.mjs`),
+        readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+          'source: "logo.svg"',
+          `source: "${name}.svg"`,
+        ),
+      );
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        `${name}-recipe.mjs`,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, /"code":"INVALID_SOURCE"/);
+    }
+
+    const namespaceLessSvg =
+      '<svg width="2" height="1" viewBox="0 0 2 1"><rect width="1" height="1"/></svg>';
+    writeFileSync(path.join(exportRoot, "namespace-less.svg"), namespaceLessSvg);
+    writeFileSync(
+      path.join(exportRoot, "namespace-less-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "namespace-less.svg",
+  staticOutput: "assets/namespace-less.png",
+  animatedOutput: "assets/namespace-less.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(namespaceLessSvg)}; },
+};\n`,
+    );
+    const accepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "namespace-less-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(accepted.status, 0, accepted.output);
+
+    const prefixedSvg =
+      '<s:svg xmlns:s="http://www.w3.org/2000/svg" width="2" height="1" viewBox="0 0 2 1"><s:g><s:rect width="1" height="1"/></s:g></s:svg>';
+    writeFileSync(path.join(exportRoot, "prefixed-svg.svg"), prefixedSvg);
+    writeFileSync(
+      path.join(exportRoot, "prefixed-svg-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "prefixed-svg.svg",
+  staticOutput: "assets/prefixed-svg.png",
+  animatedOutput: "assets/prefixed-svg.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(prefixedSvg)}; },
+};\n`,
+    );
+    const prefixedAccepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "prefixed-svg-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(prefixedAccepted.status, 0, prefixedAccepted.output);
+
+    const bomSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="1" height="1"/></svg>';
+    writeFileSync(
+      path.join(exportRoot, "bom-prefixed.svg"),
+      Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(bomSvg)]),
+    );
+    writeFileSync(
+      path.join(exportRoot, "bom-prefixed-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "bom-prefixed.svg",
+  staticOutput: "assets/bom-prefixed.png",
+  animatedOutput: "assets/bom-prefixed.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(`\uFEFF${bomSvg}`)}; },
+};\n`,
+    );
+    const bomAccepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "bom-prefixed-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(bomAccepted.status, 0, bomAccepted.output);
+  });
+
+  check("README logo exporter allows resolved same-document SVG fragments only", () => {
+    const localSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><defs><rect id="mark" width="1" height="1"/></defs><use href="#mark"/></svg>';
+    writeFileSync(path.join(exportRoot, "local-reference.svg"), localSvg);
+    writeFileSync(
+      path.join(exportRoot, "local-reference-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "local-reference.svg",
+  staticOutput: "assets/local-reference.png",
+  animatedOutput: "assets/local-reference.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(localSvg)}; },
+};\n`,
+    );
+    const accepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "local-reference-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(accepted.status, 0, accepted.output);
+
+    const xmlIdSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><defs><rect xml:id="mark" width="1" height="1"/></defs><use href="#mark"/></svg>';
+    writeFileSync(path.join(exportRoot, "xml-id-reference.svg"), xmlIdSvg);
+    writeFileSync(
+      path.join(exportRoot, "xml-id-reference-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "xml-id-reference.svg",
+  staticOutput: "assets/xml-id-reference.png",
+  animatedOutput: "assets/xml-id-reference.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(xmlIdSvg)}; },
+};\n`,
+    );
+    const xmlIdAccepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "xml-id-reference-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(xmlIdAccepted.status, 0, xmlIdAccepted.output);
+
+    writeFileSync(
+      path.join(exportRoot, "external-reference.svg"),
+      localSvg.replace('href="#mark"', 'href="https://example.invalid/mark.svg#mark"'),
+    );
+    writeFileSync(
+      path.join(exportRoot, "external-reference-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'source: "logo.svg"',
+        'source: "external-reference.svg"',
+      ),
+    );
+    const rejected = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "external-reference-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(rejected.status, 1, rejected.output);
+    assert.match(rejected.stdout, /"code":"INVALID_SOURCE"/);
+  });
+
+  check("README logo exporter scans only decoded SVG reference-bearing content", () => {
+    const textSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><text>See url(example) docs</text></svg>';
+    writeFileSync(path.join(exportRoot, "url-text.svg"), textSvg);
+    writeFileSync(
+      path.join(exportRoot, "url-text-recipe.mjs"),
+      `export default {
+  schemaVersion: 1,
+  source: "url-text.svg",
+  staticOutput: "assets/url-text.png",
+  animatedOutput: "assets/url-text.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  renderFrame() { return ${JSON.stringify(textSvg)}; },
+};\n`,
+    );
+    const accepted = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "url-text-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(accepted.status, 0, accepted.output);
+
+    writeFileSync(
+      path.join(exportRoot, "encoded-external.svg"),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="1" height="1" fill="u&#114;l(https://example.invalid/paint.svg#paint)"/></svg>',
+    );
+    writeFileSync(
+      path.join(exportRoot, "encoded-external-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'source: "logo.svg"',
+        'source: "encoded-external.svg"',
+      ),
+    );
+    const rejected = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "encoded-external-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(rejected.status, 1, rejected.output);
+    assert.match(rejected.stdout, /"code":"INVALID_SOURCE"/);
+  });
+
+  check("README logo exporter validates GIF palette size with transparency", () => {
+    const baseRecipe = readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8");
+    for (const { name, colors, transparency, status } of [
+      { name: "two-transparent", colors: 2, transparency: true, status: 1 },
+      { name: "two-opaque", colors: 2, transparency: false, status: 0 },
+      { name: "three-transparent", colors: 3, transparency: true, status: 0 },
+    ]) {
+      writeFileSync(
+        path.join(exportRoot, `${name}-recipe.mjs`),
+        baseRecipe
+          .replace(
+            "preserveTransparency: true,",
+            `gifMaxColors: ${colors},\n  preserveTransparency: ${transparency},`,
+          )
+          .replace('staticOutput: "assets/logo-static.png"', `staticOutput: "assets/${name}.png"`)
+          .replace(
+            'animatedOutput: "assets/logo-animated.gif"',
+            `animatedOutput: "assets/${name}.gif"`,
+          ),
+      );
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        `${name}-recipe.mjs`,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, status, result.output);
+      if (status === 1) assert.match(result.stdout, /"code":"INVALID_RECIPE"/);
+    }
+  });
+
+  check("README logo exporter requires output ancestors to be directories", () => {
+    writeFileSync(path.join(exportRoot, "blocked"), "regular file");
+    writeFileSync(
+      path.join(exportRoot, "blocked-output-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'staticOutput: "assets/logo-static.png"',
+        'staticOutput: "blocked/logo.png"',
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "blocked-output-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.stdout, /"code":"INVALID_OUTPUT"/);
+  });
+
+  check("README logo exporter rejects dangling output-ancestor symlinks", () => {
+    symlinkSync("missing-output-target", path.join(exportRoot, "dangling-output"));
+    writeFileSync(
+      path.join(exportRoot, "dangling-output-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'staticOutput: "assets/logo-static.png"',
+        'staticOutput: "dangling-output/logo.png"',
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "dangling-output-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.stdout, /"code":"INVALID_OUTPUT"/);
+
+    symlinkSync("missing-exact-output.png", path.join(exportAssets, "dangling-exact.png"));
+    writeFileSync(
+      path.join(exportRoot, "dangling-exact-output-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'staticOutput: "assets/logo-static.png"',
+        'staticOutput: "assets/dangling-exact.png"',
+      ),
+    );
+    const exactResult = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "dangling-exact-output-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(exactResult.status, 2, exactResult.output);
+    assert.match(exactResult.stdout, /"code":"INVALID_OUTPUT"/);
+  });
+
+  check("README logo exporter rejects oversized canonical SVG before loading it", () => {
+    const oversizedSource = path.join(exportRoot, "oversized.svg");
+    writeFileSync(oversizedSource, "");
+    truncateSync(oversizedSource, 8 * 1024 * 1024 + 1);
+    writeFileSync(
+      path.join(exportRoot, "oversized-source-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'source: "logo.svg"',
+        'source: "oversized.svg"',
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "oversized-source-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_SOURCE"/);
+  });
+
+  check("README logo exporter rejects invalid canonical SVG UTF-8", () => {
+    writeFileSync(
+      path.join(exportRoot, "invalid-utf8.svg"),
+      Buffer.concat([
+        Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1">'),
+        Buffer.from([0xff]),
+        Buffer.from("</svg>"),
+      ]),
+    );
+    writeFileSync(
+      path.join(exportRoot, "invalid-utf8-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'source: "logo.svg"',
+        'source: "invalid-utf8.svg"',
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "invalid-utf8-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_SOURCE"/);
+  });
+
+  check("README logo exporter classifies recipe module failures as validation", () => {
+    const privateMarker = "private-module-evaluation-marker";
+    writeFileSync(path.join(exportRoot, "syntax-error-recipe.mjs"), "export default {");
+    writeFileSync(
+      path.join(exportRoot, "evaluation-error-recipe.mjs"),
+      `throw new Error(${JSON.stringify(privateMarker)});\n`,
+    );
+    for (const recipe of ["syntax-error-recipe.mjs", "evaluation-error-recipe.mjs"]) {
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        recipe,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, /"code":"RECIPE_LOAD_FAILED"/);
+      assert.doesNotMatch(result.output, new RegExp(privateMarker));
+    }
+
+    const missingModuleMarker = "private-missing-recipe-dependency";
+    writeFileSync(
+      path.join(exportRoot, "missing-import-recipe.mjs"),
+      `import ${JSON.stringify(`./${missingModuleMarker}.mjs`)};\nexport default {};\n`,
+    );
+    const missingImport = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "missing-import-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(missingImport.status, 2, missingImport.output);
+    assert.match(missingImport.stdout, /"code":"RECIPE_LOAD_FAILED"/);
+    assert.doesNotMatch(missingImport.output, new RegExp(missingModuleMarker));
+  });
+
+  check("README logo exporter redacts unknown argument values", () => {
+    const privateMarker = path.join(temp, "private-repository", "secret-bearing-token");
+    for (const args of [
+      [exporterCli, "--json", privateMarker],
+      [exporterCli, privateMarker],
+    ]) {
+      const result = run(process.execPath, args);
+      assert.equal(result.status, 2, result.output);
+      assert.match(result.output, /UNKNOWN_OPTION/);
+      assert.doesNotMatch(result.output, new RegExp(privateMarker.replaceAll("\\", "\\\\")));
+    }
+  });
+
+  check("README logo exporter redacts unsupported recipe field names", () => {
+    const privateMarker = "private-secret-bearing-recipe-field";
+    writeFileSync(
+      path.join(exportRoot, "unknown-field-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        "schemaVersion: 1,",
+        `schemaVersion: 1,\n  ${JSON.stringify(privateMarker)}: true,`,
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "unknown-field-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_RECIPE"/);
+    assert.doesNotMatch(result.output, new RegExp(privateMarker));
+  });
+
+  const exporterEnvironment = {
+    ...process.env,
+    PATH: `${fakeTools}${path.delimiter}${process.env.PATH ?? ""}`,
+    LOGO_EXPORT_PNG: exporterPng,
+    LOGO_EXPORT_GIF: exporterGif,
+    LOGO_EXPORT_LOG: exporterLog,
+    FFREPORT: "unexpected-export-report.log",
+  };
+  check("README logo exporter emits the frame bytes verified by two complete passes", () => {
+    const frame =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="1" height="1"/></svg>';
+    const largerFrame = frame.replace("</svg>", "<desc>x</desc></svg>");
+    const budget = Buffer.byteLength(frame, "utf8") * 2;
+    writeFileSync(
+      path.join(exportRoot, "stateful-frame-budget-recipe.mjs"),
+      `let calls = 0;
+export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/stateful-frame-budget.png",
+  animatedOutput: "assets/stateful-frame-budget.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+  maxTotalFrameBytes: ${budget},
+  renderFrame() {
+    calls += 1;
+    return calls <= 4 ? ${JSON.stringify(frame)} : ${JSON.stringify(largerFrame)};
+  },
+};\n`,
+    );
+    const rsvgRecords = () =>
+      existsSync(exporterLog)
+        ? readFileSync(exporterLog, "utf8")
+            .split("\n")
+            .filter((line) => line.includes('"tool":"rsvg"')).length
+        : 0;
+    const before = rsvgRecords();
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "stateful-frame-budget-recipe.mjs", "--json"],
+      { cwd: temp, env: exporterEnvironment },
+    );
+    assert.equal(result.status, 0, result.output);
+    assert.equal(rsvgRecords() - before, 2);
+    assert.equal(existsSync(path.join(exportAssets, "stateful-frame-budget.png")), true);
+    assert.equal(existsSync(path.join(exportAssets, "stateful-frame-budget.gif")), true);
+    rmSync(path.join(exportAssets, "stateful-frame-budget.png"));
+    rmSync(path.join(exportAssets, "stateful-frame-budget.gif"));
+    writeFileSync(exporterLog, "");
+  });
+
+  check("README logo exporter deterministic atomic export", () => {
+    const args = [exporterCli, "--root", exportRoot, "--recipe", "recipe.mjs", "--json"];
+    const first = run(process.execPath, args, { cwd: temp, env: exporterEnvironment });
+    assert.equal(first.status, 0, first.output);
+    const firstPayload = JSON.parse(first.stdout);
+    assert.equal(firstPayload.status, "completed");
+    assert.deepEqual(firstPayload.tools, {
+      rsvgVersion: "rsvg-convert 1.0",
+      ffmpegVersion: "ffmpeg 1.0",
+    });
+    assert.equal(firstPayload.recoveryRetained, false);
+    const staticOutput = path.join(exportAssets, "logo-static.png");
+    const animatedOutput = path.join(exportAssets, "logo-animated.gif");
+    const firstStatic = readFileSync(staticOutput);
+    const firstAnimated = readFileSync(animatedOutput);
+    const inspected = inspectAnimatedImageFile(animatedOutput);
+    assert.equal(inspected.width, 2);
+    assert.equal(inspected.height, 1);
+    assert.equal(inspected.frameCount, 2);
+    assert.equal(inspected.loop, "infinite");
+    assert.deepEqual(inspected.frameDelaysCentiseconds, [10, 10]);
+    assert.equal(inspected.durationCentiseconds, 20);
+
+    const refused = run(process.execPath, args, { cwd: temp, env: exporterEnvironment });
+    assert.equal(refused.status, 1, refused.output);
+    assert.match(refused.stdout, /"code":"OUTPUT_EXISTS"/);
+    assert.deepEqual(readFileSync(staticOutput), firstStatic);
+    assert.deepEqual(readFileSync(animatedOutput), firstAnimated);
+
+    const second = run(process.execPath, [...args, "--replace"], {
+      cwd: temp,
+      env: exporterEnvironment,
+    });
+    assert.equal(second.status, 0, second.output);
+    assert.equal(JSON.parse(second.stdout).recoveryRetained, true);
+    assert.deepEqual(readFileSync(staticOutput), firstStatic);
+    assert.deepEqual(readFileSync(animatedOutput), firstAnimated);
+    const retainedRecovery = readdirSync(exportAssets).filter((entry) =>
+      entry.startsWith(".readme-logo-"),
+    );
+    assert.equal(retainedRecovery.length, 2);
+    const retainedStatic = retainedRecovery.find((entry) => entry.includes("static-stage"));
+    const retainedAnimated = retainedRecovery.find((entry) => entry.includes("animated-stage"));
+    assert.deepEqual(
+      readFileSync(path.join(exportAssets, retainedStatic, "backup-logo-static.png")),
+      firstStatic,
+    );
+    assert.deepEqual(
+      readFileSync(path.join(exportAssets, retainedAnimated, "backup-logo-animated.gif")),
+      firstAnimated,
+    );
+    for (const entry of retainedRecovery) {
+      rmSync(path.join(exportAssets, entry), { recursive: true, force: true });
+    }
+
+    const records = readFileSync(exporterLog, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    const rsvg = records.find((record) => record.tool === "rsvg");
+    const ffmpeg = records.filter((record) => record.tool === "ffmpeg");
+    assert.deepEqual(rsvg.env, {
+      LANG: "C",
+      LC_ALL: "C",
+      SOURCE_DATE_EPOCH: "0",
+      TZ: "UTC",
+    });
+    assert.equal(ffmpeg.length, 4);
+    assert.equal(
+      ffmpeg.every((record) => !("FFREPORT" in record.env)),
+      true,
+    );
+    assert.equal(existsSync(path.join(exportRoot, "unexpected-export-report.log")), false);
+    assert.equal(
+      ffmpeg.every((record) => record.args.includes("-threads")),
+      true,
+    );
+    assert.equal(
+      ffmpeg.some((record) => record.args.includes("-map_metadata")),
+      true,
+    );
+    assert.equal(
+      ffmpeg.some((record) => record.args.includes("-bitexact")),
+      true,
+    );
+    assert.equal(
+      ffmpeg.some((record) => record.args.includes("-loop")),
+      true,
+    );
+  });
+
+  check("README logo exporter accepts FFmpeg GIF time-base quantization", () => {
+    const baseRecipe = readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8");
+    for (const { name, fps, frameCount, gif } of [
+      { name: "fps-three", fps: 3, frameCount: 2, gif: fpsThreeGif },
+      { name: "fps-twelve", fps: 12, frameCount: 3, gif: fpsTwelveGif },
+    ]) {
+      writeFileSync(
+        path.join(exportRoot, `${name}-recipe.mjs`),
+        baseRecipe
+          .replace('staticOutput: "assets/logo-static.png"', `staticOutput: "assets/${name}.png"`)
+          .replace(
+            'animatedOutput: "assets/logo-animated.gif"',
+            `animatedOutput: "assets/${name}.gif"`,
+          )
+          .replace("fps: 10", `fps: ${fps}`)
+          .replace("frameCount: 2", `frameCount: ${frameCount}`),
+      );
+      const result = run(
+        process.execPath,
+        [exporterCli, "--root", exportRoot, "--recipe", `${name}-recipe.mjs`, "--json"],
+        { cwd: temp, env: { ...exporterEnvironment, LOGO_EXPORT_GIF: gif } },
+      );
+      assert.equal(result.status, 0, result.output);
+    }
+  });
+
+  check("README logo exporter rejects a wrong per-frame GIF delay distribution", () => {
+    writeFileSync(
+      path.join(exportRoot, "wrong-distribution-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace(
+          'staticOutput: "assets/logo-static.png"',
+          'staticOutput: "assets/wrong-distribution.png"',
+        )
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "assets/wrong-distribution.gif"',
+        )
+        .replace("fps: 10", "fps: 12")
+        .replace("frameCount: 2", "frameCount: 3"),
+    );
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "wrong-distribution-recipe.mjs", "--json"],
+      {
+        cwd: temp,
+        env: { ...exporterEnvironment, LOGO_EXPORT_GIF: wrongDistributionGif },
+      },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_ANIMATED_GIF"/);
+    assert.equal(existsSync(path.join(exportAssets, "wrong-distribution.png")), false);
+    assert.equal(existsSync(path.join(exportAssets, "wrong-distribution.gif")), false);
+  });
+
+  check("README logo exporter preserves a destination created during rendering", () => {
+    writeFileSync(
+      path.join(exportRoot, "commit-race-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace('staticOutput: "assets/logo-static.png"', 'staticOutput: "assets/race.png"')
+        .replace('animatedOutput: "assets/logo-animated.gif"', 'animatedOutput: "assets/race.gif"'),
+    );
+    const staticOutput = path.join(exportAssets, "race.png");
+    const animatedOutput = path.join(exportAssets, "race.gif");
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "commit-race-recipe.mjs", "--json"],
+      {
+        cwd: temp,
+        env: {
+          ...exporterEnvironment,
+          LOGO_EXPORT_CONCURRENT_DESTINATION: animatedOutput,
+        },
+      },
+    );
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.stdout, /"code":"OUTPUT_ROLLBACK_INCOMPLETE"/);
+    assert.equal(existsSync(staticOutput), true);
+    assert.equal(readFileSync(animatedOutput, "utf8"), "concurrent-output");
+    const retainedStages = readdirSync(exportAssets).filter((entry) =>
+      entry.startsWith(".readme-logo-"),
+    );
+    assert.equal(retainedStages.length, 2);
+    for (const entry of retainedStages) {
+      rmSync(path.join(exportAssets, entry), { recursive: true, force: true });
+    }
+  });
+
+  check("README logo exporter preserves a directory that replaces the second output", () => {
+    writeFileSync(
+      path.join(exportRoot, "directory-race-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace(
+          'staticOutput: "assets/logo-static.png"',
+          'staticOutput: "assets/directory-race.png"',
+        )
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "assets/directory-race.gif"',
+        ),
+    );
+    const staticOutput = path.join(exportAssets, "directory-race.png");
+    const animatedOutput = path.join(exportAssets, "directory-race.gif");
+    writeFileSync(staticOutput, "prior-static-output");
+    writeFileSync(animatedOutput, "prior-animated-output");
+
+    const result = run(
+      process.execPath,
+      [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        "directory-race-recipe.mjs",
+        "--replace",
+        "--json",
+      ],
+      {
+        cwd: temp,
+        env: {
+          ...exporterEnvironment,
+          LOGO_EXPORT_CONCURRENT_DIRECTORY: animatedOutput,
+        },
+      },
+    );
+
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.stdout, /"code":"OUTPUT_ROLLBACK_INCOMPLETE"/);
+    assert.equal(
+      readFileSync(path.join(animatedOutput, "keep.txt"), "utf8"),
+      "foreign-directory-output",
+    );
+    const retainedStages = readdirSync(exportAssets).filter((entry) =>
+      entry.startsWith(".readme-logo-"),
+    );
+    assert.equal(retainedStages.length, 2);
+    const staticStage = retainedStages.find((entry) =>
+      entry.startsWith(".readme-logo-static-stage-"),
+    );
+    const animatedStage = retainedStages.find((entry) =>
+      entry.startsWith(".readme-logo-animated-stage-"),
+    );
+    assert.equal(
+      readFileSync(path.join(exportAssets, staticStage, "backup-directory-race.png"), "utf8"),
+      "prior-static-output",
+    );
+    assert.equal(existsSync(path.join(exportAssets, staticStage, "directory-race.png")), true);
+    assert.equal(existsSync(path.join(exportAssets, animatedStage, "directory-race.gif")), true);
+    for (const entry of retainedStages) {
+      rmSync(path.join(exportAssets, entry), { recursive: true, force: true });
+    }
+    rmSync(animatedOutput, { recursive: true, force: true });
+  });
+
+  check(
+    "README logo exporter rejects an output-parent swap without touching the new target",
+    () => {
+      writeFileSync(
+        path.join(exportRoot, "parent-race-recipe.mjs"),
+        readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+          .replace(
+            'staticOutput: "assets/logo-static.png"',
+            'staticOutput: "assets/parent-race.png"',
+          )
+          .replace(
+            'animatedOutput: "assets/logo-animated.gif"',
+            'animatedOutput: "assets/parent-race.gif"',
+          ),
+      );
+      const staticOutput = path.join(exportAssets, "parent-race.png");
+      const animatedOutput = path.join(exportAssets, "parent-race.gif");
+      writeFileSync(staticOutput, "prior-static-output");
+      writeFileSync(animatedOutput, "prior-animated-output");
+      const movedAssets = path.join(exportRoot, "assets-before-parent-swap");
+      const foreignAssets = path.join(temp, "foreign-parent-swap-target");
+      mkdirSync(foreignAssets);
+      writeFileSync(path.join(foreignAssets, "parent-race.png"), "foreign-static-output");
+      writeFileSync(path.join(foreignAssets, "parent-race.gif"), "foreign-animated-output");
+
+      const result = run(
+        process.execPath,
+        [
+          exporterCli,
+          "--root",
+          exportRoot,
+          "--recipe",
+          "parent-race-recipe.mjs",
+          "--replace",
+          "--json",
+        ],
+        {
+          cwd: temp,
+          env: {
+            ...exporterEnvironment,
+            LOGO_EXPORT_SWAP_PARENT: exportAssets,
+            LOGO_EXPORT_SWAP_PARENT_BACKUP: movedAssets,
+            LOGO_EXPORT_SWAP_PARENT_FOREIGN: foreignAssets,
+          },
+        },
+      );
+
+      assert.equal(result.status, 2, result.output);
+      assert.match(result.stdout, /"code":"OUTPUT_ROLLBACK_INCOMPLETE"/);
+      assert.equal(
+        readFileSync(path.join(foreignAssets, "parent-race.png"), "utf8"),
+        "foreign-static-output",
+      );
+      assert.equal(
+        readFileSync(path.join(foreignAssets, "parent-race.gif"), "utf8"),
+        "foreign-animated-output",
+      );
+      assert.equal(
+        readdirSync(foreignAssets).some((entry) => entry.startsWith(".readme-logo-")),
+        false,
+      );
+      const retainedStages = readdirSync(movedAssets).filter((entry) =>
+        entry.startsWith(".readme-logo-"),
+      );
+      assert.equal(retainedStages.length, 2);
+      for (const entry of retainedStages) {
+        rmSync(path.join(movedAssets, entry), { recursive: true, force: true });
+      }
+      rmSync(exportAssets, { force: true });
+      renameSync(movedAssets, exportAssets);
+      rmSync(foreignAssets, { recursive: true, force: true });
+    },
+  );
+
+  check("README logo exporter creates missing output parents one safe component at a time", () => {
+    writeFileSync(
+      path.join(exportRoot, "missing-parent-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace(
+          'staticOutput: "assets/logo-static.png"',
+          'staticOutput: "created-parent/deep/logo-static.png"',
+        )
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "created-parent/deep/logo-animated.gif"',
+        ),
+    );
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "missing-parent-recipe.mjs", "--json"],
+      { cwd: temp, env: exporterEnvironment },
+    );
+    assert.equal(result.status, 0, result.output);
+    assert.equal(JSON.parse(result.stdout).recoveryRetained, false);
+    assert.equal(existsSync(path.join(exportRoot, "created-parent/deep/logo-static.png")), true);
+    assert.equal(existsSync(path.join(exportRoot, "created-parent/deep/logo-animated.gif")), true);
+    rmSync(path.join(exportRoot, "created-parent"), { recursive: true, force: true });
+  });
+
+  check("README logo exporter never follows an absent output parent raced to a symlink", () => {
+    writeFileSync(
+      path.join(exportRoot, "missing-parent-race-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace(
+          'staticOutput: "assets/logo-static.png"',
+          'staticOutput: "late-parent/deep/logo-static.png"',
+        )
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "late-parent/deep/logo-animated.gif"',
+        ),
+    );
+    const racedParent = path.join(exportRoot, "late-parent");
+    const foreignParent = path.join(temp, "foreign-missing-parent-race");
+    mkdirSync(foreignParent);
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "missing-parent-race-recipe.mjs", "--json"],
+      {
+        cwd: temp,
+        env: {
+          ...exporterEnvironment,
+          LOGO_EXPORT_RACE_PARENT: racedParent,
+          LOGO_EXPORT_RACE_PARENT_FOREIGN: foreignParent,
+        },
+      },
+    );
+    assert.equal(result.status, 2, result.output);
+    assert.match(result.stdout, /"code":"ROOT_ESCAPE"/);
+    assert.equal(existsSync(path.join(foreignParent, "deep")), false);
+    assert.equal(existsSync(path.join(foreignParent, "logo-static.png")), false);
+    assert.equal(existsSync(path.join(foreignParent, "logo-animated.gif")), false);
+    rmSync(racedParent);
+    rmSync(foreignParent, { recursive: true, force: true });
+  });
+
+  check("README logo exporter failure preserves outputs and cleans stages", () => {
+    const staticOutput = path.join(exportAssets, "logo-static.png");
+    const animatedOutput = path.join(exportAssets, "logo-animated.gif");
+    const beforeStatic = readFileSync(staticOutput);
+    const beforeAnimated = readFileSync(animatedOutput);
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "recipe.mjs", "--replace", "--json"],
+      {
+        cwd: temp,
+        env: { ...exporterEnvironment, LOGO_EXPORT_FAIL_GIF: "1" },
+      },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"TOOL_FAILED"/);
+    assert.doesNotMatch(result.stdout, new RegExp(exportRoot.replaceAll("\\", "\\\\")));
+    assert.doesNotMatch(result.stdout, new RegExp(temp.replaceAll("\\", "\\\\")));
+    assert.deepEqual(readFileSync(staticOutput), beforeStatic);
+    assert.deepEqual(readFileSync(animatedOutput), beforeAnimated);
+    assert.equal(
+      readdirSync(exportAssets).some((entry) => entry.startsWith(".readme-logo-")),
+      false,
+    );
+  });
+
+  check("README logo exporter rejects a structurally invalid static PNG", () => {
+    writeFileSync(
+      path.join(exportRoot, "invalid-png-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace('staticOutput: "assets/logo-static.png"', 'staticOutput: "assets/invalid.png"')
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "assets/invalid.gif"',
+        ),
+    );
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "invalid-png-recipe.mjs", "--json"],
+      {
+        cwd: temp,
+        env: { ...exporterEnvironment, LOGO_EXPORT_PNG: pngWithoutImageData },
+      },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_STATIC_PNG"/);
+    assert.equal(existsSync(path.join(exportAssets, "invalid.png")), false);
+    assert.equal(existsSync(path.join(exportAssets, "invalid.gif")), false);
+  });
+
+  check("README logo exporter rejects GIF timing that disagrees with recipe fps", () => {
+    writeFileSync(
+      path.join(exportRoot, "wrong-timing-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+        .replace(
+          'staticOutput: "assets/logo-static.png"',
+          'staticOutput: "assets/wrong-timing.png"',
+        )
+        .replace(
+          'animatedOutput: "assets/logo-animated.gif"',
+          'animatedOutput: "assets/wrong-timing.gif"',
+        ),
+    );
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "wrong-timing-recipe.mjs", "--json"],
+      {
+        cwd: temp,
+        env: { ...exporterEnvironment, LOGO_EXPORT_GIF: wrongTimingGif },
+      },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"INVALID_ANIMATED_GIF"/);
+    assert.equal(existsSync(path.join(exportAssets, "wrong-timing.png")), false);
+    assert.equal(existsSync(path.join(exportAssets, "wrong-timing.gif")), false);
+  });
+
+  check("README logo exporter redacts an invalid absolute recipe argument", () => {
+    const privateRecipe = path.join(temp, "private-recipe.mjs");
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      privateRecipe,
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 1, result.output);
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.recipe, null);
+    assert.doesNotMatch(result.stdout, new RegExp(privateRecipe.replaceAll("\\", "\\\\")));
+  });
+
+  check("README logo exporter rejects root escape", () => {
+    writeFileSync(
+      path.join(exportRoot, "unsafe-recipe.mjs"),
+      readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8").replace(
+        'animatedOutput: "assets/logo-animated.gif"',
+        'animatedOutput: "../escaped.gif"',
+      ),
+    );
+    const result = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "unsafe-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"ROOT_ESCAPE"/);
+  });
+
+  check("README logo exporter rejects symlinked input and output-parent escapes", () => {
+    const outside = path.join(temp, "outside-export-root");
+    mkdirSync(outside);
+    writeFileSync(
+      path.join(outside, "outside.svg"),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="2" height="1" /></svg>',
+    );
+    symlinkSync(path.join(outside, "outside.svg"), path.join(exportRoot, "linked-source.svg"));
+    symlinkSync(outside, path.join(exportRoot, "linked-output"));
+    writeFileSync(path.join(outside, "outside-recipe.mjs"), "export default {};\n");
+    symlinkSync(
+      path.join(outside, "outside-recipe.mjs"),
+      path.join(exportRoot, "linked-recipe.mjs"),
+    );
+
+    const linkedRecipe = run(process.execPath, [
+      exporterCli,
+      "--root",
+      exportRoot,
+      "--recipe",
+      "linked-recipe.mjs",
+      "--check",
+      "--json",
+    ]);
+    assert.equal(linkedRecipe.status, 1, linkedRecipe.output);
+    assert.match(linkedRecipe.stdout, /"code":"ROOT_ESCAPE"/);
+
+    for (const [name, source, animatedOutput] of [
+      ["linked-source", "linked-source.svg", "assets/linked-source.gif"],
+      ["linked-output", "logo.svg", "linked-output/escaped.gif"],
+    ]) {
+      writeFileSync(
+        path.join(exportRoot, `${name}-recipe.mjs`),
+        readFileSync(path.join(exportRoot, "recipe.mjs"), "utf8")
+          .replace('source: "logo.svg"', `source: "${source}"`)
+          .replace('staticOutput: "assets/logo-static.png"', `staticOutput: "assets/${name}.png"`)
+          .replace(
+            'animatedOutput: "assets/logo-animated.gif"',
+            `animatedOutput: "${animatedOutput}"`,
+          ),
+      );
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        `${name}-recipe.mjs`,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, /"code":"ROOT_ESCAPE"/);
+    }
+    assert.equal(existsSync(path.join(outside, "escaped.gif")), false);
+  });
+
+  check("README logo exporter rejects nondeterministic and multi-root frames", () => {
+    const recipePrefix = `const base = {
+  schemaVersion: 1,
+  source: "logo.svg",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 2,
+};\n`;
+    writeFileSync(
+      path.join(exportRoot, "nondeterministic-recipe.mjs"),
+      `${recipePrefix}let count = 0;
+export default {
+  ...base,
+  staticOutput: "assets/nondeterministic.png",
+  animatedOutput: "assets/nondeterministic.gif",
+  renderFrame({ width, height }) {
+    count += 1;
+    return \`<svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}" data-count="\${count}"><rect width="1" height="1" /></svg>\`;
+  },
+};\n`,
+    );
+    writeFileSync(
+      path.join(exportRoot, "multi-root-recipe.mjs"),
+      `${recipePrefix}export default {
+  ...base,
+  staticOutput: "assets/multi-root.png",
+  animatedOutput: "assets/multi-root.gif",
+  renderFrame({ width, height }) {
+    return \`<svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}"></svg><svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}"></svg>\`;
+  },
+};\n`,
+    );
+    writeFileSync(
+      path.join(exportRoot, "interior-nondeterministic-recipe.mjs"),
+      `let calls = 0;
+export default {
+  schemaVersion: 1,
+  source: "logo.svg",
+  staticOutput: "assets/interior-nondeterministic.png",
+  animatedOutput: "assets/interior-nondeterministic.gif",
+  width: 2,
+  height: 1,
+  fps: 10,
+  frameCount: 3,
+  renderFrame({ frameIndex, width, height }) {
+    const pass = Math.floor(calls / 3);
+    calls += 1;
+    const marker = frameIndex === 1 ? pass : frameIndex;
+    return \`<svg xmlns="http://www.w3.org/2000/svg" width="\${width}" height="\${height}" data-marker="\${marker}"><rect width="1" height="1" /></svg>\`;
+  },
+};\n`,
+    );
+    for (const [recipe, code] of [
+      ["nondeterministic-recipe.mjs", "NONDETERMINISTIC_RECIPE"],
+      ["interior-nondeterministic-recipe.mjs", "NONDETERMINISTIC_RECIPE"],
+      ["multi-root-recipe.mjs", "INVALID_FRAME"],
+    ]) {
+      const result = run(process.execPath, [
+        exporterCli,
+        "--root",
+        exportRoot,
+        "--recipe",
+        recipe,
+        "--check",
+        "--json",
+      ]);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, new RegExp(`"code":"${code}"`));
+    }
+  });
+
+  check("README logo exporter rejects missing FFmpeg capabilities", () => {
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "recipe.mjs", "--replace", "--json"],
+      {
+        cwd: temp,
+        env: { ...exporterEnvironment, LOGO_EXPORT_MISSING_FILTERS: "1" },
+      },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"MISSING_TOOL_CAPABILITY"/);
+  });
+
+  check("README logo exporter reports missing capability", () => {
+    const missingTools = path.join(temp, "missing-export-tools");
+    mkdirSync(missingTools);
+    const result = run(
+      process.execPath,
+      [exporterCli, "--root", exportRoot, "--recipe", "recipe.mjs", "--replace", "--json"],
+      { cwd: temp, env: { ...process.env, PATH: missingTools } },
+    );
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.stdout, /"code":"MISSING_OR_BROKEN_TOOL"/);
+    assert.match(result.stdout, /references\/local-tooling\.md/);
+    assert.doesNotMatch(result.stdout, new RegExp(exportRoot.replaceAll("\\", "\\\\")));
   });
 
   const formats = [

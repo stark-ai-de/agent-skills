@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable swimlane process diagram for Sales, Billing, Support, and Finance handoffs.
+Create an editable diagrams.net swimlane process diagram for Sales, Billing, Support, and Finance handoffs.
 ```
 
 ## Should Trigger

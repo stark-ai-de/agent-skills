@@ -6,7 +6,7 @@ status: "final-public-release"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-07-07"
-updated: "2026-07-07"
+updated: "2026-07-15"
 ---
 
 # drawio-diagrams Public Release Spec
@@ -23,8 +23,8 @@ Release `drawio-diagrams` as a public Engineering Workflows skill for creating, 
 - Keep `.drawio` XML as the source of truth; exports are optional deliverables.
 - Keep eval proof under `skill-evals/drawio-diagrams/`, outside the runtime payload.
 - Ship no copied third-party reference packs, bundled shape index, or bundled icon pack.
-- Use native draw.io stencils first, then explicitly configured local shape/icon caches only after user approval.
-- Document optional theSVG lookup by approved local cache or live registry, but do not maintain a static slug catalog or bundle SVG assets.
+- Default to icon-first diagrams wherever the notation supports it: real logos/service stencils for named products and labelled semantic icons for generic concepts or unresolved brands.
+- Route native draw.io stencils first, Lobe Icons for AI/LLM brands, Simple Icons for broad technology brands, then theSVG/domain packs for gaps; do not maintain a static slug catalog or bundle SVG assets.
 - Keep the dependency-free Python validator as a public helper under ADR-0022.
 
 ## Skill Contract
@@ -33,13 +33,98 @@ The skill must:
 
 - Trigger on editable draw.io / diagrams.net diagram creation, editing, repair, validation, and export.
 - Exclude charts, data plots, artistic images, photo edits, and non-editable illustrations unless the user explicitly asks for draw.io output.
-- Detect `python3`, Node >= 18, draw.io Desktop CLI, available draw.io MCP tools, and approved local caches.
-- Never install tools, write MCP config, use hosted draw.io MCP, fetch remote icons, or download indexes without explicit approval.
-- Verify third-party icon slugs, variants, and license/trademark notes at lookup time instead of trusting a frozen catalog.
+- Detect `python3`, Node >= 18, draw.io Desktop CLI, available draw.io MCP tools, and configured or standard-cache local indexes/assets.
+- Never install tools, write MCP config, use hosted draw.io MCP, download bulk packs/indexes, or create persistent caches without explicit approval. Selected public SVG retrieval is a read-only lookup when host policy allows.
+- Embed selected SVGs, record provider/slug/variant and semantic substitutions, and emit one user-responsibility notice when any third-party logo or icon appears. Do not claim legal clearance or perform per-icon legal analysis unless requested.
 - Preserve existing pages, IDs, cells, layers, metadata, and manual coordinates during edits.
 - Create a backup or alternate output before overwriting an existing `.drawio` file.
 - Validate every generated or edited diagram with `scripts/validate_drawio.py` when `python3` is available.
 - Report visual and dark-mode verification honestly, including skipped checks.
+
+## 2026-07-14 Optimization Contract
+
+### Scope
+
+- Improve the existing public skill without adding a separate diagram engine, HTML player, MCP server, or unbounded style/theme marketplace.
+- Use original guidance informed by, but not copied from, the MIT-licensed `Agents365-ai/drawio-skill` and `konraddzbik/architecture-diagram-skill` projects.
+- Apply lessons from generated architecture diagrams in the Infrastructure, Agent Bootstrapper, and Rhome V2 repositories to the public workflow, references, validation, and eval proof.
+
+### Defaults
+
+- Use a flat **technical geominimalist** visual system: 8 px grid, restrained bento-style zones, portable sans-serif type, neutral surfaces, one dominant color family, semantic accents, orthogonal connectors, and no gradients or shadows by default.
+- Keep normal text at 12 px or larger when practical, component titles at 14 px or larger, and text contrast at 4.5:1 or better. Do not rely on color, icon, line style, or animation alone to communicate meaning.
+- Add `flowAnimation=1` to newly generated directed runtime, process, and data-flow edges by default. Keep containment, association, annotation, dependency-only, and decorative lines static. If the user disables animation, omit it or set `flowAnimation=0` consistently on semantic edges.
+- Treat animation as progressive enhancement. Arrowheads, labels, and line semantics must remain understandable in static `.drawio`, PNG, PDF, and reduced-motion contexts; animated SVG is an optional export behavior.
+- Use icon-first presentation for architecture and technical-system diagrams. Every primary component gets a logo/service stencil or relevant labelled semantic icon. A missing logo falls back per node and never removes resolved peer logos or produces a bare text card.
+
+### Design profiles
+
+- Keep `technical` as the readable engineering default and add four bounded presentation options: `operator-grid`, `isometric-air`, `neon-hub`, and `aurora-story`.
+- Map the maintainer's Template 1 light/dark references to `operator-grid`, Template 2 to `isometric-air`, Template 3 to `neon-hub`, and Template 4 to `aurora-story`.
+- An explicit user choice wins. Otherwise infer an expressive profile only when audience and artifact clearly call for it; never mix profile vocabularies on one page.
+- Profiles change presentation, not content rules. All profiles retain adaptive light/dark colors, icon-first coverage, static flow semantics, animation policy, contrast floors, and deterministic validation.
+- Implement the profiles as original token, layout, and effect recipes. Do not store or reproduce the reference images, their exact compositions, text, proprietary artwork, or brand groupings.
+
+### Architecture content gate
+
+- Define the stakeholder question, audience, diagram type, scope, current/target state, and one abstraction level before selecting content.
+- Include only elements and relationships that answer that question. Use title, type/scope, directional relationships, concise responsibilities, relevant technologies/protocols, trust or deployment boundaries, and a compact legend when visual semantics are not self-evident.
+- Move secondary packages, long inventories, activation procedures, and implementation detail to another page or layer when they compete with the primary story. Omit secrets, exhaustive source trees, speculative components presented as current, and decorative infrastructure that does not affect the view.
+- For current-versus-target diagrams, label status explicitly and keep implemented, planned, optional, and blocked paths visually distinct without using color alone.
+
+### Discovery and review
+
+- For simple, well-specified requests, proceed with documented assumptions and do not force a wizard.
+- For ambiguous or expensive architecture work, use a short discovery checkpoint before authoring. Prefer native plan/question facilities when available; otherwise ask only questions whose answers materially change scope, audience, view, animation, branding, privacy, or outputs. Tool detection is automatic; installs, hosted services, bulk downloads, persistent caches, and host-required network consent remain approval-gated.
+- Self-review every generated or materially edited diagram in three bounded passes: semantic architecture review, layout/routing review, and light/dark/accessibility review. When rendering is available, fix and re-render for at most three targeted cycles. Offer additional user-led visual iteration without making it a completion blocker.
+
+### Non-goals
+
+- Do not copy upstream skill text, templates, scripts, icon packs, provider manifests, shape indexes, or interactive HTML runtimes. Improve the existing Node shape-search helper instead of adding a second Python implementation.
+- Do not add fixed copies of the supplied visual references, a mandatory multi-step wizard, an unbounded theme marketplace, bespoke animation JavaScript, or a general architecture modelling framework.
+- Do not animate every line indiscriminately or trade static clarity for motion.
+
+### 2026-07-15 quality benchmark additions
+
+- Allow bounded, task-local adaptation from a user-supplied style reference: extract reusable visual tokens, map them to the closest profile and adaptive draw.io styles, then reapply readability and accessibility guardrails. Do not copy composition/assets or persist a learned profile without an explicit request.
+- Add compact operational recipes for ERD, UML class/state, C4, BPMN, SysML, and ML/DL notation. Formal notation takes priority over icon-card decoration.
+- Publish a same-model, same-tool, blind paired architecture-quality benchmark protocol under `skill-evals/`; do not claim competitor outperformance until completed runs, raw artifacts, scores, and the stated statistical threshold are public.
+- Keep the official shape index optional and approval-gated. The current quality-focused release does not reverse the public payload decision against bundled third-party indexes.
+
+### Source challenge notes
+
+- The official [draw.io connector animation guidance](https://www.drawio.com/docs/manual/connectors/connector-animate/) confirms that flow animation is connector-level and survives SVG export; it does not make static exports animated.
+- The official [C4 notation](https://c4model.com/diagrams/notation) and [review checklist](https://c4model.com/diagrams/checklist) support titles, explicit scope and element types, concise responsibilities, directional labelled relationships, protocols, and legends without requiring C4 for every diagram.
+- The [Azure Well-Architected diagram guidance](https://learn.microsoft.com/en-us/azure/well-architected/architect-role/design-diagrams) supports audience-specific views, progressive disclosure, consistent visual semantics, official icons, metadata, and accessibility.
+- The [IBM technical diagram guidance](https://www.ibm.com/design/language/infographics/technical-diagrams/design/) supports the measurable grid, typography, card, icon, and connector defaults. WCAG contrast requirements remain the accessibility floor.
+- [Lobe Icons](https://github.com/lobehub/lobe-icons) provides static SVG assets focused on AI/LLM brands. [Simple Icons](https://github.com/simple-icons/simple-icons) provides broad brand coverage and explicitly separates its repository license from icon-specific copyright, trademark, and brand-guideline responsibility in its [disclaimer](https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md).
+- The official [draw.io MCP shape search](https://github.com/jgraph/drawio-mcp/blob/main/shared/shape-search.js) demonstrates compound-token, phonetic, and ranked AND/OR matching. The public skill adopts that behavior independently without bundling its index.
+- The maintainer-supplied [Template 1 light](https://github.com/user-attachments/assets/0677c5b3-8eff-4d79-acef-2a67a757e8a7), [Template 1 dark](https://github.com/user-attachments/assets/4798bfff-89ac-4436-9c11-8a28aa086525), [Template 2](https://cdn.dribbble.com/userupload/42005631/file/original-8f8590360694983e75da41e5894a1828.png), [Template 3](https://cdn.dribbble.com/userupload/11828561/file/original-69913398d4a428f9cc8f27e5c21ed58b.png), and [Template 4](https://cdn.dribbble.com/userupload/43336759/file/original-44723ae6a22907759ad778f981dfd7a3.jpg) establish desired visual directions only. The profiles independently translate those directions into draw.io-safe tokens and guardrails.
+- Official draw.io [adaptive colors](https://www.drawio.com/docs/manual/editor/appearance/adaptive-colours/), [shape styles](https://www.drawio.com/docs/manual/styles/shape-styles/), and [diagram-generation style reference](https://www.drawio.com/docs/reference/diagram-generation/style-reference/) ground the portable `light-dark(...)`, gradient, shadow, and shape-style implementation.
+- Magier's design-style catalog is useful inspiration, but its trend claims and inconsistent geominimalism palette are not treated as an authority. The adopted style is an original technical-diagram profile, not copied branding.
+
+### ADR gate
+
+No new ADR is required. These are skill-specific operational and output defaults, not a repo-wide runtime or publishing policy. ADR-0022 continues to govern dependency-free Python validator changes.
+
+### Acceptance criteria
+
+- `SKILL.md` stays concise and routes detailed architecture, style, animation, discovery, and review behavior into references.
+- Eval cases cover animation-on, explicit animation-off, architecture content selection, conditional discovery, modern readable design, all four optional design profiles, icon-first coverage, external SVG embedding, and the single rights notice for any third-party logo or icon.
+- Each profile eval requires the requested profile to be named and applied consistently, keeps `adaptiveColors` plus `light-dark(...)`, binds a representative `profile-<name>` cell to profile-specific styles, exercises the composition/effect guardrails in light PNG and dark SVG exports, and still runs deterministic validation.
+- The external SVG eval names LangSmith and requires editable `.drawio` plus rendered SVG artifacts, embedded image data without a provider URL, fixed aspect ratio, provider/version reporting, and the single rights notice.
+- Deterministic checks catch mixed or missing directed-flow animation without penalizing structural or decorative edges, and avoid false orphan warnings for component-card children or declared annotations.
+- Diagram-rule checks warn when a `dataRole=component` card has neither an icon-like shape nor a `dataRole=icon` child. Shape-search regressions cover JSON output, fuzzy and partial matching, type filtering, gzip input, and standard-cache discovery.
+- Desktop CLI is an export/render tool, not an assumed Mermaid importer or layout engine. For `input.drawio`, the standard renderer stages and validates fresh `input.drawio.png` and `input.dark.svg` artifacts before no-clobber installation, including when Desktop exits zero without output; `--page-index` does not rename them. A commit-time collision never deletes the raced destination. Interrupted commits retain partial outputs plus staged files and backups, while successful replacements also retain and report the staging recovery directory because an open writer can still update a renamed backup inode. Fresh installs without prior outputs remove their staging directory after validation.
+- Renderer PNG validation is bounded to non-interlaced output and checks legal IHDR fields, critical chunks, CRCs, the complete concatenated IDAT zlib stream, scanline length, and row filters. Legal interlaced PNG remains outside this renderer-validation subset and fails with an explicit unsupported-mode error.
+- Eval validation rejects suspicious escaped wildcard regexes and keeps at least 20 natural-language positive prompts that do not name the skill, alongside explicit-invocation cases.
+- The audited real diagrams are updated with animation, clearer content hierarchy, and modern readable styling where the owning worktree can be changed safely.
+- The full repository validation required below passes without staging or changing unrelated worktree state.
+- The benchmark protocol uses identical prompts and fixtures, three trials per case, blind visual grading, neutral artifact checks, pinned skill/tool versions, published failures, and an explicit claim threshold.
+
+### User verification
+
+The maintainer explicitly requested animation-on by default with opt-out, modern readable design guidance, architecture-content improvements, icon/logo use by default, user-owned rights verification, Lobe/Simple Icons evaluation, shape-search evaluation, conditional wizard evaluation, self-review loops, four visual-reference-derived design options, and KISS over feature breadth. The maintainer then requested evidence that the skill is better than the current Agents365 alternative. The implementation therefore strengthens the architecture-quality path and adds a fair benchmark instead of copying the competitor's broad helper suite or publishing an unverified universal-superiority claim.
 
 ## Runtime Payload
 
@@ -51,16 +136,24 @@ skills/engineering-workflows/drawio-diagrams/
   agents/openai.yaml
   references/
     delivery.md
+    design-profiles.md
     diagram-type-playbook.md
     icon-catalog.md
+    layout-readability.md
+    routing-and-simplification.md
     theming-dark-mode.md
     toolset-setup.md
     verification-checklist.md
     xml-authoring.md
     examples/*.drawio
   scripts/
+    lib/
+      transactional-render-output.mjs
+    open-drawio-url.mjs
+    preflight-drawio-xml.mjs
     render-drawio.mjs
     search-shapes.mjs
+    validate-drawio-diagram-rules.mjs
     validate_drawio.py
 ```
 
@@ -83,11 +176,14 @@ Required before release:
 
 ```bash
 python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" skills/engineering-workflows/drawio-diagrams
-python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/example-clean.drawio
+python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/example-clean.drawio --animation on
+python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/animation-on.drawio --animation on
+python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/animation-off.drawio --animation off
 python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/example-broken.drawio; test $? -eq 1
 python3 skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py skills/engineering-workflows/drawio-diagrams/references/examples/example-contrast-broken.drawio; test $? -eq 1
 pnpm format:check
 pnpm lint
+npm run validate:drawio
 npm run validate
 npm run smoke:install
 node scripts/check-release-intent.mjs --base-ref origin/main

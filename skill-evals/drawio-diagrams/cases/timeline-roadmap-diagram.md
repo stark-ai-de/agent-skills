@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable roadmap timeline for Q1, Q2, Q3, and Q4 with milestones and dependency arrows.
+Create an editable draw.io roadmap timeline for Q1, Q2, Q3, and Q4 with milestones and dependency arrows.
 ```
 
 ## Should Trigger

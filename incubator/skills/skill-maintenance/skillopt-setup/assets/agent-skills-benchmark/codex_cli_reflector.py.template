@@ -149,21 +149,117 @@ def _start_process_group_reaper(process):
     return thread
 
 
-def _run_isolated_codex(command, cwd, env, timeout):
+_PROMPT_ECHO_MARKER = "[redacted-prompt]"
+_PROMPT_ECHO_SEED_CHARS = 16
+_PROMPT_ECHO_SEED_POSITIONS = 8
+
+
+def _prompt_echo_spans(value, transported):
+    """Return exact prompt-derived spans without suppressing unrelated diagnostics."""
+    spans = []
+    if not value or not transported:
+        return spans
+    if value in transported:
+        return [(0, len(value))]
+    for match in re.finditer(r"[^\r\n]+", value):
+        line = match.group(0)
+        stripped = line.strip()
+        if stripped and stripped in transported:
+            offset = line.find(stripped)
+            spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+
+    seed_size = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
+    if seed_size <= 0 or len(value) < seed_size:
+        return spans
+    positions_by_seed = {}
+    for index in range(len(transported) - seed_size + 1):
+        positions = positions_by_seed.setdefault(
+            transported[index : index + seed_size], []
+        )
+        if len(positions) < _PROMPT_ECHO_SEED_POSITIONS:
+            positions.append(index)
+
+    cursor = 0
+    last_seed_start = len(value) - seed_size
+    while cursor <= last_seed_start:
+        prompt_positions = positions_by_seed.get(value[cursor : cursor + seed_size])
+        if not prompt_positions:
+            cursor += 1
+            continue
+        best_start = cursor
+        best_end = cursor + seed_size
+        for prompt_start in prompt_positions:
+            output_start = cursor
+            candidate_prompt_start = prompt_start
+            while (
+                output_start > 0
+                and candidate_prompt_start > 0
+                and value[output_start - 1] == transported[candidate_prompt_start - 1]
+            ):
+                output_start -= 1
+                candidate_prompt_start -= 1
+            output_end = cursor + seed_size
+            candidate_prompt_end = prompt_start + seed_size
+            while (
+                output_end < len(value)
+                and candidate_prompt_end < len(transported)
+                and value[output_end] == transported[candidate_prompt_end]
+            ):
+                output_end += 1
+                candidate_prompt_end += 1
+            if output_end - output_start > best_end - best_start:
+                best_start, best_end = output_start, output_end
+        spans.append((best_start, best_end))
+        cursor = best_end
+    return spans
+
+
+def _redact_prompt(text, prompt):
+    value = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
+    spans = _prompt_echo_spans(value, transported)
+    if not spans:
+        return value
+    merged = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    parts = []
+    cursor = 0
+    for start, end in merged:
+        parts.extend((value[cursor:start], _PROMPT_ECHO_MARKER))
+        cursor = end
+    parts.append(value[cursor:])
+    return "".join(parts)
+
+
+def _redact_timeout_stream(text):
+    return _PROMPT_ECHO_MARKER if (
+        text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    ) else ""
+
+
+def _run_isolated_codex(command, prompt, cwd, env, timeout):
     process = subprocess.Popen(
         command,
         cwd=cwd,
         env=env,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         start_new_session=True,
     )
     reaper = _start_process_group_reaper(process)
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
+        stdout, stderr = process.communicate(input=prompt, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        error.stdout = _redact_timeout_stream(error.stdout)
+        error.stderr = _redact_timeout_stream(error.stderr)
         _reap_process_group(process)
         try:
             process.communicate(timeout=1)
@@ -174,7 +270,12 @@ def _run_isolated_codex(command, cwd, env, timeout):
         reaper.join(timeout=7)
         if reaper.is_alive() or _process_group_alive(process.pid):
             _reap_process_group(process)
-    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+    return subprocess.CompletedProcess(
+        command,
+        process.returncode,
+        _redact_prompt(stdout, prompt),
+        _redact_prompt(stderr, prompt),
+    )
 
 
 SECRET_PATTERN = re.compile(r"(sk-[A-Za-z0-9_-]{20,}|[A-Za-z0-9_-]{32,})")
@@ -253,10 +354,11 @@ class CodexCliReflector:
                 command.extend(["--model", self.model])
             if self.profile:
                 command.extend(["--profile", self.profile])
-            command.append(prompt)
+            command.append("-")
             try:
                 completed = _run_isolated_codex(
                     command,
+                    prompt,
                     tmp,
                     process_env,
                     self.timeout,
