@@ -1,4 +1,6 @@
 import json
+import posixpath
+import re
 from pathlib import Path
 
 from skillopt.datasets.base import SplitDataLoader
@@ -12,6 +14,10 @@ REQUIRED_FIELDS = {
     "expected_behavior",
     "rubric_path",
     "fixtures",
+    "split_family",
+    "split_group",
+    "expected_artifacts",
+    "deterministic_assertions",
     "visual_assertions",
     "tags",
     "should_trigger",
@@ -19,6 +25,38 @@ REQUIRED_FIELDS = {
     "source_hash",
 }
 WORKSPACE_POLICIES = {"text-only", "isolated-artifact-write"}
+
+
+def canonical_fixture_path(value):
+    if (
+        not isinstance(value, str)
+        or not value
+        or value != value.strip()
+        or "\\" in value
+        or "|" in value
+        or any(ord(char) < 32 or ord(char) == 127 for char in value)
+        or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", value)
+        or posixpath.isabs(value)
+    ):
+        return None
+    normalized = posixpath.normpath(value)
+    if normalized in (".", "..") or normalized.startswith("../"):
+        return None
+    return normalized
+
+
+def valid_split_family(value):
+    if not isinstance(value, str) or value != value.strip():
+        return False
+    if re.fullmatch(r"[a-z0-9][a-z0-9-]{0,79}", value):
+        return True
+    if re.fullmatch(r"case:[a-z0-9][a-z0-9-]{0,127}", value):
+        return True
+    if not value.startswith("fixture:"):
+        return False
+    fixtures = value.removeprefix("fixture:").split("|")
+    canonical = [canonical_fixture_path(fixture) for fixture in fixtures]
+    return bool(fixtures) and all(canonical) and fixtures == sorted(set(canonical))
 
 
 class AgentSkillsDataLoader(SplitDataLoader):
@@ -44,6 +82,37 @@ class AgentSkillsDataLoader(SplitDataLoader):
             limit=limit,
         )
 
+    def setup(self, cfg):
+        super().setup(cfg)
+        self._validate_split_boundaries(self._splits)
+
+    @staticmethod
+    def _validate_split_boundaries(splits):
+        skill_names = {item["skill_name"] for items in splits.values() for item in items}
+        if len(skill_names) > 1:
+            raise ValueError("skill_name crosses dataset boundaries")
+        for field in ("split_family", "split_group"):
+            membership = {}
+            for split, items in splits.items():
+                for item in items:
+                    previous = membership.setdefault(item[field], split)
+                    if previous != split:
+                        raise ValueError(
+                            f"{field} {item[field]!r} crosses {previous} and {split} splits"
+                        )
+        fixture_membership = {}
+        for split, items in splits.items():
+            for item in items:
+                for fixture in item["fixtures"]:
+                    normalized = canonical_fixture_path(fixture)
+                    if normalized is None:
+                        raise ValueError(f"item {item.get('id', '<unknown>')} has invalid fixture")
+                    previous = fixture_membership.setdefault(normalized, split)
+                    if previous != split:
+                        raise ValueError(
+                            f"fixture {normalized!r} crosses {previous} and {split} splits"
+                        )
+
     def load_split_items(self, split_path):
         path = Path(split_path) / "items.json"
         items = json.loads(path.read_text(encoding="utf-8"))
@@ -51,6 +120,37 @@ class AgentSkillsDataLoader(SplitDataLoader):
             missing = sorted(REQUIRED_FIELDS - set(item))
             if missing:
                 raise ValueError(f"{path}: item {item.get('id', '<unknown>')} missing {missing}")
+            if (
+                not isinstance(item["skill_name"], str)
+                or re.fullmatch(r"[a-z0-9][a-z0-9-]{0,127}", item["skill_name"]) is None
+                or not isinstance(item["id"], str)
+                or re.fullmatch(
+                    rf"{re.escape(item['skill_name'])}/[a-z0-9][a-z0-9-]{{0,127}}",
+                    item["id"],
+                )
+                is None
+            ):
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has invalid skill_name or id"
+                )
+            if not valid_split_family(item["split_family"]):
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has invalid split_family"
+                )
+            if (
+                not isinstance(item["split_group"], str)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", item["split_group"]) is None
+            ):
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has invalid split_group"
+                )
+            if not isinstance(item["fixtures"], list) or any(
+                canonical_fixture_path(fixture) is None
+                for fixture in item["fixtures"]
+            ):
+                raise ValueError(
+                    f"{path}: item {item.get('id', '<unknown>')} has invalid fixtures"
+                )
             if item["workspace_policy"] not in WORKSPACE_POLICIES:
                 raise ValueError(
                     f"{path}: item {item.get('id', '<unknown>')} has unsupported "
@@ -80,6 +180,6 @@ class AgentSkillsDataLoader(SplitDataLoader):
         return self.load_split_items(Path(self.split_dir) / alias)
 
     def load_all(self):
-        if self._splits:
-            return {split: self.load_split(split) for split in ("train", "val", "test")}
-        return {split: self.load_split(split) for split in ("train", "val", "test")}
+        splits = {split: self.load_split(split) for split in ("train", "val", "test")}
+        self._validate_split_boundaries(splits)
+        return splits

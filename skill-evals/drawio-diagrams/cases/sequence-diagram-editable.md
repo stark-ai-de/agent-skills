@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable sequence diagram for Browser, API, Auth Service, Database, and Queue.
+Create an editable draw.io sequence diagram for Browser, API, Auth Service, Database, and Queue.
 ```
 
 ## Should Trigger

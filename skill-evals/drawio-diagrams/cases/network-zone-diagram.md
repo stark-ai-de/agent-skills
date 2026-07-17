@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable network diagram with Internet, DMZ, private subnet, firewall, load balancer, app servers, and database.
+Create an editable draw.io network diagram with Internet, DMZ, private subnet, firewall, load balancer, app servers, and database.
 ```
 
 ## Should Trigger

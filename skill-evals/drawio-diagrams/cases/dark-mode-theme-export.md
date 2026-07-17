@@ -3,12 +3,16 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create a light/dark compatible architecture diagram and export a dark SVG only if the local draw.io CLI works.
+Create an editable, light/dark-compatible draw.io architecture diagram and export a dark SVG only if the local draw.io CLI works.
 ```
 
 ## Should Trigger
 
 Yes
+
+## Split Family
+
+dark-theme
 
 ## Expected Behavior
 

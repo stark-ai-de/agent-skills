@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create an editable C4-style container diagram for Web App, API, Worker, Event Bus, Database, and Object Storage.
+Create an editable draw.io C4-style container diagram for Web App, API, Worker, Event Bus, Database, and Object Storage.
 ```
 
 ## Should Trigger

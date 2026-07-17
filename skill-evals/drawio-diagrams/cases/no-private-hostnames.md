@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create a customer-facing architecture diagram, but replace any internal hostnames, private repo paths, and secrets with generic labels.
+Create a customer-facing editable draw.io architecture diagram, but replace any internal hostnames, private repo paths, and secrets with generic labels.
 ```
 
 ## Should Trigger

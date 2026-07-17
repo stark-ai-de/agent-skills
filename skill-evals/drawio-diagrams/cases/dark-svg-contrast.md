@@ -10,6 +10,10 @@ Use $drawio-diagrams to review a dark SVG export for low-contrast text and fix t
 
 Yes
 
+## Split Family
+
+dark-theme
+
 ## Fixtures
 
 - skills/engineering-workflows/drawio-diagrams/references/examples/example-contrast-broken.drawio

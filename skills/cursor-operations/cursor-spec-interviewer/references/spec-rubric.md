@@ -39,11 +39,11 @@ Use this before finalizing the implementation spec.
 - Source fit: important decisions are checked against repo instructions, ADRs, current code, and current external docs when relevant.
 - ADR fit: durable architectural decisions are captured in ADRs, while feature-specific details remain in the spec.
 - Persistence fit: the skill uses clear repo conventions without ceremony, confirms ambiguous or risky destinations, saves the spec by default, keeps compact specs to an artifact path line, saves ADR files only when required, and uses chat output only after an explicit persistence decline or blocker.
-- Plan-mode fit: when supported, the interview runs in native Plan Mode with structured user input, performs no writes, and hands approved artifacts to a separate save-only continuation. Any fallback is explicitly justified and recorded.
+- Plan-mode fit: when supported, the interview uses the current execution host's Plan Mode, structured-question, transition, and plan-exit controls, writes no repository or workspace artifacts apart from a plan artifact created by that host's plan-exit control, and hands approved artifacts to a separate save-only continuation. Any fallback is explicitly justified and recorded; Cursor-native controls apply only when Cursor executes the skill.
 - Safety: risky changes have migration or rollback notes.
-- Cursor readiness: Cursor Agent can act without another discovery loop.
+- Cursor readiness: Cursor Agent can act without another discovery loop, using `.cursor/rules` as target evidence and a Cursor-targeted execution prompt.
 - User verification: the final scope, non-goals, assumptions, risks, validation plan, ADR result, and artifact paths were confirmed by the user before final spec creation.
-- Persistence: the spec is saved to `docs/specs/<kebab-slug>-spec.md` or the repo-approved equivalent, and required ADRs are saved to the repo's ADR folder.
+- Persistence: the repository-owned spec is saved to `docs/specs/<kebab-slug>-spec.md` or the repo-approved equivalent, and required ADRs are saved to the repo's ADR folder.
 - Documentation propagation: a required ADR is indexed during save-only persistence when the repository convention requires it. All other repo-facing documentation work is identified in the spec for later implementation.
 
 ## Final Self-Check
@@ -58,8 +58,8 @@ Use this before finalizing the implementation spec.
 - Did the ADR gate classify architectural decisions correctly?
 - Does the spec reference ADRs instead of duplicating durable architecture rationale?
 - Did the final checkpoint verify scope, non-goals, assumptions, risks, validation, ADR status, and artifact paths?
-- Was native Plan Mode used when supported, or was an unavailable/explicitly-declined fallback recorded?
-- Were all file writes deferred until the user exited Plan Mode and invoked the save-only continuation?
+- Was the current execution host's Plan Mode used when supported, or was an unavailable/explicitly-declined fallback recorded?
+- Were all repository and workspace writes deferred until the current execution host confirmed Plan Mode exit and invoked the save-only continuation, apart from a plan artifact created by that host's plan-exit control?
 - Are any unresolved decisions clearly blocking, non-blocking, or accepted by the user?
 - Was any required ADR persisted to the repo and indexed when the repository convention requires it?
 - Are all other repo-facing documentation changes explicitly deferred and recorded as later implementation work?

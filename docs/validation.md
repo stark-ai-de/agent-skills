@@ -102,6 +102,8 @@ node scripts/print-release-notes.mjs
 - `skills/**/SKILL.md` exists for promoted public skills.
 - `incubator/skills/**/SKILL.md` is validated when incubator candidates exist.
 - Frontmatter starts the file.
+- Frontmatter parses as YAML, and `metadata.category` matches the path when present.
+- `agents/openai.yaml` parses as YAML with typed `interface`, `policy`, and `dependencies` fields; resolved default prompts use current-host controls.
 - `name` and `description` are present.
 - `name` matches the parent folder.
 - `name` follows agentskills.io constraints: 1 to 64 characters, lowercase letters, numbers, and single hyphens, with no leading or trailing hyphen.
@@ -110,10 +112,12 @@ node scripts/print-release-notes.mjs
 - `SKILL.md` stays under 500 lines.
 - Skill bodies include the universal skill section contract: goal, use and non-use cases, inputs, workflow, safety rules, references, scripts, output format, completion criteria, and failure modes.
 - Public skills set `metadata.version` with `x.y.z` semver.
+- Codex/OpenAI default prompts name the selected skill and avoid foreign-host planning/question controls.
 - README includes install commands.
 - Every public category with promoted skills has a `skills/<category>/README.md`.
 - Every incubator category has an `incubator/skills/<category>/README.md`.
 - Category README files link each skill and include the exact `SKILL.md` frontmatter description.
+- README and publishing install sets contain every portable public skill as a real `--skill` operand for each supported host.
 - Category README files state that third-party helper skills live outside the public catalog under `.agents/skills/`.
 - Incubator category README files state that incubator skills are not part of the public catalog.
 - Incubator skills set `metadata.internal: true` so root `npx skills` discovery hides them unless `INSTALL_INTERNAL_SKILLS=1` is explicitly set.
@@ -121,14 +125,17 @@ node scripts/print-release-notes.mjs
 - Oxc formatting and script linting pass through `pnpm format:check` and `pnpm lint`.
 - GitHub Actions workflows pass `actionlint` through `pnpm lint:actions`.
 - The Astro GitHub Pages catalog builds generated public and incubator skill routes from `SKILL.md`.
+- README and publishing host-ready install sets include every portable public skill for Codex, Cursor, and Claude Code.
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
 - ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
-- `smoke:install` checks a clean copy without local `.agents/` or `.codegraph/` state, verifies public skills are listed when present, allows an empty public catalog, and fails if incubator skills leak into public discovery.
+- `smoke:install` checks a clean copy without local `.agents/` or `.codegraph/` state, verifies public skills are listed without incubator leaks, and performs disposable project-local Codex, Cursor, and Claude Code installs with exact destination assertions and telemetry disabled.
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
 - Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
 - CodeGraph + ast-grep contract validation checks the explicit installed-payload allowlist, fenced Markdown/config command snippets and their scanner fixtures, scenario structure, capability/update/rewrite safety invariants, captured behavioral artifact and candidate hashes, and machine-regraded assertion totals without executing analysis tools or a model.
 - SkillOpt setup validation checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.
+
+Root `scripts/validate-*.mjs` files are stable command entrypoints. Large skill-specific maintainer implementations live under `scripts/validation/<area>/`, shared validation modules live under `scripts/validation/lib/`, and installable runtime helpers remain inside their owning skill directory. This preserves the runtime-payload separation defined by [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.md).
 
 ## Continuous Integration
 

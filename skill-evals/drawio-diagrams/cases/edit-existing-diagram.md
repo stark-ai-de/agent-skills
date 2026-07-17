@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to edit this existing Client -> API -> Database draw.io file and add Redis as a cache without disturbing the existing nodes.
+Edit this existing Client -> API -> Database draw.io file and add Redis as a cache without disturbing the existing nodes.
 ```
 
 ## Should Trigger

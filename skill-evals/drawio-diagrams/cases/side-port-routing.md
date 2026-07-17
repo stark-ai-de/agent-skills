@@ -10,6 +10,10 @@ Use $drawio-diagrams to connect left-to-right services using side ports so arrow
 
 Yes
 
+## Split Family
+
+routing-geometry
+
 ## Expected Behavior
 
 - Use side-port-aware edge geometry or routing style.

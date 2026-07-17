@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import yaml from "js-yaml";
 
 const root = process.cwd();
 const publicSkillsDir = path.join(root, "skills");
@@ -21,73 +22,9 @@ const requiredSkillSections = [
 ];
 const namePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const semverPattern = /^\d+\.\d+\.\d+$/;
-const foreignHostControlRequirements = [
-  {
-    label: "Cursor Plan Mode",
-    pattern:
-      /\b(?:in|using|use|enter|run in|switch(?:ing)? to|require[sd]?|required to use|must(?: use| enter| run in)?)\s+(?:native\s+)?Cursor(?:'s)? Plan Mode\b/i,
-  },
-  {
-    label: "Cursor AskQuestion",
-    pattern:
-      /\b(?:use|invoke|call|require[sd]?|required to use|must(?: use| invoke| call)?)\s+(?:the\s+)?AskQuestion\b/i,
-  },
-  {
-    label: "Claude Code plan or question tools",
-    pattern:
-      /\b(?:use|invoke|call|require[sd]?|required to use|must(?: use| invoke| call)?)\s+(?:the\s+)?(?:EnterPlanMode|ExitPlanMode|AskUserQuestion)\b/i,
-  },
-];
-const directControlNegationPattern =
-  /\b(?:do not|don't|never|must not|should not|cannot|can't|avoid|prohibit(?:s|ed)?)\b/i;
-const controlClauseBoundaryPattern =
-  /(?:[.;:!?](?:\s+|$)|,\s*(?:but|however|instead|yet)\b|\b(?:but|however|instead|yet)\b)/gi;
-const promptControlRegressionCases = [
-  {
-    expected: true,
-    name: "reject required Cursor mode",
-    prompt: "Use $example in native Cursor Plan Mode to prepare the result.",
-  },
-  {
-    expected: true,
-    name: "reject required Claude tool",
-    prompt: "Invoke EnterPlanMode before continuing.",
-  },
-  {
-    expected: false,
-    name: "allow audit mention",
-    prompt: "Audit documentation that mentions EnterPlanMode and report drift.",
-  },
-  {
-    expected: false,
-    name: "allow current-host translation",
-    prompt: "Use current execution host controls to translate EnterPlanMode behavior.",
-  },
-  {
-    expected: true,
-    name: "reject contradictory current-host instruction",
-    prompt: "Use current execution host controls, but you must invoke EnterPlanMode.",
-  },
-  {
-    expected: false,
-    name: "allow direct prohibition",
-    prompt: "Do not invoke EnterPlanMode from this host.",
-  },
-  {
-    expected: false,
-    name: "allow never-use prohibition",
-    prompt: "Never use AskUserQuestion from this host.",
-  },
-  {
-    expected: false,
-    name: "allow multiword Cursor-mode prohibition",
-    prompt: "Do not use $example in native Cursor Plan Mode.",
-  },
-  {
-    expected: true,
-    name: "reject requirement after prohibition",
-    prompt: "Do not invoke EnterPlanMode, but use AskUserQuestion instead.",
-  },
+const foreignOpenAiPromptControls = [
+  ["Claude Code control", /\b(?:EnterPlanMode|ExitPlanMode|AskUserQuestion)\b/i],
+  ["Cursor control", /\bAskQuestion\b|\bCursor\b.*\bPlan Mode\b|\bPlan Mode\b.*\bCursor\b/i],
 ];
 const projectLocalOnlySkillNames = new Set([
   "agent-browser",
@@ -134,6 +71,10 @@ function walk(dir, predicate = () => true) {
   return files;
 }
 
+function isMapping(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function parseFrontmatter(file) {
   const text = fs.readFileSync(file, "utf8");
   const match = text.match(/^---\n([\s\S]*?)\n---/);
@@ -142,20 +83,17 @@ function parseFrontmatter(file) {
     return { text, data: null };
   }
 
-  const data = {};
-  for (const line of match[1].split("\n")) {
-    if (!line.trim() || line.trim().startsWith("#")) continue;
-    const i = line.indexOf(":");
-    if (i === -1) {
-      warnings.push(`${path.relative(root, file)}: suspicious frontmatter line: ${line}`);
-      continue;
-    }
-    const key = line.slice(0, i).trim();
-    const value = line
-      .slice(i + 1)
-      .trim()
-      .replace(/^["']|["']$/g, "");
-    data[key] = value;
+  let data;
+  try {
+    data = yaml.load(match[1]);
+  } catch (error) {
+    errors.push(`${path.relative(root, file)}: invalid YAML frontmatter: ${error.message}`);
+    return { text, data: null };
+  }
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    errors.push(`${path.relative(root, file)}: YAML frontmatter must be a mapping`);
+    return { text, data: null };
   }
 
   return { text, data };
@@ -165,17 +103,33 @@ function validateSkillFile(file, skillRoot) {
   const { text, data } = parseFrontmatter(file);
   const rel = path.relative(root, file);
   if (!data) return null;
-  const frontmatter = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
-
   const parent = path.basename(path.dirname(file));
   const category = path.relative(skillRoot.dir, path.dirname(file)).split(path.sep)[0];
-  const name = data.name;
-  const description = data.description;
-  const compatibility = data.compatibility;
-  const metadataVersion = frontmatter.match(/^\s+version:\s*["']?([^"'\n]+)["']?$/m)?.[1]?.trim();
+  const name = typeof data.name === "string" ? data.name : undefined;
+  const description = typeof data.description === "string" ? data.description : undefined;
+  const compatibility = typeof data.compatibility === "string" ? data.compatibility : undefined;
+  const metadata =
+    data.metadata && typeof data.metadata === "object" && !Array.isArray(data.metadata)
+      ? data.metadata
+      : {};
+  const metadataCategory = typeof metadata.category === "string" ? metadata.category : undefined;
+  const metadataVersion = typeof metadata.version === "string" ? metadata.version : undefined;
 
-  if (!name) errors.push(`${rel}: missing frontmatter name`);
-  if (!description) errors.push(`${rel}: missing frontmatter description`);
+  if (!name) errors.push(`${rel}: missing string frontmatter name`);
+  if (!description) errors.push(`${rel}: missing string frontmatter description`);
+  if (data.compatibility !== undefined && !compatibility) {
+    errors.push(`${rel}: compatibility must be a string`);
+  }
+
+  if (metadata.category !== undefined && typeof metadata.category !== "string") {
+    errors.push(`${rel}: metadata.category must be a string`);
+  }
+
+  if (metadataCategory !== undefined && metadataCategory !== category) {
+    errors.push(
+      `${rel}: metadata.category "${metadataCategory}" must match path-derived category "${category}"`,
+    );
+  }
 
   if (name && name !== parent) {
     errors.push(`${rel}: frontmatter name "${name}" must match parent folder "${parent}"`);
@@ -221,7 +175,8 @@ function validateSkillFile(file, skillRoot) {
 
   if (
     skillRoot.requireInternalMetadata &&
-    !/^\s+internal:\s*(true|"true"|'true')\s*$/m.test(frontmatter)
+    metadata.internal !== true &&
+    metadata.internal !== "true"
   ) {
     errors.push(`${rel}: incubator skills must set metadata.internal: true`);
   }
@@ -278,77 +233,62 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
     return;
   }
 
-  const text = fs.readFileSync(metadataFile, "utf8");
-  const shortDescription = text.match(/^\s+short_description:\s*"([^"]+)"\s*$/m)?.[1];
-  const defaultPrompt = text.match(/^\s+default_prompt:\s*"([^"]+)"\s*$/m)?.[1];
+  let data;
+  try {
+    data = yaml.load(fs.readFileSync(metadataFile, "utf8"));
+  } catch (error) {
+    errors.push(`${rel}: invalid YAML: ${error.message}`);
+    return;
+  }
 
-  if (!/^interface:\s*$/m.test(text)) {
-    errors.push(`${rel}: missing interface block`);
+  if (!isMapping(data)) {
+    errors.push(`${rel}: YAML document must be a mapping`);
+    return;
   }
-  if (!/^\s+display_name:\s*"[^"]+"\s*$/m.test(text)) {
-    errors.push(`${rel}: missing quoted interface.display_name`);
-  }
-  if (!shortDescription) {
-    errors.push(`${rel}: missing quoted interface.short_description`);
-  } else if (shortDescription.length < 25 || shortDescription.length > 64) {
-    errors.push(`${rel}: interface.short_description must be 25-64 characters`);
-  }
-  if (!defaultPrompt) {
-    errors.push(`${rel}: missing quoted interface.default_prompt`);
+
+  const interfaceBlock = data.interface;
+  if (!isMapping(interfaceBlock)) {
+    errors.push(`${rel}: interface must be a mapping`);
   } else {
-    if (name && !defaultPrompt.includes(`$${name}`)) {
-      errors.push(`${rel}: interface.default_prompt must mention $${name}`);
+    const displayName = interfaceBlock.display_name;
+    const shortDescription = interfaceBlock.short_description;
+    const defaultPrompt = interfaceBlock.default_prompt;
+
+    if (typeof displayName !== "string" || !displayName.trim()) {
+      errors.push(`${rel}: interface.display_name must be a non-empty string`);
     }
-
-    for (const label of requiredForeignHostControls(defaultPrompt)) {
-      errors.push(
-        `${rel}: interface.default_prompt must adapt required ${label} behavior to current execution-host controls`,
-      );
+    if (typeof shortDescription !== "string") {
+      errors.push(`${rel}: interface.short_description must be a string`);
+    } else if (shortDescription.length < 25 || shortDescription.length > 64) {
+      errors.push(`${rel}: interface.short_description must be 25-64 characters`);
+    }
+    if (typeof defaultPrompt !== "string" || !defaultPrompt.trim()) {
+      errors.push(`${rel}: interface.default_prompt must be a non-empty string`);
+    } else {
+      if (name && !defaultPrompt.includes(`$${name}`)) {
+        errors.push(`${rel}: interface.default_prompt must mention $${name}`);
+      }
+      const normalizedPrompt = defaultPrompt.replace(/\s+/g, " ");
+      for (const [label, pattern] of foreignOpenAiPromptControls) {
+        if (pattern.test(normalizedPrompt)) {
+          errors.push(`${rel}: interface.default_prompt must not require or name a ${label}`);
+        }
+      }
     }
   }
-  if (!/^policy:\s*$/m.test(text)) {
-    errors.push(`${rel}: missing policy block`);
-  }
-  if (!/^\s+allow_implicit_invocation:\s*(true|false)\s*$/m.test(text)) {
-    errors.push(`${rel}: missing policy.allow_implicit_invocation`);
-  }
-  if (!/^dependencies:\s*$/m.test(text)) {
-    errors.push(`${rel}: missing dependencies block`);
-  }
-  if (!/^\s+tools:\s*\[\]\s*$/m.test(text)) {
-    errors.push(`${rel}: dependencies.tools must be present, use [] when empty`);
-  }
-}
 
-function requiredForeignHostControls(prompt) {
-  return foreignHostControlRequirements
-    .filter(({ pattern }) => hasUnnegatedControlRequirement(prompt, pattern))
-    .map(({ label }) => label);
-}
-
-function hasUnnegatedControlRequirement(prompt, pattern) {
-  const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
-  const matcher = new RegExp(pattern.source, flags);
-
-  for (const match of prompt.matchAll(matcher)) {
-    const promptPrefix = prompt.slice(0, match.index);
-    let clauseStart = 0;
-    for (const boundary of promptPrefix.matchAll(controlClauseBoundaryPattern)) {
-      clauseStart = boundary.index + boundary[0].length;
-    }
-    const prefix = promptPrefix.slice(clauseStart);
-    if (!directControlNegationPattern.test(prefix)) return true;
+  const policy = data.policy;
+  if (!isMapping(policy)) {
+    errors.push(`${rel}: policy must be a mapping`);
+  } else if (typeof policy.allow_implicit_invocation !== "boolean") {
+    errors.push(`${rel}: policy.allow_implicit_invocation must be a boolean`);
   }
 
-  return false;
-}
-
-for (const regressionCase of promptControlRegressionCases) {
-  const actual = requiredForeignHostControls(regressionCase.prompt).length > 0;
-  if (actual !== regressionCase.expected) {
-    errors.push(
-      `OpenAI prompt-control regression failed: ${regressionCase.name} expected ${regressionCase.expected}, got ${actual}`,
-    );
+  const dependencies = data.dependencies;
+  if (!isMapping(dependencies)) {
+    errors.push(`${rel}: dependencies must be a mapping`);
+  } else if (!Array.isArray(dependencies.tools)) {
+    errors.push(`${rel}: dependencies.tools must be an array, use [] when empty`);
   }
 }
 
@@ -432,6 +372,84 @@ for (const skillRoot of skillRoots) {
   counts.set(skillRoot.label, validateSkillRoot(skillRoot));
 }
 
+const publicSkillFiles = walk(publicSkillsDir, (file) => path.basename(file) === "SKILL.md");
+const publicSkillNames = new Set(publicSkillFiles.map((file) => path.basename(path.dirname(file))));
+const portableSkillNames = publicSkillFiles
+  .filter((file) => {
+    const category = path.relative(publicSkillsDir, path.dirname(file)).split(path.sep)[0];
+    return !category.endsWith("-operations");
+  })
+  .map((file) => path.basename(path.dirname(file)))
+  .sort();
+
+function validatePortableInstallSets(text, rel) {
+  const commands = text
+    .split("\n")
+    .map((line) =>
+      line
+        .replace(/\s+#.*$/, "")
+        .trim()
+        .split(/\s+/),
+    )
+    .filter(
+      (words) =>
+        words[0] === "npx" &&
+        /^skills(?:@latest)?$/.test(words[1]) &&
+        words[2] === "add" &&
+        words[3] === "stark-ai-de/agent-skills" &&
+        words.includes("--skill"),
+    );
+
+  for (const host of ["codex", "cursor", "claude-code"]) {
+    const hasCompleteSet = commands.some((words) => {
+      const parsed = parseInstallCommandOptions(words);
+      if (!parsed?.hosts.includes(host)) return false;
+
+      return portableSkillNames.every((name) => parsed.skills.includes(name));
+    });
+
+    if (!hasCompleteSet) {
+      errors.push(
+        `${rel}: ${host} install set must include one command with every portable skill as a --skill operand: ${portableSkillNames.join(", ")}`,
+      );
+    }
+  }
+}
+
+function parseInstallCommandOptions(words) {
+  const booleanFlags = new Set(["--copy", "--global", "--yes", "-g", "-y"]);
+  const knownHosts = new Set(["claude-code", "codex", "cursor"]);
+  const parsed = { hosts: [], skills: [] };
+
+  for (let index = 4; index < words.length; ) {
+    const flag = words[index];
+    if (booleanFlags.has(flag)) {
+      index += 1;
+      continue;
+    }
+
+    const target =
+      flag === "--skill"
+        ? parsed.skills
+        : ["--agent", "-a"].includes(flag)
+          ? parsed.hosts
+          : undefined;
+    const allowedValues = flag === "--skill" ? publicSkillNames : knownHosts;
+    if (!target) return undefined;
+
+    index += 1;
+    const valueStart = index;
+    while (index < words.length && !words[index].startsWith("-")) {
+      if (!allowedValues.has(words[index])) return undefined;
+      target.push(words[index]);
+      index += 1;
+    }
+    if (index === valueStart) return undefined;
+  }
+
+  return parsed;
+}
+
 const readmePath = path.join(root, "README.md");
 if (!fs.existsSync(readmePath)) {
   errors.push("README.md missing");
@@ -449,6 +467,14 @@ if (!fs.existsSync(readmePath)) {
   if (!readme.includes("skill-evals/")) {
     warnings.push("README.md should explain the skill-evals proof root");
   }
+  validatePortableInstallSets(readme, "README.md");
+}
+
+const publishingPath = path.join(root, "docs", "publishing.md");
+if (!fs.existsSync(publishingPath)) {
+  errors.push("docs/publishing.md missing");
+} else {
+  validatePortableInstallSets(fs.readFileSync(publishingPath, "utf8"), "docs/publishing.md");
 }
 
 if (warnings.length) {

@@ -16,9 +16,9 @@ Yes
 
 ## Expected Behavior
 
-- Prefer built-in draw.io stencils or generic labeled shapes.
+- Use built-in draw.io service stencils for all three named AWS services and keep readable labels.
 - Avoid network access and remote icon fetches.
-- Keep icons editable and record whether they are generic or native stencils.
+- Keep icons editable and record their native stencil styles.
 - Validate the resulting `.drawio` file.
 
 ## Deterministic Assertions

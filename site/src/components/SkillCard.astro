@@ -2,7 +2,7 @@
 import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import type { CatalogSkill } from "../lib/skills";
-import { collectionLabel, installAgentLabel } from "../lib/skills";
+import { collectionLabel, installHostLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
@@ -13,8 +13,12 @@ interface Props {
 const { compact = false, skill } = Astro.props;
 const href =
   skill.kind === "public" ? `/skills/${skill.name}/` : `/incubator/${skill.name}/`;
-const command = skill.installCommand ?? skill.localUsageCommand;
-const installTarget = installAgentLabel(skill.installAgent);
+const defaultInstallCommand = skill.installCommands.find(
+  ({ host }) => host === skill.defaultInstallHost,
+);
+const defaultInstallHost = installHostLabel(skill.defaultInstallHost);
+const targetRuntime = skill.targetRuntime ? installHostLabel(skill.targetRuntime) : undefined;
+const contractLabel = targetRuntime ? `Target contract: ${targetRuntime}` : "Portable contract";
 ---
 
 <article
@@ -50,12 +54,16 @@ const installTarget = installAgentLabel(skill.installAgent);
   )}
   <ul class="skill-card__meta" aria-label={`${skill.name} metadata`}>
     {skill.version && <li class="skill-card__version">v{skill.version}</li>}
-    <li>Default target: {installTarget}</li>
+    <li>{contractLabel}</li>
+    <li>Install into: {defaultInstallHost}</li>
     {skill.hasOpenAiMetadata && <li>Codex metadata</li>}
     {skill.evalUrl && <li class="skill-card__proof">Eval proof</li>}
   </ul>
-  {!compact && command && (
-    <CommandBlock command={command} label={`${skill.name} ${installTarget} install command`} />
+  {!compact && defaultInstallCommand && (
+    <CommandBlock
+      command={defaultInstallCommand.command}
+      label={`${skill.name} install into ${defaultInstallHost}`}
+    />
   )}
   <div class="skill-card__links">
     <a href={withBase(href)}>View skill</a>

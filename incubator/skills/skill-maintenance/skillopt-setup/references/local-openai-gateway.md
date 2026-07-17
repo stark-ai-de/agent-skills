@@ -66,18 +66,13 @@ export SKILLOPT_JUDGE_MODEL=codex
 
 If the selected backend uses Azure/OpenAI-compatible settings, set only the required endpoint/auth variables for that backend and keep the actual token out of tracked files.
 
-## Deployment Topology
+## Ownership and Extraction
 
-The bundled gateway is for local, loopback-only use. Do not publish it through a shared route layer until an infrastructure-owned OS/container sandbox also provides process, memory, disk, and defense-in-depth filesystem isolation. Once that boundary exists, do not deploy one monolithic service for every gateway script. Use a shared route layer, such as LiteLLM or an internal route catalog, for client-facing model names, then keep separate gateway deployments per backend and trust boundary.
+Keep this loopback adapter inside `skillopt-setup`: SkillOpt is its only demonstrated workflow consumer. The agent executing this skill may be Codex, Cursor, or Claude Code; that does not require a gateway variant because the adapter backend remains `codex exec`.
 
-Recommended shape:
+Do not create Claude- or Cursor-backed copies for symmetry. Those would be different backends and need a concrete SkillOpt contract, version-pinned CLI behavior, and equivalent isolation and process-lifecycle proof.
 
-- Deploy a read-isolated Codex gateway for Codex-backed OpenAI-compatible chat.
-- Deploy separate gateway services for CatGPT, browser/oracle, OAuth, or other backends with different secrets, sandbox rules, network policy, resource limits, or failure modes.
-- A single Codex gateway deployment may serve multiple Codex model aliases or workspaces only when they share the same auth boundary, sandbox policy, resource limits, and operational owner.
-- Keep remote Codex routes blocked until the gateway has an external OS/container boundary, is probed through `/v1/chat/completions`, and is represented accurately in the selected route catalog.
-
-This skill should document and verify the Codex gateway behavior. Kubernetes workloads, LiteLLM route publication, NetworkPolicy, and secret wiring belong in the infrastructure source of truth.
+Extract a reusable gateway only after a second independent consumer exists and fail-closed filesystem, process, tool, network, and inherited-environment isolation are proven. Remote publication additionally requires an infrastructure-owned OS/container boundary; route catalogs, workloads, NetworkPolicy, and secret wiring remain in the infrastructure source of truth.
 
 ## Troubleshooting
 

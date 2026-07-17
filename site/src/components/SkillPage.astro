@@ -3,7 +3,7 @@ import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
 import type { CatalogSkill } from "../lib/skills";
-import { collectionLabel, installAgentLabel } from "../lib/skills";
+import { collectionLabel, installHostLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
 
 interface Props {
@@ -12,10 +12,27 @@ interface Props {
 
 const { skill } = Astro.props;
 const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
-const installTarget = installAgentLabel(skill.installAgent);
-const commandLabel =
-  skill.kind === "public" ? `Install for ${installTarget}` : `Local ${installTarget} test command`;
-const command = skill.installCommand ?? skill.localUsageCommand;
+const defaultInstallHost = installHostLabel(skill.defaultInstallHost);
+const targetRuntime = skill.targetRuntime ? installHostLabel(skill.targetRuntime) : undefined;
+const contractLabel = targetRuntime ? `Target contract: ${targetRuntime}` : "Portable contract";
+const supportedInstallHosts = skill.supportedInstallHosts.map(installHostLabel).join(", ");
+const hasCrossHostInstalls = skill.supportedInstallHosts.length > 1;
+const installHostLabelText = hasCrossHostInstalls
+  ? "Supported install hosts"
+  : "Supported install host";
+const installSectionTitle =
+  skill.kind === "public"
+    ? hasCrossHostInstalls
+      ? "Install hosts"
+      : "Install host"
+    : hasCrossHostInstalls
+      ? "Local test hosts"
+      : "Local test host";
+const installContext = !targetRuntime
+  ? "This portable, target-neutral contract can be installed into any supported execution host."
+  : hasCrossHostInstalls
+    ? `The ${targetRuntime} target contract stays unchanged when installed into another supported execution host.`
+    : `This ${targetRuntime} target contract currently supports installation into ${defaultInstallHost} only.`;
 ---
 
 <section class="skill-hero" data-reveal data-tracing-hero>
@@ -33,7 +50,9 @@ const command = skill.installCommand ?? skill.localUsageCommand;
     <OperationBadge label={skill.categoryLabel} tag="li" />
     {skill.version && <li>Version {skill.version}</li>}
     <li>{skill.license}</li>
-    <li>Default install target: {installTarget}</li>
+    <li>{contractLabel}</li>
+    <li>Default install host: {defaultInstallHost}</li>
+    <li>{installHostLabelText}: {supportedInstallHosts}</li>
     {skill.hasOpenAiMetadata && <li>Codex/OpenAI metadata available</li>}
   </ul>
 </section>
@@ -45,18 +64,30 @@ const command = skill.installCommand ?? skill.localUsageCommand;
       <p>{skill.sourcePath}</p>
       <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Open on GitHub</a>
     </section>
-    {
-      command && (
-        <section class="detail-panel__command">
-          <h2>{commandLabel}</h2>
-          <CommandBlock
-            command={command}
-            iconOnly
-            label={`${skill.name} ${commandLabel.toLowerCase()}`}
-          />
-        </section>
-      )
-    }
+    <section class="detail-panel__command">
+      <h2>{installSectionTitle}</h2>
+      <p>{installContext}</p>
+      {
+        skill.installCommands.map(({ command, host }) => {
+          const hostLabel = installHostLabel(host);
+          const isDefault = host === skill.defaultInstallHost;
+          const action = skill.kind === "public" ? "Install into" : "Test in";
+
+          return (
+            <div class="install-option">
+              <p>
+                <strong>{action} {hostLabel}{isDefault ? " (default)" : ""}</strong>
+              </p>
+              <CommandBlock
+                command={command}
+                iconOnly
+                label={`${skill.name} ${action.toLowerCase()} ${hostLabel}`}
+              />
+            </div>
+          );
+        })
+      }
+    </section>
     {
       skill.evalUrl && (
         <section>
@@ -90,3 +121,15 @@ const command = skill.installCommand ?? skill.localUsageCommand;
     <div class="markdown" set:html={skill.html} />
   </article>
 </div>
+
+<style>
+  .install-option {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.8rem;
+  }
+
+  .install-option p {
+    margin: 0;
+  }
+</style>

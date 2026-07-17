@@ -66,7 +66,7 @@ function loopLabel(loopCount) {
   return loopCount === 0 ? "infinite" : loopCount;
 }
 
-function result(format, width, height, frameCount, loopCount) {
+function result(format, width, height, frameCount, loopCount, details = {}) {
   return {
     format,
     width,
@@ -75,6 +75,7 @@ function result(format, width, height, frameCount, loopCount) {
     animated: frameCount > 1,
     loopCount,
     loop: loopLabel(loopCount),
+    ...details,
   };
 }
 
@@ -103,6 +104,9 @@ function inspectGif(buffer, limits) {
   let loopCount = null;
   let chunkCount = 0;
   let trailerSeen = false;
+  let pendingFrameDelay = null;
+  let graphicControlCount = 0;
+  const frameDelaysCentiseconds = [];
 
   const countChunk = (context) => {
     chunkCount += 1;
@@ -175,6 +179,8 @@ function inspectGif(buffer, limits) {
         fail("INVALID_GIF_LZW", "GIF LZW minimum code size must be between 2 and 8");
       }
       subBlocks("GIF image data");
+      frameDelaysCentiseconds.push(pendingFrameDelay ?? 0);
+      pendingFrameDelay = null;
       frameCount += 1;
       continue;
     }
@@ -198,6 +204,11 @@ function inspectGif(buffer, limits) {
       if (4 > limits.maxChunkBytes) {
         fail("CHUNK_LIMIT", "GIF graphic-control extension exceeds the chunk limit");
       }
+      if (pendingFrameDelay !== null) {
+        fail("CONFLICTING_GIF_CONTROL", "GIF frame has multiple graphic-control extensions");
+      }
+      pendingFrameDelay = buffer.readUInt16LE(offset + 2);
+      graphicControlCount += 1;
       offset += 6;
       continue;
     }
@@ -249,7 +260,14 @@ function inspectGif(buffer, limits) {
   if (!trailerSeen) fail("MISSING_GIF_TRAILER", "GIF trailer is missing");
   if (offset !== buffer.length) fail("TRAILING_DATA", "GIF contains data after its trailer");
   if (frameCount === 0) fail("MISSING_FRAMES", "GIF contains no image frames");
-  return result("gif", width, height, frameCount, loopCount);
+  if (pendingFrameDelay !== null) {
+    fail("DANGLING_GIF_CONTROL", "GIF has a graphic-control extension without a frame");
+  }
+  return result("gif", width, height, frameCount, loopCount, {
+    graphicControlCount,
+    frameDelaysCentiseconds,
+    durationCentiseconds: frameDelaysCentiseconds.reduce((total, delay) => total + delay, 0),
+  });
 }
 
 let crcTable;

@@ -3,12 +3,16 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to export PNG from a draw.io diagram and inspect whether the output is blank, clipped, or unreadable.
+Export a PNG from this draw.io diagram and inspect whether the output is blank, clipped, or unreadable.
 ```
 
 ## Should Trigger
 
 Yes
+
+## Split Family
+
+basic-export
 
 ## Fixtures
 

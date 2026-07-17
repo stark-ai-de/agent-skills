@@ -10,6 +10,10 @@ Use $drawio-diagrams to create a service flow where a transparent callout explai
 
 Yes
 
+## Split Family
+
+routing-geometry
+
 ## Expected Behavior
 
 - Treat transparent text, labels, and callouts as routing obstacles.

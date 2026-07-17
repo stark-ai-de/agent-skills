@@ -18,4 +18,5 @@ This repository contains public Agent Skills.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.
 - Do not stage files with `git add` unless the user explicitly asks.
 - Do not unstage files or otherwise change Git index state unless the user explicitly asks.
+- Create linked Git worktrees only under `<repo>/.worktrees/<name>`.
 - Run `npm run validate` before finalizing changes.

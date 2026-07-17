@@ -1,0 +1,28 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Runtime">
+    <mxGraphModel grid="1" gridSize="8" page="1" pageWidth="827" pageHeight="1169">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" value="Runtime" parent="0"/>
+        <mxCell id="notes-layer" value="Notes" parent="0" visible="0"/>
+        <mxCell id="runtime-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="160" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="private-note" value="Preserve this hidden note" style="shape=note;whiteSpace=wrap;html=1;" vertex="1" parent="notes-layer">
+          <mxGeometry x="320" y="80" width="160" height="80" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Data">
+    <mxGraphModel grid="1" gridSize="8" page="1" pageWidth="827" pageHeight="1169">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" value="Data" parent="0"/>
+        <mxCell id="data-store" value="Primary Store" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="1">
+          <mxGeometry x="96" y="96" width="120" height="96" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to create a two-page draw.io file: one page for runtime request flow and one page for data flow.
+Create a two-page draw.io file: one page for runtime request flow and one page for data flow.
 ```
 
 ## Should Trigger

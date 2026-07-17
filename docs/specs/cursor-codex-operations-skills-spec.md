@@ -7,7 +7,7 @@ status: "accepted"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-07-03"
-updated: "2026-07-06"
+updated: "2026-07-13"
 source_request: "@GitHub My codex related skills inside https://github.com/stark-ai-de/agent-skills should be made available for cursor. create a spec file how to implement it. Follow-up: consider Cursor-native skills such as cursor-spec-interviewer. Maintainer challenge: evaluate whether portable skills belong in engineering-workflows instead of duplicated runtime categories."
 ---
 
@@ -17,11 +17,18 @@ source_request: "@GitHub My codex related skills inside https://github.com/stark
 
 Make the repository's Codex-related operating workflows available to Cursor Agent users through first-class Agent Skills. Use runtime-native skill variants when the runtime name, trigger behavior, configuration steps, evidence model, or output contract should be runtime-specific; otherwise keep the skill portable, place it in the appropriate workflow category, and document runtime installation.
 
+## Cross-host clarification
+
+- The skill name and description drive discovery; no shared router or custom metadata can guarantee activation across clients.
+- Installing a target-specific skill into another host preserves its target evidence and output contract while only collaboration controls adapt.
+- Portable workflows remain single skills; runtime-specific memory/state and execution-prompt workflows remain independent skills.
+- Local CLI-to-API gateways are backend adapters, not skill routers, and stay with their owning workflow until [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md)'s extraction gate is met.
+
 ## Scope
 
 - In scope: promoted public skills originally reviewed from `skills/codex-operations/`: `codegraph-ast-grep`, `codex-memory-curator`, and `codex-spec-interviewer`.
 - In scope: creating Cursor-native public skill variants when the skill would be clearer, safer, or more discoverable as a Cursor workflow.
-- In scope: initial Cursor-native target `cursor-spec-interviewer`, because `codex-spec-interviewer` is a portable workflow but its name, compatibility text, and final execution prompt are Codex-specific.
+- In scope: initial Cursor-native target `cursor-spec-interviewer`, because `codex-spec-interviewer` shares the interview lifecycle but has a Codex-specific name, evidence model, and execution-output contract.
 - In scope: deciding whether `codegraph-ast-grep` needs a Cursor-specific variant or belongs in `skills/engineering-workflows/` as a portable engineering workflow.
 - In scope: documenting that `codex-memory-curator` remains a Codex-state skill and that any Cursor, Claude, or other runtime memory/state curator requires its own source challenge instead of a clone-by-default split.
 - In scope: Cursor installation documentation, Cursor compatibility notes, skill wording audits, eval proof for new public skills, and install smoke validation.

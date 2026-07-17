@@ -1,5 +1,8 @@
-import json
+from collections import deque
+import errno
 import fnmatch
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -7,11 +10,30 @@ import signal
 import subprocess
 import tempfile
 import time
+import urllib.parse
 from pathlib import Path
-from threading import Thread
+from threading import Lock, Thread
 
 
 JUDGE_PERMISSION_PROFILE = "skillopt_judge"
+DRAWIO_PROFILE_STYLE_KEYS = frozenset(
+    {
+        "designProfile",
+        "shape",
+        "dataRole",
+        "strokeColor",
+        "fillColor",
+        "gradientColor",
+        "gradientDirection",
+        "shadow",
+        "glass",
+        "arcSize",
+        "strokeWidth",
+        "fontColor",
+        "fontSize",
+        "profileRole",
+    }
+)
 
 
 def _toml_string(value):
@@ -132,50 +154,479 @@ def _reap_process_group(process, grace_seconds=1):
         return
     deadline = time.monotonic() + grace_seconds
     while _process_group_alive(process.pid) and time.monotonic() < deadline:
+        process.poll()
         time.sleep(0.05)
     if _process_group_alive(process.pid):
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:
             return
+        deadline = time.monotonic() + 5
+        while _process_group_alive(process.pid) and time.monotonic() < deadline:
+            process.poll()
+            time.sleep(0.05)
 
 
-def _start_process_group_reaper(process):
-    thread = Thread(
-        target=lambda: (process.wait(), _reap_process_group(process)),
-        name="skillopt-judge-process-reaper",
-        daemon=True,
+_PROMPT_ECHO_MARKER = "[redacted-prompt]"
+_PROMPT_ECHO_SEED_CHARS = 16
+_PROMPT_ECHO_MAX_UNIQUE_SEEDS = 65_536
+_PROMPT_ECHO_MAX_SPANS = 65_536
+_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES = _PROMPT_ECHO_SEED_CHARS * 4
+_MAX_STDOUT_CAPTURE_BYTES = 10 * 1024 * 1024
+_MAX_STDERR_CAPTURE_BYTES = 64 * 1024
+_CAPTURE_CHUNK_BYTES = 64 * 1024
+_OUTPUT_TRUNCATION_MARKER = "[output truncated; retained tail]"
+
+
+class _BoundedCaptureError(OSError):
+    pass
+
+
+class _BoundedByteCapture:
+    def __init__(self, limit):
+        self.limit = max(1, int(limit))
+        self._chunks = deque()
+        self._retained_bytes = 0
+        self._total_bytes = 0
+        self._discarded_tail = b""
+        self._lock = Lock()
+
+    def _remember_discarded(self, value):
+        recent = value[-_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+        self._discarded_tail = (
+            self._discarded_tail + recent
+        )[-_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+
+    def append(self, chunk):
+        value = bytes(chunk or b"")
+        if not value:
+            return
+        with self._lock:
+            self._total_bytes += len(value)
+            self._chunks.append(value)
+            self._retained_bytes += len(value)
+            while self._retained_bytes > self.limit:
+                excess = self._retained_bytes - self.limit
+                first = self._chunks[0]
+                if len(first) <= excess:
+                    removed = self._chunks.popleft()
+                    self._retained_bytes -= len(first)
+                else:
+                    removed = first[:excess]
+                    self._chunks[0] = first[excess:]
+                    self._retained_bytes -= excess
+                self._remember_discarded(removed)
+
+    @property
+    def total_bytes(self):
+        with self._lock:
+            return self._total_bytes
+
+    def snapshot(self):
+        with self._lock:
+            return b"".join(self._chunks), self._total_bytes > self.limit
+
+    def redaction_snapshot(self):
+        with self._lock:
+            return (
+                self._discarded_tail,
+                b"".join(self._chunks),
+                self._total_bytes > self.limit,
+            )
+
+
+class _BoundedProcessIO:
+    def __init__(
+        self,
+        process,
+        prompt,
+        stdout_limit=_MAX_STDOUT_CAPTURE_BYTES,
+        stderr_limit=_MAX_STDERR_CAPTURE_BYTES,
+    ):
+        self.process = process
+        self.prompt = str(prompt or "").encode("utf-8", errors="replace")
+        self.stdout = _BoundedByteCapture(stdout_limit)
+        self.stderr = _BoundedByteCapture(stderr_limit)
+        self._errors = []
+        self._error_lock = Lock()
+        self._readers = [
+            Thread(
+                target=self._read_stream,
+                args=("stdout", process.stdout, self.stdout),
+                name="skillopt-judge-stdout-drain",
+                daemon=True,
+            ),
+            Thread(
+                target=self._read_stream,
+                args=("stderr", process.stderr, self.stderr),
+                name="skillopt-judge-stderr-drain",
+                daemon=True,
+            ),
+        ]
+        self._writer = Thread(
+            target=self._write_prompt,
+            name="skillopt-judge-stdin-writer",
+            daemon=True,
+        )
+        self._threads = [*self._readers, self._writer]
+        self._started_threads = []
+
+    def _record_error(self, label, error):
+        with self._error_lock:
+            self._errors.append(f"{label}: {type(error).__name__}")
+
+    def _read_stream(self, label, stream, capture):
+        try:
+            while True:
+                chunk = stream.read(_CAPTURE_CHUNK_BYTES)
+                if not chunk:
+                    return
+                capture.append(chunk)
+        except Exception as error:
+            self._record_error(label, error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def _write_prompt(self):
+        stream = self.process.stdin
+        try:
+            view = memoryview(self.prompt)
+            while view:
+                written = stream.write(view)
+                if not written:
+                    raise BrokenPipeError("stdin closed before prompt transport completed")
+                view = view[written:]
+            stream.flush()
+        except BrokenPipeError:
+            pass
+        except OSError as error:
+            if error.errno not in {errno.EINVAL, errno.EPIPE}:
+                self._record_error("stdin", error)
+        except Exception as error:
+            self._record_error("stdin", error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def start(self):
+        for thread in self._threads:
+            try:
+                thread.start()
+            finally:
+                if thread.ident is not None and thread not in self._started_threads:
+                    self._started_threads.append(thread)
+
+    def close_unstarted_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread in self._started_threads or thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def close_stopped_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def finish(self, timeout=7):
+        deadline = time.monotonic() + max(0, timeout)
+        for thread in self._started_threads:
+            thread.join(timeout=max(0, deadline - time.monotonic()))
+        alive = [thread.name for thread in self._started_threads if thread.is_alive()]
+        if alive:
+            raise _BoundedCaptureError("bounded subprocess I/O threads did not stop")
+        with self._error_lock:
+            errors = list(self._errors)
+        if errors:
+            raise _BoundedCaptureError(
+                "bounded subprocess I/O failed: " + "; ".join(errors)
+            )
+
+
+def _close_process_pipes(process):
+    for stream in (process.stdin, process.stdout, process.stderr):
+        try:
+            stream.close()
+        except Exception:
+            pass
+
+
+def _cleanup_failed_process_io_start(process, process_io):
+    cleanup_failed = False
+    try:
+        if process_io is not None:
+            process_io.close_unstarted_streams()
+    except Exception:
+        cleanup_failed = True
+    try:
+        _reap_process_group(process, grace_seconds=0)
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            cleanup_failed = True
+    except Exception:
+        cleanup_failed = True
+    if process_io is not None:
+        try:
+            process_io.finish(timeout=1)
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+    else:
+        _close_process_pipes(process)
+    try:
+        cleanup_failed = (
+            process.poll() is None
+            or _process_group_alive(process.pid)
+            or cleanup_failed
+        )
+    except Exception:
+        cleanup_failed = True
+    return cleanup_failed
+
+
+def _start_bounded_process_io(process, prompt, **kwargs):
+    process_io = None
+    try:
+        process_io = _BoundedProcessIO(process, prompt, **kwargs)
+        process_io.start()
+        return process_io
+    except BaseException as error:
+        cleanup_failed = _cleanup_failed_process_io_start(process, process_io)
+        if not isinstance(error, Exception):
+            raise
+        if cleanup_failed:
+            raise _BoundedCaptureError(
+                "bounded subprocess I/O startup cleanup failed"
+            ) from None
+        raise _BoundedCaptureError(
+            f"bounded subprocess I/O failed to start: {type(error).__name__}"
+        ) from None
+
+
+def _render_captured_stream(capture, prompt):
+    discarded_tail, payload, truncated = capture.redaction_snapshot()
+    value = payload.decode("utf-8", errors="replace")
+    boundary_chars = _prompt_boundary_prefix_chars(
+        discarded_tail,
+        payload,
+        str(prompt or "").encode("utf-8", errors="replace"),
     )
-    thread.start()
-    return thread
+    value = _redact_prompt(value, prompt, boundary_chars=boundary_chars)
+    if truncated:
+        return f"{_OUTPUT_TRUNCATION_MARKER}\n{value}"
+    return value
 
 
-def _run_isolated_codex(command, cwd, env, timeout):
+def _prompt_boundary_prefix_chars(discarded_tail, payload, transported):
+    """Return retained leading characters proven to continue a discarded prompt echo."""
+    if not discarded_tail or not payload or len(transported) < 2:
+        return 0
+    seed_bytes = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
+    max_left_size = min(seed_bytes - 1, len(discarded_tail))
+    if max_left_size <= 0:
+        return 0
+    high = min(len(payload), _PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES)
+    matched_bytes = 0
+    for left_size in range(1, max_left_size + 1):
+        left = discarded_tail[-left_size:]
+        if left + payload[:1] not in transported:
+            continue
+        low = 1
+        candidate_high = high
+        while low < candidate_high:
+            middle = (low + candidate_high + 1) // 2
+            if left + payload[:middle] in transported:
+                low = middle
+            else:
+                candidate_high = middle - 1
+        matched_bytes = max(matched_bytes, low)
+        if matched_bytes == high:
+            break
+    return len(payload[:matched_bytes].decode("utf-8", errors="replace"))
+
+
+def _prompt_echo_spans(value, transported):
+    """Return bounded prompt-derived spans, or None to request fail-closed redaction."""
+    spans = []
+    if not value or not transported:
+        return spans
+    if value in transported:
+        return [(0, len(value))]
+    for match in re.finditer(r"[^\r\n]+", value):
+        line = match.group(0)
+        stripped = line.strip()
+        if stripped and stripped in transported:
+            offset = line.find(stripped)
+            spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+            if len(spans) > _PROMPT_ECHO_MAX_SPANS:
+                return None
+
+    seed_size = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
+    if seed_size <= 0 or len(value) < seed_size:
+        return spans
+
+    prompt_seeds = set()
+    for index in range(len(transported) - seed_size + 1):
+        prompt_seeds.add(transported[index : index + seed_size])
+        if len(prompt_seeds) > _PROMPT_ECHO_MAX_UNIQUE_SEEDS:
+            return None
+
+    seed_spans = []
+    last_seed_start = len(value) - seed_size
+    for index in range(last_seed_start + 1):
+        if value[index : index + seed_size] not in prompt_seeds:
+            continue
+        end = index + seed_size
+        if seed_spans and index <= seed_spans[-1][1]:
+            seed_spans[-1] = (
+                seed_spans[-1][0],
+                max(seed_spans[-1][1], end),
+            )
+        else:
+            seed_spans.append((index, end))
+            if len(spans) + len(seed_spans) > _PROMPT_ECHO_MAX_SPANS:
+                return None
+    spans.extend(seed_spans)
+    return spans
+
+
+def _redact_prompt(text, prompt, boundary_chars=0):
+    value = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
+    spans = _prompt_echo_spans(value, transported)
+    if spans is None:
+        return _PROMPT_ECHO_MARKER if value else ""
+    guard_end = min(len(value), max(0, int(boundary_chars)))
+    if guard_end:
+        if len(spans) >= _PROMPT_ECHO_MAX_SPANS:
+            return _PROMPT_ECHO_MARKER
+        spans.append((0, guard_end))
+    if not spans:
+        return value
+    spans.sort()
+    merged = []
+    for start, end in spans:
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    parts = []
+    cursor = 0
+    for start, end in merged:
+        parts.extend((value[cursor:start], _PROMPT_ECHO_MARKER))
+        cursor = end
+    parts.append(value[cursor:])
+    return "".join(parts)
+
+
+def _redact_timeout_stream(text):
+    return _PROMPT_ECHO_MARKER if (
+        text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
+    ) else ""
+
+
+def _run_isolated_codex(command, prompt, cwd, env, timeout):
     process = subprocess.Popen(
         command,
         cwd=cwd,
         env=env,
-        stdin=subprocess.DEVNULL,
-        text=True,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         start_new_session=True,
     )
-    reaper = _start_process_group_reaper(process)
+    process_io = _start_bounded_process_io(process, prompt)
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
+        process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        _reap_process_group(process)
+        cleanup_failed = False
         try:
-            process.communicate(timeout=1)
-        except subprocess.TimeoutExpired:
-            pass
-        raise
-    finally:
-        reaper.join(timeout=7)
-        if reaper.is_alive() or _process_group_alive(process.pid):
             _reap_process_group(process)
-    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+        except Exception:
+            cleanup_failed = True
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            cleanup_failed = True
+        try:
+            process_io.finish()
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+        try:
+            cleanup_failed = (
+                process.poll() is None
+                or _process_group_alive(process.pid)
+                or cleanup_failed
+            )
+        except Exception:
+            cleanup_failed = True
+        if cleanup_failed:
+            raise _BoundedCaptureError(
+                "bounded subprocess cleanup failed after timeout"
+            ) from None
+        error = subprocess.TimeoutExpired(command, timeout)
+        error.stdout = (
+            _PROMPT_ECHO_MARKER
+            if process_io.stdout.total_bytes
+            else ""
+        )
+        error.stderr = (
+            _PROMPT_ECHO_MARKER
+            if process_io.stderr.total_bytes
+            else ""
+        )
+        raise error
+    cleanup_failed = False
+    try:
+        _reap_process_group(process)
+    except Exception:
+        cleanup_failed = True
+    try:
+        group_alive = _process_group_alive(process.pid)
+    except Exception:
+        group_alive = True
+    capture_error = None
+    try:
+        process_io.finish()
+    except _BoundedCaptureError as error:
+        capture_error = error
+    finally:
+        process_io.close_stopped_streams()
+    if cleanup_failed or group_alive:
+        raise _BoundedCaptureError("bounded subprocess cleanup failed") from None
+    if capture_error is not None:
+        raise capture_error
+    return subprocess.CompletedProcess(
+        command,
+        process.returncode,
+        _render_captured_stream(process_io.stdout, prompt),
+        _render_captured_stream(process_io.stderr, prompt),
+    )
 
 
 def _short(text, limit=1000):
@@ -436,6 +887,477 @@ def _match_visual_assertion(artifacts, assertion):
             ),
         }
 
+    if kind == "svg_has_flow_animation":
+        if parsed["parts"]:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "svg_has_flow_animation accepts only an artifact glob",
+            }
+        passing = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") == "svg"
+            and artifact.get("valid")
+            and artifact.get("flow_animation")
+            and int(artifact.get("external_references") or 0) == 0
+            and int(artifact.get("unsupported_images") or 0) == 0
+        ]
+        return {
+            "text": raw,
+            "passed": bool(passing),
+            "evidence": (
+                f"{passing[0].get('path')} has active connector flow animation"
+                if passing
+                else "no SVG has active connector flow animation"
+            ),
+        }
+
+    if kind == "svg_self_contained_images":
+        passing = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") == "svg"
+            and artifact.get("valid")
+            and int(artifact.get("embedded_svg_images") or 0) > 0
+            and int(artifact.get("external_references") or 0) == 0
+            and int(artifact.get("unsupported_images") or 0) == 0
+        ]
+        return {
+            "text": raw,
+            "passed": bool(passing),
+            "evidence": (
+                f"{passing[0].get('path')} has self-contained embedded SVG images"
+                if passing
+                else "no SVG has self-contained embedded SVG images"
+            ),
+        }
+
+    if kind == "drawio_valid":
+        try:
+            options = _parse_visual_options(parsed["parts"])
+        except ValueError as error:
+            return {"text": raw, "passed": False, "evidence": str(error)}
+        allowed = {
+            "animation_on",
+            "animation_off",
+            "adaptive_colors",
+            "min_pages",
+            "min_native_stencils",
+            "self_contained_svg",
+            "uncompressed",
+        }
+        unsupported = sorted(set(options) - allowed)
+        if unsupported:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": f"drawio_valid does not support option {unsupported[0]}",
+            }
+        if options.get("animation_on") and options.get("animation_off"):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid cannot require animation_on and animation_off together",
+            }
+        for name in (
+            "animation_on",
+            "animation_off",
+            "adaptive_colors",
+            "self_contained_svg",
+            "uncompressed",
+        ):
+            if name in options and options[name] != 1:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": f"drawio_valid option {name} must equal 1",
+                }
+        if "min_pages" in options and options["min_pages"] < 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid option min_pages must be positive",
+            }
+        if "min_native_stencils" in options and options["min_native_stencils"] < 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid option min_native_stencils must be positive",
+            }
+        if "min_native_stencils" in options and options.get("uncompressed") != 1:
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": "drawio_valid min_native_stencils requires uncompressed=1",
+            }
+
+        invalid = []
+        for artifact in matches:
+            if artifact.get("kind") != "drawio" or not artifact.get("valid"):
+                invalid.append(artifact)
+                continue
+            if int(artifact.get("page_count") or 0) < int(options.get("min_pages") or 1):
+                invalid.append(artifact)
+                continue
+            if int(artifact.get("native_stencil_count") or 0) < int(
+                options.get("min_native_stencils") or 0
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("adaptive_colors") and (
+                artifact.get("adaptive_colors") is not True
+                or not artifact.get("page_graphs")
+                or any(
+                    page.get("adaptive_colors") is not True
+                    for page in artifact.get("page_graphs") or []
+                )
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("animation_on") and (
+                not artifact.get("animation_on")
+                or int(artifact.get("directed_flow_edges") or 0) < 1
+                or int(artifact.get("animated_edges") or 0) < 1
+            ):
+                invalid.append(artifact)
+                continue
+            if options.get("animation_off") and not artifact.get("animation_off"):
+                invalid.append(artifact)
+                continue
+            if options.get("self_contained_svg") and not artifact.get("self_contained_svg"):
+                invalid.append(artifact)
+                continue
+            if options.get("uncompressed") and not artifact.get("uncompressed"):
+                invalid.append(artifact)
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts passed bounded validation"
+                if not invalid
+                else "one or more draw.io artifacts failed validation or required options"
+            ),
+        }
+
+    if kind == "drawio_embeds_svg_sha256":
+        parts = parsed["parts"]
+        if (
+            len(parts) not in (1, 2)
+            or re.fullmatch(r"[0-9a-f]{64}", parts[0]) is None
+            or (
+                len(parts) == 2
+                and re.fullmatch(r"cell=[A-Za-z0-9_.:-]{1,128}", parts[1]) is None
+            )
+        ):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": (
+                    "drawio_embeds_svg_sha256 requires one lowercase SHA-256 digest "
+                    "and optional cell=<stable-id>"
+                ),
+            }
+        expected = parts[0]
+        cell_id = parts[1][5:] if len(parts) == 2 else None
+        expected_cell_digest = (
+            hashlib.sha256(f"{cell_id}\0{expected}".encode("utf-8")).hexdigest()
+            if cell_id
+            else None
+        )
+        invalid = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") != "drawio"
+            or not artifact.get("valid")
+            or not isinstance(artifact.get("embedded_svg_sha256s"), list)
+            or expected not in artifact["embedded_svg_sha256s"]
+            or (
+                expected_cell_digest is not None
+                and (
+                    not isinstance(artifact.get("embedded_svg_cell_sha256s"), list)
+                    or expected_cell_digest not in artifact["embedded_svg_cell_sha256s"]
+                )
+            )
+        ]
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts embed the expected SVG digest"
+                if not invalid
+                else "one or more draw.io artifacts lack the expected embedded SVG digest"
+            ),
+        }
+
+    if kind == "drawio_graph":
+        options = {}
+        for part in parsed["parts"]:
+            match = re.fullmatch(
+                r"(ids|native_ids|edges|not_edges|edge_roles|profile_styles|links|page)=(.+)",
+                part,
+            )
+            if match is None or match.group(1) in options:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": f"drawio_graph has invalid or repeated option {part}",
+                }
+            options[match.group(1)] = match.group(2)
+        if not options or not any(
+            name in options
+            for name in (
+                "ids",
+                "native_ids",
+                "edges",
+                "not_edges",
+                "edge_roles",
+                "profile_styles",
+                "links",
+            )
+        ):
+            return {
+                "text": raw,
+                "passed": False,
+                "evidence": (
+                    "drawio_graph requires ids=..., native_ids=..., edges=..., not_edges=..., "
+                    "edge_roles=..., profile_styles=..., or links=..."
+                ),
+            }
+
+        identifiers = options.get("ids", "").split(",") if "ids" in options else []
+        native_identifiers = (
+            options.get("native_ids", "").split(",") if "native_ids" in options else []
+        )
+        raw_edges = options.get("edges", "").split(",") if "edges" in options else []
+        raw_not_edges = options.get("not_edges", "").split(",") if "not_edges" in options else []
+        raw_edge_roles = (
+            options.get("edge_roles", "").split(",") if "edge_roles" in options else []
+        )
+        raw_profile_styles = (
+            options.get("profile_styles", "").split(",")
+            if "profile_styles" in options
+            else []
+        )
+        links = options.get("links", "").split(",") if "links" in options else []
+        if any(
+            len(values) > 128
+            for values in (
+                identifiers,
+                native_identifiers,
+                raw_edges,
+                raw_not_edges,
+                raw_edge_roles,
+                raw_profile_styles,
+                links,
+            )
+        ):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph exceeds 128 entries"}
+        identifier_pattern = re.compile(r"[A-Za-z0-9_.:-]{1,128}")
+        edges = []
+        not_edges = []
+        edge_roles = []
+        profile_styles = []
+        if any(
+            identifier_pattern.fullmatch(identifier) is None
+            for identifier in (*identifiers, *native_identifiers)
+        ):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid ID"}
+        for raw_values, target in ((raw_edges, edges), (raw_not_edges, not_edges)):
+            for edge in raw_values:
+                match = re.fullmatch(r"([^>]+)>([^>]+)", edge)
+                if match is None or any(
+                    identifier_pattern.fullmatch(identifier) is None for identifier in match.groups()
+                ):
+                    return {
+                        "text": raw,
+                        "passed": False,
+                        "evidence": "drawio_graph has an invalid directed edge pair",
+                    }
+                target.append(match.groups())
+        for edge_role in raw_edge_roles:
+            match = re.fullmatch(r"(.+):([a-z][a-z0-9_-]{0,63})", edge_role)
+            if match is None or identifier_pattern.fullmatch(match.group(1)) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid edge role mapping",
+                }
+            edge_roles.append(match.groups())
+        encoded_component_pattern = re.compile(
+            r"(?:[A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+"
+        )
+        style_key_pattern = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,63}")
+        for raw_profile_style in raw_profile_styles:
+            parts = raw_profile_style.split(":")
+            if (
+                len(raw_profile_style) > 8192
+                or len(parts) != 3
+                or any(encoded_component_pattern.fullmatch(part) is None for part in parts)
+            ):
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style mapping",
+                }
+            try:
+                cell_id, style_key, style_value = (
+                    urllib.parse.unquote(part, encoding="utf-8", errors="strict")
+                    for part in parts
+                )
+            except UnicodeDecodeError:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style mapping",
+                }
+            contains_control = any(
+                ord(char) < 32 or 127 <= ord(char) <= 159
+                for value in (cell_id, style_key, style_value)
+                for char in value
+            )
+            if identifier_pattern.fullmatch(cell_id) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style ID",
+                }
+            if style_key_pattern.fullmatch(style_key) is None:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style key",
+                }
+            if style_key not in DRAWIO_PROFILE_STYLE_KEYS:
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an unsupported profile style key",
+                }
+            if (
+                not style_value
+                or len(style_value) > 2048
+                or contains_control
+            ):
+                return {
+                    "text": raw,
+                    "passed": False,
+                    "evidence": "drawio_graph has an invalid profile style value",
+                }
+            profile_styles.append((cell_id, style_key, style_value))
+        if any(len(link) > 2048 or re.fullmatch(r"https?://[^\s,]+", link) is None for link in links):
+            return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid link"}
+        page_name = None
+        if "page" in options:
+            encoded_page = options["page"]
+            if (
+                len(encoded_page) > 384
+                or re.fullmatch(r"(?:[A-Za-z0-9_.:-]|%[0-9A-Fa-f]{2})+", encoded_page)
+                is None
+            ):
+                return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid page"}
+            page_name = urllib.parse.unquote(encoded_page)
+            if not page_name or len(page_name) > 128 or any(ord(char) < 32 for char in page_name):
+                return {"text": raw, "passed": False, "evidence": "drawio_graph has an invalid page"}
+
+        expected_ids = {
+            hashlib.sha256(identifier.encode("utf-8")).hexdigest()
+            for identifier in identifiers
+        }
+        expected_native_ids = {
+            hashlib.sha256(identifier.encode("utf-8")).hexdigest()
+            for identifier in native_identifiers
+        }
+        expected_edges = {
+            hashlib.sha256(f"{source}\0{target}".encode("utf-8")).hexdigest()
+            for source, target in edges
+        }
+        forbidden_edges = {
+            hashlib.sha256(f"{source}\0{target}".encode("utf-8")).hexdigest()
+            for source, target in not_edges
+        }
+        expected_links = {hashlib.sha256(link.encode("utf-8")).hexdigest() for link in links}
+        expected_edge_roles = {
+            hashlib.sha256(f"{edge_id}\0{role}".encode("utf-8")).hexdigest()
+            for edge_id, role in edge_roles
+        }
+        expected_profile_styles = {
+            hashlib.sha256(f"{cell_id}\0{key}\0{value}".encode("utf-8")).hexdigest()
+            for cell_id, key, value in profile_styles
+        }
+        expected_page = (
+            hashlib.sha256(page_name.encode("utf-8")).hexdigest() if page_name is not None else None
+        )
+        invalid = []
+        for artifact in matches:
+            graph = artifact
+            if expected_page is not None:
+                graph = next(
+                    (
+                        page
+                        for page in artifact.get("page_graphs") or []
+                        if page.get("page_name_sha256") == expected_page
+                    ),
+                    None,
+                )
+            id_hashes = set((graph or {}).get("cell_id_sha256s") or [])
+            native_id_hashes = set((graph or {}).get("native_stencil_cell_id_sha256s") or [])
+            edge_hashes = set((graph or {}).get("directed_edge_sha256s") or [])
+            edge_role_hashes = set((graph or {}).get("edge_role_sha256s") or [])
+            if expected_page is not None:
+                profile_styles_satisfied = expected_profile_styles.issubset(
+                    set((graph or {}).get("profile_style_sha256s") or [])
+                )
+            else:
+                profile_styles_satisfied = not expected_profile_styles or any(
+                    expected_profile_styles.issubset(
+                        set(page.get("profile_style_sha256s") or [])
+                    )
+                    for page in artifact.get("page_graphs") or []
+                )
+            link_hashes = set((graph or {}).get("link_sha256s") or [])
+            if (
+                artifact.get("kind") != "drawio"
+                or not artifact.get("valid")
+                or graph is None
+                or not expected_ids.issubset(id_hashes)
+                or not expected_native_ids.issubset(native_id_hashes)
+                or not expected_edges.issubset(edge_hashes)
+                or bool(forbidden_edges & edge_hashes)
+                or not expected_edge_roles.issubset(edge_role_hashes)
+                or not profile_styles_satisfied
+                or not expected_links.issubset(link_hashes)
+            ):
+                invalid.append(artifact)
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts contain the required graph invariants"
+                if not invalid
+                else "one or more draw.io artifacts lack required graph invariants"
+            ),
+        }
+
+    if kind == "drawio_self_contained_svg":
+        invalid = [
+            artifact
+            for artifact in matches
+            if artifact.get("kind") != "drawio"
+            or not artifact.get("valid")
+            or not artifact.get("uncompressed")
+            or not artifact.get("self_contained_svg")
+        ]
+        return {
+            "text": raw,
+            "passed": not invalid,
+            "evidence": (
+                "all matching draw.io artifacts contain validated embedded SVG images"
+                if not invalid
+                else "one or more draw.io artifacts are invalid, compressed, or not self-contained"
+            ),
+        }
+
     return {"text": raw, "passed": False, "evidence": f"unsupported visual assertion kind {kind!r}"}
 
 
@@ -656,10 +1578,12 @@ class AgentSkillsEvaluator:
                 command.extend(["--model", self.codex_model])
             if self.codex_profile:
                 command.extend(["--profile", self.codex_profile])
-            command.append(self._judge_prompt(case, response, expected))
+            prompt = self._judge_prompt(case, response, expected)
+            command.append("-")
             try:
                 completed = _run_isolated_codex(
                     command,
+                    prompt,
                     tmp,
                     process_env,
                     self.codex_timeout,

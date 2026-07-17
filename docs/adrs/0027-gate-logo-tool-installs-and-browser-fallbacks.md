@@ -1,33 +1,33 @@
-# ADR-0027: Gate logo tool installs and browser fallbacks
+# ADR-0027: Reuse logo export mechanics and gate tool installs
 
 Status: Accepted
 Date: 2026-07-13
 Owner: stark-ai-de
-Gist: Ask before installing the smallest missing logo toolset and reuse configured browsers before downloading another one.
+Gist: Keep export mechanics portable, recipes repository-owned, and every missing-tool installation approval-gated.
 
 ## Decision
 
-We will make `animated-readme-logo` request explicit approval for the smallest missing exporter or browser installation, prefer `librsvg` plus headless FFmpeg for raster delivery, and exhaust configured Chrome or Chromium paths and `agent-browser` before offering a Chrome-for-Testing download.
+Ship one dependency-free Node exporter in `animated-readme-logo`. It consumes a trusted, root-bounded repository recipe, uses `librsvg` and headless FFmpeg, validates staged outputs before replacement, and reuses the bundled inspector. Brand behavior stays in the target repository. Missing tool installations require explicit approval; browser preview reuses configured browsers first.
 
 ## Why
 
-- A validated SVG and motion plan do not prove that requested raster files can be built.
-- Silent package installation violates the existing side-effect boundary.
-- Browser preview and export are separate capabilities.
-- Reusing a managed browser avoids duplicate downloads and platform-specific executable assumptions.
+- Duplicated product-level export plumbing drifts.
+- SVG readiness does not prove raster-export readiness.
+- Silent installation violates the side-effect boundary.
 
 ## Options
 
-- Chosen: capability preflight, itemized approval, minimal install, verification, and fallback ladder.
+- Rejected: moving complete product generators into the skill, because brand behavior is not reusable.
 - Rejected: automatic installation, because it changes local state without consent.
-- Rejected: Playwright-only preview, because its bundled browser may be absent while another compatible browser exists.
 
 ## Consequences
 
-- Good: missing tools become an actionable checkpoint instead of an ambiguous blocker.
-- Tradeoff: export pauses while approval is pending.
+- Good: repositories share deterministic mechanics without sharing identity recipes.
+- Tradeoff: recipes are trusted executable code; `--check` cannot sandbox them.
+- Tradeoff: export pauses while tool approval is pending.
 - Risk: package names vary; inspect the active package manager before proposing commands.
 
 ## Follow-up
 
 - Keep provider approval and local-tool installation approval distinct in reports.
+- Add formats only when their deterministic encoding and inspection contracts are tested.

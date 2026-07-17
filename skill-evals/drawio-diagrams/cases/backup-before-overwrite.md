@@ -10,6 +10,10 @@ Use $drawio-diagrams to update an existing production architecture.drawio in pla
 
 Yes
 
+## Split Family
+
+basic-export
+
 ## Fixtures
 
 - skills/engineering-workflows/drawio-diagrams/references/examples/example-clean.drawio

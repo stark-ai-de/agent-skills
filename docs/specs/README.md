@@ -9,7 +9,7 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 ## Tracked Specs
 
 - [`animated-readme-logo-provider-routing-and-promotion-spec.md`](animated-readme-logo-provider-routing-and-promotion-spec.md) - portable provider routing, strict asset validation, and public promotion for `animated-readme-logo`.
-- [`animated-readme-logo-export-toolchain-fallback-spec.md`](animated-readme-logo-export-toolchain-fallback-spec.md) - approval-gated exporter installation and configured-browser fallback routing for `animated-readme-logo`.
+- [`animated-readme-logo-export-toolchain-fallback-spec.md`](animated-readme-logo-export-toolchain-fallback-spec.md) - reusable recipe-driven raster export, approval-gated tool installation, and configured-browser fallback routing for `animated-readme-logo`.
 - [`architecture-compass-oxc-tooling-policy-spec.md`](architecture-compass-oxc-tooling-policy-spec.md) - Oxc formatting and linting policy for Architecture Compass guidance.
 - [`architecture-compass-portable-plan-routing-spec.md`](architecture-compass-portable-plan-routing-spec.md) - conditional portable planning and execution lifecycle for Architecture Compass.
 - [`cursor-codex-operations-skills-spec.md`](cursor-codex-operations-skills-spec.md) - Cursor-native support and runtime category boundaries.

@@ -1,6 +1,6 @@
 # animated-readme-logo Eval Proof
 
-This folder contains self-contained routing and safety cases for `animated-readme-logo` v0.3.0. Historical v0.2.0 promotion proofs remain under `runs/`.
+This folder contains self-contained routing and safety cases for `animated-readme-logo` v0.4.0. Historical v0.2.0 promotion proofs remain under `runs/`.
 
 ## What the set proves
 
@@ -11,6 +11,7 @@ This folder contains self-contained routing and safety cases for `animated-readm
 - Equivalent direct local SVG fallback and optional draw.io assistance only when materially useful.
 - Strict SVG readiness, deterministic motion, capability-gated export, and honest status reporting.
 - Explicit approval before minimal exporter installation and configured-browser fallback before any browser download.
+- Reusable export mechanics stay in the skill while trusted repository recipes retain brand behavior.
 - Root-bounded README audits that reject absolute, UNC, traversal, and symlink escapes.
 - One portable workflow without agent-specific commands or forks.
 

@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams to repair a .drawio file that has duplicate IDs, a missing root layer, and an edge without relative geometry.
+Repair this `.drawio` file, which has duplicate IDs, a missing root layer, and an edge without relative geometry.
 ```
 
 ## Should Trigger

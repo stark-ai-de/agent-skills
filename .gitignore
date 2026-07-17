@@ -1,6 +1,7 @@
 node_modules
 __pycache__/
 .agents/
+/.worktrees/
 .claude/
 .codegraph/
 skills-lock.json

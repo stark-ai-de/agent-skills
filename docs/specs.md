@@ -4,7 +4,7 @@ Implementation specs are saved planning artifacts that guide coding work.
 
 Specs are working contracts, not durable architecture policy. Put long-lived repo, runtime, validation, publishing, security, or ownership decisions in [`docs/adrs/`](adrs/README.md), then link the ADR from the spec. See [`docs/adrs.md`](adrs.md) for ADR policy and the ADR index.
 
-This public catalog keeps private, sensitive, exploratory, or repo-creation drafts in `docs/specs/do-not-publish/`, which is ignored by git except for its `.gitkeep`. Track publishable specs under `docs/specs/` only after the maintainer explicitly confirms they are intended for public release and contain no secrets, customer data, private repo paths, or internal hostnames.
+This public catalog keeps private, sensitive, exploratory, or repo-creation drafts in `docs/specs/do-not-publish/`, which is ignored by git except for its `.gitkeep`. Track publishable specs under `docs/specs/` only after the maintainer explicitly confirms they are intended for public release and contain no secrets, customer data, private repo paths, internal hostnames, repository-specific provenance, or named third-party comparison or inspiration analysis. [ADR-0030](adrs/0030-separate-public-contracts-from-private-provenance.md) defines the public-contract and private-provenance boundary. An official public provider repository is part of the public contract, not private maintainer provenance, when its exact source, schema, setup, probe, dependency, or license information is required to use or verify a public function.
 
 ## Persistence
 
@@ -17,8 +17,10 @@ This public catalog keeps private, sensitive, exploratory, or repo-creation draf
 
 ## Spec Content
 
-- Include scope, non-goals, acceptance criteria, validation commands, source challenge notes, ADR gate result, user verification, risks, and done-when criteria.
+- Include scope, non-goals, acceptance criteria, validation commands, a publishable source-challenge summary, ADR gate result, user verification, risks, and done-when criteria.
 - Link to ADRs for durable decisions instead of copying ADR rationale into the spec.
+- Keep exact official sources, schemas, setup and probe instructions, provider and dependency details, and license information public when the owning contract requires them.
+- Keep non-public maintainer repositories and paths, private reference mappings, detailed source challenge notes, named comparison or inspiration targets, and identifying raw artifacts in ignored local provenance artifacts.
 - Keep obsolete specs only when they are useful historical context; otherwise supersede or archive them intentionally.
 
 ## Filenames

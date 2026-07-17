@@ -7,7 +7,7 @@ metadata:
   author: stark-ai-de
   category: skill-maintenance
   internal: true
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # SkillOpt Setup

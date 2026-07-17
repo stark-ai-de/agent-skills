@@ -9,11 +9,7 @@ import { fileURLToPath } from "node:url";
 const root = process.cwd();
 const scriptPath = fileURLToPath(import.meta.url);
 const skillRoot = path.resolve(path.dirname(scriptPath), "..");
-const allowedModes = new Set([
-  "native-provider",
-  "hybrid-codex-target",
-  "codex-cli-all",
-]);
+const allowedModes = new Set(["native-provider", "hybrid-codex-target", "codex-cli-all"]);
 const runProfiles = new Set(["official-parity", "exploratory"]);
 const pythonManagers = new Set(["auto", "uv", "local"]);
 const EXPLORATORY_MIN = { positive: 10, val: 3, test: 3 };
@@ -24,11 +20,7 @@ const SAFE_MODEL_ENV_PLACEHOLDERS = [
   "SKILLOPT_JUDGE_MODEL",
   "SKILLOPT_REFLECTION_MODEL",
 ];
-const OPENAI_COMPATIBLE_AUTH_MODES = new Set([
-  "openai_compatible",
-  "compat",
-  "openai",
-]);
+const OPENAI_COMPATIBLE_AUTH_MODES = new Set(["openai_compatible", "compat", "openai"]);
 const TOKENLESS_AZURE_AUTH_MODES = new Set(["azure_cli", "managed_identity"]);
 const REQUIRED_SPLIT_ITEM_FIELDS = new Set([
   "id",
@@ -38,16 +30,17 @@ const REQUIRED_SPLIT_ITEM_FIELDS = new Set([
   "expected_behavior",
   "rubric_path",
   "fixtures",
+  "split_family",
+  "split_group",
+  "expected_artifacts",
+  "deterministic_assertions",
   "visual_assertions",
   "tags",
   "should_trigger",
   "workspace_policy",
   "source_hash",
 ]);
-const SUPPORTED_WORKSPACE_POLICIES = new Set([
-  "text-only",
-  "isolated-artifact-write",
-]);
+const SUPPORTED_WORKSPACE_POLICIES = new Set(["text-only", "isolated-artifact-write"]);
 const PYTHON_PATCH_AST_PROBE = String.raw`
 import ast
 import json
@@ -285,8 +278,7 @@ function parseArgs(argv) {
   if (!pythonManagers.has(args.pythonManager))
     fail(`Unsupported python manager: ${args.pythonManager}`);
   args.runProfile ||= defaultRunProfile(args.mode);
-  if (!runProfiles.has(args.runProfile))
-    fail(`Unsupported run profile: ${args.runProfile}`);
+  if (!runProfiles.has(args.runProfile)) fail(`Unsupported run profile: ${args.runProfile}`);
   return args;
 }
 
@@ -354,18 +346,8 @@ function resolveUvCommand() {
   const home = process.env.HOME || process.env.USERPROFILE;
   const candidates = home
     ? [
-        path.join(
-          home,
-          ".local",
-          "bin",
-          process.platform === "win32" ? "uv.exe" : "uv",
-        ),
-        path.join(
-          home,
-          ".cargo",
-          "bin",
-          process.platform === "win32" ? "uv.exe" : "uv",
-        ),
+        path.join(home, ".local", "bin", process.platform === "win32" ? "uv.exe" : "uv"),
+        path.join(home, ".cargo", "bin", process.platform === "win32" ? "uv.exe" : "uv"),
       ]
     : [];
   return candidates.find((candidate) => fs.existsSync(candidate)) || null;
@@ -410,18 +392,12 @@ function walk(dir, predicate) {
 function resolveSkill(skill) {
   if (!skill) return null;
   const direct = path.resolve(root, skill);
-  if (fs.existsSync(direct) && path.basename(direct) === "SKILL.md")
-    return direct;
-  if (fs.existsSync(path.join(direct, "SKILL.md")))
-    return path.join(direct, "SKILL.md");
+  if (fs.existsSync(direct) && path.basename(direct) === "SKILL.md") return direct;
+  if (fs.existsSync(path.join(direct, "SKILL.md"))) return path.join(direct, "SKILL.md");
 
-  const matches = walk(
-    root,
-    (file) => path.basename(file) === "SKILL.md",
-  ).filter((file) => {
+  const matches = walk(root, (file) => path.basename(file) === "SKILL.md").filter((file) => {
     const rel = path.relative(root, file).replaceAll("\\", "/");
-    if (!rel.startsWith("skills/") && !rel.startsWith("incubator/skills/"))
-      return false;
+    if (!rel.startsWith("skills/") && !rel.startsWith("incubator/skills/")) return false;
     return path.basename(path.dirname(file)) === skill;
   });
   return matches[0] || null;
@@ -466,9 +442,7 @@ function providerPresence() {
     "SKILLOPT_TARGET_MODEL",
     "SKILLOPT_JUDGE_MODEL",
   ];
-  return Object.fromEntries(
-    names.map((name) => [name, Boolean(process.env[name])]),
-  );
+  return Object.fromEntries(names.map((name) => [name, Boolean(process.env[name])]));
 }
 
 function readJsonArray(file) {
@@ -504,10 +478,26 @@ function section(text, heading) {
 }
 
 function bullets(text) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.match(/^\s*[-*]\s+(.+)$/)?.[1]?.trim())
-    .filter(Boolean);
+  const items = [];
+  let current = null;
+  for (const line of text.split(/\r?\n/)) {
+    const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+    if (bullet) {
+      if (current) items.push(current);
+      current = bullet[1].trim();
+      continue;
+    }
+    if (current && /^\s+\S/.test(line)) {
+      current = `${current} ${line.trim()}`;
+      continue;
+    }
+    if (current) {
+      items.push(current);
+      current = null;
+    }
+  }
+  if (current) items.push(current);
+  return items;
 }
 
 function isNoneBullet(value) {
@@ -535,6 +525,65 @@ function shouldTrigger(text) {
   return value !== "no" && value !== "false";
 }
 
+function canonicalFixturePath(value) {
+  if (
+    typeof value !== "string" ||
+    !value ||
+    value !== value.trim() ||
+    value.includes("\\") ||
+    value.includes("|") ||
+    /[\0-\x1f\x7f]/.test(value) ||
+    /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value) ||
+    path.posix.isAbsolute(value)
+  ) {
+    return null;
+  }
+  const normalized = path.posix.normalize(value);
+  if (normalized === "." || normalized === ".." || normalized.startsWith("../")) return null;
+  return normalized;
+}
+
+function canonicalFixturePaths(text) {
+  const fixtures = [...bullets(section(text, "Fixture")), ...bullets(section(text, "Fixtures"))];
+  const normalized = fixtures.map(canonicalFixturePath);
+  return normalized.every(Boolean) ? [...new Set(normalized)].sort() : null;
+}
+
+function expectedSplitFamily(text, caseFile, fixtures) {
+  const explicit = section(text, "Split Family").trim();
+  if (explicit) return explicit;
+  return fixtures.length
+    ? `fixture:${fixtures.join("|")}`
+    : `case:${path.basename(caseFile, ".md")}`;
+}
+
+function expectedArtifactPaths(text, skillName) {
+  const explicit = [
+    ...bullets(section(text, "Expected Artifact")),
+    ...bullets(section(text, "Expected Artifacts")),
+  ];
+  if (explicit.length) return explicit;
+  return walk(path.join(root, "skill-evals", skillName, "expected"), (file) =>
+    fs.statSync(file).isFile(),
+  )
+    .map((file) => path.relative(root, file).replaceAll("\\", "/"))
+    .sort();
+}
+
+function validSplitFamily(value) {
+  if (typeof value !== "string" || value !== value.trim()) return false;
+  if (/^[a-z0-9][a-z0-9-]{0,79}$/.test(value)) return true;
+  if (/^case:[a-z0-9][a-z0-9-]{0,127}$/.test(value)) return true;
+  if (!value.startsWith("fixture:")) return false;
+  const fixtures = value.slice("fixture:".length).split("|");
+  const canonical = fixtures.map(canonicalFixturePath);
+  return (
+    fixtures.length > 0 &&
+    canonical.every(Boolean) &&
+    fixtures.join("|") === [...new Set(canonical)].sort().join("|")
+  );
+}
+
 function evalCaseCounts(evalDir) {
   const counts = {
     positive: 0,
@@ -546,9 +595,7 @@ function evalCaseCounts(evalDir) {
     positive_with_expected_artifacts: 0,
   };
   if (!evalDir || !fs.existsSync(evalDir)) return counts;
-  for (const file of walk(path.join(evalDir, "cases"), (caseFile) =>
-    caseFile.endsWith(".md"),
-  )) {
+  for (const file of walk(path.join(evalDir, "cases"), (caseFile) => caseFile.endsWith(".md"))) {
     const text = fs.readFileSync(file, "utf8");
     counts.total += 1;
     if (!shouldTrigger(text)) {
@@ -564,10 +611,7 @@ function evalCaseCounts(evalDir) {
       if (hasBullets(text, "Fixture") || hasBullets(text, "Fixtures")) {
         counts.positive_with_fixtures += 1;
       }
-      if (
-        hasBullets(text, "Expected Artifact") ||
-        hasBullets(text, "Expected Artifacts")
-      ) {
+      if (hasBullets(text, "Expected Artifact") || hasBullets(text, "Expected Artifacts")) {
         counts.positive_with_expected_artifacts += 1;
       }
     }
@@ -586,16 +630,66 @@ function splitCountsInDir(splitDir) {
   const val = splitInfo.val.items;
   const test = splitInfo.test.items;
   const items = [...train, ...val, ...test];
+  const splitEntries = Object.entries(splitInfo).flatMap(([splitName, info]) =>
+    info.items.map((item) => ({ item, splitName })),
+  );
+  const crossingValues = (field) => {
+    const memberships = new Map();
+    for (const { item, splitName } of splitEntries) {
+      const value = item && typeof item === "object" ? item[field] : null;
+      if (typeof value !== "string" || !value.trim()) continue;
+      if (!memberships.has(value)) memberships.set(value, new Set());
+      memberships.get(value).add(splitName);
+    }
+    return new Set(
+      [...memberships.entries()]
+        .filter(([, splitNames]) => splitNames.size > 1)
+        .map(([value]) => value),
+    );
+  };
+  const crossingGroups = crossingValues("split_group");
+  const crossingFamilies = crossingValues("split_family");
+  const fixtureMemberships = new Map();
+  for (const { item, splitName } of splitEntries) {
+    if (!Array.isArray(item?.fixtures)) continue;
+    for (const fixture of item.fixtures) {
+      if (typeof fixture !== "string" || !fixture.trim()) continue;
+      const normalized = canonicalFixturePath(fixture);
+      if (!normalized) continue;
+      if (!fixtureMemberships.has(normalized)) fixtureMemberships.set(normalized, new Set());
+      fixtureMemberships.get(normalized).add(splitName);
+    }
+  }
+  const crossingFixtures = new Set(
+    [...fixtureMemberships.entries()]
+      .filter(([, splitNames]) => splitNames.size > 1)
+      .map(([fixture]) => fixture),
+  );
+  const validFixtures = (item) =>
+    Array.isArray(item.fixtures) &&
+    item.fixtures.every((fixture) => {
+      const normalized = canonicalFixturePath(fixture);
+      return Boolean(normalized) && !crossingFixtures.has(normalized);
+    });
   const invalidItems = items.filter(
     (item) =>
       !item ||
       typeof item !== "object" ||
       [...REQUIRED_SPLIT_ITEM_FIELDS].some((field) => !(field in item)) ||
+      typeof item.skill_name !== "string" ||
+      !/^[a-z0-9][a-z0-9-]{0,127}$/.test(item.skill_name) ||
+      typeof item.id !== "string" ||
+      !new RegExp(
+        `^${item.skill_name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/[a-z0-9][a-z0-9-]{0,127}$`,
+      ).test(item.id) ||
+      !validSplitFamily(item.split_family) ||
+      !/^sha256:[0-9a-f]{64}$/.test(item.split_group || "") ||
+      crossingGroups.has(item.split_group) ||
+      crossingFamilies.has(item.split_family) ||
+      !validFixtures(item) ||
       !SUPPORTED_WORKSPACE_POLICIES.has(item.workspace_policy) ||
       (item.workspace_policy === "isolated-artifact-write") !==
-        (item.visual_assertions || []).some((assertion) =>
-          String(assertion || "").trim(),
-        ),
+        (item.visual_assertions || []).some((assertion) => String(assertion || "").trim()),
   );
   return {
     train: train.length,
@@ -603,9 +697,7 @@ function splitCountsInDir(splitDir) {
     test: test.length,
     positive: items.length,
     positive_with_visual_assertions: items.filter((item) =>
-      (item.visual_assertions || []).some((assertion) =>
-        String(assertion || "").trim(),
-      ),
+      (item.visual_assertions || []).some((assertion) => String(assertion || "").trim()),
     ).length,
     path: path.relative(root, splitDir).replaceAll("\\", "/"),
     exists: fs.existsSync(splitDir),
@@ -616,6 +708,9 @@ function splitCountsInDir(splitDir) {
       .filter(([, info]) => info.exists && !info.valid)
       .map(([name]) => name),
     invalid_item_count: invalidItems.length,
+    cross_split_group_count: crossingGroups.size,
+    cross_split_family_count: crossingFamilies.size,
+    cross_split_fixture_count: crossingFixtures.size,
   };
 }
 
@@ -640,19 +735,14 @@ function generatedSplitCounts(skillName, dirName = "data") {
     ...split,
     configured: false,
     configured_path: null,
-    activation_negative: readJsonArray(
-      path.join(workDir, "activation/negative-cases.json"),
-    ).length,
+    activation_negative: readJsonArray(path.join(workDir, "activation/negative-cases.json")).length,
   };
 }
 
 function generatedSplitCountsFromConfig(skillName, configInfo) {
   const configured = String(configInfo?.values?.split_dir || "").trim();
-  if (!configured || configured.includes("<"))
-    return generatedSplitCounts(skillName);
-  const absolute = path.isAbsolute(configured)
-    ? configured
-    : path.resolve(root, configured);
+  if (!configured || configured.includes("<")) return generatedSplitCounts(skillName);
+  const absolute = path.isAbsolute(configured) ? configured : path.resolve(root, configured);
   const split = splitCountsInDir(absolute);
   return {
     ...split,
@@ -661,12 +751,7 @@ function generatedSplitCountsFromConfig(skillName, configInfo) {
     missing_configured_split: !split.exists,
     activation_negative: skillName
       ? readJsonArray(
-          path.join(
-            root,
-            ".agents/skillopt-work",
-            skillName,
-            "activation/negative-cases.json",
-          ),
+          path.join(root, ".agents/skillopt-work", skillName, "activation/negative-cases.json"),
         ).length
       : 0,
   };
@@ -675,9 +760,7 @@ function generatedSplitCountsFromConfig(skillName, configInfo) {
 function activeSplitDir(skillName, configInfo) {
   const configured = String(configInfo?.values?.split_dir || "").trim();
   if (configured && !configured.includes("<")) {
-    return path.isAbsolute(configured)
-      ? configured
-      : path.resolve(root, configured);
+    return path.isAbsolute(configured) ? configured : path.resolve(root, configured);
   }
   return path.join(root, ".agents/skillopt-work", skillName, "data");
 }
@@ -699,19 +782,12 @@ function generatedDataFreshness(skillPath, skillName, configInfo) {
   const splitInfo = splitCountsInDir(splitDir);
   const expectedTextOnly =
     path.resolve(splitDir) ===
-      path.resolve(
-        root,
-        ".agents/skillopt-work",
-        skillName,
-        "data-text-only",
-      ) || configInfo.values.visual_eval_policy === "text-only";
+      path.resolve(root, ".agents/skillopt-work", skillName, "data-text-only") ||
+    configInfo.values.visual_eval_policy === "text-only";
   const blockers = [];
-  if (!splitInfo.exists)
-    blockers.push(`active split directory is missing: ${splitInfo.path}`);
+  if (!splitInfo.exists) blockers.push(`active split directory is missing: ${splitInfo.path}`);
   if (splitInfo.missing_splits.length) {
-    blockers.push(
-      `active split is missing items.json for: ${splitInfo.missing_splits.join(", ")}`,
-    );
+    blockers.push(`active split is missing items.json for: ${splitInfo.missing_splits.join(", ")}`);
   }
   if (splitInfo.invalid_splits.length) {
     blockers.push(
@@ -721,17 +797,48 @@ function generatedDataFreshness(skillPath, skillName, configInfo) {
 
   const casesDir = path.join(root, "skill-evals", skillName, "cases");
   const expected = [];
-  for (const caseFile of walk(casesDir, (file) =>
-    file.endsWith(".md"),
-  ).sort()) {
+  const expectedActivation = [];
+  for (const caseFile of walk(casesDir, (file) => file.endsWith(".md")).sort()) {
     const text = fs.readFileSync(caseFile, "utf8");
-    if (!shouldTrigger(text)) continue;
-    if (expectedTextOnly && hasVisualAssertionBullets(text)) continue;
-    expected.push({
+    const fixtures = canonicalFixturePaths(text);
+    const visualAssertions = visualAssertionBullets(section(text, "Visual Assertions"));
+    const expectedItem = {
       id: `${skillName}/${path.basename(caseFile, ".md")}`,
+      skill_name: skillName,
       case_path: path.relative(root, caseFile).replaceAll("\\", "/"),
       source_hash: `sha256:${sha256Text(text)}`,
-    });
+      fixtures,
+      split_family: fixtures ? expectedSplitFamily(text, caseFile, fixtures) : null,
+      prompt: section(text, "Prompt"),
+      expected_behavior: bullets(section(text, "Expected Behavior")),
+      deterministic_assertions: bullets(section(text, "Deterministic Assertions")),
+      visual_assertions: visualAssertions,
+      expected_artifacts: expectedArtifactPaths(text, skillName),
+      rubric_path: fs.existsSync(path.join(root, "skill-evals", skillName, "rubric.md"))
+        ? `skill-evals/${skillName}/rubric.md`
+        : null,
+      tags: shouldTrigger(text) ? ["positive"] : ["negative", "activation"],
+      should_trigger: shouldTrigger(text),
+      workspace_policy: visualAssertions.length ? "isolated-artifact-write" : "text-only",
+    };
+    if (!shouldTrigger(text)) {
+      expectedActivation.push(expectedItem);
+      continue;
+    }
+    if (expectedTextOnly && hasVisualAssertionBullets(text)) continue;
+    expected.push(expectedItem);
+  }
+
+  const duplicateExpectedIds = (items) => {
+    const counts = new Map();
+    for (const item of items) counts.set(item.id, (counts.get(item.id) || 0) + 1);
+    return [...counts.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+  };
+  const duplicateSourceIds = duplicateExpectedIds([...expected, ...expectedActivation]);
+  if (duplicateSourceIds.length) {
+    blockers.push(
+      `eval sources contain duplicate case IDs: ${duplicateSourceIds.slice(0, 5).join(", ")}`,
+    );
   }
 
   const generated = ["train", "val", "test"].flatMap((name) =>
@@ -753,12 +860,8 @@ function generatedDataFreshness(skillPath, skillName, configInfo) {
     );
   }
   const expectedById = new Map(expected.map((item) => [item.id, item]));
-  const missingIds = expected
-    .filter((item) => !generatedById.has(item.id))
-    .map((item) => item.id);
-  const unexpectedIds = [...generatedById.keys()].filter(
-    (id) => !expectedById.has(id),
-  );
+  const missingIds = expected.filter((item) => !generatedById.has(item.id)).map((item) => item.id);
+  const unexpectedIds = [...generatedById.keys()].filter((id) => !expectedById.has(id));
   if (missingIds.length) {
     blockers.push(
       `active split is missing current positive cases: ${missingIds.slice(0, 5).join(", ")}`,
@@ -777,6 +880,102 @@ function generatedDataFreshness(skillPath, skillName, configInfo) {
     }
     if (generatedItem.source_hash !== expectedItem.source_hash) {
       blockers.push(`active split source hash is stale for ${expectedItem.id}`);
+    }
+    if (
+      !expectedItem.fixtures ||
+      JSON.stringify(generatedItem.fixtures) !== JSON.stringify(expectedItem.fixtures)
+    ) {
+      blockers.push(`active split fixtures are stale or invalid for ${expectedItem.id}`);
+    }
+    if (generatedItem.split_family !== expectedItem.split_family) {
+      blockers.push(`active split family is stale for ${expectedItem.id}`);
+    }
+    for (const field of [
+      "prompt",
+      "skill_name",
+      "expected_behavior",
+      "deterministic_assertions",
+      "visual_assertions",
+      "expected_artifacts",
+      "rubric_path",
+      "tags",
+      "should_trigger",
+      "workspace_policy",
+    ]) {
+      if (JSON.stringify(generatedItem[field]) !== JSON.stringify(expectedItem[field])) {
+        blockers.push(`active split ${field} is stale for ${expectedItem.id}`);
+      }
+    }
+  }
+
+  const activationPath = path.join(
+    root,
+    ".agents/skillopt-work",
+    skillName,
+    "activation/negative-cases.json",
+  );
+  const activationInfo = readJsonArrayInfo(activationPath);
+  if (!activationInfo.exists) blockers.push("activation negative-cases.json is missing");
+  else if (!activationInfo.valid)
+    blockers.push("activation negative-cases.json is not a JSON array");
+  const generatedActivationById = new Map();
+  for (const item of activationInfo.items) {
+    const id = String(item?.id || "");
+    const current = generatedActivationById.get(id) || [];
+    current.push(item);
+    generatedActivationById.set(id, current);
+  }
+  const duplicateActivationIds = [...generatedActivationById.entries()]
+    .filter(([, items]) => items.length > 1)
+    .map(([id]) => id);
+  if (duplicateActivationIds.length) {
+    blockers.push(
+      `activation split contains duplicate case IDs: ${duplicateActivationIds.slice(0, 5).join(", ")}`,
+    );
+  }
+  const expectedActivationById = new Map(expectedActivation.map((item) => [item.id, item]));
+  const missingActivationIds = expectedActivation
+    .filter((item) => !generatedActivationById.has(item.id))
+    .map((item) => item.id);
+  const unexpectedActivationIds = [...generatedActivationById.keys()].filter(
+    (id) => !expectedActivationById.has(id),
+  );
+  if (missingActivationIds.length) {
+    blockers.push(
+      `activation split is missing current negative cases: ${missingActivationIds.slice(0, 5).join(", ")}`,
+    );
+  }
+  if (unexpectedActivationIds.length) {
+    blockers.push(
+      `activation split contains stale or unexpected cases: ${unexpectedActivationIds.slice(0, 5).join(", ")}`,
+    );
+  }
+  for (const expectedItem of expectedActivation) {
+    const generatedItem = generatedActivationById.get(expectedItem.id)?.[0];
+    if (!generatedItem) continue;
+    if (generatedItem.case_path !== expectedItem.case_path) {
+      blockers.push(`activation case path is stale for ${expectedItem.id}`);
+    }
+    if (generatedItem.source_hash !== expectedItem.source_hash) {
+      blockers.push(`activation source hash is stale for ${expectedItem.id}`);
+    }
+    for (const field of [
+      "prompt",
+      "skill_name",
+      "expected_behavior",
+      "deterministic_assertions",
+      "visual_assertions",
+      "expected_artifacts",
+      "rubric_path",
+      "tags",
+      "should_trigger",
+      "workspace_policy",
+      "fixtures",
+      "split_family",
+    ]) {
+      if (JSON.stringify(generatedItem[field]) !== JSON.stringify(expectedItem[field])) {
+        blockers.push(`activation ${field} is stale for ${expectedItem.id}`);
+      }
     }
   }
 
@@ -802,6 +1001,8 @@ function generatedDataFreshness(skillPath, skillName, configInfo) {
     path: splitInfo.path,
     expected_positive_cases: expected.length,
     generated_positive_cases: generated.length,
+    expected_activation_negative_cases: expectedActivation.length,
+    generated_activation_negative_cases: activationInfo.items.length,
     blockers: [...new Set(blockers)],
   };
 }
@@ -835,16 +1036,12 @@ function readText(file) {
 }
 
 function extractYamlValue(text, key) {
-  const match = text.match(
-    new RegExp(`^[ \\t]*${key}:[ \\t]*(.*?)[ \\t]*$`, "m"),
-  );
+  const match = text.match(new RegExp(`^[ \\t]*${key}:[ \\t]*(.*?)[ \\t]*$`, "m"));
   return match?.[1]?.trim().replace(/^["']|["']$/g, "") || "";
 }
 
 function extractYamlLeafValue(text, key) {
-  const matches = [
-    ...text.matchAll(new RegExp(`^[ \\t]+${key}:[ \\t]*(.*?)[ \\t]*$`, "gm")),
-  ];
+  const matches = [...text.matchAll(new RegExp(`^[ \\t]+${key}:[ \\t]*(.*?)[ \\t]*$`, "gm"))];
   const value = matches
     .at(-1)?.[1]
     ?.trim()
@@ -854,20 +1051,10 @@ function extractYamlLeafValue(text, key) {
 
 function configPathForMode(skillName, mode) {
   const workConfig = skillName
-    ? path.join(
-        root,
-        ".agents/skillopt-work",
-        skillName,
-        "configs",
-        `agent-skills.${mode}.yaml`,
-      )
+    ? path.join(root, ".agents/skillopt-work", skillName, "configs", `agent-skills.${mode}.yaml`)
     : null;
   if (workConfig && fs.existsSync(workConfig)) return workConfig;
-  return path.join(
-    skillRoot,
-    "assets/agent-skills-benchmark",
-    `config.${mode}.yaml`,
-  );
+  return path.join(skillRoot, "assets/agent-skills-benchmark", `config.${mode}.yaml`);
 }
 
 function pinState(value) {
@@ -888,8 +1075,7 @@ function configProfile(skillName, mode) {
   const configPath = configPathForMode(skillName, mode);
   const text = readText(configPath);
   const values = {
-    run_profile:
-      extractYamlValue(text, "run_profile") || defaultRunProfile(mode),
+    run_profile: extractYamlValue(text, "run_profile") || defaultRunProfile(mode),
     env_out_root: extractYamlValue(text, "out_root"),
     split_dir: extractYamlValue(text, "split_dir"),
     visual_eval_policy: extractYamlValue(text, "visual_eval_policy"),
@@ -911,23 +1097,14 @@ function configProfile(skillName, mode) {
     optimizer_min_learning_rate: extractYamlValue(text, "min_learning_rate"),
     optimizer_lr_scheduler: extractYamlValue(text, "lr_scheduler"),
     optimizer_use_slow_update: extractYamlValue(text, "use_slow_update"),
-    optimizer_slow_update_samples: extractYamlValue(
-      text,
-      "slow_update_samples",
-    ),
+    optimizer_slow_update_samples: extractYamlValue(text, "slow_update_samples"),
     optimizer_slow_update_gate_with_selection: extractYamlValue(
       text,
       "slow_update_gate_with_selection",
     ),
     optimizer_use_meta_skill: extractYamlValue(text, "use_meta_skill"),
-    optimizer_use_skill_aware_reflection: extractYamlValue(
-      text,
-      "use_skill_aware_reflection",
-    ),
-    optimizer_skill_aware_appendix_source: extractYamlValue(
-      text,
-      "skill_aware_appendix_source",
-    ),
+    optimizer_use_skill_aware_reflection: extractYamlValue(text, "use_skill_aware_reflection"),
+    optimizer_skill_aware_appendix_source: extractYamlValue(text, "skill_aware_appendix_source"),
     optimizer_skill_aware_consolidate_threshold: extractYamlValue(
       text,
       "skill_aware_consolidate_threshold",
@@ -944,17 +1121,12 @@ function configProfile(skillName, mode) {
         ? "Hybrid Codex CLI target rollouts use smaller batch/workers than the upstream provider-backed default."
         : "",
   };
-  if (values.run_profile === "<run-profile>")
-    values.run_profile = defaultRunProfile(mode);
+  if (values.run_profile === "<run-profile>") values.run_profile = defaultRunProfile(mode);
   const modelPins = {
     optimizer: pinState(extractYamlLeafValue(text, "optimizer")),
     target: pinState(extractYamlLeafValue(text, "target")),
-    codex_cli_judge_model: pinState(
-      extractYamlLeafValue(text, "codex_cli_judge_model"),
-    ),
-    codex_cli_reflection_model: pinState(
-      extractYamlLeafValue(text, "codex_cli_reflection_model"),
-    ),
+    codex_cli_judge_model: pinState(extractYamlLeafValue(text, "codex_cli_judge_model")),
+    codex_cli_reflection_model: pinState(extractYamlLeafValue(text, "codex_cli_reflection_model")),
   };
   return {
     path: path.relative(root, configPath).replaceAll("\\", "/"),
@@ -981,11 +1153,7 @@ function parseYamlKeys(text) {
 }
 
 function parseCliOptions(helpText) {
-  return new Set(
-    [...String(helpText || "").matchAll(/--([a-z0-9_]+)/g)].map(
-      (match) => match[1],
-    ),
-  );
+  return new Set([...String(helpText || "").matchAll(/--([a-z0-9_]+)/g)].map((match) => match[1]));
 }
 
 function localPythonCommand(skillOptPath) {
@@ -1007,14 +1175,10 @@ function localHelpOptions(skillOptPath, script) {
       options: new Set(),
       error: "uv or SkillOpt virtualenv unavailable",
     };
-  const result = commandResult(
-    python.command,
-    [...python.argsPrefix, script, "--help"],
-    {
-      cwd: skillOptPath,
-      timeout: 60000,
-    },
-  );
+  const result = commandResult(python.command, [...python.argsPrefix, script, "--help"], {
+    cwd: skillOptPath,
+    timeout: 60000,
+  });
   if (!result.ok) {
     return {
       ok: false,
@@ -1061,11 +1225,7 @@ function adapterConfigKeys(skillOptPath) {
 function structuredConfigPaths(skillOptPath) {
   const configPy = path.join(skillOptPath, "skillopt/config.py");
   const text = readText(configPy);
-  return new Set(
-    [...text.matchAll(/"([a-z]+\.[a-zA-Z0-9_]+)"\s*:/g)].map(
-      (match) => match[1],
-    ),
-  );
+  return new Set([...text.matchAll(/"([a-z]+\.[a-zA-Z0-9_]+)"\s*:/g)].map((match) => match[1]));
 }
 
 function configSchemaCheck(skillName, mode) {
@@ -1103,17 +1263,13 @@ function configSchemaCheck(skillName, mode) {
   });
   const unsupportedKeys = leafKeys
     .map((entry) => ({ key: entry.key, path: entry.path }))
-    .filter(
-      (entry) => !supported.has(entry.key) && !supportedPaths.has(entry.path),
-    );
+    .filter((entry) => !supported.has(entry.key) && !supportedPaths.has(entry.path));
   return {
     status: unsupportedKeys.length ? "review_required" : "passed",
     configPath: path.relative(root, configPath).replaceAll("\\", "/"),
     unsupportedKeys,
     checkedAgainst: [
-      trainHelp.ok
-        ? "local scripts/train.py --help"
-        : `train help unavailable: ${trainHelp.error}`,
+      trainHelp.ok ? "local scripts/train.py --help" : `train help unavailable: ${trainHelp.error}`,
       evalHelp.ok
         ? "local scripts/eval_only.py --help"
         : `eval help unavailable: ${evalHelp.error}`,
@@ -1152,14 +1308,10 @@ function benchmarkQuality(datasetCounts) {
     );
   }
   if (split.val < OFFICIAL_RECOMMENDED.val) {
-    blockers.push(
-      `needs ${OFFICIAL_RECOMMENDED.val}+ validation cases; found ${split.val}`,
-    );
+    blockers.push(`needs ${OFFICIAL_RECOMMENDED.val}+ validation cases; found ${split.val}`);
   }
   if (split.test < OFFICIAL_RECOMMENDED.test) {
-    blockers.push(
-      `needs ${OFFICIAL_RECOMMENDED.test}+ test cases; found ${split.test}`,
-    );
+    blockers.push(`needs ${OFFICIAL_RECOMMENDED.test}+ test cases; found ${split.test}`);
   }
   return {
     classification: officialFloorMet
@@ -1178,13 +1330,10 @@ function benchmarkQuality(datasetCounts) {
       exploratoryMinimum: EXPLORATORY_MIN,
       officialRecommended: OFFICIAL_RECOMMENDED,
     },
-    positiveWithDeterministicAssertions:
-      datasetCounts.positive_with_deterministic_assertions || 0,
-    positiveWithVisualAssertions:
-      datasetCounts.positive_with_visual_assertions || 0,
+    positiveWithDeterministicAssertions: datasetCounts.positive_with_deterministic_assertions || 0,
+    positiveWithVisualAssertions: datasetCounts.positive_with_visual_assertions || 0,
     positiveWithFixtures: datasetCounts.positive_with_fixtures || 0,
-    positiveWithExpectedArtifacts:
-      datasetCounts.positive_with_expected_artifacts || 0,
+    positiveWithExpectedArtifacts: datasetCounts.positive_with_expected_artifacts || 0,
     blockers,
   };
 }
@@ -1193,9 +1342,7 @@ function runnableSplitBlockers(datasetCounts, configInfo) {
   const split = datasetCounts.generated_active || datasetCounts.generated;
   const blockers = [];
   if (!split?.exists)
-    blockers.push(
-      `active split directory is missing: ${split?.path || "unknown"}`,
-    );
+    blockers.push(`active split directory is missing: ${split?.path || "unknown"}`);
   for (const name of split?.missing_splits || []) {
     blockers.push(`active split is missing ${name}/items.json`);
   }
@@ -1207,23 +1354,29 @@ function runnableSplitBlockers(datasetCounts, configInfo) {
       `active split contains ${split.invalid_item_count} item(s) with missing required fields`,
     );
   }
-  if (!split || split.train < 1)
-    blockers.push("active split needs at least one training case");
-  if (
-    configInfo.values.evaluation_use_gate !== "false" &&
-    (!split || split.val < 1)
-  ) {
+  if (split?.cross_split_group_count) {
+    blockers.push(
+      `active split leaks ${split.cross_split_group_count} split_group value(s) across train/validation/test`,
+    );
+  }
+  if (split?.cross_split_family_count) {
+    blockers.push(
+      `active split leaks ${split.cross_split_family_count} split_family value(s) across train/validation/test`,
+    );
+  }
+  if (split?.cross_split_fixture_count) {
+    blockers.push(
+      `active split leaks ${split.cross_split_fixture_count} normalized fixture path(s) across train/validation/test`,
+    );
+  }
+  if (!split || split.train < 1) blockers.push("active split needs at least one training case");
+  if (configInfo.values.evaluation_use_gate !== "false" && (!split || split.val < 1)) {
     blockers.push(
       "active split needs at least one validation case while the evaluation gate is enabled",
     );
   }
-  if (
-    configInfo.values.evaluation_eval_test !== "false" &&
-    (!split || split.test < 1)
-  ) {
-    blockers.push(
-      "active split needs at least one test case while test evaluation is enabled",
-    );
+  if (configInfo.values.evaluation_eval_test !== "false" && (!split || split.test < 1)) {
+    blockers.push("active split needs at least one test case while test evaluation is enabled");
   }
   return [...new Set(blockers)];
 }
@@ -1253,9 +1406,7 @@ function skillOptCommit(skillOptPath, commitPath) {
   const value = fs.readFileSync(head, "utf8").trim();
   if (!value.startsWith("ref: ")) return value;
   const refFile = path.join(skillOptPath, ".git", value.slice(5));
-  return fs.existsSync(refFile)
-    ? fs.readFileSync(refFile, "utf8").trim()
-    : value;
+  return fs.existsSync(refFile) ? fs.readFileSync(refFile, "utf8").trim() : value;
 }
 
 function upstreamBehaviorBypassed(mode) {
@@ -1273,21 +1424,11 @@ function upstreamBehaviorBypassed(mode) {
 
 function readAdapterManifest(skillName) {
   const targetPath = skillName
-    ? path.join(
-        root,
-        ".agents/skillopt-work",
-        skillName,
-        "adapter-manifest.json",
-      )
+    ? path.join(root, ".agents/skillopt-work", skillName, "adapter-manifest.json")
     : null;
-  const legacyPath = path.join(
-    root,
-    ".agents/skillopt-work/adapter-manifest.json",
-  );
-  const manifestPath =
-    targetPath && fs.existsSync(targetPath) ? targetPath : legacyPath;
-  if (!fs.existsSync(manifestPath))
-    return { path: null, data: null, target_specific: false };
+  const legacyPath = path.join(root, ".agents/skillopt-work/adapter-manifest.json");
+  const manifestPath = targetPath && fs.existsSync(targetPath) ? targetPath : legacyPath;
+  if (!fs.existsSync(manifestPath)) return { path: null, data: null, target_specific: false };
   try {
     return {
       path: path.relative(root, manifestPath).replaceAll("\\", "/"),
@@ -1325,12 +1466,9 @@ function templateHashWarnings(manifest) {
       warnings.push(`Adapter installed file is missing: ${rel}`);
       continue;
     }
-    const sourceRel =
-      typeof sourceSpec === "string" ? sourceSpec : sourceSpec?.source;
+    const sourceRel = typeof sourceSpec === "string" ? sourceSpec : sourceSpec?.source;
     if (!sourceRel || typeof sourceRel !== "string") {
-      warnings.push(
-        `Adapter manifest has no tracked source for installed file: ${rel}`,
-      );
+      warnings.push(`Adapter manifest has no tracked source for installed file: ${rel}`);
       continue;
     }
     const source = path.join(root, sourceRel);
@@ -1348,9 +1486,7 @@ function templateHashWarnings(manifest) {
     }
     const actualHash = sha256File(file);
     if (actualHash !== sha256Text(expectedText)) {
-      warnings.push(
-        `Adapter installed file differs from the current tracked template: ${rel}`,
-      );
+      warnings.push(`Adapter installed file differs from the current tracked template: ${rel}`);
     }
   }
   return warnings;
@@ -1361,9 +1497,7 @@ function actualSkillOptCommit(skillOptPath) {
   const result = commandResult("git", ["rev-parse", "HEAD"], {
     cwd: skillOptPath,
   });
-  return result.ok && /^[a-f0-9]{40}$/i.test(result.stdout)
-    ? result.stdout
-    : null;
+  return result.ok && /^[a-f0-9]{40}$/i.test(result.stdout) ? result.stdout : null;
 }
 
 function pythonAstPatchProof(skillOptPath, pythonCommand) {
@@ -1373,11 +1507,7 @@ function pythonAstPatchProof(skillOptPath, pythonCommand) {
     safe_env: "skillopt/config.py",
     trainer_steps: "skillopt/engine/trainer.py",
   };
-  if (
-    Object.values(relativeFiles).some(
-      (file) => !fs.existsSync(path.join(skillOptPath, file)),
-    )
-  ) {
+  if (Object.values(relativeFiles).some((file) => !fs.existsSync(path.join(skillOptPath, file)))) {
     return {
       status: "failed",
       diagnostic: "required_file_missing",
@@ -1385,8 +1515,8 @@ function pythonAstPatchProof(skillOptPath, pythonCommand) {
     };
   }
   const env = Object.fromEntries(
-    ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE"].flatMap(
-      (name) => (process.env[name] ? [[name, process.env[name]]] : []),
+    ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE"].flatMap((name) =>
+      process.env[name] ? [[name, process.env[name]]] : [],
     ),
   );
   const result = spawnSync(
@@ -1395,9 +1525,7 @@ function pythonAstPatchProof(skillOptPath, pythonCommand) {
       "-c",
       PYTHON_PATCH_AST_PROBE,
       JSON.stringify(SAFE_MODEL_ENV_PLACEHOLDERS),
-      ...Object.values(relativeFiles).map((file) =>
-        path.join(skillOptPath, file),
-      ),
+      ...Object.values(relativeFiles).map((file) => path.join(skillOptPath, file)),
     ],
     {
       cwd: skillOptPath,
@@ -1418,11 +1546,7 @@ function pythonAstPatchProof(skillOptPath, pythonCommand) {
   }
   try {
     const parsed = JSON.parse(result.stdout);
-    if (
-      !parsed ||
-      typeof parsed.checks !== "object" ||
-      Array.isArray(parsed.checks)
-    ) {
+    if (!parsed || typeof parsed.checks !== "object" || Array.isArray(parsed.checks)) {
       return {
         status: "failed",
         diagnostic: "invalid_probe_output",
@@ -1431,9 +1555,7 @@ function pythonAstPatchProof(skillOptPath, pythonCommand) {
     }
     return {
       status: "completed",
-      diagnostic: Object.keys(parsed.errors || {}).length
-        ? "unparseable_python"
-        : null,
+      diagnostic: Object.keys(parsed.errors || {}).length ? "unparseable_python" : null,
       checks: parsed.checks,
     };
   } catch {
@@ -1452,8 +1574,7 @@ function liveAdapterPatchCheck(skillOptPath, manifest, pythonCommand) {
       files.push({ file: relativeFile, status: "missing" });
       return;
     }
-    const passed =
-      proof.status === "completed" && proof.checks[proofKey] === true;
+    const passed = proof.status === "completed" && proof.checks[proofKey] === true;
     files.push({
       file: relativeFile,
       status: passed ? "matched" : "refresh_required",
@@ -1482,21 +1603,15 @@ function liveAdapterPatchCheck(skillOptPath, manifest, pythonCommand) {
     "skillopt/engine/trainer.py is missing the structural configured steps-per-epoch patch",
   );
   if (proof.status !== "completed") {
-    blockers.push(
-      `live SkillOpt structural patch proof failed: ${proof.diagnostic}`,
-    );
+    blockers.push(`live SkillOpt structural patch proof failed: ${proof.diagnostic}`);
   }
 
-  const manifestCommit =
-    manifest?.skillopt_commit || manifest?.skilloptCommit || null;
+  const manifestCommit = manifest?.skillopt_commit || manifest?.skilloptCommit || null;
   const liveCommit = actualSkillOptCommit(skillOptPath);
-  if (!manifestCommit)
-    blockers.push("adapter manifest is missing the SkillOpt commit identity");
+  if (!manifestCommit) blockers.push("adapter manifest is missing the SkillOpt commit identity");
   if (!liveCommit) blockers.push("live SkillOpt commit could not be resolved");
   if (manifestCommit && liveCommit && manifestCommit !== liveCommit) {
-    blockers.push(
-      "adapter manifest SkillOpt commit does not match the live clone",
-    );
+    blockers.push("adapter manifest SkillOpt commit does not match the live clone");
   }
   return {
     status: blockers.length ? "refresh_required" : "matched",
@@ -1512,8 +1627,7 @@ function liveAdapterPatchCheck(skillOptPath, manifest, pythonCommand) {
 
 function requiredModelPinNames(mode, configInfo) {
   if (mode === "native-provider") return ["optimizer", "target"];
-  if (mode === "hybrid-codex-target")
-    return ["optimizer", "target", "codex_cli_judge_model"];
+  if (mode === "hybrid-codex-target") return ["optimizer", "target", "codex_cli_judge_model"];
   if (configInfo.values.judge_backend === "codex_cli") {
     return ["target", "codex_cli_judge_model", "codex_cli_reflection_model"];
   }
@@ -1521,8 +1635,7 @@ function requiredModelPinNames(mode, configInfo) {
 }
 
 function semanticJudgeReadiness(args, configInfo) {
-  const runProfile =
-    args.mode === "codex-cli-all" ? "exploratory" : args.runProfile;
+  const runProfile = args.mode === "codex-cli-all" ? "exploratory" : args.runProfile;
   const backend = String(configInfo.values.judge_backend || "heuristic")
     .trim()
     .toLowerCase();
@@ -1535,11 +1648,7 @@ function semanticJudgeReadiness(args, configInfo) {
         ]
       : [];
   return {
-    status: blockers.length
-      ? "blocked"
-      : supported
-        ? "ready"
-        : "exploratory_only",
+    status: blockers.length ? "blocked" : supported ? "ready" : "exploratory_only",
     backend,
     officialParityRequired,
     blockers,
@@ -1558,19 +1667,16 @@ function officialParityReport(
   const gaps = [];
   const proofBlockers = [];
   const bypassed = upstreamBehaviorBypassed(args.mode);
-  const effectiveProfile =
-    args.mode === "codex-cli-all" ? "exploratory" : args.runProfile;
+  const effectiveProfile = args.mode === "codex-cli-all" ? "exploratory" : args.runProfile;
   const split = quality.splitCounts;
-  const activePositiveCases =
-    quality.activePositiveCases ?? datasetCounts.eval_positive;
+  const activePositiveCases = quality.activePositiveCases ?? datasetCounts.eval_positive;
 
   if (args.mode === "codex-cli-all") {
     gaps.push(
       "codex-cli-all is provider-free exploratory mode, not upstream-native optimizer parity",
     );
   }
-  if (effectiveProfile !== "official-parity")
-    gaps.push("run profile is exploratory");
+  if (effectiveProfile !== "official-parity") gaps.push("run profile is exploratory");
   if (effectiveProfile === "official-parity" && !providerOk) {
     proofBlockers.push(
       "provider-backed optimizer credentials or endpoint preflight are incomplete",
@@ -1597,23 +1703,16 @@ function officialParityReport(
       `below official-parity recommendation of ${OFFICIAL_RECOMMENDED.positive}+ positive cases`,
     );
   }
-  if (
-    split.val < OFFICIAL_RECOMMENDED.val ||
-    split.test < OFFICIAL_RECOMMENDED.test
-  ) {
+  if (split.val < OFFICIAL_RECOMMENDED.val || split.test < OFFICIAL_RECOMMENDED.test) {
     gaps.push(
       `below official-parity split recommendation of ${OFFICIAL_RECOMMENDED.val}+ validation and ${OFFICIAL_RECOMMENDED.test}+ test cases`,
     );
   }
   if (effectiveProfile === "official-parity" && !quality.officialFloorMet) {
-    proofBlockers.push(
-      ...quality.blockers.map((blocker) => `dataset floor: ${blocker}`),
-    );
+    proofBlockers.push(...quality.blockers.map((blocker) => `dataset floor: ${blocker}`));
   }
   const requiredPins =
-    effectiveProfile === "official-parity"
-      ? requiredModelPinNames(args.mode, configInfo)
-      : [];
+    effectiveProfile === "official-parity" ? requiredModelPinNames(args.mode, configInfo) : [];
   const gapPins = new Set([
     ...requiredPins,
     ...(args.mode === "codex-cli-all"
@@ -1624,12 +1723,9 @@ function officialParityReport(
     if (!gapPins.has(key) && !state.value) continue;
     if (state.status === "inherited_default") {
       gaps.push(`${key} model is blank and will inherit runtime defaults`);
-      if (requiredPins.includes(key))
-        proofBlockers.push(`${key} model pin is required`);
+      if (requiredPins.includes(key)) proofBlockers.push(`${key} model pin is required`);
     } else if (state.status === "env_missing") {
-      gaps.push(
-        `${key} model uses ${state.value}, but ${state.env} is not present`,
-      );
+      gaps.push(`${key} model uses ${state.value}, but ${state.env} is not present`);
       if (requiredPins.includes(key))
         proofBlockers.push(`${key} model env ${state.env} is missing`);
     }
@@ -1646,9 +1742,7 @@ function officialParityReport(
     configInfo.values.optimizer_lr_scheduler &&
     configInfo.values.optimizer_lr_scheduler !== "cosine"
   ) {
-    gaps.push(
-      `optimizer.lr_scheduler is ${configInfo.values.optimizer_lr_scheduler}, not cosine`,
-    );
+    gaps.push(`optimizer.lr_scheduler is ${configInfo.values.optimizer_lr_scheduler}, not cosine`);
   }
   if (configInfo.values.optimizer_use_slow_update === "false") {
     gaps.push("optimizer.use_slow_update is disabled");
@@ -1658,8 +1752,7 @@ function officialParityReport(
   }
 
   let status = "ready";
-  if (args.mode === "codex-cli-all" || effectiveProfile === "exploratory")
-    status = "exploratory";
+  if (args.mode === "codex-cli-all" || effectiveProfile === "exploratory") status = "exploratory";
   else if (proofBlockers.length) {
     status = "blocked";
   } else if (gaps.length) {
@@ -1726,17 +1819,12 @@ function providerRoleConfig(role, backend, configInfo) {
 
   if (normalizedBackend === "codex_exec") {
     if (role === "target") publicStatus.configured = true;
-    else
-      blockers.push(
-        `${role} codex_exec is unsupported for provider optimizer work`,
-      );
+    else blockers.push(`${role} codex_exec is unsupported for provider optimizer work`);
     return { publicStatus, endpointProbe };
   }
 
   if (normalizedBackend === "claude_code_exec") {
-    blockers.push(
-      `${role} claude_code_exec is unsupported by the Agent Skills rollout adapter`,
-    );
+    blockers.push(`${role} claude_code_exec is unsupported by the Agent Skills rollout adapter`);
     publicStatus.auth_mode = "unsupported_local_cli";
     return { publicStatus, endpointProbe };
   }
@@ -1750,14 +1838,11 @@ function providerRoleConfig(role, backend, configInfo) {
     publicStatus.endpoint_present = Boolean(azure.endpoint);
     publicStatus.credential_present = Boolean(azure.apiKey);
     publicStatus.auth_mode = supportedAuthMode ? azure.authMode : "unsupported";
-    if (!azure.endpoint)
-      blockers.push(`${role} openai_chat endpoint is missing`);
+    if (!azure.endpoint) blockers.push(`${role} openai_chat endpoint is missing`);
     if (["api_key", "key"].includes(azure.authMode) && !azure.apiKey) {
       blockers.push(`${role} openai_chat API key is missing`);
     } else if (azure.authMode === "azure_cli" && !commandExists("az")) {
-      blockers.push(
-        `${role} openai_chat requires Azure CLI for azure_cli auth`,
-      );
+      blockers.push(`${role} openai_chat requires Azure CLI for azure_cli auth`);
     } else if (!supportedAuthMode) {
       blockers.push(`${role} openai_chat auth mode is unsupported`);
     }
@@ -1776,12 +1861,9 @@ function providerRoleConfig(role, backend, configInfo) {
     );
   } else if (normalizedBackend === "qwen_chat") {
     const upper = role.toUpperCase();
-    const baseUrl =
-      cleanEnv(`${upper}_QWEN_CHAT_BASE_URL`) || cleanEnv("QWEN_CHAT_BASE_URL");
-    const model =
-      cleanEnv(`${upper}_QWEN_CHAT_MODEL`) || cleanEnv("QWEN_CHAT_MODEL");
-    const apiKey =
-      cleanEnv(`${upper}_QWEN_CHAT_API_KEY`) || cleanEnv("QWEN_CHAT_API_KEY");
+    const baseUrl = cleanEnv(`${upper}_QWEN_CHAT_BASE_URL`) || cleanEnv("QWEN_CHAT_BASE_URL");
+    const model = cleanEnv(`${upper}_QWEN_CHAT_MODEL`) || cleanEnv("QWEN_CHAT_MODEL");
+    const apiKey = cleanEnv(`${upper}_QWEN_CHAT_API_KEY`) || cleanEnv("QWEN_CHAT_API_KEY");
     publicStatus.endpoint_present = Boolean(baseUrl);
     publicStatus.credential_present = Boolean(apiKey);
     if (!baseUrl) blockers.push(`${role} qwen_chat base URL is missing`);
@@ -1795,12 +1877,9 @@ function providerRoleConfig(role, backend, configInfo) {
         "optimizer minimax_chat is unsupported because installed SkillOpt implements MiniMax for target chat only",
       );
     }
-    if (!publicStatus.credential_present)
-      blockers.push(`${role} minimax_chat API key is missing`);
+    if (!publicStatus.credential_present) blockers.push(`${role} minimax_chat API key is missing`);
   } else {
-    blockers.push(
-      `${role} provider backend ${normalizedBackend || "<missing>"} is unsupported`,
-    );
+    blockers.push(`${role} provider backend ${normalizedBackend || "<missing>"} is unsupported`);
   }
 
   publicStatus.configured = blockers.length === 0;
@@ -1815,10 +1894,7 @@ function runOpenAiCompatibleEndpointProbe(spec) {
       error: `${spec.role} model pin is missing`,
     };
   }
-  const script = path.join(
-    skillRoot,
-    "scripts/probe-openai-compatible-endpoint.mjs",
-  );
+  const script = path.join(skillRoot, "scripts/probe-openai-compatible-endpoint.mjs");
   const result = commandResult(process.execPath, [script, "--json"], {
     timeout: 70000,
     env: {
@@ -1842,10 +1918,7 @@ function runOpenAiCompatibleEndpointProbe(spec) {
     return {
       ok: parsed.ok === true,
       status: parsed.ok === true ? "passed" : "failed",
-      error:
-        parsed.ok === true
-          ? null
-          : `${spec.role} chat-completion preflight failed`,
+      error: parsed.ok === true ? null : `${spec.role} chat-completion preflight failed`,
     };
   } catch {
     return {
@@ -1867,9 +1940,7 @@ function providerReadiness(args, configInfo) {
   const blockers = [];
   for (const role of requiredRoles) {
     const backend =
-      role === "optimizer"
-        ? configInfo.values.optimizer_backend
-        : configInfo.values.target_backend;
+      role === "optimizer" ? configInfo.values.optimizer_backend : configInfo.values.target_backend;
     const check = providerRoleConfig(role, backend, configInfo);
     roles.push(check.publicStatus);
     blockers.push(...check.publicStatus.blockers);
@@ -1911,9 +1982,7 @@ function codexPermissionCapability(configInfo) {
   const command = configInfo.values.codex_exec_path || "codex";
   let probeRoot = null;
   try {
-    probeRoot = fs.mkdtempSync(
-      path.join(os.tmpdir(), "skillopt-codex-capability-"),
-    );
+    probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "skillopt-codex-capability-"));
     const codexHome = path.join(probeRoot, "codex-home");
     const workspace = path.join(probeRoot, "workspace");
     fs.mkdirSync(codexHome, { mode: 0o700 });
@@ -1921,8 +1990,8 @@ function codexPermissionCapability(configInfo) {
     const missingSchemaName = "probe-output-schema-never-created.json";
     const missingSchema = path.join(workspace, missingSchemaName);
     const env = Object.fromEntries(
-      ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE"].flatMap(
-        (name) => (process.env[name] ? [[name, process.env[name]]] : []),
+      ["PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE"].flatMap((name) =>
+        process.env[name] ? [[name, process.env[name]]] : [],
       ),
     );
     env.CODEX_HOME = codexHome;
@@ -1980,29 +2049,21 @@ function codexPermissionCapability(configInfo) {
       /permissions/i.test(invalidOutput) &&
       !invalidOutput.includes("Failed to read output schema file");
     const output = `${validOutput}\n${invalidOutput}`;
-    const sessionStarted =
-      /(?:session id:|responses_websocket|Reconnecting\.\.\.)/i.test(output);
-    const supported =
-      deliberatePreflightFailure && invalidControlRejected && !sessionStarted;
+    const sessionStarted = /(?:session id:|responses_websocket|Reconnecting\.\.\.)/i.test(output);
+    const supported = deliberatePreflightFailure && invalidControlRejected && !sessionStarted;
     let diagnostic = null;
     if (!supported) {
-      if (
-        validResult.error?.code === "ENOENT" ||
-        invalidControl.error?.code === "ENOENT"
-      ) {
+      if (validResult.error?.code === "ENOENT" || invalidControl.error?.code === "ENOENT") {
         diagnostic = "command_unavailable";
       } else if (
         validResult.error?.code === "ETIMEDOUT" ||
         invalidControl.error?.code === "ETIMEDOUT"
       ) {
         diagnostic = "probe_timed_out";
-      } else if (
-        /unknown configuration field|strict-config.*not supported/i.test(output)
-      ) {
+      } else if (/unknown configuration field|strict-config.*not supported/i.test(output)) {
         diagnostic = "strict_config_rejected";
       } else if (sessionStarted) diagnostic = "probe_crossed_model_boundary";
-      else if (!invalidControlRejected)
-        diagnostic = "strict_config_negative_control_failed";
+      else if (!invalidControlRejected) diagnostic = "strict_config_negative_control_failed";
       else diagnostic = "unexpected_probe_result";
     }
     return {
@@ -2010,8 +2071,7 @@ function codexPermissionCapability(configInfo) {
       command: path.basename(command),
       strict_config: supported,
       permission_config: supported,
-      probe:
-        "strict_config_parse_with_invalid_control_before_deliberate_missing_schema_failure",
+      probe: "strict_config_parse_with_invalid_control_before_deliberate_missing_schema_failure",
       negative_control_rejected: invalidControlRejected,
       model_or_network_started: sessionStarted,
       diagnostic,
@@ -2022,8 +2082,7 @@ function codexPermissionCapability(configInfo) {
       command: path.basename(command),
       strict_config: false,
       permission_config: false,
-      probe:
-        "strict_config_parse_with_invalid_control_before_deliberate_missing_schema_failure",
+      probe: "strict_config_parse_with_invalid_control_before_deliberate_missing_schema_failure",
       negative_control_rejected: false,
       model_or_network_started: false,
       diagnostic: "probe_setup_failed",
@@ -2070,11 +2129,7 @@ function codexExecutionIsolationReadiness(datasetCounts, configInfo) {
         ]
       : [];
   return {
-    status: required
-      ? blockers.length
-        ? "blocked"
-        : "ready"
-      : "not_applicable",
+    status: required ? (blockers.length ? "blocked" : "ready") : "not_applicable",
     required,
     activeRoles,
     targetBackend,
@@ -2089,8 +2144,7 @@ function codexExecutionIsolationReadiness(datasetCounts, configInfo) {
 function visualArtifactReadiness(datasetCounts, configInfo, codexIsolation) {
   const visualCases = datasetCounts.positive_with_visual_assertions || 0;
   const activeVisualCases =
-    datasetCounts.generated_active?.positive_with_visual_assertions ??
-    visualCases;
+    datasetCounts.generated_active?.positive_with_visual_assertions ?? visualCases;
   const activePositiveCases = datasetCounts.generated_active?.positive || 0;
   const drawioCli = detectDrawioCli();
   const toolRolloutForVisualAssertions = configBoolDefault(
@@ -2101,10 +2155,8 @@ function visualArtifactReadiness(datasetCounts, configInfo, codexIsolation) {
     configInfo.values.require_drawio_cli_for_visual_rollouts,
     true,
   );
-  const visualExecTimeoutSeconds =
-    Number(configInfo.values.visual_exec_timeout || 0) || null;
-  const activeSplitDir =
-    datasetCounts.generated_active?.path || configInfo.values.split_dir || "";
+  const visualExecTimeoutSeconds = Number(configInfo.values.visual_exec_timeout || 0) || null;
+  const activeSplitDir = datasetCounts.generated_active?.path || configInfo.values.split_dir || "";
   const visualEvalPolicy = configInfo.values.visual_eval_policy || "";
   const targetBackend = String(configInfo.values.target_backend || "")
     .trim()
@@ -2123,10 +2175,7 @@ function visualArtifactReadiness(datasetCounts, configInfo, codexIsolation) {
       warnings.push(
         "Provider-backed target runs must select the generated text-only split when source evals include visual assertions.",
       );
-    } else if (
-      codexIsolation.required &&
-      codexPermissionProfile.status !== "supported"
-    ) {
+    } else if (codexIsolation.required && codexPermissionProfile.status !== "supported") {
       status = "unsupported_codex_permission_profile";
       blockers.push(
         "active Codex target cases require a verified strict custom permission profile, including text-only rollouts",
@@ -2141,9 +2190,7 @@ function visualArtifactReadiness(datasetCounts, configInfo, codexIsolation) {
       );
     } else if (!toolRolloutForVisualAssertions) {
       status = "blocked";
-      blockers.push(
-        "visual assertions exist but tool_rollout_for_visual_assertions is disabled",
-      );
+      blockers.push("visual assertions exist but tool_rollout_for_visual_assertions is disabled");
     } else if (requireDrawioCliForVisualRollouts && !drawioCli.installed) {
       status = "missing_drawio_cli";
       blockers.push(
@@ -2190,12 +2237,7 @@ function codexCliAllUnsupportedProviderFeatures(args, configInfo) {
   return blockers;
 }
 
-function adapterManifestCompatibility(
-  adapterManifest,
-  skillName,
-  args,
-  effectiveRunProfile,
-) {
+function adapterManifestCompatibility(adapterManifest, skillName, args, effectiveRunProfile) {
   if (!adapterManifest.data) {
     return {
       status: "missing",
@@ -2210,13 +2252,9 @@ function adapterManifestCompatibility(
 
   const manifest = adapterManifest.data;
   const manifestTarget =
-    manifest.target_skill ||
-    manifest.proof_target ||
-    manifest.proofTarget ||
-    null;
+    manifest.target_skill || manifest.proof_target || manifest.proofTarget || null;
   const manifestMode = manifest.mode || manifest.selected_mode || null;
-  const manifestRunProfile =
-    manifest.runProfile || manifest.run_profile || null;
+  const manifestRunProfile = manifest.runProfile || manifest.run_profile || null;
   const warnings = [];
   let reviewRequired = false;
 
@@ -2252,8 +2290,7 @@ function adapterManifestCompatibility(
       `Adapter manifest run profile ${manifestRunProfile} does not match requested run profile ${effectiveRunProfile}; production setup must refresh it before training.`,
     );
   }
-  const registryStatus =
-    manifest.registry_patch?.status || manifest.registryPatch?.status || null;
+  const registryStatus = manifest.registry_patch?.status || manifest.registryPatch?.status || null;
   if (registryStatus !== "ready") {
     reviewRequired = true;
     warnings.push(
@@ -2263,11 +2300,7 @@ function adapterManifestCompatibility(
   warnings.push(...templateHashWarnings(manifest));
 
   return {
-    status: reviewRequired
-      ? "review_required"
-      : warnings.length
-        ? "refresh_required"
-        : "matched",
+    status: reviewRequired ? "review_required" : warnings.length ? "refresh_required" : "matched",
     target: manifestTarget,
     mode: manifestMode,
     runProfile: manifestRunProfile,
@@ -2280,20 +2313,16 @@ function adapterManifestCompatibility(
 
 function pythonStatus(args) {
   const uvCommand = resolveUvCommand();
-  const uvVersion = uvCommand
-    ? commandResult(uvCommand, ["--version"]).stdout
-    : null;
+  const uvVersion = uvCommand ? commandResult(uvCommand, ["--version"]).stdout : null;
   const local = commandResult(args.python, ["--version"]);
   const localVersion = (local.stdout || local.stderr || "").trim();
   const version = localVersion.match(/Python\s+(\d+)\.(\d+)(?:\.(\d+))?/);
   const localCompatible =
     Boolean(version) &&
-    (Number(version[1]) > 3 ||
-      (Number(version[1]) === 3 && Number(version[2]) >= 10));
+    (Number(version[1]) > 3 || (Number(version[1]) === 3 && Number(version[2]) >= 10));
 
   let preference_required = false;
-  if (args.pythonManager === "auto" && !uvCommand && localCompatible)
-    preference_required = true;
+  if (args.pythonManager === "auto" && !uvCommand && localCompatible) preference_required = true;
 
   return {
     preference: args.pythonManager,
@@ -2345,9 +2374,7 @@ function readExistingCodexProbe() {
     cached: true,
     final_path: path.relative(root, finalPath).replaceAll("\\", "/"),
     diagnostic_path: path.relative(root, diagnosticPath).replaceAll("\\", "/"),
-    error: ok
-      ? null
-      : "Existing Codex probe diagnostics are missing CODEX_READY or status 0",
+    error: ok ? null : "Existing Codex probe diagnostics are missing CODEX_READY or status 0",
   };
 }
 
@@ -2355,8 +2382,7 @@ const args = parseArgs(process.argv.slice(2));
 const missing = [];
 const warnings = [];
 const repoRootOk =
-  fs.existsSync(path.join(root, "package.json")) &&
-  fs.existsSync(path.join(root, "AGENTS.md"));
+  fs.existsSync(path.join(root, "package.json")) && fs.existsSync(path.join(root, "AGENTS.md"));
 if (!repoRootOk) missing.push("repo root");
 
 const gitignore = fs.existsSync(path.join(root, ".gitignore"))
@@ -2396,12 +2422,10 @@ else {
     eval_positive: evalCounts.positive,
     eval_negative: evalCounts.negative,
     eval_total: evalCounts.total,
-    positive_with_deterministic_assertions:
-      evalCounts.positive_with_deterministic_assertions,
+    positive_with_deterministic_assertions: evalCounts.positive_with_deterministic_assertions,
     positive_with_visual_assertions: evalCounts.positive_with_visual_assertions,
     positive_with_fixtures: evalCounts.positive_with_fixtures,
-    positive_with_expected_artifacts:
-      evalCounts.positive_with_expected_artifacts,
+    positive_with_expected_artifacts: evalCounts.positive_with_expected_artifacts,
     estimated_split: estimateSplitCounts(evalCounts.positive),
     generated: generatedSplitCounts(skillName),
   };
@@ -2411,9 +2435,7 @@ else {
     );
   }
   const split =
-    datasetCounts.generated.train +
-    datasetCounts.generated.val +
-    datasetCounts.generated.test
+    datasetCounts.generated.train + datasetCounts.generated.val + datasetCounts.generated.test
       ? datasetCounts.generated
       : datasetCounts.estimated_split;
   if (split.val < EXPLORATORY_MIN.val || split.test < EXPLORATORY_MIN.test) {
@@ -2432,17 +2454,12 @@ if (args.pythonManager === "uv" && !python.uv.installed) {
   missing.push("uv or Python 3.10+");
 }
 if (python.preference_required) {
-  warnings.push(
-    "uv is not installed; ask whether to install uv or explicitly use local Python.",
-  );
+  warnings.push("uv is not installed; ask whether to install uv or explicitly use local Python.");
 }
 
 if (!commandResult("git", ["--version"]).ok) missing.push("Git");
 if (!commandResult("node", ["--version"]).ok) missing.push("Node.js");
-if (
-  !commandResult("pnpm", ["--version"]).ok &&
-  !commandResult("npm", ["--version"]).ok
-) {
+if (!commandResult("pnpm", ["--version"]).ok && !commandResult("npm", ["--version"]).ok) {
   missing.push("npm or pnpm");
 }
 
@@ -2463,19 +2480,14 @@ if (provider.endpoint_probes.some((probe) => probe.status === "not_run")) {
     "OpenAI-compatible endpoint chat preflight was not run; use strict training readiness before handoff.",
   );
 }
-if (args.mode === "native-provider" && !providerOk)
-  missing.push(...provider.blockers);
+if (args.mode === "native-provider" && !providerOk) missing.push(...provider.blockers);
 if (args.mode === "hybrid-codex-target" && !providerOk && !args.setupOnly) {
   missing.push(...provider.blockers);
 }
-datasetCounts.generated_active = generatedSplitCountsFromConfig(
-  skillName,
-  configInfo,
-);
+datasetCounts.generated_active = generatedSplitCountsFromConfig(skillName, configInfo);
 const quality = benchmarkQuality(datasetCounts);
 const semanticJudge = semanticJudgeReadiness(args, configInfo);
-const codexCliAllProviderFeatureBlockers =
-  codexCliAllUnsupportedProviderFeatures(args, configInfo);
+const codexCliAllProviderFeatureBlockers = codexCliAllUnsupportedProviderFeatures(args, configInfo);
 if (codexCliAllProviderFeatureBlockers.length) {
   missing.push(...codexCliAllProviderFeatureBlockers);
   warnings.push(
@@ -2546,27 +2558,13 @@ const liveAdapterPatches = adapterManifest.data
       files: [],
       blockers: ["target-specific adapter manifest is missing or invalid"],
     };
-const datasetFreshness = generatedDataFreshness(
-  skillPath,
-  skillName,
-  configInfo,
-);
-const codexIsolation = codexExecutionIsolationReadiness(
-  datasetCounts,
-  configInfo,
-);
-const visualArtifact = visualArtifactReadiness(
-  datasetCounts,
-  configInfo,
-  codexIsolation,
-);
+const datasetFreshness = generatedDataFreshness(skillPath, skillName, configInfo);
+const codexIsolation = codexExecutionIsolationReadiness(datasetCounts, configInfo);
+const visualArtifact = visualArtifactReadiness(datasetCounts, configInfo, codexIsolation);
 warnings.push(...visualArtifact.warnings);
 const configuredSplitBlockers =
-  datasetCounts.generated_active?.configured &&
-  !datasetCounts.generated_active.exists
-    ? [
-        `configured split_dir is missing: ${datasetCounts.generated_active.configured_path}`,
-      ]
+  datasetCounts.generated_active?.configured && !datasetCounts.generated_active.exists
+    ? [`configured split_dir is missing: ${datasetCounts.generated_active.configured_path}`]
     : [];
 const dataFloorTrainingBlockers =
   officialParity.runProfile === "official-parity" && !quality.officialFloorMet
@@ -2578,16 +2576,10 @@ if (args.mode === "codex-cli-all") {
     missing.push("adapter manifest for codex-cli-all");
   } else {
     const manifest = adapterManifest.data;
-    if (
-      !manifest.installed_files?.some((file) =>
-        file.endsWith("codex_cli_reflector.py"),
-      )
-    ) {
+    if (!manifest.installed_files?.some((file) => file.endsWith("codex_cli_reflector.py"))) {
       missing.push("codex_cli reflection adapter");
     }
-    if (
-      !manifest.installed_files?.some((file) => file.endsWith("evaluator.py"))
-    ) {
+    if (!manifest.installed_files?.some((file) => file.endsWith("evaluator.py"))) {
       missing.push("Agent Skills evaluator adapter");
     }
   }
@@ -2602,12 +2594,7 @@ if (args.mode === "codex-cli-all") {
     }
   }
   const codexAllConfig = skillName
-    ? path.join(
-        root,
-        ".agents/skillopt-work",
-        skillName,
-        "configs/agent-skills.codex-cli-all.yaml",
-      )
+    ? path.join(root, ".agents/skillopt-work", skillName, "configs/agent-skills.codex-cli-all.yaml")
     : null;
   if (!codexAllConfig || !fs.existsSync(codexAllConfig)) {
     missing.push("codex-cli-all work config");
@@ -2649,6 +2636,14 @@ const trainingBlockers = [
     : []),
 ];
 const uniqueTrainingBlockers = [...new Set(trainingBlockers)];
+const finalProofBlockers =
+  officialParity.runProfile === "official-parity"
+    ? [...new Set([...officialParity.proofBlockers, ...uniqueTrainingBlockers])]
+    : officialParity.proofBlockers;
+const finalProofStatus =
+  officialParity.runProfile === "official-parity" && finalProofBlockers.length
+    ? "blocked"
+    : officialParity.proofStatus;
 
 const result = {
   ok: uniqueTrainingBlockers.length === 0,
@@ -2658,15 +2653,16 @@ const result = {
   run_profile: officialParity.runProfile,
   requestedRunProfile: officialParity.requestedRunProfile,
   runProfile: officialParity.runProfile,
-  proofStatus: officialParity.proofStatus,
-  proofBlockers: officialParity.proofBlockers,
-  officialParityStatus: officialParity.officialParityStatus,
+  proofStatus: finalProofStatus,
+  proofBlockers: finalProofBlockers,
+  officialParityStatus:
+    officialParity.runProfile === "official-parity" && finalProofStatus === "blocked"
+      ? "blocked"
+      : officialParity.officialParityStatus,
   officialParityGaps: officialParity.officialParityGaps,
   upstreamBehaviorBypassed: officialParity.upstreamBehaviorBypassed,
   maturity: skillMaturity,
-  skill_path: skillPath
-    ? path.relative(root, skillPath).replaceAll("\\", "/")
-    : null,
+  skill_path: skillPath ? path.relative(root, skillPath).replaceAll("\\", "/") : null,
   frontmatter_ok: frontmatterOk,
   skillopt: {
     clone: skillOptClone,
@@ -2699,16 +2695,13 @@ const result = {
     slowUpdateGateWithSelection:
       configInfo.values.optimizer_slow_update_gate_with_selection === "true",
     metaSkill: configInfo.values.optimizer_use_meta_skill === "true",
-    skillAwareReflection:
-      configInfo.values.optimizer_use_skill_aware_reflection === "true",
+    skillAwareReflection: configInfo.values.optimizer_use_skill_aware_reflection === "true",
     cosineScheduler: configInfo.values.optimizer_lr_scheduler === "cosine",
     visualArtifactReadiness: visualArtifact.status,
-    requiredModelPins: requiredModelPinNames(args.mode, configInfo).map(
-      (name) => ({
-        name,
-        status: configInfo.modelPins[name]?.status || "not_applicable",
-      }),
-    ),
+    requiredModelPins: requiredModelPinNames(args.mode, configInfo).map((name) => ({
+      name,
+      status: configInfo.modelPins[name]?.status || "not_applicable",
+    })),
   },
   configPath: configInfo.path,
   adapterManifest,
@@ -2728,9 +2721,7 @@ const result = {
 if (args.json) {
   console.log(JSON.stringify(result, null, 2));
 } else {
-  console.log(
-    `SkillOpt readiness for ${result.target_skill || "<missing skill>"}`,
-  );
+  console.log(`SkillOpt readiness for ${result.target_skill || "<missing skill>"}`);
   console.log(`Mode: ${result.mode}`);
   console.log(`Run profile: ${result.run_profile}`);
   console.log(`Setup readiness: ${result.setupReadiness}`);
@@ -2740,10 +2731,7 @@ if (args.json) {
   if (result.proofBlockers.length)
     console.log(`Proof blockers: ${result.proofBlockers.join("; ")}`);
   if (result.officialParityGaps.length) {
-    if (
-      result.mode === "codex-cli-all" ||
-      result.run_profile === "exploratory"
-    ) {
+    if (result.mode === "codex-cli-all" || result.run_profile === "exploratory") {
       const bypassed = result.upstreamBehaviorBypassed.length
         ? ` Bypassed upstream provider-backed behavior: ${result.upstreamBehaviorBypassed.join(", ")}.`
         : "";
@@ -2751,9 +2739,7 @@ if (args.json) {
         `Expected exploratory differences: provider-free exploratory mode, not upstream-native official optimizer parity.${bypassed}`,
       );
     } else {
-      console.log(
-        `Official-parity gaps: ${result.officialParityGaps.join("; ")}`,
-      );
+      console.log(`Official-parity gaps: ${result.officialParityGaps.join("; ")}`);
     }
   }
   console.log(`Config schema: ${result.configSchemaCheck.status}`);
@@ -2764,15 +2750,12 @@ if (args.json) {
     .filter((pin) => pin.status === "env_missing")
     .map((pin) => pin.env)
     .filter(Boolean);
-  if (modelPinBlockers.length)
-    console.log(`Missing model pin env: ${modelPinBlockers.join(", ")}`);
+  if (modelPinBlockers.length) console.log(`Missing model pin env: ${modelPinBlockers.join(", ")}`);
   console.log(
     `Dataset: positive ${result.datasetCounts.eval_positive}, negative ${result.datasetCounts.eval_negative}, generated train ${result.datasetCounts.generated.train}, val ${result.datasetCounts.generated.val}, test ${result.datasetCounts.generated.test}`,
   );
   if (result.visualArtifactReadiness.visualAssertionCases > 0) {
-    console.log(
-      `Visual artifact readiness: ${result.visualArtifactReadiness.status}`,
-    );
+    console.log(`Visual artifact readiness: ${result.visualArtifactReadiness.status}`);
   }
   if (result.adapterManifestCheck.status !== "matched")
     console.log(`Adapter manifest: ${result.adapterManifestCheck.status}`);
@@ -2792,7 +2775,7 @@ if (args.json) {
 }
 
 if (args.strictTrainingReady && result.trainingReadiness !== "ready") {
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  process.exitCode = result.safe_to_setup ? 0 : 1;
 }
-
-process.exit(result.safe_to_setup ? 0 : 1);

@@ -24,6 +24,8 @@ Descriptions are routing rules. Include the concrete workflow, trigger terms, an
 
 Codex/OpenAI-facing skills under `skills/` and `incubator/skills/` should include `agents/openai.yaml`. Keep it focused on product metadata: `interface`, `policy.allow_implicit_invocation`, and `dependencies.tools`.
 
+Keep `interface.default_prompt` executable by Codex: use current-host wording and do not name Claude Code- or Cursor-specific planning/question controls. Put target-specific evidence and output terms in the prompt, and keep host-specific lifecycle detail in `SKILL.md`.
+
 Do not add `agents/openai.yaml` as boilerplate to every skill. Keep routing and workflow instructions in `SKILL.md`, and do not add product metadata to ignored project-local helper installs under `.agents/skills/` by default.
 
 See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy decision.
@@ -31,13 +33,13 @@ See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy
 ## Execution Host and Target Runtime
 
 - Treat the execution host as the client running the skill and the target runtime as the agent whose evidence or artifacts the user wants to manage.
-- Keep a workflow portable when its evidence and output contracts match. Specialize only when its name, trigger, configuration, evidence, or output materially differs.
+- Keep a workflow portable when its evidence and output contracts match. Create a target-specific skill only when its name, configuration, evidence, or output makes both its trigger and outcome materially distinct.
 - When a target-specific skill runs from another host, preserve its target contract and adapt only planning, questions, permissions, and handoff to available host controls.
 - Use descriptions for implicit discovery and explicit invocation, where supported, when deterministic selection matters. Do not add a catch-all router or custom metadata that claims to guarantee activation.
 - Create an independent skill when it has a distinct trigger and outcome; do not impose a catalog-size quota.
-- Keep a backend gateway with its owning skill until a second independent consumer or a separately proven, fail-closed backend justifies extraction.
+- Keep a backend gateway with its owning skill until both a second independent consumer exists and a separately proven backend provides fail-closed filesystem, process, tool, network, and environment isolation.
 
-See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.md) and [ADR-0026](adrs/0026-distinguish-execution-host-from-target-runtime.md).
+See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.md) and [ADR-0028](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md).
 
 ## Body Shape
 

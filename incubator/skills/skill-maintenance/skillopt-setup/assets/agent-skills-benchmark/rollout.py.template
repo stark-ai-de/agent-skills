@@ -1,5 +1,12 @@
+import base64
+import binascii
+from collections import deque
+import copy
+import errno
+import html
 import json
 import hashlib
+import math
 import os
 import re
 import shutil
@@ -9,10 +16,12 @@ import subprocess
 import struct
 import tempfile
 import time
+import urllib.parse
 import xml.etree.ElementTree as ET
 import zlib
+from html.parser import HTMLParser
 from pathlib import Path
-from threading import Thread
+from threading import Lock, Thread
 
 
 def redact(text):
@@ -30,6 +39,326 @@ def as_text(value):
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
+
+
+PROMPT_ECHO_MARKER = "[redacted-prompt]"
+PROMPT_ECHO_SEED_CHARS = 16
+PROMPT_ECHO_MAX_UNIQUE_SEEDS = 65_536
+PROMPT_ECHO_MAX_SPANS = 65_536
+PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES = PROMPT_ECHO_SEED_CHARS * 4
+MAX_STDOUT_CAPTURE_BYTES = 10 * 1024 * 1024
+MAX_STDERR_CAPTURE_BYTES = 64 * 1024
+CAPTURE_CHUNK_BYTES = 64 * 1024
+OUTPUT_TRUNCATION_MARKER = "[output truncated; retained tail]"
+
+
+class BoundedCaptureError(OSError):
+    pass
+
+
+class BoundedByteCapture:
+    def __init__(self, limit):
+        self.limit = max(1, int(limit))
+        self._chunks = deque()
+        self._retained_bytes = 0
+        self._total_bytes = 0
+        self._discarded_tail = b""
+        self._lock = Lock()
+
+    def _remember_discarded(self, value):
+        recent = value[-PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+        self._discarded_tail = (
+            self._discarded_tail + recent
+        )[-PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+
+    def append(self, chunk):
+        value = bytes(chunk or b"")
+        if not value:
+            return
+        with self._lock:
+            self._total_bytes += len(value)
+            self._chunks.append(value)
+            self._retained_bytes += len(value)
+            while self._retained_bytes > self.limit:
+                excess = self._retained_bytes - self.limit
+                first = self._chunks[0]
+                if len(first) <= excess:
+                    removed = self._chunks.popleft()
+                    self._retained_bytes -= len(first)
+                else:
+                    removed = first[:excess]
+                    self._chunks[0] = first[excess:]
+                    self._retained_bytes -= excess
+                self._remember_discarded(removed)
+
+    @property
+    def total_bytes(self):
+        with self._lock:
+            return self._total_bytes
+
+    def snapshot(self):
+        with self._lock:
+            return b"".join(self._chunks), self._total_bytes > self.limit
+
+    def redaction_snapshot(self):
+        with self._lock:
+            return (
+                self._discarded_tail,
+                b"".join(self._chunks),
+                self._total_bytes > self.limit,
+            )
+
+
+class BoundedProcessIO:
+    def __init__(
+        self,
+        process,
+        prompt,
+        stdout_limit=MAX_STDOUT_CAPTURE_BYTES,
+        stderr_limit=MAX_STDERR_CAPTURE_BYTES,
+    ):
+        self.process = process
+        self.prompt = str(prompt or "").encode("utf-8", errors="replace")
+        self.stdout = BoundedByteCapture(stdout_limit)
+        self.stderr = BoundedByteCapture(stderr_limit)
+        self._errors = []
+        self._error_lock = Lock()
+        self._readers = [
+            Thread(
+                target=self._read_stream,
+                args=("stdout", process.stdout, self.stdout),
+                name="skillopt-stdout-drain",
+                daemon=True,
+            ),
+            Thread(
+                target=self._read_stream,
+                args=("stderr", process.stderr, self.stderr),
+                name="skillopt-stderr-drain",
+                daemon=True,
+            ),
+        ]
+        self._writer = Thread(
+            target=self._write_prompt,
+            name="skillopt-stdin-writer",
+            daemon=True,
+        )
+        self._threads = [*self._readers, self._writer]
+        self._started_threads = []
+
+    def _record_error(self, label, error):
+        with self._error_lock:
+            self._errors.append(f"{label}: {type(error).__name__}")
+
+    def _read_stream(self, label, stream, capture):
+        try:
+            while True:
+                chunk = stream.read(CAPTURE_CHUNK_BYTES)
+                if not chunk:
+                    return
+                capture.append(chunk)
+        except Exception as error:
+            self._record_error(label, error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def _write_prompt(self):
+        stream = self.process.stdin
+        try:
+            view = memoryview(self.prompt)
+            while view:
+                written = stream.write(view)
+                if not written:
+                    raise BrokenPipeError("stdin closed before prompt transport completed")
+                view = view[written:]
+            stream.flush()
+        except BrokenPipeError:
+            pass
+        except OSError as error:
+            if error.errno not in {errno.EINVAL, errno.EPIPE}:
+                self._record_error("stdin", error)
+        except Exception as error:
+            self._record_error("stdin", error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def start(self):
+        for thread in self._threads:
+            try:
+                thread.start()
+            finally:
+                if thread.ident is not None and thread not in self._started_threads:
+                    self._started_threads.append(thread)
+
+    def close_unstarted_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread in self._started_threads or thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def close_stopped_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def finish(self, timeout=7):
+        deadline = time.monotonic() + max(0, timeout)
+        for thread in self._started_threads:
+            thread.join(timeout=max(0, deadline - time.monotonic()))
+        alive = [thread.name for thread in self._started_threads if thread.is_alive()]
+        if alive:
+            raise BoundedCaptureError("bounded subprocess I/O threads did not stop")
+        with self._error_lock:
+            errors = list(self._errors)
+        if errors:
+            raise BoundedCaptureError("bounded subprocess I/O failed: " + "; ".join(errors))
+
+
+def render_captured_stream(capture, prompt):
+    discarded_tail, payload, truncated = capture.redaction_snapshot()
+    value = payload.decode("utf-8", errors="replace")
+    boundary_chars = prompt_boundary_prefix_chars(
+        discarded_tail,
+        payload,
+        str(prompt or "").encode("utf-8", errors="replace"),
+    )
+    value = redact_prompt(value, prompt, boundary_chars=boundary_chars)
+    if truncated:
+        return f"{OUTPUT_TRUNCATION_MARKER}\n{value}"
+    return value
+
+
+def prompt_boundary_prefix_chars(discarded_tail, payload, transported):
+    """Return retained leading characters proven to continue a discarded prompt echo."""
+    if not discarded_tail or not payload or len(transported) < 2:
+        return 0
+    seed_bytes = min(PROMPT_ECHO_SEED_CHARS, len(transported))
+    max_left_size = min(seed_bytes - 1, len(discarded_tail))
+    if max_left_size <= 0:
+        return 0
+    high = min(len(payload), PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES)
+    matched_bytes = 0
+    for left_size in range(1, max_left_size + 1):
+        left = discarded_tail[-left_size:]
+        if left + payload[:1] not in transported:
+            continue
+        low = 1
+        candidate_high = high
+        while low < candidate_high:
+            middle = (low + candidate_high + 1) // 2
+            if left + payload[:middle] in transported:
+                low = middle
+            else:
+                candidate_high = middle - 1
+        matched_bytes = max(matched_bytes, low)
+        if matched_bytes == high:
+            break
+    return len(payload[:matched_bytes].decode("utf-8", errors="replace"))
+
+
+def prompt_echo_spans(value, transported):
+    """Return bounded prompt-derived spans, or None to request fail-closed redaction."""
+    spans = []
+    if not value or not transported:
+        return spans
+
+    # A short captured stream or an individual line can be a truncated stdin echo.
+    # Treat it as sensitive even when it is shorter than the rolling-match seed.
+    if value in transported:
+        return [(0, len(value))]
+    for match in re.finditer(r"[^\r\n]+", value):
+        line = match.group(0)
+        stripped = line.strip()
+        if stripped and stripped in transported:
+            offset = line.find(stripped)
+            spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+            if len(spans) > PROMPT_ECHO_MAX_SPANS:
+                return None
+
+    seed_size = min(PROMPT_ECHO_SEED_CHARS, len(transported))
+    if seed_size <= 0 or len(value) < seed_size:
+        return spans
+
+    prompt_seeds = set()
+    for index in range(len(transported) - seed_size + 1):
+        prompt_seeds.add(transported[index : index + seed_size])
+        if len(prompt_seeds) > PROMPT_ECHO_MAX_UNIQUE_SEEDS:
+            return None
+
+    seed_spans = []
+    last_seed_start = len(value) - seed_size
+    for index in range(last_seed_start + 1):
+        if value[index : index + seed_size] not in prompt_seeds:
+            continue
+        end = index + seed_size
+        if seed_spans and index <= seed_spans[-1][1]:
+            seed_spans[-1] = (
+                seed_spans[-1][0],
+                max(seed_spans[-1][1], end),
+            )
+        else:
+            seed_spans.append((index, end))
+            if len(spans) + len(seed_spans) > PROMPT_ECHO_MAX_SPANS:
+                return None
+    spans.extend(seed_spans)
+    return spans
+
+
+def redact_prompt(text, prompt, boundary_chars=0):
+    value = as_text(text)
+    transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
+    spans = prompt_echo_spans(value, transported)
+    if spans is None:
+        return PROMPT_ECHO_MARKER if value else ""
+    guard_end = min(len(value), max(0, int(boundary_chars)))
+    if guard_end:
+        if len(spans) >= PROMPT_ECHO_MAX_SPANS:
+            return PROMPT_ECHO_MARKER
+        spans.append((0, guard_end))
+    if not spans:
+        return value
+    spans.sort()
+    merged = []
+    for start, end in spans:
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    parts = []
+    cursor = 0
+    for start, end in merged:
+        parts.extend((value[cursor:start], PROMPT_ECHO_MARKER))
+        cursor = end
+    parts.append(value[cursor:])
+    return "".join(parts)
+
+
+def redact_timeout_stream(text):
+    # Once transport is interrupted, even a one-character captured fragment can
+    # be prompt-derived. Its ownership cannot be distinguished from diagnostics.
+    return PROMPT_ECHO_MARKER if as_text(text) else ""
 
 
 def normalize_task_prompt(prompt, skill_name="drawio-diagrams"):
@@ -98,12 +427,12 @@ def signal_process_group(process, sig):
         return short(error, 500)
 
 
-def communicate_after_signal(process, timeout):
+def wait_after_signal(process, timeout):
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
-        return as_text(stdout), as_text(stderr), False
-    except subprocess.TimeoutExpired as error:
-        return as_text(error.stdout), as_text(error.stderr), True
+        process.wait(timeout=timeout)
+        return False
+    except subprocess.TimeoutExpired:
+        return True
 
 
 def wait_for_process_group_exit(pgid, timeout):
@@ -134,21 +463,75 @@ def reap_process_group(process, grace_seconds=1):
     return notes, still_alive, had_remaining_processes
 
 
-def start_process_group_reaper(process, grace_seconds=0):
-    state = {}
+def close_process_pipes(process):
+    for stream in (process.stdin, process.stdout, process.stderr):
+        try:
+            stream.close()
+        except Exception:
+            pass
 
-    def wait_and_reap():
-        process.wait()
-        state["result"] = reap_process_group(process, grace_seconds)
 
-    thread = Thread(target=wait_and_reap, name="skillopt-process-group-reaper", daemon=True)
-    thread.start()
-    return thread, state
+def cleanup_failed_process_io_start(process, process_io):
+    cleanup_failed = False
+    try:
+        if process_io is not None:
+            process_io.close_unstarted_streams()
+    except Exception:
+        cleanup_failed = True
+    try:
+        signal_process_group(process, signal.SIGTERM)
+        still_running = wait_after_signal(process, 0)
+        if still_running:
+            signal_process_group(process, signal.SIGKILL)
+            cleanup_failed = wait_after_signal(process, 5) or cleanup_failed
+        reap_process_group(process, grace_seconds=0)
+    except Exception:
+        cleanup_failed = True
+    if process_io is not None:
+        try:
+            process_io.finish(timeout=1)
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+    else:
+        close_process_pipes(process)
+    try:
+        cleanup_failed = (
+            process.poll() is None
+            or process_group_alive(process.pid)
+            or cleanup_failed
+        )
+    except Exception:
+        cleanup_failed = True
+    return cleanup_failed
+
+
+def start_bounded_process_io(process, prompt, **kwargs):
+    process_io = None
+    try:
+        process_io = BoundedProcessIO(process, prompt, **kwargs)
+        process_io.start()
+        return process_io
+    except BaseException as error:
+        cleanup_failed = cleanup_failed_process_io_start(process, process_io)
+        if not isinstance(error, Exception):
+            raise
+        if cleanup_failed:
+            raise BoundedCaptureError(
+                "bounded subprocess I/O startup cleanup failed"
+            ) from None
+        raise BoundedCaptureError(
+            f"bounded subprocess I/O failed to start: {type(error).__name__}"
+        ) from None
 
 
 PACKAGE_DIRS_TO_SEED = ("scripts", "references", "assets", "agents")
 ROLLOUT_CONTROL_DIR = ".skillopt-control"
 ROLLOUT_BIN_DIR = ".skillopt-bin"
+ARTIFACT_EXCLUDED_TOP_LEVEL = frozenset(
+    (*PACKAGE_DIRS_TO_SEED, "fixtures", ROLLOUT_CONTROL_DIR, ROLLOUT_BIN_DIR)
+)
 VISUAL_ROLLOUT_PERMISSION_PROFILE = "skillopt_visual_rollout"
 TEXT_ROLLOUT_PERMISSION_PROFILE = "skillopt_text_rollout"
 MAX_WORKSPACE_ENTRIES = 4096
@@ -156,6 +539,12 @@ MAX_ARTIFACT_COUNT = 32
 MAX_ARTIFACT_FILE_BYTES = 20 * 1024 * 1024
 MAX_ARTIFACT_TOTAL_BYTES = 64 * 1024 * 1024
 MAX_SVG_FILE_BYTES = 5 * 1024 * 1024
+MAX_EMBEDDED_IMAGE_BYTES = 2 * 1024 * 1024
+MAX_SVG_ELEMENTS = 20000
+MAX_SVG_DEPTH = 128
+MAX_DRAWIO_ELEMENTS = 50000
+MAX_DRAWIO_DEPTH = 256
+MAX_INFLATED_DRAWIO_BYTES = 32 * 1024 * 1024
 MAX_PNG_DIMENSION = 16384
 MAX_PNG_PIXELS = 2_000_000
 MAX_PNG_INFLATED_BYTES = 16 * 1024 * 1024
@@ -1050,12 +1439,709 @@ SVG_11_DOCTYPE = re.compile(
     r'''["']http://www\.w3\.org/Graphics/SVG/1\.1/DTD/svg11\.dtd["']\s*>''',
     flags=re.IGNORECASE,
 )
+SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+SVG_XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace"
+SVG_URL_RE = re.compile(r'''url\(\s*(['"]?)(.*?)\1\s*\)''', flags=re.IGNORECASE)
+SVG_KEYFRAMES_START_RE = re.compile(
+    r"@(?:-webkit-)?keyframes\s+[_A-Za-z][_A-Za-z0-9-]*\s*\{",
+    flags=re.IGNORECASE,
+)
+SVG_EXTERNAL_REFERENCE_PREFIXES = ("http://", "https://", "//")
+SVG_ANIMATION_ELEMENTS = {
+    "animate",
+    "animatecolor",
+    "animatemotion",
+    "animatetransform",
+    "discard",
+    "mpath",
+    "set",
+}
+SVG_UNSAFE_RESOURCE_ELEMENTS = SVG_ANIMATION_ELEMENTS | {
+    "embed",
+    "frame",
+    "iframe",
+    "object",
+    "script",
+}
 
 
 def svg_local_name(value):
     if not isinstance(value, str):
         return ""
     return value.rsplit("}", 1)[-1].split(":")[-1]
+
+
+def svg_namespace(value):
+    if not isinstance(value, str) or not value.startswith("{") or "}" not in value:
+        return ""
+    return value[1:].split("}", 1)[0]
+
+
+def svg_attribute(element, name):
+    for raw_name, value in element.attrib.items():
+        if svg_local_name(raw_name).lower() == name:
+            return str(value).strip()
+    return ""
+
+
+def svg_css_reference_counts(value, identifiers):
+    literal = str(value or "")
+    external = 1 if re.search(r"@import\b", literal, flags=re.IGNORECASE) or "\\" in literal else 0
+    unsupported = 0
+    for match in SVG_URL_RE.finditer(literal):
+        reference = match.group(2).strip()
+        if not reference or reference.lower().startswith("data:"):
+            continue
+        if reference.startswith("#"):
+            if reference[1:] not in identifiers:
+                unsupported += 1
+        else:
+            external += 1
+    return external, unsupported
+
+
+def xml_tree_shape(root, *, max_elements, max_depth, label):
+    count = 0
+    deepest = 0
+    stack = [(root, 1)]
+    while stack:
+        element, depth = stack.pop()
+        count += 1
+        deepest = max(deepest, depth)
+        if count > max_elements or deepest > max_depth:
+            raise ValueError(f"{label} exceeds element or depth safety limit")
+        stack.extend((child, depth + 1) for child in element)
+    return count, deepest
+
+
+def svg_tree_shape(root):
+    return xml_tree_shape(
+        root,
+        max_elements=MAX_SVG_ELEMENTS,
+        max_depth=MAX_SVG_DEPTH,
+        label="SVG",
+    )
+
+
+def drawio_tree_shape(root, max_elements=None):
+    return xml_tree_shape(
+        root,
+        max_elements=MAX_DRAWIO_ELEMENTS if max_elements is None else max_elements,
+        max_depth=MAX_DRAWIO_DEPTH,
+        label="draw.io XML",
+    )
+
+
+def positive_svg_length(value):
+    match = re.fullmatch(
+        r"\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[A-Za-z%]+)?\s*",
+        str(value or ""),
+    )
+    if not match:
+        return False
+    try:
+        number = float(match.group(1))
+        return math.isfinite(number) and number > 0
+    except ValueError:
+        return False
+
+
+def svg_has_bounds(root):
+    view_box = root.attrib.get("viewBox") or root.attrib.get("viewbox")
+    if view_box:
+        try:
+            values = [float(value) for value in re.split(r"[\s,]+", view_box.strip()) if value]
+        except ValueError:
+            values = []
+        if (
+            len(values) == 4
+            and all(math.isfinite(value) for value in values)
+            and values[2] > 0
+            and values[3] > 0
+        ):
+            return True
+    return positive_svg_length(root.attrib.get("width")) and positive_svg_length(
+        root.attrib.get("height")
+    )
+
+
+def svg_identifier_map(root):
+    result = {}
+    for element in root.iter():
+        for raw_name, raw_value in element.attrib.items():
+            if svg_local_name(raw_name).lower() != "id":
+                continue
+            identifier = str(raw_value).strip()
+            if not identifier:
+                raise ValueError("SVG contains an empty id")
+            if identifier in result:
+                raise ValueError(f"SVG contains duplicate id {identifier!r}")
+            result[identifier] = element
+    return result
+
+
+def svg_stylesheet_has_only_keyframes(css):
+    literal = str(css or "")
+    if not literal.strip():
+        return True
+    if "\\" in literal or "/*" in literal or "*/" in literal:
+        return False
+    position = 0
+    while position < len(literal):
+        while position < len(literal) and literal[position].isspace():
+            position += 1
+        if position == len(literal):
+            return True
+        match = SVG_KEYFRAMES_START_RE.match(literal, position)
+        if match is None:
+            return False
+        depth = 1
+        quote = None
+        position = match.end()
+        while position < len(literal) and depth:
+            character = literal[position]
+            if quote:
+                if character == quote:
+                    quote = None
+            elif character in {'"', "'"}:
+                quote = character
+            elif character == "{":
+                depth += 1
+            elif character == "}":
+                depth -= 1
+            position += 1
+        if depth or quote:
+            return False
+    return True
+
+
+def validate_svg_stylesheets(root):
+    for element in root.iter():
+        if svg_local_name(element.tag).lower() != "style":
+            continue
+        if not svg_stylesheet_has_only_keyframes("".join(element.itertext())):
+            raise ValueError("SVG contains a non-keyframe stylesheet rule")
+
+
+def svg_numeric_length(value, default=0):
+    match = re.fullmatch(
+        r"\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[A-Za-z%]+)?\s*",
+        str(value or ""),
+    )
+    if not match:
+        return default
+    try:
+        number = float(match.group(1))
+    except ValueError:
+        return default
+    return number if math.isfinite(number) else default
+
+
+def svg_points(value):
+    try:
+        numbers = [
+            float(item)
+            for item in re.findall(
+                r"[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[Ee][-+]?\d+)?",
+                str(value or ""),
+            )
+        ]
+    except ValueError:
+        return []
+    if len(numbers) % 2 or not all(math.isfinite(number) for number in numbers):
+        return []
+    return list(zip(numbers[::2], numbers[1::2]))
+
+
+def svg_points_have_area(points):
+    if not points:
+        return False
+    origin = points[0]
+    direction = next((point for point in points[1:] if point != origin), None)
+    if direction is None:
+        return False
+    first = (direction[0] - origin[0], direction[1] - origin[1])
+    return any(
+        first[0] * (point[1] - origin[1]) != first[1] * (point[0] - origin[0])
+        for point in points[1:]
+    )
+
+
+def svg_path_geometry(value):
+    data = str(value or "").strip()
+    if not data:
+        return False, False, False
+    arity = {"m": 2, "l": 2, "h": 1, "v": 1, "c": 6, "s": 4, "q": 4, "t": 2, "a": 7}
+    commands = frozenset("MmZzLlHhVvCcSsQqTtAa")
+    number_re = re.compile(r"[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[Ee][-+]?\d+)?")
+    index = 0
+    command = None
+    relative = False
+    saw_command = False
+    drew_segment = False
+    drew_zero_length_segment = False
+    fillable = False
+    current = (0.0, 0.0)
+    subpath_start = None
+    fill_direction = None
+
+    def record_fill_point(point):
+        nonlocal fill_direction, fillable
+        if subpath_start is None or point == subpath_start:
+            return
+        if fill_direction is None:
+            fill_direction = point
+            return
+        first = (fill_direction[0] - subpath_start[0], fill_direction[1] - subpath_start[1])
+        candidate = (point[0] - subpath_start[0], point[1] - subpath_start[1])
+        if first[0] * candidate[1] != first[1] * candidate[0]:
+            fillable = True
+
+    def skip_whitespace(position):
+        while position < len(data) and data[position].isspace():
+            position += 1
+        return position
+
+    def consume_separator(position, allow_comma):
+        position = skip_whitespace(position)
+        if position < len(data) and data[position] == ",":
+            if not allow_comma:
+                return None
+            position = skip_whitespace(position + 1)
+        return position
+
+    while index < len(data):
+        index = skip_whitespace(index)
+        if index >= len(data):
+            break
+        if data[index] in commands:
+            raw_command = data[index]
+            command = raw_command.lower()
+            relative = raw_command.islower()
+            if not saw_command and command != "m":
+                return False, False, False
+            saw_command = True
+            index += 1
+            if command == "z":
+                if subpath_start is not None:
+                    drew_segment = drew_segment or current != subpath_start
+                    current = subpath_start
+                command = None
+                continue
+        elif command is None:
+            return False, False, False
+
+        parameter_count = arity.get(command)
+        if not parameter_count:
+            return False, False, False
+        group_count = 0
+        while True:
+            values = []
+            for parameter in range(parameter_count):
+                separated = consume_separator(index, parameter > 0 or group_count > 0)
+                if separated is None:
+                    return False, False, False
+                index = separated
+                if index >= len(data) or data[index] in commands:
+                    return False, False, False
+                if command == "a" and parameter in {3, 4}:
+                    if data[index] not in {"0", "1"}:
+                        return False, False, False
+                    values.append(data[index])
+                    index += 1
+                else:
+                    match = number_re.match(data, index)
+                    if match is None:
+                        return False, False, False
+                    values.append(match.group(0))
+                    index = match.end()
+            numbers = [float(item) for item in values]
+            if not all(math.isfinite(number) for number in numbers):
+                return False, False, False
+            if command == "a" and (numbers[0] < 0 or numbers[1] < 0):
+                return False, False, False
+            origin = current
+
+            def point(x, y):
+                return (origin[0] + x, origin[1] + y) if relative else (x, y)
+
+            if command == "m":
+                endpoint = point(numbers[0], numbers[1])
+                if group_count == 0:
+                    subpath_start = endpoint
+                    fill_direction = None
+                else:
+                    drew_segment = drew_segment or endpoint != current
+                    drew_zero_length_segment = drew_zero_length_segment or endpoint == current
+                    record_fill_point(endpoint)
+                current = endpoint
+            elif command in {"l", "t"}:
+                endpoint = point(numbers[0], numbers[1])
+                drew_segment = drew_segment or endpoint != current
+                drew_zero_length_segment = drew_zero_length_segment or endpoint == current
+                record_fill_point(endpoint)
+                current = endpoint
+            elif command == "h":
+                endpoint = (origin[0] + numbers[0], origin[1]) if relative else (numbers[0], origin[1])
+                drew_segment = drew_segment or endpoint != current
+                drew_zero_length_segment = drew_zero_length_segment or endpoint == current
+                record_fill_point(endpoint)
+                current = endpoint
+            elif command == "v":
+                endpoint = (origin[0], origin[1] + numbers[0]) if relative else (origin[0], numbers[0])
+                drew_segment = drew_segment or endpoint != current
+                drew_zero_length_segment = drew_zero_length_segment or endpoint == current
+                record_fill_point(endpoint)
+                current = endpoint
+            elif command == "c":
+                control_1 = point(numbers[0], numbers[1])
+                control_2 = point(numbers[2], numbers[3])
+                endpoint = point(numbers[4], numbers[5])
+                has_extent = any(item != current for item in (control_1, control_2, endpoint))
+                drew_segment = drew_segment or has_extent
+                drew_zero_length_segment = drew_zero_length_segment or not has_extent
+                for item in (control_1, control_2, endpoint):
+                    record_fill_point(item)
+                current = endpoint
+            elif command in {"s", "q"}:
+                control = point(numbers[0], numbers[1])
+                endpoint = point(numbers[2], numbers[3])
+                has_extent = control != current or endpoint != current
+                drew_segment = drew_segment or has_extent
+                drew_zero_length_segment = drew_zero_length_segment or not has_extent
+                for item in (control, endpoint):
+                    record_fill_point(item)
+                current = endpoint
+            elif command == "a":
+                endpoint = point(numbers[5], numbers[6])
+                drew_segment = drew_segment or endpoint != current
+                drew_zero_length_segment = drew_zero_length_segment or endpoint == current
+                if numbers[0] > 0 and numbers[1] > 0 and endpoint != current:
+                    fillable = True
+                record_fill_point(endpoint)
+                current = endpoint
+            group_count += 1
+
+            index = skip_whitespace(index)
+            if index >= len(data):
+                return drew_segment, fillable, drew_zero_length_segment
+            if data[index] in commands:
+                break
+    return (
+        saw_command and drew_segment,
+        saw_command and fillable,
+        saw_command and drew_zero_length_segment,
+    )
+
+
+def svg_color_visible(value, identifiers):
+    literal = re.sub(r"\s+", "", str(value or "")).lower()
+    local_paint = re.fullmatch(r'''url\((?:['"])?#([^)'"]+)(?:['"])?\)''', literal)
+    if local_paint:
+        return urllib.parse.unquote(local_paint.group(1)) in identifiers
+    if literal.startswith("url("):
+        return False
+    if literal in {"", "none", "transparent"}:
+        return False
+    if re.fullmatch(r"#[0-9a-f]{4}", literal):
+        return literal[-1] != "0"
+    if re.fullmatch(r"#[0-9a-f]{8}", literal):
+        return literal[-2:] != "00"
+    alpha = re.fullmatch(r"(?:rgba|hsla)\(.*,([^,\)]*)\)", literal)
+    if alpha is None:
+        alpha = re.fullmatch(r"(?:rgba?|hsla?)\(.*\/([^\)]*)\)", literal)
+    if alpha:
+        value = alpha.group(1)
+        try:
+            divisor = 100 if value.endswith("%") else 1
+            return float(value.rstrip("%")) / divisor > 0
+        except ValueError:
+            return True
+    return True
+
+
+def svg_paint_visible(state, identifiers, *, fill=True, stroke=True):
+    fill_color = state["color"] if state["fill"] == "currentcolor" else state["fill"]
+    stroke_color = state["color"] if state["stroke"] == "currentcolor" else state["stroke"]
+    fill_visible = (
+        fill
+        and svg_color_visible(fill_color, identifiers)
+        and state["fill_opacity"] > 0
+    )
+    stroke_visible = (
+        stroke
+        and svg_color_visible(stroke_color, identifiers)
+        and state["stroke_opacity"] > 0
+        and state["stroke_width"] > 0
+    )
+    return fill_visible or stroke_visible
+
+
+def svg_renderable_graphics(root):
+    identifiers = svg_identifier_map(root)
+    validate_svg_stylesheets(root)
+    initial_state = {
+        "color": "black",
+        "displayed": True,
+        "visibility": "visible",
+        "opacity": 1.0,
+        "fill": "black",
+        "fill_opacity": 1.0,
+        "stroke": "none",
+        "stroke_opacity": 1.0,
+        "stroke_width": 1.0,
+        "stroke_linecap": "butt",
+        "hidden_attribute": False,
+    }
+    non_rendering = {
+        "clippath",
+        "defs",
+        "desc",
+        "marker",
+        "mask",
+        "metadata",
+        "pattern",
+        "style",
+        "symbol",
+        "title",
+    }
+
+    def visible_geometry(element, name, state):
+        if name == "image":
+            return positive_svg_length(element.attrib.get("width")) and positive_svg_length(
+                element.attrib.get("height")
+            )
+        if name == "rect":
+            geometry = positive_svg_length(element.attrib.get("width")) and positive_svg_length(
+                element.attrib.get("height")
+            )
+            return geometry and svg_paint_visible(state, identifiers)
+        elif name == "circle":
+            geometry = positive_svg_length(element.attrib.get("r"))
+            return geometry and svg_paint_visible(state, identifiers)
+        elif name == "ellipse":
+            geometry = positive_svg_length(element.attrib.get("rx")) and positive_svg_length(
+                element.attrib.get("ry")
+            )
+            return geometry and svg_paint_visible(state, identifiers)
+        elif name == "line":
+            geometry = (
+                svg_numeric_length(element.attrib.get("x1")),
+                svg_numeric_length(element.attrib.get("y1")),
+            ) != (
+                svg_numeric_length(element.attrib.get("x2")),
+                svg_numeric_length(element.attrib.get("y2")),
+            )
+            return geometry and svg_paint_visible(
+                state, identifiers, fill=False, stroke=True
+            )
+        elif name in {"polygon", "polyline"}:
+            points = svg_points(element.attrib.get("points"))
+            geometry = len(set(points)) >= 2
+            return geometry and svg_paint_visible(
+                state,
+                identifiers,
+                fill=svg_points_have_area(points),
+                stroke=True,
+            )
+        elif name == "path":
+            has_segment, has_fill_area, has_zero_length_segment = svg_path_geometry(
+                element.attrib.get("d")
+            )
+            if has_segment:
+                return svg_paint_visible(
+                    state, identifiers, fill=has_fill_area, stroke=True
+                )
+            if has_zero_length_segment and state["stroke_linecap"] in {"round", "square"}:
+                return svg_paint_visible(state, identifiers, fill=False, stroke=True)
+            return False
+        elif name == "text":
+            geometry = bool("".join(element.itertext()).strip()) and svg_numeric_length(
+                svg_properties(element).get("font-size"), 16
+            ) > 0
+            return geometry and svg_paint_visible(state, identifiers)
+        else:
+            return False
+
+    def visit(element, parent_state, resolving=frozenset(), referenced=False):
+        name = svg_local_name(element.tag).lower()
+        namespace = svg_namespace(element.tag)
+        if namespace not in {"", SVG_NAMESPACE}:
+            return 0
+        state = svg_render_state(element, parent_state)
+        hidden = (
+            not state["displayed"]
+            or state["hidden_attribute"]
+            or state["visibility"] in {"hidden", "collapse"}
+            or state["opacity"] <= 0
+        )
+        if hidden:
+            return 0
+        if name == "use":
+            href = svg_attribute(element, "href")
+            identifier = urllib.parse.unquote(href[1:]) if href.startswith("#") else ""
+            if not identifier or identifier in resolving or identifier not in identifiers:
+                return 0
+            return visit(
+                identifiers[identifier],
+                state,
+                resolving | {identifier},
+                referenced=True,
+            )
+        if name in non_rendering and not (referenced and name == "symbol"):
+            return 0
+        own = 1 if visible_geometry(element, name, state) else 0
+        return own + sum(visit(child, state, resolving) for child in element)
+
+    return visit(root, initial_state)
+
+
+def decode_data_image(source):
+    header, separator, payload = str(source or "").partition(",")
+    if not separator or not header.lower().startswith("data:image/"):
+        raise ValueError("image source is not a data URI")
+    parts = header[5:].split(";")
+    media_type = parts[0].lower()
+    parameters = {part.lower() for part in parts[1:] if part}
+    if "base64" not in parameters and re.search(r"%(?![0-9A-Fa-f]{2})", payload):
+        raise ValueError("embedded image contains malformed percent encoding")
+    try:
+        if "base64" in parameters:
+            raw = base64.b64decode(payload, validate=True)
+        elif media_type == "image/svg+xml" and payload.lstrip().startswith("<"):
+            raw = payload.encode("utf-8")
+        elif re.search(r"%[0-9A-Fa-f]{2}", payload):
+            raw = urllib.parse.unquote_to_bytes(payload)
+        else:
+            raw = base64.b64decode(payload, validate=True)
+    except (binascii.Error, ValueError) as error:
+        raise ValueError("invalid embedded image encoding") from error
+    if not raw or len(raw) > MAX_EMBEDDED_IMAGE_BYTES:
+        raise ValueError("embedded image is empty or exceeds the safety limit")
+    return media_type, raw
+
+
+def validate_embedded_image(source):
+    media_type, raw = decode_data_image(source)
+    if media_type == "image/png":
+        if not png_metadata(Path("embedded.png"), raw).get("valid"):
+            raise ValueError("invalid embedded PNG")
+        return "png"
+    if media_type != "image/svg+xml":
+        raise ValueError("unsupported embedded image media type")
+    text = raw.decode("utf-8", errors="strict")
+    lowered = text.lower()
+    if "\x00" in text or "<!doctype" in lowered or "<!entity" in lowered:
+        raise ValueError("embedded SVG contains a forbidden declaration")
+    without_xml_declaration = re.sub(
+        r"^\ufeff?\s*<\?xml\s+[^?]*\?>", "", text, count=1, flags=re.IGNORECASE
+    )
+    if "<?" in without_xml_declaration:
+        raise ValueError("embedded SVG processing instructions are not allowed")
+    root = ET.fromstring(text)
+    if svg_local_name(root.tag).lower() != "svg" or svg_namespace(root.tag) not in {
+        "",
+        SVG_NAMESPACE,
+    }:
+        raise ValueError("embedded image root is not SVG")
+    svg_tree_shape(root)
+    if not svg_has_bounds(root) or svg_renderable_graphics(root) <= 0:
+        raise ValueError("embedded SVG lacks bounds or renderable graphics")
+    for element in root.iter():
+        name = svg_local_name(element.tag).lower()
+        if name == "image":
+            raise ValueError("nested embedded SVG images are not allowed")
+        if name == "foreignobject":
+            raise ValueError("embedded SVG foreignObject content is not allowed")
+    metadata = svg_resource_metadata(root, None)
+    if metadata["external_references"] or metadata["unsupported_images"]:
+        raise ValueError("embedded SVG contains unsafe resource references")
+    return "svg+xml"
+
+
+def svg_resource_metadata(root, embedded_image_validator):
+    identifiers = set(svg_identifier_map(root))
+    embedded_svg_images = 0
+    embedded_raster_images = 0
+    external_references = 0
+    unsupported_images = 0
+
+    for element in root.iter():
+        name = svg_local_name(element.tag).lower()
+        namespace = svg_namespace(element.tag)
+        href = svg_attribute(element, "href")
+        image_sources = []
+        if name == "image" and namespace in {"", SVG_NAMESPACE}:
+            image_sources = [href] if href else []
+        elif name in {"img", "source"} and namespace != SVG_NAMESPACE:
+            image_sources = [
+                value
+                for value in (svg_attribute(element, "src"), svg_attribute(element, "srcset"))
+                if value
+            ]
+
+        if name in {"image", "img", "source"}:
+            if not image_sources:
+                unsupported_images += 1
+            for source in image_sources:
+                if source.startswith("#"):
+                    if source[1:] not in identifiers:
+                        unsupported_images += 1
+                    continue
+                if source.lower().startswith("data:image/"):
+                    if embedded_image_validator is None:
+                        unsupported_images += 1
+                        continue
+                    try:
+                        media_type = embedded_image_validator(source)
+                    except Exception:
+                        unsupported_images += 1
+                    else:
+                        if media_type == "svg+xml":
+                            embedded_svg_images += 1
+                        else:
+                            embedded_raster_images += 1
+                    continue
+                if source.lower().startswith(SVG_EXTERNAL_REFERENCE_PREFIXES):
+                    external_references += 1
+                else:
+                    unsupported_images += 1
+        elif href and name != "a":
+            if href.startswith("#"):
+                if href[1:] not in identifiers:
+                    unsupported_images += 1
+            elif href.lower().startswith("data:"):
+                unsupported_images += 1
+            else:
+                external_references += 1
+        elif name == "a" and href:
+            navigation = normalize_url_for_scheme(href).lower()
+            if not navigation.startswith(("#", "http://", "https://", "mailto:")):
+                external_references += 1
+
+        if name in SVG_UNSAFE_RESOURCE_ELEMENTS:
+            external_references += 1
+        if name == "style":
+            external, unsupported = svg_css_reference_counts("".join(element.itertext()), identifiers)
+            external_references += external
+            unsupported_images += unsupported
+        for raw_name, value in element.attrib.items():
+            key = svg_local_name(raw_name).lower()
+            literal = normalize_url_for_scheme(value).lower()
+            if raw_name == f"{{{SVG_XML_NAMESPACE}}}base" or str(raw_name).lower() == "xml:base":
+                external_references += 1
+            if key.startswith("on") or literal.startswith(("javascript:", "vbscript:", "data:text/html")):
+                external_references += 1
+            external, unsupported = svg_css_reference_counts(value, identifiers)
+            external_references += external
+            unsupported_images += unsupported
+
+    return {
+        "embedded_svg_images": embedded_svg_images,
+        "embedded_raster_images": embedded_raster_images,
+        "external_references": external_references,
+        "unsupported_images": unsupported_images,
+    }
 
 
 def svg_style_properties(element):
@@ -1074,6 +2160,122 @@ def svg_properties(element):
     }
     attributes.update(svg_style_properties(element))
     return attributes
+
+
+def svg_flow_keyframe_offsets(root):
+    offsets = {}
+    for element in root.iter():
+        if svg_local_name(element.tag).lower() != "style":
+            continue
+        css = "".join(element.itertext())
+        for match in re.finditer(
+            r"@keyframes\s+([_A-Za-z][_A-Za-z0-9-]*)\s*\{", css, re.IGNORECASE
+        ):
+            start = match.end() - 1
+            depth = 0
+            end = None
+            for index in range(start, len(css)):
+                if css[index] == "{":
+                    depth += 1
+                elif css[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        end = index
+                        break
+            if end is None:
+                continue
+            body = css[start + 1 : end]
+            values = set()
+            has_from = has_to = False
+            for rule in re.finditer(r"([^{}]+)\{([^{}]*)\}", body):
+                declaration = re.search(
+                    r"stroke-dashoffset\s*:\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))(?:px)?(?:\s*[;}])",
+                    rule.group(2),
+                    re.IGNORECASE,
+                )
+                if declaration is None or not math.isfinite(float(declaration.group(1))):
+                    continue
+                values.add(float(declaration.group(1)))
+                selectors = {selector.strip().lower() for selector in rule.group(1).split(",")}
+                has_from = has_from or bool(selectors & {"from", "0%", "0.0%"})
+                has_to = has_to or bool(selectors & {"to", "100%", "100.0%"})
+            if values:
+                offsets[match.group(1).lower()] = {
+                    "values": values,
+                    "has_from": has_from,
+                    "has_to": has_to,
+                }
+    return offsets
+
+
+def svg_has_flow_animation(root):
+    keyframes = svg_flow_keyframe_offsets(root)
+    if not keyframes:
+        return False
+    identifiers = svg_identifier_map(root)
+    initial_state = {
+        "color": "black",
+        "displayed": True,
+        "visibility": "visible",
+        "opacity": 1.0,
+        "fill": "black",
+        "fill_opacity": 1.0,
+        "stroke": "none",
+        "stroke_opacity": 1.0,
+        "stroke_width": 1.0,
+        "stroke_linecap": "butt",
+        "hidden_attribute": False,
+    }
+
+    def visit(element, parent_state):
+        state = svg_render_state(element, parent_state)
+        properties = svg_properties(element)
+        animation = properties.get("animation", "")
+        tokens = set(re.split(r"\s+", animation))
+        times = [
+            float(value) * (0.001 if unit.lower() == "ms" else 1)
+            for value, unit in re.findall(
+                r"(?<![-\w.])(\d+(?:\.\d+)?)(ms|s)(?![-\w])", animation, re.IGNORECASE
+            )
+        ]
+        dash_array = properties.get("stroke-dasharray", "")
+        dash_offset = properties.get("stroke-dashoffset", "")
+        animation_name = next((name for name in keyframes if name in tokens), None)
+        inline_offsets = {
+            float(value)
+            for value in re.findall(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)", dash_offset)
+            if math.isfinite(float(value))
+        } or {0.0}
+        keyframe = keyframes.get(animation_name, {})
+        keyframe_offsets = keyframe.get("values", set())
+        motion = len(keyframe_offsets) > 1 or (
+            not (keyframe.get("has_from") and keyframe.get("has_to"))
+            and len(inline_offsets | keyframe_offsets) > 1
+        )
+        stroke_color = state["color"] if state["stroke"] == "currentcolor" else state["stroke"]
+        animated = (
+            svg_local_name(element.tag).lower() in {"path", "line", "polyline"}
+            and animation_name
+            and "running" in tokens
+            and "infinite" in tokens
+            and times
+            and times[0] > 0
+            and any(
+                float(value) > 0
+                for value in re.findall(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)", dash_array)
+            )
+            and motion
+            and state["displayed"]
+            and not state["hidden_attribute"]
+            and state["visibility"] not in {"hidden", "collapse"}
+            and state["opacity"] > 0
+            and state["stroke_opacity"] > 0
+            and state["stroke_width"] > 0
+            and svg_color_visible(stroke_color, identifiers)
+        )
+        return animated or any(visit(child, state) for child in element)
+
+    return visit(root, initial_state)
 
 
 def svg_number(value, fallback):
@@ -1105,6 +2307,7 @@ def svg_render_state(element, parent):
         "displayed": parent["displayed"] and display != "none",
         "visibility": visibility,
         "opacity": parent["opacity"] * own_opacity,
+        "color": inherited("color"),
         "fill": inherited("fill"),
         "fill_opacity": max(
             0.0,
@@ -1119,6 +2322,7 @@ def svg_render_state(element, parent):
             0.0,
             svg_number(inherited("stroke-width"), parent["stroke_width"]),
         ),
+        "stroke_linecap": inherited("stroke-linecap"),
         "hidden_attribute": parent["hidden_attribute"]
         or "hidden" in properties
         and properties.get("hidden") in {"", "hidden", "true"}
@@ -1126,7 +2330,7 @@ def svg_render_state(element, parent):
     }
 
 
-def svg_state_is_visible(state, foreign_text=False):
+def svg_state_is_visible(state, identifiers, foreign_text=False):
     if (
         not state["displayed"]
         or state["hidden_attribute"]
@@ -1136,18 +2340,14 @@ def svg_state_is_visible(state, foreign_text=False):
         return False
     if foreign_text:
         return True
-    fill_visible = state["fill"] not in {"none", "transparent"} and state["fill_opacity"] > 0
-    stroke_visible = (
-        state["stroke"] not in {"none", "transparent"}
-        and state["stroke_opacity"] > 0
-        and state["stroke_width"] > 0
-    )
-    return fill_visible or stroke_visible
+    return svg_paint_visible(state, identifiers)
 
 
 def svg_visible_text(root):
     parts = []
+    identifiers = svg_identifier_map(root)
     initial_state = {
+        "color": "black",
         "displayed": True,
         "visibility": "visible",
         "opacity": 1.0,
@@ -1156,6 +2356,7 @@ def svg_visible_text(root):
         "stroke": "none",
         "stroke_opacity": 1.0,
         "stroke_width": 1.0,
+        "stroke_linecap": "butt",
         "hidden_attribute": False,
     }
 
@@ -1169,7 +2370,7 @@ def svg_visible_text(root):
         elif local_name in SVG_TEXT_CONTAINERS and not child_text_context:
             child_text_context = "svg"
         visible = not non_rendered and svg_state_is_visible(
-            state, foreign_text=child_text_context == "foreign"
+            state, identifiers, foreign_text=child_text_context == "foreign"
         )
         if visible and child_text_context and element.text:
             parts.append(element.text)
@@ -1209,15 +2410,831 @@ def svg_metadata(path, data=None):
             raise ValueError(f"SVG exceeds {MAX_SVG_FILE_BYTES} byte safety limit")
         text = data.decode("utf-8", errors="strict")
         validate_svg_doctype(text)
+        without_xml_declaration = re.sub(
+            r"^\ufeff?\s*<\?xml\s+[^?]*\?>", "", text, count=1, flags=re.IGNORECASE
+        )
+        if "<?" in without_xml_declaration:
+            raise ValueError("SVG processing instructions are not allowed")
         root = ET.fromstring(text)
         local_name = svg_local_name(root.tag)
+        namespace = svg_namespace(root.tag)
+        svg_tree_shape(root)
+        visible_text = svg_visible_text(root)
+        renderable_graphics = svg_renderable_graphics(root)
+        resource_metadata = svg_resource_metadata(root, validate_embedded_image)
         return {
-            "valid": local_name == "svg",
-            "text_sample": text,
-            "visible_text": svg_visible_text(root),
+            "valid": (
+                local_name == "svg"
+                and namespace in {"", SVG_NAMESPACE}
+                and svg_has_bounds(root)
+                and renderable_graphics > 0
+            ),
+            "visible_text": visible_text,
+            "renderable_graphics": renderable_graphics,
+            "flow_animation": svg_has_flow_animation(root),
+            **resource_metadata,
         }
     except Exception as error:
-        return {"valid": False, "error": short(error, 300), "text_sample": ""}
+        return {"valid": False, "error": short(error, 300)}
+
+
+def drawio_style_map(style):
+    values = {}
+    for token in str(style or "").split(";"):
+        key, separator, value = token.partition("=")
+        if separator:
+            values[key.strip()] = value.strip()
+    return values
+
+
+def drawio_is_image_style(style):
+    literal = str(style or "")
+    parsed = drawio_style_map(literal)
+    flags = {
+        token.strip().lower()
+        for token in literal.split(";")
+        if token.strip() and "=" not in token
+    }
+    return parsed.get("shape", "").strip().lower() == "image" or "image" in flags
+
+
+DRAWIO_FLOW_ANIMATION_KEYS = {
+    "flowAnimation",
+    "flowAnimationDirection",
+    "flowAnimationDuration",
+    "flowAnimationTimingFunction",
+}
+DRAWIO_FLOW_ANIMATION_DIRECTIONS = {"normal", "reverse", "alternate", "alternate-reverse"}
+DRAWIO_FLOW_ANIMATION_TIMINGS = {"linear", "ease", "ease-in", "ease-out", "ease-in-out"}
+DRAWIO_EXPLICIT_FLOW_ROLES = {
+    "flow",
+    "runtime-flow",
+    "data-flow",
+    "process-flow",
+    "request",
+    "event",
+}
+DRAWIO_STATIC_EDGE_ROLES = {
+    "association",
+    "dependency",
+    "containment",
+    "ownership",
+    "annotation",
+    "decorative",
+    "legend",
+    "structural",
+}
+DRAWIO_PROFILE_STYLE_HASH_KEYS = frozenset(
+    {
+        "designProfile",
+        "shape",
+        "dataRole",
+        "strokeColor",
+        "fillColor",
+        "gradientColor",
+        "gradientDirection",
+        "shadow",
+        "glass",
+        "arcSize",
+        "strokeWidth",
+        "fontColor",
+        "fontSize",
+        "profileRole",
+    }
+)
+
+
+def drawio_image_source(style):
+    literal = str(style or "")
+    match = None
+    for candidate in re.finditer(r"(?:^|;)image=", literal):
+        match = candidate
+    if match is None:
+        return ""
+    tail = literal[match.end():]
+    boundary = re.search(r";(?=[A-Za-z_][A-Za-z0-9_.-]*=)", tail)
+    source = (tail[:boundary.start()] if boundary else tail).strip()
+    if boundary is None and source.endswith(";"):
+        source = source[:-1].rstrip()
+    return source
+
+
+def drawio_srcset_sources(value):
+    literal = str(value or "")
+    sources = []
+    position = 0
+    whitespace = "\t\n\f\r "
+    while position < len(literal):
+        while position < len(literal) and literal[position] in whitespace + ",":
+            position += 1
+        if position >= len(literal):
+            break
+
+        start = position
+        is_data_uri = literal[position : position + 5].lower() == "data:"
+        while position < len(literal):
+            character = literal[position]
+            if character in whitespace or (character == "," and not is_data_uri):
+                break
+            position += 1
+        source = literal[start:position]
+        if position < len(literal) and literal[position] == ",":
+            position += 1
+            if source:
+                sources.append(source)
+            continue
+        if source.endswith(","):
+            source = source.rstrip(",")
+            if source:
+                sources.append(source)
+            continue
+
+        if source:
+            sources.append(source)
+        parentheses = 0
+        while position < len(literal):
+            character = literal[position]
+            if character == "(":
+                parentheses += 1
+            elif character == ")" and parentheses:
+                parentheses -= 1
+            elif character == "," and not parentheses:
+                position += 1
+                break
+            position += 1
+    return sources
+
+
+def normalize_url_for_scheme(value):
+    without_tab_or_newline = re.sub(r"[\t\n\r]", "", str(value or ""))
+    return re.sub(r"^[\x00-\x20]+|[\x00-\x20]+$", "", without_tab_or_newline)
+
+
+class DrawioImageSourceParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.sources = []
+        self.style_depth = 0
+
+    def collect_css_sources(self, value):
+        literal = str(value or "")
+        if "\\" in literal:
+            self.sources.append("unsafe-css:escape")
+        if re.search(r"@import\b", literal, flags=re.IGNORECASE):
+            self.sources.append("unsafe-css:import")
+        if re.search(
+            r"(?<![-_A-Za-z0-9])(?:-webkit-)?image-set\s*\(",
+            literal,
+            flags=re.IGNORECASE,
+        ):
+            self.sources.append("unsupported-css:image-set")
+        for match in SVG_URL_RE.finditer(literal):
+            self.sources.append(match.group(2).strip())
+
+    def handle_starttag(self, tag, attrs):
+        tag_name = str(tag or "").lower()
+        values = {}
+        for name, value in attrs:
+            values.setdefault(str(name or "").lower(), []).append(str(value or ""))
+        if tag_name == "style":
+            self.style_depth += 1
+        if tag_name in {"img", "image", "source"}:
+            image_sources = []
+            for name in ("src", "href", "xlink:href"):
+                image_sources.extend(
+                    source.strip() for source in values.get(name, ()) if source.strip()
+                )
+            for srcset in values.get("srcset", ()):
+                image_sources.extend(drawio_srcset_sources(srcset))
+            self.sources.extend(image_sources)
+            if not image_sources:
+                self.sources.append(f"missing-image-source:{tag_name}")
+
+        resource_attributes = {
+            "animate": ("href", "xlink:href"),
+            "animatemotion": ("href", "xlink:href"),
+            "animatetransform": ("href", "xlink:href"),
+            "audio": ("src",),
+            "base": ("href",),
+            "discard": ("href", "xlink:href"),
+            "embed": ("src",),
+            "feimage": ("href", "xlink:href"),
+            "filter": ("href", "xlink:href"),
+            "frame": ("src",),
+            "iframe": ("src",),
+            "input": ("src",),
+            "lineargradient": ("href", "xlink:href"),
+            "link": ("href",),
+            "mpath": ("href", "xlink:href"),
+            "object": ("data",),
+            "pattern": ("href", "xlink:href"),
+            "radialgradient": ("href", "xlink:href"),
+            "script": ("src", "href"),
+            "set": ("href", "xlink:href"),
+            "textpath": ("href", "xlink:href"),
+            "track": ("src",),
+            "use": ("href", "xlink:href"),
+            "video": ("src", "poster"),
+        }
+        for name in resource_attributes.get(tag_name, ()):
+            self.sources.extend(
+                source.strip() for source in values.get(name, ()) if source.strip()
+            )
+        if tag_name in SVG_UNSAFE_RESOURCE_ELEMENTS:
+            self.sources.append(f"active-content:{tag_name}")
+        for name, attribute_values in values.items():
+            for value in attribute_values:
+                literal = normalize_url_for_scheme(value).lower()
+                if name == "xml:base":
+                    self.sources.append("active-content:xml:base")
+                elif name.startswith("on") or literal.startswith(
+                    ("javascript:", "vbscript:", "data:text/html")
+                ):
+                    self.sources.append(value.strip() or f"active-content:{name}")
+                if name == "style":
+                    self.collect_css_sources(value)
+
+    def handle_endtag(self, tag):
+        if str(tag or "").lower() == "style" and self.style_depth:
+            self.style_depth -= 1
+
+    def handle_data(self, data):
+        if self.style_depth:
+            self.collect_css_sources(data)
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        self.handle_endtag(tag)
+
+    def handle_pi(self, data):
+        self.sources.append("active-content:processing-instruction")
+
+
+def drawio_cell_resource_sources(cell):
+    sources = []
+    style = str(cell.attrib.get("style") or "")
+    style_source = drawio_image_source(style)
+    if style_source:
+        sources.append(style_source)
+
+    value = html.unescape(str(cell.attrib.get("value") or ""))
+    parser = DrawioImageSourceParser()
+    try:
+        parser.feed(value)
+        parser.close()
+    except (TypeError, ValueError):
+        parser.sources.append("")
+    sources.extend(parser.sources)
+
+    for text in (style, value):
+        for match in SVG_URL_RE.finditer(text):
+            sources.append(match.group(2).strip())
+    return list(dict.fromkeys(str(source or "").strip() for source in sources))
+
+
+def drawio_root_cells(root):
+    cells = []
+    for child in root:
+        if child.tag == "mxCell":
+            cells.append(child)
+            continue
+        if child.tag.lower() not in {"object", "userobject"}:
+            continue
+        nested = [element for element in child if element.tag == "mxCell"]
+        if len(nested) != 1:
+            raise ValueError("draw.io object wrapper must contain exactly one mxCell")
+        normalized = copy.deepcopy(nested[0])
+        wrapper_id = child.attrib.get("id")
+        inner_id = normalized.attrib.get("id")
+        if wrapper_id and inner_id and wrapper_id != inner_id:
+            raise ValueError("draw.io object wrapper and mxCell IDs disagree")
+        if wrapper_id and not inner_id:
+            normalized.attrib["id"] = wrapper_id
+        if "value" not in normalized.attrib:
+            wrapper_value = child.attrib.get("label") or child.attrib.get("value")
+            if wrapper_value is not None:
+                normalized.attrib["value"] = wrapper_value
+        if "link" not in normalized.attrib and child.attrib.get("link") is not None:
+            normalized.attrib["link"] = child.attrib["link"]
+        cells.append(normalized)
+    return cells
+
+
+def validate_drawio_animation_style(cell, style):
+    is_edge = cell.attrib.get("edge") == "1"
+    animation_keys = {key for key in style if key.startswith("flowAnimation")}
+    if animation_keys - DRAWIO_FLOW_ANIMATION_KEYS:
+        raise ValueError("draw.io cell contains an unknown flow animation style")
+    if animation_keys and not is_edge:
+        raise ValueError("draw.io flow animation styles are only valid on edges")
+    enabled = style.get("flowAnimation")
+    if enabled is not None and enabled not in {"0", "1"}:
+        raise ValueError("draw.io flowAnimation must be 0 or 1")
+    duration = style.get("flowAnimationDuration")
+    if duration is not None and (not duration.isdigit() or int(duration) <= 0):
+        raise ValueError("draw.io flowAnimationDuration must be a positive integer")
+    if (
+        style.get("flowAnimationTimingFunction") is not None
+        and style["flowAnimationTimingFunction"] not in DRAWIO_FLOW_ANIMATION_TIMINGS
+    ):
+        raise ValueError("draw.io flowAnimationTimingFunction is invalid")
+    if (
+        style.get("flowAnimationDirection") is not None
+        and style["flowAnimationDirection"] not in DRAWIO_FLOW_ANIMATION_DIRECTIONS
+    ):
+        raise ValueError("draw.io flowAnimationDirection is invalid")
+
+
+def drawio_directed_semantic_flow(style):
+    role = str(style.get("dataRole") or "").strip().lower()
+    if role in DRAWIO_EXPLICIT_FLOW_ROLES:
+        return True
+    if role in DRAWIO_STATIC_EDGE_ROLES:
+        return False
+    return style.get("endArrow") != "none" or style.get("startArrow") not in {None, "none"}
+
+
+def drawio_has_static_direction(style):
+    return style.get("endArrow") != "none" or style.get("startArrow") not in {None, "none"}
+
+
+def drawio_visible_profile_vertex(cell, cells_by_id):
+    if cell.attrib.get("vertex") != "1":
+        return False
+    geometries = [child for child in cell if child.tag == "mxGeometry"]
+    if len(geometries) != 1 or geometries[0].attrib.get("as") != "geometry":
+        return False
+    try:
+        width = float(geometries[0].attrib.get("width", ""))
+        height = float(geometries[0].attrib.get("height", ""))
+    except (TypeError, ValueError):
+        return False
+    if not math.isfinite(width) or not math.isfinite(height) or width <= 0 or height <= 0:
+        return False
+
+    current = cell
+    seen = set()
+    while current is not None:
+        if current.attrib.get("visible") == "0":
+            return False
+        current_id = str(current.attrib.get("id") or "")
+        if not current_id or current_id in seen:
+            return False
+        seen.add(current_id)
+        parent = current.attrib.get("parent")
+        current = cells_by_id.get(parent) if parent is not None else None
+    return True
+
+
+def drawio_finite_number(value, label):
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"draw.io {label} must be numeric") from error
+    if not math.isfinite(number):
+        raise ValueError(f"draw.io {label} must be finite")
+    return number
+
+
+def drawio_cell_geometry(cell, *, edge=False):
+    geometries = [child for child in cell if child.tag == "mxGeometry"]
+    if len(geometries) != 1:
+        raise ValueError("draw.io vertex or edge must contain exactly one mxGeometry")
+    geometry = geometries[0]
+    if geometry.attrib.get("as") != "geometry":
+        raise ValueError("draw.io mxGeometry must set as=geometry")
+    if edge and geometry.attrib.get("relative") != "1":
+        raise ValueError("draw.io edge geometry must set relative=1")
+    for name in ("x", "y", "width", "height"):
+        if name in geometry.attrib:
+            drawio_finite_number(geometry.attrib[name], f"geometry {name}")
+    for point in geometry.iter("mxPoint"):
+        for name in ("x", "y"):
+            if name in point.attrib:
+                drawio_finite_number(point.attrib[name], f"point {name}")
+    return geometry
+
+
+def validate_drawio_model_cells(cells, cells_by_id):
+    content = [cell for cell in cells if cell.attrib.get("id") not in {"0", "1"}]
+    semantic_cells = 0
+    for cell in content:
+        cell_id = str(cell.attrib["id"])
+        parent = cell.attrib.get("parent")
+        if not parent or parent not in cells_by_id:
+            raise ValueError("draw.io content cell must reference an existing parent")
+        is_vertex = cell.attrib.get("vertex") == "1"
+        is_edge = cell.attrib.get("edge") == "1"
+        if is_vertex and is_edge:
+            raise ValueError("draw.io cell cannot be both a vertex and an edge")
+        if not is_vertex and not is_edge:
+            continue
+        semantic_cells += 1
+        geometry = drawio_cell_geometry(cell, edge=is_edge)
+        style = drawio_style_map(cell.attrib.get("style"))
+        if is_vertex:
+            required = ("x", "y", "width", "height")
+            if any(name not in geometry.attrib for name in required):
+                raise ValueError("draw.io vertex requires x, y, width, and height geometry")
+            width = drawio_finite_number(geometry.attrib["width"], "vertex width")
+            height = drawio_finite_number(geometry.attrib["height"], "vertex height")
+            if width < 0 or height < 0:
+                raise ValueError("draw.io vertex geometry cannot be negative")
+            if (
+                drawio_image_source(cell.attrib.get("style"))
+                or drawio_is_image_style(cell.attrib.get("style"))
+            ) and (width <= 0 or height <= 0):
+                raise ValueError("draw.io image vertex dimensions must be positive")
+            continue
+
+        for endpoint_name in ("source", "target"):
+            endpoint_id = cell.attrib.get(endpoint_name)
+            if endpoint_id:
+                endpoint = cells_by_id.get(endpoint_id)
+                if endpoint is None or endpoint.attrib.get("vertex") != "1":
+                    raise ValueError("draw.io edge endpoint must reference a vertex")
+            else:
+                point_name = f"{endpoint_name}Point"
+                points = [
+                    child
+                    for child in geometry
+                    if child.tag == "mxPoint" and child.attrib.get("as") == point_name
+                ]
+                if len(points) != 1:
+                    raise ValueError("draw.io edge requires a vertex endpoint or terminal point")
+                if "x" not in points[0].attrib or "y" not in points[0].attrib:
+                    raise ValueError("draw.io terminal point must contain x and y")
+        for port_name in ("sourcePort", "targetPort"):
+            port_id = style.get(port_name)
+            if port_id:
+                port = cells_by_id.get(port_id)
+                if port is None or port.attrib.get("vertex") != "1":
+                    raise ValueError("draw.io edge port must reference a vertex")
+
+    if semantic_cells == 0:
+        raise ValueError("draw.io page has no vertices or edges")
+
+    for cell in content:
+        seen = {str(cell.attrib["id"])}
+        parent = cell.attrib.get("parent")
+        while parent is not None:
+            if parent in seen:
+                raise ValueError("draw.io cell parent chain contains a cycle")
+            seen.add(parent)
+            parent_cell = cells_by_id.get(parent)
+            if parent_cell is None:
+                raise ValueError("draw.io cell parent chain is incomplete")
+            parent = parent_cell.attrib.get("parent")
+
+
+def decode_compressed_drawio(
+    payload,
+    max_inflated_bytes=MAX_INFLATED_DRAWIO_BYTES,
+    max_xml_elements=MAX_DRAWIO_ELEMENTS,
+):
+    if max_inflated_bytes <= 0:
+        raise ValueError("compressed draw.io pages exceed the aggregate inflated-size limit")
+    if max_xml_elements <= 0:
+        raise ValueError("draw.io pages exceed the aggregate XML element limit")
+    compact = re.sub(r"\s+", "", str(payload or ""))
+    if not compact:
+        raise ValueError("compressed draw.io page is empty")
+    try:
+        compressed = base64.b64decode(compact, validate=True)
+    except (binascii.Error, ValueError) as error:
+        raise ValueError("compressed draw.io page is not valid base64") from error
+    try:
+        decompressor = zlib.decompressobj(-15)
+        inflated = decompressor.decompress(compressed, max_inflated_bytes + 1)
+        if len(inflated) > max_inflated_bytes or decompressor.unconsumed_tail:
+            raise ValueError("compressed draw.io page exceeds the inflated-size limit")
+        inflated += decompressor.flush(max_inflated_bytes + 1 - len(inflated))
+    except zlib.error as error:
+        raise ValueError("compressed draw.io page has an invalid deflate stream") from error
+    if not decompressor.eof or decompressor.unused_data:
+        raise ValueError("compressed draw.io page has an incomplete or trailing deflate stream")
+    try:
+        encoded_xml = inflated.decode("utf-8", errors="strict")
+        if re.search(r"%(?![0-9A-Fa-f]{2})", encoded_xml):
+            raise ValueError("compressed draw.io page contains malformed percent encoding")
+        xml = urllib.parse.unquote_to_bytes(encoded_xml).decode("utf-8", errors="strict")
+        lowered = xml.lower()
+        without_xml_declaration = re.sub(
+            r"^\ufeff?\s*<\?xml\s+[^?]*\?>", "", xml, count=1, flags=re.IGNORECASE
+        )
+        if "\x00" in xml or "<!doctype" in lowered or "<!entity" in lowered:
+            raise ValueError("compressed draw.io page contains a forbidden declaration")
+        if "<?" in without_xml_declaration:
+            raise ValueError("compressed draw.io page contains a processing instruction")
+        model = ET.fromstring(xml)
+    except (UnicodeDecodeError, ET.ParseError) as error:
+        raise ValueError("compressed draw.io page does not contain valid UTF-8 XML") from error
+    if model.tag != "mxGraphModel":
+        raise ValueError("compressed draw.io page is not an mxGraphModel")
+    element_count, _ = drawio_tree_shape(model, max_elements=max_xml_elements)
+    return model, len(inflated), element_count
+
+
+def drawio_metadata(path, data=None):
+    try:
+        if data is None:
+            data = path.read_bytes()
+        text = data.decode("utf-8", errors="strict")
+        lowered = text.lower()
+        without_xml_declaration = re.sub(
+            r"^\ufeff?\s*<\?xml\s+[^?]*\?>", "", text, count=1, flags=re.IGNORECASE
+        )
+        if "\x00" in text or "<!doctype" in lowered or "<!entity" in lowered:
+            raise ValueError("draw.io source contains a forbidden declaration")
+        if "<?" in without_xml_declaration:
+            raise ValueError("draw.io processing instructions are not allowed")
+        root = ET.fromstring(text)
+        outer_element_count, _ = drawio_tree_shape(root)
+        if svg_namespace(root.tag):
+            raise ValueError("draw.io root must not use an XML namespace")
+
+        page_models = []
+        page_count = 0
+        uncompressed = True
+        animation_inspectable = True
+        if root.tag == "mxGraphModel":
+            page_models.append((path.name, root))
+            page_count = 1
+        elif root.tag == "mxfile":
+            diagrams = [child for child in root if child.tag == "diagram"]
+            if not diagrams:
+                raise ValueError("draw.io source has no diagram pages")
+            page_count = len(diagrams)
+            inflated_drawio_bytes = 0
+            decoded_element_count = 0
+            for page_index, diagram in enumerate(diagrams, start=1):
+                page_name = str(diagram.attrib.get("name") or f"Page-{page_index}")
+                models = [child for child in diagram if child.tag == "mxGraphModel"]
+                if len(models) == 1:
+                    page_models.append((page_name, models[0]))
+                elif not models and str(diagram.text or "").strip():
+                    uncompressed = False
+                    model, inflated_bytes, element_count = decode_compressed_drawio(
+                        diagram.text,
+                        MAX_INFLATED_DRAWIO_BYTES - inflated_drawio_bytes,
+                        MAX_DRAWIO_ELEMENTS - outer_element_count - decoded_element_count,
+                    )
+                    inflated_drawio_bytes += inflated_bytes
+                    decoded_element_count += element_count
+                    page_models.append((page_name, model))
+                else:
+                    raise ValueError("draw.io page has an invalid model payload")
+        else:
+            raise ValueError("draw.io source is missing an mxfile or mxGraphModel root")
+
+        embedded_svg_images = 0
+        embedded_raster_images = 0
+        embedded_svg_sha256s = []
+        embedded_svg_cell_sha256s = set()
+        external_images = 0
+        unsupported_images = 0
+        animation_on = animation_inspectable
+        animation_off = animation_inspectable
+        directed_flow_edges = 0
+        animated_edges = 0
+        animated_static_edges = 0
+        native_stencil_count = 0
+        cell_id_sha256s = set()
+        native_stencil_cell_id_sha256s = set()
+        directed_edge_sha256s = set()
+        edge_role_sha256s = set()
+        profile_style_sha256s = set()
+        link_sha256s = set()
+        adaptive_colors = bool(page_models)
+        page_graphs = []
+        for page_name, model in page_models:
+            if model.tag != "mxGraphModel":
+                raise ValueError("draw.io page model uses an unexpected namespace")
+            page_adaptive_colors = model.attrib.get("adaptiveColors") == "auto"
+            adaptive_colors = adaptive_colors and page_adaptive_colors
+            graph_roots = [child for child in model if child.tag == "root"]
+            if len(graph_roots) != 1:
+                raise ValueError("draw.io page is missing its graph root")
+            cells = drawio_root_cells(graph_roots[0])
+            identifiers = [str(cell.attrib.get("id") or "") for cell in cells]
+            if not all(identifiers) or len(identifiers) != len(set(identifiers)):
+                raise ValueError("draw.io page contains missing or duplicate cell IDs")
+            by_id = set(identifiers)
+            cells_by_id = {str(cell.attrib["id"]): cell for cell in cells}
+            page_cell_id_sha256s = {
+                hashlib.sha256(identifier.encode("utf-8")).hexdigest()
+                for identifier in identifiers
+            }
+            cell_id_sha256s.update(page_cell_id_sha256s)
+            page_link_sha256s = {
+                hashlib.sha256(link.encode("utf-8")).hexdigest()
+                for cell in cells
+                if (link := str(cell.attrib.get("link") or "").strip())
+            }
+            link_sha256s.update(page_link_sha256s)
+            page_native_stencil_cell_id_sha256s = set()
+            page_directed_edge_sha256s = set()
+            page_edge_role_sha256s = set()
+            page_profile_style_sha256s = set()
+            if "0" not in by_id or "1" not in by_id:
+                raise ValueError("draw.io page is missing base cells")
+            if cells_by_id["0"].attrib.get("parent") is not None:
+                raise ValueError("draw.io root base cell must not have a parent")
+            if cells_by_id["1"].attrib.get("parent") != "0":
+                raise ValueError("draw.io layer base cell must have parent 0")
+            validate_drawio_model_cells(cells, cells_by_id)
+            for cell in cells:
+                style = drawio_style_map(cell.attrib.get("style"))
+                validate_drawio_animation_style(cell, style)
+                if str(style.get("designProfile") or "").strip() and drawio_visible_profile_vertex(
+                    cell, cells_by_id
+                ):
+                    for key, value in style.items():
+                        if key not in DRAWIO_PROFILE_STYLE_HASH_KEYS:
+                            continue
+                        profile_digest = hashlib.sha256(
+                            f"{cell.attrib['id']}\0{key}\0{value}".encode("utf-8")
+                        ).hexdigest()
+                        profile_style_sha256s.add(profile_digest)
+                        page_profile_style_sha256s.add(profile_digest)
+                if cell.attrib.get("vertex") == "1" and str(
+                    style.get("shape") or ""
+                ).lower().startswith("mxgraph."):
+                    native_stencil_count += 1
+                    native_digest = hashlib.sha256(
+                        str(cell.attrib["id"]).encode("utf-8")
+                    ).hexdigest()
+                    native_stencil_cell_id_sha256s.add(native_digest)
+                    page_native_stencil_cell_id_sha256s.add(native_digest)
+                if cell.attrib.get("edge") == "1":
+                    animated = style.get("flowAnimation") == "1"
+                    directed = drawio_directed_semantic_flow(style)
+                    static_direction = drawio_has_static_direction(style)
+                    role = str(style.get("dataRole") or "").strip().lower()
+                    if role:
+                        role_digest = hashlib.sha256(
+                            f"{cell.attrib['id']}\0{role}".encode("utf-8")
+                        ).hexdigest()
+                        edge_role_sha256s.add(role_digest)
+                        page_edge_role_sha256s.add(role_digest)
+                    animated_static = animated and role in DRAWIO_STATIC_EDGE_ROLES
+                    animated_edges += int(animated)
+                    animated_static_edges += int(animated_static)
+                    directed_flow_edges += int(directed)
+                    if animated:
+                        animation_off = False
+                    if directed and (not animated or not static_direction) or animated_static:
+                        animation_on = False
+                    source = str(cell.attrib.get("source") or "")
+                    target = str(cell.attrib.get("target") or "")
+                    if source and target:
+                        edge_digest = hashlib.sha256(
+                            f"{source}\0{target}".encode("utf-8")
+                        ).hexdigest()
+                        directed_edge_sha256s.add(edge_digest)
+                        page_directed_edge_sha256s.add(edge_digest)
+                source = drawio_image_source(cell.attrib.get("style"))
+                image_declared = re.search(
+                    r"(?:^|;)image=", str(cell.attrib.get("style") or "")
+                ) is not None
+                image_shape = drawio_is_image_style(cell.attrib.get("style"))
+                if (image_declared or image_shape) and not source:
+                    raise ValueError("draw.io image cell has an empty or truncated image source")
+                for resource_source in drawio_cell_resource_sources(cell):
+                    if resource_source.lower().startswith("data:image/"):
+                        try:
+                            media_type = validate_embedded_image(resource_source)
+                        except Exception as error:
+                            raise ValueError(
+                                "draw.io source contains an invalid embedded image"
+                            ) from error
+                        else:
+                            if media_type == "svg+xml":
+                                embedded_svg_images += 1
+                                _, raw_image = decode_data_image(resource_source)
+                                svg_digest = hashlib.sha256(raw_image).hexdigest()
+                                embedded_svg_sha256s.append(svg_digest)
+                                embedded_svg_cell_sha256s.add(
+                                    hashlib.sha256(
+                                        f"{cell.attrib['id']}\0{svg_digest}".encode("utf-8")
+                                    ).hexdigest()
+                                )
+                            else:
+                                embedded_raster_images += 1
+                    elif resource_source.lower().startswith(
+                        SVG_EXTERNAL_REFERENCE_PREFIXES
+                    ):
+                        external_images += 1
+                    else:
+                        unsupported_images += 1
+            page_graphs.append(
+                {
+                    "page_name_sha256": hashlib.sha256(
+                        page_name.encode("utf-8")
+                    ).hexdigest(),
+                    "adaptive_colors": page_adaptive_colors,
+                    "cell_id_sha256s": sorted(page_cell_id_sha256s),
+                    "native_stencil_cell_id_sha256s": sorted(
+                        page_native_stencil_cell_id_sha256s
+                    ),
+                    "directed_edge_sha256s": sorted(page_directed_edge_sha256s),
+                    "edge_role_sha256s": sorted(page_edge_role_sha256s),
+                    "profile_style_sha256s": sorted(page_profile_style_sha256s),
+                    "link_sha256s": sorted(page_link_sha256s),
+                }
+            )
+        animation_on = (
+            animation_on
+            and directed_flow_edges > 0
+            and animated_edges > 0
+            and animated_static_edges == 0
+        )
+        return {
+            "valid": True,
+            "page_count": page_count,
+            "adaptive_colors": adaptive_colors,
+            "uncompressed": uncompressed,
+            "embedded_svg_images": embedded_svg_images,
+            "embedded_raster_images": embedded_raster_images,
+            "embedded_svg_sha256s": sorted(set(embedded_svg_sha256s)),
+            "embedded_svg_cell_sha256s": sorted(embedded_svg_cell_sha256s),
+            "external_references": external_images,
+            "unsupported_images": unsupported_images,
+            "animation_on": animation_on,
+            "animation_off": animation_off,
+            "animation_inspectable": animation_inspectable,
+            "directed_flow_edges": directed_flow_edges,
+            "animated_edges": animated_edges,
+            "animated_static_edges": animated_static_edges,
+            "native_stencil_count": native_stencil_count,
+            "cell_id_sha256s": sorted(cell_id_sha256s),
+            "native_stencil_cell_id_sha256s": sorted(native_stencil_cell_id_sha256s),
+            "directed_edge_sha256s": sorted(directed_edge_sha256s),
+            "edge_role_sha256s": sorted(edge_role_sha256s),
+            "profile_style_sha256s": sorted(profile_style_sha256s),
+            "link_sha256s": sorted(link_sha256s),
+            "page_graphs": page_graphs,
+            "self_contained_svg": (
+                embedded_svg_images > 0
+                and external_images == 0
+                and unsupported_images == 0
+            ),
+        }
+    except Exception as error:
+        return {
+            "valid": False,
+            "self_contained_svg": False,
+            "error": short(error, 300),
+        }
+
+
+def read_artifact_snapshot(path):
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
+        raise ArtifactPolicyError("artifact inspection requires O_NOFOLLOW and O_NONBLOCK support")
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as error:
+        raise ArtifactPolicyError(f"could not open artifact {path.name}: {error}") from error
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise ArtifactPolicyError(f"artifact is not a regular file: {path.name}")
+        if before.st_size > MAX_ARTIFACT_FILE_BYTES:
+            raise ArtifactPolicyError(
+                f"artifact {path.name} exceeds {MAX_ARTIFACT_FILE_BYTES} byte limit"
+            )
+        chunks = []
+        remaining = MAX_ARTIFACT_FILE_BYTES + 1
+        while remaining > 0:
+            chunk = os.read(descriptor, min(1024 * 1024, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        content = b"".join(chunks)
+        after = os.fstat(descriptor)
+        identity_before = (
+            before.st_dev,
+            before.st_ino,
+            before.st_size,
+            before.st_mtime_ns,
+            before.st_ctime_ns,
+        )
+        identity_after = (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mtime_ns,
+            after.st_ctime_ns,
+        )
+        if identity_before != identity_after or len(content) != before.st_size:
+            raise ArtifactPolicyError(f"artifact changed while being inspected: {path.name}")
+        return content
+    finally:
+        os.close(descriptor)
 
 
 def collect_artifacts(workspace):
@@ -1227,12 +3244,19 @@ def collect_artifacts(workspace):
     for root, dirs, files in os.walk(workspace, topdown=True, followlinks=False):
         root_path = Path(root)
         raw_dirs = sorted(dirs)
-        scanned_entries += len(raw_dirs)
+        dirs[:] = [
+            name
+            for name in raw_dirs
+            if not (root_path / name).is_symlink()
+            and not (
+                root_path == workspace and name in ARTIFACT_EXCLUDED_TOP_LEVEL
+            )
+        ]
+        scanned_entries += len(dirs)
         if scanned_entries > MAX_WORKSPACE_ENTRIES:
             raise ArtifactPolicyError(
                 f"rollout workspace exceeds {MAX_WORKSPACE_ENTRIES} inspected entries"
             )
-        dirs[:] = [name for name in raw_dirs if not (root_path / name).is_symlink()]
         for name in sorted(files):
             scanned_entries += 1
             if scanned_entries > MAX_WORKSPACE_ENTRIES:
@@ -1240,7 +3264,13 @@ def collect_artifacts(workspace):
                     f"rollout workspace exceeds {MAX_WORKSPACE_ENTRIES} inspected entries"
                 )
             path = root_path / name
-            if path.is_symlink() or path.suffix.lower() not in {".png", ".svg"}:
+            suffix = path.suffix.lower()
+            if suffix not in {".drawio", ".png", ".svg"}:
+                continue
+            if path.is_symlink():
+                continue
+            relative_parts = path.relative_to(workspace).parts
+            if relative_parts and relative_parts[0] in ARTIFACT_EXCLUDED_TOP_LEVEL:
                 continue
             artifact_paths.append(path)
             if len(artifact_paths) > MAX_ARTIFACT_COUNT:
@@ -1250,24 +3280,12 @@ def collect_artifacts(workspace):
 
     total_bytes = 0
     for path in sorted(artifact_paths):
-        try:
-            file_stat = path.stat(follow_symlinks=False)
-        except OSError as error:
-            raise ArtifactPolicyError(f"could not inspect artifact {path.name}: {error}") from error
-        if not stat.S_ISREG(file_stat.st_mode):
-            raise ArtifactPolicyError(f"artifact is not a regular file: {path.name}")
-        if file_stat.st_size > MAX_ARTIFACT_FILE_BYTES:
-            raise ArtifactPolicyError(
-                f"artifact {path.name} exceeds {MAX_ARTIFACT_FILE_BYTES} byte limit"
-            )
-        total_bytes += file_stat.st_size
+        content = read_artifact_snapshot(path)
+        total_bytes += len(content)
         if total_bytes > MAX_ARTIFACT_TOTAL_BYTES:
             raise ArtifactPolicyError(
                 f"visual artifacts exceed {MAX_ARTIFACT_TOTAL_BYTES} total byte limit"
             )
-        content = path.read_bytes()
-        if len(content) != file_stat.st_size:
-            raise ArtifactPolicyError(f"artifact changed while being inspected: {path.name}")
         suffix = path.suffix.lower()
         item = {
             "path": path.relative_to(workspace).as_posix(),
@@ -1279,6 +3297,8 @@ def collect_artifacts(workspace):
             item.update(png_metadata(path, content))
         elif suffix == ".svg":
             item.update(svg_metadata(path, content))
+        elif suffix == ".drawio":
+            item.update(drawio_metadata(path, content))
         artifacts.append(item)
     return artifacts
 
@@ -1556,41 +3576,56 @@ class AgentSkillsRollout:
                 command.extend(["-c", f"approval_policy={toml_string(self.approval_policy)}"])
             if self.profile:
                 command.extend(["--profile", self.profile])
-            command.append(prompt)
+            command.append("-")
             try:
                 process = subprocess.Popen(
                     command,
                     cwd=workspace,
-                    stdin=subprocess.DEVNULL,
-                    text=True,
+                    stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     start_new_session=True,
                     env=process_env,
                 )
-                reaper_thread, reaper_state = start_process_group_reaper(process)
-                stdout, stderr = process.communicate(timeout=bounds["timeout"])
-                reaper_thread.join(timeout=7)
-                process_notes, process_group_still_alive, reaped_descendants = (
-                    reaper_state.get("result") or reap_process_group(process)
+                process_io = start_bounded_process_io(process, prompt)
+                process.wait(timeout=bounds["timeout"])
+                process_notes, process_group_still_alive, reaped_descendants = reap_process_group(
+                    process,
+                    grace_seconds=0,
                 )
-                if process_group_still_alive:
+                capture_error = ""
+                try:
+                    process_io.finish()
+                except BoundedCaptureError as error:
+                    capture_error = str(error)
+                finally:
+                    process_io.close_stopped_streams()
+                if process_group_still_alive or capture_error:
                     keep_workspace = True
                     outcome = {
                         "id": case["id"],
                         "case_id": case["id"],
-                        "response": redact(stdout),
+                        "response": "",
                         "returncode": 125,
                         "stderr": short(
-                            "rollout process group could not be terminated: "
-                            + "; ".join(process_notes)
+                            (
+                                "rollout process group could not be terminated: "
+                                + "; ".join(process_notes)
+                            )
+                            if process_group_still_alive
+                            else capture_error
                         ),
-                        "stdout": short(stdout),
+                        "stdout": "",
                         "artifacts": [],
                         "tool_rollout_enabled": bounds["tool_rollout_enabled"],
-                        "process_group_alive": True,
                     }
+                    if process_group_still_alive:
+                        outcome["process_group_alive"] = True
+                    if capture_error:
+                        outcome["capture_error"] = True
                     return outcome
+                stdout = render_captured_stream(process_io.stdout, prompt)
+                stderr = render_captured_stream(process_io.stderr, prompt)
                 response = final.read_text(encoding="utf-8") if final.exists() else stdout
                 artifacts = []
                 artifact_error = ""
@@ -1619,30 +3654,46 @@ class AgentSkillsRollout:
                     outcome["process_cleanup_notes"] = process_notes
                 if artifact_error:
                     outcome["artifact_policy_error"] = artifact_error
-            except subprocess.TimeoutExpired as error:
-                stdout = as_text(error.stdout)
-                stderr = as_text(error.stderr)
+            except BoundedCaptureError as error:
+                keep_workspace = True
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": "",
+                    "returncode": 125,
+                    "stderr": short(str(error)),
+                    "stdout": "",
+                    "artifacts": [],
+                    "tool_rollout_enabled": bounds["tool_rollout_enabled"],
+                    "capture_error": True,
+                }
+            except subprocess.TimeoutExpired:
                 termination_notes = []
                 process_alive_after_kill = False
                 term_error = signal_process_group(process, signal.SIGTERM)
                 if term_error:
                     termination_notes.append(f"SIGTERM: {term_error}")
-                term_stdout, term_stderr, still_running = communicate_after_signal(process, 5)
-                stdout = term_stdout or stdout
-                stderr = term_stderr or stderr
+                still_running = wait_after_signal(process, 5)
                 if still_running:
                     kill_error = signal_process_group(process, signal.SIGKILL)
                     if kill_error:
                         termination_notes.append(f"SIGKILL: {kill_error}")
-                    kill_stdout, kill_stderr, process_alive_after_kill = communicate_after_signal(process, 5)
-                    stdout = kill_stdout or stdout
-                    stderr = kill_stderr or stderr
-                reaper_thread.join(timeout=7)
-                process_notes, group_alive, _ = (
-                    reaper_state.get("result") or reap_process_group(process)
-                )
+                    process_alive_after_kill = wait_after_signal(process, 5)
+                process_notes, group_alive, _ = reap_process_group(process)
                 termination_notes.extend(process_notes)
                 process_alive_after_kill = process_alive_after_kill or group_alive
+                try:
+                    process_io.finish()
+                except BoundedCaptureError:
+                    termination_notes.append("bounded subprocess I/O cleanup failed")
+                finally:
+                    process_io.close_stopped_streams()
+                stdout = (
+                    PROMPT_ECHO_MARKER if process_io.stdout.total_bytes else ""
+                )
+                stderr = (
+                    PROMPT_ECHO_MARKER if process_io.stderr.total_bytes else ""
+                )
                 # On timeout, avoid inspecting or deleting the workspace. Some
                 # failed Codex/tool subprocesses can leave cwd/file handles in a
                 # kernel-blocked state; walking the tree or rmtree can wedge the
