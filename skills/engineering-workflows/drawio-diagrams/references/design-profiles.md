@@ -25,8 +25,6 @@ Record `design_profile: technical | operator-grid | isometric-air | neon-hub | a
 | `neon-hub`      | dark product architecture with one clear hub, team/platform boundaries, high-level slide or README visuals | the output is print-first, has no clear focal subsystem, or needs many semantic colors |
 | `aurora-story`  | executive architecture stories, branded integrations, numbered service journeys with 4-8 primary nodes     | the output is a runbook, detailed reference, or dense operational diagram              |
 
-Treat “Template 1” as `operator-grid`, “Template 2” as `isometric-air`, “Template 3” as `neon-hub`, and “Template 4” as `aurora-story` when the user refers to the supplied visual references.
-
 ## Reference style adaptation
 
 When the user supplies a diagram or image as a style reference, adapt it for the current task without copying its layout or proprietary assets:
@@ -101,4 +99,4 @@ aurora-story-base: rounded=1;arcSize=16;fillColor=light-dark(#FFFFFF,#111638);st
 aurora-story-primary: rounded=1;arcSize=16;fillColor=light-dark(#FFFFFF,#111638);gradientColor=light-dark(#F3E8FF,#312E81);gradientDirection=north;strokeColor=light-dark(#6D28D9,#C084FC);fontColor=light-dark(#17112B,#F8FAFC);shadow=1;glass=0;
 ```
 
-Provenance-only visual references supplied by the user: [Template 1 light](https://github.com/user-attachments/assets/0677c5b3-8eff-4d79-acef-2a67a757e8a7), [Template 1 dark](https://github.com/user-attachments/assets/4798bfff-89ac-4436-9c11-8a28aa086525), [Template 2](https://cdn.dribbble.com/userupload/42005631/file/original-8f8590360694983e75da41e5894a1828.png), [Template 3](https://cdn.dribbble.com/userupload/11828561/file/original-69913398d4a428f9cc8f27e5c21ed58b.png), and [Template 4](https://cdn.dribbble.com/userupload/43336759/file/original-44723ae6a22907759ad778f981dfd7a3.jpg). They are never runtime dependencies and must not be fetched automatically during diagram generation. Implementation capabilities are grounded in the official draw.io [style reference](https://www.drawio.com/docs/reference/diagram-generation/style-reference/), [adaptive-color guidance](https://www.drawio.com/docs/manual/editor/appearance/adaptive-colours/), and [shape-style guidance](https://www.drawio.com/docs/manual/styles/shape-styles/).
+Implementation capabilities are grounded in the official draw.io [style reference](https://www.drawio.com/docs/reference/diagram-generation/style-reference/), [adaptive-color guidance](https://www.drawio.com/docs/manual/editor/appearance/adaptive-colours/), and [shape-style guidance](https://www.drawio.com/docs/manual/styles/shape-styles/).

@@ -23,7 +23,7 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 - `cases/codex-execution-host.md`
 - `cases/claude-md-evidence.md`
 - `cases/claude-rules-adr-implications.md`
-- `cases/grill-with-docs-reference.md`
+- `cases/docs-producing-interview-request.md`
 - `cases/no-spec-structure-repo.md`
 - `cases/declined-persistence.md`
 - `cases/already-specified-negative.md`

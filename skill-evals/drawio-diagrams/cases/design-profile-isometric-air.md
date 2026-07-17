@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create deployment-topology.drawio for an eight-node deployment topology with client, edge gateway, application tier, worker pool, queue, database, object store, and observability. Select the Template 2 isometric-air profile and use only built-in editable shapes and semantic icons. Use profile-isometric-air for the orange Gateway focus cube with designProfile=isometric-air, shape=isoCube, and the documented focus stroke. Also use stable ids client, application, workers, queue, database, object-store, observability, edge-client-gateway, and edge-application-queue; mark the edges as request and event. Use render-drawio.mjs to export deployment-topology.drawio.png plus deployment-topology.dark.svg.
+Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create deployment-topology.drawio for an eight-node deployment topology with client, edge gateway, application tier, worker pool, queue, database, object store, and observability. Select the isometric-air profile and use only built-in editable shapes and semantic icons. Use profile-isometric-air for the orange Gateway focus cube with designProfile=isometric-air, shape=isoCube, and the documented focus stroke. Also use stable ids client, application, workers, queue, database, object-store, observability, edge-client-gateway, and edge-application-queue; mark the edges as request and event. Use render-drawio.mjs to export deployment-topology.drawio.png plus deployment-topology.dark.svg.
 ```
 
 ## Should Trigger

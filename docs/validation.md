@@ -135,6 +135,8 @@ node scripts/print-release-notes.mjs
 - CodeGraph + ast-grep contract validation checks the explicit installed-payload allowlist, fenced Markdown/config command snippets and their scanner fixtures, scenario structure, capability/update/rewrite safety invariants, captured behavioral artifact and candidate hashes, and machine-regraded assertion totals without executing analysis tools or a model.
 - SkillOpt setup validation checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.
 
+Root `scripts/validate-*.mjs` files are stable command entrypoints. Large skill-specific maintainer implementations live under `scripts/validation/<area>/`, shared validation modules live under `scripts/validation/lib/`, and installable runtime helpers remain inside their owning skill directory. This preserves the runtime-payload separation defined by [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.md).
+
 ## Continuous Integration
 
 The `Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. It runs `npm run validate`, `pnpm format:check`, `pnpm lint`, `npx skills@latest add ./skills --list`, and `npm run smoke:install`. `npm run validate` includes actionlint for GitHub Actions workflows and the Astro site build. On pull requests, it also runs release validation when release intent is detected so partial package, changelog, or public skill version updates fail before merge.

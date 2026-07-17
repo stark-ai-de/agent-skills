@@ -37,7 +37,7 @@ Ask only if the host requires network consent or an action would install softwar
 | Missing tool | Promote when | Benefit | Example install/config command |
 | --- | --- | --- | --- |
 | draw.io Desktop CLI | user needs PNG/SVG/PDF export or visual/dark render checks | export, embedded XML where supported, and visual verification after a format smoke test; Mermaid import and `--layout` are not assumed | macOS: `brew install --cask drawio`; Windows: `winget install JGraph.Draw`; Linux: use the distro package, Snap, Flatpak, or downloaded AppImage available for the user's environment |
-| Official shape index | exact stencil names matter and no MCP `search_shapes` is available | offline style-string search through `scripts/search-shapes.mjs` | download the `jgraph/drawio-mcp` shape index into an external cache such as `~/.cache/drawio-diagrams/search-index.json` only after approval; the helper auto-detects that path |
+| Official shape index | exact stencil names matter and no MCP `search_shapes` is available | offline style-string search through `scripts/search-shapes.mjs` | after approval, download the committed [`jgraph/drawio-mcp` shape index](https://github.com/jgraph/drawio-mcp/blob/main/shape-search/search-index.json) unchanged to `~/.cache/drawio-diagrams/search-index.json`; the helper auto-detects that path |
 | Hosted draw.io MCP app server | inline diagram creation or shape search is useful and the diagram is not sensitive | app/server-assisted create + search | configure the client for `https://mcp.draw.io/mcp` only after warning that diagram XML is sent to the hosted endpoint |
 | `@drawio/mcp` tool server | browser opening for XML/CSV/Mermaid without a full live editor | local tool server URL flow | configure the MCP client with `npx -y @drawio/mcp` if the user approves |
 | `drawio-mcp-server` live editor | existing open documents, pages, layers, and live browser editing matter | interactive CRUD editing and export | configure the MCP client for `npx -y drawio-mcp-server --editor` if approved |
@@ -55,6 +55,34 @@ Suggested cache locations:
 ```text
 ~/.cache/drawio-diagrams/search-index.json
 ~/.cache/drawio-diagrams/icons/<source>/<slug>/<variant>.svg
+```
+
+### Official shape-index cache
+
+The exact upstream source is
+[`jgraph/drawio-mcp/shape-search/search-index.json`](https://github.com/jgraph/drawio-mcp/blob/main/shape-search/search-index.json).
+Before downloading it or creating the cache directory, show the source and
+target and obtain explicit approval. After approval, download the raw file
+unchanged:
+
+```bash
+mkdir -p "$HOME/.cache/drawio-diagrams"
+curl --fail --location \
+  --output "$HOME/.cache/drawio-diagrams/search-index.json" \
+  https://raw.githubusercontent.com/jgraph/drawio-mcp/main/shape-search/search-index.json
+```
+
+The compatible upstream schema is a JSON array whose entries use `title`,
+`tags`, `style`, `w`, `h`, and `type`; `search-shapes.mjs` consumes that array
+without conversion. Index resolution is, in order: explicit `--index PATH`,
+`DRAWIO_SHAPE_INDEX`, `~/.cache/drawio-diagrams/search-index.json`, then the
+gzip variant `~/.cache/drawio-diagrams/search-index.json.gz`.
+
+Probe the installed cache before relying on it:
+
+```bash
+node skills/engineering-workflows/drawio-diagrams/scripts/search-shapes.mjs \
+  "AWS Lambda" --type vertex --limit 5 --json
 ```
 
 Record any external icon or index source in the final response.

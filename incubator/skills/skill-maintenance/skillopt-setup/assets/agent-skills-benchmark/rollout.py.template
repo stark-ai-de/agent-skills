@@ -1,6 +1,8 @@
 import base64
 import binascii
+from collections import deque
 import copy
+import errno
 import html
 import json
 import hashlib
@@ -19,7 +21,7 @@ import xml.etree.ElementTree as ET
 import zlib
 from html.parser import HTMLParser
 from pathlib import Path
-from threading import Thread
+from threading import Lock, Thread
 
 
 def redact(text):
@@ -41,11 +43,243 @@ def as_text(value):
 
 PROMPT_ECHO_MARKER = "[redacted-prompt]"
 PROMPT_ECHO_SEED_CHARS = 16
-PROMPT_ECHO_SEED_POSITIONS = 8
+PROMPT_ECHO_MAX_UNIQUE_SEEDS = 65_536
+PROMPT_ECHO_MAX_SPANS = 65_536
+PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES = PROMPT_ECHO_SEED_CHARS * 4
+MAX_STDOUT_CAPTURE_BYTES = 10 * 1024 * 1024
+MAX_STDERR_CAPTURE_BYTES = 64 * 1024
+CAPTURE_CHUNK_BYTES = 64 * 1024
+OUTPUT_TRUNCATION_MARKER = "[output truncated; retained tail]"
+
+
+class BoundedCaptureError(OSError):
+    pass
+
+
+class BoundedByteCapture:
+    def __init__(self, limit):
+        self.limit = max(1, int(limit))
+        self._chunks = deque()
+        self._retained_bytes = 0
+        self._total_bytes = 0
+        self._discarded_tail = b""
+        self._lock = Lock()
+
+    def _remember_discarded(self, value):
+        recent = value[-PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+        self._discarded_tail = (
+            self._discarded_tail + recent
+        )[-PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+
+    def append(self, chunk):
+        value = bytes(chunk or b"")
+        if not value:
+            return
+        with self._lock:
+            self._total_bytes += len(value)
+            self._chunks.append(value)
+            self._retained_bytes += len(value)
+            while self._retained_bytes > self.limit:
+                excess = self._retained_bytes - self.limit
+                first = self._chunks[0]
+                if len(first) <= excess:
+                    removed = self._chunks.popleft()
+                    self._retained_bytes -= len(first)
+                else:
+                    removed = first[:excess]
+                    self._chunks[0] = first[excess:]
+                    self._retained_bytes -= excess
+                self._remember_discarded(removed)
+
+    @property
+    def total_bytes(self):
+        with self._lock:
+            return self._total_bytes
+
+    def snapshot(self):
+        with self._lock:
+            return b"".join(self._chunks), self._total_bytes > self.limit
+
+    def redaction_snapshot(self):
+        with self._lock:
+            return (
+                self._discarded_tail,
+                b"".join(self._chunks),
+                self._total_bytes > self.limit,
+            )
+
+
+class BoundedProcessIO:
+    def __init__(
+        self,
+        process,
+        prompt,
+        stdout_limit=MAX_STDOUT_CAPTURE_BYTES,
+        stderr_limit=MAX_STDERR_CAPTURE_BYTES,
+    ):
+        self.process = process
+        self.prompt = str(prompt or "").encode("utf-8", errors="replace")
+        self.stdout = BoundedByteCapture(stdout_limit)
+        self.stderr = BoundedByteCapture(stderr_limit)
+        self._errors = []
+        self._error_lock = Lock()
+        self._readers = [
+            Thread(
+                target=self._read_stream,
+                args=("stdout", process.stdout, self.stdout),
+                name="skillopt-stdout-drain",
+                daemon=True,
+            ),
+            Thread(
+                target=self._read_stream,
+                args=("stderr", process.stderr, self.stderr),
+                name="skillopt-stderr-drain",
+                daemon=True,
+            ),
+        ]
+        self._writer = Thread(
+            target=self._write_prompt,
+            name="skillopt-stdin-writer",
+            daemon=True,
+        )
+        self._threads = [*self._readers, self._writer]
+        self._started_threads = []
+
+    def _record_error(self, label, error):
+        with self._error_lock:
+            self._errors.append(f"{label}: {type(error).__name__}")
+
+    def _read_stream(self, label, stream, capture):
+        try:
+            while True:
+                chunk = stream.read(CAPTURE_CHUNK_BYTES)
+                if not chunk:
+                    return
+                capture.append(chunk)
+        except Exception as error:
+            self._record_error(label, error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def _write_prompt(self):
+        stream = self.process.stdin
+        try:
+            view = memoryview(self.prompt)
+            while view:
+                written = stream.write(view)
+                if not written:
+                    raise BrokenPipeError("stdin closed before prompt transport completed")
+                view = view[written:]
+            stream.flush()
+        except BrokenPipeError:
+            pass
+        except OSError as error:
+            if error.errno not in {errno.EINVAL, errno.EPIPE}:
+                self._record_error("stdin", error)
+        except Exception as error:
+            self._record_error("stdin", error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def start(self):
+        for thread in self._threads:
+            try:
+                thread.start()
+            finally:
+                if thread.ident is not None and thread not in self._started_threads:
+                    self._started_threads.append(thread)
+
+    def close_unstarted_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread in self._started_threads or thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def close_stopped_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def finish(self, timeout=7):
+        deadline = time.monotonic() + max(0, timeout)
+        for thread in self._started_threads:
+            thread.join(timeout=max(0, deadline - time.monotonic()))
+        alive = [thread.name for thread in self._started_threads if thread.is_alive()]
+        if alive:
+            raise BoundedCaptureError("bounded subprocess I/O threads did not stop")
+        with self._error_lock:
+            errors = list(self._errors)
+        if errors:
+            raise BoundedCaptureError("bounded subprocess I/O failed: " + "; ".join(errors))
+
+
+def render_captured_stream(capture, prompt):
+    discarded_tail, payload, truncated = capture.redaction_snapshot()
+    value = payload.decode("utf-8", errors="replace")
+    boundary_chars = prompt_boundary_prefix_chars(
+        discarded_tail,
+        payload,
+        str(prompt or "").encode("utf-8", errors="replace"),
+    )
+    value = redact_prompt(value, prompt, boundary_chars=boundary_chars)
+    if truncated:
+        return f"{OUTPUT_TRUNCATION_MARKER}\n{value}"
+    return value
+
+
+def prompt_boundary_prefix_chars(discarded_tail, payload, transported):
+    """Return retained leading characters proven to continue a discarded prompt echo."""
+    if not discarded_tail or not payload or len(transported) < 2:
+        return 0
+    seed_bytes = min(PROMPT_ECHO_SEED_CHARS, len(transported))
+    max_left_size = min(seed_bytes - 1, len(discarded_tail))
+    if max_left_size <= 0:
+        return 0
+    high = min(len(payload), PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES)
+    matched_bytes = 0
+    for left_size in range(1, max_left_size + 1):
+        left = discarded_tail[-left_size:]
+        if left + payload[:1] not in transported:
+            continue
+        low = 1
+        candidate_high = high
+        while low < candidate_high:
+            middle = (low + candidate_high + 1) // 2
+            if left + payload[:middle] in transported:
+                low = middle
+            else:
+                candidate_high = middle - 1
+        matched_bytes = max(matched_bytes, low)
+        if matched_bytes == high:
+            break
+    return len(payload[:matched_bytes].decode("utf-8", errors="replace"))
 
 
 def prompt_echo_spans(value, transported):
-    """Return exact prompt-derived spans without suppressing unrelated diagnostics."""
+    """Return bounded prompt-derived spans, or None to request fail-closed redaction."""
     spans = []
     if not value or not transported:
         return spans
@@ -60,62 +294,54 @@ def prompt_echo_spans(value, transported):
         if stripped and stripped in transported:
             offset = line.find(stripped)
             spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+            if len(spans) > PROMPT_ECHO_MAX_SPANS:
+                return None
 
     seed_size = min(PROMPT_ECHO_SEED_CHARS, len(transported))
     if seed_size <= 0 or len(value) < seed_size:
         return spans
 
-    positions_by_seed = {}
+    prompt_seeds = set()
     for index in range(len(transported) - seed_size + 1):
-        positions = positions_by_seed.setdefault(
-            transported[index : index + seed_size], []
-        )
-        if len(positions) < PROMPT_ECHO_SEED_POSITIONS:
-            positions.append(index)
+        prompt_seeds.add(transported[index : index + seed_size])
+        if len(prompt_seeds) > PROMPT_ECHO_MAX_UNIQUE_SEEDS:
+            return None
 
-    cursor = 0
+    seed_spans = []
     last_seed_start = len(value) - seed_size
-    while cursor <= last_seed_start:
-        prompt_positions = positions_by_seed.get(value[cursor : cursor + seed_size])
-        if not prompt_positions:
-            cursor += 1
+    for index in range(last_seed_start + 1):
+        if value[index : index + seed_size] not in prompt_seeds:
             continue
-        best_start = cursor
-        best_end = cursor + seed_size
-        for prompt_start in prompt_positions:
-            output_start = cursor
-            candidate_prompt_start = prompt_start
-            while (
-                output_start > 0
-                and candidate_prompt_start > 0
-                and value[output_start - 1] == transported[candidate_prompt_start - 1]
-            ):
-                output_start -= 1
-                candidate_prompt_start -= 1
-            output_end = cursor + seed_size
-            candidate_prompt_end = prompt_start + seed_size
-            while (
-                output_end < len(value)
-                and candidate_prompt_end < len(transported)
-                and value[output_end] == transported[candidate_prompt_end]
-            ):
-                output_end += 1
-                candidate_prompt_end += 1
-            if output_end - output_start > best_end - best_start:
-                best_start, best_end = output_start, output_end
-        spans.append((best_start, best_end))
-        cursor = best_end
+        end = index + seed_size
+        if seed_spans and index <= seed_spans[-1][1]:
+            seed_spans[-1] = (
+                seed_spans[-1][0],
+                max(seed_spans[-1][1], end),
+            )
+        else:
+            seed_spans.append((index, end))
+            if len(spans) + len(seed_spans) > PROMPT_ECHO_MAX_SPANS:
+                return None
+    spans.extend(seed_spans)
     return spans
 
 
-def redact_prompt(text, prompt):
+def redact_prompt(text, prompt, boundary_chars=0):
     value = as_text(text)
     transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
     spans = prompt_echo_spans(value, transported)
+    if spans is None:
+        return PROMPT_ECHO_MARKER if value else ""
+    guard_end = min(len(value), max(0, int(boundary_chars)))
+    if guard_end:
+        if len(spans) >= PROMPT_ECHO_MAX_SPANS:
+            return PROMPT_ECHO_MARKER
+        spans.append((0, guard_end))
     if not spans:
         return value
+    spans.sort()
     merged = []
-    for start, end in sorted(spans):
+    for start, end in spans:
         if merged and start <= merged[-1][1]:
             merged[-1] = (merged[-1][0], max(merged[-1][1], end))
         else:
@@ -201,12 +427,12 @@ def signal_process_group(process, sig):
         return short(error, 500)
 
 
-def communicate_after_signal(process, timeout):
+def wait_after_signal(process, timeout):
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
-        return as_text(stdout), as_text(stderr), False
-    except subprocess.TimeoutExpired as error:
-        return as_text(error.stdout), as_text(error.stderr), True
+        process.wait(timeout=timeout)
+        return False
+    except subprocess.TimeoutExpired:
+        return True
 
 
 def wait_for_process_group_exit(pgid, timeout):
@@ -237,16 +463,67 @@ def reap_process_group(process, grace_seconds=1):
     return notes, still_alive, had_remaining_processes
 
 
-def start_process_group_reaper(process, grace_seconds=0):
-    state = {}
+def close_process_pipes(process):
+    for stream in (process.stdin, process.stdout, process.stderr):
+        try:
+            stream.close()
+        except Exception:
+            pass
 
-    def wait_and_reap():
-        process.wait()
-        state["result"] = reap_process_group(process, grace_seconds)
 
-    thread = Thread(target=wait_and_reap, name="skillopt-process-group-reaper", daemon=True)
-    thread.start()
-    return thread, state
+def cleanup_failed_process_io_start(process, process_io):
+    cleanup_failed = False
+    try:
+        if process_io is not None:
+            process_io.close_unstarted_streams()
+    except Exception:
+        cleanup_failed = True
+    try:
+        signal_process_group(process, signal.SIGTERM)
+        still_running = wait_after_signal(process, 0)
+        if still_running:
+            signal_process_group(process, signal.SIGKILL)
+            cleanup_failed = wait_after_signal(process, 5) or cleanup_failed
+        reap_process_group(process, grace_seconds=0)
+    except Exception:
+        cleanup_failed = True
+    if process_io is not None:
+        try:
+            process_io.finish(timeout=1)
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+    else:
+        close_process_pipes(process)
+    try:
+        cleanup_failed = (
+            process.poll() is None
+            or process_group_alive(process.pid)
+            or cleanup_failed
+        )
+    except Exception:
+        cleanup_failed = True
+    return cleanup_failed
+
+
+def start_bounded_process_io(process, prompt, **kwargs):
+    process_io = None
+    try:
+        process_io = BoundedProcessIO(process, prompt, **kwargs)
+        process_io.start()
+        return process_io
+    except BaseException as error:
+        cleanup_failed = cleanup_failed_process_io_start(process, process_io)
+        if not isinstance(error, Exception):
+            raise
+        if cleanup_failed:
+            raise BoundedCaptureError(
+                "bounded subprocess I/O startup cleanup failed"
+            ) from None
+        raise BoundedCaptureError(
+            f"bounded subprocess I/O failed to start: {type(error).__name__}"
+        ) from None
 
 
 PACKAGE_DIRS_TO_SEED = ("scripts", "references", "assets", "agents")
@@ -3305,42 +3582,50 @@ class AgentSkillsRollout:
                     command,
                     cwd=workspace,
                     stdin=subprocess.PIPE,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     start_new_session=True,
                     env=process_env,
                 )
-                reaper_thread, reaper_state = start_process_group_reaper(process)
-                stdout, stderr = process.communicate(
-                    input=prompt,
-                    timeout=bounds["timeout"],
+                process_io = start_bounded_process_io(process, prompt)
+                process.wait(timeout=bounds["timeout"])
+                process_notes, process_group_still_alive, reaped_descendants = reap_process_group(
+                    process,
+                    grace_seconds=0,
                 )
-                stdout = redact_prompt(stdout, prompt)
-                stderr = redact_prompt(stderr, prompt)
-                reaper_thread.join(timeout=7)
-                process_notes, process_group_still_alive, reaped_descendants = (
-                    reaper_state.get("result") or reap_process_group(process)
-                )
-                if process_group_still_alive:
+                capture_error = ""
+                try:
+                    process_io.finish()
+                except BoundedCaptureError as error:
+                    capture_error = str(error)
+                finally:
+                    process_io.close_stopped_streams()
+                if process_group_still_alive or capture_error:
                     keep_workspace = True
                     outcome = {
                         "id": case["id"],
                         "case_id": case["id"],
-                        "response": redact(stdout),
+                        "response": "",
                         "returncode": 125,
                         "stderr": short(
-                            "rollout process group could not be terminated: "
-                            + "; ".join(process_notes)
+                            (
+                                "rollout process group could not be terminated: "
+                                + "; ".join(process_notes)
+                            )
+                            if process_group_still_alive
+                            else capture_error
                         ),
-                        "stdout": short(stdout),
+                        "stdout": "",
                         "artifacts": [],
                         "tool_rollout_enabled": bounds["tool_rollout_enabled"],
-                        "process_group_alive": True,
                     }
+                    if process_group_still_alive:
+                        outcome["process_group_alive"] = True
+                    if capture_error:
+                        outcome["capture_error"] = True
                     return outcome
+                stdout = render_captured_stream(process_io.stdout, prompt)
+                stderr = render_captured_stream(process_io.stderr, prompt)
                 response = final.read_text(encoding="utf-8") if final.exists() else stdout
                 artifacts = []
                 artifact_error = ""
@@ -3369,30 +3654,46 @@ class AgentSkillsRollout:
                     outcome["process_cleanup_notes"] = process_notes
                 if artifact_error:
                     outcome["artifact_policy_error"] = artifact_error
-            except subprocess.TimeoutExpired as error:
-                stdout = redact_timeout_stream(error.stdout)
-                stderr = redact_timeout_stream(error.stderr)
+            except BoundedCaptureError as error:
+                keep_workspace = True
+                outcome = {
+                    "id": case["id"],
+                    "case_id": case["id"],
+                    "response": "",
+                    "returncode": 125,
+                    "stderr": short(str(error)),
+                    "stdout": "",
+                    "artifacts": [],
+                    "tool_rollout_enabled": bounds["tool_rollout_enabled"],
+                    "capture_error": True,
+                }
+            except subprocess.TimeoutExpired:
                 termination_notes = []
                 process_alive_after_kill = False
                 term_error = signal_process_group(process, signal.SIGTERM)
                 if term_error:
                     termination_notes.append(f"SIGTERM: {term_error}")
-                term_stdout, term_stderr, still_running = communicate_after_signal(process, 5)
-                stdout = redact_timeout_stream(term_stdout) or stdout
-                stderr = redact_timeout_stream(term_stderr) or stderr
+                still_running = wait_after_signal(process, 5)
                 if still_running:
                     kill_error = signal_process_group(process, signal.SIGKILL)
                     if kill_error:
                         termination_notes.append(f"SIGKILL: {kill_error}")
-                    kill_stdout, kill_stderr, process_alive_after_kill = communicate_after_signal(process, 5)
-                    stdout = redact_timeout_stream(kill_stdout) or stdout
-                    stderr = redact_timeout_stream(kill_stderr) or stderr
-                reaper_thread.join(timeout=7)
-                process_notes, group_alive, _ = (
-                    reaper_state.get("result") or reap_process_group(process)
-                )
+                    process_alive_after_kill = wait_after_signal(process, 5)
+                process_notes, group_alive, _ = reap_process_group(process)
                 termination_notes.extend(process_notes)
                 process_alive_after_kill = process_alive_after_kill or group_alive
+                try:
+                    process_io.finish()
+                except BoundedCaptureError:
+                    termination_notes.append("bounded subprocess I/O cleanup failed")
+                finally:
+                    process_io.close_stopped_streams()
+                stdout = (
+                    PROMPT_ECHO_MARKER if process_io.stdout.total_bytes else ""
+                )
+                stderr = (
+                    PROMPT_ECHO_MARKER if process_io.stderr.total_bytes else ""
+                )
                 # On timeout, avoid inspecting or deleting the workspace. Some
                 # failed Codex/tool subprocesses can leave cwd/file handles in a
                 # kernel-blocked state; walking the tree or rmtree can wedge the

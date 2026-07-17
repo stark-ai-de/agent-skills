@@ -1,3 +1,5 @@
+from collections import deque
+import errno
 import fnmatch
 import hashlib
 import json
@@ -10,7 +12,7 @@ import tempfile
 import time
 import urllib.parse
 from pathlib import Path
-from threading import Thread
+from threading import Lock, Thread
 
 
 JUDGE_PERMISSION_PROFILE = "skillopt_judge"
@@ -152,31 +154,322 @@ def _reap_process_group(process, grace_seconds=1):
         return
     deadline = time.monotonic() + grace_seconds
     while _process_group_alive(process.pid) and time.monotonic() < deadline:
+        process.poll()
         time.sleep(0.05)
     if _process_group_alive(process.pid):
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:
             return
-
-
-def _start_process_group_reaper(process):
-    thread = Thread(
-        target=lambda: (process.wait(), _reap_process_group(process)),
-        name="skillopt-judge-process-reaper",
-        daemon=True,
-    )
-    thread.start()
-    return thread
+        deadline = time.monotonic() + 5
+        while _process_group_alive(process.pid) and time.monotonic() < deadline:
+            process.poll()
+            time.sleep(0.05)
 
 
 _PROMPT_ECHO_MARKER = "[redacted-prompt]"
 _PROMPT_ECHO_SEED_CHARS = 16
-_PROMPT_ECHO_SEED_POSITIONS = 8
+_PROMPT_ECHO_MAX_UNIQUE_SEEDS = 65_536
+_PROMPT_ECHO_MAX_SPANS = 65_536
+_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES = _PROMPT_ECHO_SEED_CHARS * 4
+_MAX_STDOUT_CAPTURE_BYTES = 10 * 1024 * 1024
+_MAX_STDERR_CAPTURE_BYTES = 64 * 1024
+_CAPTURE_CHUNK_BYTES = 64 * 1024
+_OUTPUT_TRUNCATION_MARKER = "[output truncated; retained tail]"
+
+
+class _BoundedCaptureError(OSError):
+    pass
+
+
+class _BoundedByteCapture:
+    def __init__(self, limit):
+        self.limit = max(1, int(limit))
+        self._chunks = deque()
+        self._retained_bytes = 0
+        self._total_bytes = 0
+        self._discarded_tail = b""
+        self._lock = Lock()
+
+    def _remember_discarded(self, value):
+        recent = value[-_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+        self._discarded_tail = (
+            self._discarded_tail + recent
+        )[-_PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES:]
+
+    def append(self, chunk):
+        value = bytes(chunk or b"")
+        if not value:
+            return
+        with self._lock:
+            self._total_bytes += len(value)
+            self._chunks.append(value)
+            self._retained_bytes += len(value)
+            while self._retained_bytes > self.limit:
+                excess = self._retained_bytes - self.limit
+                first = self._chunks[0]
+                if len(first) <= excess:
+                    removed = self._chunks.popleft()
+                    self._retained_bytes -= len(first)
+                else:
+                    removed = first[:excess]
+                    self._chunks[0] = first[excess:]
+                    self._retained_bytes -= excess
+                self._remember_discarded(removed)
+
+    @property
+    def total_bytes(self):
+        with self._lock:
+            return self._total_bytes
+
+    def snapshot(self):
+        with self._lock:
+            return b"".join(self._chunks), self._total_bytes > self.limit
+
+    def redaction_snapshot(self):
+        with self._lock:
+            return (
+                self._discarded_tail,
+                b"".join(self._chunks),
+                self._total_bytes > self.limit,
+            )
+
+
+class _BoundedProcessIO:
+    def __init__(
+        self,
+        process,
+        prompt,
+        stdout_limit=_MAX_STDOUT_CAPTURE_BYTES,
+        stderr_limit=_MAX_STDERR_CAPTURE_BYTES,
+    ):
+        self.process = process
+        self.prompt = str(prompt or "").encode("utf-8", errors="replace")
+        self.stdout = _BoundedByteCapture(stdout_limit)
+        self.stderr = _BoundedByteCapture(stderr_limit)
+        self._errors = []
+        self._error_lock = Lock()
+        self._readers = [
+            Thread(
+                target=self._read_stream,
+                args=("stdout", process.stdout, self.stdout),
+                name="skillopt-judge-stdout-drain",
+                daemon=True,
+            ),
+            Thread(
+                target=self._read_stream,
+                args=("stderr", process.stderr, self.stderr),
+                name="skillopt-judge-stderr-drain",
+                daemon=True,
+            ),
+        ]
+        self._writer = Thread(
+            target=self._write_prompt,
+            name="skillopt-judge-stdin-writer",
+            daemon=True,
+        )
+        self._threads = [*self._readers, self._writer]
+        self._started_threads = []
+
+    def _record_error(self, label, error):
+        with self._error_lock:
+            self._errors.append(f"{label}: {type(error).__name__}")
+
+    def _read_stream(self, label, stream, capture):
+        try:
+            while True:
+                chunk = stream.read(_CAPTURE_CHUNK_BYTES)
+                if not chunk:
+                    return
+                capture.append(chunk)
+        except Exception as error:
+            self._record_error(label, error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def _write_prompt(self):
+        stream = self.process.stdin
+        try:
+            view = memoryview(self.prompt)
+            while view:
+                written = stream.write(view)
+                if not written:
+                    raise BrokenPipeError("stdin closed before prompt transport completed")
+                view = view[written:]
+            stream.flush()
+        except BrokenPipeError:
+            pass
+        except OSError as error:
+            if error.errno not in {errno.EINVAL, errno.EPIPE}:
+                self._record_error("stdin", error)
+        except Exception as error:
+            self._record_error("stdin", error)
+        finally:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def start(self):
+        for thread in self._threads:
+            try:
+                thread.start()
+            finally:
+                if thread.ident is not None and thread not in self._started_threads:
+                    self._started_threads.append(thread)
+
+    def close_unstarted_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread in self._started_threads or thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def close_stopped_streams(self):
+        thread_streams = (
+            (self._readers[0], self.process.stdout),
+            (self._readers[1], self.process.stderr),
+            (self._writer, self.process.stdin),
+        )
+        for thread, stream in thread_streams:
+            if thread.is_alive():
+                continue
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def finish(self, timeout=7):
+        deadline = time.monotonic() + max(0, timeout)
+        for thread in self._started_threads:
+            thread.join(timeout=max(0, deadline - time.monotonic()))
+        alive = [thread.name for thread in self._started_threads if thread.is_alive()]
+        if alive:
+            raise _BoundedCaptureError("bounded subprocess I/O threads did not stop")
+        with self._error_lock:
+            errors = list(self._errors)
+        if errors:
+            raise _BoundedCaptureError(
+                "bounded subprocess I/O failed: " + "; ".join(errors)
+            )
+
+
+def _close_process_pipes(process):
+    for stream in (process.stdin, process.stdout, process.stderr):
+        try:
+            stream.close()
+        except Exception:
+            pass
+
+
+def _cleanup_failed_process_io_start(process, process_io):
+    cleanup_failed = False
+    try:
+        if process_io is not None:
+            process_io.close_unstarted_streams()
+    except Exception:
+        cleanup_failed = True
+    try:
+        _reap_process_group(process, grace_seconds=0)
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            cleanup_failed = True
+    except Exception:
+        cleanup_failed = True
+    if process_io is not None:
+        try:
+            process_io.finish(timeout=1)
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+    else:
+        _close_process_pipes(process)
+    try:
+        cleanup_failed = (
+            process.poll() is None
+            or _process_group_alive(process.pid)
+            or cleanup_failed
+        )
+    except Exception:
+        cleanup_failed = True
+    return cleanup_failed
+
+
+def _start_bounded_process_io(process, prompt, **kwargs):
+    process_io = None
+    try:
+        process_io = _BoundedProcessIO(process, prompt, **kwargs)
+        process_io.start()
+        return process_io
+    except BaseException as error:
+        cleanup_failed = _cleanup_failed_process_io_start(process, process_io)
+        if not isinstance(error, Exception):
+            raise
+        if cleanup_failed:
+            raise _BoundedCaptureError(
+                "bounded subprocess I/O startup cleanup failed"
+            ) from None
+        raise _BoundedCaptureError(
+            f"bounded subprocess I/O failed to start: {type(error).__name__}"
+        ) from None
+
+
+def _render_captured_stream(capture, prompt):
+    discarded_tail, payload, truncated = capture.redaction_snapshot()
+    value = payload.decode("utf-8", errors="replace")
+    boundary_chars = _prompt_boundary_prefix_chars(
+        discarded_tail,
+        payload,
+        str(prompt or "").encode("utf-8", errors="replace"),
+    )
+    value = _redact_prompt(value, prompt, boundary_chars=boundary_chars)
+    if truncated:
+        return f"{_OUTPUT_TRUNCATION_MARKER}\n{value}"
+    return value
+
+
+def _prompt_boundary_prefix_chars(discarded_tail, payload, transported):
+    """Return retained leading characters proven to continue a discarded prompt echo."""
+    if not discarded_tail or not payload or len(transported) < 2:
+        return 0
+    seed_bytes = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
+    max_left_size = min(seed_bytes - 1, len(discarded_tail))
+    if max_left_size <= 0:
+        return 0
+    high = min(len(payload), _PROMPT_ECHO_BOUNDARY_CONTEXT_BYTES)
+    matched_bytes = 0
+    for left_size in range(1, max_left_size + 1):
+        left = discarded_tail[-left_size:]
+        if left + payload[:1] not in transported:
+            continue
+        low = 1
+        candidate_high = high
+        while low < candidate_high:
+            middle = (low + candidate_high + 1) // 2
+            if left + payload[:middle] in transported:
+                low = middle
+            else:
+                candidate_high = middle - 1
+        matched_bytes = max(matched_bytes, low)
+        if matched_bytes == high:
+            break
+    return len(payload[:matched_bytes].decode("utf-8", errors="replace"))
 
 
 def _prompt_echo_spans(value, transported):
-    """Return exact prompt-derived spans without suppressing unrelated diagnostics."""
+    """Return bounded prompt-derived spans, or None to request fail-closed redaction."""
     spans = []
     if not value or not transported:
         return spans
@@ -188,61 +481,54 @@ def _prompt_echo_spans(value, transported):
         if stripped and stripped in transported:
             offset = line.find(stripped)
             spans.append((match.start() + offset, match.start() + offset + len(stripped)))
+            if len(spans) > _PROMPT_ECHO_MAX_SPANS:
+                return None
 
     seed_size = min(_PROMPT_ECHO_SEED_CHARS, len(transported))
     if seed_size <= 0 or len(value) < seed_size:
         return spans
-    positions_by_seed = {}
-    for index in range(len(transported) - seed_size + 1):
-        positions = positions_by_seed.setdefault(
-            transported[index : index + seed_size], []
-        )
-        if len(positions) < _PROMPT_ECHO_SEED_POSITIONS:
-            positions.append(index)
 
-    cursor = 0
+    prompt_seeds = set()
+    for index in range(len(transported) - seed_size + 1):
+        prompt_seeds.add(transported[index : index + seed_size])
+        if len(prompt_seeds) > _PROMPT_ECHO_MAX_UNIQUE_SEEDS:
+            return None
+
+    seed_spans = []
     last_seed_start = len(value) - seed_size
-    while cursor <= last_seed_start:
-        prompt_positions = positions_by_seed.get(value[cursor : cursor + seed_size])
-        if not prompt_positions:
-            cursor += 1
+    for index in range(last_seed_start + 1):
+        if value[index : index + seed_size] not in prompt_seeds:
             continue
-        best_start = cursor
-        best_end = cursor + seed_size
-        for prompt_start in prompt_positions:
-            output_start = cursor
-            candidate_prompt_start = prompt_start
-            while (
-                output_start > 0
-                and candidate_prompt_start > 0
-                and value[output_start - 1] == transported[candidate_prompt_start - 1]
-            ):
-                output_start -= 1
-                candidate_prompt_start -= 1
-            output_end = cursor + seed_size
-            candidate_prompt_end = prompt_start + seed_size
-            while (
-                output_end < len(value)
-                and candidate_prompt_end < len(transported)
-                and value[output_end] == transported[candidate_prompt_end]
-            ):
-                output_end += 1
-                candidate_prompt_end += 1
-            if output_end - output_start > best_end - best_start:
-                best_start, best_end = output_start, output_end
-        spans.append((best_start, best_end))
-        cursor = best_end
+        end = index + seed_size
+        if seed_spans and index <= seed_spans[-1][1]:
+            seed_spans[-1] = (
+                seed_spans[-1][0],
+                max(seed_spans[-1][1], end),
+            )
+        else:
+            seed_spans.append((index, end))
+            if len(spans) + len(seed_spans) > _PROMPT_ECHO_MAX_SPANS:
+                return None
+    spans.extend(seed_spans)
     return spans
 
 
-def _redact_prompt(text, prompt):
+def _redact_prompt(text, prompt, boundary_chars=0):
     value = text.decode("utf-8", errors="replace") if isinstance(text, bytes) else str(text or "")
     transported = str(prompt or "").encode("utf-8", errors="replace").decode("utf-8")
     spans = _prompt_echo_spans(value, transported)
+    if spans is None:
+        return _PROMPT_ECHO_MARKER if value else ""
+    guard_end = min(len(value), max(0, int(boundary_chars)))
+    if guard_end:
+        if len(spans) >= _PROMPT_ECHO_MAX_SPANS:
+            return _PROMPT_ECHO_MARKER
+        spans.append((0, guard_end))
     if not spans:
         return value
+    spans.sort()
     merged = []
-    for start, end in sorted(spans):
+    for start, end in spans:
         if merged and start <= merged[-1][1]:
             merged[-1] = (merged[-1][0], max(merged[-1][1], end))
         else:
@@ -268,34 +554,78 @@ def _run_isolated_codex(command, prompt, cwd, env, timeout):
         cwd=cwd,
         env=env,
         stdin=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         start_new_session=True,
     )
-    reaper = _start_process_group_reaper(process)
+    process_io = _start_bounded_process_io(process, prompt)
     try:
-        stdout, stderr = process.communicate(input=prompt, timeout=timeout)
-    except subprocess.TimeoutExpired as error:
-        error.stdout = _redact_timeout_stream(error.stdout)
-        error.stderr = _redact_timeout_stream(error.stderr)
-        _reap_process_group(process)
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        cleanup_failed = False
         try:
-            process.communicate(timeout=1)
-        except subprocess.TimeoutExpired:
-            pass
-        raise
-    finally:
-        reaper.join(timeout=7)
-        if reaper.is_alive() or _process_group_alive(process.pid):
             _reap_process_group(process)
+        except Exception:
+            cleanup_failed = True
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            cleanup_failed = True
+        try:
+            process_io.finish()
+        except Exception:
+            cleanup_failed = True
+        finally:
+            process_io.close_stopped_streams()
+        try:
+            cleanup_failed = (
+                process.poll() is None
+                or _process_group_alive(process.pid)
+                or cleanup_failed
+            )
+        except Exception:
+            cleanup_failed = True
+        if cleanup_failed:
+            raise _BoundedCaptureError(
+                "bounded subprocess cleanup failed after timeout"
+            ) from None
+        error = subprocess.TimeoutExpired(command, timeout)
+        error.stdout = (
+            _PROMPT_ECHO_MARKER
+            if process_io.stdout.total_bytes
+            else ""
+        )
+        error.stderr = (
+            _PROMPT_ECHO_MARKER
+            if process_io.stderr.total_bytes
+            else ""
+        )
+        raise error
+    cleanup_failed = False
+    try:
+        _reap_process_group(process)
+    except Exception:
+        cleanup_failed = True
+    try:
+        group_alive = _process_group_alive(process.pid)
+    except Exception:
+        group_alive = True
+    capture_error = None
+    try:
+        process_io.finish()
+    except _BoundedCaptureError as error:
+        capture_error = error
+    finally:
+        process_io.close_stopped_streams()
+    if cleanup_failed or group_alive:
+        raise _BoundedCaptureError("bounded subprocess cleanup failed") from None
+    if capture_error is not None:
+        raise capture_error
     return subprocess.CompletedProcess(
         command,
         process.returncode,
-        _redact_prompt(stdout, prompt),
-        _redact_prompt(stderr, prompt),
+        _render_captured_stream(process_io.stdout, prompt),
+        _render_captured_stream(process_io.stderr, prompt),
     )
 
 

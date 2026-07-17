@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create agent-run.drawio for an agent run that moves from intake through planner, tools, reviewer, and delivery. Use the Template 1 operator-grid profile and built-in semantic icons without network lookup. Use stable ids profile-operator-grid, intake, planner, tools, reviewer, delivery, and edge-planner-tools; use profile-operator-grid for one self-contained SVG grid backdrop with designProfile=operator-grid, shape=image, dataRole=decorative, and fillColor=light-dark(#F5F7FB,#0B0F16), and mark the edge as runtime-flow. Make the current route visually active, keep inactive routes readable, and use render-drawio.mjs to export agent-run.drawio.png plus agent-run.dark.svg.
+Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create agent-run.drawio for an agent run that moves from intake through planner, tools, reviewer, and delivery. Use the operator-grid profile and built-in semantic icons without network lookup. Use stable ids profile-operator-grid, intake, planner, tools, reviewer, delivery, and edge-planner-tools; use profile-operator-grid for one self-contained SVG grid backdrop with designProfile=operator-grid, shape=image, dataRole=decorative, and fillColor=light-dark(#F5F7FB,#0B0F16), and mark the edge as runtime-flow. Make the current route visually active, keep inactive routes readable, and use render-drawio.mjs to export agent-run.drawio.png plus agent-run.dark.svg.
 ```
 
 ## Should Trigger

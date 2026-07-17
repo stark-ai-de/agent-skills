@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create integration-story.drawio as a 16:9 executive view with Source, Gateway, Processor, Store, and Consumer services, built-in semantic icons, one main data path, and control labels Step 1, Step 2, and Step 3. Select the Template 4 aurora-story profile and do not use network lookup. Use profile-aurora-story for the Source primary card with designProfile=aurora-story, the documented gradient, shadow=1, and glass=0. Also use stable ids gateway, processor, store, consumer, edge-source-gateway, and edge-processor-store; mark the edges as data-flow. Use render-drawio.mjs to export integration-story.drawio.png plus integration-story.dark.svg.
+Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create integration-story.drawio as a 16:9 executive view with Source, Gateway, Processor, Store, and Consumer services, built-in semantic icons, one main data path, and control labels Step 1, Step 2, and Step 3. Select the aurora-story profile and do not use network lookup. Use profile-aurora-story for the Source primary card with designProfile=aurora-story, the documented gradient, shadow=1, and glass=0. Also use stable ids gateway, processor, store, consumer, edge-source-gateway, and edge-processor-store; mark the edges as data-flow. Use render-drawio.mjs to export integration-story.drawio.png plus integration-story.dark.svg.
 ```
 
 ## Should Trigger

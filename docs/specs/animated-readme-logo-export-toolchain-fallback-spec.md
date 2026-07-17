@@ -64,7 +64,6 @@ Turn missing export and preview capabilities into explicit, minimal installation
 - Requirement revised: a missing Playwright browser is a preview limitation, not evidence that the raster exporter or inspector is unavailable.
 - Requirement constrained: package names, versions, commands, and disk impact are live platform facts and must be inspected before an approval request.
 - Requirement preserved: no package, browser CLI, browser binary, or paid provider call is installed or invoked from approval for a different side-effect class.
-- Product evidence checked: `stark-ai-de/scripts/generate-readme-logo.mjs` combined reusable subprocess, staging, rasterization, encoding, sanitization, and inspection logic with one brand's hard-coded paths, layers, palette, and motion.
 - Boundary revised: the public skill owns deterministic export mechanics; each target repository owns a small reviewed recipe. The recipe is executable repository code and is therefore trusted input, not a sandbox boundary.
 
 ## User verification

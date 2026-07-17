@@ -2,10 +2,10 @@
 
 This folder contains the SkillOpt-ready eval corpus for `drawio-diagrams`.
 
-See [comparison.md](comparison.md) for the audited capability tables that compare the
-skill with an unassisted agent and current draw.io skill/tool alternatives.
-Use [benchmark.md](benchmark.md) for the same-model, blind, paired protocol required
-before publishing any competitor-outperformance claim.
+Use [benchmark.md](benchmark.md) for the candidate-neutral, same-model, blind,
+paired protocol used to evaluate architecture quality. External candidate
+identities, repositories, revisions, mappings, and identifying raw artifacts
+remain maintainer-local under ADR-0030.
 
 ## Promotion Rationale
 

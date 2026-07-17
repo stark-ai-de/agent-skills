@@ -3,7 +3,7 @@
 ## Prompt
 
 ```text
-Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create developer-platform.drawio for one central orchestration hub, three product teams, identity, model APIs, and observability. Select the Template 3 neon-hub profile and use built-in semantic icons without network lookup. Use profile-neon-hub for the Orchestration Hub with designProfile=neon-hub and the documented acid-lime focus stroke. Also use stable ids team-a, team-b, team-c, identity, models, observability, edge-identity-hub, and edge-hub-observability; mark the edges as request and event. Use render-drawio.mjs to export developer-platform.drawio.png plus developer-platform.dark.svg.
+Use $drawio-diagrams in a render-capable eval environment with local draw.io Desktop CLI available. Create developer-platform.drawio for one central orchestration hub, three product teams, identity, model APIs, and observability. Select the neon-hub profile and use built-in semantic icons without network lookup. Use profile-neon-hub for the Orchestration Hub with designProfile=neon-hub and the documented acid-lime focus stroke. Also use stable ids team-a, team-b, team-c, identity, models, observability, edge-identity-hub, and edge-hub-observability; mark the edges as request and event. Use render-drawio.mjs to export developer-platform.drawio.png plus developer-platform.dark.svg.
 ```
 
 ## Should Trigger
