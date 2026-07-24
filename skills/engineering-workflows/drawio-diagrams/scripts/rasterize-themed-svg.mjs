@@ -10,6 +10,9 @@ import { validatePng, validateSvgXml } from "./render-drawio.mjs";
 const MAX_SVG_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 32_768;
 const MAX_PIXELS = 16_000_000;
+const MAX_EMBEDDED_SVG_BYTES = 2 * 1024 * 1024;
+const MAX_EMBEDDED_SVG_DEPTH = 4;
+const MAX_EMBEDDED_SVG_TOTAL_BYTES = 8 * 1024 * 1024;
 const FIXED_THEMES = new Set(["light", "dark"]);
 const ACTIVE_ELEMENTS = new Set([
   "animate",
@@ -51,7 +54,7 @@ const CSS_RENDER_REFERENCE_ATTRIBUTES = new Set([
 const DATA_IMAGE_ELEMENTS = new Set(["feimage", "image", "img"]);
 
 function usage() {
-  return `Usage: node scripts/rasterize-themed-svg.mjs input.light.svg output.light.png [--browser <chrome-or-edge>]
+  return `Usage: node scripts/rasterize-themed-svg.mjs input.light.svg output.light.png --browser <pinned-chrome-or-edge>
 
 Rasterizes one fixed-theme SVG through a local Chromium-family browser.
 The input must declare exactly one root color-scheme (light or dark), have bounded dimensions,
@@ -133,7 +136,60 @@ function assertNoActiveUrlScheme(reference) {
   }
 }
 
-function assertCssIsSelfContained(source) {
+function parseImageDataUrl(reference) {
+  const match = String(reference)
+    .trim()
+    .match(/^data:([^,]*),(.*)$/is);
+  if (!match) return null;
+  const parameters = match[1].split(";");
+  const mediaType = parameters.shift()?.trim().toLowerCase();
+  if (!mediaType?.startsWith("image/")) return null;
+  return {
+    mediaType,
+    payload: match[2],
+    base64: parameters.some((parameter) => parameter.trim().toLowerCase() === "base64"),
+  };
+}
+
+function decodeEmbeddedSvgDataUrl(parsed) {
+  const { payload, base64 } = parsed;
+  if (!payload || payload.length > MAX_EMBEDDED_SVG_BYTES * 4) {
+    throw new Error("SVG embedded image data is empty or exceeds the size limit");
+  }
+  let bytes;
+  try {
+    if (base64) {
+      if (
+        payload.length % 4 === 1 ||
+        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?$/.test(payload)
+      ) {
+        throw new Error("invalid base64");
+      }
+      bytes = Buffer.from(payload, "base64");
+    } else if (payload.trimStart().startsWith("<")) {
+      bytes = Buffer.from(payload, "utf8");
+    } else {
+      if (/%(?![0-9A-Fa-f]{2})/.test(payload)) throw new Error("invalid percent encoding");
+      bytes = Buffer.from(decodeURIComponent(payload), "utf8");
+    }
+  } catch {
+    throw new Error("SVG embedded image data is not valid UTF-8 or encoded data");
+  }
+  if (!bytes.length || bytes.length > MAX_EMBEDDED_SVG_BYTES) {
+    throw new Error("SVG embedded image data is empty or exceeds the size limit");
+  }
+  return bytes;
+}
+
+function inspectDataImageReference(reference, depth, context, message) {
+  const parsed = parseImageDataUrl(reference);
+  if (!parsed) throw new Error(message);
+  if (parsed.mediaType !== "image/svg+xml") return;
+  const bytes = decodeEmbeddedSvgDataUrl(parsed);
+  inspectEmbeddedSvg(bytes, depth + 1, context);
+}
+
+function assertCssIsSelfContained(source, depth, context) {
   const css = String(source);
   if (css.includes("\\") || css.includes("/*") || css.includes("*/")) {
     throw new Error("SVG CSS escapes and comments are not supported for rasterization");
@@ -144,28 +200,37 @@ function assertCssIsSelfContained(source) {
   for (const match of css.matchAll(/url\s*\(\s*(["']?)(.*?)\1\s*\)/gis)) {
     const reference = match[2].trim();
     assertNoActiveUrlScheme(reference);
-    if (reference && !reference.startsWith("#") && !reference.toLowerCase().startsWith("data:")) {
-      throw new Error("SVG contains an external CSS render asset");
-    }
+    if (!reference || reference.startsWith("#")) continue;
+    if (!/^data:/i.test(reference)) throw new Error("SVG contains an external CSS render asset");
+    inspectDataImageReference(
+      reference,
+      depth,
+      context,
+      "SVG contains an external CSS render asset",
+    );
   }
 }
 
-function isImageDataUrl(reference) {
-  const match = String(reference).match(/^data:([^,]*),/i);
-  if (!match) return false;
-  const mediaType = match[1].split(";", 1)[0].trim().toLowerCase();
-  return mediaType.startsWith("image/") && mediaType.length > "image/".length;
-}
-
-function assertRenderReference(reference, message, { allowImageData = false } = {}) {
+function assertRenderReference(
+  reference,
+  message,
+  { allowImageData = false, depth = 0, context } = {},
+) {
   const value = String(reference).trim();
   assertNoActiveUrlScheme(value);
   if (!value || value.startsWith("#")) return;
-  if (allowImageData && isImageDataUrl(value)) return;
+  if (allowImageData && /^data:/i.test(value)) {
+    inspectDataImageReference(value, depth, context, message);
+    return;
+  }
   throw new Error(message);
 }
 
-function inspectRasterElement({ name, attributes }) {
+function inspectRasterText({ text, parentName }, depth, context) {
+  if (localName(parentName) === "style") assertCssIsSelfContained(text, depth, context);
+}
+
+function inspectRasterElement({ name, attributes }, depth, context) {
   const elementName = localName(name);
   if (ACTIVE_ELEMENTS.has(elementName)) {
     throw new Error(`SVG contains an unsupported active content element: ${elementName}`);
@@ -181,7 +246,7 @@ function inspectRasterElement({ name, attributes }) {
     }
     assertNoActiveUrlScheme(value);
     if (CSS_RENDER_REFERENCE_ATTRIBUTES.has(attributeName)) {
-      assertCssIsSelfContained(value);
+      assertCssIsSelfContained(value, depth, context);
     }
     if (attributeName === "srcset") {
       throw new Error("SVG contains an unsupported HTML source set");
@@ -189,23 +254,52 @@ function inspectRasterElement({ name, attributes }) {
     if (attributeName === "href" && elementName !== "a") {
       assertRenderReference(value, "SVG contains an external image or symbol reference", {
         allowImageData: DATA_IMAGE_ELEMENTS.has(elementName),
+        depth,
+        context,
       });
     }
     if (HTML_RENDER_REFERENCE_ATTRIBUTES.has(attributeName)) {
       assertRenderReference(value, "SVG contains an external HTML render asset", {
         allowImageData: true,
+        depth,
+        context,
       });
     }
   }
 }
 
-export function inspectThemedSvg(source) {
-  const { rootAttributes: attributes } = validateSvgXml(source, {
-    onElement: inspectRasterElement,
-    onText: ({ text, parentName }) => {
-      if (localName(parentName) === "style") assertCssIsSelfContained(text);
-    },
+function inspectSvgSource(source, depth, context) {
+  if (/<!DOCTYPE\b/i.test(source)) {
+    throw new Error("SVG DOCTYPE is not supported for rasterization");
+  }
+  return validateSvgXml(source, {
+    onElement: (entry) => inspectRasterElement(entry, depth, context),
+    onText: (entry) => inspectRasterText(entry, depth, context),
   });
+}
+
+function inspectEmbeddedSvg(bytes, depth, context) {
+  if (depth > MAX_EMBEDDED_SVG_DEPTH) {
+    throw new Error(`SVG embedded image nesting exceeds ${MAX_EMBEDDED_SVG_DEPTH} levels`);
+  }
+  context.embeddedBytes += bytes.length;
+  if (context.embeddedBytes > MAX_EMBEDDED_SVG_TOTAL_BYTES) {
+    throw new Error("SVG embedded image data exceeds the aggregate size limit");
+  }
+  let source;
+  try {
+    source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error("SVG embedded image data must use UTF-8 encoding");
+  }
+  inspectSvgSource(source, depth, context);
+}
+
+export function inspectThemedSvg(source) {
+  if (Buffer.byteLength(source, "utf8") > MAX_SVG_BYTES) {
+    throw new Error(`SVG exceeds the ${MAX_SVG_BYTES}-byte inspection limit`);
+  }
+  const { rootAttributes: attributes } = inspectSvgSource(source, 0, { embeddedBytes: 0 });
   if (!attributes) throw new Error("SVG root element is missing");
   const width = parseDimension(attributes.get("width"), "width");
   const height = parseDimension(attributes.get("height"), "height");
@@ -219,43 +313,20 @@ export function inspectThemedSvg(source) {
   };
 }
 
-function browserCandidates() {
-  const candidates = [
-    process.env.SVG_RASTER_BROWSER,
-    "google-chrome",
-    "google-chrome-stable",
-    "chromium",
-    "chromium-browser",
-    "microsoft-edge",
-    "microsoft-edge-stable",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
-    "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-  ];
-  return candidates.filter(Boolean);
-}
-
 function isPathCandidate(candidate) {
   return path.isAbsolute(candidate) || candidate.includes("/") || candidate.includes("\\");
 }
 
 export function findBrowser(configured = null) {
-  const candidates = configured ? [configured] : browserCandidates();
-  for (const candidate of candidates) {
-    if (isPathCandidate(candidate)) {
-      if (fs.existsSync(candidate)) return candidate;
-      continue;
-    }
-    const result = spawnSync(candidate, ["--version"], {
-      encoding: "utf8",
-      timeout: 5_000,
-    });
-    if (!result.error && result.status === 0) return candidate;
+  if (!configured) return null;
+  if (isPathCandidate(configured)) {
+    return fs.existsSync(configured) ? configured : null;
   }
-  return null;
+  const result = spawnSync(configured, ["--version"], {
+    encoding: "utf8",
+    timeout: 5_000,
+  });
+  return !result.error && result.status === 0 ? configured : null;
 }
 
 function windowsPath(file) {
@@ -414,8 +485,10 @@ function main() {
     console.log(usage());
     return;
   }
-  if (!args.input || !args.output) {
-    console.error("input SVG and output PNG are required");
+  if (!args.input || !args.output || (!args.browser && !process.env.SVG_RASTER_BROWSER)) {
+    console.error(
+      "input SVG, output PNG, and a pinned browser (--browser or SVG_RASTER_BROWSER) are required",
+    );
     console.error(usage());
     process.exitCode = 2;
     return;
@@ -441,10 +514,10 @@ function main() {
     const output = path.join(outputParent, path.basename(requestedOutput));
     if (fs.existsSync(output)) throw new Error(`refusing to replace existing output: ${output}`);
 
-    const browser = findBrowser(args.browser);
+    const browser = findBrowser(args.browser || process.env.SVG_RASTER_BROWSER);
     if (!browser) {
       throw new Error(
-        "no local Chrome, Chromium, or Edge browser was found; pass --browser <path>",
+        "the pinned browser was not found or did not accept --version; pass --browser <path>",
       );
     }
 

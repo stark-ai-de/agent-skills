@@ -32,14 +32,15 @@ drawio -x -f svg --svg-theme light -e -b 10 -o name.light.svg name.drawio
 drawio -x -f svg --svg-theme dark -e -b 10 -o name.dark.svg name.drawio
 ```
 
-The standard `name.drawio.svg` is adaptive; do not relabel it as fixed light. For a light/dark comparison set, pass `--svg-theme light` and `--svg-theme dark` explicitly for every source, then rasterize each fixed SVG through a local Chromium-family browser:
+The standard `name.drawio.svg` is adaptive; do not relabel it as fixed light. For a light/dark comparison set, pass `--svg-theme light` and `--svg-theme dark` explicitly for every source, then, after explicit user approval, rasterize each fixed SVG through the same pinned local Chromium-family browser executable:
 
 ```bash
-node scripts/rasterize-themed-svg.mjs name.light.svg name.light.png
-node scripts/rasterize-themed-svg.mjs name.dark.svg name.dark.png
+BROWSER="/absolute/path/to/pinned/chromium"
+node scripts/rasterize-themed-svg.mjs name.light.svg name.light.png --browser "$BROWSER"
+node scripts/rasterize-themed-svg.mjs name.dark.svg name.dark.png --browser "$BROWSER"
 ```
 
-The rasterizer reads the parsed root element, requires its `color-scheme` to be fixed to exactly `light` or `dark`, rejects active content and remotely loaded render assets, disables browser JavaScript, uses an isolated temporary browser profile, preserves the SVG dimensions, validates the PNG, and refuses to replace an existing output. Use `--browser <path>` when Chrome, Chromium, or Edge is not discoverable. This SVG-to-PNG path is required for a true dark PNG because draw.io Desktop's theme option applies to SVG, not direct PNG export. Build comparison galleries from the static light/dark PNG previews and link the fixed-theme SVGs plus editable sources separately.
+The rasterizer reads the parsed root element, requires its `color-scheme` to be fixed to exactly `light` or `dark`, recursively inspects bounded embedded SVG image data, rejects active content and remotely loaded render assets, disables browser JavaScript, uses an isolated temporary browser profile, preserves the SVG dimensions, validates the PNG, and refuses to replace an existing output. A pinned browser executable is required so a comparison batch does not silently mix rendering engines; `SVG_RASTER_BROWSER` may provide the same explicit path. This SVG-to-PNG path is required for a true dark PNG because draw.io Desktop's theme option applies to SVG, not direct PNG export. Build comparison galleries from the static light/dark PNG previews and link the fixed-theme SVGs plus editable sources separately.
 
 Export and validate every source/theme artifact, even when the CLI is invoked in a batch. If a preview appears to clip an embedded image, inspect a full-resolution crop with an independent decoder and make an isolated re-export before changing the source or renderer. Treat animated SVG byte hashes and live animation frames as nondeterministic; prove repeatability with source-graph, declared-theme, self-containment, and static-render checks.
 

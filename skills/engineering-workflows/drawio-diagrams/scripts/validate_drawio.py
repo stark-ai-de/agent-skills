@@ -43,6 +43,8 @@ SVG_KEYFRAMES_START_RE = re.compile(
 )
 MAX_EMBEDDED_SVG_BYTES = 2 * 1024 * 1024
 MAX_EMBEDDED_SVG_PAYLOAD_CHARS = 8 * 1024 * 1024
+MAX_EMBEDDED_SVG_DEPTH = 4
+MAX_EMBEDDED_SVG_TOTAL_BYTES = 8 * 1024 * 1024
 MAX_EMBEDDED_PNG_DIMENSION = 32_768
 MAX_EMBEDDED_PNG_DECODED_BYTES = 64 * 1024 * 1024
 MAX_DRAWIO_SOURCE_BYTES = 20 * 1024 * 1024
@@ -53,6 +55,33 @@ SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 XLINK_NAMESPACE = "http://www.w3.org/1999/xlink"
 XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace"
 SVG_ANIMATION_ELEMENTS = {"animate", "animatemotion", "animatetransform", "discard", "set"}
+SVG_ACTIVE_ELEMENTS = frozenset(
+    {
+        "animate",
+        "animatemotion",
+        "animatetransform",
+        "audio",
+        "base",
+        "button",
+        "embed",
+        "form",
+        "handler",
+        "iframe",
+        "input",
+        "listener",
+        "link",
+        "meta",
+        "object",
+        "script",
+        "select",
+        "set",
+        "source",
+        "textarea",
+        "track",
+        "video",
+        "discard",
+    }
+)
 SVG_NON_RENDERING_ELEMENTS = {
     "defs",
     "desc",
@@ -819,8 +848,16 @@ def svg_stylesheet_has_only_keyframes(css: str) -> bool:
     return True
 
 
-def validate_embedded_svg(uri: str) -> None:
-    text = decode_embedded_svg(uri)
+def validate_embedded_svg_bytes(raw: bytes, depth: int, context: dict[str, int]) -> None:
+    if depth > MAX_EMBEDDED_SVG_DEPTH:
+        raise ValueError(f"embedded SVG nesting exceeds {MAX_EMBEDDED_SVG_DEPTH} levels")
+    context["bytes"] += len(raw)
+    if context["bytes"] > MAX_EMBEDDED_SVG_TOTAL_BYTES:
+        raise ValueError("embedded SVG data exceeds the aggregate size limit")
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError("embedded SVG must use UTF-8 encoding") from exc
     if "<!doctype" in text.lower():
         raise ValueError("embedded SVG contains a DOCTYPE")
     without_declaration = SVG_XML_DECL_RE.sub("", text, count=1)
@@ -853,10 +890,8 @@ def validate_embedded_svg(uri: str) -> None:
 
     for element in root.iter():
         tag = xml_local_name(element.tag)
-        if tag in {"foreignobject", "script"}:
+        if tag in SVG_ACTIVE_ELEMENTS or tag == "foreignobject":
             raise ValueError(f"embedded SVG contains forbidden <{tag}> content")
-        if tag in SVG_ANIMATION_ELEMENTS:
-            raise ValueError(f"embedded SVG contains forbidden <{tag}> animation")
 
         if tag == "style":
             css = "".join(element.itertext())
@@ -866,6 +901,8 @@ def validate_embedded_svg(uri: str) -> None:
                 reference = match.group(2).strip()
                 if reference.startswith("#"):
                     local_fragment(reference, ids)
+                elif reference.lower().startswith("data:image/"):
+                    validate_embedded_image(reference, depth + 1, context)
                 else:
                     raise ValueError("embedded SVG style contains an external URL")
 
@@ -878,15 +915,30 @@ def validate_embedded_svg(uri: str) -> None:
                 raise ValueError("embedded SVG contains an event-handler attribute")
             if "\\" in value:
                 raise ValueError("embedded SVG attribute contains a CSS escape")
+            if name == "srcset":
+                raise ValueError("embedded SVG contains an unsupported source set")
             if name in {"href", "src"} and value:
                 if value.startswith("#"):
                     local_fragment(value, ids)
+                elif tag in {"image", "feimage", "img"} and value.lower().startswith(
+                    "data:image/"
+                ):
+                    validate_embedded_image(value, depth + 1, context)
                 else:
                     raise ValueError("embedded SVG contains an external reference")
+            if name in {"background", "poster"} and value:
+                if value.startswith("#"):
+                    local_fragment(value, ids)
+                elif value.lower().startswith("data:image/"):
+                    validate_embedded_image(value, depth + 1, context)
+                else:
+                    raise ValueError("embedded SVG contains an external render asset")
             for match in SVG_URL_RE.finditer(value):
                 reference = match.group(2).strip()
                 if reference.startswith("#"):
                     local_fragment(reference, ids)
+                elif reference.lower().startswith("data:image/"):
+                    validate_embedded_image(reference, depth + 1, context)
                 else:
                     raise ValueError("embedded SVG attribute contains an external URL")
     if not svg_has_renderable_graphic(root, elements_by_id):
@@ -989,10 +1041,20 @@ def validate_png(raw: bytes) -> None:
             raise ValueError("embedded PNG contains an invalid scanline filter")
 
 
-def validate_embedded_image(uri: str) -> str:
+def validate_embedded_svg(uri: str) -> None:
     media_type, raw = decode_data_image(uri)
+    if media_type != "svg+xml":
+        raise ValueError("embedded image is not SVG")
+    validate_embedded_svg_bytes(raw, 0, {"bytes": 0})
+
+
+def validate_embedded_image(
+    uri: str, depth: int = 0, context: dict[str, int] | None = None
+) -> str:
+    media_type, raw = decode_data_image(uri)
+    inspection = context if context is not None else {"bytes": 0}
     if media_type == "svg+xml":
-        validate_embedded_svg(uri)
+        validate_embedded_svg_bytes(raw, depth, inspection)
         return media_type
     validate_png(raw)
     return media_type
@@ -1298,6 +1360,36 @@ def data_role(cell: Cell) -> str:
     return cell.style_map.get("dataRole", "").strip().lower()
 
 
+GROUP_ROLES = frozenset({"boundary", "container", "group", "zone"})
+
+
+def is_semantic_group(cell: Cell) -> bool:
+    return (
+        cell.is_vertex
+        and not cell.is_text_label
+        and (
+            cell.style_map.get("container") == "1"
+            or "swimlane" in cell.style
+            or data_role(cell) in GROUP_ROLES
+        )
+    )
+
+
+def group_ancestors(cell: Cell, cells_by_id: dict[str, Cell], group_ids: set[str]) -> list[str]:
+    result: list[str] = []
+    parent_id = cell.parent
+    seen: set[str] = set()
+    while parent_id and parent_id not in seen:
+        seen.add(parent_id)
+        parent = cells_by_id.get(parent_id)
+        if parent is None:
+            break
+        if parent.id in group_ids:
+            result.append(parent.id)
+        parent_id = parent.parent
+    return result
+
+
 def style_flags(cell: Cell) -> set[str]:
     return {
         token.strip().lower()
@@ -1448,6 +1540,9 @@ def validate_model(
             "cell_id_sha256s": [],
             "component_cell_id_sha256s": [],
             "component_label_sha256s": [],
+            "group_cell_id_sha256s": [],
+            "group_label_sha256s": [],
+            "group_membership_sha256s": [],
             "native_stencil_cell_id_sha256s": [],
             "directed_edge_sha256s": [],
             "directed_edge_identity_sha256s": [],
@@ -1509,6 +1604,26 @@ def validate_model(
         and cell.is_vertex
         and data_role(cell) == "component"
         and strip_html(cell.value).strip()
+    )
+    semantic_groups = [cell for cell in content if cell.id and is_semantic_group(cell)]
+    group_ids = {cell.id for cell in semantic_groups if cell.id}
+    group_cell_id_sha256s = sorted(
+        hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
+        for cell in semantic_groups
+        if cell.id
+    )
+    group_label_sha256s = sorted(
+        hashlib.sha256(
+            f"{cell.id}\0{' '.join(strip_html(cell.value).split())}".encode("utf-8")
+        ).hexdigest()
+        for cell in semantic_groups
+        if cell.id and strip_html(cell.value).strip()
+    )
+    group_membership_sha256s = sorted(
+        hashlib.sha256(f"{cell.id}\0{group_id}".encode("utf-8")).hexdigest()
+        for cell in content
+        if cell.id and cell.is_vertex and data_role(cell) == "component"
+        for group_id in group_ancestors(cell, cells_by_id, group_ids)
     )
     native_stencil_cell_id_sha256s = sorted(
         hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
@@ -1761,13 +1876,14 @@ def validate_model(
     embedded_svg_sources = 0
     embedded_svg_sha256s: set[str] = set()
     embedded_svg_cell_sha256s: set[str] = set()
+    embedded_svg_context = {"bytes": 0}
     for cell_id, source in dict.fromkeys(collect_model_image_sources(cells)):
         normalized = source.strip()
         if not normalized and cell_id in missing_image_source_cells:
             continue
         if normalized.lower().startswith("data:image/"):
             try:
-                media_type = validate_embedded_image(normalized)
+                media_type = validate_embedded_image(normalized, context=embedded_svg_context)
                 if media_type == "svg+xml":
                     embedded_svg_sources += 1
                     _, raw_image = decode_data_image(normalized)
@@ -1831,6 +1947,9 @@ def validate_model(
         "cell_id_sha256s": cell_id_sha256s,
         "component_cell_id_sha256s": component_cell_id_sha256s,
         "component_label_sha256s": component_label_sha256s,
+        "group_cell_id_sha256s": group_cell_id_sha256s,
+        "group_label_sha256s": group_label_sha256s,
+        "group_membership_sha256s": group_membership_sha256s,
         "native_stencil_cell_id_sha256s": native_stencil_cell_id_sha256s,
         "directed_edge_sha256s": directed_edge_sha256s,
         "directed_edge_identity_sha256s": directed_edge_identity_sha256s,

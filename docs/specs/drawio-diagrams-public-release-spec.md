@@ -6,7 +6,7 @@ status: "final-public-release"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-07-07"
-updated: "2026-07-18"
+updated: "2026-07-24"
 ---
 
 # drawio-diagrams Public Release Spec
@@ -105,7 +105,7 @@ The skill must:
 
 ### ADR gate
 
-[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.md) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.md) governs the public-contract and private-provenance split.
+[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.md) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.md) governs the public-contract and private-provenance split. [ADR-0031](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.md) governs explicit approval, bounded recursive inspection, and local browser isolation for fixed-theme rasterization.
 
 ### User verification
 
@@ -116,9 +116,9 @@ The maintainer approved this public product contract and the ADR-0030 publicatio
 - `SKILL.md` stays concise and routes detailed architecture, style, animation, discovery, and review behavior into references.
 - Eval cases cover animation-on, explicit animation-off, architecture content selection, conditional discovery, modern readable design, all four optional design profiles, icon-first coverage, external SVG embedding, and the single rights notice for any third-party logo or icon.
 - Each profile eval requires the requested profile to be named and applied consistently, keeps `adaptiveColors` plus `light-dark(...)`, binds a representative `profile-<name>` cell to profile-specific styles, exercises the composition/effect guardrails in light PNG and dark SVG exports, and still runs deterministic validation.
-- The profile-comparison eval applies all five profiles to one synthetic semantic manifest, preserves exact component names, directed edge IDs/endpoints/roles, and embedded icon bytes, compares every profile pair in both themes, and verifies fixed light/dark SVG declarations plus real static gallery previews and artifact links.
-- Standard adaptive SVG refreshes use `--svg-theme auto`. Viewer-independent light/dark PNGs are rasterized from validated fixed-theme SVGs with the bounded local helper; the helper rejects active or remote-loading content and the skill does not claim that direct draw.io Desktop PNG export applies a dark theme.
-- Per-artifact wildcard checks for PNG dimensions/nonblank content and SVG validity/theme/animation/self-containment evaluate every match. PNG comparisons use canonical canvas-order RGBA pixels rather than encoding details, fixed SVG/PNG pairs require identical explicit pixel dimensions, profile pairs require a nontrivial changed-pixel floor, relative gallery references resolve to real artifacts, and exact graph assertions reject extra or duplicate semantic cells.
+- The profile-comparison eval applies all five profiles to one synthetic semantic manifest, preserves exact component and group/boundary names, component-to-boundary membership, directed edge IDs/endpoints/roles, stable built-in icon cell IDs, and embedded icon bytes, compares every profile pair in both themes, and verifies fixed light/dark SVG declarations plus real static gallery previews and artifact links.
+- Standard adaptive SVG refreshes use `--svg-theme auto`. Viewer-independent light/dark PNGs are rasterized from validated fixed-theme SVGs with the bounded local helper and an explicitly selected local browser executable; comparison instructions reuse the same path for a batch, the helper recursively inspects bounded embedded SVG image data, rejects active or remote-loading content, and the skill does not claim that direct draw.io Desktop PNG export applies a dark theme.
+- Per-artifact wildcard checks for PNG dimensions/nonblank content and SVG validity/theme/animation/self-containment evaluate every match. PNG comparisons use canonical canvas-order RGBA pixels rather than encoding details, fixed SVG/PNG pairs require identical explicit pixel dimensions, profile pairs require a nontrivial changed-pixel floor, relative gallery references resolve to real artifacts, and exact graph assertions reject extra or duplicate semantic cells and listed component-to-group memberships.
 - The external SVG eval names LangSmith and requires editable `.drawio` plus rendered SVG artifacts, embedded image data without a provider URL, fixed aspect ratio, provider/version reporting, and the single rights notice.
 - Deterministic checks catch mixed or missing directed-flow animation without penalizing structural or decorative edges, and avoid false orphan warnings for component-card children or declared annotations.
 - Diagram-rule checks warn when a `dataRole=component` card has neither an icon-like shape nor a `dataRole=icon` child. Shape-search regressions cover JSON output, fuzzy and partial matching, type filtering, gzip input, and standard-cache discovery.

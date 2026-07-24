@@ -178,6 +178,10 @@ function parseDrawioGraph(parts) {
     "ids",
     "component_ids",
     "component_labels",
+    "group_ids",
+    "group_labels",
+    "group_memberships",
+    "exact_groups",
     "native_ids",
     "edges",
     "edge_bindings",
@@ -202,6 +206,9 @@ function parseDrawioGraph(parts) {
       "ids",
       "component_ids",
       "component_labels",
+      "group_ids",
+      "group_labels",
+      "group_memberships",
       "native_ids",
       "edges",
       "edge_bindings",
@@ -212,7 +219,7 @@ function parseDrawioGraph(parts) {
     ].some((name) => options.has(name))
   ) {
     throw new Error(
-      "drawio_graph requires ids=..., component_ids=..., component_labels=..., native_ids=..., edges=..., edge_bindings=..., not_edges=..., edge_roles=..., profile_styles=..., or links=...",
+      "drawio_graph requires ids=..., component_ids=..., component_labels=..., group_ids=..., group_labels=..., group_memberships=..., native_ids=..., edges=..., edge_bindings=..., not_edges=..., edge_roles=..., profile_styles=..., or links=...",
     );
   }
 
@@ -275,47 +282,62 @@ function parseDrawioGraph(parts) {
   if (edgeBindings.length > 128) {
     throw new Error("drawio_graph edge_bindings exceeds 128 entries");
   }
-  const rawComponentLabels = options.has("component_labels")
-    ? options.get("component_labels").split(",")
-    : [];
-  if (rawComponentLabels.length > 128) {
-    throw new Error("drawio_graph component_labels exceeds 128 entries");
+  const parseLabelMappings = (optionName, labelName) => {
+    const rawMappings = options.has(optionName) ? options.get(optionName).split(",") : [];
+    if (rawMappings.length > 128) {
+      throw new Error(`drawio_graph ${optionName} exceeds 128 entries`);
+    }
+    return rawMappings.map((mapping) => {
+      if (mapping.length > 1024) {
+        throw new Error(`drawio_graph has an oversized ${labelName} label mapping`);
+      }
+      const parts = mapping.split(":");
+      const encodedComponent = /^(?:[A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+$/;
+      if (parts.length !== 2 || parts.some((part) => !encodedComponent.test(part))) {
+        throw new Error(
+          `drawio_graph has invalid ${labelName} label mapping ${JSON.stringify(mapping)}`,
+        );
+      }
+      let cellId;
+      let label;
+      try {
+        [cellId, label] = parts.map((part) => decodeURIComponent(part));
+      } catch {
+        throw new Error(
+          `drawio_graph has invalid ${labelName} label mapping ${JSON.stringify(mapping)}`,
+        );
+      }
+      if (
+        !/^[A-Za-z0-9_.:-]{1,128}$/.test(cellId) ||
+        !label ||
+        [...label].length > 512 ||
+        [...label].some((char) => {
+          const codePoint = char.codePointAt(0);
+          return codePoint <= 31 || (codePoint >= 127 && codePoint <= 159);
+        })
+      ) {
+        throw new Error(
+          `drawio_graph has invalid ${labelName} label mapping ${JSON.stringify(mapping)}`,
+        );
+      }
+      return [cellId, label];
+    });
+  };
+  const componentLabels = parseLabelMappings("component_labels", "component");
+  const groupLabels = parseLabelMappings("group_labels", "group");
+  const groupMemberships = (options.get("group_memberships") || "")
+    .split(",")
+    .filter(Boolean)
+    .map((mapping) => {
+      const match = /^([A-Za-z0-9_.:-]{1,128})@([A-Za-z0-9_.:-]{1,128})$/.exec(mapping);
+      if (!match) {
+        throw new Error(`drawio_graph has invalid group membership ${JSON.stringify(mapping)}`);
+      }
+      return [match[1], match[2]];
+    });
+  if (groupMemberships.length > 128) {
+    throw new Error("drawio_graph group_memberships exceeds 128 entries");
   }
-  const componentLabels = rawComponentLabels.map((mapping) => {
-    if (mapping.length > 1024) {
-      throw new Error("drawio_graph has an oversized component label mapping");
-    }
-    const parts = mapping.split(":");
-    const encodedComponent = /^(?:[A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+$/;
-    if (parts.length !== 2 || parts.some((part) => !encodedComponent.test(part))) {
-      throw new Error(
-        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
-      );
-    }
-    let cellId;
-    let label;
-    try {
-      [cellId, label] = parts.map((part) => decodeURIComponent(part));
-    } catch {
-      throw new Error(
-        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
-      );
-    }
-    if (
-      !/^[A-Za-z0-9_.:-]{1,128}$/.test(cellId) ||
-      !label ||
-      [...label].length > 512 ||
-      [...label].some((char) => {
-        const codePoint = char.codePointAt(0);
-        return codePoint <= 31 || (codePoint >= 127 && codePoint <= 159);
-      })
-    ) {
-      throw new Error(
-        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
-      );
-    }
-    return [cellId, label];
-  });
   const rawProfileStyles = options.has("profile_styles")
     ? options.get("profile_styles").split(",")
     : [];
@@ -391,11 +413,16 @@ function parseDrawioGraph(parts) {
     return true;
   };
   const componentIds = parseIds(options.get("component_ids"), "component_ids");
+  const groupIds = parseIds(options.get("group_ids"), "group_ids");
   const edges = parseEdges(options.get("edges"), "edge");
   const exactComponents = exactOption("exact_components");
+  const exactGroups = exactOption("exact_groups");
   const exactEdges = exactOption("exact_edges");
   if (exactComponents && componentIds.length === 0) {
     throw new Error("drawio_graph exact_components=1 requires component_ids=...");
+  }
+  if (exactGroups && groupIds.length === 0) {
+    throw new Error("drawio_graph exact_groups=1 requires group_ids=...");
   }
   if (exactEdges && edges.length === 0) {
     throw new Error("drawio_graph exact_edges=1 requires edges=...");
@@ -404,6 +431,9 @@ function parseDrawioGraph(parts) {
     ids: parseIds(options.get("ids"), "ids"),
     componentIds,
     componentLabels,
+    groupIds,
+    groupLabels,
+    groupMemberships,
     nativeIds: parseIds(options.get("native_ids"), "native_ids"),
     edges,
     edgeBindings,
@@ -413,6 +443,7 @@ function parseDrawioGraph(parts) {
     links,
     pageName,
     exactComponents,
+    exactGroups,
     exactEdges,
   };
 }
@@ -1235,7 +1266,14 @@ PNG_BIT_DEPTHS = {0: {1, 2, 4, 8, 16}, 2: {8, 16}, 3: {1, 2, 4, 8}, 4: {8, 16}, 
 PNG_CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
 MAX_EMBEDDED_PNG_DIMENSION = 32768
 MAX_EMBEDDED_PNG_DECODED_BYTES = 64 * 1024 * 1024
+MAX_EMBEDDED_SVG_DEPTH = 4
+MAX_EMBEDDED_SVG_TOTAL_BYTES = 8 * 1024 * 1024
 MAX_CANVAS_DIMENSION = ${MAX_PNG_DIMENSION}
+ACTIVE_ELEMENTS = {
+    "animate", "animatemotion", "animatetransform", "audio", "base", "button", "embed",
+    "form", "handler", "iframe", "input", "listener", "link", "meta", "object", "script",
+    "select", "set", "source", "textarea", "track", "video",
+}
 
 def local_name(tag):
     return str(tag).rsplit("}", 1)[-1].split(":")[-1]
@@ -1319,7 +1357,21 @@ def missing_local_css_references(text, identifiers):
         and not local_fragment_exists(match.group(2).strip(), identifiers)
     )
 
-def embedded_svg_is_safe(raw):
+def embedded_css_images_are_safe(text, depth, context):
+    for match in CSS_URL_RE.finditer(str(text or "")):
+        reference = match.group(2).strip()
+        if reference.lower().startswith("data:"):
+            if not reference.lower().startswith("data:image/") or not valid_embedded_image_source(reference, depth + 1, context):
+                return False
+    return True
+
+def embedded_svg_is_safe(raw, depth=0, context=None):
+    if depth > MAX_EMBEDDED_SVG_DEPTH:
+        return False
+    inspection = context if context is not None else {"bytes": 0}
+    inspection["bytes"] += len(raw)
+    if inspection["bytes"] > MAX_EMBEDDED_SVG_TOTAL_BYTES:
+        return False
     lowered = raw.lower()
     without_xml_declaration = re.sub(br"^\\s*<\\?xml\\s+[^?]*\\?>", b"", lowered, count=1)
     if b"\\x00" in raw or b"<!doctype" in lowered or b"<!entity" in lowered or b"<?" in without_xml_declaration:
@@ -1339,11 +1391,15 @@ def embedded_svg_is_safe(raw):
     }
     for embedded in embedded_root.iter():
         name = local_name(embedded.tag).lower()
-        if name in {"animate", "animatemotion", "animatetransform", "discard", "foreignobject", "script", "set"}:
+        if name in ACTIVE_ELEMENTS or name in {"discard", "foreignobject"}:
             return False
         if name == "style":
             css = "".join(embedded.itertext())
-            if external_css_references(css, True) or missing_local_css_references(css, embedded_ids):
+            if (
+                external_css_references(css, True)
+                or missing_local_css_references(css, embedded_ids)
+                or not embedded_css_images_are_safe(css, depth, inspection)
+            ):
                 return False
         for raw_name, raw_value in embedded.attrib.items():
             key = local_name(raw_name).lower()
@@ -1352,21 +1408,36 @@ def embedded_svg_is_safe(raw):
                 return False
             if key.startswith("on") or external_css_references(value, True) or missing_local_css_references(value, embedded_ids):
                 return False
+            if key == "srcset":
+                return False
             if key in {"href", "src"} and value:
                 if value.startswith("#"):
                     if not local_fragment_exists(value, embedded_ids):
                         return False
+                elif name in {"image", "feimage", "img"} and value.lower().startswith(
+                    "data:image/"
+                ):
+                    if not valid_embedded_image_source(value, depth + 1, inspection):
+                        return False
                 else:
                     return False
+            if key in {"background", "poster"} and value:
+                if value.startswith("#"):
+                    if not local_fragment_exists(value, embedded_ids):
+                        return False
+                elif not value.lower().startswith("data:image/") or not valid_embedded_image_source(value, depth + 1, inspection):
+                    return False
+            if not embedded_css_images_are_safe(value, depth, inspection):
+                return False
     return embedded_svg_has_renderable_graphic(embedded_root)
 
-def valid_embedded_image_source(source):
+def valid_embedded_image_source(source, depth=0, context=None):
     decoded = decoded_data_image(source)
     if not decoded:
         return None
     media_type, raw = decoded
     if media_type == "svg+xml":
-        return media_type if embedded_svg_is_safe(raw) else None
+        return media_type if embedded_svg_is_safe(raw, depth, context) else None
     return media_type if embedded_png_is_valid(raw) else None
 
 def style_map(value):
@@ -2015,6 +2086,7 @@ try:
     element_count = 0
     embedded_svg_images = 0
     embedded_raster_images = 0
+    embedded_context = {"bytes": 0}
     identifiers = {
         str(element.attrib.get("id"))
         for element in root.iter()
@@ -2052,7 +2124,7 @@ try:
                     if not local_fragment_exists(source, identifiers):
                         unsupported_images += 1
                     continue
-                embedded_type = valid_embedded_image_source(source)
+                embedded_type = valid_embedded_image_source(source, 0, embedded_context)
                 if embedded_type == "svg+xml":
                     embedded_svg_images += 1
                 elif embedded_type == "png":
@@ -2369,6 +2441,13 @@ export function evaluateAssertion(assertion, artifacts) {
     const expectedComponentLabels = assertion.componentLabels.map(([id, label]) =>
       sha256(`${id}\0${label}`),
     );
+    const expectedGroupIds = assertion.groupIds.map((id) => sha256(id));
+    const expectedGroupLabels = assertion.groupLabels.map(([id, label]) =>
+      sha256(`${id}\0${label}`),
+    );
+    const expectedGroupMemberships = assertion.groupMemberships.map(([componentId, groupId]) =>
+      sha256(`${componentId}\0${groupId}`),
+    );
     const expectedNativeIds = assertion.nativeIds.map((id) => sha256(id));
     const expectedEdges = assertion.edges.map(([source, target]) => sha256(`${source}\0${target}`));
     const expectedEdgeBindings = assertion.edgeBindings.map(([edgeId, source, target]) =>
@@ -2401,6 +2480,11 @@ export function evaluateAssertion(assertion, artifacts) {
       const componentLabelHashes = new Set(
         graphs.flatMap((page) => page.component_label_sha256s || []),
       );
+      const groupHashList = graphs.flatMap((page) => page.group_cell_id_sha256s || []);
+      const groupHashes = new Set(groupHashList);
+      const groupLabelHashes = new Set(graphs.flatMap((page) => page.group_label_sha256s || []));
+      const groupMembershipHashList = graphs.flatMap((page) => page.group_membership_sha256s || []);
+      const groupMembershipHashes = new Set(groupMembershipHashList);
       const nativeIdHashes = new Set(
         graphs.flatMap((page) => page.native_stencil_cell_id_sha256s || []),
       );
@@ -2432,6 +2516,30 @@ export function evaluateAssertion(assertion, artifacts) {
           componentHashes.size !== expectedComponentIds.length)
       ) {
         throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic components`);
+      }
+      if (!expectedGroupIds.every((digest) => groupHashes.has(digest))) {
+        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group IDs`);
+      }
+      if (!expectedGroupLabels.every((digest) => groupLabelHashes.has(digest))) {
+        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group labels`);
+      }
+      if (!expectedGroupMemberships.every((digest) => groupMembershipHashes.has(digest))) {
+        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group memberships`);
+      }
+      if (
+        assertion.exactGroups &&
+        (groupHashList.length !== expectedGroupIds.length ||
+          groupHashes.size !== expectedGroupIds.length)
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic groups`);
+      }
+      if (
+        assertion.exactGroups &&
+        expectedGroupMemberships.length > 0 &&
+        (groupMembershipHashList.length !== expectedGroupMemberships.length ||
+          groupMembershipHashes.size !== expectedGroupMemberships.length)
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} contains unexpected group memberships`);
       }
       if (!expectedNativeIds.every((digest) => nativeIdHashes.has(digest))) {
         throw new Error(`${assertion.raw}: ${rel} lacks one or more required native stencil IDs`);

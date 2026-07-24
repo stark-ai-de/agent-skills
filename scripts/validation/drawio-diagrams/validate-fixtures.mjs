@@ -919,8 +919,8 @@ try {
     2,
     "--page-index must be a positive 1-based integer",
   );
-  const fixedThemeSvg = (theme) =>
-    `<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: ${theme};" width="2px" height="2px" viewBox="0 0 2 2"><rect width="2" height="2" fill="red"/></svg>`;
+  const fixedThemeSvg = (theme, body = '<rect width="2" height="2" fill="red"/>') =>
+    `<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: ${theme};" width="2px" height="2px" viewBox="0 0 2 2">${body}</svg>`;
   const lightInspection = inspectThemedSvg(fixedThemeSvg("light"));
   const darkInspection = inspectThemedSvg(fixedThemeSvg("dark"));
   if (
@@ -1024,6 +1024,90 @@ try {
     if (!failure?.message.includes(expected)) {
       throw new Error(`${name} passed themed SVG inspection`);
     }
+  }
+  const embeddedSvgUri = (svg) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  const nestedSvgDocument = (body) => `<svg xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+  const safeEmbeddedSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path d="M0 0h2v2H0z" fill="blue"/></svg>';
+  const safeEmbeddedUri = embeddedSvgUri(safeEmbeddedSvg);
+  inspectThemedSvg(fixedThemeSvg("light", `<image href="${safeEmbeddedUri}"/>`));
+  let boundedNestedSvg = nestedSvgDocument('<rect width="2" height="2" fill="blue"/>');
+  for (let level = 0; level < 3; level += 1) {
+    boundedNestedSvg = nestedSvgDocument(`<image href="${embeddedSvgUri(boundedNestedSvg)}"/>`);
+  }
+  inspectThemedSvg(fixedThemeSvg("light", `<image href="${embeddedSvgUri(boundedNestedSvg)}"/>`));
+  let tooDeepNestedSvg = boundedNestedSvg;
+  tooDeepNestedSvg = nestedSvgDocument(`<image href="${embeddedSvgUri(tooDeepNestedSvg)}"/>`);
+  let depthFailure;
+  try {
+    inspectThemedSvg(fixedThemeSvg("light", `<image href="${embeddedSvgUri(tooDeepNestedSvg)}"/>`));
+  } catch (error) {
+    depthFailure = error;
+  }
+  if (!depthFailure?.message.includes("nesting exceeds 4 levels")) {
+    throw new Error("themed SVG rasterizer accepted excessive embedded SVG nesting");
+  }
+  const aggregateSvg = nestedSvgDocument(`<!--${"x".repeat(900_000)}-->`);
+  const aggregateUri = embeddedSvgUri(aggregateSvg);
+  let aggregateFailure;
+  try {
+    inspectThemedSvg(
+      fixedThemeSvg(
+        "light",
+        Array.from({ length: 10 }, () => `<image href="${aggregateUri}"/>`).join(""),
+      ),
+    );
+  } catch (error) {
+    aggregateFailure = error;
+  }
+  if (!aggregateFailure?.message.includes("aggregate size limit")) {
+    throw new Error("themed SVG rasterizer accepted excessive embedded SVG bytes");
+  }
+  const nestedUnsafeCases = [
+    [
+      "nested SVG script",
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+      "active content element",
+      "base64",
+    ],
+    [
+      "nested SVG remote image",
+      '<svg xmlns="http://www.w3.org/2000/svg"><image href="https://example.invalid/nested.svg"/></svg>',
+      "external image or symbol",
+      "encoded",
+    ],
+    [
+      "nested SVG remote CSS",
+      '<svg xmlns="http://www.w3.org/2000/svg"><style>.remote{fill:url(https://example.invalid/nested.svg)}</style><rect class="remote" width="2" height="2"/></svg>',
+      "external CSS render asset",
+      "encoded",
+    ],
+  ];
+  for (const [name, nested, expected, encoding] of nestedUnsafeCases) {
+    const uri =
+      encoding === "base64"
+        ? `data:image/svg+xml;base64,${Buffer.from(nested).toString("base64")}`
+        : embeddedSvgUri(nested);
+    let failure;
+    try {
+      inspectThemedSvg(fixedThemeSvg("light", `<image href="${uri}"/>`));
+    } catch (error) {
+      failure = error;
+    }
+    if (!failure?.message.includes(expected)) {
+      throw new Error(`${name} passed nested themed SVG inspection`);
+    }
+  }
+  let doctypeFailure;
+  try {
+    inspectThemedSvg(
+      '<?xml version="1.0"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><rect width="2" height="2"/></svg>',
+    );
+  } catch (error) {
+    doctypeFailure = error;
+  }
+  if (!doctypeFailure?.message.includes("DOCTYPE")) {
+    throw new Error("themed SVG rasterizer accepted an external DOCTYPE");
   }
   const fakeBrowser = path.join(temp, "fake-chromium");
   const fakeBrowserPng = embeddedPng({

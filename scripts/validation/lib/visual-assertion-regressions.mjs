@@ -688,6 +688,14 @@ function runSvgValidRegression() {
     const embeddedSvgPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>',
     ).toString("base64");
+    const nestedEmbeddedSvgSource = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><image width="24" height="24" href="data:image/svg+xml;base64,${embeddedSvgPayload}"/><path d="M0 0h24v24H0z"/></svg>`;
+    const nestedEmbeddedSvgPayload = Buffer.from(nestedEmbeddedSvgSource).toString("base64");
+    const nestedUnsafeObjectPayload = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><object data="data:image/svg+xml;base64,${embeddedSvgPayload}"/><path d="M0 0h24v24H0z"/></svg>`,
+    ).toString("base64");
+    const nestedUnsafeSrcsetPayload = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><image srcset="https://cdn.example/nested.svg"/><path d="M0 0h24v24H0z"/></svg>',
+    ).toString("base64");
     const referencedSvgPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><path id="mark" d="M0 0h24v24H0z"/></defs><use href="#mark"/></svg>',
     ).toString("base64");
@@ -767,6 +775,18 @@ function runSvgValidRegression() {
     fs.writeFileSync(
       path.join(temp, "embedded-image.svg"),
       `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml,${embeddedSvgPayload}"/><text>Logo</text></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-embedded-image.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedEmbeddedSvgPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-object.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeObjectPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-srcset.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeSrcsetPayload}"/></svg>`,
     );
     fs.writeFileSync(
       path.join(temp, "embedded-image-with-png-fallback.svg"),
@@ -1254,6 +1274,16 @@ function runSvgValidRegression() {
       drawioArtifact(`data:image/svg+xml,${logoPayload}`),
     );
     fs.writeFileSync(
+      path.join(temp, "nested-embedded-logo.drawio"),
+      drawioArtifact(`data:image/svg+xml,${encodeURIComponent(nestedEmbeddedSvgSource)}`),
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-object.drawio"),
+      drawioArtifact(
+        `data:image/svg+xml,${encodeURIComponent(Buffer.from(nestedUnsafeObjectPayload, "base64").toString("utf8"))}`,
+      ),
+    );
+    fs.writeFileSync(
       path.join(temp, "stable-graph.drawio"),
       `<mxfile host="app.diagrams.net"><diagram name="Graph"><mxGraphModel adaptiveColors="auto"><root>
         <mxCell id="0"/><mxCell id="1" parent="0"/>
@@ -1382,6 +1412,61 @@ function runSvgValidRegression() {
       ),
     );
     const stableGraphSource = fs.readFileSync(path.join(temp, "stable-graph.drawio"), "utf8");
+    const groupedGraphSource = stableGraphSource
+      .replace(
+        '<mxCell id="client" value="Client" style=',
+        '<mxCell id="runtime-boundary" value="Runtime Boundary" style="swimlane;container=1;fillColor=none;" vertex="1" parent="1"><mxGeometry x="-20" y="-40" width="360" height="160" as="geometry"/></mxCell>\n        <mxCell id="client" value="Client" style=',
+      )
+      .replace(
+        'id="client" value="Client" style="strokeColor=#123456;dataRole=component;" vertex="1" parent="1"',
+        'id="client" value="Client" style="strokeColor=#123456;dataRole=component;" vertex="1" parent="runtime-boundary"',
+      )
+      .replace(
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="1"',
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="runtime-boundary"',
+      )
+      .replace(
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="1"',
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="runtime-boundary"',
+      );
+    if (
+      !groupedGraphSource.includes('id="runtime-boundary"') ||
+      !groupedGraphSource.includes('parent="runtime-boundary"')
+    ) {
+      throw new Error("grouped graph fixture did not create stable container membership");
+    }
+    fs.writeFileSync(path.join(temp, "grouped-graph.drawio"), groupedGraphSource);
+    fs.writeFileSync(
+      path.join(temp, "changed-group-label.drawio"),
+      groupedGraphSource.replace(
+        'id="runtime-boundary" value="Runtime Boundary"',
+        'id="runtime-boundary" value="Changed Boundary"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "changed-group-membership.drawio"),
+      groupedGraphSource.replace(
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="runtime-boundary"',
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="1"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "extra-group.drawio"),
+      groupedGraphSource.replace(
+        "</root>",
+        '<mxCell id="extra-boundary" value="Extra Boundary" style="container=1;fillColor=none;" vertex="1" parent="1"><mxGeometry x="0" y="200" width="120" height="80" as="geometry"/></mxCell></root>',
+      ),
+    );
+    const nestedGroupSource = groupedGraphSource
+      .replace(
+        "</root>",
+        '<mxCell id="nested-boundary" value="Nested Boundary" style="container=1;fillColor=none;" vertex="1" parent="runtime-boundary"><mxGeometry x="0" y="0" width="320" height="120" as="geometry"/></mxCell></root>',
+      )
+      .replace(
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="runtime-boundary"',
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="nested-boundary"',
+      );
+    fs.writeFileSync(path.join(temp, "extra-group-membership.drawio"), nestedGroupSource);
     fs.writeFileSync(
       path.join(temp, "extra-component.drawio"),
       stableGraphSource.replace(
@@ -1574,6 +1659,20 @@ function runSvgValidRegression() {
       listArtifacts(temp),
     );
     evaluateAssertion(
+      parseAssertion("svg_self_contained_images: nested-embedded-image.svg"),
+      listArtifacts(temp),
+    );
+    for (const nestedUnsafeSvg of ["nested-unsafe-object.svg", "nested-unsafe-srcset.svg"]) {
+      expectFailure(
+        () =>
+          evaluateAssertion(
+            parseAssertion(`svg_self_contained_images: ${nestedUnsafeSvg}`),
+            listArtifacts(temp),
+          ),
+        `${nestedUnsafeSvg} passed svg_self_contained_images`,
+      );
+    }
+    evaluateAssertion(
       parseAssertion("svg_self_contained_images: embedded-image-with-png-fallback.svg"),
       listArtifacts(temp),
     );
@@ -1679,6 +1778,18 @@ function runSvgValidRegression() {
       parseAssertion("drawio_self_contained_svg: embedded-logo.drawio"),
       listArtifacts(temp),
     );
+    evaluateAssertion(
+      parseAssertion("drawio_self_contained_svg: nested-embedded-logo.drawio"),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_self_contained_svg: nested-unsafe-object.drawio"),
+          listArtifacts(temp),
+        ),
+      "nested active object passed drawio_self_contained_svg",
+    );
     evaluateAssertion(parseAssertion("drawio_valid: embedded-logo.drawio"), listArtifacts(temp));
     evaluateAssertion(
       parseAssertion("drawio_valid: page-scoped.drawio adaptive_colors=1"),
@@ -1764,6 +1875,52 @@ function runSvgValidRegression() {
       ),
       listArtifacts(temp),
     );
+    evaluateAssertion(
+      parseAssertion(
+        "drawio_graph: grouped-graph.drawio component_ids=client,api,cache group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary exact_groups=1",
+      ),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: changed-group-label.drawio group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary",
+          ),
+          listArtifacts(temp),
+        ),
+      "changed group label passed group_labels",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: changed-group-membership.drawio component_ids=client,api,cache group_ids=runtime-boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary",
+          ),
+          listArtifacts(temp),
+        ),
+      "changed group membership passed group_memberships",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-group.drawio group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary exact_groups=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected semantic group passed exact_groups",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-group-membership.drawio group_ids=runtime-boundary,nested-boundary group_labels=runtime-boundary:Runtime%20Boundary,nested-boundary:Nested%20Boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary exact_groups=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected group membership passed exact_groups",
+    );
     expectFailure(
       () =>
         evaluateAssertion(
@@ -1807,6 +1964,10 @@ function runSvgValidRegression() {
     expectFailure(
       () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_components=1"),
       "exact_components was accepted without component_ids",
+    );
+    expectFailure(
+      () => parseAssertion("drawio_graph: grouped-graph.drawio ids=client exact_groups=1"),
+      "exact_groups was accepted without group_ids",
     );
     expectFailure(
       () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_edges=1"),
