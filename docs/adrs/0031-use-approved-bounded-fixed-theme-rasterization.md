@@ -7,7 +7,7 @@ Gist: Fixed-theme SVG previews use an approved, isolated local browser with fail
 
 ## Decision
 
-Fixed-theme SVGs use the bounded local browser helper after explicit approval. It recursively validates embedded SVG image data, rejects active or remote content, and publishes no-clobber output.
+Fixed-theme SVGs use the bounded local browser helper after explicit approval to recursively validate embedded SVG image data, reject active or remote content, and publish no-clobber output.
 
 ## Why
 

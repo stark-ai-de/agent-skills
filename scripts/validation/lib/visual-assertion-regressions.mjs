@@ -696,6 +696,9 @@ function runSvgValidRegression() {
     const nestedUnsafeSrcsetPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><image srcset="https://cdn.example/nested.svg"/><path d="M0 0h24v24H0z"/></svg>',
     ).toString("base64");
+    const nestedUnsafeImageSetPayload = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path style='background-image:image-set("https://cdn.example/nested.png" 1x)' d="M0 0h24v24H0z"/></svg>`,
+    ).toString("base64");
     const referencedSvgPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><path id="mark" d="M0 0h24v24H0z"/></defs><use href="#mark"/></svg>',
     ).toString("base64");
@@ -761,6 +764,10 @@ function runSvgValidRegression() {
       );
     }
     fs.writeFileSync(
+      path.join(temp, "quoted-theme-lookalike.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg" style="content: ';color-scheme: light;';"><rect width="24" height="24"/></svg>`,
+    );
+    fs.writeFileSync(
       path.join(temp, "matching-canvas.svg"),
       '<svg xmlns="http://www.w3.org/2000/svg" width="1.2px" height="2.1px"><rect width="2" height="3"/></svg>',
     );
@@ -787,6 +794,10 @@ function runSvgValidRegression() {
     fs.writeFileSync(
       path.join(temp, "nested-unsafe-srcset.svg"),
       `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeSrcsetPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-image-set.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeImageSetPayload}"/></svg>`,
     );
     fs.writeFileSync(
       path.join(temp, "embedded-image-with-png-fallback.svg"),
@@ -1412,6 +1423,8 @@ function runSvgValidRegression() {
       ),
     );
     const stableGraphSource = fs.readFileSync(path.join(temp, "stable-graph.drawio"), "utf8");
+    fs.writeFileSync(path.join(temp, "native-identity-same-a.drawio"), stableGraphSource);
+    fs.writeFileSync(path.join(temp, "native-identity-same-b.drawio"), stableGraphSource);
     const groupedGraphSource = stableGraphSource
       .replace(
         '<mxCell id="client" value="Client" style=',
@@ -1436,6 +1449,13 @@ function runSvgValidRegression() {
       throw new Error("grouped graph fixture did not create stable container membership");
     }
     fs.writeFileSync(path.join(temp, "grouped-graph.drawio"), groupedGraphSource);
+    fs.writeFileSync(path.join(temp, "native-parent-a.drawio"), stableGraphSource);
+    fs.writeFileSync(path.join(temp, "native-parent-b.drawio"), groupedGraphSource);
+    fs.writeFileSync(path.join(temp, "native-stencil-a.drawio"), stableGraphSource);
+    fs.writeFileSync(
+      path.join(temp, "native-stencil-b.drawio"),
+      stableGraphSource.replace("resIcon=mxgraph.aws4.dynamodb", "resIcon=mxgraph.aws4.sqs"),
+    );
     fs.writeFileSync(
       path.join(temp, "changed-group-label.drawio"),
       groupedGraphSource.replace(
@@ -1472,6 +1492,13 @@ function runSvgValidRegression() {
       stableGraphSource.replace(
         '<mxCell id="profile-neon-hub"',
         '<mxCell id="database" value="Database" style="dataRole=component;" vertex="1" parent="1"><mxGeometry x="0" y="80" width="80" height="40" as="geometry"/></mxCell><mxCell id="profile-neon-hub"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "extra-native-stencil.drawio"),
+      stableGraphSource.replace(
+        '<mxCell id="profile-neon-hub"',
+        '<mxCell id="extra-native" value="Extra" style="shape=mxgraph.azure.function_apps;" vertex="1" parent="1"><mxGeometry x="500" y="0" width="60" height="60" as="geometry"/></mxCell><mxCell id="profile-neon-hub"',
       ),
     );
     fs.writeFileSync(
@@ -1642,6 +1669,14 @@ function runSvgValidRegression() {
       "SVG without a declared color scheme passed a fixed theme assertion",
     );
     expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_theme: quoted-theme-lookalike.svg light"),
+          listArtifacts(temp),
+        ),
+      "quoted color-scheme lookalike passed a fixed theme assertion",
+    );
+    expectFailure(
       () => parseAssertion("svg_theme: fixed-light.svg sepia"),
       "unsupported SVG theme assertion value was accepted",
     );
@@ -1662,7 +1697,11 @@ function runSvgValidRegression() {
       parseAssertion("svg_self_contained_images: nested-embedded-image.svg"),
       listArtifacts(temp),
     );
-    for (const nestedUnsafeSvg of ["nested-unsafe-object.svg", "nested-unsafe-srcset.svg"]) {
+    for (const nestedUnsafeSvg of [
+      "nested-unsafe-object.svg",
+      "nested-unsafe-srcset.svg",
+      "nested-unsafe-image-set.svg",
+    ]) {
       expectFailure(
         () =>
           evaluateAssertion(
@@ -1865,7 +1904,7 @@ function runSvgValidRegression() {
     }
     evaluateAssertion(
       parseAssertion(
-        "drawio_graph: stable-graph.drawio page=Graph ids=client,api,cache native_ids=cache edges=client>api,api>cache edge_bindings=edge-client-api@client>api,edge-api-cache@api>cache not_edges=api>client edge_roles=edge-client-api:request,edge-api-cache:event profile_styles=profile-neon-hub:designProfile:neon-hub,profile-neon-hub:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29 links=https://docs.example.invalid/product",
+        "drawio_graph: stable-graph.drawio page=Graph ids=client,api,cache native_ids=cache exact_native_ids=1 edges=client>api,api>cache edge_bindings=edge-client-api@client>api,edge-api-cache@api>cache not_edges=api>client edge_roles=edge-client-api:request,edge-api-cache:event profile_styles=profile-neon-hub:designProfile:neon-hub,profile-neon-hub:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29 links=https://docs.example.invalid/product",
       ),
       listArtifacts(temp),
     );
@@ -1874,6 +1913,26 @@ function runSvgValidRegression() {
         "drawio_graph: stable-graph.drawio component_ids=client,api,cache component_labels=client:Client,api:API,cache:Cache exact_components=1 edges=client>api,api>cache exact_edges=1",
       ),
       listArtifacts(temp),
+    );
+    evaluateAssertion(
+      parseAssertion("drawio_native_stencils_equal: native-identity-same-*.drawio"),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: native-parent-*.drawio"),
+          listArtifacts(temp),
+        ),
+      "changed native stencil parent passed drawio_native_stencils_equal",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: native-stencil-?.drawio"),
+          listArtifacts(temp),
+        ),
+      "changed native stencil selector passed drawio_native_stencils_equal",
     );
     evaluateAssertion(
       parseAssertion(
@@ -1970,6 +2029,10 @@ function runSvgValidRegression() {
       "exact_groups was accepted without group_ids",
     );
     expectFailure(
+      () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_native_ids=1"),
+      "exact_native_ids was accepted without native_ids",
+    );
+    expectFailure(
       () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_edges=1"),
       "exact_edges was accepted without edges",
     );
@@ -2038,6 +2101,24 @@ function runSvgValidRegression() {
           listArtifacts(temp),
         ),
       "non-native cell ID passed native_ids",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: stable-graph.drawio"),
+          listArtifacts(temp),
+        ),
+      "single source passed drawio_native_stencils_equal",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-native-stencil.drawio native_ids=cache exact_native_ids=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected native stencil passed exact_native_ids",
     );
     expectFailure(
       () =>

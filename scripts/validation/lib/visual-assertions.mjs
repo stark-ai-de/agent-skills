@@ -6,25 +6,54 @@ import os from "node:os";
 import path from "node:path";
 import zlib from "node:zlib";
 
-export const SUPPORTED_VISUAL_ASSERTION_KINDS = new Set([
-  "artifact_exists",
-  "markdown_image",
-  "markdown_link",
-  "png_dimensions",
-  "png_nonblank",
-  "png_pixels_differ",
-  "svg_png_dimensions_match",
-  "svg_valid",
-  "svg_theme",
-  "svg_contains",
-  "svg_not_contains",
-  "svg_has_flow_animation",
-  "svg_self_contained_images",
-  "drawio_valid",
-  "drawio_graph",
-  "drawio_embeds_svg_sha256",
-  "drawio_self_contained_svg",
+const ASSERTION_KIND_HANDLERS = new Map([
+  ["artifact_exists", { parse: parseGlobOnlyAssertion, evaluate: evaluateArtifactExists }],
+  [
+    "markdown_image",
+    { parse: parseMarkdownReferenceAssertion, evaluate: evaluateMarkdownReference },
+  ],
+  [
+    "markdown_link",
+    { parse: parseMarkdownReferenceAssertion, evaluate: evaluateMarkdownReference },
+  ],
+  ["png_dimensions", { parse: parsePngDimensionsAssertion, evaluate: evaluatePngDimensions }],
+  ["png_nonblank", { parse: parsePngNonblankAssertion, evaluate: evaluatePngNonblank }],
+  [
+    "png_pixels_differ",
+    { parse: parsePngPixelsDifferAssertion, evaluate: evaluatePngPixelsDiffer },
+  ],
+  [
+    "svg_png_dimensions_match",
+    { parse: parseSvgPngDimensionsMatchAssertion, evaluate: evaluateSvgPngDimensionsMatch },
+  ],
+  ["svg_valid", { parse: parseGlobOnlyAssertion, evaluate: evaluateSvgValid }],
+  ["svg_theme", { parse: parseSvgThemeAssertion, evaluate: evaluateSvgTheme }],
+  ["svg_contains", { parse: parseSvgTextAssertion, evaluate: evaluateSvgContains }],
+  ["svg_not_contains", { parse: parseSvgTextAssertion, evaluate: evaluateSvgNotContains }],
+  [
+    "svg_has_flow_animation",
+    { parse: parseGlobOnlyAssertion, evaluate: evaluateSvgHasFlowAnimation },
+  ],
+  [
+    "svg_self_contained_images",
+    { parse: parseGlobOnlyAssertion, evaluate: evaluateSvgSelfContainedImages },
+  ],
+  ["drawio_valid", { parse: parseDrawioValidAssertion, evaluate: evaluateDrawioValid }],
+  ["drawio_graph", { parse: parseDrawioGraphAssertion, evaluate: evaluateDrawioGraph }],
+  [
+    "drawio_embeds_svg_sha256",
+    { parse: parseDrawioEmbedsSvgSha256Assertion, evaluate: evaluateDrawioEmbedsSvgSha256 },
+  ],
+  [
+    "drawio_self_contained_svg",
+    { parse: parseGlobOnlyAssertion, evaluate: evaluateDrawioSelfContainedSvg },
+  ],
+  [
+    "drawio_native_stencils_equal",
+    { parse: parseGlobOnlyAssertion, evaluate: evaluateDrawioNativeStencilsEqual },
+  ],
 ]);
+export const SUPPORTED_VISUAL_ASSERTION_KINDS = new Set(ASSERTION_KIND_HANDLERS.keys());
 const MAX_PNG_FILE_BYTES = 64 * 1024 * 1024;
 const MAX_PNG_DIMENSION = 32768;
 const MAX_PNG_PIXELS = 16_000_000;
@@ -183,6 +212,7 @@ function parseDrawioGraph(parts) {
     "group_memberships",
     "exact_groups",
     "native_ids",
+    "exact_native_ids",
     "edges",
     "edge_bindings",
     "exact_components",
@@ -414,15 +444,20 @@ function parseDrawioGraph(parts) {
   };
   const componentIds = parseIds(options.get("component_ids"), "component_ids");
   const groupIds = parseIds(options.get("group_ids"), "group_ids");
+  const nativeIds = parseIds(options.get("native_ids"), "native_ids");
   const edges = parseEdges(options.get("edges"), "edge");
   const exactComponents = exactOption("exact_components");
   const exactGroups = exactOption("exact_groups");
+  const exactNativeIds = exactOption("exact_native_ids");
   const exactEdges = exactOption("exact_edges");
   if (exactComponents && componentIds.length === 0) {
     throw new Error("drawio_graph exact_components=1 requires component_ids=...");
   }
   if (exactGroups && groupIds.length === 0) {
     throw new Error("drawio_graph exact_groups=1 requires group_ids=...");
+  }
+  if (exactNativeIds && nativeIds.length === 0) {
+    throw new Error("drawio_graph exact_native_ids=1 requires native_ids=...");
   }
   if (exactEdges && edges.length === 0) {
     throw new Error("drawio_graph exact_edges=1 requires edges=...");
@@ -434,7 +469,7 @@ function parseDrawioGraph(parts) {
     groupIds,
     groupLabels,
     groupMemberships,
-    nativeIds: parseIds(options.get("native_ids"), "native_ids"),
+    nativeIds,
     edges,
     edgeBindings,
     notEdges: parseEdges(options.get("not_edges"), "forbidden edge"),
@@ -444,6 +479,7 @@ function parseDrawioGraph(parts) {
     pageName,
     exactComponents,
     exactGroups,
+    exactNativeIds,
     exactEdges,
   };
 }
@@ -452,165 +488,160 @@ function sha256(value) {
   return crypto.createHash("sha256").update(value, "utf8").digest("hex");
 }
 
+function parseGlobOnlyAssertion({ raw, kind, glob, parts }) {
+  if (parts.length !== 1) throw new Error(`${kind} accepts only an artifact glob`);
+  return { raw, kind, glob };
+}
+
+function parseMarkdownReferenceAssertion({ raw, kind, glob, parts }) {
+  const target = decodeMarkdownEscapes(parts[1] || "");
+  if (
+    parts.length !== 2 ||
+    !target ||
+    target.length > 512 ||
+    [...target].some((char) => char.charCodeAt(0) < 32)
+  ) {
+    throw new Error(`${kind} requires one control-free Markdown target after the artifact glob`);
+  }
+  return { raw, kind, glob, target };
+}
+
+function parsePngDimensionsAssertion({ raw, kind, glob, parts }) {
+  const options = parseKeyValues(parts.slice(1));
+  if (!options.min_width || !options.min_height) {
+    throw new Error("png_dimensions requires min_width=<px> and min_height=<px>");
+  }
+  return { raw, kind, glob, options };
+}
+
+function parsePngNonblankAssertion({ raw, kind, glob, parts }) {
+  const options = parseKeyValues(parts.slice(1));
+  return { raw, kind, glob, options: { min_size: options.min_size || 1024 } };
+}
+
+function parsePngPixelsDifferAssertion({ raw, kind, glob, parts }) {
+  if (parts.length < 2) {
+    throw new Error(
+      "png_pixels_differ requires two artifact globs and optional min_changed_basis_points=<1-10000>",
+    );
+  }
+  const options = parseKeyValues(parts.slice(2));
+  for (const name of Object.keys(options)) {
+    if (name !== "min_changed_basis_points") {
+      throw new Error(`png_pixels_differ does not support option ${name}`);
+    }
+  }
+  const hasMinChangedBasisPoints = Object.hasOwn(options, "min_changed_basis_points");
+  const minChangedBasisPoints = hasMinChangedBasisPoints ? options.min_changed_basis_points : 0;
+  if (hasMinChangedBasisPoints && (minChangedBasisPoints < 1 || minChangedBasisPoints > 10_000)) {
+    throw new Error("png_pixels_differ min_changed_basis_points must be between 1 and 10000");
+  }
+  return {
+    raw,
+    kind,
+    glob,
+    otherGlob: decodeMarkdownEscapes(parts[1]),
+    minChangedBasisPoints,
+  };
+}
+
+function parseSvgPngDimensionsMatchAssertion({ raw, kind, glob, parts }) {
+  if (parts.length !== 2) {
+    throw new Error("svg_png_dimensions_match requires one SVG glob and one PNG glob");
+  }
+  return { raw, kind, glob, otherGlob: decodeMarkdownEscapes(parts[1]) };
+}
+
+function parseSvgThemeAssertion({ raw, kind, glob, parts }) {
+  const theme = parts[1];
+  if (parts.length !== 2 || !["light", "dark", "adaptive"].includes(theme)) {
+    throw new Error(`${kind} requires light, dark, or adaptive after the artifact glob`);
+  }
+  return { raw, kind, glob, theme };
+}
+
+function parseSvgTextAssertion({ raw, kind, glob, parts }) {
+  const text = parts.slice(1).join(" ");
+  if (!text) throw new Error(`${kind} requires text after the artifact glob`);
+  return { raw, kind, glob, text };
+}
+
+function parseDrawioValidAssertion({ raw, kind, glob, parts }) {
+  const options = parseKeyValues(parts.slice(1));
+  const allowed = new Set([
+    "animation_on",
+    "animation_off",
+    "adaptive_colors",
+    "min_pages",
+    "min_native_stencils",
+    "self_contained_svg",
+    "uncompressed",
+  ]);
+  for (const name of Object.keys(options)) {
+    if (!allowed.has(name)) throw new Error(`drawio_valid does not support option ${name}`);
+  }
+  if (options.animation_on && options.animation_off) {
+    throw new Error("drawio_valid cannot require animation_on and animation_off together");
+  }
+  for (const name of [
+    "animation_on",
+    "animation_off",
+    "adaptive_colors",
+    "self_contained_svg",
+    "uncompressed",
+  ]) {
+    if (options[name] !== undefined && options[name] !== 1) {
+      throw new Error(`drawio_valid option ${name} must equal 1`);
+    }
+  }
+  if (options.min_pages !== undefined && options.min_pages < 1) {
+    throw new Error("drawio_valid option min_pages must be positive");
+  }
+  if (options.min_native_stencils !== undefined) {
+    if (options.min_native_stencils < 1) {
+      throw new Error("drawio_valid option min_native_stencils must be positive");
+    }
+    if (!options.uncompressed) {
+      throw new Error("drawio_valid option min_native_stencils requires uncompressed=1");
+    }
+  }
+  return { raw, kind, glob, options };
+}
+
+function parseDrawioGraphAssertion({ raw, kind, glob, parts }) {
+  return { raw, kind, glob, ...parseDrawioGraph(parts.slice(1)) };
+}
+
+function parseDrawioEmbedsSvgSha256Assertion({ raw, kind, glob, parts }) {
+  if (
+    ![2, 3].includes(parts.length) ||
+    !/^[a-f0-9]{64}$/.test(parts[1]) ||
+    (parts.length === 3 && !/^cell=[A-Za-z0-9_.:-]{1,128}$/.test(parts[2]))
+  ) {
+    throw new Error(`${kind} requires one lowercase SHA-256 digest and optional cell=<stable-id>`);
+  }
+  return {
+    raw,
+    kind,
+    glob,
+    sha256: parts[1],
+    cellId: parts.length === 3 ? parts[2].slice("cell=".length) : null,
+  };
+}
+
 export function parseAssertion(raw) {
   const index = raw.indexOf(":");
   if (index === -1) throw new Error("missing ':' separator");
   const kind = raw.slice(0, index).trim();
   const value = raw.slice(index + 1).trim();
-  if (!SUPPORTED_VISUAL_ASSERTION_KINDS.has(kind)) {
-    throw new Error(`unsupported assertion kind ${JSON.stringify(kind)}`);
-  }
+  const handler = ASSERTION_KIND_HANDLERS.get(kind);
+  if (!handler) throw new Error(`unsupported assertion kind ${JSON.stringify(kind)}`);
   if (!value) throw new Error("missing assertion value");
 
   const parts = value.split(/\s+/);
   const glob = decodeMarkdownEscapes(parts[0]);
   if (!glob) throw new Error("missing artifact glob");
-
-  if (kind === "png_dimensions") {
-    const options = parseKeyValues(parts.slice(1));
-    if (!options.min_width || !options.min_height) {
-      throw new Error("png_dimensions requires min_width=<px> and min_height=<px>");
-    }
-    return { raw, kind, glob, options };
-  }
-
-  if (kind === "png_nonblank") {
-    const options = parseKeyValues(parts.slice(1));
-    return { raw, kind, glob, options: { min_size: options.min_size || 1024 } };
-  }
-
-  if (kind === "png_pixels_differ") {
-    if (parts.length < 2) {
-      throw new Error(
-        "png_pixels_differ requires two artifact globs and optional min_changed_basis_points=<1-10000>",
-      );
-    }
-    const options = parseKeyValues(parts.slice(2));
-    for (const name of Object.keys(options)) {
-      if (name !== "min_changed_basis_points") {
-        throw new Error(`png_pixels_differ does not support option ${name}`);
-      }
-    }
-    const hasMinChangedBasisPoints = Object.hasOwn(options, "min_changed_basis_points");
-    const minChangedBasisPoints = hasMinChangedBasisPoints ? options.min_changed_basis_points : 0;
-    if (hasMinChangedBasisPoints && (minChangedBasisPoints < 1 || minChangedBasisPoints > 10_000)) {
-      throw new Error("png_pixels_differ min_changed_basis_points must be between 1 and 10000");
-    }
-    return {
-      raw,
-      kind,
-      glob,
-      otherGlob: decodeMarkdownEscapes(parts[1]),
-      minChangedBasisPoints,
-    };
-  }
-
-  if (kind === "svg_png_dimensions_match") {
-    if (parts.length !== 2) {
-      throw new Error("svg_png_dimensions_match requires one SVG glob and one PNG glob");
-    }
-    return {
-      raw,
-      kind,
-      glob,
-      otherGlob: decodeMarkdownEscapes(parts[1]),
-    };
-  }
-
-  if (kind === "markdown_image" || kind === "markdown_link") {
-    const target = decodeMarkdownEscapes(parts[1] || "");
-    if (
-      parts.length !== 2 ||
-      !target ||
-      target.length > 512 ||
-      [...target].some((char) => char.charCodeAt(0) < 32)
-    ) {
-      throw new Error(`${kind} requires one control-free Markdown target after the artifact glob`);
-    }
-    return { raw, kind, glob, target };
-  }
-
-  if (kind === "drawio_valid") {
-    const options = parseKeyValues(parts.slice(1));
-    const allowed = new Set([
-      "animation_on",
-      "animation_off",
-      "adaptive_colors",
-      "min_pages",
-      "min_native_stencils",
-      "self_contained_svg",
-      "uncompressed",
-    ]);
-    for (const name of Object.keys(options)) {
-      if (!allowed.has(name)) throw new Error(`drawio_valid does not support option ${name}`);
-    }
-    if (options.animation_on && options.animation_off) {
-      throw new Error("drawio_valid cannot require animation_on and animation_off together");
-    }
-    for (const name of [
-      "animation_on",
-      "animation_off",
-      "adaptive_colors",
-      "self_contained_svg",
-      "uncompressed",
-    ]) {
-      if (options[name] !== undefined && options[name] !== 1) {
-        throw new Error(`drawio_valid option ${name} must equal 1`);
-      }
-    }
-    if (options.min_pages !== undefined && options.min_pages < 1) {
-      throw new Error("drawio_valid option min_pages must be positive");
-    }
-    if (options.min_native_stencils !== undefined) {
-      if (options.min_native_stencils < 1) {
-        throw new Error("drawio_valid option min_native_stencils must be positive");
-      }
-      if (!options.uncompressed) {
-        throw new Error("drawio_valid option min_native_stencils requires uncompressed=1");
-      }
-    }
-    return { raw, kind, glob, options };
-  }
-
-  if (kind === "drawio_embeds_svg_sha256") {
-    if (
-      ![2, 3].includes(parts.length) ||
-      !/^[a-f0-9]{64}$/.test(parts[1]) ||
-      (parts.length === 3 && !/^cell=[A-Za-z0-9_.:-]{1,128}$/.test(parts[2]))
-    ) {
-      throw new Error(
-        `${kind} requires one lowercase SHA-256 digest and optional cell=<stable-id>`,
-      );
-    }
-    return {
-      raw,
-      kind,
-      glob,
-      sha256: parts[1],
-      cellId: parts.length === 3 ? parts[2].slice("cell=".length) : null,
-    };
-  }
-
-  if (kind === "drawio_graph") {
-    return { raw, kind, glob, ...parseDrawioGraph(parts.slice(1)) };
-  }
-
-  if (kind === "svg_theme") {
-    const theme = parts[1];
-    if (parts.length !== 2 || !["light", "dark", "adaptive"].includes(theme)) {
-      throw new Error(`${kind} requires light, dark, or adaptive after the artifact glob`);
-    }
-    return { raw, kind, glob, theme };
-  }
-
-  if (kind === "svg_contains" || kind === "svg_not_contains") {
-    const text = parts.slice(1).join(" ");
-    if (!text) throw new Error(`${kind} requires text after the artifact glob`);
-    return { raw, kind, glob, text };
-  }
-
-  if (parts.length > 1) throw new Error(`${kind} accepts only an artifact glob`);
-  return { raw, kind, glob };
+  return handler.parse({ raw, kind, glob, parts });
 }
 
 function globToRegExp(glob) {
@@ -1262,6 +1293,7 @@ TEXT_CONTEXT = {"text", "textPath", "tspan", "foreignObject"}
 PAINTED_TEXT = {"text", "textPath", "tspan"}
 DATA_IMAGE_RE = re.compile(r"^data:image/(svg\\+xml|png)(;base64)?,(.*)$", re.IGNORECASE | re.DOTALL)
 CSS_URL_RE = re.compile(r'''url\\(\\s*(['"]?)(.*?)\\1\\s*\\)''', re.IGNORECASE)
+CSS_IMAGE_SET_RE = re.compile(r"(?<![-_A-Za-z0-9])(?:-webkit-)?image-set\\s*\\(", re.IGNORECASE)
 PNG_BIT_DEPTHS = {0: {1, 2, 4, 8, 16}, 2: {8, 16}, 3: {1, 2, 4, 8}, 4: {8, 16}, 6: {8, 16}}
 PNG_CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
 MAX_EMBEDDED_PNG_DIMENSION = 32768
@@ -1332,7 +1364,11 @@ def embedded_svg_has_bounds(root):
 
 def external_css_references(text, reject_escapes=False):
     literal = str(text or "")
-    count = 1 if re.search(r"@import\\b", literal, re.IGNORECASE) or (reject_escapes and chr(92) in literal) else 0
+    count = 1 if (
+        re.search(r"@import\\b", literal, re.IGNORECASE)
+        or CSS_IMAGE_SET_RE.search(literal)
+        or (reject_escapes and chr(92) in literal)
+    ) else 0
     for match in CSS_URL_RE.finditer(literal):
         reference = match.group(2).strip()
         if reference and not reference.startswith("#") and not reference.lower().startswith("data:"):
@@ -1440,12 +1476,44 @@ def valid_embedded_image_source(source, depth=0, context=None):
         return media_type if embedded_svg_is_safe(raw, depth, context) else None
     return media_type if embedded_png_is_valid(raw) else None
 
+def css_declarations(value):
+    literal = str(value or "")
+    if chr(92) in literal:
+        return None
+    declarations = []
+    start = 0
+    quote = None
+    parentheses = 0
+    for index, character in enumerate(literal):
+        if quote:
+            if character == quote:
+                quote = None
+            continue
+        if character in {'"', "'"}:
+            quote = character
+        elif character == "(":
+            parentheses += 1
+        elif character == ")":
+            if parentheses == 0:
+                return None
+            parentheses -= 1
+        elif character == ";" and parentheses == 0:
+            declarations.append(literal[start:index])
+            start = index + 1
+    if quote or parentheses:
+        return None
+    declarations.append(literal[start:])
+    return declarations
+
 def style_map(value):
     result = {}
-    for token in str(value or "").split(";"):
-        key, separator, item = token.partition(":")
-        if separator:
-            result[key.strip().lower()] = item.strip().lower()
+    declarations = css_declarations(value)
+    if declarations is None:
+        return result
+    for token in declarations:
+        match = re.match(r"^\\s*([_A-Za-z-][_A-Za-z0-9-]*)\\s*:(.*)$", token, re.DOTALL)
+        if match:
+            result[match.group(1).lower()] = match.group(2).strip().lower()
     return result
 
 def stylesheet_has_only_keyframes(css):
@@ -2248,334 +2316,370 @@ except Exception as error:
   }
 }
 
+function evaluateArtifactExists() {}
+
+function evaluateMarkdownReference({ assertion, artifacts, matches }) {
+  const artifactPaths = new Set(artifacts.map(({ rel }) => rel));
+  matches.forEach(({ file, rel }) => {
+    const destinations = markdownDestinations(file);
+    const collection =
+      assertion.kind === "markdown_image" ? destinations.images : destinations.links;
+    if (!collection.has(assertion.target)) {
+      throw new Error(`${assertion.raw}: ${rel} lacks the requested Markdown reference`);
+    }
+    const referencedArtifact = localMarkdownArtifact(rel, assertion.target);
+    if (referencedArtifact && !artifactPaths.has(referencedArtifact)) {
+      throw new Error(`${assertion.raw}: ${rel} references missing artifact ${referencedArtifact}`);
+    }
+  });
+}
+
+function evaluatePngDimensions({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const info = decodedPngInfo(file);
+    if (info.width < assertion.options.min_width || info.height < assertion.options.min_height) {
+      throw new Error(`${assertion.raw}: ${rel} does not meet required dimensions`);
+    }
+  });
+}
+
+function evaluatePngNonblank({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const info = decodedPngInfo(file);
+    if (
+      info.width <= 0 ||
+      info.height <= 0 ||
+      info.size < assertion.options.min_size ||
+      !info.nonblank
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} failed decoded nonblank pixel check`);
+    }
+  });
+}
+
+function evaluatePngPixelsDiffer({ assertion, artifacts, matches }) {
+  const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
+  if (matches.length !== 1 || otherMatches.length !== 1) {
+    throw new Error(`${assertion.raw}: each PNG glob must match exactly one artifact`);
+  }
+  const left = decodedPngInfo(matches[0].file);
+  const right = decodedPngInfo(otherMatches[0].file);
+  if (left.width !== right.width || left.height !== right.height) {
+    throw new Error(`${assertion.raw}: PNG dimensions differ`);
+  }
+  if (left.pixelDigest === right.pixelDigest) {
+    throw new Error(`${assertion.raw}: decoded PNG pixels are identical`);
+  }
+  if (assertion.minChangedBasisPoints > 0) {
+    let changedPixels = 0;
+    for (let offset = 0; offset < left.canonicalPixels.length; offset += 4) {
+      if (
+        left.canonicalPixels[offset] !== right.canonicalPixels[offset] ||
+        left.canonicalPixels[offset + 1] !== right.canonicalPixels[offset + 1] ||
+        left.canonicalPixels[offset + 2] !== right.canonicalPixels[offset + 2] ||
+        left.canonicalPixels[offset + 3] !== right.canonicalPixels[offset + 3]
+      ) {
+        changedPixels += 1;
+      }
+    }
+    const changedPercent = (changedPixels * 100) / (left.width * left.height);
+    if (changedPercent < assertion.minChangedBasisPoints / 100) {
+      throw new Error(
+        `${assertion.raw}: only ${changedPercent.toFixed(3)}% of decoded PNG pixels differ`,
+      );
+    }
+  }
+}
+
+function evaluateSvgPngDimensionsMatch({ assertion, artifacts, matches }) {
+  const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
+  if (matches.length !== 1 || otherMatches.length !== 1) {
+    throw new Error(`${assertion.raw}: each SVG/PNG glob must match exactly one artifact`);
+  }
+  const svg = svgInfo(matches[0].file);
+  const png = decodedPngInfo(otherMatches[0].file);
+  if (svg.canvasWidth <= 0 || svg.canvasHeight <= 0) {
+    throw new Error(`${assertion.raw}: SVG must declare positive px width and height`);
+  }
+  if (svg.canvasWidth !== png.width || svg.canvasHeight !== png.height) {
+    throw new Error(
+      `${assertion.raw}: SVG canvas ${svg.canvasWidth}x${svg.canvasHeight} does not match PNG ${png.width}x${png.height}`,
+    );
+  }
+}
+
+function evaluateSvgValid({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    if (svgInfo(file).renderableGraphics <= 0) {
+      throw new Error(`${assertion.raw}: ${rel} has no visible renderable graphic`);
+    }
+  });
+}
+
+function evaluateSvgTheme({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const actual = svgInfo(file).theme || "unspecified";
+    if (actual !== assertion.theme) {
+      throw new Error(`${assertion.raw}: ${rel} declares ${actual}, not ${assertion.theme}`);
+    }
+  });
+}
+
+function evaluateSvgContains({ assertion, matches }) {
+  const needle = assertion.text.toLowerCase().replace(/\s+/g, " ").trim();
+  const passing = matches.some(({ file }) =>
+    svgInfo(file).visibleText.toLowerCase().replace(/\s+/g, " ").trim().includes(needle),
+  );
+  if (!passing) throw new Error(`${assertion.raw}: no SVG contains expected visible text`);
+}
+
+function evaluateSvgNotContains({ assertion, matches }) {
+  const needle = assertion.text.toLowerCase().replace(/\s+/g, " ").trim();
+  const failing = matches.find(({ file }) =>
+    svgInfo(file).visibleText.toLowerCase().replace(/\s+/g, " ").trim().includes(needle),
+  );
+  if (failing) throw new Error(`${assertion.raw}: ${failing.rel} contains forbidden visible text`);
+}
+
+function evaluateSvgHasFlowAnimation({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const info = svgInfo(file);
+    if (
+      !(
+        info.renderableGraphics > 0 &&
+        info.flowAnimation &&
+        info.externalReferences === 0 &&
+        info.unsupportedImages === 0
+      )
+    ) {
+      throw new Error(
+        `${assertion.raw}: ${rel} lacks active self-contained connector flow animation`,
+      );
+    }
+  });
+}
+
+function evaluateSvgSelfContainedImages({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const info = svgInfo(file);
+    if (
+      info.embeddedSvgImages <= 0 ||
+      info.externalReferences !== 0 ||
+      info.unsupportedImages !== 0
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} lacks self-contained embedded SVG images`);
+    }
+  });
+}
+
+function evaluateDrawioValid({ assertion, matches }) {
+  matches.forEach(({ file }) => assertDrawioValid(file, assertion.options));
+}
+
+function evaluateDrawioEmbedsSvgSha256({ assertion, matches }) {
+  matches.forEach(({ file, rel }) => {
+    const report = assertDrawioValid(file);
+    const pages = Array.isArray(report.pages) ? report.pages : [];
+    const hashes = new Set(pages.flatMap((page) => page.embedded_svg_sha256s || []));
+    if (!hashes.has(assertion.sha256)) {
+      throw new Error(`${assertion.raw}: ${rel} does not embed the expected SVG bytes`);
+    }
+    if (assertion.cellId) {
+      const cellHashes = new Set(pages.flatMap((page) => page.embedded_svg_cell_sha256s || []));
+      const expectedCellHash = sha256(`${assertion.cellId}\0${assertion.sha256}`);
+      if (!cellHashes.has(expectedCellHash)) {
+        throw new Error(
+          `${assertion.raw}: ${rel} does not bind the expected SVG bytes to the requested cell`,
+        );
+      }
+    }
+  });
+}
+
+function evaluateDrawioGraph({ assertion, matches }) {
+  const expectedIds = assertion.ids.map((id) => sha256(id));
+  const expectedComponentIds = assertion.componentIds.map((id) => sha256(id));
+  const expectedComponentLabels = assertion.componentLabels.map(([id, label]) =>
+    sha256(`${id}\0${label}`),
+  );
+  const expectedGroupIds = assertion.groupIds.map((id) => sha256(id));
+  const expectedGroupLabels = assertion.groupLabels.map(([id, label]) => sha256(`${id}\0${label}`));
+  const expectedGroupMemberships = assertion.groupMemberships.map(([componentId, groupId]) =>
+    sha256(`${componentId}\0${groupId}`),
+  );
+  const expectedNativeIds = assertion.nativeIds.map((id) => sha256(id));
+  const expectedEdges = assertion.edges.map(([source, target]) => sha256(`${source}\0${target}`));
+  const expectedEdgeBindings = assertion.edgeBindings.map(([edgeId, source, target]) =>
+    sha256(`${edgeId}\0${source}\0${target}`),
+  );
+  const forbiddenEdges = assertion.notEdges.map(([source, target]) =>
+    sha256(`${source}\0${target}`),
+  );
+  const expectedEdgeRoles = assertion.edgeRoles.map(([edgeId, role]) =>
+    sha256(`${edgeId}\0${role}`),
+  );
+  const expectedProfileStyles = assertion.profileStyles.map(([cellId, key, value]) =>
+    sha256(`${cellId}\0${key}\0${value}`),
+  );
+  const expectedLinks = assertion.links.map((link) => sha256(link));
+  matches.forEach(({ file, rel }) => {
+    const report = assertDrawioValid(file);
+    const pages = Array.isArray(report.pages) ? report.pages : [];
+    const scopedPage =
+      assertion.pageName === null
+        ? null
+        : pages.find((page) => page.page_name_sha256 === sha256(assertion.pageName));
+    if (assertion.pageName !== null && !scopedPage) {
+      throw new Error(`${assertion.raw}: ${rel} does not contain the requested page`);
+    }
+    const graphs = scopedPage ? [scopedPage] : pages;
+    const idHashes = new Set(graphs.flatMap((page) => page.cell_id_sha256s || []));
+    const componentHashList = graphs.flatMap((page) => page.component_cell_id_sha256s || []);
+    const componentHashes = new Set(componentHashList);
+    const componentLabelHashes = new Set(
+      graphs.flatMap((page) => page.component_label_sha256s || []),
+    );
+    const groupHashList = graphs.flatMap((page) => page.group_cell_id_sha256s || []);
+    const groupHashes = new Set(groupHashList);
+    const groupLabelHashes = new Set(graphs.flatMap((page) => page.group_label_sha256s || []));
+    const groupMembershipHashList = graphs.flatMap((page) => page.group_membership_sha256s || []);
+    const groupMembershipHashes = new Set(groupMembershipHashList);
+    const nativeIdHashList = graphs.flatMap((page) => page.native_stencil_cell_id_sha256s || []);
+    const nativeIdHashes = new Set(nativeIdHashList);
+    const edgeHashList = graphs.flatMap((page) => page.directed_edge_sha256s || []);
+    const edgeHashes = new Set(edgeHashList);
+    const edgeBindingHashes = new Set(
+      graphs.flatMap((page) => page.directed_edge_identity_sha256s || []),
+    );
+    const edgeRoleHashes = new Set(graphs.flatMap((page) => page.edge_role_sha256s || []));
+    const profileStylesSatisfied =
+      expectedProfileStyles.length === 0 ||
+      graphs.some((page) => {
+        const hashes = new Set(page.profile_style_sha256s || []);
+        return expectedProfileStyles.every((digest) => hashes.has(digest));
+      });
+    const linkHashes = new Set(graphs.flatMap((page) => page.link_sha256s || []));
+    if (!expectedIds.every((digest) => idHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required cell IDs`);
+    }
+    if (!expectedComponentIds.every((digest) => componentHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required component IDs`);
+    }
+    if (!expectedComponentLabels.every((digest) => componentLabelHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required component labels`);
+    }
+    if (
+      assertion.exactComponents &&
+      (componentHashList.length !== expectedComponentIds.length ||
+        componentHashes.size !== expectedComponentIds.length)
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic components`);
+    }
+    if (!expectedGroupIds.every((digest) => groupHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required group IDs`);
+    }
+    if (!expectedGroupLabels.every((digest) => groupLabelHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required group labels`);
+    }
+    if (!expectedGroupMemberships.every((digest) => groupMembershipHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required group memberships`);
+    }
+    if (
+      assertion.exactGroups &&
+      (groupHashList.length !== expectedGroupIds.length ||
+        groupHashes.size !== expectedGroupIds.length)
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic groups`);
+    }
+    if (
+      assertion.exactGroups &&
+      expectedGroupMemberships.length > 0 &&
+      (groupMembershipHashList.length !== expectedGroupMemberships.length ||
+        groupMembershipHashes.size !== expectedGroupMemberships.length)
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} contains unexpected group memberships`);
+    }
+    if (!expectedNativeIds.every((digest) => nativeIdHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required native stencil IDs`);
+    }
+    if (
+      assertion.exactNativeIds &&
+      (nativeIdHashList.length !== expectedNativeIds.length ||
+        nativeIdHashes.size !== expectedNativeIds.length)
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} contains unexpected native stencil IDs`);
+    }
+    if (!expectedEdges.every((digest) => edgeHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required directed edge pairs`);
+    }
+    if (!expectedEdgeBindings.every((digest) => edgeBindingHashes.has(digest))) {
+      throw new Error(
+        `${assertion.raw}: ${rel} does not bind one or more edge IDs to the required endpoints`,
+      );
+    }
+    if (
+      assertion.exactEdges &&
+      (edgeHashList.length !== expectedEdges.length || edgeHashes.size !== expectedEdges.length)
+    ) {
+      throw new Error(`${assertion.raw}: ${rel} contains unexpected directed edge pairs`);
+    }
+    if (forbiddenEdges.some((digest) => edgeHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} contains a forbidden directed edge pair`);
+    }
+    if (!expectedEdgeRoles.every((digest) => edgeRoleHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required edge roles`);
+    }
+    if (!profileStylesSatisfied) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required profile styles`);
+    }
+    if (!expectedLinks.every((digest) => linkHashes.has(digest))) {
+      throw new Error(`${assertion.raw}: ${rel} lacks one or more required links`);
+    }
+  });
+}
+
+function evaluateDrawioSelfContainedSvg({ matches }) {
+  matches.forEach(({ file }) => assertDrawioSelfContainedSvg(file));
+}
+
+function evaluateDrawioNativeStencilsEqual({ assertion, matches }) {
+  if (matches.length < 2) {
+    throw new Error(`${assertion.raw}: requires at least two matching draw.io artifacts`);
+  }
+  let baseline = null;
+  let baselineRel = null;
+  for (const { file, rel } of matches) {
+    const report = assertDrawioValid(file);
+    const identities = (Array.isArray(report.pages) ? report.pages : [])
+      .flatMap((page) => page.native_stencil_identity_sha256s || [])
+      .sort();
+    if (identities.length === 0) {
+      throw new Error(`${assertion.raw}: ${rel} contains no native stencils`);
+    }
+    if (baseline === null) {
+      baseline = identities;
+      baselineRel = rel;
+      continue;
+    }
+    if (
+      identities.length !== baseline.length ||
+      identities.some((digest, index) => digest !== baseline[index])
+    ) {
+      throw new Error(
+        `${assertion.raw}: ${rel} native stencil identities differ from ${baselineRel}`,
+      );
+    }
+  }
+}
+
 export function evaluateAssertion(assertion, artifacts) {
   const matches = matchingArtifacts(artifacts, assertion.glob);
   if (matches.length === 0)
     throw new Error(`${assertion.raw}: no artifact matches ${assertion.glob}`);
 
-  if (assertion.kind === "artifact_exists") return;
-  if (assertion.kind === "markdown_image" || assertion.kind === "markdown_link") {
-    const artifactPaths = new Set(artifacts.map(({ rel }) => rel));
-    matches.forEach(({ file, rel }) => {
-      const destinations = markdownDestinations(file);
-      const collection =
-        assertion.kind === "markdown_image" ? destinations.images : destinations.links;
-      if (!collection.has(assertion.target)) {
-        throw new Error(`${assertion.raw}: ${rel} lacks the requested Markdown reference`);
-      }
-      const referencedArtifact = localMarkdownArtifact(rel, assertion.target);
-      if (referencedArtifact && !artifactPaths.has(referencedArtifact)) {
-        throw new Error(
-          `${assertion.raw}: ${rel} references missing artifact ${referencedArtifact}`,
-        );
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "png_dimensions") {
-    matches.forEach(({ file, rel }) => {
-      const info = decodedPngInfo(file);
-      if (info.width < assertion.options.min_width || info.height < assertion.options.min_height) {
-        throw new Error(`${assertion.raw}: ${rel} does not meet required dimensions`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "png_nonblank") {
-    matches.forEach(({ file, rel }) => {
-      const info = decodedPngInfo(file);
-      if (
-        info.width <= 0 ||
-        info.height <= 0 ||
-        info.size < assertion.options.min_size ||
-        !info.nonblank
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} failed decoded nonblank pixel check`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "png_pixels_differ") {
-    const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
-    if (matches.length !== 1 || otherMatches.length !== 1) {
-      throw new Error(`${assertion.raw}: each PNG glob must match exactly one artifact`);
-    }
-    const left = decodedPngInfo(matches[0].file);
-    const right = decodedPngInfo(otherMatches[0].file);
-    if (left.width !== right.width || left.height !== right.height) {
-      throw new Error(`${assertion.raw}: PNG dimensions differ`);
-    }
-    if (left.pixelDigest === right.pixelDigest) {
-      throw new Error(`${assertion.raw}: decoded PNG pixels are identical`);
-    }
-    if (assertion.minChangedBasisPoints > 0) {
-      let changedPixels = 0;
-      for (let offset = 0; offset < left.canonicalPixels.length; offset += 4) {
-        if (
-          left.canonicalPixels[offset] !== right.canonicalPixels[offset] ||
-          left.canonicalPixels[offset + 1] !== right.canonicalPixels[offset + 1] ||
-          left.canonicalPixels[offset + 2] !== right.canonicalPixels[offset + 2] ||
-          left.canonicalPixels[offset + 3] !== right.canonicalPixels[offset + 3]
-        ) {
-          changedPixels += 1;
-        }
-      }
-      const changedPercent = (changedPixels * 100) / (left.width * left.height);
-      if (changedPercent < assertion.minChangedBasisPoints / 100) {
-        throw new Error(
-          `${assertion.raw}: only ${changedPercent.toFixed(3)}% of decoded PNG pixels differ`,
-        );
-      }
-    }
-    return;
-  }
-  if (assertion.kind === "svg_png_dimensions_match") {
-    const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
-    if (matches.length !== 1 || otherMatches.length !== 1) {
-      throw new Error(`${assertion.raw}: each SVG/PNG glob must match exactly one artifact`);
-    }
-    const svg = svgInfo(matches[0].file);
-    const png = decodedPngInfo(otherMatches[0].file);
-    if (svg.canvasWidth <= 0 || svg.canvasHeight <= 0) {
-      throw new Error(`${assertion.raw}: SVG must declare positive px width and height`);
-    }
-    if (svg.canvasWidth !== png.width || svg.canvasHeight !== png.height) {
-      throw new Error(
-        `${assertion.raw}: SVG canvas ${svg.canvasWidth}x${svg.canvasHeight} does not match PNG ${png.width}x${png.height}`,
-      );
-    }
-    return;
-  }
-  if (assertion.kind === "svg_valid") {
-    matches.forEach(({ file, rel }) => {
-      if (svgInfo(file).renderableGraphics <= 0) {
-        throw new Error(`${assertion.raw}: ${rel} has no visible renderable graphic`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "svg_theme") {
-    matches.forEach(({ file, rel }) => {
-      const actual = svgInfo(file).theme || "unspecified";
-      if (actual !== assertion.theme) {
-        throw new Error(`${assertion.raw}: ${rel} declares ${actual}, not ${assertion.theme}`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "svg_contains") {
-    const needle = assertion.text.toLowerCase().replace(/\s+/g, " ").trim();
-    const passing = matches.some(({ file }) =>
-      svgInfo(file).visibleText.toLowerCase().replace(/\s+/g, " ").trim().includes(needle),
-    );
-    if (!passing) throw new Error(`${assertion.raw}: no SVG contains expected visible text`);
-    return;
-  }
-  if (assertion.kind === "svg_not_contains") {
-    const needle = assertion.text.toLowerCase().replace(/\s+/g, " ").trim();
-    const failing = matches.find(({ file }) =>
-      svgInfo(file).visibleText.toLowerCase().replace(/\s+/g, " ").trim().includes(needle),
-    );
-    if (failing)
-      throw new Error(`${assertion.raw}: ${failing.rel} contains forbidden visible text`);
-    return;
-  }
-  if (assertion.kind === "svg_has_flow_animation") {
-    matches.forEach(({ file, rel }) => {
-      const info = svgInfo(file);
-      if (
-        !(
-          info.renderableGraphics > 0 &&
-          info.flowAnimation &&
-          info.externalReferences === 0 &&
-          info.unsupportedImages === 0
-        )
-      ) {
-        throw new Error(
-          `${assertion.raw}: ${rel} lacks active self-contained connector flow animation`,
-        );
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "svg_self_contained_images") {
-    matches.forEach(({ file, rel }) => {
-      const info = svgInfo(file);
-      if (
-        info.embeddedSvgImages <= 0 ||
-        info.externalReferences !== 0 ||
-        info.unsupportedImages !== 0
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} lacks self-contained embedded SVG images`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "drawio_valid") {
-    matches.forEach(({ file }) => assertDrawioValid(file, assertion.options));
-    return;
-  }
-  if (assertion.kind === "drawio_embeds_svg_sha256") {
-    matches.forEach(({ file, rel }) => {
-      const report = assertDrawioValid(file);
-      const pages = Array.isArray(report.pages) ? report.pages : [];
-      const hashes = new Set(pages.flatMap((page) => page.embedded_svg_sha256s || []));
-      if (!hashes.has(assertion.sha256)) {
-        throw new Error(`${assertion.raw}: ${rel} does not embed the expected SVG bytes`);
-      }
-      if (assertion.cellId) {
-        const cellHashes = new Set(pages.flatMap((page) => page.embedded_svg_cell_sha256s || []));
-        const expectedCellHash = sha256(`${assertion.cellId}\0${assertion.sha256}`);
-        if (!cellHashes.has(expectedCellHash)) {
-          throw new Error(
-            `${assertion.raw}: ${rel} does not bind the expected SVG bytes to the requested cell`,
-          );
-        }
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "drawio_graph") {
-    const expectedIds = assertion.ids.map((id) => sha256(id));
-    const expectedComponentIds = assertion.componentIds.map((id) => sha256(id));
-    const expectedComponentLabels = assertion.componentLabels.map(([id, label]) =>
-      sha256(`${id}\0${label}`),
-    );
-    const expectedGroupIds = assertion.groupIds.map((id) => sha256(id));
-    const expectedGroupLabels = assertion.groupLabels.map(([id, label]) =>
-      sha256(`${id}\0${label}`),
-    );
-    const expectedGroupMemberships = assertion.groupMemberships.map(([componentId, groupId]) =>
-      sha256(`${componentId}\0${groupId}`),
-    );
-    const expectedNativeIds = assertion.nativeIds.map((id) => sha256(id));
-    const expectedEdges = assertion.edges.map(([source, target]) => sha256(`${source}\0${target}`));
-    const expectedEdgeBindings = assertion.edgeBindings.map(([edgeId, source, target]) =>
-      sha256(`${edgeId}\0${source}\0${target}`),
-    );
-    const forbiddenEdges = assertion.notEdges.map(([source, target]) =>
-      sha256(`${source}\0${target}`),
-    );
-    const expectedEdgeRoles = assertion.edgeRoles.map(([edgeId, role]) =>
-      sha256(`${edgeId}\0${role}`),
-    );
-    const expectedProfileStyles = assertion.profileStyles.map(([cellId, key, value]) =>
-      sha256(`${cellId}\0${key}\0${value}`),
-    );
-    const expectedLinks = assertion.links.map((link) => sha256(link));
-    matches.forEach(({ file, rel }) => {
-      const report = assertDrawioValid(file);
-      const pages = Array.isArray(report.pages) ? report.pages : [];
-      const scopedPage =
-        assertion.pageName === null
-          ? null
-          : pages.find((page) => page.page_name_sha256 === sha256(assertion.pageName));
-      if (assertion.pageName !== null && !scopedPage) {
-        throw new Error(`${assertion.raw}: ${rel} does not contain the requested page`);
-      }
-      const graphs = scopedPage ? [scopedPage] : pages;
-      const idHashes = new Set(graphs.flatMap((page) => page.cell_id_sha256s || []));
-      const componentHashList = graphs.flatMap((page) => page.component_cell_id_sha256s || []);
-      const componentHashes = new Set(componentHashList);
-      const componentLabelHashes = new Set(
-        graphs.flatMap((page) => page.component_label_sha256s || []),
-      );
-      const groupHashList = graphs.flatMap((page) => page.group_cell_id_sha256s || []);
-      const groupHashes = new Set(groupHashList);
-      const groupLabelHashes = new Set(graphs.flatMap((page) => page.group_label_sha256s || []));
-      const groupMembershipHashList = graphs.flatMap((page) => page.group_membership_sha256s || []);
-      const groupMembershipHashes = new Set(groupMembershipHashList);
-      const nativeIdHashes = new Set(
-        graphs.flatMap((page) => page.native_stencil_cell_id_sha256s || []),
-      );
-      const edgeHashList = graphs.flatMap((page) => page.directed_edge_sha256s || []);
-      const edgeHashes = new Set(edgeHashList);
-      const edgeBindingHashes = new Set(
-        graphs.flatMap((page) => page.directed_edge_identity_sha256s || []),
-      );
-      const edgeRoleHashes = new Set(graphs.flatMap((page) => page.edge_role_sha256s || []));
-      const profileStylesSatisfied =
-        expectedProfileStyles.length === 0 ||
-        graphs.some((page) => {
-          const hashes = new Set(page.profile_style_sha256s || []);
-          return expectedProfileStyles.every((digest) => hashes.has(digest));
-        });
-      const linkHashes = new Set(graphs.flatMap((page) => page.link_sha256s || []));
-      if (!expectedIds.every((digest) => idHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required cell IDs`);
-      }
-      if (!expectedComponentIds.every((digest) => componentHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required component IDs`);
-      }
-      if (!expectedComponentLabels.every((digest) => componentLabelHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required component labels`);
-      }
-      if (
-        assertion.exactComponents &&
-        (componentHashList.length !== expectedComponentIds.length ||
-          componentHashes.size !== expectedComponentIds.length)
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic components`);
-      }
-      if (!expectedGroupIds.every((digest) => groupHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group IDs`);
-      }
-      if (!expectedGroupLabels.every((digest) => groupLabelHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group labels`);
-      }
-      if (!expectedGroupMemberships.every((digest) => groupMembershipHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required group memberships`);
-      }
-      if (
-        assertion.exactGroups &&
-        (groupHashList.length !== expectedGroupIds.length ||
-          groupHashes.size !== expectedGroupIds.length)
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic groups`);
-      }
-      if (
-        assertion.exactGroups &&
-        expectedGroupMemberships.length > 0 &&
-        (groupMembershipHashList.length !== expectedGroupMemberships.length ||
-          groupMembershipHashes.size !== expectedGroupMemberships.length)
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} contains unexpected group memberships`);
-      }
-      if (!expectedNativeIds.every((digest) => nativeIdHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required native stencil IDs`);
-      }
-      if (!expectedEdges.every((digest) => edgeHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required directed edge pairs`);
-      }
-      if (!expectedEdgeBindings.every((digest) => edgeBindingHashes.has(digest))) {
-        throw new Error(
-          `${assertion.raw}: ${rel} does not bind one or more edge IDs to the required endpoints`,
-        );
-      }
-      if (
-        assertion.exactEdges &&
-        (edgeHashList.length !== expectedEdges.length || edgeHashes.size !== expectedEdges.length)
-      ) {
-        throw new Error(`${assertion.raw}: ${rel} contains unexpected directed edge pairs`);
-      }
-      if (forbiddenEdges.some((digest) => edgeHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} contains a forbidden directed edge pair`);
-      }
-      if (!expectedEdgeRoles.every((digest) => edgeRoleHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required edge roles`);
-      }
-      if (!profileStylesSatisfied) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required profile styles`);
-      }
-      if (!expectedLinks.every((digest) => linkHashes.has(digest))) {
-        throw new Error(`${assertion.raw}: ${rel} lacks one or more required links`);
-      }
-    });
-    return;
-  }
-  if (assertion.kind === "drawio_self_contained_svg") {
-    matches.forEach(({ file }) => assertDrawioSelfContainedSvg(file));
-  }
+  const handler = ASSERTION_KIND_HANDLERS.get(assertion.kind);
+  if (!handler) throw new Error(`unsupported assertion kind ${JSON.stringify(assertion.kind)}`);
+  handler.evaluate({ assertion, artifacts, matches });
 }
 
 export function extractVisualAssertionLines(markdown) {

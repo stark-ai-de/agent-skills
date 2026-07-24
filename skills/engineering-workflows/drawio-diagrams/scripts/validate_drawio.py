@@ -32,6 +32,9 @@ SVG_NUMBER_LENGTH_RE = re.compile(
     r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[A-Za-z%]+)?\s*$"
 )
 SVG_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
+SVG_IMAGE_SET_RE = re.compile(
+    r"(?<![-_A-Za-z0-9])(?:-webkit-)?image-set\s*\(", re.IGNORECASE
+)
 DATA_IMAGE_URI_RE = re.compile(
     r"^data:image/(svg\+xml|png)(;base64)?,(.*)$",
     re.IGNORECASE | re.DOTALL,
@@ -895,6 +898,8 @@ def validate_embedded_svg_bytes(raw: bytes, depth: int, context: dict[str, int])
 
         if tag == "style":
             css = "".join(element.itertext())
+            if SVG_IMAGE_SET_RE.search(css):
+                raise ValueError("embedded SVG style contains unsupported CSS image-set")
             if not svg_stylesheet_has_only_keyframes(css):
                 raise ValueError("embedded SVG style contains a non-keyframe stylesheet rule")
             for match in SVG_URL_RE.finditer(css):
@@ -915,6 +920,8 @@ def validate_embedded_svg_bytes(raw: bytes, depth: int, context: dict[str, int])
                 raise ValueError("embedded SVG contains an event-handler attribute")
             if "\\" in value:
                 raise ValueError("embedded SVG attribute contains a CSS escape")
+            if SVG_IMAGE_SET_RE.search(value):
+                raise ValueError("embedded SVG attribute contains unsupported CSS image-set")
             if name == "srcset":
                 raise ValueError("embedded SVG contains an unsupported source set")
             if name in {"href", "src"} and value:
@@ -1127,11 +1134,7 @@ class ImageSourceParser(HTMLParser):
             self.sources.append("unsafe-css:escape")
         if re.search(r"@import\b", value, flags=re.IGNORECASE):
             self.sources.append("unsafe-css:import")
-        if re.search(
-            r"(?<![-_A-Za-z0-9])(?:-webkit-)?image-set\s*\(",
-            value,
-            flags=re.IGNORECASE,
-        ):
+        if SVG_IMAGE_SET_RE.search(value):
             self.sources.append("unsupported-css:image-set")
         for match in SVG_URL_RE.finditer(value):
             self.sources.append(match.group(2).strip())
@@ -1544,6 +1547,7 @@ def validate_model(
             "group_label_sha256s": [],
             "group_membership_sha256s": [],
             "native_stencil_cell_id_sha256s": [],
+            "native_stencil_identity_sha256s": [],
             "directed_edge_sha256s": [],
             "directed_edge_identity_sha256s": [],
             "edge_role_sha256s": [],
@@ -1625,12 +1629,32 @@ def validate_model(
         if cell.id and cell.is_vertex and data_role(cell) == "component"
         for group_id in group_ancestors(cell, cells_by_id, group_ids)
     )
-    native_stencil_cell_id_sha256s = sorted(
-        hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
+    native_stencil_cells = [
+        cell
         for cell in content
         if cell.id
         and cell.is_vertex
         and cell.style_map.get("shape", "").strip().lower().startswith("mxgraph.")
+    ]
+    native_stencil_cell_id_sha256s = sorted(
+        hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
+        for cell in native_stencil_cells
+    )
+    native_stencil_identity_sha256s = sorted(
+        hashlib.sha256(
+            (
+                f"{cell.id}\0{cell.parent or ''}\0"
+                + "\0".join(
+                    f"{key.lower()}={value.strip()}"
+                    for key, value in sorted(
+                        cell.style_map.items(), key=lambda item: item[0].lower()
+                    )
+                    if key.lower() == "shape"
+                    or value.strip().lower().startswith("mxgraph.")
+                )
+            ).encode("utf-8")
+        ).hexdigest()
+        for cell in native_stencil_cells
     )
     directed_edge_sha256s = sorted(
         hashlib.sha256(f"{edge.source}\0{edge.target}".encode("utf-8")).hexdigest()
@@ -1951,6 +1975,7 @@ def validate_model(
         "group_label_sha256s": group_label_sha256s,
         "group_membership_sha256s": group_membership_sha256s,
         "native_stencil_cell_id_sha256s": native_stencil_cell_id_sha256s,
+        "native_stencil_identity_sha256s": native_stencil_identity_sha256s,
         "directed_edge_sha256s": directed_edge_sha256s,
         "directed_edge_identity_sha256s": directed_edge_identity_sha256s,
         "edge_role_sha256s": edge_role_sha256s,

@@ -54,7 +54,7 @@ const CSS_RENDER_REFERENCE_ATTRIBUTES = new Set([
 const DATA_IMAGE_ELEMENTS = new Set(["feimage", "image", "img"]);
 
 function usage() {
-  return `Usage: node scripts/rasterize-themed-svg.mjs input.light.svg output.light.png --browser <pinned-chrome-or-edge>
+  return `Usage: node scripts/rasterize-themed-svg.mjs input.light.svg output.light.png --browser <absolute-chrome-chromium-or-edge-path>
 
 Rasterizes one fixed-theme SVG through a local Chromium-family browser.
 The input must declare exactly one root color-scheme (light or dark), have bounded dimensions,
@@ -71,7 +71,7 @@ export function parseArgs(argv) {
     if (arg === "--help" || arg === "-h") return { help: true, input, output, browser };
     if (arg === "--browser") {
       browser = argv[++index];
-      if (!browser) throw new Error("--browser requires a command or path");
+      if (!browser) throw new Error("--browser requires an absolute executable path");
       continue;
     }
     if (arg.startsWith("-")) throw new Error(`Unknown argument: ${arg}`);
@@ -95,11 +95,42 @@ function parseDimension(value, label) {
   return dimension;
 }
 
+function cssDeclarations(style) {
+  const source = String(style || "");
+  const declarations = [];
+  let start = 0;
+  let quote = null;
+  let parentheses = 0;
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (character === "\\") {
+        throw new Error("SVG root style contains unsupported CSS escape syntax");
+      }
+      if (character === quote) quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === "(") {
+      parentheses += 1;
+    } else if (character === ")") {
+      if (parentheses === 0) throw new Error("SVG root style contains malformed CSS syntax");
+      parentheses -= 1;
+    } else if (character === ";" && parentheses === 0) {
+      declarations.push(source.slice(start, index));
+      start = index + 1;
+    }
+  }
+  if (quote || parentheses !== 0) {
+    throw new Error("SVG root style contains malformed CSS syntax");
+  }
+  declarations.push(source.slice(start));
+  return declarations.map((part) => part.trim()).filter(Boolean);
+}
+
 function rootTheme(style) {
-  const declarations = String(style || "")
-    .split(";")
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const declarations = cssDeclarations(style);
   const schemes = declarations
     .map((part) =>
       part
@@ -194,6 +225,9 @@ function assertCssIsSelfContained(source, depth, context) {
   if (css.includes("\\") || css.includes("/*") || css.includes("*/")) {
     throw new Error("SVG CSS escapes and comments are not supported for rasterization");
   }
+  if (/(?:^|[^A-Za-z0-9_-])(?:-webkit-)?image-set\s*\(/i.test(css)) {
+    throw new Error("SVG CSS image-set() values are not supported for rasterization");
+  }
   if (/@import\b/i.test(css)) {
     throw new Error("SVG imported stylesheets are not supported for rasterization");
   }
@@ -278,6 +312,29 @@ function inspectSvgSource(source, depth, context) {
   });
 }
 
+function positiveSvgLength(value) {
+  const match = String(value || "")
+    .trim()
+    .match(/^\+?(\d+(?:\.\d*)?|\.\d+)(?:[A-Za-z%]+)?$/);
+  return Boolean(match && Number.isFinite(Number(match[1])) && Number(match[1]) > 0);
+}
+
+function embeddedSvgHasUsableBounds(attributes) {
+  if (!attributes) return false;
+  const viewBox = attributes.get("viewBox") || attributes.get("viewbox");
+  if (viewBox) {
+    const values = String(viewBox)
+      .trim()
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
+    if (values.length === 4 && values.every(Number.isFinite) && values[2] > 0 && values[3] > 0) {
+      return true;
+    }
+  }
+  return positiveSvgLength(attributes.get("width")) && positiveSvgLength(attributes.get("height"));
+}
+
 function inspectEmbeddedSvg(bytes, depth, context) {
   if (depth > MAX_EMBEDDED_SVG_DEPTH) {
     throw new Error(`SVG embedded image nesting exceeds ${MAX_EMBEDDED_SVG_DEPTH} levels`);
@@ -292,7 +349,10 @@ function inspectEmbeddedSvg(bytes, depth, context) {
   } catch {
     throw new Error("SVG embedded image data must use UTF-8 encoding");
   }
-  inspectSvgSource(source, depth, context);
+  const { rootAttributes } = inspectSvgSource(source, depth, context);
+  if (!embeddedSvgHasUsableBounds(rootAttributes)) {
+    throw new Error("SVG embedded image needs a positive viewBox or width and height");
+  }
 }
 
 export function inspectThemedSvg(source) {
@@ -318,15 +378,29 @@ function isPathCandidate(candidate) {
 }
 
 export function findBrowser(configured = null) {
-  if (!configured) return null;
-  if (isPathCandidate(configured)) {
-    return fs.existsSync(configured) ? configured : null;
+  if (!configured || !path.isAbsolute(configured)) return null;
+  let browser;
+  try {
+    browser = fs.realpathSync(configured);
+    if (!fs.statSync(browser).isFile()) return null;
+    fs.accessSync(browser, process.platform === "win32" ? fs.constants.F_OK : fs.constants.X_OK);
+  } catch {
+    return null;
   }
-  const result = spawnSync(configured, ["--version"], {
+  const result = spawnSync(browser, ["--version"], {
     encoding: "utf8",
+    maxBuffer: 64 * 1024,
     timeout: 5_000,
   });
-  return !result.error && result.status === 0 ? configured : null;
+  const version = `${result.stdout || ""}\n${result.stderr || ""}`;
+  if (
+    result.error ||
+    result.status !== 0 ||
+    !/\b(?:chromium|google chrome|microsoft edge)\b/i.test(version)
+  ) {
+    return null;
+  }
+  return browser;
 }
 
 function windowsPath(file) {
@@ -517,7 +591,7 @@ function main() {
     const browser = findBrowser(args.browser || process.env.SVG_RASTER_BROWSER);
     if (!browser) {
       throw new Error(
-        "the pinned browser was not found or did not accept --version; pass --browser <path>",
+        "the pinned browser must be an absolute executable path to Chrome, Chromium, or Edge",
       );
     }
 
