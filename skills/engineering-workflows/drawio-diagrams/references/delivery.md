@@ -11,9 +11,14 @@ kebab-case-name.drawio
 kebab-case-name.drawio.png
 kebab-case-name.drawio.svg
 kebab-case-name.drawio.pdf
+kebab-case-name.light.svg
 kebab-case-name.dark.svg
+kebab-case-name.light.png
+kebab-case-name.dark.png
 kebab-case-name.validation.json
 ```
+
+Use the `.light.*` and `.dark.*` pairs only when the user requests fixed-theme comparison exports. The standard renderer naming below remains unchanged.
 
 ## Export commands
 
@@ -21,10 +26,22 @@ When draw.io Desktop CLI exists:
 
 ```bash
 drawio -x -f png -s 2 -b 10 -o name.drawio.png name.drawio
-drawio -x -f svg -e -b 10 -o name.drawio.svg name.drawio
+drawio -x -f svg --svg-theme auto -e -b 10 -o name.drawio.svg name.drawio
 drawio -x -f pdf -e -b 10 -o name.drawio.pdf name.drawio
+drawio -x -f svg --svg-theme light -e -b 10 -o name.light.svg name.drawio
 drawio -x -f svg --svg-theme dark -e -b 10 -o name.dark.svg name.drawio
 ```
+
+The standard `name.drawio.svg` is adaptive; do not relabel it as fixed light. For a light/dark comparison set, pass `--svg-theme light` and `--svg-theme dark` explicitly for every source, then rasterize each fixed SVG through a local Chromium-family browser:
+
+```bash
+node scripts/rasterize-themed-svg.mjs name.light.svg name.light.png
+node scripts/rasterize-themed-svg.mjs name.dark.svg name.dark.png
+```
+
+The rasterizer reads the parsed root element, requires its `color-scheme` to be fixed to exactly `light` or `dark`, rejects active content and remotely loaded render assets, disables browser JavaScript, uses an isolated temporary browser profile, preserves the SVG dimensions, validates the PNG, and refuses to replace an existing output. Use `--browser <path>` when Chrome, Chromium, or Edge is not discoverable. This SVG-to-PNG path is required for a true dark PNG because draw.io Desktop's theme option applies to SVG, not direct PNG export. Build comparison galleries from the static light/dark PNG previews and link the fixed-theme SVGs plus editable sources separately.
+
+Export and validate every source/theme artifact, even when the CLI is invoked in a batch. If a preview appears to clip an embedded image, inspect a full-resolution crop with an independent decoder and make an isolated re-export before changing the source or renderer. Treat animated SVG byte hashes and live animation frames as nondeterministic; prove repeatability with source-graph, declared-theme, self-containment, and static-render checks.
 
 Prefer `scripts/render-drawio.mjs name.drawio` for the standard light PNG + dark SVG verification export. It rejects exit-zero runs that create no fresh artifact and validates both formats before commit. Installation is no-clobber at each destination. Interrupted commits retain partial outputs plus staged files and backups instead of deleting concurrent data. A successful replacement also prints and retains its `.drawio-render-*` recovery directory; inspect the public outputs and `backup-*` files before removing it manually. Fresh installs without prior outputs clean their staging directory automatically. Treat raw CLI commands as format probes, not proof that an output was produced.
 

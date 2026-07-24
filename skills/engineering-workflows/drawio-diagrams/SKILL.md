@@ -67,6 +67,7 @@ Never install tools, write MCP config, download bulk icon packs/indexes, create 
 - `scripts/validate_drawio.py`: read-only lint for `.drawio`/mxGraph XML.
 - `scripts/validate-drawio-diagram-rules.mjs`: read-only checks for floating semantic edges, component icon coverage, fixed-aspect logos, and likely route crossings.
 - `scripts/render-drawio.mjs`: stages and validates a light PNG plus dark SVG, then installs both with commit-time no-clobber checks; interrupted commits retain partial outputs and recovery backups, and successful replacements report a retained recovery directory for manual cleanup.
+- `scripts/rasterize-themed-svg.mjs`: writes one no-clobber PNG from a bounded, self-contained fixed-light or fixed-dark SVG through a local Chrome, Chromium, or Edge browser; validates the output and preserves source dimensions.
 - `scripts/open-drawio-url.mjs`: read-only browser URL builder/opener for `.drawio` files.
 - `scripts/search-shapes.mjs`: searches a configured or standard-cache local shape index with strict and fuzzy fallback ranking.
 

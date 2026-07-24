@@ -292,7 +292,7 @@ function invalidArtifact(format, reason) {
   throw new Error(`draw.io export created an invalid ${format} artifact: ${reason}`);
 }
 
-function validatePng(file) {
+export function validatePng(file) {
   const { handle, stat } = openArtifact(file, "PNG");
   const scratch = Buffer.alloc(IO_BUFFER_BYTES);
   let position = 8;
@@ -477,6 +477,24 @@ function validateXmlReferences(text, context) {
   }
 }
 
+function decodeXmlReferences(text) {
+  const named = new Map([
+    ["&amp;", "&"],
+    ["&apos;", "'"],
+    ["&gt;", ">"],
+    ["&lt;", "<"],
+    ["&quot;", '"'],
+  ]);
+  return text.replace(/&(?:amp|apos|gt|lt|quot|#(?:x[0-9A-Fa-f]+|[0-9]+));/g, (reference) => {
+    if (named.has(reference)) return named.get(reference);
+    const digits = reference.slice(2, -1);
+    const hexadecimal = digits.startsWith("x");
+    return String.fromCodePoint(
+      Number.parseInt(hexadecimal ? digits.slice(1) : digits, hexadecimal ? 16 : 10),
+    );
+  });
+}
+
 function xmlTagEnd(text, start) {
   let quote = null;
   for (let index = start + 1; index < text.length; index += 1) {
@@ -517,13 +535,13 @@ function xmlAttributes(raw) {
     const value = raw.slice(cursor + 1, end);
     if (value.includes("<")) invalidArtifact("SVG", `attribute ${name} contains <`);
     validateXmlReferences(value, `attribute ${name}`);
-    attributes.set(name, value);
+    attributes.set(name, decodeXmlReferences(value));
     cursor = end + 1;
   }
   return attributes;
 }
 
-export function validateSvgXml(source) {
+export function validateSvgXml(source, { onElement = null, onText = null } = {}) {
   const text = source.replace(/^\uFEFF/, "");
   validateXmlCharacters(text);
   const stack = [];
@@ -533,19 +551,28 @@ export function validateSvgXml(source) {
   let doctypeSeen = false;
   let declarationSeen = false;
   let elementCount = 0;
+  let rootAttributes = null;
 
   while (cursor < text.length) {
     const open = text.indexOf("<", cursor);
     if (open === -1) {
-      validateXmlReferences(text.slice(cursor), "text");
-      if (stack.length === 0 && /\S/.test(text.slice(cursor))) {
+      const body = text.slice(cursor);
+      validateXmlReferences(body, "text");
+      if (stack.length === 0 && /\S/.test(body)) {
         invalidArtifact("SVG", "text appears outside the root element");
+      }
+      if (stack.length > 0 && onText && body) {
+        onText({ text: decodeXmlReferences(body), parentName: stack.at(-1) });
       }
       break;
     }
-    validateXmlReferences(text.slice(cursor, open), "text");
-    if (stack.length === 0 && /\S/.test(text.slice(cursor, open))) {
+    const body = text.slice(cursor, open);
+    validateXmlReferences(body, "text");
+    if (stack.length === 0 && /\S/.test(body)) {
       invalidArtifact("SVG", "text appears outside the root element");
+    }
+    if (stack.length > 0 && onText && body) {
+      onText({ text: decodeXmlReferences(body), parentName: stack.at(-1) });
     }
 
     if (text.startsWith("<!--", open)) {
@@ -561,6 +588,9 @@ export function validateSvgXml(source) {
       if (stack.length === 0) invalidArtifact("SVG", "CDATA appears outside the root element");
       const end = text.indexOf("]]>", open + 9);
       if (end === -1) invalidArtifact("SVG", "unterminated CDATA section");
+      if (onText) {
+        onText({ text: text.slice(open + 9, end), parentName: stack.at(-1) });
+      }
       cursor = end + 3;
       continue;
     }
@@ -618,9 +648,13 @@ export function validateSvgXml(source) {
         invalidArtifact("SVG", "root has no SVG namespace");
       }
       rootSeen = true;
+      rootAttributes = attributes;
     }
     elementCount += 1;
     if (elementCount > MAX_SVG_ELEMENTS) invalidArtifact("SVG", "element count exceeds limit");
+    if (onElement) {
+      onElement({ name, attributes, parentName: stack.at(-1) || null });
+    }
     if (!selfClosing) {
       stack.push(name);
       if (stack.length > MAX_SVG_DEPTH) invalidArtifact("SVG", "nesting depth exceeds limit");
@@ -633,6 +667,7 @@ export function validateSvgXml(source) {
   if (!rootSeen || !rootClosed || stack.length !== 0) {
     invalidArtifact("SVG", "root element is missing or unclosed");
   }
+  return { rootAttributes };
 }
 
 function validateSvg(file) {

@@ -8,9 +8,14 @@ import zlib from "node:zlib";
 
 export const SUPPORTED_VISUAL_ASSERTION_KINDS = new Set([
   "artifact_exists",
+  "markdown_image",
+  "markdown_link",
   "png_dimensions",
   "png_nonblank",
+  "png_pixels_differ",
+  "svg_png_dimensions_match",
   "svg_valid",
+  "svg_theme",
   "svg_contains",
   "svg_not_contains",
   "svg_has_flow_animation",
@@ -25,6 +30,7 @@ const MAX_PNG_DIMENSION = 32768;
 const MAX_PNG_PIXELS = 16_000_000;
 const MAX_PNG_DECODED_BYTES = 256 * 1024 * 1024;
 const MAX_SVG_FILE_BYTES = 16 * 1024 * 1024;
+const MAX_MARKDOWN_FILE_BYTES = 1024 * 1024;
 const MAX_SVG_ELEMENTS = 20_000;
 const MAX_SVG_DEPTH = 128;
 const SVG_INSPECTION_TIMEOUT_MS = 5_000;
@@ -170,8 +176,13 @@ function parseDrawioGraph(parts) {
   const options = new Map();
   const allowedOptions = new Set([
     "ids",
+    "component_ids",
+    "component_labels",
     "native_ids",
     "edges",
+    "edge_bindings",
+    "exact_components",
+    "exact_edges",
     "not_edges",
     "edge_roles",
     "profile_styles",
@@ -187,12 +198,21 @@ function parseDrawioGraph(parts) {
     options.set(name, value);
   }
   if (
-    !["ids", "native_ids", "edges", "not_edges", "edge_roles", "profile_styles", "links"].some(
-      (name) => options.has(name),
-    )
+    ![
+      "ids",
+      "component_ids",
+      "component_labels",
+      "native_ids",
+      "edges",
+      "edge_bindings",
+      "not_edges",
+      "edge_roles",
+      "profile_styles",
+      "links",
+    ].some((name) => options.has(name))
   ) {
     throw new Error(
-      "drawio_graph requires ids=..., native_ids=..., edges=..., not_edges=..., edge_roles=..., profile_styles=..., or links=...",
+      "drawio_graph requires ids=..., component_ids=..., component_labels=..., native_ids=..., edges=..., edge_bindings=..., not_edges=..., edge_roles=..., profile_styles=..., or links=...",
     );
   }
 
@@ -239,6 +259,63 @@ function parseDrawioGraph(parts) {
       return [match[1], match[2]];
     });
   if (edgeRoles.length > 128) throw new Error("drawio_graph edge_roles exceeds 128 entries");
+  const edgeBindings = (options.get("edge_bindings") || "")
+    .split(",")
+    .filter(Boolean)
+    .map((binding) => {
+      const match =
+        /^([A-Za-z0-9_.:-]{1,128})@([A-Za-z0-9_.:-]{1,128})>([A-Za-z0-9_.:-]{1,128})$/.exec(
+          binding,
+        );
+      if (!match) {
+        throw new Error(`drawio_graph has invalid edge binding ${JSON.stringify(binding)}`);
+      }
+      return [match[1], match[2], match[3]];
+    });
+  if (edgeBindings.length > 128) {
+    throw new Error("drawio_graph edge_bindings exceeds 128 entries");
+  }
+  const rawComponentLabels = options.has("component_labels")
+    ? options.get("component_labels").split(",")
+    : [];
+  if (rawComponentLabels.length > 128) {
+    throw new Error("drawio_graph component_labels exceeds 128 entries");
+  }
+  const componentLabels = rawComponentLabels.map((mapping) => {
+    if (mapping.length > 1024) {
+      throw new Error("drawio_graph has an oversized component label mapping");
+    }
+    const parts = mapping.split(":");
+    const encodedComponent = /^(?:[A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+$/;
+    if (parts.length !== 2 || parts.some((part) => !encodedComponent.test(part))) {
+      throw new Error(
+        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
+      );
+    }
+    let cellId;
+    let label;
+    try {
+      [cellId, label] = parts.map((part) => decodeURIComponent(part));
+    } catch {
+      throw new Error(
+        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
+      );
+    }
+    if (
+      !/^[A-Za-z0-9_.:-]{1,128}$/.test(cellId) ||
+      !label ||
+      [...label].length > 512 ||
+      [...label].some((char) => {
+        const codePoint = char.codePointAt(0);
+        return codePoint <= 31 || (codePoint >= 127 && codePoint <= 159);
+      })
+    ) {
+      throw new Error(
+        `drawio_graph has invalid component label mapping ${JSON.stringify(mapping)}`,
+      );
+    }
+    return [cellId, label];
+  });
   const rawProfileStyles = options.has("profile_styles")
     ? options.get("profile_styles").split(",")
     : [];
@@ -308,15 +385,35 @@ function parseDrawioGraph(parts) {
       throw new Error("drawio_graph has an invalid page");
     }
   }
+  const exactOption = (name) => {
+    if (!options.has(name)) return false;
+    if (options.get(name) !== "1") throw new Error(`drawio_graph ${name} must equal 1`);
+    return true;
+  };
+  const componentIds = parseIds(options.get("component_ids"), "component_ids");
+  const edges = parseEdges(options.get("edges"), "edge");
+  const exactComponents = exactOption("exact_components");
+  const exactEdges = exactOption("exact_edges");
+  if (exactComponents && componentIds.length === 0) {
+    throw new Error("drawio_graph exact_components=1 requires component_ids=...");
+  }
+  if (exactEdges && edges.length === 0) {
+    throw new Error("drawio_graph exact_edges=1 requires edges=...");
+  }
   return {
     ids: parseIds(options.get("ids"), "ids"),
+    componentIds,
+    componentLabels,
     nativeIds: parseIds(options.get("native_ids"), "native_ids"),
-    edges: parseEdges(options.get("edges"), "edge"),
+    edges,
+    edgeBindings,
     notEdges: parseEdges(options.get("not_edges"), "forbidden edge"),
     edgeRoles,
     profileStyles,
     links,
     pageName,
+    exactComponents,
+    exactEdges,
   };
 }
 
@@ -349,6 +446,57 @@ export function parseAssertion(raw) {
   if (kind === "png_nonblank") {
     const options = parseKeyValues(parts.slice(1));
     return { raw, kind, glob, options: { min_size: options.min_size || 1024 } };
+  }
+
+  if (kind === "png_pixels_differ") {
+    if (parts.length < 2) {
+      throw new Error(
+        "png_pixels_differ requires two artifact globs and optional min_changed_basis_points=<1-10000>",
+      );
+    }
+    const options = parseKeyValues(parts.slice(2));
+    for (const name of Object.keys(options)) {
+      if (name !== "min_changed_basis_points") {
+        throw new Error(`png_pixels_differ does not support option ${name}`);
+      }
+    }
+    const hasMinChangedBasisPoints = Object.hasOwn(options, "min_changed_basis_points");
+    const minChangedBasisPoints = hasMinChangedBasisPoints ? options.min_changed_basis_points : 0;
+    if (hasMinChangedBasisPoints && (minChangedBasisPoints < 1 || minChangedBasisPoints > 10_000)) {
+      throw new Error("png_pixels_differ min_changed_basis_points must be between 1 and 10000");
+    }
+    return {
+      raw,
+      kind,
+      glob,
+      otherGlob: decodeMarkdownEscapes(parts[1]),
+      minChangedBasisPoints,
+    };
+  }
+
+  if (kind === "svg_png_dimensions_match") {
+    if (parts.length !== 2) {
+      throw new Error("svg_png_dimensions_match requires one SVG glob and one PNG glob");
+    }
+    return {
+      raw,
+      kind,
+      glob,
+      otherGlob: decodeMarkdownEscapes(parts[1]),
+    };
+  }
+
+  if (kind === "markdown_image" || kind === "markdown_link") {
+    const target = decodeMarkdownEscapes(parts[1] || "");
+    if (
+      parts.length !== 2 ||
+      !target ||
+      target.length > 512 ||
+      [...target].some((char) => char.charCodeAt(0) < 32)
+    ) {
+      throw new Error(`${kind} requires one control-free Markdown target after the artifact glob`);
+    }
+    return { raw, kind, glob, target };
   }
 
   if (kind === "drawio_valid") {
@@ -414,6 +562,14 @@ export function parseAssertion(raw) {
 
   if (kind === "drawio_graph") {
     return { raw, kind, glob, ...parseDrawioGraph(parts.slice(1)) };
+  }
+
+  if (kind === "svg_theme") {
+    const theme = parts[1];
+    if (parts.length !== 2 || !["light", "dark", "adaptive"].includes(theme)) {
+      throw new Error(`${kind} requires light, dark, or adaptive after the artifact glob`);
+    }
+    return { raw, kind, glob, theme };
   }
 
   if (kind === "svg_contains" || kind === "svg_not_contains") {
@@ -627,86 +783,62 @@ function pngChannels(colorType) {
   throw new Error(`unsupported PNG color type ${colorType}`);
 }
 
-function pngPixelSample(row, x, bitDepth, pixelStride) {
-  if (bitDepth >= 8) {
-    const start = x * pixelStride;
-    return row.subarray(start, start + pixelStride).toString("hex");
-  }
-  const bitOffset = x * bitDepth;
+function pngSample(row, sampleIndex, bitDepth) {
+  if (bitDepth === 16) return row.readUInt16BE(sampleIndex * 2);
+  if (bitDepth === 8) return row[sampleIndex];
+  const bitOffset = sampleIndex * bitDepth;
   const byte = row[Math.floor(bitOffset / 8)];
   const shift = 8 - bitDepth - (bitOffset % 8);
   const mask = (1 << bitDepth) - 1;
-  return String((byte >> shift) & mask);
+  return (byte >> shift) & mask;
 }
 
-function sampleHasValue(bytes) {
-  return bytes.some((byte) => byte !== 0);
+function canonicalPngChannel(value, bitDepth) {
+  if (bitDepth === 8) return value;
+  if (bitDepth === 16) return Math.round(value / 257);
+  return Math.round((value * 255) / (2 ** bitDepth - 1));
 }
 
-function sampleEquals(bytes, expected) {
-  if (!expected || bytes.length !== expected.length) return false;
-  return bytes.every((byte, index) => byte === expected[index]);
-}
+function canonicalPngPixel(row, x, bitDepth, colorType, transparency) {
+  const channels = pngChannels(colorType);
+  const samples = Array.from({ length: channels }, (_, channel) =>
+    pngSample(row, x * channels + channel, bitDepth),
+  );
+  let red;
+  let green;
+  let blue;
+  let alpha = 255;
 
-function pngVisiblePixelSample(row, x, bitDepth, colorType, pixelStride, transparency) {
-  if (bitDepth >= 8) {
-    const start = x * pixelStride;
-    const bytesPerSample = Math.ceil(bitDepth / 8);
-    if (colorType === 0) {
-      const sample = row.subarray(start, start + bytesPerSample);
-      if (sampleEquals(sample, transparency?.grayscale)) return null;
-      return sample.toString("hex");
-    }
-    if (colorType === 2) {
-      const sample = row.subarray(start, start + 3 * bytesPerSample);
-      if (sampleEquals(sample, transparency?.rgb)) return null;
-      return sample.toString("hex");
-    }
-    if (colorType === 3) {
-      const index = row[start];
-      const alpha = transparency?.palette?.[index];
-      if (alpha === 0) return null;
-      const color = transparency?.paletteColors?.subarray(index * 3, index * 3 + 3);
-      if (!color || color.length !== 3)
-        throw new Error(`indexed PNG uses missing palette entry ${index}`);
-      return `${color.toString("hex")}:${alpha ?? 255}`;
-    }
-    if (colorType === 4) {
-      const alphaStart = start + bytesPerSample;
-      const alpha = row.subarray(alphaStart, alphaStart + bytesPerSample);
-      if (!sampleHasValue(alpha)) return null;
-      return row.subarray(start, alphaStart).toString("hex");
-    }
-    if (colorType === 6) {
-      const alphaStart = start + 3 * bytesPerSample;
-      const alpha = row.subarray(alphaStart, alphaStart + bytesPerSample);
-      if (!sampleHasValue(alpha)) return null;
-      return row.subarray(start, alphaStart).toString("hex");
-    }
-    return row.subarray(start, start + pixelStride).toString("hex");
-  }
   if (colorType === 0) {
-    const sample = pngPixelSample(row, x, bitDepth, pixelStride);
-    if (transparency?.grayscaleValue != null && sample === String(transparency.grayscaleValue))
-      return null;
-    return sample;
-  }
-  if (colorType === 3) {
-    const index = Number(pngPixelSample(row, x, bitDepth, pixelStride));
-    const alpha = transparency?.palette?.[index];
-    if (alpha === 0) return null;
-    const color = transparency?.paletteColors?.subarray(index * 3, index * 3 + 3);
-    if (!color || color.length !== 3)
+    red = green = blue = canonicalPngChannel(samples[0], bitDepth);
+    if (transparency.grayscaleValue === samples[0]) alpha = 0;
+  } else if (colorType === 2) {
+    [red, green, blue] = samples.map((sample) => canonicalPngChannel(sample, bitDepth));
+    if (
+      transparency.rgbValues?.every(
+        (transparentSample, index) => transparentSample === samples[index],
+      )
+    ) {
+      alpha = 0;
+    }
+  } else if (colorType === 3) {
+    const index = samples[0];
+    const color = transparency.paletteColors?.subarray(index * 3, index * 3 + 3);
+    if (!color || color.length !== 3) {
       throw new Error(`indexed PNG uses missing palette entry ${index}`);
-    return `${color.toString("hex")}:${alpha ?? 255}`;
+    }
+    [red, green, blue] = color;
+    alpha = transparency.palette?.[index] ?? 255;
+  } else if (colorType === 4) {
+    red = green = blue = canonicalPngChannel(samples[0], bitDepth);
+    alpha = canonicalPngChannel(samples[1], bitDepth);
+  } else if (colorType === 6) {
+    [red, green, blue, alpha] = samples.map((sample) => canonicalPngChannel(sample, bitDepth));
+  } else {
+    throw new Error(`unsupported PNG color type ${colorType}`);
   }
-  return pngPixelSample(row, x, bitDepth, pixelStride);
-}
 
-function pngTransparencySampleBytes(data, bitDepth, sampleIndex) {
-  const bytesPerSample = Math.ceil(bitDepth / 8);
-  const sampleStart = sampleIndex * 2;
-  return Buffer.from(data.subarray(sampleStart + 2 - bytesPerSample, sampleStart + 2));
+  return alpha === 0 ? [0, 0, 0, 0] : [red, green, blue, alpha];
 }
 
 function crc32(...buffers) {
@@ -806,15 +938,10 @@ export function decodedPngInfo(file) {
       seenTrns = true;
       if (colorType === 0) {
         if (length !== 2) throw new Error("invalid PNG tRNS length for grayscale image");
-        transparency.grayscale = pngTransparencySampleBytes(data, bitDepth, 0);
         transparency.grayscaleValue = data.readUInt16BE(0);
       } else if (colorType === 2) {
         if (length !== 6) throw new Error("invalid PNG tRNS length for truecolor image");
-        transparency.rgb = Buffer.concat([
-          pngTransparencySampleBytes(data, bitDepth, 0),
-          pngTransparencySampleBytes(data, bitDepth, 1),
-          pngTransparencySampleBytes(data, bitDepth, 2),
-        ]);
+        transparency.rgbValues = [data.readUInt16BE(0), data.readUInt16BE(2), data.readUInt16BE(4)];
       } else if (colorType === 3) {
         if (length === 0 || length > paletteEntries) {
           throw new Error("invalid PNG tRNS length for indexed image");
@@ -845,14 +972,17 @@ export function decodedPngInfo(file) {
   const channels = pngChannels(colorType);
   const bitsPerPixel = channels * bitDepth;
   const filterStride = Math.max(1, Math.ceil(bitsPerPixel / 8));
-  const pixelStride = bitDepth >= 8 ? filterStride : 1;
-  const passes =
-    interlaceMethod === 0
-      ? [{ width, height }]
-      : ADAM7_PASSES.map(([startX, startY, stepX, stepY]) => ({
-          width: width > startX ? Math.ceil((width - startX) / stepX) : 0,
-          height: height > startY ? Math.ceil((height - startY) / stepY) : 0,
-        })).filter((pass) => pass.width > 0 && pass.height > 0);
+  const passDefinitions = interlaceMethod === 0 ? [[0, 0, 1, 1]] : ADAM7_PASSES;
+  const passes = passDefinitions
+    .map(([startX, startY, stepX, stepY]) => ({
+      startX,
+      startY,
+      stepX,
+      stepY,
+      width: width > startX ? Math.ceil((width - startX) / stepX) : 0,
+      height: height > startY ? Math.ceil((height - startY) / stepY) : 0,
+    }))
+    .filter((pass) => pass.width > 0 && pass.height > 0);
   const expectedLength = passes.reduce(
     (total, pass) => total + pass.height * (Math.ceil((pass.width * bitsPerPixel) / 8) + 1),
     0,
@@ -878,6 +1008,8 @@ export function decodedPngInfo(file) {
   const visibleDistinctPixels = new Set();
   let visiblePixelCount = 0;
   let transparentPixelCount = 0;
+  let visitedPixelCount = 0;
+  const canonicalPixels = Buffer.alloc(width * height * 4);
 
   for (const pass of passes) {
     const rowBytes = Math.ceil((pass.width * bitsPerPixel) / 8);
@@ -902,29 +1034,33 @@ export function decodedPngInfo(file) {
       }
 
       for (let x = 0; x < pass.width; x += 1) {
-        if (distinctPixels.size < 2) {
-          distinctPixels.add(pngPixelSample(row, x, bitDepth, pixelStride));
-        }
-        const visibleSample = pngVisiblePixelSample(
-          row,
-          x,
-          bitDepth,
-          colorType,
-          pixelStride,
-          transparency,
-        );
-        if (visibleSample == null) transparentPixelCount += 1;
+        const pixel = canonicalPngPixel(row, x, bitDepth, colorType, transparency);
+        const canvasX = pass.startX + x * pass.stepX;
+        const canvasY = pass.startY + y * pass.stepY;
+        canonicalPixels.set(pixel, (canvasY * width + canvasX) * 4);
+        visitedPixelCount += 1;
+        const pixelKey = pixel[0] * 0x1000000 + pixel[1] * 0x10000 + pixel[2] * 0x100 + pixel[3];
+        if (distinctPixels.size < 2) distinctPixels.add(pixelKey);
+        if (pixel[3] === 0) transparentPixelCount += 1;
         else {
           visiblePixelCount += 1;
-          if (visibleDistinctPixels.size < 2) visibleDistinctPixels.add(visibleSample);
+          if (visibleDistinctPixels.size < 2) visibleDistinctPixels.add(pixelKey);
         }
       }
       previous = row;
     }
   }
+  if (inOffset !== inflated.length || visitedPixelCount !== width * height) {
+    throw new Error("PNG decoded passes do not cover the complete canvas");
+  }
 
   const nonblank =
     transparentPixelCount > 0 ? visiblePixelCount > 0 : visibleDistinctPixels.size > 1;
+  const pixelDigest = crypto
+    .createHash("sha256")
+    .update(`${width}\0${height}\0rgba8\0`, "utf8")
+    .update(canonicalPixels)
+    .digest("hex");
   return {
     width,
     height,
@@ -936,7 +1072,138 @@ export function decodedPngInfo(file) {
     visiblePixelCount,
     transparentPixelCount,
     nonblank,
+    pixelDigest,
+    canonicalPixels,
   };
+}
+
+function markdownFence(line) {
+  const match = /^( {0,3})(`{3,}|~{3,})(.*)$/.exec(line);
+  if (!match || (match[2][0] === "`" && match[3].includes("`"))) return null;
+  return { character: match[2][0], length: match[2].length, suffix: match[3] };
+}
+
+const MARKDOWN_BLOCK_HTML_TAGS =
+  "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+const MARKDOWN_BLOCK_HTML_RE = new RegExp(
+  `^ {0,3}</?(?:${MARKDOWN_BLOCK_HTML_TAGS})(?:\\s|/?>|$)`,
+  "i",
+);
+
+function markdownHtmlBlock(line) {
+  const prefix = line.match(/^ {0,3}(.*)$/)?.[1];
+  if (prefix === undefined) return null;
+  for (const [start, end] of [
+    [/^<(?:script|pre|style|textarea)(?:\s|>|$)/i, /<\/(?:script|pre|style|textarea)\s*>/i],
+    [/^<!--/, /-->/],
+    [/^<\?/, /\?>/],
+    [/^<!\[CDATA\[/i, /\]\]>/],
+    [/^<![A-Z]/, />/],
+  ]) {
+    if (start.test(prefix)) return { end, blankTerminated: false };
+  }
+  if (
+    MARKDOWN_BLOCK_HTML_RE.test(line) ||
+    /^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?\/?>\s*$/.test(line)
+  ) {
+    return { end: null, blankTerminated: true };
+  }
+  return null;
+}
+
+function markdownSyntaxIsEscaped(source, index) {
+  let backslashes = 0;
+  for (let cursor = index - 1; cursor >= 0 && source[cursor] === "\\"; cursor -= 1) {
+    backslashes += 1;
+  }
+  return backslashes % 2 === 1;
+}
+
+function markdownDestinations(file) {
+  const stat = fs.statSync(file);
+  if (!stat.isFile() || stat.size <= 0 || stat.size > MAX_MARKDOWN_FILE_BYTES) {
+    throw new Error(
+      `Markdown must be a nonempty file no larger than ${MAX_MARKDOWN_FILE_BYTES} bytes`,
+    );
+  }
+  let source;
+  try {
+    source = new TextDecoder("utf-8", { fatal: true }).decode(fs.readFileSync(file));
+  } catch {
+    throw new Error("Markdown is not valid UTF-8");
+  }
+  const visibleLines = [];
+  let fence = null;
+  let htmlBlock = null;
+  for (const line of source.split(/\r?\n/)) {
+    if (htmlBlock) {
+      if (htmlBlock.blankTerminated) {
+        if (line.trim() === "") htmlBlock = null;
+      } else if (htmlBlock.end.test(line)) {
+        htmlBlock = null;
+      }
+      continue;
+    }
+    const marker = markdownFence(line);
+    if (fence) {
+      if (
+        marker?.character === fence.character &&
+        marker.length >= fence.length &&
+        marker.suffix.trim() === ""
+      ) {
+        fence = null;
+      }
+      continue;
+    }
+    if (marker) {
+      fence = marker;
+      continue;
+    }
+    if (/^(?: {4}|\t)/.test(line)) continue;
+    const block = markdownHtmlBlock(line);
+    if (block) {
+      if (!block.blankTerminated && block.end.test(line)) continue;
+      htmlBlock = block;
+      continue;
+    }
+    visibleLines.push(line);
+  }
+  const visible = visibleLines
+    .join("\n")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(pre|code|script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
+    .replace(/(`+)[\s\S]*?\1/g, "");
+  const images = new Set();
+  const links = new Set();
+  const inline =
+    /(!?)\[[^\]\r\n]*\]\(\s*(?:<([^>\r\n]+)>|([^\s)\r\n]+))(?:\s+(?:"[^"\r\n]*"|'[^'\r\n]*'|\([^)\r\n]*\)))?\s*\)/g;
+  let match;
+  while ((match = inline.exec(visible)) !== null) {
+    if (markdownSyntaxIsEscaped(visible, match.index)) continue;
+    const target = match[2] || match[3];
+    (match[1] ? images : links).add(target);
+  }
+  return { images, links };
+}
+
+function localMarkdownArtifact(markdownRel, target) {
+  const value = String(target).trim();
+  if (!value || value.startsWith("#") || /^(?:[A-Za-z][A-Za-z0-9+.-]*:|\/\/|\/)/.test(value)) {
+    return null;
+  }
+  const pathOnly = value.split(/[?#]/, 1)[0];
+  if (!pathOnly) return null;
+  let decoded;
+  try {
+    decoded = decodeURI(pathOnly);
+  } catch {
+    throw new Error(`Markdown target is not a valid relative URI: ${target}`);
+  }
+  const relative = path.posix.normalize(path.posix.join(path.posix.dirname(markdownRel), decoded));
+  if (relative === ".." || relative.startsWith("../")) {
+    throw new Error(`Markdown target escapes the artifact root: ${target}`);
+  }
+  return relative;
 }
 
 export function svgInfo(file) {
@@ -968,6 +1235,7 @@ PNG_BIT_DEPTHS = {0: {1, 2, 4, 8, 16}, 2: {8, 16}, 3: {1, 2, 4, 8}, 4: {8, 16}, 
 PNG_CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
 MAX_EMBEDDED_PNG_DIMENSION = 32768
 MAX_EMBEDDED_PNG_DECODED_BYTES = 64 * 1024 * 1024
+MAX_CANVAS_DIMENSION = ${MAX_PNG_DIMENSION}
 
 def local_name(tag):
     return str(tag).rsplit("}", 1)[-1].split(":")[-1]
@@ -1002,6 +1270,16 @@ def decoded_data_image(source):
 def positive_svg_length(value):
     match = re.fullmatch(r"\\s*\\+?(\\d+(?:\\.\\d*)?|\\.\\d+)(?:[A-Za-z%]+)?\\s*", str(value or ""))
     return bool(match and float(match.group(1)) > 0)
+
+def canvas_dimension(value):
+    match = re.fullmatch(r"\\s*\\+?(\\d+(?:\\.\\d*)?|\\.\\d+)(?:px)?\\s*", str(value or ""), re.IGNORECASE)
+    if not match:
+        return 0
+    number = float(match.group(1))
+    if not math.isfinite(number) or number <= 0:
+        return 0
+    dimension = math.ceil(number)
+    return dimension if dimension <= MAX_CANVAS_DIMENSION else 0
 
 def embedded_svg_has_bounds(root):
     view_box = root.attrib.get("viewBox") or root.attrib.get("viewbox")
@@ -1835,6 +2113,17 @@ try:
     visible_text, visible_graphics = inspect(root)
     renderable_graphics = 1 if embedded_svg_has_renderable_graphic(root) else 0
     flow_animation = has_flow_animation(root)
+    color_scheme = style_map(root.attrib.get("style")).get("color-scheme", "")
+    color_scheme_tokens = color_scheme.lower().split()
+    svg_theme = (
+        color_scheme_tokens[0]
+        if len(color_scheme_tokens) == 1 and color_scheme_tokens[0] in {"light", "dark"}
+        else "adaptive"
+        if len(color_scheme_tokens) == 2 and set(color_scheme_tokens) == {"light", "dark"}
+        else ""
+    )
+    canvas_width = canvas_dimension(root.attrib.get("width"))
+    canvas_height = canvas_dimension(root.attrib.get("height"))
     print(json.dumps({
         "visible_text": " ".join(" ".join(visible_text).split()),
         "visible_graphics": visible_graphics,
@@ -1844,6 +2133,9 @@ try:
         "external_references": external_references,
         "unsupported_images": unsupported_images,
         "flow_animation": flow_animation,
+        "theme": svg_theme,
+        "canvas_width": canvas_width,
+        "canvas_height": canvas_height,
         "size": size,
     }))
 except Exception as error:
@@ -1874,6 +2166,9 @@ except Exception as error:
       externalReferences: Number(parsed.external_references) || 0,
       unsupportedImages: Number(parsed.unsupported_images) || 0,
       flowAnimation: Boolean(parsed.flow_animation),
+      theme: parsed.theme || "",
+      canvasWidth: Number(parsed.canvas_width) || 0,
+      canvasHeight: Number(parsed.canvas_height) || 0,
       size: Number(parsed.size) || 0,
     };
   } catch (error) {
@@ -1887,33 +2182,111 @@ export function evaluateAssertion(assertion, artifacts) {
     throw new Error(`${assertion.raw}: no artifact matches ${assertion.glob}`);
 
   if (assertion.kind === "artifact_exists") return;
-  if (assertion.kind === "png_dimensions") {
-    const passing = matches.some(({ file }) => {
-      const info = decodedPngInfo(file);
-      return (
-        info.width >= assertion.options.min_width && info.height >= assertion.options.min_height
-      );
+  if (assertion.kind === "markdown_image" || assertion.kind === "markdown_link") {
+    const artifactPaths = new Set(artifacts.map(({ rel }) => rel));
+    matches.forEach(({ file, rel }) => {
+      const destinations = markdownDestinations(file);
+      const collection =
+        assertion.kind === "markdown_image" ? destinations.images : destinations.links;
+      if (!collection.has(assertion.target)) {
+        throw new Error(`${assertion.raw}: ${rel} lacks the requested Markdown reference`);
+      }
+      const referencedArtifact = localMarkdownArtifact(rel, assertion.target);
+      if (referencedArtifact && !artifactPaths.has(referencedArtifact)) {
+        throw new Error(
+          `${assertion.raw}: ${rel} references missing artifact ${referencedArtifact}`,
+        );
+      }
     });
-    if (!passing) throw new Error(`${assertion.raw}: no PNG matches required dimensions`);
+    return;
+  }
+  if (assertion.kind === "png_dimensions") {
+    matches.forEach(({ file, rel }) => {
+      const info = decodedPngInfo(file);
+      if (info.width < assertion.options.min_width || info.height < assertion.options.min_height) {
+        throw new Error(`${assertion.raw}: ${rel} does not meet required dimensions`);
+      }
+    });
     return;
   }
   if (assertion.kind === "png_nonblank") {
-    const passing = matches.some(({ file }) => {
+    matches.forEach(({ file, rel }) => {
       const info = decodedPngInfo(file);
-      return (
-        info.width > 0 &&
-        info.height > 0 &&
-        info.size >= assertion.options.min_size &&
-        info.nonblank
-      );
+      if (
+        info.width <= 0 ||
+        info.height <= 0 ||
+        info.size < assertion.options.min_size ||
+        !info.nonblank
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} failed decoded nonblank pixel check`);
+      }
     });
-    if (!passing) throw new Error(`${assertion.raw}: no PNG passed decoded nonblank pixel check`);
+    return;
+  }
+  if (assertion.kind === "png_pixels_differ") {
+    const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
+    if (matches.length !== 1 || otherMatches.length !== 1) {
+      throw new Error(`${assertion.raw}: each PNG glob must match exactly one artifact`);
+    }
+    const left = decodedPngInfo(matches[0].file);
+    const right = decodedPngInfo(otherMatches[0].file);
+    if (left.width !== right.width || left.height !== right.height) {
+      throw new Error(`${assertion.raw}: PNG dimensions differ`);
+    }
+    if (left.pixelDigest === right.pixelDigest) {
+      throw new Error(`${assertion.raw}: decoded PNG pixels are identical`);
+    }
+    if (assertion.minChangedBasisPoints > 0) {
+      let changedPixels = 0;
+      for (let offset = 0; offset < left.canonicalPixels.length; offset += 4) {
+        if (
+          left.canonicalPixels[offset] !== right.canonicalPixels[offset] ||
+          left.canonicalPixels[offset + 1] !== right.canonicalPixels[offset + 1] ||
+          left.canonicalPixels[offset + 2] !== right.canonicalPixels[offset + 2] ||
+          left.canonicalPixels[offset + 3] !== right.canonicalPixels[offset + 3]
+        ) {
+          changedPixels += 1;
+        }
+      }
+      const changedPercent = (changedPixels * 100) / (left.width * left.height);
+      if (changedPercent < assertion.minChangedBasisPoints / 100) {
+        throw new Error(
+          `${assertion.raw}: only ${changedPercent.toFixed(3)}% of decoded PNG pixels differ`,
+        );
+      }
+    }
+    return;
+  }
+  if (assertion.kind === "svg_png_dimensions_match") {
+    const otherMatches = matchingArtifacts(artifacts, assertion.otherGlob);
+    if (matches.length !== 1 || otherMatches.length !== 1) {
+      throw new Error(`${assertion.raw}: each SVG/PNG glob must match exactly one artifact`);
+    }
+    const svg = svgInfo(matches[0].file);
+    const png = decodedPngInfo(otherMatches[0].file);
+    if (svg.canvasWidth <= 0 || svg.canvasHeight <= 0) {
+      throw new Error(`${assertion.raw}: SVG must declare positive px width and height`);
+    }
+    if (svg.canvasWidth !== png.width || svg.canvasHeight !== png.height) {
+      throw new Error(
+        `${assertion.raw}: SVG canvas ${svg.canvasWidth}x${svg.canvasHeight} does not match PNG ${png.width}x${png.height}`,
+      );
+    }
     return;
   }
   if (assertion.kind === "svg_valid") {
     matches.forEach(({ file, rel }) => {
       if (svgInfo(file).renderableGraphics <= 0) {
         throw new Error(`${assertion.raw}: ${rel} has no visible renderable graphic`);
+      }
+    });
+    return;
+  }
+  if (assertion.kind === "svg_theme") {
+    matches.forEach(({ file, rel }) => {
+      const actual = svgInfo(file).theme || "unspecified";
+      if (actual !== assertion.theme) {
+        throw new Error(`${assertion.raw}: ${rel} declares ${actual}, not ${assertion.theme}`);
       }
     });
     return;
@@ -1936,27 +2309,34 @@ export function evaluateAssertion(assertion, artifacts) {
     return;
   }
   if (assertion.kind === "svg_has_flow_animation") {
-    const passing = matches.some(({ file }) => {
+    matches.forEach(({ file, rel }) => {
       const info = svgInfo(file);
-      return (
-        info.renderableGraphics > 0 &&
-        info.flowAnimation &&
-        info.externalReferences === 0 &&
-        info.unsupportedImages === 0
-      );
+      if (
+        !(
+          info.renderableGraphics > 0 &&
+          info.flowAnimation &&
+          info.externalReferences === 0 &&
+          info.unsupportedImages === 0
+        )
+      ) {
+        throw new Error(
+          `${assertion.raw}: ${rel} lacks active self-contained connector flow animation`,
+        );
+      }
     });
-    if (!passing) throw new Error(`${assertion.raw}: no SVG has active connector flow animation`);
     return;
   }
   if (assertion.kind === "svg_self_contained_images") {
-    const passing = matches.some(({ file }) => {
+    matches.forEach(({ file, rel }) => {
       const info = svgInfo(file);
-      return (
-        info.embeddedSvgImages > 0 && info.externalReferences === 0 && info.unsupportedImages === 0
-      );
+      if (
+        info.embeddedSvgImages <= 0 ||
+        info.externalReferences !== 0 ||
+        info.unsupportedImages !== 0
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} lacks self-contained embedded SVG images`);
+      }
     });
-    if (!passing)
-      throw new Error(`${assertion.raw}: no SVG has self-contained embedded SVG images`);
     return;
   }
   if (assertion.kind === "drawio_valid") {
@@ -1985,8 +2365,15 @@ export function evaluateAssertion(assertion, artifacts) {
   }
   if (assertion.kind === "drawio_graph") {
     const expectedIds = assertion.ids.map((id) => sha256(id));
+    const expectedComponentIds = assertion.componentIds.map((id) => sha256(id));
+    const expectedComponentLabels = assertion.componentLabels.map(([id, label]) =>
+      sha256(`${id}\0${label}`),
+    );
     const expectedNativeIds = assertion.nativeIds.map((id) => sha256(id));
     const expectedEdges = assertion.edges.map(([source, target]) => sha256(`${source}\0${target}`));
+    const expectedEdgeBindings = assertion.edgeBindings.map(([edgeId, source, target]) =>
+      sha256(`${edgeId}\0${source}\0${target}`),
+    );
     const forbiddenEdges = assertion.notEdges.map(([source, target]) =>
       sha256(`${source}\0${target}`),
     );
@@ -2009,10 +2396,19 @@ export function evaluateAssertion(assertion, artifacts) {
       }
       const graphs = scopedPage ? [scopedPage] : pages;
       const idHashes = new Set(graphs.flatMap((page) => page.cell_id_sha256s || []));
+      const componentHashList = graphs.flatMap((page) => page.component_cell_id_sha256s || []);
+      const componentHashes = new Set(componentHashList);
+      const componentLabelHashes = new Set(
+        graphs.flatMap((page) => page.component_label_sha256s || []),
+      );
       const nativeIdHashes = new Set(
         graphs.flatMap((page) => page.native_stencil_cell_id_sha256s || []),
       );
-      const edgeHashes = new Set(graphs.flatMap((page) => page.directed_edge_sha256s || []));
+      const edgeHashList = graphs.flatMap((page) => page.directed_edge_sha256s || []);
+      const edgeHashes = new Set(edgeHashList);
+      const edgeBindingHashes = new Set(
+        graphs.flatMap((page) => page.directed_edge_identity_sha256s || []),
+      );
       const edgeRoleHashes = new Set(graphs.flatMap((page) => page.edge_role_sha256s || []));
       const profileStylesSatisfied =
         expectedProfileStyles.length === 0 ||
@@ -2024,11 +2420,35 @@ export function evaluateAssertion(assertion, artifacts) {
       if (!expectedIds.every((digest) => idHashes.has(digest))) {
         throw new Error(`${assertion.raw}: ${rel} lacks one or more required cell IDs`);
       }
+      if (!expectedComponentIds.every((digest) => componentHashes.has(digest))) {
+        throw new Error(`${assertion.raw}: ${rel} lacks one or more required component IDs`);
+      }
+      if (!expectedComponentLabels.every((digest) => componentLabelHashes.has(digest))) {
+        throw new Error(`${assertion.raw}: ${rel} lacks one or more required component labels`);
+      }
+      if (
+        assertion.exactComponents &&
+        (componentHashList.length !== expectedComponentIds.length ||
+          componentHashes.size !== expectedComponentIds.length)
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} contains unexpected semantic components`);
+      }
       if (!expectedNativeIds.every((digest) => nativeIdHashes.has(digest))) {
         throw new Error(`${assertion.raw}: ${rel} lacks one or more required native stencil IDs`);
       }
       if (!expectedEdges.every((digest) => edgeHashes.has(digest))) {
         throw new Error(`${assertion.raw}: ${rel} lacks one or more required directed edge pairs`);
+      }
+      if (!expectedEdgeBindings.every((digest) => edgeBindingHashes.has(digest))) {
+        throw new Error(
+          `${assertion.raw}: ${rel} does not bind one or more edge IDs to the required endpoints`,
+        );
+      }
+      if (
+        assertion.exactEdges &&
+        (edgeHashList.length !== expectedEdges.length || edgeHashes.size !== expectedEdges.length)
+      ) {
+        throw new Error(`${assertion.raw}: ${rel} contains unexpected directed edge pairs`);
       }
       if (forbiddenEdges.some((digest) => edgeHashes.has(digest))) {
         throw new Error(`${assertion.raw}: ${rel} contains a forbidden directed edge pair`);

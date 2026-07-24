@@ -1446,8 +1446,11 @@ def validate_model(
             "directed_flow_edges": 0,
             "animated_edges": 0,
             "cell_id_sha256s": [],
+            "component_cell_id_sha256s": [],
+            "component_label_sha256s": [],
             "native_stencil_cell_id_sha256s": [],
             "directed_edge_sha256s": [],
+            "directed_edge_identity_sha256s": [],
             "edge_role_sha256s": [],
             "profile_style_sha256s": [],
             "link_sha256s": [],
@@ -1492,6 +1495,21 @@ def validate_model(
     cell_id_sha256s = sorted(
         hashlib.sha256(cell_id.encode("utf-8")).hexdigest() for cell_id in cells_by_id
     )
+    component_cell_id_sha256s = sorted(
+        hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
+        for cell in content
+        if cell.id and cell.is_vertex and data_role(cell) == "component"
+    )
+    component_label_sha256s = sorted(
+        hashlib.sha256(
+            f"{cell.id}\0{' '.join(strip_html(cell.value).split())}".encode("utf-8")
+        ).hexdigest()
+        for cell in content
+        if cell.id
+        and cell.is_vertex
+        and data_role(cell) == "component"
+        and strip_html(cell.value).strip()
+    )
     native_stencil_cell_id_sha256s = sorted(
         hashlib.sha256(cell.id.encode("utf-8")).hexdigest()
         for cell in content
@@ -1503,6 +1521,13 @@ def validate_model(
         hashlib.sha256(f"{edge.source}\0{edge.target}".encode("utf-8")).hexdigest()
         for edge in edges
         if edge.source and edge.target
+    )
+    directed_edge_identity_sha256s = sorted(
+        hashlib.sha256(
+            f"{edge.id}\0{edge.source}\0{edge.target}".encode("utf-8")
+        ).hexdigest()
+        for edge in edges
+        if edge.id and edge.source and edge.target
     )
     edge_role_sha256s = sorted(
         hashlib.sha256(f"{edge.id}\0{role}".encode("utf-8")).hexdigest()
@@ -1804,8 +1829,11 @@ def validate_model(
         "directed_flow_edges": directed_flow_edges,
         "animated_edges": animated_edges,
         "cell_id_sha256s": cell_id_sha256s,
+        "component_cell_id_sha256s": component_cell_id_sha256s,
+        "component_label_sha256s": component_label_sha256s,
         "native_stencil_cell_id_sha256s": native_stencil_cell_id_sha256s,
         "directed_edge_sha256s": directed_edge_sha256s,
+        "directed_edge_identity_sha256s": directed_edge_identity_sha256s,
         "edge_role_sha256s": edge_role_sha256s,
         "profile_style_sha256s": profile_style_sha256s,
         "link_sha256s": link_sha256s,

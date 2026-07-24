@@ -33,15 +33,21 @@ Activation coverage intentionally mixes explicit skill requests with natural-lan
 Supported deterministic visual checks are:
 
 - `artifact_exists: <glob>`
+- `markdown_image: <glob> <relative-target>`
+- `markdown_link: <glob> <relative-target>`
 - `drawio_valid: <glob> [animation_on=1] [animation_off=1] [adaptive_colors=1] [min_pages=N] [min_native_stencils=N] [self_contained_svg=1] [uncompressed=1]`
 - `drawio_embeds_svg_sha256: <glob> <sha256> [cell=stable-id]`
-- `drawio_graph: <glob> [page=URL-encoded-name] [ids=id,...] [native_ids=id,...] [edges=source>target,...] [not_edges=source>target,...] [edge_roles=edge-id:role,...] [profile_styles=URL-encoded-cell-id:styleKey:styleValue,...] [links=https://...]`
+- `drawio_graph: <glob> [page=URL-encoded-name] [ids=id,...] [component_ids=id,...] [component_labels=URL-encoded-id:URL-encoded-label,...] [exact_components=1] [native_ids=id,...] [edges=source>target,...] [edge_bindings=edge-id@source>target,...] [exact_edges=1] [not_edges=source>target,...] [edge_roles=edge-id:role,...] [profile_styles=URL-encoded-cell-id:styleKey:styleValue,...] [links=https://...]`
 
 `profile_styles` checks exact style properties on visible vertex cells marked with a nonempty `designProfile`; the cell and its ancestors must be visible and its finite width and height must be positive. Without `page=`, all requested profile mappings must occur together on at least one page rather than being combined across pages. URL-encode punctuation inside each cell ID, key, or value; for example, `profile-neon-hub:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29`. IDs follow the normal `drawio_graph` rules; at most 128 mappings are allowed, and each decoded value is limited to 2048 control-free characters. Allowed keys are `designProfile`, `shape`, `dataRole`, `strokeColor`, `fillColor`, `gradientColor`, `gradientDirection`, `shadow`, `glass`, `arcSize`, `strokeWidth`, `fontColor`, `fontSize`, and `profileRole`.
 
+- `component_ids` selects vertices tagged `dataRole=component`. `component_labels` binds those stable IDs to whitespace-normalized visible names. `edge_bindings` binds each stable edge ID to its directed endpoints; use it with `edge_roles` when identity must remain invariant across variants. URL-encode punctuation in each component ID or label. Add `exact_components=1` to reject unlisted semantic components and `exact_edges=1` to reject unlisted directed edge pairs, including duplicate pairs. Each exact option requires its corresponding expected list.
 - `png_dimensions: <glob> min_width=<px> min_height=<px>`
 - `png_nonblank: <glob> [min_size=<bytes>]`
+- `png_pixels_differ: <left-glob> <right-glob> [min_changed_basis_points=<1-10000>]`
+- `svg_png_dimensions_match: <svg-glob> <png-glob>`
 - `svg_valid: <glob>`
+- `svg_theme: <glob> light|dark|adaptive`
 - `svg_has_flow_animation: <glob>`
 - `svg_contains: <glob> <text>`
 - `svg_not_contains: <glob> <text>`
@@ -50,7 +56,11 @@ Supported deterministic visual checks are:
 
 `adaptive_colors=1` is artifact-wide and requires `adaptiveColors="auto"` on every page; it is not affected by `drawio_graph page=...` scoping.
 
-These checks prove artifact existence, source structure, basic render validity, animation policy, and selected icon invariants. Composition quality such as connector crossings, logo recognizability, and nuanced contrast still requires manual inspection or a future vision-enabled evaluator; a response-only semantic judge cannot prove pixel-level quality.
+`svg_theme` checks the root SVG `color-scheme` declaration. `light` and `dark` require one fixed scheme; `adaptive` requires both tokens. Use it with `svg_valid` when a comparison gallery must remain independent of the viewer theme.
+
+`markdown_image` and `markdown_link` check real inline Markdown references outside fenced, indented, inline, and raw-HTML code; relative references must resolve to an artifact in the evaluated package. `png_pixels_differ` requires one same-size PNG per glob and compares canonical canvas-order RGBA pixels rather than PNG encoding, interlace layout, hidden RGB, compression, or metadata. Add `min_changed_basis_points` when exact inequality is too weak, such as profile comparisons where a tiny marker-only change must fail (`25` means 0.25%). `svg_png_dimensions_match` requires one SVG and one PNG, requires explicit positive SVG pixel dimensions, and compares the SVG canvas after fractional dimensions are rounded up like the fixed-theme rasterizer. Wildcard assertions for PNG dimensions, nonblank pixels, SVG animation, and self-contained SVG images require every matched artifact to pass.
+
+These checks prove artifact existence, source structure, basic render validity, animation policy, gallery references, theme-pair differences, and selected icon invariants. Composition quality such as connector crossings, logo recognizability, and nuanced contrast still requires manual inspection or a vision-enabled evaluator; a response-only semantic judge cannot prove those properties.
 
 The auto-discovered corpus deliberately spans:
 
