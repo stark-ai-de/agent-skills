@@ -12,6 +12,35 @@
 
 ### Removed
 
+## v0.14.0 - 2026-07-28
+
+### Added
+
+- Added a routed Architecture Compass library of 25 Short, canonical Long, and implementation Guide ADR triplets spanning skill governance, repository architecture, frontend/backend/runtime boundaries, security and data, tooling, testing, delivery, accessibility, observability, and performance.
+- Added strict repository-ADR and Architecture Compass validators, deterministic triplet scaffolding, selective-routing regression cases, and cross-host installed-payload assertions.
+
+### Changed
+
+- Updated `architecture-compass` to 0.3.0 with a compact catalog-driven dispatcher, explicit skill-runtime versus adoptable target-repository scopes, dual-axis authority handling, reconciled delegation, and evidence-stage reporting.
+- Migrated repository ADR governance from single compact files to linked Short/Long/Guide triplets with Long as the canonical decision and Short-first companion links.
+- Re-evaluated toolchain, runtime, request, AI, data, UI, validation, security, delivery, and operational guidance against current official sources; version-sensitive mechanics now live in dated Guides.
+
+### Fixed
+
+- Removed contradictory authority precedence and environment-loading rules, stale TypeScript preview and AI SDK v5 defaults, Vercel KV guidance, unsafe elevated Supabase credential defaults, and inconsistent Next.js/TanStack Query error and hydration examples.
+
+### Deprecated
+
+- Kept `new-repo-bootstrap` only as a compatibility input alias for `setup-new-repo`.
+
+### Removed
+
+- Removed the eight legacy monolithic Architecture Compass references, the multi-decision ADR draft, and unsuffixed repository ADR paths.
+
+### Security
+
+- Added first-class least-privilege, trust-boundary, secret/PII redaction, object/action authorization, AI tool approval, data lifecycle, migration, rollback, and staged-evidence guardrails.
+
 ## v0.13.0 - 2026-07-24
 
 ### Added

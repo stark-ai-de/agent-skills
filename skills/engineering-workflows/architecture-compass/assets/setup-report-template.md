@@ -1,25 +1,25 @@
 # ADR Governance Setup Report
 
-## Action
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
+
+## Action and route
 
 - Top-level action: `setup`
-- Internal mode: `<setup-existing-repo | setup-new-repo>`
-- Collaboration route: `<native decision phase | portable no-write fallback | direct execution>`
-- Host capability evidence:
-- Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
-- Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
-- Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
+- Internal mode: `setup-existing-repo | setup-new-repo`
+- Collaboration route: `decision phase | direct execution`
+- Planning capability: `<state - evidence>`
+- Read-only enforcement: `<state - evidence>`
 - Architecture decision status: `<not required | pending | approved | blocked>`
 - Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
 
 ## Inspected evidence
 
 - Agent instructions:
-- ADR paths:
-- Architecture docs:
-- Stack rules:
-- Referenced examples:
-- Validation docs/scripts:
+- ADR paths/index:
+- Architecture and stack docs:
+- Representative examples:
+- Validation/CI:
+- Missing or unavailable evidence:
 
 ## Files created or changed
 
@@ -27,74 +27,68 @@
 | ---- | ------ | ------- |
 |      |        |         |
 
-## ADR discovery and precedence
+## Authority and conflicts
 
-- ADR discovery paths:
-- Accepted ADRs are binding: yes/no
-- Conflict rule:
-- Final-response reporting rule:
+- Operational/safety authority:
+- Architectural authority:
+- Conflicts and resolution:
+- Required successor ADRs:
 
 ## Bundled guardrail adoption
 
-- Decisions: `adopt`, `adapt`, `defer`, or `reject`. Use `defer` when the guardrail is kept for future repo growth but not active in the current slice.
-- For `adapt`, fill the active adapted rule. For `defer`, fill the future trigger or owner condition. For `reject`, fill the user-confirmed rejection rationale.
+Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or owner; a rejection records maintainer-confirmed rationale.
 
-| Guardrail                                       | Decision | Target evidence | Active or adapted rule | Future trigger or owner condition | User-confirmed rejection rationale |
-| ----------------------------------------------- | -------- | --------------- | ---------------------- | --------------------------------- | ---------------------------------- |
-| Workspace and source-role ownership             |          |                 |                        |                                   |                                    |
-| Thin framework entrypoints                      |          |                 |                        |                                   |                                    |
-| Server-only and browser-safe runtime boundaries |          |                 |                        |                                   |                                    |
-| Request read/write boundaries                   |          |                 |                        |                                   |                                    |
-| Backend runtime composition                     |          |                 |                        |                                   |                                    |
-| Environment loading and config ownership        |          |                 |                        |                                   |                                    |
-| Infrastructure placement outside runtime source |          |                 |                        |                                   |                                    |
-| Export/import boundary policy                   |          |                 |                        |                                   |                                    |
-| Oxc formatting and linting for JS/TS starters   |          |                 |                        |                                   |                                    |
-| Validation and documentation promotion path     |          |                 |                        |                                   |                                    |
+| AC ADR | Guardrail                      | Decision | Target evidence | Active/adapted rule | Deferred trigger/owner | Rejection rationale |
+| ------ | ------------------------------ | -------- | --------------- | ------------------- | ---------------------- | ------------------- |
+| 005    | Repository ADR guardrails      |          |                 |                     |                        |                     |
+| 006    | Workspace and source roles     |          |                 |                     |                        |                     |
+| 007    | Module and package boundaries  |          |                 |                     |                        |                     |
+| 008    | Next.js rendering boundaries   |          |                 |                     |                        |                     |
+| 009    | Reads, cache, and freshness    |          |                 |                     |                        |                     |
+| 010    | Validated command boundaries   |          |                 |                     |                        |                     |
+| 011    | Backend lifecycle              |          |                 |                     |                        |                     |
+| 012    | Environment and configuration  |          |                 |                     |                        |                     |
+| 013    | Toolchain and supply chain     |          |                 |                     |                        |                     |
+| 014    | Runtime and deployment targets |          |                 |                     |                        |                     |
+| 015    | Frontend capabilities          |          |                 |                     |                        |                     |
+| 016    | AI capabilities                |          |                 |                     |                        |                     |
+| 017    | Data infrastructure            |          |                 |                     |                        |                     |
+| 018    | Testing and enforcement        |          |                 |                     |                        |                     |
+| 019    | Security and privacy           |          |                 |                     |                        |                     |
+| 020    | Data ownership and lifecycle   |          |                 |                     |                        |                     |
+| 021    | Migration and compatibility    |          |                 |                     |                        |                     |
+| 022    | Delivery and rollback          |          |                 |                     |                        |                     |
+| 023    | Operations and observability   |          |                 |                     |                        |                     |
+| 024    | Accessibility                  |          |                 |                     |                        |                     |
+| 025    | Performance                    |          |                 |                     |                        |                     |
 
-## Active or starter ADRs
+## Active target ADRs
 
 | ADR | Status | Area | Notes |
 | --- | ------ | ---- | ----- |
 |     |        |      |       |
 
-## Future usage prompts
+## Future prompts
 
 ```text
 Use Architecture Compass in setup mode for this repo.
 ```
 
 ```text
-Use Architecture Compass in refactor mode for this repo.
-```
-
-For feature work:
-
-```text
 Use Architecture Compass in refactor mode. Read the relevant ADRs first, then create an implementation placement map before editing code.
 ```
 
-When that map requires a durable decision, use the host's planning and read-only controls when available and do not edit until the architecture checkpoint is approved.
+## Validation ledger
 
-## Open decisions
+| Evidence stage       | Status | Revision/artifact | Result or limitation |
+| -------------------- | ------ | ----------------- | -------------------- |
+| source/static        |        |                   |                      |
+| local                |        |                   |                      |
+| CI                   |        |                   |                      |
+| publication/install  |        |                   |                      |
+| deployed/production  |        |                   |                      |
+| external/third-party |        |                   |                      |
 
-| Decision | Why unresolved | Recommended owner |
-| -------- | -------------- | ----------------- |
-|          |                |                   |
+## Remaining decisions and risks
 
-## Approved execution boundary
-
-Include this section only when implementation was requested; otherwise omit it.
-
-- Approved setup slice:
-- Allowed target paths:
-- Validation commands:
-- Material assumptions:
-- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
-- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
-
-## Validation
-
-- Commands run:
-- Commands skipped and reason:
-- Remaining risks:
+-

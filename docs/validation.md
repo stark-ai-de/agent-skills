@@ -1,6 +1,6 @@
 # Validation
 
-Validation keeps the promoted public skill catalog and incubator candidates compatible with the open Agent Skills specification and the lightweight ADR rules.
+Validation keeps the promoted public skill catalog and incubator candidates compatible with the open Agent Skills specification, repository ADR-triplet contract, and skill-specific runtime contracts.
 
 ## Commands
 
@@ -33,6 +33,14 @@ Validate only ADRs:
 ```bash
 npm run validate:adrs
 ```
+
+Validate the routed Architecture Compass ADR library and its eval contract:
+
+```bash
+npm run validate:architecture-compass
+```
+
+This gate verifies the complete 25-record Short/Long/Guide inventory, shared metadata and navigation, scope/adoption rules, accepted decision locks, catalog routing, derived assets, retired legacy references, and required lifecycle/eval cases. It also creates disposable temporary fixtures to prove that malformed libraries fail without modifying the repository.
 
 Validate script syntax:
 
@@ -90,7 +98,7 @@ pnpm lint:actions
 Validate release readiness:
 
 ```bash
-NEXT_VERSION=0.2.1
+NEXT_VERSION=0.14.0
 node scripts/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
 node scripts/check-release-intent.mjs --base-ref origin/main
 node scripts/validate-release.mjs --base-ref origin/main
@@ -127,15 +135,16 @@ node scripts/print-release-notes.mjs
 - The Astro GitHub Pages catalog builds generated public and incubator skill routes from `SKILL.md`.
 - README and publishing host-ready install sets include every portable public skill for Codex, Cursor, and Claude Code.
 - Known upstream helper skills are not vendored under `skills/`; they belong in local ignored `.agents/skills/` installs.
-- ADR files use the short template, allowed status values, sequential filenames, and a 250-word hard limit.
-- `smoke:install` checks a clean copy without local `.agents/` or `.codegraph/` state, verifies public skills are listed without incubator leaks, and performs disposable project-local Codex, Cursor, and Claude Code installs with exact destination assertions and telemetry disabled.
+- Repository ADRs form complete Short/Long/Guide triplets with stable IDs, accepted stem/decision locks, synchronized metadata, Long canonical authority, exact sibling navigation, reciprocal supersession, valid catalog routing, and no unsuffixed legacy paths or links.
+- Architecture Compass validation checks its 25 routed ADR triplets, compact dispatcher, derived non-normative assets, and maintainer eval inventory.
+- `smoke:install` checks a clean copy without local `.agents/` or `.codegraph/` state, verifies public skills are listed without incubator leaks, and performs disposable project-local Codex, Cursor, and Claude Code installs with exact destination assertions, Architecture Compass payload parity, and telemetry disabled.
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
 - Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
 - CodeGraph + ast-grep contract validation checks the explicit installed-payload allowlist, fenced Markdown/config command snippets and their scanner fixtures, scenario structure, capability/update/rewrite safety invariants, captured behavioral artifact and candidate hashes, and machine-regraded assertion totals without executing analysis tools or a model.
 - SkillOpt setup validation checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.
 
-Root `scripts/validate-*.mjs` files are stable command entrypoints. Large skill-specific maintainer implementations live under `scripts/validation/<area>/`, shared validation modules live under `scripts/validation/lib/`, and installable runtime helpers remain inside their owning skill directory. This preserves the runtime-payload separation defined by [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.md).
+Root `scripts/validate-*.mjs` files are stable command entrypoints. Large skill-specific maintainer implementations live under `scripts/validation/<area>/`, shared validation modules live under `scripts/validation/lib/`, and installable runtime helpers remain inside their owning skill directory. This preserves the runtime-payload separation defined by [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.short.md) ([Long, canonical](adrs/0007-keep-skill-evals-outside-runtime-payload.long.md) · [Guide](adrs/0007-keep-skill-evals-outside-runtime-payload.guide.md)).
 
 ## Continuous Integration
 

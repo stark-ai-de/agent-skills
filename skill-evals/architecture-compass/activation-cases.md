@@ -11,6 +11,13 @@ mode for the review itself. A direct route whose required write-capable control
 is still inactive reports `pending write permission`; it is not ready to mutate
 until that separate transition is confirmed.
 
+ADR discovery and detail loading are also separate decisions. Start from
+`references/adr-catalog.md`, use Short variants for inventory, and load only the
+canonical Long ADRs selected by scope, category, tags, and `Applies when`.
+Load Guides only when concrete implementation help is needed. Setup adoption
+considers only `Scope: target-repository` plus `Adoptable: true`; skill-runtime
+ADRs remain internal workflow controls.
+
 ## Positive cases
 
 ### Case 1: ADR setup for an existing repo
@@ -118,6 +125,62 @@ This feature might need a different request library. Check whether that deviates
 Expected: activate and run the stack-deviation gate. An actual durable deviation
 or new ADR requires the decision phase; a conclusion that the existing stack is
 sufficient does not require a Plan transition.
+
+### Case 9: Human guardrail inventory
+
+Prompt:
+
+```text
+Use Architecture Compass to summarize the available ADR guardrails for a maintainer. Do not implement anything.
+```
+
+Expected: activate, route through the catalog, and read Short variants without
+loading every Long ADR or Guide. State the canonical and non-normative roles.
+
+### Case 10: Selective frontend route
+
+Prompt:
+
+```text
+Plan a read-only Next.js dashboard screen under Architecture Compass. Select only the rendering, read/cache, accessibility, and performance guardrails.
+```
+
+Expected: activate, select AC-ADR-008, AC-ADR-009, AC-ADR-024, and AC-ADR-025,
+then avoid unrelated backend, AI, and data-platform ADRs.
+
+### Case 11: Cross-category destructive flow
+
+Prompt:
+
+```text
+Use Architecture Compass to plan an account-deletion Server Action, including retention, authorization, tests, and rollback. Do not implement it.
+```
+
+Expected: activate and combine only applicable mutation, testing, security,
+data-ownership, and delivery ADRs. Keep unresolved durable choices read-only.
+
+### Case 12: Existing-repo adoptable inventory
+
+Prompt:
+
+```text
+Run Architecture Compass setup and create the adopt/adapt/defer/reject matrix from the routed ADR catalog.
+```
+
+Expected: activate and evaluate AC-ADR-005..025 where applicable. Do not expose
+AC-ADR-001..004 as target-repository adoption candidates.
+
+### Case 13: Architecture authority conflict
+
+Prompt:
+
+```text
+An accepted Long ADR requires a package change, but active repository instructions forbid modifying that package in this task. Use Architecture Compass and do not edit through the conflict.
+```
+
+Expected: activate and report the two authority axes. Instructions and
+permissions constrain operations; the Long ADR defines architecture intent.
+Block implementation until the conflict is resolved.
 
 ## Negative cases
 

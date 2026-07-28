@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -54,12 +54,13 @@
   "scripts": {
     "list": "node scripts/list-skills.mjs",
     "list:incubator": "node scripts/list-incubator-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:adrs && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
+    "validate": "npm run validate:skills && npm run validate:adrs && npm run validate:architecture-compass && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
     "release:prepare": "node scripts/prepare-release.mjs",
     "release:validate": "node scripts/validate-release.mjs",
     "release:notes": "node scripts/print-release-notes.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
+    "validate:architecture-compass": "node scripts/validate-architecture-compass.mjs && node scripts/validation/architecture-compass/test-validator.mjs",
     "validate:codegraph-ast-grep": "node scripts/validate-codegraph-ast-grep-contract.mjs",
     "validate:drawio": "node scripts/validate-drawio-fixtures.mjs && node scripts/validate-drawio-visual-evals.mjs",
     "validate:animated-readme-logo": "node scripts/validate-animated-readme-logo.mjs && node scripts/validate-animated-readme-logo-evals.mjs",

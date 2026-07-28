@@ -1,23 +1,32 @@
 # Architecture Decision Records
 
-This file documents ADR policy and the ADR index for `stark-ai-de/agent-skills`. ADR files live in [`docs/adrs/`](adrs/README.md).
+This file defines the ADR contract and indexes every decision in [`docs/adrs/`](adrs/README.md).
 
-ADRs must be short. The target is 120 to 180 words. The hard limit is 250 words.
+## Contract
 
-## Rules
+- One decision has one stable numeric ID and filename stem.
+- Each decision has exactly three sibling files: `.short.md`, `.long.md`, and `.guide.md`.
+- Long is canonical and normative. Short is a faithful abstraction. Guide is non-normative application and verification help.
+- Use plain metadata fields and keep them identical across the triplet except for `Variant`.
+- Link to Short first and provide Long and Guide companions.
+- Keep one decision per ADR. Numeric word, paragraph, and section limits do not apply.
+- Do not rewrite an accepted decision. Create a successor and maintain reciprocal `Supersedes` / `Superseded by` metadata.
+- Accepted, superseded, deprecated, and rejected records keep their stable stem and normalized Long `Decision` digest in `scripts/validation/adrs/decision-lock.tsv`; metadata-only edits must preserve that lock.
+- Repository ADRs use `Scope: repository` and `Adoptable: false`.
 
-- Use `docs/adrs/TEMPLATE.md`.
-- Use filenames like `0001-use-open-agent-skills-spec.md`.
-- Keep the decision to one sentence.
-- Use bullets, not long paragraphs.
-- Do not write ADRs for tiny edits.
-- After initial setup, do not rewrite accepted ADRs. Supersede them with a new ADR.
+## Authoring
 
-## Spec Linkage
+Use `npm run adr:new -- "<title>" --category <category> --tags "<tags>" --applies-when "<condition>" --gist "<summary>"` or copy all three `docs/adrs/TEMPLATE.*.md` files. The command creates the triplet and rewrites the grouped index atomically; complete every body placeholder before validation.
+
+New records remain `Proposed` and unlocked. When maintainers accept or otherwise finalize one, add its stable ID, stem, and SHA-256 of the trimmed canonical Long `Decision` section to `scripts/validation/adrs/decision-lock.tsv` in the same reviewed change. Never refresh a lock merely to make an in-place decision edit pass.
+
+Normal references use this shape:
+
+`[ADR-NNNN](NNNN-slug.short.md) ([Long, canonical](NNNN-slug.long.md) · [Guide](NNNN-slug.guide.md))`
 
 For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs.md).
 
-## Status Values
+## Status values
 
 - Proposed
 - Accepted
@@ -25,38 +34,86 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 - Deprecated
 - Rejected
 
-## Index
+## Index by category
 
-| ADR  | Status     | Decision                                                            |
-| ---- | ---------- | ------------------------------------------------------------------- |
-| 0001 | Accepted   | Use the open Agent Skills specification.                            |
-| 0002 | Accepted   | Publish through GitHub and validate/install with Vercel skills CLI. |
-| 0003 | Accepted   | Keep ADRs short and anti-bloat.                                     |
-| 0004 | Accepted   | Start with an empty promoted-only public catalog.                   |
-| 0005 | Accepted   | License the public catalog under Apache-2.0.                        |
-| 0006 | Accepted   | Use the incubator as the default home for skill candidates.         |
-| 0007 | Accepted   | Treat skill evals as maintainer proof, not default runtime content. |
-| 0008 | Accepted   | Promotion requires value and maintainability, not just evals.       |
-| 0009 | Accepted   | Hide incubator skills from normal CLI discovery.                    |
-| 0010 | Accepted   | Ignore local helper installs and helper lockfiles.                  |
-| 0011 | Superseded | Use manual release workflows.                                       |
-| 0012 | Accepted   | Use the `agent-skills` repository slug.                             |
-| 0013 | Accepted   | Persist specs and ADRs as repo artifacts.                           |
-| 0014 | Accepted   | Prefer Node skill helper scripts for public skill portability.      |
-| 0015 | Accepted   | Prepare releases in change PRs.                                     |
-| 0016 | Accepted   | Use OpenAI metadata for Codex-facing skills.                        |
-| 0017 | Accepted   | Use Astro for the GitHub Pages skill catalog.                       |
-| 0018 | Accepted   | Use Bun runtime and pnpm package manager guidance.                  |
-| 0019 | Accepted   | Use native TypeScript tooling in Architecture Compass guidance.     |
-| 0020 | Accepted   | Use Oxc for formatting and linting.                                 |
-| 0021 | Accepted   | Place portable public skills in workflow categories.                |
-| 0022 | Accepted   | Allow dependency-free Python helpers by exception.                  |
-| 0023 | Proposed   | Use a local SkillOpt workspace for Agent Skill optimization.        |
-| 0024 | Accepted   | Keep Architecture Compass portable with host mode adapters.         |
-| 0025 | Accepted   | Keep Animated README Logo portable with provider routing.           |
-| 0026 | Superseded | Distinguish the execution host from the target runtime.             |
-| 0027 | Accepted   | Gate logo tool installs and reuse configured browser fallbacks.     |
-| 0028 | Accepted   | Preserve target contracts and gate gateway extraction.              |
-| 0029 | Accepted   | Keep linked worktrees inside the repository.                        |
-| 0030 | Accepted   | Separate public contracts from private provenance.                  |
-| 0031 | Accepted   | Use approved bounded fixed-theme browser rasterization.             |
+### governance
+
+| Short                                                                               | Status     | Gist                                                                                              | Long                                                                                      | Guide                                                                            |
+| ----------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [ADR-0001](adrs/0001-use-open-agent-skills-spec.short.md)                           | Accepted   | The repo needs one portable skill format.                                                         | [Long, canonical](adrs/0001-use-open-agent-skills-spec.long.md)                           | [Guide](adrs/0001-use-open-agent-skills-spec.guide.md)                           |
+| [ADR-0003](adrs/0003-keep-adrs-short.short.md)                                      | Superseded | Decision records should not become documentation bloat.                                           | [Long, canonical](adrs/0003-keep-adrs-short.long.md)                                      | [Guide](adrs/0003-keep-adrs-short.guide.md)                                      |
+| [ADR-0004](adrs/0004-keep-public-catalog-stable-and-portable.short.md)              | Accepted   | Public installs should expose only promoted skills.                                               | [Long, canonical](adrs/0004-keep-public-catalog-stable-and-portable.long.md)              | [Guide](adrs/0004-keep-public-catalog-stable-and-portable.guide.md)              |
+| [ADR-0005](adrs/0005-adopt-apache-2-license.short.md)                               | Accepted   | License the public catalog under Apache-2.0.                                                      | [Long, canonical](adrs/0005-adopt-apache-2-license.long.md)                               | [Guide](adrs/0005-adopt-apache-2-license.guide.md)                               |
+| [ADR-0006](adrs/0006-use-incubator-outside-public-catalog.short.md)                 | Accepted   | Keep all unproven skills outside the installable catalog.                                         | [Long, canonical](adrs/0006-use-incubator-outside-public-catalog.long.md)                 | [Guide](adrs/0006-use-incubator-outside-public-catalog.guide.md)                 |
+| [ADR-0009](adrs/0009-mark-incubator-skills-internal.short.md)                       | Accepted   | Hide incubator skills from normal CLI discovery.                                                  | [Long, canonical](adrs/0009-mark-incubator-skills-internal.long.md)                       | [Guide](adrs/0009-mark-incubator-skills-internal.guide.md)                       |
+| [ADR-0012](adrs/0012-use-agent-skills-repository-slug.short.md)                     | Accepted   | The public repository slug should match ecosystem Agent Skills naming.                            | [Long, canonical](adrs/0012-use-agent-skills-repository-slug.long.md)                     | [Guide](adrs/0012-use-agent-skills-repository-slug.guide.md)                     |
+| [ADR-0013](adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md)             | Superseded | Specs and ADRs are saved files, not chat-only output.                                             | [Long, canonical](adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md)             | [Guide](adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md)             |
+| [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.short.md)                 | Accepted   | Codex-facing skills should carry OpenAI product metadata without making it universal boilerplate. | [Long, canonical](adrs/0016-use-openai-metadata-for-codex-skills.long.md)                 | [Guide](adrs/0016-use-openai-metadata-for-codex-skills.guide.md)                 |
+| [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.short.md)         | Accepted   | Portable skills belong in workflow categories, not runtime operation categories.                  | [Long, canonical](adrs/0021-place-portable-skills-in-workflow-categories.long.md)         | [Guide](adrs/0021-place-portable-skills-in-workflow-categories.guide.md)         |
+| [ADR-0032](adrs/0032-adopt-short-long-guide-adr-triplets.short.md)                  | Accepted   | Every ADR exposes a short overview, one canonical decision, and implementation guidance.          | [Long, canonical](adrs/0032-adopt-short-long-guide-adr-triplets.long.md)                  | [Guide](adrs/0032-adopt-short-long-guide-adr-triplets.guide.md)                  |
+| [ADR-0033](adrs/0033-package-architecture-compass-as-a-routed-adr-library.short.md) | Accepted   | Architecture Compass should load only applicable canonical guardrails.                            | [Long, canonical](adrs/0033-package-architecture-compass-as-a-routed-adr-library.long.md) | [Guide](adrs/0033-package-architecture-compass-as-a-routed-adr-library.guide.md) |
+
+### agent-lifecycle
+
+| Short                                                                                     | Status     | Gist                                                                                       | Long                                                                                            | Guide                                                                                  |
+| ----------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [ADR-0024](adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.short.md) | Accepted   | Keep one Architecture Compass workflow and adapt only host collaboration controls.         | [Long, canonical](adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.long.md) | [Guide](adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.guide.md) |
+| [ADR-0026](adrs/0026-distinguish-execution-host-from-target-runtime.short.md)             | Superseded | Preserve target-specific behavior while adapting only to the host that executes the skill. | [Long, canonical](adrs/0026-distinguish-execution-host-from-target-runtime.long.md)             | [Guide](adrs/0026-distinguish-execution-host-from-target-runtime.guide.md)             |
+
+### repository-architecture
+
+| Short                                                                                            | Status   | Gist                                                                        | Long                                                                                                   | Guide                                                                                         |
+| ------------------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [ADR-0010](adrs/0010-ignore-local-helper-installs.short.md)                                      | Accepted | Local helper skills should not become repository state.                     | [Long, canonical](adrs/0010-ignore-local-helper-installs.long.md)                                      | [Guide](adrs/0010-ignore-local-helper-installs.guide.md)                                      |
+| [ADR-0028](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.short.md) | Accepted | Preserve target contracts; extract gateways only after reuse and isolation. | [Long, canonical](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.long.md) | [Guide](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.guide.md) |
+| [ADR-0029](adrs/0029-keep-linked-worktrees-inside-the-repository.short.md)                       | Accepted | Give linked worktrees one ignored, repository-local home.                   | [Long, canonical](adrs/0029-keep-linked-worktrees-inside-the-repository.long.md)                       | [Guide](adrs/0029-keep-linked-worktrees-inside-the-repository.guide.md)                       |
+
+### frontend
+
+| Short                                                                   | Status   | Gist                                                                                  | Long                                                                          | Guide                                                                |
+| ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [ADR-0017](adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) | Accepted | Build the repository website as a static Astro site deployed by GitHub Pages Actions. | [Long, canonical](adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) | [Guide](adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md) |
+
+### backend
+
+| Short  | Status | Gist | Long | Guide |
+| ------ | ------ | ---- | ---- | ----- |
+| _None_ | —      | —    | —    | —     |
+
+### runtime-platform
+
+| Short                                                                                               | Status   | Gist                                                                                                     | Long                                                                                                      | Guide                                                                                            |
+| --------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [ADR-0025](adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.short.md)             | Accepted | Keep one portable logo workflow and gate optional Recraft generation behind live discovery and approval. | [Long, canonical](adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.long.md)             | [Guide](adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.guide.md)             |
+| [ADR-0034](adrs/0034-separate-package-manager-runtime-orchestration-and-hosting-decisions.short.md) | Accepted | Tool and platform choices require independent target evidence.                                           | [Long, canonical](adrs/0034-separate-package-manager-runtime-orchestration-and-hosting-decisions.long.md) | [Guide](adrs/0034-separate-package-manager-runtime-orchestration-and-hosting-decisions.guide.md) |
+
+### security-data
+
+| Short                                                                            | Status   | Gist                                                                                          | Long                                                                                   | Guide                                                                         |
+| -------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [ADR-0030](adrs/0030-separate-public-contracts-from-private-provenance.short.md) | Accepted | Keep public contracts usable while private provenance stays local.                            | [Long, canonical](adrs/0030-separate-public-contracts-from-private-provenance.long.md) | [Guide](adrs/0030-separate-public-contracts-from-private-provenance.guide.md) |
+| [ADR-0031](adrs/0031-use-approved-bounded-fixed-theme-rasterization.short.md)    | Accepted | Fixed-theme SVG previews use an approved, isolated local browser with fail-closed inspection. | [Long, canonical](adrs/0031-use-approved-bounded-fixed-theme-rasterization.long.md)    | [Guide](adrs/0031-use-approved-bounded-fixed-theme-rasterization.guide.md)    |
+
+### stack-tooling
+
+| Short                                                                                 | Status     | Gist                                                                                                          | Long                                                                                        | Guide                                                                              |
+| ------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [ADR-0014](adrs/0014-prefer-node-skill-helper-scripts.short.md)                       | Accepted   | Public skill helpers should be portable across common developer operating systems.                            | [Long, canonical](adrs/0014-prefer-node-skill-helper-scripts.long.md)                       | [Guide](adrs/0014-prefer-node-skill-helper-scripts.guide.md)                       |
+| [ADR-0018](adrs/0018-use-bun-runtime-and-pnpm-package-manager-guidance.short.md)      | Superseded | Architecture Compass starter guidance should separate runtime choice from package-management ownership.       | [Long, canonical](adrs/0018-use-bun-runtime-and-pnpm-package-manager-guidance.long.md)      | [Guide](adrs/0018-use-bun-runtime-and-pnpm-package-manager-guidance.guide.md)      |
+| [ADR-0019](adrs/0019-use-native-typescript-tooling.short.md)                          | Superseded | Architecture Compass should guide TypeScript repos toward native TypeScript tooling.                          | [Long, canonical](adrs/0019-use-native-typescript-tooling.long.md)                          | [Guide](adrs/0019-use-native-typescript-tooling.guide.md)                          |
+| [ADR-0020](adrs/0020-use-oxc-for-formatting-and-linting.short.md)                     | Superseded | Oxc is the repository formatter/linter and JS/TS starter default.                                             | [Long, canonical](adrs/0020-use-oxc-for-formatting-and-linting.long.md)                     | [Guide](adrs/0020-use-oxc-for-formatting-and-linting.guide.md)                     |
+| [ADR-0022](adrs/0022-allow-task-specific-python-skill-helpers.short.md)               | Accepted   | Public skills may use Python helpers when the task needs Python's standard-library strengths.                 | [Long, canonical](adrs/0022-allow-task-specific-python-skill-helpers.long.md)               | [Guide](adrs/0022-allow-task-specific-python-skill-helpers.guide.md)               |
+| [ADR-0027](adrs/0027-gate-logo-tool-installs-and-browser-fallbacks.short.md)          | Accepted   | Keep export mechanics portable, recipes repository-owned, and every missing-tool installation approval-gated. | [Long, canonical](adrs/0027-gate-logo-tool-installs-and-browser-fallbacks.long.md)          | [Guide](adrs/0027-gate-logo-tool-installs-and-browser-fallbacks.guide.md)          |
+| [ADR-0035](adrs/0035-use-stable-native-typescript-with-a-compatibility-lane.short.md) | Accepted   | Stable native TypeScript is primary while legacy API consumers remain explicit.                               | [Long, canonical](adrs/0035-use-stable-native-typescript-with-a-compatibility-lane.long.md) | [Guide](adrs/0035-use-stable-native-typescript-with-a-compatibility-lane.guide.md) |
+| [ADR-0036](adrs/0036-gate-oxc-adoption-on-repository-compatibility.short.md)          | Accepted   | Oxc adoption must preserve the target repository's required coverage.                                         | [Long, canonical](adrs/0036-gate-oxc-adoption-on-repository-compatibility.long.md)          | [Guide](adrs/0036-gate-oxc-adoption-on-repository-compatibility.guide.md)          |
+
+### quality-delivery
+
+| Short                                                                                | Status     | Gist                                                                       | Long                                                                                       | Guide                                                                             |
+| ------------------------------------------------------------------------------------ | ---------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| [ADR-0002](adrs/0002-publish-through-github-and-vercel-skills-cli.short.md)          | Accepted   | Publishing should be simple and testable.                                  | [Long, canonical](adrs/0002-publish-through-github-and-vercel-skills-cli.long.md)          | [Guide](adrs/0002-publish-through-github-and-vercel-skills-cli.guide.md)          |
+| [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.short.md)              | Accepted   | Treat skill evals as maintainer proof, not default runtime content.        | [Long, canonical](adrs/0007-keep-skill-evals-outside-runtime-payload.long.md)              | [Guide](adrs/0007-keep-skill-evals-outside-runtime-payload.guide.md)              |
+| [ADR-0008](adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.short.md) | Accepted   | Promotion requires value and maintainability, not just passing evals.      | [Long, canonical](adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md) | [Guide](adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.guide.md) |
+| [ADR-0011](adrs/0011-use-manual-release-workflows.short.md)                          | Superseded | Releases should be automated but explicitly triggered.                     | [Long, canonical](adrs/0011-use-manual-release-workflows.long.md)                          | [Guide](adrs/0011-use-manual-release-workflows.guide.md)                          |
+| [ADR-0015](adrs/0015-prepare-releases-in-change-prs.short.md)                        | Accepted   | Release metadata should travel with the public catalog change it releases. | [Long, canonical](adrs/0015-prepare-releases-in-change-prs.long.md)                        | [Guide](adrs/0015-prepare-releases-in-change-prs.guide.md)                        |
+| [ADR-0023](adrs/0023-use-local-skillopt-for-agent-skill-optimization.short.md)       | Proposed   | Optimize skills through an ignored local SkillOpt workspace.               | [Long, canonical](adrs/0023-use-local-skillopt-for-agent-skill-optimization.long.md)       | [Guide](adrs/0023-use-local-skillopt-for-agent-skill-optimization.guide.md)       |

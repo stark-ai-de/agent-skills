@@ -45,14 +45,14 @@ Update Architecture Compass with an accepted ADR and implementation guidance tha
 ## File plan
 
 - Update: `docs/adrs.md`, `skills/engineering-workflows/architecture-compass/references/preferred-stack-profile.md`, `skills/engineering-workflows/architecture-compass/SKILL.md`, `package.json`, `CHANGELOG.md`.
-- Add: `docs/adrs/0019-use-native-typescript-tooling.md`.
+- Add: [ADR-0019](../adrs/0019-use-native-typescript-tooling.short.md) ([Long, canonical](../adrs/0019-use-native-typescript-tooling.long.md) · [Guide](../adrs/0019-use-native-typescript-tooling.guide.md)).
 - Avoid touching: unrelated skills, site runtime, and package lockfiles unless validation proves they must change.
 
 ## Architectural decisions
 
 - ADR required: yes
 - Existing ADRs consulted: ADR-0013, ADR-0015, ADR-0018
-- ADR draft or path: `docs/adrs/0019-use-native-typescript-tooling.md`
+- ADR draft or path: [ADR-0019](../adrs/0019-use-native-typescript-tooling.short.md) ([Long, canonical](../adrs/0019-use-native-typescript-tooling.long.md) · [Guide](../adrs/0019-use-native-typescript-tooling.guide.md))
 - Implementation blocked until ADR accepted: no
 
 ## Source challenge

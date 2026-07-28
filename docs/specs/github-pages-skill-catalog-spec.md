@@ -68,8 +68,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `pnpm`
   - Existing root validation scripts
 - Related ADRs:
-  - `docs/adrs/0013-persist-specs-and-adrs-as-repo-artifacts.md`
-  - `docs/adrs/0017-use-astro-for-github-pages-skill-catalog.md`
+  - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - Unspecified facts:
   - Final deployed Pages URL until repository Pages settings are enabled.
   - Whether a future custom domain will be configured.
@@ -143,9 +143,9 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 
 - ADR required: yes
 - Existing ADRs consulted:
-  - `docs/adrs/0013-persist-specs-and-adrs-as-repo-artifacts.md`
+  - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
 - ADR draft or path:
-  - `docs/adrs/0017-use-astro-for-github-pages-skill-catalog.md`
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - Supersedes:
   - None
 - Implementation blocked until ADR accepted: no
@@ -227,7 +227,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `skills/**/SKILL.md`
   - `incubator/skills/**/SKILL.md`
 - ADRs/specs checked:
-  - `docs/adrs/0013-persist-specs-and-adrs-as-repo-artifacts.md`
+  - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
   - Existing ADR index through ADR-0016 and accepted ADR-0017
 - External docs checked:
   - Astro GitHub Pages deployment guidance
@@ -277,7 +277,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Existing file overwrite needed:
   - no
 - ADR paths:
-  - `docs/adrs/0017-use-astro-for-github-pages-skill-catalog.md`
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - ADR persistence:
   - saved as Proposed
 - ADR index updates needed:

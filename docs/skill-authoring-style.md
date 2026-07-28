@@ -28,7 +28,7 @@ Keep `interface.default_prompt` executable by Codex: use current-host wording an
 
 Do not add `agents/openai.yaml` as boilerplate to every skill. Keep routing and workflow instructions in `SKILL.md`, and do not add product metadata to ignored project-local helper installs under `.agents/skills/` by default.
 
-See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy decision.
+See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.short.md) ([Long, canonical](adrs/0016-use-openai-metadata-for-codex-skills.long.md) · [Guide](adrs/0016-use-openai-metadata-for-codex-skills.guide.md)) for the policy decision.
 
 ## Execution Host and Target Runtime
 
@@ -39,7 +39,7 @@ See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.md) for the policy
 - Create an independent skill when it has a distinct trigger and outcome; do not impose a catalog-size quota.
 - Keep a backend gateway with its owning skill until both a second independent consumer exists and a separately proven backend provides fail-closed filesystem, process, tool, network, and environment isolation.
 
-See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.md) and [ADR-0028](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md).
+See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.short.md) ([Long, canonical](adrs/0021-place-portable-skills-in-workflow-categories.long.md) · [Guide](adrs/0021-place-portable-skills-in-workflow-categories.guide.md)) and [ADR-0028](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.short.md) ([Long, canonical](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.long.md) · [Guide](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.guide.md)).
 
 ## Body Shape
 

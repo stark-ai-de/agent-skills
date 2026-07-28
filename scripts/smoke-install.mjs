@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -29,7 +30,24 @@ const installCases = [
     destination: path.join(".claude", "skills", "claude-spec-interviewer"),
     skill: "claude-spec-interviewer",
   },
+  {
+    agent: "codex",
+    destination: path.join(".agents", "skills", "architecture-compass"),
+    skill: "architecture-compass",
+  },
+  {
+    agent: "cursor",
+    destination: path.join(".agents", "skills", "architecture-compass"),
+    skill: "architecture-compass",
+  },
+  {
+    agent: "claude-code",
+    destination: path.join(".claude", "skills", "architecture-compass"),
+    skill: "architecture-compass",
+  },
 ];
+
+const architectureManifests = new Map();
 
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
@@ -49,6 +67,80 @@ function walk(dir, predicate = () => true) {
 function parseSkillName(file) {
   const text = fs.readFileSync(file, "utf8");
   return text.match(/^name:\s*([a-z0-9-]+)$/m)?.[1] ?? null;
+}
+
+function architectureManifest(skillDir) {
+  const catalog = path.join(skillDir, "references", "adr-catalog.md");
+  if (!fs.existsSync(catalog)) {
+    throw new Error("Installed architecture-compass payload is missing references/adr-catalog.md.");
+  }
+
+  const references = walk(path.join(skillDir, "references"), (file) => file.endsWith(".md"));
+  const triplets = references.filter((file) =>
+    /^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.(?:short|long|guide)\.md$/.test(path.basename(file)),
+  );
+  if (triplets.length !== 75) {
+    throw new Error(
+      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 75.`,
+    );
+  }
+
+  const variantsByStem = new Map();
+  for (const file of triplets) {
+    const match = path.basename(file).match(/^(ac-adr-\d{3}-.+)\.(short|long|guide)\.md$/);
+    const variants = variantsByStem.get(match[1]) ?? new Set();
+    variants.add(match[2]);
+    variantsByStem.set(match[1], variants);
+  }
+  if (
+    variantsByStem.size !== 25 ||
+    [...variantsByStem.values()].some(
+      (variants) => !["short", "long", "guide"].every((variant) => variants.has(variant)),
+    )
+  ) {
+    throw new Error(
+      "Installed architecture-compass payload does not contain 25 complete triplets.",
+    );
+  }
+
+  const legacyReferences = new Set([
+    "adoption-workflows.md",
+    "backend-runtime-patterns.md",
+    "checklists.md",
+    "host-collaboration-modes.md",
+    "nextjs-request-patterns.md",
+    "preferred-stack-profile.md",
+    "repository-source-structure.md",
+    "rule-extraction-and-conflict-resolution.md",
+  ]);
+  const legacy = references.find((file) => legacyReferences.has(path.basename(file)));
+  if (legacy) {
+    throw new Error(
+      `Installed architecture-compass payload contains legacy reference ${path.basename(legacy)}.`,
+    );
+  }
+
+  for (const required of [
+    "assets/adr-template.short.md",
+    "assets/adr-template.long.md",
+    "assets/adr-template.guide.md",
+    "assets/adr-example.short.md",
+    "assets/adr-example.long.md",
+    "assets/adr-example.guide.md",
+  ]) {
+    if (!fs.existsSync(path.join(skillDir, required))) {
+      throw new Error(`Installed architecture-compass payload is missing ${required}.`);
+    }
+  }
+
+  const files = walk(skillDir, () => true).sort();
+  return files
+    .map((file) => {
+      const rel = path.relative(skillDir, file).split(path.sep).join("/");
+      const digest = crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+      return `${rel}:${digest}`;
+    })
+    .join("\n");
 }
 
 function installAndAssertDestination({ agent, destination, skill }) {
@@ -117,6 +209,15 @@ function installAndAssertDestination({ agent, destination, skill }) {
   }
 
   console.log(`Smoke installed ${skill} for ${agent} at ${destination}.`);
+
+  if (skill === "architecture-compass") {
+    try {
+      architectureManifests.set(agent, architectureManifest(path.dirname(installedSkillFile)));
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  }
 }
 
 try {
@@ -191,6 +292,18 @@ try {
   for (const installCase of installCases) {
     installAndAssertDestination(installCase);
   }
+
+  const manifestValues = [...architectureManifests.values()];
+  if (
+    architectureManifests.size !== 3 ||
+    manifestValues.some((manifest) => manifest !== manifestValues[0])
+  ) {
+    console.error(
+      "Installed architecture-compass payload differs across Codex, Cursor, and Claude Code.",
+    );
+    process.exit(1);
+  }
+  console.log("Architecture Compass payload parity passed for Codex, Cursor, and Claude Code.");
 } finally {
   fs.rmSync(tmpRoot, { force: true, recursive: true });
 }

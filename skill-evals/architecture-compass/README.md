@@ -11,6 +11,11 @@ Passing behavior must:
 
 - activate for ADR governance, architecture placement, setup, refactor, audit,
   PR review, and stack-deviation work while rejecting unrelated small tasks,
+- route from `references/adr-catalog.md` to Short variants first, then load only
+  the relevant canonical Long ADRs and optional implementation Guides,
+- keep skill-runtime ADRs out of target-repository adoption matrices and apply
+  `adopt`, `adapt`, `defer`, or `reject` only to `target-repository` ADRs marked
+  `Adoptable: true`,
 - inspect target evidence before applying bundled defaults,
 - route unresolved durable decisions and broad, multi-boundary,
   behavior-changing, or phased refactors through a read-only decision phase
@@ -30,6 +35,11 @@ Passing behavior must:
   while a known required write control remains inactive or unconfirmed,
 - hand approved implementation to an exact-path continuation that rechecks
   repository state and stops on material drift,
+- reconcile provisional subagent reports against current files, canonical Long
+  ADRs, repository identity, and validation before using them as final evidence,
+- distinguish source/static, local, CI, publication/install,
+  deployed/production, and external/third-party proof without promoting one
+  stage into another,
 - produce public-safe output with no private source names, links, secrets, or
   copied source files.
 
@@ -59,6 +69,26 @@ Focused lifecycle cases:
 - `cases/reentry-material-drift.md`
 - `cases/audit-and-pr-review-routing.md`
 
+Focused routed-library cases:
+
+- `cases/adr-catalog-short-first-inventory.md`
+- `cases/selective-frontend-routing.md`
+- `cases/selective-backend-routing.md`
+- `cases/cross-category-adr-routing.md`
+- `cases/instruction-adr-authority-conflict.md`
+- `cases/setup-adoptable-only.md`
+- `cases/stale-subagent-reconciliation.md`
+- `cases/evidence-stage-claim-limits.md`
+
+Focused invalid-library cases:
+
+- `cases/invalid-missing-triplet.md`
+- `cases/invalid-id-collision.md`
+- `cases/invalid-metadata-drift.md`
+- `cases/invalid-decision-drift.md`
+- `cases/invalid-catalog-orphan.md`
+- `cases/invalid-legacy-link.md`
+
 ## Lifecycle Evaluation
 
 Decision-heavy cases are multi-turn. The first turn classifies the work and,
@@ -86,6 +116,19 @@ when `unavailable`, `explicitly declined`, or `indeterminate` planning capabilit
 is reported honestly, read-only enforcement is recorded separately, and the same
 no-write decision gate is preserved.
 
+Routed-library cases pass only when the catalog is the discovery surface, Short
+variants support inventory, canonical Long variants control decisions, and
+Guides are loaded for concrete implementation help rather than as a second
+authority. Cross-category work selects the minimum applicable set. Operational
+instructions and permissions control what an agent may do; accepted Long ADRs
+control architecture intent. A conflict between those axes blocks mutation.
+
+Invalid-library cases are static negative contracts. They must fail validation
+for incomplete triplets, duplicate IDs, shared-metadata drift, catalog orphans,
+or legacy policy links. They do not authorize repairing their described fixture.
+
 `## Deterministic Assertions` provides lightweight output checks. No dated run
 summary should claim the 0.2.0 lifecycle proof until the corresponding static or
-live runtime check has completed.
+live runtime check has completed. Likewise, no run may claim the 0.3.0 routed
+ADR-library proof until triplet validation and the focused routing cases have
+actually run against the released payload.

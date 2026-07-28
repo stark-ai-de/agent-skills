@@ -1,100 +1,74 @@
 # ADR-Guided Refactor Report
 
-## Action and mode
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
 
-Top-level action: `refactor`
+## Action and route
 
-Internal mode:
-
-`audit | refactor | new-implementation | new-repo-bootstrap | pr-review | docs-sync | stack-deviation`
-
-Collaboration route:
-
-`native decision phase | portable no-write fallback | direct execution | read-only audit | review`
-
-Host capability evidence:
-
-Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
-
-Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
-
-Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
-
-Architecture decision status: `<not required | pending | approved | blocked>`
-
-Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+- Top-level action: `refactor`
+- Internal mode: `audit | refactor | new-implementation | pr-review | docs-sync | stack-deviation`
+- Collaboration route: `decision phase | direct execution | read-only audit | review`
+- Planning capability: `<state - evidence>`
+- Read-only enforcement: `<state - evidence>`
+- Architecture decision status: `<not required | pending | approved | blocked>`
+- Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
 
 ## Inspected evidence
 
-| Evidence                | Status                                | Notes |
-| ----------------------- | ------------------------------------- | ----- |
-| ADRs                    | inspected / unavailable / not present |       |
-| Agent instructions      | inspected / unavailable / not present |       |
-| Stack rules             | inspected / unavailable / not present |       |
-| Representative examples | inspected / unavailable / not present |       |
-| Validation commands     | inspected / unavailable / not present |       |
+| Evidence                      | Status | Revision/path | Notes |
+| ----------------------------- | ------ | ------------- | ----- |
+| Agent instructions            |        |               |       |
+| ADR catalog and selected ADRs |        |               |       |
+| Stack/architecture docs       |        |               |       |
+| Representative code/tests     |        |               |       |
+| Validation/CI                 |        |               |       |
 
-## Rule-set summary
+## Selected decisions
 
-| Rule | Provenance | Applies to | Strength |
-| ---- | ---------- | ---------- | -------- |
-|      |            |            |          |
+| Rule | ADR Short | Canonical Long | Guide used | Target provenance | Applies to |
+| ---- | --------- | -------------- | ---------- | ----------------- | ---------- |
+|      |           |                |            |                   |            |
 
 ## Gap report
 
-| Severity                       | File or area | Drift | Rule | Recommended change |
-| ------------------------------ | ------------ | ----- | ---- | ------------------ |
-| blocking / important / cleanup |              |       |      |                    |
+| Severity                       | File/area | Drift | Decision | Recommended bounded change |
+| ------------------------------ | --------- | ----- | -------- | -------------------------- |
+| blocking / important / cleanup |           |       |          |                            |
 
 ## Proposed slices
 
-1. Slice name:
-   - Scope:
-   - Files:
-   - Behavior change: yes/no
-   - Validation:
+| Slice | Allowed paths | Behavior change | Acceptance evidence | Stop condition | Rollback |
+| ----- | ------------- | --------------- | ------------------- | -------------- | -------- |
+|       |               |                 |                     |                |          |
 
 ## Approved execution boundary
 
-Include this section only when implementation was requested; otherwise omit it.
+Include only when implementation was requested.
 
 - Approved slice:
 - Allowed target paths:
 - Validation commands:
 - Material assumptions:
-- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
-- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
-- Pre-execution state recheck: passed / material drift found / not applicable
+- Required permission transition:
+- Exact continuation:
+- Pre-execution recheck:
 
-## Docs or ADR updates
+## Documentation and ADRs
 
 - Required:
-- Optional:
+- Deferred:
 - Not needed because:
 
-## Stack-deviation result
+## Validation ledger
 
-- Preferred option considered:
-- Gap:
-- Chosen option:
-- Docs update needed:
-
-## Validation
-
-```bash
-# commands
-```
-
-Result:
-
-- Passed:
-- Failed:
-- Skipped with reason:
+| Evidence stage       | Status | Revision/artifact | Result or limitation |
+| -------------------- | ------ | ----------------- | -------------------- |
+| source/static        |        |                   |                      |
+| local                |        |                   |                      |
+| CI                   |        |                   |                      |
+| publication/install  |        |                   |                      |
+| deployed/production  |        |                   |                      |
+| external/third-party |        |                   |                      |
 
 ## Remaining risks
-
--
-
-## Done when
 
 -

@@ -12,7 +12,9 @@ This repository contains public Agent Skills.
 - Move long examples, rubrics, and templates into `references/` or `assets/`.
 - Prefer read-only scripts. Any script that modifies files must be clearly documented.
 - Document repo-level decisions in `docs/adrs/`.
-- ADRs must be short. The hard limit is 250 words.
+- Store every repository ADR as linked `.short.md`, `.long.md`, and `.guide.md` files. Long is canonical; Short is a faithful abstraction; Guide is non-normative.
+- Keep one decision per ADR and do not impose numeric word, paragraph, or section limits.
+- Keep accepted ADR IDs, filename stems, and decision text stable; change architecture through a reciprocal successor ADR, not an in-place decision rewrite.
 - Follow `docs/specs.md` for spec persistence, ADR linkage, filename examples, and repo-facing documentation update rules.
 - Do not copy copyrighted skill text from other repositories. Use them only as inspiration.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.
