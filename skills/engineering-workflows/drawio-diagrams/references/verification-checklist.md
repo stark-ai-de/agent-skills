@@ -95,6 +95,11 @@ When rendered output exists, inspect:
 - logos are not stretched, cropped, recolored, inverted, or mixed between wordmarks and icon-only variants unless intentional
 - logo chips are consistent in size and contrast across a visual family
 - dark SVG preserves contrast, including weak monochrome logos and connector labels
+- fixed light/dark SVG exports declare the requested theme; adaptive SVGs are not relabelled as fixed light
+- fixed light/dark PNG pairs are rasterized from their matching fixed-theme SVGs at the same dimensions and produce different canonical canvas-order RGBA pixels when the adaptive palette actually differs
+- comparison galleries use static light/dark previews so both themes remain visible regardless of viewer preference
+- every variant in a profile comparison preserves the same component names, groups, directed edge IDs/endpoints/roles, and embedded icon payloads; compare every profile pair in both themes so profile cues remain visibly distinct
+- SVG and PNG compositions agree on bounds, routing, labels, and complete icon pixels
 - line styles are explained when mixed
 - whitespace is balanced, not crowded or sparse, and any empty area has a deliberate purpose
 - external systems sit outside the runtime/deployment trust boundary they depend on
@@ -103,6 +108,8 @@ When rendered output exists, inspect:
 - legends do not call animated flows "solid" or reserve dashed appearance as the only pending/dev cue; arrowhead shape and text remain authoritative
 - light PNG/PDF remain complete, and animated SVG preserves motion when that export is requested
 - emoji or platform glyphs do not render as tofu/missing boxes; use portable vector shapes or validated embedded icons instead
+
+When a batch preview suggests clipping or another raster defect, inspect the encoded artifact at full resolution with an independent decoder and compare an isolated re-export. Change the source or renderer only when the defect reproduces in the encoded pixels.
 
 Fix and re-render at most three cycles; then report remaining imperfections honestly. Inspect every relevant page, not only page 1.
 
@@ -125,6 +132,7 @@ Fix and re-render at most three cycles; then report remaining imperfections hone
 
 - Inspect light and dark renders at normal zoom.
 - Verify the selected design profile is consistent across the page. Check 12 px body/connector text where practical, contrast, color-independent meaning, static fallback, and the profile's effect limits; use the technical-geominimalist baseline when no expressive profile was selected.
+- For a profile set, compare the semantic manifest across sources and inspect the complete light/dark gallery, not one representative profile.
 - Compare generated exports with the editable source and refresh stale referenced images.
 
 ## Architecture readability review

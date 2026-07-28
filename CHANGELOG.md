@@ -12,6 +12,30 @@
 
 ### Removed
 
+## v0.13.0 - 2026-07-24
+
+### Added
+
+- Added fixed-theme light/dark SVG-to-PNG comparison exports and profile-comparison proof for `drawio-diagrams`, including stable component, group, boundary, edge, and embedded-icon identities.
+- Added visual assertions for exact group membership, fixed SVG themes, canonical PNG pixel differences, static gallery references, and SVG/PNG canvas matching.
+
+### Changed
+
+- Updated `drawio-diagrams` to 0.5.0 with viewer-independent comparison-gallery guidance, explicit fixed-theme rasterization approval, and bounded browser export behavior.
+- Comparison proof now covers exact component-to-boundary membership, recursive self-contained SVG inspection across validators, and one explicitly selected browser executable per rasterization batch.
+
+### Fixed
+
+- Hardened fixed-theme rasterization to inspect bounded nested SVG image data and reject active or remotely loading content at every embedded level.
+
+### Deprecated
+
+### Removed
+
+### Security
+
+- Kept local browser rasterization no-clobber and fail-closed for active content, external render assets, and unapproved file-writing use.
+
 ## v0.12.0 - 2026-07-17
 
 ### Added

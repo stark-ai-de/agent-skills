@@ -5,6 +5,7 @@ Use these profiles as original draw.io style recipes, not as instructions to cop
 ## Contents
 
 - [Selection](#selection)
+- [Profile comparison sets](#profile-comparison-sets)
 - [Reference style adaptation](#reference-style-adaptation)
 - [Shared guardrails](#shared-guardrails)
 - [Operator grid](#operator-grid)
@@ -25,6 +26,14 @@ Record `design_profile: technical | operator-grid | isometric-air | neon-hub | a
 | `neon-hub`      | dark product architecture with one clear hub, team/platform boundaries, high-level slide or README visuals | the output is print-first, has no clear focal subsystem, or needs many semantic colors |
 | `aurora-story`  | executive architecture stories, branded integrations, numbered service journeys with 4-8 primary nodes     | the output is a runbook, detailed reference, or dense operational diagram              |
 
+## Profile comparison sets
+
+When the same architecture is requested in multiple profiles, freeze one semantic manifest before styling: stable component and group IDs, visible names, directed edge IDs/endpoints/roles, boundary membership, and embedded icon payloads. Clone that source for each profile, then change presentation cells and styles only. Profile markers and explicitly tagged decorative cells may differ.
+
+Compare every variant against the manifest before export. Prefer stable substantive geometry when it stays readable so the gallery isolates style; a readability-driven layout change must not change the graph or silently drop content.
+
+If a requested comparison forces an expressive profile beyond its ideal density, preserve the architecture and reduce the profile effect. For `isometric-air`, prefer shallow editable logo planes behind fixed-aspect icon chips and reserve full cubes for a small number of focus or deployment units. If that is still crowded, split the same view consistently across every profile and report the fallback.
+
 ## Reference style adaptation
 
 When the user supplies a diagram or image as a style reference, adapt it for the current task without copying its layout or proprietary assets:
@@ -42,6 +51,7 @@ Never reproduce the reference's exact composition, text, logos, illustrations, o
 - Use `adaptiveColors="auto"` and intentional `light-dark(...)` pairs on every page, including dark-first profiles.
 - Keep logos and native service icons recognizable. Do not recolor them to match a profile; change the chip or card behind them.
 - Keep arrowheads, labels, and line roles complete without color, glow, texture, or motion. Animation remains progressive enhancement.
+- The content brief wins over the profile recipe. For names-only output, do not invent descriptions, metadata, relationship prose, legends, or sequence badges; retain meaning through names, arrowheads, grouping, and spatial order.
 - Profile accents express hierarchy, focus, or sequence; they do not replace status labels, boundaries, or relationship text.
 - Do not use an accent token for small text unless that exact foreground/background pair reaches 4.5:1.
 - Prefer one profile accent plus semantic exceptions. Never apply gradients, shadows, dashes, or bright colors to every object.
@@ -78,10 +88,10 @@ Use a dark-first black/charcoal canvas, one central hub, oversized modular cards
 
 ## Aurora story
 
-Use a 16:9 dark navy or pale lavender canvas, large rounded service columns, numbered flow steps, brand logos for named products or semantic icons for generic services, and restrained violet/rose/teal accents. This is a presentation profile, not the default architecture reference style.
+Use a 16:9 dark navy or pale lavender canvas, large rounded service columns, numbered flow steps for a single ordered journey, brand logos for named products or semantic icons for generic services, and restrained violet/rose/teal accents. This is a presentation profile, not the default architecture reference style.
 
 - Palette: canvas `light-dark(#F3F1FF,#070B2B)`, surface `light-dark(#FFFFFF,#111638)`, text `light-dark(#17112B,#F8FAFC)`, violet `light-dark(#6D28D9,#C084FC)`, rose `light-dark(#BE185D,#F472B6)`, teal `light-dark(#0F766E,#2DD4BF)`, gold `light-dark(#A16207,#FACC15)`.
-- Use `arcSize=16` (a draw.io percentage, not pixels), 160-240 px service cards, 28-32 px page titles, 16 px service titles, at least 12 px labels/badges, clear step numbers, and no more than three accent families on a page.
+- Use `arcSize=16` (a draw.io percentage, not pixels), 160-240 px service cards, 28-32 px page titles, 16 px service titles, at least 12 px labels/badges, clear step numbers when sequence is part of the semantic model, and no more than three accent families on a page.
 - Allow one subtle same-hue gradient and one shadow tier on primary service cards. Keep `glass=0`; never shadow text or connectors.
 - Keep primary routes solid and labelled. Use a dotted accent route only for a clearly named secondary control or discovery flow.
 

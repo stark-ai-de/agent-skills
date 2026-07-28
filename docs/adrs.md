@@ -59,3 +59,4 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 | 0028 | Accepted   | Preserve target contracts and gate gateway extraction.              |
 | 0029 | Accepted   | Keep linked worktrees inside the repository.                        |
 | 0030 | Accepted   | Separate public contracts from private provenance.                  |
+| 0031 | Accepted   | Use approved bounded fixed-theme browser rasterization.             |

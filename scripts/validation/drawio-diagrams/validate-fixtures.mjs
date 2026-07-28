@@ -19,6 +19,10 @@ import {
   verifyCommittedRenderArtifacts,
 } from "../../../skills/engineering-workflows/drawio-diagrams/scripts/lib/transactional-render-output.mjs";
 import { validateSvgXml } from "../../../skills/engineering-workflows/drawio-diagrams/scripts/render-drawio.mjs";
+import {
+  findBrowser,
+  inspectThemedSvg,
+} from "../../../skills/engineering-workflows/drawio-diagrams/scripts/rasterize-themed-svg.mjs";
 
 const root = process.cwd();
 const validator = path.join(
@@ -44,6 +48,10 @@ const urlOpener = path.join(
 const renderer = path.join(
   root,
   "skills/engineering-workflows/drawio-diagrams/scripts/render-drawio.mjs",
+);
+const themedSvgRasterizer = path.join(
+  root,
+  "skills/engineering-workflows/drawio-diagrams/scripts/rasterize-themed-svg.mjs",
 );
 const shapeSearch = path.join(
   root,
@@ -914,6 +922,291 @@ try {
     2,
     "--page-index must be a positive 1-based integer",
   );
+  const fixedThemeSvg = (theme, body = '<rect width="2" height="2" fill="red"/>') =>
+    `<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: ${theme};" width="2px" height="2px" viewBox="0 0 2 2">${body}</svg>`;
+  const lightInspection = inspectThemedSvg(fixedThemeSvg("light"));
+  const darkInspection = inspectThemedSvg(fixedThemeSvg("dark"));
+  if (
+    lightInspection.theme !== "light" ||
+    darkInspection.theme !== "dark" ||
+    lightInspection.width !== 2 ||
+    lightInspection.height !== 2
+  ) {
+    throw new Error("themed SVG rasterizer lost fixed theme or dimensions");
+  }
+  for (const [name, svg, expected] of [
+    ["adaptive theme", fixedThemeSvg("light dark"), "fixed light or fixed dark"],
+    [
+      "quoted color-scheme lookalike",
+      `<svg xmlns="http://www.w3.org/2000/svg" style="content: ';color-scheme: light;';" width="2" height="2"><rect width="2" height="2"/></svg>`,
+      "exactly one color-scheme",
+    ],
+    [
+      "comment-spoofed root",
+      `<!-- <svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="1" height="1"> -->
+<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light dark;" width="200" height="100"><rect width="200" height="100"/></svg>`,
+      "fixed light or fixed dark",
+    ],
+    [
+      "root event handler",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2" onload="alert(1)"><rect width="2" height="2"/></svg>',
+      "event handler",
+    ],
+    [
+      "namespace-prefixed script",
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:x="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><x:script>location.href="file:///etc/passwd"</x:script><rect width="2" height="2"/></svg>',
+      "active content element",
+    ],
+    [
+      "javascript link",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><a href="javascript:alert(1)"><rect width="2" height="2"/></a></svg>',
+      "active URL scheme",
+    ],
+    [
+      "encoded javascript link",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><a href="java&#x73;cript:alert(1)"><rect width="2" height="2"/></a></svg>',
+      "active URL scheme",
+    ],
+    [
+      "animated external reference",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><image id="mark" href="#local"/><set href="#mark" attributeName="href" to="https://example.invalid/icon.svg"/></svg>',
+      "active content element",
+    ],
+    [
+      "external image",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><image href="https://example.invalid/icon.svg"/></svg>',
+      "external image or symbol",
+    ],
+    [
+      "remote XML base",
+      '<svg xmlns="http://www.w3.org/2000/svg" xml:base="https://example.invalid/icon.svg" style="color-scheme: light;" width="2" height="2"><use href="#mark"/></svg>',
+      "xml:base",
+    ],
+    [
+      "local-file XML base",
+      '<svg xmlns="http://www.w3.org/2000/svg" xml:base="file:///tmp/icon.svg" style="color-scheme: light;" width="2" height="2"><use href="#mark"/></svg>',
+      "xml:base",
+    ],
+    [
+      "external CSS asset",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light; background: url(https://example.invalid/bg.png);" width="2" height="2"><rect width="2" height="2"/></svg>',
+      "external CSS render asset",
+    ],
+    [
+      "string-form CSS image-set asset",
+      `<svg xmlns="http://www.w3.org/2000/svg" style='color-scheme: light; background-image: image-set("https://example.invalid/bg.png" 1x);' width="2" height="2"><rect width="2" height="2"/></svg>`,
+      "CSS image-set",
+    ],
+    [
+      "external presentation attribute",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><rect width="2" height="2" filter="url(file:///etc/passwd)"/></svg>',
+      "external CSS render asset",
+    ],
+    [
+      "comment-obfuscated CSS asset",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><rect width="2" height="2" style="fill:u/**/rl(file:///etc/passwd)"/></svg>',
+      "CSS escapes and comments",
+    ],
+    [
+      "escape-obfuscated CSS asset",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><rect width="2" height="2" style="fill:u\\72l(file:///etc/passwd)"/></svg>',
+      "CSS escapes and comments",
+    ],
+    [
+      "active handler element",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><handler>location.href="file:///etc/passwd"</handler></svg>',
+      "active content element",
+    ],
+    [
+      "data document use",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><use href="data:text/html,&lt;script&gt;alert(1)&lt;/script&gt;"/></svg>',
+      "external image or symbol",
+    ],
+    [
+      "external foreign-object image",
+      '<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><foreignObject><div xmlns="http://www.w3.org/1999/xhtml"><img src="https://example.invalid/icon.png"/></div></foreignObject></svg>',
+      "external HTML render asset",
+    ],
+  ]) {
+    let failure;
+    try {
+      inspectThemedSvg(svg);
+    } catch (error) {
+      failure = error;
+    }
+    if (!failure?.message.includes(expected)) {
+      throw new Error(`${name} passed themed SVG inspection`);
+    }
+  }
+  const embeddedSvgUri = (svg) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  const nestedSvgDocument = (body) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2">${body}</svg>`;
+  const safeEmbeddedSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><path d="M0 0h2v2H0z" fill="blue"/></svg>';
+  const safeEmbeddedUri = embeddedSvgUri(safeEmbeddedSvg);
+  inspectThemedSvg(fixedThemeSvg("light", `<image href="${safeEmbeddedUri}"/>`));
+  let boundlessEmbeddedFailure;
+  try {
+    inspectThemedSvg(
+      fixedThemeSvg(
+        "light",
+        `<image href="${embeddedSvgUri('<svg xmlns="http://www.w3.org/2000/svg"><rect width="2" height="2"/></svg>')}"/>`,
+      ),
+    );
+  } catch (error) {
+    boundlessEmbeddedFailure = error;
+  }
+  if (!boundlessEmbeddedFailure?.message.includes("positive viewBox or width and height")) {
+    throw new Error("themed SVG rasterizer accepted a boundless embedded SVG");
+  }
+  let boundedNestedSvg = nestedSvgDocument('<rect width="2" height="2" fill="blue"/>');
+  for (let level = 0; level < 3; level += 1) {
+    boundedNestedSvg = nestedSvgDocument(`<image href="${embeddedSvgUri(boundedNestedSvg)}"/>`);
+  }
+  inspectThemedSvg(fixedThemeSvg("light", `<image href="${embeddedSvgUri(boundedNestedSvg)}"/>`));
+  let tooDeepNestedSvg = boundedNestedSvg;
+  tooDeepNestedSvg = nestedSvgDocument(`<image href="${embeddedSvgUri(tooDeepNestedSvg)}"/>`);
+  let depthFailure;
+  try {
+    inspectThemedSvg(fixedThemeSvg("light", `<image href="${embeddedSvgUri(tooDeepNestedSvg)}"/>`));
+  } catch (error) {
+    depthFailure = error;
+  }
+  if (!depthFailure?.message.includes("nesting exceeds 4 levels")) {
+    throw new Error("themed SVG rasterizer accepted excessive embedded SVG nesting");
+  }
+  const aggregateSvg = nestedSvgDocument(`<!--${"x".repeat(900_000)}-->`);
+  const aggregateUri = embeddedSvgUri(aggregateSvg);
+  let aggregateFailure;
+  try {
+    inspectThemedSvg(
+      fixedThemeSvg(
+        "light",
+        Array.from({ length: 10 }, () => `<image href="${aggregateUri}"/>`).join(""),
+      ),
+    );
+  } catch (error) {
+    aggregateFailure = error;
+  }
+  if (!aggregateFailure?.message.includes("aggregate size limit")) {
+    throw new Error("themed SVG rasterizer accepted excessive embedded SVG bytes");
+  }
+  const nestedUnsafeCases = [
+    [
+      "nested SVG script",
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><script>alert(1)</script></svg>',
+      "active content element",
+      "base64",
+    ],
+    [
+      "nested SVG remote image",
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><image href="https://example.invalid/nested.svg"/></svg>',
+      "external image or symbol",
+      "encoded",
+    ],
+    [
+      "nested SVG remote CSS",
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2"><style>.remote{fill:url(https://example.invalid/nested.svg)}</style><rect class="remote" width="2" height="2"/></svg>',
+      "external CSS render asset",
+      "encoded",
+    ],
+  ];
+  for (const [name, nested, expected, encoding] of nestedUnsafeCases) {
+    const uri =
+      encoding === "base64"
+        ? `data:image/svg+xml;base64,${Buffer.from(nested).toString("base64")}`
+        : embeddedSvgUri(nested);
+    let failure;
+    try {
+      inspectThemedSvg(fixedThemeSvg("light", `<image href="${uri}"/>`));
+    } catch (error) {
+      failure = error;
+    }
+    if (!failure?.message.includes(expected)) {
+      throw new Error(`${name} passed nested themed SVG inspection`);
+    }
+  }
+  let doctypeFailure;
+  try {
+    inspectThemedSvg(
+      '<?xml version="1.0"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: light;" width="2" height="2"><rect width="2" height="2"/></svg>',
+    );
+  } catch (error) {
+    doctypeFailure = error;
+  }
+  if (!doctypeFailure?.message.includes("DOCTYPE")) {
+    throw new Error("themed SVG rasterizer accepted an external DOCTYPE");
+  }
+  if (findBrowser("true") !== null) {
+    throw new Error("themed SVG rasterizer accepted an unpinned PATH command as its browser");
+  }
+  const nonBrowserExecutable = path.join(temp, "not-a-browser");
+  writeFileSync(nonBrowserExecutable, '#!/bin/sh\nprintf "not a browser 1.0\\n"\n', "utf8");
+  chmodSync(nonBrowserExecutable, 0o755);
+  if (findBrowser(nonBrowserExecutable) !== null) {
+    throw new Error("themed SVG rasterizer accepted a non-Chromium browser executable");
+  }
+  const fakeBrowser = path.join(temp, "fake-chromium");
+  const fakeBrowserPng = embeddedPng({
+    width: 2,
+    height: 2,
+    decoded: Buffer.alloc(18),
+  });
+  writeFileSync(
+    fakeBrowser,
+    `#!/usr/bin/env node
+import fs from "node:fs";
+if (process.argv.includes("--version")) {
+  console.log("Chromium 123.0.0.0");
+  process.exit(0);
+}
+const screenshot = process.argv.find((arg) => arg.startsWith("--screenshot="))?.slice("--screenshot=".length);
+if (!screenshot) process.exit(2);
+if (!process.argv.includes("--disable-javascript")) process.exit(3);
+const profile = process.argv.find((arg) => arg.startsWith("--user-data-dir="))?.slice("--user-data-dir=".length);
+if (!profile || !profile.includes(".themed-svg-raster-")) process.exit(4);
+fs.writeFileSync(screenshot, Buffer.from(process.env.FAKE_BROWSER_PNG, "base64"));
+`,
+    "utf8",
+  );
+  chmodSync(fakeBrowser, 0o755);
+  const fixedSvgFile = path.join(temp, "fixed-light.svg");
+  const fixedPngFile = path.join(temp, "fixed-light.png");
+  writeFileSync(fixedSvgFile, fixedThemeSvg("light"), "utf8");
+  const rasterResult = spawnSync(
+    "node",
+    [themedSvgRasterizer, fixedSvgFile, fixedPngFile, "--browser", fakeBrowser],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, FAKE_BROWSER_PNG: fakeBrowserPng.toString("base64") },
+    },
+  );
+  if (
+    rasterResult.error ||
+    rasterResult.status !== 0 ||
+    !existsSync(fixedPngFile) ||
+    !rasterResult.stdout.includes("fixed theme: light")
+  ) {
+    throw new Error(
+      `themed SVG rasterizer did not publish a validated PNG\n${rasterResult.stdout}${rasterResult.stderr}`,
+    );
+  }
+  const noClobberResult = spawnSync(
+    "node",
+    [themedSvgRasterizer, fixedSvgFile, fixedPngFile, "--browser", fakeBrowser],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, FAKE_BROWSER_PNG: fakeBrowserPng.toString("base64") },
+    },
+  );
+  if (
+    noClobberResult.status !== 1 ||
+    !noClobberResult.stderr.includes("refusing to replace existing output")
+  ) {
+    throw new Error("themed SVG rasterizer replaced or accepted an existing output");
+  }
   let malformedSvgCommentFailure;
   try {
     validateSvgXml(
@@ -2635,6 +2928,19 @@ if (format === "png") {
     "--require-self-contained-images",
     "--require-uncompressed",
   ]);
+
+  const imageSetSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" style="background-image:image-set(&quot;https://cdn.example/icon.png&quot; 1x)"/></svg>';
+  const imageSetSvgUri = `data:image/svg+xml,${Buffer.from(imageSetSvg).toString("base64")}`;
+  const imageSetSvgSource = path.join(temp, "image-set-svg-source.drawio");
+  writeFileSync(imageSetSvgSource, embeddedSvgDrawio(imageSetSvgUri), "utf8");
+  assertRun(
+    "embedded SVG string-form image-set is not self-contained",
+    imageSetSvgSource,
+    1,
+    "embedded SVG attribute contains unsupported CSS image-set",
+    ["--require-self-contained-images", "--require-uncompressed"],
+  );
 
   const missingFragmentImageSource = path.join(temp, "missing-fragment-image-source.drawio");
   writeFileSync(

@@ -137,6 +137,35 @@ function makeRgbaPng(
   ]);
 }
 
+function makeRgbPng(width, height, pixelAt) {
+  const signature = Buffer.from("89504e470d0a1a0a", "hex");
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    const row = Buffer.alloc(1 + width * 3);
+    for (let x = 0; x < width; x += 1) {
+      const pixel = pixelAt(x, y);
+      const offset = 1 + x * 3;
+      row[offset] = pixel[0];
+      row[offset + 1] = pixel[1];
+      row[offset + 2] = pixel[2];
+    }
+    rows.push(row);
+  }
+
+  return Buffer.concat([
+    signature,
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", zlib.deflateSync(Buffer.concat(rows))),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
 function makeIndexedPng(width, height, palette, transparency, indexAt) {
   const signature = Buffer.from("89504e470d0a1a0a", "hex");
   const ihdr = Buffer.alloc(13);
@@ -172,6 +201,7 @@ function runPngNonblankRegression() {
     const blank = path.join(temp, "blank.png");
     const nonblank = path.join(temp, "nonblank.png");
     const transparent = path.join(temp, "transparent-hidden-rgb.png");
+    const transparentZero = path.join(temp, "transparent-zero-rgb.png");
     const transparentContent = path.join(temp, "transparent-content.png");
     const indexedTransparent = path.join(temp, "indexed-transparent.png");
     const indexedContent = path.join(temp, "indexed-content.png");
@@ -192,6 +222,10 @@ function runPngNonblankRegression() {
     fs.writeFileSync(
       transparent,
       makeRgbaPng(8, 8, (x, y) => [(x * 31) & 0xff, (y * 29) & 0xff, (x + y) & 0xff, 0]),
+    );
+    fs.writeFileSync(
+      transparentZero,
+      makeRgbaPng(8, 8, () => [0, 0, 0, 0]),
     );
     fs.writeFileSync(
       transparentContent,
@@ -244,8 +278,125 @@ function runPngNonblankRegression() {
     corruptCrcBytes[corruptCrcBytes.length - 1] ^= 0xff;
     fs.writeFileSync(corruptCrc, corruptCrcBytes);
     fs.writeFileSync(missingIend, validForCorruption.subarray(0, -12));
+    fs.writeFileSync(path.join(temp, "all-good.png"), fs.readFileSync(nonblank));
+    fs.writeFileSync(path.join(temp, "all-bad.png"), fs.readFileSync(blank));
+    fs.writeFileSync(
+      path.join(temp, "dimensions-good.png"),
+      makeRgbaPng(16, 16, (x, y) => (x === 0 && y === 0 ? [0, 0, 0, 255] : [255, 255, 255, 255])),
+    );
+    fs.writeFileSync(path.join(temp, "dimensions-bad.png"), fs.readFileSync(nonblank));
+    fs.writeFileSync(path.join(temp, "pixels-a.png"), fs.readFileSync(nonblank));
+    fs.writeFileSync(path.join(temp, "pixels-a-copy.png"), fs.readFileSync(nonblank));
+    fs.writeFileSync(
+      path.join(temp, "pixels-a-rgb.png"),
+      makeRgbPng(8, 8, (x, y) => (x === 0 && y === 0 ? [0, 0, 0] : [255, 255, 255])),
+    );
+    fs.writeFileSync(
+      path.join(temp, "pixels-b.png"),
+      makeRgbaPng(8, 8, (x, y) => (x === 1 && y === 1 ? [255, 0, 0, 255] : [255, 255, 255, 255])),
+    );
+    fs.writeFileSync(
+      path.join(temp, "profile-base.png"),
+      makeRgbaPng(64, 64, () => [255, 255, 255, 255]),
+    );
+    fs.writeFileSync(
+      path.join(temp, "profile-marker-only.png"),
+      makeRgbaPng(64, 64, (x, y) => (x === 0 && y === 0 ? [255, 0, 0, 255] : [255, 255, 255, 255])),
+    );
+    fs.writeFileSync(
+      path.join(temp, "profile-substantive.png"),
+      makeRgbaPng(64, 64, (x, y) => (y < 4 ? [255, 0, 0, 255] : [255, 255, 255, 255])),
+    );
 
     evaluateAssertion(parseAssertion("artifact_exists: \\*.png"), listArtifacts(temp));
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("png_nonblank: all-*.png min_size=1"),
+          listArtifacts(temp),
+        ),
+      "wildcard png_nonblank passed when only one matched PNG was nonblank",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("png_dimensions: dimensions-*.png min_width=12 min_height=12"),
+          listArtifacts(temp),
+        ),
+      "wildcard png_dimensions passed when only one matched PNG met the dimensions",
+    );
+    evaluateAssertion(
+      parseAssertion("png_pixels_differ: pixels-a.png pixels-b.png"),
+      listArtifacts(temp),
+    );
+    evaluateAssertion(
+      parseAssertion(
+        "png_pixels_differ: profile-base.png profile-substantive.png min_changed_basis_points=25",
+      ),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "png_pixels_differ: profile-base.png profile-marker-only.png min_changed_basis_points=25",
+          ),
+          listArtifacts(temp),
+        ),
+      "marker-only PNG difference passed a 25-basis-point changed-pixel floor",
+    );
+    for (const invalidThreshold of [
+      "min_changed_basis_points=0",
+      "min_changed_basis_points=10001",
+      "ratio=1",
+    ]) {
+      expectFailure(
+        () =>
+          parseAssertion(
+            `png_pixels_differ: profile-base.png profile-substantive.png ${invalidThreshold}`,
+          ),
+        "invalid png_pixels_differ threshold was accepted",
+      );
+    }
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("png_pixels_differ: pixels-a.png pixels-a-copy.png"),
+          listArtifacts(temp),
+        ),
+      "identical decoded PNG pixels passed png_pixels_differ",
+    );
+    for (const [left, right, message] of [
+      [
+        "pixels-a.png",
+        "pixels-a-rgb.png",
+        "equivalent RGB and RGBA pixels passed png_pixels_differ",
+      ],
+      [
+        "pixels-a.png",
+        "interlaced-content.png",
+        "equivalent interlaced pixels passed png_pixels_differ",
+      ],
+      [
+        "transparent-hidden-rgb.png",
+        "transparent-zero-rgb.png",
+        "hidden RGB under transparent pixels passed png_pixels_differ",
+      ],
+      [
+        "transparent-content.png",
+        "indexed-content.png",
+        "equivalent indexed and RGBA pixels passed png_pixels_differ",
+      ],
+    ]) {
+      expectFailure(
+        () =>
+          evaluateAssertion(
+            parseAssertion(`png_pixels_differ: ${left} ${right}`),
+            listArtifacts(temp),
+          ),
+        message,
+      );
+    }
 
     let blankPassed = false;
     try {
@@ -332,6 +483,162 @@ function runPngNonblankRegression() {
   }
 }
 
+function runMarkdownReferenceRegression() {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-visual-markdown-"));
+  try {
+    fs.writeFileSync(
+      path.join(temp, "gallery.md"),
+      `# Comparison
+
+![Technical light](comparison.technical.light.png)
+[Technical SVG](comparison.technical.light.svg)
+![Missing preview](missing-preview.png)
+[Missing SVG](missing-target.svg)
+![Outside preview](../outside.png)
+[Outside SVG](../outside.svg)
+
+\`![Not a real inline preview](inline-ignored.png)\`
+<!-- [Not a real comment link](comment-ignored.svg) -->
+
+\`\`\`markdown
+![Not a real preview](ignored.png)
+[Not a real link](ignored.svg)
+\`\`\`
+
+    ![Not a real indented preview](indented-ignored.png)
+    [Not a real indented link](indented-ignored.svg)
+
+~~~~markdown
+![Not a real long-fence preview](long-fence-ignored.png)
+~~~
+[Not a real long-fence link](long-fence-ignored.svg)
+~~~~
+
+<div class="example">
+![Not a real raw HTML preview](raw-html-ignored.png)
+[Not a real raw HTML link](raw-html-ignored.svg)
+</div>
+`,
+      "utf8",
+    );
+    fs.writeFileSync(path.join(temp, "comparison.technical.light.png"), "png", "utf8");
+    fs.writeFileSync(path.join(temp, "comparison.technical.light.svg"), "svg", "utf8");
+    const artifacts = listArtifacts(temp);
+    evaluateAssertion(
+      parseAssertion("markdown_image: gallery.md comparison.technical.light.png"),
+      artifacts,
+    );
+    evaluateAssertion(
+      parseAssertion("markdown_link: gallery.md comparison.technical.light.svg"),
+      artifacts,
+    );
+    expectFailure(
+      () => evaluateAssertion(parseAssertion("markdown_image: gallery.md ignored.png"), artifacts),
+      "Markdown image assertion accepted a fenced-code example",
+    );
+    expectFailure(
+      () => evaluateAssertion(parseAssertion("markdown_link: gallery.md ignored.svg"), artifacts),
+      "Markdown link assertion accepted a fenced-code example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_image: gallery.md inline-ignored.png"),
+          artifacts,
+        ),
+      "Markdown image assertion accepted an inline-code example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_link: gallery.md comment-ignored.svg"),
+          artifacts,
+        ),
+      "Markdown link assertion accepted an HTML comment",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_image: gallery.md indented-ignored.png"),
+          artifacts,
+        ),
+      "Markdown image assertion accepted an indented-code example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_link: gallery.md indented-ignored.svg"),
+          artifacts,
+        ),
+      "Markdown link assertion accepted an indented-code example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_image: gallery.md long-fence-ignored.png"),
+          artifacts,
+        ),
+      "Markdown image assertion accepted content inside a longer fence",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_link: gallery.md long-fence-ignored.svg"),
+          artifacts,
+        ),
+      "Markdown link assertion accepted content inside a longer fence",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_image: gallery.md raw-html-ignored.png"),
+          artifacts,
+        ),
+      "Markdown image assertion accepted a raw HTML block example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_link: gallery.md raw-html-ignored.svg"),
+          artifacts,
+        ),
+      "Markdown link assertion accepted a raw HTML block example",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_image: gallery.md missing-preview.png"),
+          artifacts,
+        ),
+      "Markdown reference assertion accepted a missing local artifact",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("markdown_link: gallery.md missing-target.svg"),
+          artifacts,
+        ),
+      "Markdown link assertion accepted a missing local artifact",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(parseAssertion("markdown_image: gallery.md ../outside.png"), artifacts),
+      "Markdown image assertion accepted a target outside the artifact root",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(parseAssertion("markdown_link: gallery.md ../outside.svg"), artifacts),
+      "Markdown link assertion accepted a target outside the artifact root",
+    );
+    expectFailure(
+      () => parseAssertion("markdown_image: gallery.md"),
+      "Markdown image assertion accepted a missing target",
+    );
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+}
+
 function runSvgValidRegression() {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-visual-svg-"));
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-visual-outside-"));
@@ -380,6 +687,17 @@ function runSvgValidRegression() {
 
     const embeddedSvgPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>',
+    ).toString("base64");
+    const nestedEmbeddedSvgSource = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><image width="24" height="24" href="data:image/svg+xml;base64,${embeddedSvgPayload}"/><path d="M0 0h24v24H0z"/></svg>`;
+    const nestedEmbeddedSvgPayload = Buffer.from(nestedEmbeddedSvgSource).toString("base64");
+    const nestedUnsafeObjectPayload = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><object data="data:image/svg+xml;base64,${embeddedSvgPayload}"/><path d="M0 0h24v24H0z"/></svg>`,
+    ).toString("base64");
+    const nestedUnsafeSrcsetPayload = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><image srcset="https://cdn.example/nested.svg"/><path d="M0 0h24v24H0z"/></svg>',
+    ).toString("base64");
+    const nestedUnsafeImageSetPayload = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path style='background-image:image-set("https://cdn.example/nested.png" 1x)' d="M0 0h24v24H0z"/></svg>`,
     ).toString("base64");
     const referencedSvgPayload = Buffer.from(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><path id="mark" d="M0 0h24v24H0z"/></defs><use href="#mark"/></svg>',
@@ -434,9 +752,52 @@ function runSvgValidRegression() {
       path.join(temp, "valid.svg"),
       '<svg xmlns="http://www.w3.org/2000/svg"><text>Client</text></svg>',
     );
+    for (const [name, colorScheme] of [
+      ["fixed-light.svg", "light"],
+      ["fixed-dark.svg", "dark"],
+      ["adaptive.svg", "light dark"],
+      ["unsupported-theme.svg", "light dark sepia"],
+    ]) {
+      fs.writeFileSync(
+        path.join(temp, name),
+        `<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme: ${colorScheme};"><rect width="24" height="24"/></svg>`,
+      );
+    }
+    fs.writeFileSync(
+      path.join(temp, "quoted-theme-lookalike.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg" style="content: ';color-scheme: light;';"><rect width="24" height="24"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "matching-canvas.svg"),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1.2px" height="2.1px"><rect width="2" height="3"/></svg>',
+    );
+    fs.writeFileSync(
+      path.join(temp, "matching-canvas.png"),
+      makeRgbaPng(2, 3, () => [20, 80, 220, 255]),
+    );
+    fs.writeFileSync(
+      path.join(temp, "mismatched-canvas.png"),
+      makeRgbaPng(3, 3, () => [20, 80, 220, 255]),
+    );
     fs.writeFileSync(
       path.join(temp, "embedded-image.svg"),
       `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml,${embeddedSvgPayload}"/><text>Logo</text></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-embedded-image.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedEmbeddedSvgPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-object.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeObjectPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-srcset.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeSrcsetPayload}"/></svg>`,
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-image-set.svg"),
+      `<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,${nestedUnsafeImageSetPayload}"/></svg>`,
     );
     fs.writeFileSync(
       path.join(temp, "embedded-image-with-png-fallback.svg"),
@@ -924,12 +1285,22 @@ function runSvgValidRegression() {
       drawioArtifact(`data:image/svg+xml,${logoPayload}`),
     );
     fs.writeFileSync(
+      path.join(temp, "nested-embedded-logo.drawio"),
+      drawioArtifact(`data:image/svg+xml,${encodeURIComponent(nestedEmbeddedSvgSource)}`),
+    );
+    fs.writeFileSync(
+      path.join(temp, "nested-unsafe-object.drawio"),
+      drawioArtifact(
+        `data:image/svg+xml,${encodeURIComponent(Buffer.from(nestedUnsafeObjectPayload, "base64").toString("utf8"))}`,
+      ),
+    );
+    fs.writeFileSync(
       path.join(temp, "stable-graph.drawio"),
       `<mxfile host="app.diagrams.net"><diagram name="Graph"><mxGraphModel adaptiveColors="auto"><root>
         <mxCell id="0"/><mxCell id="1" parent="0"/>
-        <mxCell id="client" value="Client" style="strokeColor=#123456;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="80" height="40" as="geometry"/></mxCell>
-        <mxCell id="api" value="API" vertex="1" parent="1"><mxGeometry x="120" y="0" width="80" height="40" as="geometry"/></mxCell>
-        <mxCell id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;" vertex="1" parent="1"><mxGeometry x="240" y="0" width="80" height="40" as="geometry"/></mxCell>
+        <mxCell id="client" value="Client" style="strokeColor=#123456;dataRole=component;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="80" height="40" as="geometry"/></mxCell>
+        <mxCell id="api" value="API" style="dataRole=component;" vertex="1" parent="1"><mxGeometry x="120" y="0" width="80" height="40" as="geometry"/></mxCell>
+        <mxCell id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="1"><mxGeometry x="240" y="0" width="80" height="40" as="geometry"/></mxCell>
         <mxCell id="profile-neon-hub" value="Profile" style="designProfile=neon-hub;strokeColor=light-dark(#4D7C0F,#D7FF00);" vertex="1" parent="1"><mxGeometry x="360" y="0" width="80" height="40" as="geometry"/></mxCell>
         <mxCell id="edge-client-api" edge="1" parent="1" source="client" target="api" style="endArrow=block;dataRole=request;"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="edge-api-cache" edge="1" parent="1" source="api" target="cache" style="endArrow=block;dataRole=event;"><mxGeometry relative="1" as="geometry"/></mxCell>
@@ -1052,6 +1423,107 @@ function runSvgValidRegression() {
       ),
     );
     const stableGraphSource = fs.readFileSync(path.join(temp, "stable-graph.drawio"), "utf8");
+    fs.writeFileSync(path.join(temp, "native-identity-same-a.drawio"), stableGraphSource);
+    fs.writeFileSync(path.join(temp, "native-identity-same-b.drawio"), stableGraphSource);
+    const groupedGraphSource = stableGraphSource
+      .replace(
+        '<mxCell id="client" value="Client" style=',
+        '<mxCell id="runtime-boundary" value="Runtime Boundary" style="swimlane;container=1;fillColor=none;" vertex="1" parent="1"><mxGeometry x="-20" y="-40" width="360" height="160" as="geometry"/></mxCell>\n        <mxCell id="client" value="Client" style=',
+      )
+      .replace(
+        'id="client" value="Client" style="strokeColor=#123456;dataRole=component;" vertex="1" parent="1"',
+        'id="client" value="Client" style="strokeColor=#123456;dataRole=component;" vertex="1" parent="runtime-boundary"',
+      )
+      .replace(
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="1"',
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="runtime-boundary"',
+      )
+      .replace(
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="1"',
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="runtime-boundary"',
+      );
+    if (
+      !groupedGraphSource.includes('id="runtime-boundary"') ||
+      !groupedGraphSource.includes('parent="runtime-boundary"')
+    ) {
+      throw new Error("grouped graph fixture did not create stable container membership");
+    }
+    fs.writeFileSync(path.join(temp, "grouped-graph.drawio"), groupedGraphSource);
+    fs.writeFileSync(path.join(temp, "native-parent-a.drawio"), stableGraphSource);
+    fs.writeFileSync(path.join(temp, "native-parent-b.drawio"), groupedGraphSource);
+    fs.writeFileSync(path.join(temp, "native-stencil-a.drawio"), stableGraphSource);
+    fs.writeFileSync(
+      path.join(temp, "native-stencil-b.drawio"),
+      stableGraphSource.replace("resIcon=mxgraph.aws4.dynamodb", "resIcon=mxgraph.aws4.sqs"),
+    );
+    fs.writeFileSync(
+      path.join(temp, "changed-group-label.drawio"),
+      groupedGraphSource.replace(
+        'id="runtime-boundary" value="Runtime Boundary"',
+        'id="runtime-boundary" value="Changed Boundary"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "changed-group-membership.drawio"),
+      groupedGraphSource.replace(
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="runtime-boundary"',
+        'id="api" value="API" style="dataRole=component;" vertex="1" parent="1"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "extra-group.drawio"),
+      groupedGraphSource.replace(
+        "</root>",
+        '<mxCell id="extra-boundary" value="Extra Boundary" style="container=1;fillColor=none;" vertex="1" parent="1"><mxGeometry x="0" y="200" width="120" height="80" as="geometry"/></mxCell></root>',
+      ),
+    );
+    const nestedGroupSource = groupedGraphSource
+      .replace(
+        "</root>",
+        '<mxCell id="nested-boundary" value="Nested Boundary" style="container=1;fillColor=none;" vertex="1" parent="runtime-boundary"><mxGeometry x="0" y="0" width="320" height="120" as="geometry"/></mxCell></root>',
+      )
+      .replace(
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="runtime-boundary"',
+        'id="cache" value="Cache" link="https://docs.example.invalid/product" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;dataRole=component;" vertex="1" parent="nested-boundary"',
+      );
+    fs.writeFileSync(path.join(temp, "extra-group-membership.drawio"), nestedGroupSource);
+    fs.writeFileSync(
+      path.join(temp, "extra-component.drawio"),
+      stableGraphSource.replace(
+        '<mxCell id="profile-neon-hub"',
+        '<mxCell id="database" value="Database" style="dataRole=component;" vertex="1" parent="1"><mxGeometry x="0" y="80" width="80" height="40" as="geometry"/></mxCell><mxCell id="profile-neon-hub"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "extra-native-stencil.drawio"),
+      stableGraphSource.replace(
+        '<mxCell id="profile-neon-hub"',
+        '<mxCell id="extra-native" value="Extra" style="shape=mxgraph.azure.function_apps;" vertex="1" parent="1"><mxGeometry x="500" y="0" width="60" height="60" as="geometry"/></mxCell><mxCell id="profile-neon-hub"',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "extra-edge.drawio"),
+      stableGraphSource.replace(
+        "</root>",
+        '<mxCell id="edge-cache-client" edge="1" parent="1" source="cache" target="client" style="endArrow=block;dataRole=event;"><mxGeometry relative="1" as="geometry"/></mxCell></root>',
+      ),
+    );
+    fs.writeFileSync(
+      path.join(temp, "changed-label.drawio"),
+      stableGraphSource.replace('id="api" value="API"', 'id="api" value="Gateway"'),
+    );
+    fs.writeFileSync(
+      path.join(temp, "swapped-edge-bindings.drawio"),
+      stableGraphSource
+        .replace(
+          'id="edge-client-api" edge="1" parent="1" source="client" target="api"',
+          'id="edge-client-api" edge="1" parent="1" source="api" target="cache"',
+        )
+        .replace(
+          'id="edge-api-cache" edge="1" parent="1" source="api" target="cache"',
+          'id="edge-api-cache" edge="1" parent="1" source="client" target="api"',
+        ),
+    );
     fs.writeFileSync(
       path.join(temp, "hidden-profile-cell.drawio"),
       stableGraphSource.replace(
@@ -1119,6 +1591,9 @@ function runSvgValidRegression() {
           profileReport.profile_style_sha256s?.includes(digest) &&
           profileReport.pages?.[0]?.profile_style_sha256s?.includes(digest),
       ) ||
+      !["client", "api", "cache"]
+        .map((id) => createHash("sha256").update(id).digest("hex"))
+        .every((digest) => profileReport.pages?.[0]?.component_cell_id_sha256s?.includes(digest)) ||
       profileReport.profile_style_sha256s?.includes(
         createHash("sha256").update("client\0strokeColor\0#123456").digest("hex"),
       )
@@ -1181,11 +1656,61 @@ function runSvgValidRegression() {
 
     evaluateAssertion(parseAssertion("svg_valid: valid.svg"), listArtifacts(temp));
     evaluateAssertion(parseAssertion("svg_valid: drawio-doctype.svg"), listArtifacts(temp));
+    evaluateAssertion(parseAssertion("svg_theme: fixed-light.svg light"), listArtifacts(temp));
+    evaluateAssertion(parseAssertion("svg_theme: fixed-dark.svg dark"), listArtifacts(temp));
+    evaluateAssertion(parseAssertion("svg_theme: adaptive.svg adaptive"), listArtifacts(temp));
+    expectFailure(
+      () =>
+        evaluateAssertion(parseAssertion("svg_theme: fixed-light.svg dark"), listArtifacts(temp)),
+      "fixed-light SVG passed a dark theme assertion",
+    );
+    expectFailure(
+      () => evaluateAssertion(parseAssertion("svg_theme: valid.svg light"), listArtifacts(temp)),
+      "SVG without a declared color scheme passed a fixed theme assertion",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_theme: quoted-theme-lookalike.svg light"),
+          listArtifacts(temp),
+        ),
+      "quoted color-scheme lookalike passed a fixed theme assertion",
+    );
+    expectFailure(
+      () => parseAssertion("svg_theme: fixed-light.svg sepia"),
+      "unsupported SVG theme assertion value was accepted",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_theme: unsupported-theme.svg adaptive"),
+          listArtifacts(temp),
+        ),
+      "unsupported extra color-scheme token passed an adaptive theme assertion",
+    );
     evaluateAssertion(parseAssertion("svg_contains: valid.svg Client"), listArtifacts(temp));
     evaluateAssertion(
       parseAssertion("svg_self_contained_images: embedded-image.svg"),
       listArtifacts(temp),
     );
+    evaluateAssertion(
+      parseAssertion("svg_self_contained_images: nested-embedded-image.svg"),
+      listArtifacts(temp),
+    );
+    for (const nestedUnsafeSvg of [
+      "nested-unsafe-object.svg",
+      "nested-unsafe-srcset.svg",
+      "nested-unsafe-image-set.svg",
+    ]) {
+      expectFailure(
+        () =>
+          evaluateAssertion(
+            parseAssertion(`svg_self_contained_images: ${nestedUnsafeSvg}`),
+            listArtifacts(temp),
+          ),
+        `${nestedUnsafeSvg} passed svg_self_contained_images`,
+      );
+    }
     evaluateAssertion(
       parseAssertion("svg_self_contained_images: embedded-image-with-png-fallback.svg"),
       listArtifacts(temp),
@@ -1292,6 +1817,18 @@ function runSvgValidRegression() {
       parseAssertion("drawio_self_contained_svg: embedded-logo.drawio"),
       listArtifacts(temp),
     );
+    evaluateAssertion(
+      parseAssertion("drawio_self_contained_svg: nested-embedded-logo.drawio"),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_self_contained_svg: nested-unsafe-object.drawio"),
+          listArtifacts(temp),
+        ),
+      "nested active object passed drawio_self_contained_svg",
+    );
     evaluateAssertion(parseAssertion("drawio_valid: embedded-logo.drawio"), listArtifacts(temp));
     evaluateAssertion(
       parseAssertion("drawio_valid: page-scoped.drawio adaptive_colors=1"),
@@ -1367,9 +1904,137 @@ function runSvgValidRegression() {
     }
     evaluateAssertion(
       parseAssertion(
-        "drawio_graph: stable-graph.drawio page=Graph ids=client,api,cache native_ids=cache edges=client>api,api>cache not_edges=api>client edge_roles=edge-client-api:request,edge-api-cache:event profile_styles=profile-neon-hub:designProfile:neon-hub,profile-neon-hub:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29 links=https://docs.example.invalid/product",
+        "drawio_graph: stable-graph.drawio page=Graph ids=client,api,cache native_ids=cache exact_native_ids=1 edges=client>api,api>cache edge_bindings=edge-client-api@client>api,edge-api-cache@api>cache not_edges=api>client edge_roles=edge-client-api:request,edge-api-cache:event profile_styles=profile-neon-hub:designProfile:neon-hub,profile-neon-hub:strokeColor:light-dark%28%234D7C0F%2C%23D7FF00%29 links=https://docs.example.invalid/product",
       ),
       listArtifacts(temp),
+    );
+    evaluateAssertion(
+      parseAssertion(
+        "drawio_graph: stable-graph.drawio component_ids=client,api,cache component_labels=client:Client,api:API,cache:Cache exact_components=1 edges=client>api,api>cache exact_edges=1",
+      ),
+      listArtifacts(temp),
+    );
+    evaluateAssertion(
+      parseAssertion("drawio_native_stencils_equal: native-identity-same-*.drawio"),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: native-parent-*.drawio"),
+          listArtifacts(temp),
+        ),
+      "changed native stencil parent passed drawio_native_stencils_equal",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: native-stencil-?.drawio"),
+          listArtifacts(temp),
+        ),
+      "changed native stencil selector passed drawio_native_stencils_equal",
+    );
+    evaluateAssertion(
+      parseAssertion(
+        "drawio_graph: grouped-graph.drawio component_ids=client,api,cache group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary exact_groups=1",
+      ),
+      listArtifacts(temp),
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: changed-group-label.drawio group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary",
+          ),
+          listArtifacts(temp),
+        ),
+      "changed group label passed group_labels",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: changed-group-membership.drawio component_ids=client,api,cache group_ids=runtime-boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary",
+          ),
+          listArtifacts(temp),
+        ),
+      "changed group membership passed group_memberships",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-group.drawio group_ids=runtime-boundary group_labels=runtime-boundary:Runtime%20Boundary exact_groups=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected semantic group passed exact_groups",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-group-membership.drawio group_ids=runtime-boundary,nested-boundary group_labels=runtime-boundary:Runtime%20Boundary,nested-boundary:Nested%20Boundary group_memberships=client@runtime-boundary,api@runtime-boundary,cache@runtime-boundary exact_groups=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected group membership passed exact_groups",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: changed-label.drawio component_labels=client:Client,api:API,cache:Cache",
+          ),
+          listArtifacts(temp),
+        ),
+      "changed component label passed component_labels",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-component.drawio component_ids=client,api,cache exact_components=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected semantic component passed exact_components",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-edge.drawio edges=client>api,api>cache exact_edges=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected directed edge passed exact_edges",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: swapped-edge-bindings.drawio edges=client>api,api>cache edge_bindings=edge-client-api@client>api,edge-api-cache@api>cache edge_roles=edge-client-api:request,edge-api-cache:event exact_edges=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "stable edge IDs were not bound to their directed endpoints",
+    );
+    expectFailure(
+      () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_components=1"),
+      "exact_components was accepted without component_ids",
+    );
+    expectFailure(
+      () => parseAssertion("drawio_graph: grouped-graph.drawio ids=client exact_groups=1"),
+      "exact_groups was accepted without group_ids",
+    );
+    expectFailure(
+      () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_native_ids=1"),
+      "exact_native_ids was accepted without native_ids",
+    );
+    expectFailure(
+      () => parseAssertion("drawio_graph: stable-graph.drawio ids=client exact_edges=1"),
+      "exact_edges was accepted without edges",
     );
     for (const invisibleProfileArtifact of [
       "hidden-profile-cell.drawio",
@@ -1436,6 +2101,24 @@ function runSvgValidRegression() {
           listArtifacts(temp),
         ),
       "non-native cell ID passed native_ids",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("drawio_native_stencils_equal: stable-graph.drawio"),
+          listArtifacts(temp),
+        ),
+      "single source passed drawio_native_stencils_equal",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion(
+            "drawio_graph: extra-native-stencil.drawio native_ids=cache exact_native_ids=1",
+          ),
+          listArtifacts(temp),
+        ),
+      "unexpected native stencil passed exact_native_ids",
     );
     expectFailure(
       () =>
@@ -1631,6 +2314,19 @@ function runSvgValidRegression() {
       parseAssertion("svg_has_flow_animation: animated-flow.svg"),
       listArtifacts(temp),
     );
+    fs.copyFileSync(
+      path.join(temp, "animated-flow.svg"),
+      path.join(temp, "animation-set-good.svg"),
+    );
+    fs.copyFileSync(path.join(temp, "paused-flow.svg"), path.join(temp, "animation-set-bad.svg"));
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_has_flow_animation: animation-set-*.svg"),
+          listArtifacts(temp),
+        ),
+      "wildcard flow-animation assertion passed when only one matched SVG animated",
+    );
     expectFailure(
       () =>
         evaluateAssertion(
@@ -1806,6 +2502,32 @@ function runSvgValidRegression() {
       }
       if (invisiblePassed) throw new Error(`${invisible} passed visible svg_contains`);
     }
+
+    const canvasArtifacts = listArtifacts(temp);
+    evaluateAssertion(
+      parseAssertion("svg_png_dimensions_match: matching-canvas.svg matching-canvas.png"),
+      canvasArtifacts,
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_png_dimensions_match: matching-canvas.svg mismatched-canvas.png"),
+          canvasArtifacts,
+        ),
+      "SVG/PNG canvas assertion accepted mismatched dimensions",
+    );
+    expectFailure(
+      () =>
+        evaluateAssertion(
+          parseAssertion("svg_png_dimensions_match: valid.svg matching-canvas.png"),
+          canvasArtifacts,
+        ),
+      "SVG/PNG canvas assertion accepted an SVG without explicit dimensions",
+    );
+    expectFailure(
+      () => parseAssertion("svg_png_dimensions_match: matching-canvas.svg"),
+      "SVG/PNG canvas assertion accepted a missing PNG glob",
+    );
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
     fs.rmSync(outside, { recursive: true, force: true });
@@ -1815,6 +2537,7 @@ function runSvgValidRegression() {
 export function runVisualAssertionRegressions() {
   runMultilineAssertionRegression();
   runPngNonblankRegression();
+  runMarkdownReferenceRegression();
   runSvgValidRegression();
 }
 

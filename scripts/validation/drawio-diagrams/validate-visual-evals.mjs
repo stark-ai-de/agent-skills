@@ -246,16 +246,20 @@ When --artifacts-dir is supplied, also checks matching generated .drawio, PNG, a
 
 Supported assertions:
   - artifact_exists: <glob>
+  - markdown_image: <glob> <relative-target>
+  - markdown_link: <glob> <relative-target>
   - png_dimensions: <glob> min_width=<px> min_height=<px>
   - png_nonblank: <glob> [min_size=<bytes>]
+  - png_pixels_differ: <left-glob> <right-glob> [min_changed_basis_points=<1-10000>]
   - svg_valid: <glob>
+  - svg_theme: <glob> light|dark|adaptive
   - svg_has_flow_animation: <glob>
   - svg_contains: <glob> <text>
   - svg_not_contains: <glob> <text>
   - svg_self_contained_images: <glob>
   - drawio_valid: <glob> [animation_on=1|animation_off=1] [adaptive_colors=1] [min_pages=N] [min_native_stencils=N] [self_contained_svg=1] [uncompressed=1]
   - drawio_embeds_svg_sha256: <glob> <64-lowercase-hex> [cell=stable-id]
-  - drawio_graph: <glob> [page=URL-encoded-name] [ids=id,...] [native_ids=id,...] [edges=source>target,...] [not_edges=source>target,...] [edge_roles=edge-id:role,...] [profile_styles=URL-encoded-cell-id:styleKey:styleValue,...] [links=https://...]
+  - drawio_graph: <glob> [page=URL-encoded-name] [ids=id,...] [component_ids=id,...] [component_labels=URL-encoded-id:URL-encoded-label,...] [group_ids=id,...] [group_labels=URL-encoded-id:URL-encoded-label,...] [group_memberships=component-id@group-id,...] [exact_components=1] [exact_groups=1] [native_ids=id,...] [edges=source>target,...] [exact_edges=1] [not_edges=source>target,...] [edge_roles=edge-id:role,...] [profile_styles=URL-encoded-cell-id:styleKey:styleValue,...] [links=https://...]
     profile_styles: max 128 mappings; decoded values max 2048 characters without controls; keys: designProfile, shape, dataRole, strokeColor, fillColor, gradientColor, gradientDirection, shadow, glass, arcSize, strokeWidth, fontColor, fontSize, profileRole
   - drawio_self_contained_svg: <glob>`);
 }
