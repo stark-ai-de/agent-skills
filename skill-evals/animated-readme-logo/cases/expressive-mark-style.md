@@ -10,7 +10,7 @@ Create a new expressive, hand-drawn comet mark for the Comet Notes README. There
 
 ## Expected Behavior
 
-- Report `Task mode: create`, `Source route`, `Provider state`, `Approval state`, `SVG readiness`, and `Export status` using contract-valid values.
+- Report `Workflow: create`, `Source route`, `Selection`, `Write scope and protected originals`, `Provider state`, `Approval state`, `Motion readiness`, and `Animation delivery` using contract-valid values.
 - Apply the same live capability, exact-model, current-cost, sanitized-brief, and approval gate as every eligible provider route.
 - If the live provider route is available, propose `model_type: vector` and explain that the expressive brief is the reason for departing from the `utility_vector` default.
 - Keep 1:1, 1k, one output, and no background fixed.

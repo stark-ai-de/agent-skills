@@ -77,10 +77,13 @@ From the repository root:
 npm run validate
 npm run list
 npx skills@latest add ./skills --list
+npm run smoke:fingerprint
 npm run smoke:install
 ```
 
-`npm run smoke:install` creates a temporary clean copy of the repo, excludes `.agents/`, `.codegraph/`, and `skills-lock.json`, and disables install telemetry. It verifies public discovery without incubator leaks, then performs disposable project-local Codex, Cursor, and Claude Code installs and asserts their exact destinations before removing the temporary tree. It does not install global skills.
+`npm run smoke:fingerprint` reads the exact candidate set without copying or changing repository state. Its deterministic SHA-256 binds each sorted repository-relative path, normalized permission mode, byte size, and content hash. Run it immediately before and after the broader gates used by a validation receipt and require an exact match.
+
+`npm run smoke:install` creates a temporary candidate copy from existing Git-indexed files plus non-ignored untracked files through the same selection and safe-read pipeline. Before copying, it checks every repository-relative path component with `lstat`, rejects parent or leaf symlinks, identity-checks each open file before and after reading, and stages regular files transactionally so a rejected candidate exposes neither external bytes nor a partial destination. It emits the fingerprint of the bytes it actually copied. It excludes `.git/`, local agent state, private `docs/specs/do-not-publish/` content, lock state, dependencies, and generated build or temporary directories even if such a path is indexed. It requires the CLI's `Available Skills` output to equal the public `skills/` catalog exactly, then performs disposable project-local Codex, Cursor, and Claude Code installs and asserts their exact destinations before removing only its own temporary tree. Telemetry is disabled and no global skills are installed.
 
 Do not publish, push, tag, send telemetry-triggering installs, or install globally unless the maintainer explicitly asks for that action.
 
@@ -209,14 +212,16 @@ For Claude Code release artifacts, verify the source archive includes `skills/cl
 ## Release Update Process
 
 1. Update public or incubator skills.
-2. Run `npm run validate`.
-3. Run `pnpm format:check` and `pnpm lint`.
-4. Run `npx skills@latest add ./skills --list` locally.
-5. Run `npm run smoke:install`.
-6. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.
-7. Add an ADR only if a decision changed.
-8. Confirm the release-intent PR gate passed.
-9. Merge changes through a PR.
-10. Run `Publish Release` manually with `dry_run: true`.
-11. Run `Publish Release` manually with `dry_run: false`.
-12. Verify public install.
+2. Run `npm run smoke:fingerprint` and record the initial candidate digest before any broader local gate.
+3. Run `npm run validate`.
+4. Run `pnpm format:check` and `pnpm lint`.
+5. Run `npx skills@latest add ./skills --list` locally.
+6. Run `npm run smoke:install` and require its emitted digest to match the initial fingerprint.
+7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest to remain unchanged.
+8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.
+9. Add an ADR only if a decision changed.
+10. Confirm the release-intent PR gate passed.
+11. Merge changes through a PR.
+12. Run `Publish Release` manually with `dry_run: true`.
+13. Run `Publish Release` manually with `dry_run: false`.
+14. Verify public install.

@@ -2,171 +2,72 @@
 
 ## Routing expectations
 
-Activation and collaboration routing are separate decisions. After activation,
-use a read-only decision phase for unresolved durable choices or broad,
-multi-boundary, behavior-changing, or phased refactors. Fully specified narrow
-behavior-preserving work can execute directly. Audits remain read-only, and PR,
-branch, or diff reviews prefer the host review surface without requiring Plan
-mode for the review itself. A direct route whose required write-capable control
-is still inactive reports `pending write permission`; it is not ready to mutate
-until that separate transition is confirmed.
+Activation and workflow routing are separate. Every direct invocation exposes `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. Clear task intent with sufficient authority selects and announces a workflow immediately; bare or materially ambiguous activation asks. There is no `auto` workflow.
+
+Start ADR discovery at `references/adr-catalog.md`, use Short variants for inventory, load only applicable canonical Long ADRs, and use Guides for procedure. Planning capability and filesystem/write permission remain separate controls.
 
 ## Positive cases
 
-### Case 1: ADR setup for an existing repo
-
-Prompt:
+### Governance setup
 
 ```text
-Use Architecture Compass in setup mode for this repo. Make future agents rely on the provided ADRs.
+Establish recommended repository-native ADR governance so future coding agents follow accepted decisions.
 ```
 
-Expected: activate. The skill should inspect existing ADRs and docs and compare
-bundled guardrails against target evidence. Adoption conflicts, rejection,
-adaptation, or stale ADRs require the decision phase; a mechanical refresh under
-accepted ADRs can execute directly. It should defer future-fit guardrails,
-challenge rejected guardrails, update or create agent instructions, update the
-ADR index, and return future prompts.
+Select `setup/recommended`, state rationale and governance-only write scope, inspect target conventions, and proceed. For a new/evidence-empty repository only, evaluate the exact seven-decision foundation first. An explicit exhaustive request selects `setup/complete`.
 
-### Case 2: ADR setup for a new repo
-
-Prompt:
+### Read-only architecture review
 
 ```text
-Use the Architecture Compass in setup mode for a new TypeScript monorepo. Create the minimal ADR governance files before implementation starts.
+Audit this branch for architecture and accepted-ADR drift. Do not change files.
 ```
 
-Expected: activate and prefer the decision phase because stack, deployable-unit,
-ownership, and adoption choices are unresolved. The skill should create nothing
-until those choices are approved, then use the bounded execution continuation to
-create a starter ADR governance baseline with `AGENTS.md`, an ADR index, a
-source-structure ADR, bundled guardrail adoption decisions, optional stack rules,
-and validation notes.
+Select `audit`, use the host review/read-only surface when available, and return evidence-backed findings without governance repair, artifacts, installs, or external mutations.
 
-### Case 3: Existing repo refactor
-
-Prompt:
+### Bounded governed refactor
 
 ```text
-Refactor this feature so it follows the repository source-structure ADR and the approved query/read/write examples.
+Refactor these two adapter files to conform to accepted ADR-0012.
 ```
 
-Expected: activate. The skill should inspect ADRs, stack rules, and examples
-before proposing or applying changes. Broad, multi-boundary, behavior-changing,
-or phased refactors require the decision phase; narrow behavior-preserving ADR
-alignment can execute directly.
+Select `refactor` only when accepted local decisions already govern the complete change. Execute reversible slices inside the named scope and stop if a durable decision or missing governance appears.
 
-### Case 4: New implementation guardrail
-
-Prompt:
+### Plan only
 
 ```text
-Add a new data-backed screen and make sure the implementation follows our route, component, query, and Server Action patterns.
+Plan and persist a repository architecture migration, but do not implement it.
 ```
 
-Expected: activate. The skill should create a file placement map and validation
-plan. Unresolved placement, request, runtime, package, or public-contract
-boundaries require the decision phase; a fully placed ADR-backed implementation
-can execute directly.
+Select `plan-refactor`. Use native Plan mode when supported, approve the bounded specification while repository artifacts remain read-only, exit Plan mode, persist and validate only the approved planning/ADR artifacts, then stop.
 
-### Case 5: New repository bootstrap
-
-Prompt:
+### Plan and run
 
 ```text
-Create a starter source structure and ADRs for a new TypeScript monorepo so future implementation follows the same architecture rules.
+Plan and implement this broad multi-package architecture migration; ownership decisions are unresolved.
 ```
 
-Expected: activate and prefer the decision phase while repository ownership,
-runtime, stack, or guardrail choices are unresolved. The skill should produce an
-adoption plan, ADR draft, bundled guardrail adoption decisions, docs list, and
-starter examples before a bounded setup continuation.
+Select `plan-run-refactor`. Resolve decisions in Plan mode, exit before persistence, recheck state, and execute only the unchanged approved plan.
 
-### Case 6: Backend runtime composition
-
-Prompt:
+### Bare activation
 
 ```text
-Create a new worker service and follow our runtime composition pattern with main.ts, runtime.ts, http-app.ts, routes, services, config, and env loading.
+Use Architecture Compass here.
 ```
 
-Expected: activate. The skill should enforce process bootstrap versus
-composition-root boundaries. It may execute directly when accepted ADRs fully
-specify service ownership and placement; unresolved deployable-unit or package
-boundaries require the decision phase.
+Show all workflows and ask which outcome is wanted. Do not infer mutation, persistence, or scope.
 
-### Case 7: PR drift review
+### Agent-discovered concern
 
-Prompt:
+When the agent activates the skill because it discovers an architecture concern during another task, it may select a relevant read-only audit. It may select mutation only if the user's existing request already authorizes that outcome and scope.
 
-```text
-Review this branch for architecture drift against our ADRs and stack rules, especially server-only boundaries and package ownership.
-```
+### Conditional target instruction
 
-Expected: activate and remain read-only without requiring Plan mode. Prefer the
-host review surface when available and return blocking, important, and cleanup
-findings. Remediation planning is a separate phase after findings exist.
-
-### Case 8: Stack deviation
-
-Prompt:
-
-```text
-This feature might need a different request library. Check whether that deviates from our stack rules before implementation.
-```
-
-Expected: activate and run the stack-deviation gate. An actual durable deviation
-or new ADR requires the decision phase; a conclusion that the existing stack is
-sufficient does not require a Plan transition.
+During setup, add or preserve the generic finite-workflow/intent-selector instruction only when target evidence proves a stable public skill with multiple material workflows. During audit, report its classification only. Indeterminate evidence authorizes no write.
 
 ## Negative cases
 
-### Case 1: Tiny edit
-
-Prompt:
-
-```text
-Fix this typo in README.
-```
-
-Expected: do not activate.
-
-### Case 2: Generic framework explanation
-
-Prompt:
-
-```text
-Explain how TanStack Query staleTime works.
-```
-
-Expected: do not activate unless tied to a target repo ADR or implementation guardrail.
-
-### Case 3: Dependency-only update
-
-Prompt:
-
-```text
-Bump the patch version of this package and update the lockfile.
-```
-
-Expected: do not activate unless stack rules or architecture policy are involved.
-
-### Case 4: Debugging-only task
-
-Prompt:
-
-```text
-A test is failing. Find the bug and fix it.
-```
-
-Expected: do not activate by default. A debugging skill should own it unless the failure is caused by architecture-boundary drift.
-
-### Case 5: Product planning
-
-Prompt:
-
-```text
-Write a PRD for a new analytics dashboard.
-```
-
-Expected: do not activate. A PRD or spec skill should own it until implementation placement is needed.
+- A typo or style-only edit does not activate the skill.
+- Generic framework education without target architecture evidence does not activate it.
+- An ordinary dependency patch does not activate it unless architecture/stack policy is implicated.
+- A generic failing test routes to diagnosis unless architecture-boundary drift is the cause.
+- Product requirements work routes to a specification workflow until architecture governance or placement is in scope.

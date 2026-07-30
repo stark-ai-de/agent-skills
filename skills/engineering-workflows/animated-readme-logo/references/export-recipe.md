@@ -1,8 +1,15 @@
 # Export Recipe Contract
 
-Use the bundled exporter only after the canonical SVG and deterministic motion specification are ready.
+Use the bundled exporter only after the canonical SVG and deterministic motion specification are ready. Persist the reviewed recipe as `<slug>-logo-animation.mjs`; it is one of the five required outputs for every successful mutating workflow.
 
 ## Boundary
+
+The motion specification and recipe serve different readers:
+
+- `<slug>-logo-motion.md` is the human-readable, renderer-independent design contract: named layers, keyframes, easing, duration, loop, transparency, and reduced-motion state.
+- `<slug>-logo-animation.mjs` is trusted executable repository code that implements that contract for deterministic frame rendering.
+
+Do not replace one with the other, and do not expose export as a public workflow.
 
 - Keep brand geometry, named layers, palette, placement, easing, timing, and repository-specific limits in a root-relative `.mjs` recipe.
 - Treat the recipe as trusted executable repository code. Read it before execution; never download or run a remote, dependency-provided, unreviewed generated, or unreviewed pull-request recipe. `--check` is not a sandbox: it prevents exporter-controlled writes, but imported recipe code can still have arbitrary side effects.

@@ -9,11 +9,15 @@ const casesDir = path.join(root, "skill-evals/animated-readme-logo/cases");
 const expectedCaseNames = [
   "animated-gif-only.md",
   "app-animation-negative.md",
+  "audit-read-only.md",
   "browser-preview-fallback.md",
+  "explicit-start-selection.md",
   "export-capability-unavailable.md",
   "export-install-approval.md",
   "expressive-mark-style.md",
+  "implicit-selection-no-start.md",
   "lottie-readme-request.md",
+  "motion-specification-and-recipe.md",
   "no-initial-asset.md",
   "ordinary-readme-edit-negative.md",
   "portable-agent-host.md",
@@ -23,17 +27,21 @@ const expectedCaseNames = [
   "provider-unavailable-local-fallback.md",
   "raster-source-transform.md",
   "readme-path-safety.md",
+  "required-animation-stack.md",
   "static-svg-logo.md",
   "transparent-logo-requirement.md",
 ].sort();
 const publicFields = [
-  "Task mode",
+  "Workflow",
   "Source route",
+  "Selection",
+  "Write scope and protected originals",
   "Provider state",
   "Approval state",
-  "SVG readiness",
-  "Export status",
+  "Motion readiness",
+  "Animation delivery",
 ];
+const negativePublicFieldFixtures = ["Selection", "Write scope and protected originals"];
 const caseTextRequirements = new Map([
   [
     "browser-preview-fallback.md",
@@ -86,7 +94,7 @@ function requiredValue(argv, index, option) {
 function printHelp() {
   console.log(`Usage: node scripts/validate-animated-readme-logo-evals.mjs [--case path] [--artifacts-dir dir]
 
-Validates the fixed v0.9 animated-readme-logo eval-case schema and optional
+Validates the fixed v0.5 animated-readme-logo eval-case schema and optional
 ## Visual Assertions sections.
 When --artifacts-dir is supplied, also checks matching generated PNG/SVG artifacts.
 
@@ -151,14 +159,18 @@ function visualAssertionPrefixes(markdown) {
   );
 }
 
-function validateCaseSchema(caseFile) {
+function validateCaseSchema(caseFile, markdownFixture = null) {
   const errors = [];
   const relative = path.relative(root, caseFile);
   let markdown;
-  try {
-    markdown = fs.readFileSync(caseFile, "utf8");
-  } catch (error) {
-    return [`${relative}: unable to read eval case (${error.message})`];
+  if (markdownFixture === null) {
+    try {
+      markdown = fs.readFileSync(caseFile, "utf8");
+    } catch (error) {
+      return [`${relative}: unable to read eval case (${error.message})`];
+    }
+  } else {
+    markdown = markdownFixture;
   }
 
   const titles = [...markdown.matchAll(/^# (?!#)\S.+$/gm)];
@@ -210,7 +222,7 @@ function validateCaseSchema(caseFile) {
 
   for (const prefix of visualAssertionPrefixes(markdown)) {
     if (/(?:gif|apng|webp)/i.test(prefix)) {
-      errors.push(`${relative}: v0.9 must not add GIF/APNG/WebP visual assertion prefix ${prefix}`);
+      errors.push(`${relative}: v0.5 must not add GIF/APNG/WebP visual assertion prefix ${prefix}`);
     }
   }
   return errors;
@@ -233,6 +245,30 @@ if (!selectedCase) {
   }
 }
 for (const caseFile of caseFiles) schemaErrors.push(...validateCaseSchema(caseFile));
+for (const missingField of negativePublicFieldFixtures) {
+  const fixturePath = path.join(
+    casesDir,
+    `__validator-missing-${missingField.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}.md`,
+  );
+  const fixture = `# Missing public field
+
+## Should Trigger
+
+Yes.
+
+## Prompt
+
+Exercise the validator.
+
+## Expected Behavior
+
+${publicFields.filter((field) => field !== missingField).join("\n")}
+`;
+  const expectedError = `${path.relative(root, fixturePath)}: positive case must assert the ${missingField} public field`;
+  if (!validateCaseSchema(fixturePath, fixture).includes(expectedError)) {
+    schemaErrors.push(`validator negative fixture did not reject a missing ${missingField} field`);
+  }
+}
 const artifacts = args.artifactsDir ? listArtifacts(args.artifactsDir, { cwd: root }) : null;
 const { assertionCount, errors, visualCaseCount } = validateVisualEvalCases({
   caseFiles,
@@ -247,6 +283,7 @@ if (allErrors.length) {
 }
 
 console.log(`Validated ${caseFiles.length} animated README logo eval case(s).`);
+console.log(`Validated ${negativePublicFieldFixtures.length} public-field negative fixture(s).`);
 console.log(
   `Validated ${assertionCount} visual assertion(s) across ${visualCaseCount} animated README logo eval case(s).`,
 );

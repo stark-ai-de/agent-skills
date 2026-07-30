@@ -312,7 +312,7 @@ try {
     const exportRecipe = readFileSync(exportRecipeReference, "utf8");
     const outputContract = readFileSync(outputContractReference, "utf8");
 
-    assert.match(skill, /requested export or inspection needs a missing local command/);
+    assert.match(skill, /required exporter or inspector command is missing/);
     assert.match(skill, /Keep provider approval and local-tool installation approval as separate/);
     assert.match(localTooling, /Ask for explicit approval of that exact installation/);
     assert.match(
@@ -334,6 +334,25 @@ try {
       outputContract,
       /Local-tool approval: pending \| approved \| declined \| not-required/,
     );
+    assert.match(skill, /audit.*create.*transform.*animate/s);
+    assert.match(skill, /There is no `auto` workflow and no public export workflow/);
+    const auditStep = skill.indexOf("2. For `audit`");
+    const auditReturn = skill.indexOf("Return immediately after the audit report");
+    const mutationStep = skill.indexOf("3. For a mutating workflow");
+    assert.ok(auditStep >= 0, "audit workflow step is missing");
+    assert.ok(auditReturn > auditStep, "audit must return after its report");
+    assert.ok(mutationStep > auditReturn, "audit return must precede every mutating workflow step");
+    assert.match(skill, /<slug>-logo-animation\.mjs/);
+    assert.match(skill, /Selection: <task evidence and rationale>/);
+    assert.match(skill, /Write scope and protected originals: <scope>/);
+    assert.match(
+      assetPipeline,
+      /Successful `create`, `transform`, and `animate` routes produce all five files/,
+    );
+    assert.match(outputContract, /`Motion readiness`/);
+    assert.match(outputContract, /`Animation delivery`/);
+    assert.match(outputContract, /`Selection`/);
+    assert.match(outputContract, /`Write scope and protected originals`/);
   });
 
   expectRun(

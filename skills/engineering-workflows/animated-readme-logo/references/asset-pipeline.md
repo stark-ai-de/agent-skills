@@ -2,25 +2,19 @@
 
 Use this reference after the canonical SVG and motion specification are ready.
 
-## Canonical minimum
+## Required mutating-workflow stack
 
 ```text
 docs/assets/<slug>-logo.svg              # validated, self-contained source
 docs/assets/<slug>-logo-motion.md        # deterministic motion specification
-```
-
-Add only verified delivery artifacts:
-
-```text
+docs/assets/<slug>-logo-animation.mjs     # reviewed deterministic render recipe
 docs/assets/<slug>-logo-static.png
-docs/assets/<slug>-logo-static.webp
-docs/assets/<slug>-logo-animated.webp
-docs/assets/<slug>-logo-animated.apng
 docs/assets/<slug>-logo-animated.gif
-docs/logo/index.html                     # optional web demo
 ```
 
 Use the repository's established asset folder instead of `docs/assets/` when one exists.
+
+Successful `create`, `transform`, and `animate` routes produce all five files. Optional WebP, APNG, or web-demo derivatives may be added only after the required stack succeeds and those extras are independently verified. `audit` writes none of them.
 
 ## Capability-gated export
 
@@ -30,9 +24,9 @@ Use the repository's established asset folder instead of `docs/assets/` when one
 4. Record the exact source, settings, recipe, and command before export.
 5. Export only formats the tool actually supports.
 6. Inspect every animated raster with the bundled inspector. It rejects non-regular inputs, malformed animation structure, hidden text/comment/application/EXIF/XMP/ICC metadata, and unsupported ancillary chunks.
-7. Claim `Export status: completed` only when requested outputs exist and pass inspection.
+7. Claim `Animation delivery: completed` only when the required PNG and GIF exist and pass inspection alongside the validated SVG, motion specification, and checked recipe.
 
-When a required exporter or inspector command is missing, present the minimal installation preflight from `local-tooling.md` and ask for explicit approval immediately. Use `Export status: blocked` while approval is pending. If installation is declined, forbidden, or unavailable, keep the validated SVG and motion spec, set `Export status: capability-unavailable`, and provide an exact next step. Do not create placeholder files or claim an export succeeded.
+When a required exporter or inspector command is missing, present the minimal installation preflight from `local-tooling.md` and ask for explicit approval immediately. Use `Animation delivery: blocked` while approval is pending. If installation is declined, forbidden, or unavailable, keep the validated SVG, motion specification, and checked recipe when available, set `Animation delivery: incomplete`, and provide an exact next step. Do not create placeholder files or claim delivery succeeded.
 
 ## Transparency and delivery checks
 

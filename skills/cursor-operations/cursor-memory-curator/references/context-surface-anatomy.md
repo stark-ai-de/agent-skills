@@ -44,7 +44,7 @@ Treat memory-bank files as user-maintained artifacts:
 
 - Review them when the user provides a path.
 - Preserve their schema if it is clear.
-- Write a sibling `.proposed.md` cleanup plan instead of direct edits when the schema is unclear.
+- Defer the proposal in chat or the single curation record instead of editing or creating a sibling context file when the schema is unclear.
 
 ## Source Basis
 

@@ -10,6 +10,7 @@ remain maintainer-local under ADR-0030.
 ## Promotion Rationale
 
 - Clear routing: activates for editable draw.io / diagrams.net `.drawio` diagrams, technical flows, architecture diagrams, sequence/ER/class/state/network diagrams, repair, validation, and export.
+- Intent-bound routing: exposes four material workflows, proceeds on clear task authority, and asks only when workflow or scope is ambiguous.
 - High utility: gives agents a deterministic XML path when draw.io Desktop, MCP tools, or network access are unavailable.
 - Safe defaults: embeds selected public SVGs instead of runtime links, and requires approval for installs, MCP config writes, hosted previews, bulk downloads, external indexes, and persistent caches.
 - Maintenance fit: public runtime payload is original guidance, deterministic helper scripts, and small regression fixtures; copied third-party reference packs and icon/index assets are not shipped in the public skill.
@@ -17,6 +18,11 @@ remain maintainer-local under ADR-0030.
 ## Eval Set
 
 Cases live under `cases/` and follow the SkillOpt markdown schema:
+
+- `cases/clear-intent-routing.md`
+- `cases/ambiguous-workflow-selection.md`
+- `cases/agent-initiated-authority.md`
+- `cases/review-read-only-early-return.md`
 
 Activation coverage intentionally mixes explicit skill requests with natural-language draw.io work. The corpus validator requires at least 20 positive prompts that do not name `$drawio-diagrams`, so routing quality cannot regress into invocation-only coverage.
 
@@ -67,6 +73,7 @@ These checks prove artifact existence, source structure, basic render validity, 
 
 The auto-discovered corpus deliberately spans:
 
+- clear-intent selection, ambiguous invocation, agent-initiated authority boundaries, and read-only review early return
 - architecture context, deployment, dynamic, operations, current/target, C4, and evidence-conflict decisions
 - flowchart, sequence, ER, UML class/state, BPMN, SysML, ML/DL, swimlane, timeline, network, comparison, and Kubernetes notation
 - icon-first defaults, explicit full opt-out, repository contracts, mixed providers, offline and vendor-neutral fallback, logo fidelity, and rights messaging
@@ -80,4 +87,4 @@ Case files are auto-discovered from `cases/*.md`; split preparation reports the 
 
 Use `rubric.md` to grade outputs. `runs/` stores promotion review summaries and future run evidence.
 
-Passing outputs must create or edit editable `.drawio` XML, run deterministic validation when `python3` is available, preserve existing diagram structure during edits, report visual/export limitations honestly, keep dense architecture diagrams readable in light and dark mode, embed selected external SVGs without runtime links, and approval-gate hosted services, installs, bulk downloads, and persistent caches.
+Cases other than the three routing cases provide enough task intent to select a workflow directly or state the remaining material ambiguity. Passing outputs must create or edit editable `.drawio` XML when requested, run deterministic validation when `python3` is available, preserve existing diagram structure during edits, report visual/export limitations honestly, keep dense architecture diagrams readable in light and dark mode, embed selected external SVGs without runtime links, and approval-gate hosted services, installs, bulk downloads, persistent caches, and file-writing render/raster helpers.

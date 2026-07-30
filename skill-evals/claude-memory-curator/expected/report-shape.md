@@ -1,9 +1,11 @@
-# Expected Claude Memory Review Shape
+# Expected Claude Memory Curation Shape
 
-Passing outputs should lead with a report shaped like this before edits:
+Chat routes render the applicable sections without writing a report. File routes persist exactly one redacted record shaped like this:
 
 ```md
-# Claude Memory Review
+# Claude Memory Curation Record
+
+## Review
 
 ## Top Decisions
 
@@ -51,12 +53,43 @@ Passing outputs should lead with a report shaped like this before edits:
 - Hooks:
 - Managed policy:
 
-## Optional Cleanup Plan Artifact
+## Plan
 
-- Plan path:
-- Plan format: `assets/cleanup-plan-template.md`
+- Status:
+- Approved entries:
+- Stop conditions:
+
+## Execution Receipt
+
+- Applied entries:
+- Files changed:
+- Manifest reconciliation and unmatched paths:
+- New paths (`created-no-preimage`) and rollback:
+
+| Changed path | Backup destination | Bytes | SHA-256 | Verification |
+| ------------ | ------------------ | ----: | ------- | ------------ |
+
+- Backup destinations are manifest-relative; absolute local paths are not persisted.
+
+## Deferred Work
+
+- Entries and reasons:
+
+## Backup
+
+- Portable backup ID (directory basename) or not applicable:
+- Portable storage locator (`user-state/.../<backup-id>` or `external-root/<alias>/<backup-id>`):
+- Storage policy / root safety (`outside-git-worktree`):
+- Backup mode and portable manifest locator (`<storage-locator>/backup-manifest.json`):
+- Manifest file count / changed-file match count:
+
+## Verification
+
+- Re-read results:
+- Backup integrity result:
+- Residual risks:
 
 ## Recommended Next Action
 ```
 
-After approved edits, outputs should add backup path, files changed, trimmed diff summary, skipped managed-policy actions, and residual risks.
+Use `not applicable` with a reason for route phases that do not run. Never persist a separate report, plan, or receipt for one selection.

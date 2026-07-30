@@ -1,7 +1,7 @@
 interface:
   display_name: "Animated README Logo"
   short_description: "Creates validated animated README logo pipelines"
-  default_prompt: "Use $animated-readme-logo to create, transform, animate, export, or review a repository README logo. Route eligible new-mark design through live Recraft discovery and exact-cost approval; otherwise author and validate the SVG locally. Keep brand motion in a trusted repository recipe, reuse the bundled raster exporter, ask before installing missing tools, and never claim unverified exports."
+  default_prompt: "Use $animated-readme-logo for this README logo task. Show audit, create, transform, and animate; announce and proceed with the intent-bound workflow when outcome and authority are clear, otherwise ask me to choose. Keep provider spend, tool installation, and overwrites separately approved."
 policy:
   allow_implicit_invocation: true
 dependencies:

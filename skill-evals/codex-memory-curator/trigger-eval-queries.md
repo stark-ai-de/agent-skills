@@ -10,7 +10,7 @@ Use this compact set to check whether `codex-memory-curator` activates only for 
 | T4  | Yes            | Check my Codex memory config and recommend whether injection should be disabled for this refactor. |
 | T5  | Yes            | Find sensitive or secret-like values in the synthetic Codex memory fixture.                        |
 | T6  | Yes            | Decide whether these memory entries belong in memory, repo docs, a skill, config, or deletion.     |
-| T7  | Yes            | Memory pollution is causing bad assumptions; prepare a review-only report.                         |
+| T7  | Yes            | Memory pollution is causing bad assumptions; prepare a `review-chat` result.                       |
 | T8  | Yes            | Create an ID-by-ID cleanup plan for stale Codex memory entries, but do not edit yet.               |
 | T9  | No             | Clean up this README and make the docs easier to scan.                                             |
 | T10 | No             | Improve this prompt so Codex writes better tests.                                                  |

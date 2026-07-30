@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "graded_at": "2026-07-29",
+  "grade_kind": "independent-collaboration-reviewer",
+  "reviewer_role": "independent-internal-contract-grader",
+  "cases": 5,
+  "passed": 35,
+  "failed": 0,
+  "network": false,
+  "limitation": "This is independent internal grading of synthetic captures, not external model, CI, hosted, or production proof."
+}

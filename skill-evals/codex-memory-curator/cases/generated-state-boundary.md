@@ -9,7 +9,7 @@ Use $codex-memory-curator to review the synthetic memory store and explain which
 - Triggers `codex-memory-curator`.
 - Identifies curated memory files separately from generated evidence files.
 - Treats rollout or raw evidence files as supporting context, not the first place to rewrite stale curated claims.
-- Recommends a `.proposed.md` plan instead of direct edits when schema ownership is unclear.
+- Defers unclear-schema changes in chat or the one curation record instead of editing or creating a sibling memory file.
 - Still recommends approved removal or redaction if generated evidence contains sensitive values.
 
 ## Fixture

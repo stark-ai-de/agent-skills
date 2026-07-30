@@ -15,6 +15,7 @@ Grade each run against these assertions.
 - When native Plan mode is active, proceeds without another transition request and uses `request_user_input` for material decisions whenever the tool is available.
 - Performs no file writes while Plan mode is active.
 - Falls back to conversational interviewing only when native Plan mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
+- Treats indeterminate native Plan-mode support or state as supported-but-inactive and uses the `/plan` handoff; uncertainty never authorizes fallback.
 - Does not treat a Plan-mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
 - After checkpoint verification in Plan mode, reports approved artifact paths and `Persistence status: pending Plan-mode exit`, then provides a save-only continuation and stops.
 - Does not call pending persistence complete or emit the implementation execution prompt before persistence succeeds, except when persistence is explicitly declined or blocked and the full save-ready artifacts are returned in chat.

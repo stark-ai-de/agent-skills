@@ -23,4 +23,4 @@ Use `node scripts/inventory-memories.mjs --json` when file-kind grouping would m
 - Prefer changing the smallest curated claim that affects future behavior.
 - Do not rewrite generated evidence just because a summary is stale.
 - If a generated evidence file contains sensitive data, propose removal or redaction only after backup and explicit approval.
-- If schema ownership is unclear, write a sibling `.proposed.md` plan instead of editing the original.
+- If schema ownership is unclear, defer the proposal in chat or the single curation record instead of editing the original or creating a sibling memory file.

@@ -1,136 +1,127 @@
-# New Repository ADR-Guided Adoption Plan
+# New Repository Architecture Adoption Plan
 
-Use this template for the first-implementation layout plan after guardrail adoption has been recorded in `setup-report-template.md`.
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
 
-## Collaboration route
+Use this after `setup` establishes repository-native governance. It does not extend setup authority into source implementation.
 
-- Host capability evidence:
-- Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
-- Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
-- Route: `<native decision phase | portable no-write fallback | direct execution>`
-- Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
-- Architecture decision status: `<not required | pending | approved | blocked>`
-- Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+## Setup handoff
 
-## Selected stack
+- Setup coverage: `recommended | complete`
+- Repository evidence state: `new | evidence-empty`
+- Foundation candidates evaluated: `AC-ADR-005, AC-ADR-006, AC-ADR-018, AC-ADR-019, AC-ADR-021, AC-ADR-022, AC-ADR-049`
+- Provider-to-local mapping path:
+- Accepted local decisions and unresolved decisions:
+- Protected paths and pre-existing state:
+- Setup validation receipt:
 
-- Workspace:
-- Web framework:
-- Backend runtime:
-- Validation/parsing:
-- Styling/UI:
-- Data/request layer:
-- Package manager:
-- Lint/format: Oxc for JavaScript/TypeScript starters unless target ADRs, stack rules, or explicit rejection choose another toolchain.
-- pnpm workspace hardening:
+## Candidate Dispositions
 
-## Initial layout
+Do not treat the new-repository foundation as automatic adoption. Preserve each Setup disposition and implement only accepted local decisions.
+
+Use one of `adopt`, `adapt`, `defer`, or `reject` in the Disposition column.
+
+| Provider candidate | Disposition | Local ADR/path | Evidence or adaptation | Deferred trigger/owner or rejection rationale |
+| ------------------ | ----------- | -------------- | ---------------------- | --------------------------------------------- |
+| AC-ADR-005         |             |                |                        |                                               |
+| AC-ADR-006         |             |                |                        |                                               |
+| AC-ADR-018         |             |                |                        |                                               |
+| AC-ADR-019         |             |                |                        |                                               |
+| AC-ADR-021         |             |                |                        |                                               |
+| AC-ADR-022         |             |                |                        |                                               |
+| AC-ADR-049         |             |                |                        |                                               |
+
+Additional candidates selected by repository evidence:
+
+| Provider candidate | Disposition | Local ADR/path | Selection evidence | Trigger/owner or rejection rationale |
+| ------------------ | ----------- | -------------- | ------------------ | ------------------------------------ |
+|                    |             |                |                    |                                      |
+
+## First implementation workflow
+
+- Public workflows exposed: `setup | audit | refactor | plan-refactor | plan-run-refactor`
+- Recommended route: `plan-run-refactor`
+- Selected route: `plan-refactor | plan-run-refactor | refactor`
+- Selection rationale and user-authorized outcome/scope:
+- Planning capability and transition evidence:
+- Expected specification and implementation artifacts:
+- Separate destructive, paid, external, deployment, publication, or production approvals:
+
+Use `refactor` only when accepted local ADRs already govern every durable choice and the requested implementation is explicitly bounded. Otherwise use a Plan workflow.
+
+## Repository contract
+
+- ADR directory, index, and successor convention:
+- Agent instruction surfaces:
+- Validation receipt location:
+- Package/module ownership:
+- Deployable units and runtime boundaries:
+- Public contracts and compatibility policy:
+- Security, data, migration, delivery, and rollback obligations:
+
+## Selective Guide / Placement Map
+
+Load only the Guide needed for an accepted candidate and place the resulting rule or implementation at the target repository's owning boundary. A provider Guide is non-normative and does not authorize copying provider paths.
+
+| Accepted local ADR | Provider ADR | Guide path or heading needed | Target owning boundary | Exact target placement | Selection evidence |
+| ------------------ | ------------ | ---------------------------- | ---------------------- | ---------------------- | ------------------ |
+|                    |              |                              |                        |                        |                    |
+
+## Approved bounded plan
+
+- Outcome and non-goals:
+- Exact path allowlist:
+- Ordered reversible slices:
+- Proof obligations and one owner per obligation:
+- Reusable receipts and invalidators:
+- Rollback and stop conditions:
+- Plan-mode exit requirement:
+
+## Execution preflight
+
+- Repository root, branch, HEAD, and status:
+- Accepted ADR and mapping recheck:
+- Dependency/toolchain recheck:
+- Permissions and protected-path recheck:
+- Material drift result:
+
+## Delivery ledger
+
+| Slice | Exact paths | Governing local ADR | Validation | Evidence stage | Environment | Status | Observation/result | Rollback |
+| ----- | ----------- | ------------------- | ---------- | -------------- | ----------- | ------ | ------------------ | -------- |
+|       |             |                     |            |                |             |        |                    |          |
+
+## AC-ADR-049 validation receipts
+
+Record one receipt per distinct proof obligation. Reconcile delegated receipts against the integrated candidate before the final gate.
 
 ```text
-apps/<web-app>/
-apps/<docs-app>/
-apps/<backend-service>/
-packages/ui/
-packages/<domain-core>/
-packages/backend-runtime/
-packages/<tooling>/
-docs/adr/
+Receipt ID:
+Risk: low | moderate | high | critical
+Cadence: reuse | final-batch | checkpointed | reproduce-first
+Proof obligation:
+Subject / owning boundary:
+Revision / exact candidate artifact / dirty-tree or content fingerprint:
+Command / scenario / harness:
+Toolchain / config / fixtures / lockfile:
+Evidence stage: source/static | local | CI | publication/install | deployed/production | external/third-party
+Environment:
+Status: verified | failed | not run | unavailable | stale
+Observation / result:
+Observed at / freshness boundary:
+Covered contracts:
+Invalidators / limitations:
+Owner / source / run link:
+Repository-native receipt location:
+Skip reason: none | <why this obligation was not executed and who authorized it>
+Final aggregate gate: <command or scenario, relationship to this receipt, and result>
 ```
 
-Delete unused folders from the starter plan. Do not create backend or package folders before there is a real owner.
+| Receipt ID | Risk | Cadence | Proof obligation | Subject | Command/scenario/harness | Toolchain | Stage | Environment | Status | Observation/result | Invalidators | Owner | Skip reason | Final aggregate gate relationship |
+| ---------- | ---- | ------- | ---------------- | ------- | ------------------------ | --------- | ----- | ----------- | ------ | ------------------ | ------------ | ----- | ----------- | --------------------------------- |
+|            |      |         |                  |         |                          |           |       |             |        |                    |              |       |             |                                   |
 
-## ADRs and docs
+## Deferred decisions and triggers
 
-- Source-structure ADR: `docs/adr/NNNN-repository-source-structure.md`
-- ADR index: `docs/adr/index.md` or target convention
-- Agent instructions: `AGENTS.md` by default, or the approved target-runtime convention
-- Stack rules: `STACK_RULES.md` or target convention
-- Validation docs:
-
-## Starter examples
-
-Include only examples selected for the stack:
-
-- Thin route file.
-- Screen wrapper.
-- Hydrated server component.
-- Client controller.
-- Pure UI leaf.
-- Query client helper.
-- Query contract.
-- Client query options.
-- Server query options.
-- Server Action wrapper.
-- Backend `main.ts`.
-- Backend `runtime.ts`.
-- Backend `http-app.ts`.
-- Backend env/config loader.
-
-## Guardrails for first implementation
-
-- [ ] New files have one source role.
-- [ ] Runtime boundaries are explicit.
-- [ ] Stack choices match stack rules.
-- [ ] Oxc owns JavaScript/TypeScript linting and formatting, or the accepted alternative is recorded.
-- [ ] pnpm owns dependency installation, workspace resolution, and lockfile state.
-- [ ] `pnpm-workspace.yaml` includes supply-chain hardening and reviewed `allowBuilds` entries.
-- [ ] Docs point to canonical ADRs.
-- [ ] Validation commands exist.
-
-## pnpm workspace baseline
-
-```yaml
-packages:
-  - "."
-  - "apps/*"
-  - "packages/*"
-strictDepBuilds: true
-blockExoticSubdeps: true
-minimumReleaseAge: 1440
-minimumReleaseAgeStrict: true
-trustPolicy: no-downgrade
-allowBuilds: {}
-```
-
-Populate `allowBuilds` only after reviewing dependencies that genuinely need lifecycle scripts. Add narrow `minimumReleaseAgeExclude` or `trustPolicyExclude` entries only for approved urgent or compatibility cases.
-
-## Oxc lint/format baseline
-
-```json
-{
-  "scripts": {
-    "format": "oxfmt --write .",
-    "format:check": "oxfmt --check .",
-    "lint": "oxlint"
-  }
-}
-```
-
-Keep formatter and linter config in repo-root Oxc config files unless target repo structure requires package-local overrides.
-
-## Validation commands
-
-```bash
-# install
-# type-check
-# lint
-# test
-# docs
-```
-
-## Approved implementation boundary
-
-Include this section only when implementation was requested; otherwise omit it.
-
-- Approved first slice:
-- Allowed target paths:
-- Validation commands:
-- Material assumptions:
-- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
-- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
-
-## Open decisions
-
-| Decision | Required before | Owner | Notes |
-| -------- | --------------- | ----- | ----- |
-|          |                 |       |       |
+| Decision | Why deferred | Owner | Trigger | Blocking scope |
+| -------- | ------------ | ----- | ------- | -------------- |
+|          |              |       |         |                |

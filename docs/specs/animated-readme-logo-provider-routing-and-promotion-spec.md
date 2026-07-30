@@ -105,7 +105,7 @@ Promote `animated-readme-logo` as a portable public workflow that can create or 
 
 - ADR required: yes.
 - Existing ADRs consulted: ADR-0007, ADR-0008, ADR-0014, ADR-0021, ADR-0022, ADR-0024.
-- ADR path: `docs/adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.md`.
+- ADR path: [ADR-0025](../adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.short.md) ([Long, canonical](../adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.long.md) · [Guide](../adrs/0025-keep-animated-readme-logo-portable-with-provider-routing.guide.md)).
 - ADR gate result: required and accepted.
 - Supersedes: none.
 

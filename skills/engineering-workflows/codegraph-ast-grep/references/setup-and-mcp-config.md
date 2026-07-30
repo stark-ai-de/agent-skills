@@ -1,18 +1,20 @@
 # Setup and MCP Configuration
 
-Use this reference for installation, MCP setup, project initialization, or setup repair. Use [update-and-provenance.md](update-and-provenance.md) for an already-installed tool's stable-update check and update approval.
+Use this reference for the idempotent `setup` workflow: installation/reconciliation, MCP setup, project initialization, and persisted repository guidance. Use [update-and-provenance.md](update-and-provenance.md) for the `update` workflow.
+
+Precondition: `setup` was selected from clear user intent or explicit choice and the exact root/write scope was announced. That selection covers ordinary in-root package, runtime-config, graph, and guidance reconciliation; privilege escalation, installer-channel/scope changes, telemetry, destructive replacement, and unrelated writes remain separate.
 
 ## Contents
 
 - [Setup principles](#setup-principles)
 - [Read-only preflight](#read-only-preflight)
-- [Choose a setup profile](#choose-a-setup-profile)
+- [Choose an installation scope](#choose-an-installation-scope)
 - [Install channels](#install-channels)
 - [CodeGraph runtime configuration](#codegraph-runtime-configuration)
 - [Project initialization and configuration](#project-initialization-and-configuration)
 - [ast-grep project setup](#ast-grep-project-setup)
 - [Experimental ast-grep MCP](#experimental-ast-grep-mcp)
-- [Approval and verification](#approval-and-verification)
+- [Authorization and verification](#authorization-and-verification)
 
 ## Setup principles
 
@@ -20,7 +22,7 @@ Use this reference for installation, MCP setup, project initialization, or setup
 2. Discover the installed command surface before choosing examples.
 3. Preserve the user's current package manager, installer channel, scope, trust policy, and declarative configuration.
 4. Show exact versions, destinations, remote execution, lifecycle scripts, telemetry behavior, and rollback limits before approval. Treat update-network permission and telemetry consent separately; default-on telemetry is not affirmative consent.
-5. Keep the CLI/package decision separate from MCP registration, agent instructions/hooks, project initialization, and repository config.
+5. Keep CLI/package, MCP registration, agent guidance, project initialization, and repository config as separately reported changes even when the selected setup scope authorizes them together.
 6. Never install a package manager just to install either tool unless the user asks.
 
 `npx`, `uvx`, package installs, archive extraction, MCP registration, `codegraph install`, graph initialization, configuration writes, and ignore-file edits are side-effectful. Do not run them from diagnostic intent.
@@ -66,16 +68,16 @@ find . -maxdepth 3 \
 
 When content inspection is necessary, redact credentials, headers, private service URLs, customer names, and unrelated server entries before reporting it.
 
-## Choose a setup profile
+## Choose an installation scope
 
-Present the applicable profile and obtain approval before executing it.
+Select and announce the applicable installation scope inside the `setup` workflow. This is not another public workflow. Ask only when the installation scope or authority is ambiguous or expands beyond the requested setup outcome.
 
-| Profile          | CLI/tool scope                                                            | MCP/config scope                 | Best fit                                               |
-| ---------------- | ------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------ |
-| Personal         | Existing or user-wide installation                                        | User/global runtime config       | One trusted workstation across many repositories       |
-| Team-pinned      | Project dependency, Nix/devbox/toolchain pin, or documented exact release | Project runtime config           | Reproducible team and CI behavior                      |
-| Ephemeral        | Exact package or verified archive in a temp/sandbox path                  | Printed or temporary config only | CI, evaluation, locked-down hosts                      |
-| Diagnostics-only | Existing executables only                                                 | No writes                        | Exploration or repair assessment before setup approval |
+| Installation scope | CLI/tool scope                                                            | MCP/config scope                 | Best fit                                               |
+| ------------------ | ------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------ |
+| Personal           | Existing or user-wide installation                                        | User/global runtime config       | One trusted workstation across many repositories       |
+| Team-pinned        | Project dependency, Nix/devbox/toolchain pin, or documented exact release | Project runtime config           | Reproducible team and CI behavior                      |
+| Ephemeral          | Exact package or verified archive in a temp/sandbox path                  | Printed or temporary config only | CI, evaluation, locked-down hosts                      |
+| Diagnostics-only   | Existing executables only                                                 | No writes                        | Exploration or repair assessment before setup approval |
 
 The CodeGraph index is always per selected project root even when the CLI/MCP registration is user-wide. ast-grep can be user-wide for ad-hoc use or project-local when rules/CI require a reproducible version.
 
@@ -436,7 +438,7 @@ Do not create `sgconfig.yml`, rule directories, or test fixtures for an ad-hoc s
 
 ## Experimental ast-grep MCP
 
-Prefer ast-grep CLI. The upstream ast-grep MCP server is experimental, has no stable release line, requires Python plus ast-grep on `PATH`, and should not be persisted from an unpinned Git branch.
+Prefer ast-grep CLI. The upstream ast-grep MCP server is experimental, has no stable release line, requires Python plus ast-grep on `PATH`, and is excluded from normal `setup` and `update`. It should not be persisted from an unpinned Git branch.
 
 For an approved experiment:
 
@@ -449,18 +451,16 @@ For an approved experiment:
 
 Do not publish an unpinned `uvx --from git+...` MCP entry as a durable default.
 
-## Approval and verification
+## Authorization and verification
 
-Treat these as separate approval classes:
+An explicit `setup` request for the announced root authorizes the ordinary agent-complete actions below. Keep each effect visible, and stop for a new approval when the effective action crosses the listed boundary.
 
-| Action                                                | Separate approval           | Verify afterward                                   |
-| ----------------------------------------------------- | --------------------------- | -------------------------------------------------- |
-| Install/update CLI package or archive                 | Yes, per tool               | Executable path, version, help, install provenance |
-| Change package-manager/build trust                    | Yes                         | Effective config and native executable             |
-| Register/edit MCP server                              | Yes, per runtime/scope      | Server list, tool list, restart/reconnect          |
-| Run `codegraph install`                               | Yes, with full side effects | Every touched config/instruction/hook surface      |
-| Open a project for status/graph diagnostics           | Yes, per root or copy       | Intended generated-state boundary and freshness    |
-| Initialize/sync/rebuild graph                         | Yes                         | Selected root, `status`, freshness, ignore state   |
-| Create/edit `codegraph.json` or ast-grep config/rules | Yes                         | Diff, parse/test, index/rule behavior              |
+| Action                                             | Covered setup scope                                  | Separate boundary                                      | Verify afterward                                   |
+| -------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| Install/reconcile CLI package or archive           | Existing approved project/declarative channel        | Privilege, global scope, channel/trust-policy change   | Executable path, version, help, install provenance |
+| Register/edit MCP server                           | Named runtime and announced config scope             | Another runtime, user-wide expansion, secret material  | Server list, tool list, restart/reconnect          |
+| Run `codegraph install`                            | Only when every known side effect was announced      | Undisclosed instruction/hook/global mutation           | Every touched config/instruction/hook surface      |
+| Initialize/migrate/sync graph                      | Exact announced root and generated state             | Destructive rebuild, deletion, or another root         | Root, `status`, freshness, ignore state            |
+| Create/edit project config and repository guidance | Minimal idempotent setup files in the announced root | Unrelated source, policy, or broad instruction rewrite | Diff, parse/test, discovery and behavior           |
 
-The approval for initialize/sync/rebuild may include its project-opening `status` verification only when that verification and root are named in the checkpoint. After setup, report exact installed versions and scopes, runtime verification, approved graph-status evidence or why it was skipped, ast-grep availability, any unverified path, and the next safe usage command. Do not claim setup complete from file presence alone.
+After setup, report exact installed versions and scopes, runtime verification, graph readiness, ast-grep availability, persisted guidance discovery, any unverified path, and the next safe usage command. Do not claim setup complete from file presence alone.

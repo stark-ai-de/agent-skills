@@ -1,7 +1,7 @@
 interface:
   display_name: "CodeGraph + ast-grep"
-  short_description: "Semantic and structural repo analysis with safe setup"
-  default_prompt: "Use $codegraph-ast-grep to check the selected analysis tools, map semantic impact with CodeGraph, confirm syntax with ast-grep, and keep setup or refactors approval-gated."
+  short_description: "Set up, update, or diagnose semantic and structural tooling"
+  default_prompt: "Use $codegraph-ast-grep to expose setup, update, and doctor; select and announce the task-matching workflow when intent and authority are clear, otherwise ask. Preserve installer provenance and protected state, keep doctor non-repairing, require exact-root approval before possibly migrating graph diagnostics, and persist repository guidance for automatic CodeGraph plus ast-grep CLI use after setup."
 policy:
   allow_implicit_invocation: true
 dependencies:

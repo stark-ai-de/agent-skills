@@ -7,10 +7,10 @@ Use $cursor-memory-curator to review the synthetic Cursor context. After you sho
 ## Expected Behavior
 
 - Triggers `cursor-memory-curator`.
-- Produces the review report before any edits, with a cleanup plan only if ID-by-ID approval is needed.
-- Does not run `backup-cursor-context.mjs` because cleanup was not approved.
+- Selects `review-chat`, produces the full review, and creates no cleanup plan or durable report.
+- Does not run `backup-cursor-context.mjs` because the selected route is read-only.
 - Does not modify `.cursor/rules`, `.cursorrules`, `AGENTS.md`, User Rules exports, Team Rules exports, or memory-bank fixtures.
-- Ends with the remaining recommended action instead of asking the approval question again.
+- Ends with the remaining recommendation without asking a generic cleanup-approval question.
 
 ## Fixture
 

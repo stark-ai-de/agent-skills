@@ -1,18 +1,18 @@
 ---
 name: animated-readme-logo
-description: Create, transform, or review animated logo asset pipelines for GitHub READMEs, including starter asset creation when no logo exists, transparent-background transformations, SVG/Lottie source choices, README-safe picture markup, reduced-motion fallbacks, GitHub Pages demos, and asset validation. Use when working on README logos, profile README hero images, animated repository branding, or README image compatibility.
+description: Audit, create, transform, or animate verified logo pipelines for GitHub READMEs. Use when a repository needs a new or reconstructed mark, motion specification, SVG animation master, executable animation recipe, static PNG, animated GIF, README-safe markup, reduced-motion fallback, or compatibility review. Do not use for unrelated app/site motion or generic image generation without a README branding target.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # Animated README Logo
 
 ## Goal
 
-Create a portable, validated SVG logo master and a deterministic motion plan, then export only the artifacts the available tools can verify.
+Audit an existing README logo pipeline or deliver a portable, verified animation from a validated SVG master, deterministic motion specification, and executable repository recipe.
 
 ## When to use
 
@@ -26,6 +26,28 @@ Create a portable, validated SVG logo master and a deterministic motion plan, th
 - App/site motion unrelated to repository branding delivery.
 - Generic image generation with no README or repository-logo target.
 
+## Workflow selection
+
+Always expose exactly these public workflows:
+
+- `audit`: read-only assessment of existing README logo sources, animation assets, delivery markup, and validation evidence.
+- `create`: design a new mark or intentional redesign and deliver the complete verified animation stack.
+- `transform`: faithfully recreate or clean up an existing mark and deliver the complete verified animation stack.
+- `animate`: use an acceptable existing SVG source and deliver the complete verified animation stack.
+
+There is no `auto` workflow and no public export workflow. Export is an internal rendering stage of every mutating route.
+
+Route from task intent:
+
+- review, compatibility, or quality assessment selects `audit`;
+- a new mark or intentional redesign selects `create`;
+- faithful work from a raster, screenshot, poster, or unsuitable SVG selects `transform`;
+- an acceptable existing SVG that needs motion or raster delivery selects `animate`.
+
+On every activation, show all four workflows, then `Selected`, `Reason`, source evidence, write scope, required outputs, protected originals, and remaining paid/tool/install/overwrite approvals. Proceed after the announcement when intent and mutation authority are unambiguous. A bare invocation, conflicting source evidence, or ambiguity about identity preservation, outcome, scope, or write authority asks the user to choose before substantive inspection. Agent-initiated activation may select `audit`; it may select a mutating workflow only when the existing task explicitly requested that outcome and scope.
+
+Source routing is internal. Provider evaluation is available only within `create`, and selection never authorizes a credit-consuming call or tool installation.
+
 ## Inputs to inspect
 
 - Repository identity, public brand copy, target surface, and requested task.
@@ -35,22 +57,26 @@ Create a portable, validated SVG logo master and a deterministic motion plan, th
 
 ## Workflow
 
-1. Inspect repository identity, README markup, referenced assets, brand constraints, target surface, and available local or connected capabilities.
-2. Select exactly one current task mode:
-   - `review`: assess existing README logo assets without redesigning them.
-   - `create`: design a new mark or intentionally redesign an existing one.
-   - `transform`: faithfully recreate or clean an existing mark.
-   - `animate-export`: define motion or export an already acceptable source.
-3. Select the source route before creating anything. Read `references/provider-routing.md` for every `create` task and whenever external generation is proposed. Recraft is ineligible for `review`, a clean existing SVG, a faithful transformation, or any task that needs reference-media fidelity.
-4. Preserve originals. Create deterministic derived filenames under the repository's established asset folder, or `docs/assets/` when none exists.
-5. Produce a self-contained SVG locally at the static first-frame state. A provider result is design input, not proof that the SVG is ready. Use `drawio-diagrams` only when geometric, editable construction materially helps; it is not a dependency.
-6. Strictly validate the SVG. Do not report completion until it passes the bundled validator. Read `references/asset-transformation.md` for the authoring and validation contract.
-7. Write a deterministic motion specification with named layers, explicit keyframes, easing, duration, loop point, and a static reduced-motion state. Read `references/motion-rubric.md`.
-8. Choose README and optional web-demo delivery from `references/github-readme-compatibility.md` and `references/asset-pipeline.md`. For static PNG plus animated GIF delivery, keep brand behavior in a trusted repository recipe and use the bundled exporter contract in `references/export-recipe.md`; do not recreate its rasterization and encoding plumbing in the product repository. Read `references/local-tooling.md` before declaring an exporter, inspector runtime, or browser unavailable. When a requested export or inspection needs a missing local command, immediately present the minimal installation preflight and ask for explicit approval; stop before installing. Export animated raster formats only when a detected or approved-and-verified tool can produce them and the result can be inspected. Never invent an artifact or successful export.
-9. For an existing README, run the read-only audit with an explicit repository root. Treat every local reference as untrusted and root-bounded. Read `references/readme-audit-safety.md`.
-10. Report the public status fields below and the exact files, checks, fallbacks, and remaining blockers.
+1. Resolve and announce the intent-bound workflow. Stop before inspection only when routing or authority is ambiguous.
+2. For `audit`, inspect with an explicit repository root, treat local README references as untrusted and root-bounded, run available read-only validation, report remediation, and write nothing. Return immediately after the audit report; do not continue to the mutating workflow steps below.
+3. For a mutating workflow, preserve originals and reserve these deterministic names under the established asset folder, or `docs/assets/` when none exists:
 
-For a multi-stage request, finish and report one mode before moving to the next mode.
+   ```text
+   <slug>-logo.svg
+   <slug>-logo-motion.md
+   <slug>-logo-animation.mjs
+   <slug>-logo-static.png
+   <slug>-logo-animated.gif
+   ```
+
+4. Select the internal source route. Read `references/provider-routing.md` for `create`; Recraft is ineligible for `audit`, `transform`, `animate`, clean existing SVG work, and any identity-preserving task.
+5. Produce or verify a self-contained SVG at the static first-frame state. An acceptable animation source is a real, self-contained SVG that preserves the intended identity, has stable named layers, and passes the bundled strict validator. A provider result is design input, not readiness proof.
+6. Write the human-readable motion specification: the renderer-independent contract for layers, keyframes, easing, duration, loop point, transparency, and reduced-motion state. This explains what must move and is the durable review surface.
+7. Write the executable animation recipe: trusted repository-owned `.mjs` code that deterministically turns the SVG and motion contract into frames for the bundled exporter. This explains how the animation is rendered and is not a separate user workflow.
+8. Validate the SVG and run the recipe with `--check`. Then use the bundled exporter to create the static PNG and animated GIF, and inspect the GIF. Read `references/asset-transformation.md`, `references/motion-rubric.md`, `references/export-recipe.md`, and `references/asset-pipeline.md`.
+9. If a required exporter or inspector command is missing, present the minimal installation preflight and ask for explicit approval. Stop before installation. If installation is declined, forbidden, or unavailable, retain every verified intermediate that can be produced, create no placeholder PNG/GIF, and report incomplete animation delivery.
+10. Choose README and optional web-demo delivery from `references/github-readme-compatibility.md`; include static and reduced-motion fallbacks, dimensions, alt text, transparency checks, and a manual committed-GitHub preview.
+11. Report the public status fields below, exact files, validation evidence, fallbacks, and remaining blockers.
 
 ## Provider boundary
 
@@ -61,6 +87,7 @@ For a multi-stage request, finish and report one mode before moving to the next 
 
 ## Safety rules
 
+- Do not inspect while workflow selection is ambiguous, and do not mutate unless the user's request authorizes the selected mutating outcome and scope.
 - Do not install tools, overwrite brand assets, spend credits, publish, or change remote state without the required approval.
 - Keep provider approval and local-tool installation approval as separate checkpoints. Approval of one never authorizes the other.
 - Do not expose secrets, private paths, internal hostnames, hidden metadata, or customer data in a prompt, asset, snippet, or report.
@@ -99,20 +126,24 @@ Run a script with `--help` before relying on optional flags.
 Always report these fields for an activated task:
 
 ```text
-Task mode: review | create | transform | animate-export
+Workflow: audit | create | transform | animate
 Source route: <route>
+Selection: <task evidence and rationale>
+Write scope and protected originals: <scope>
 Provider state: <state>
 Approval state: <state>
-SVG readiness: <state>
-Export status: <state>
+Motion readiness: <state>
+Animation delivery: <state>
 ```
 
 Then report the asset stack, motion specification, README delivery, validation evidence, and remaining blockers. Use the exact meanings in `references/output-contract.md`.
 
 ## Completion criteria
 
-- A complete creation, transformation, or animation path has a self-contained SVG that passes strict validation and a deterministic motion specification.
-- A review may finish with a non-ready SVG status only when it reports concrete remediation; it must not claim the asset pipeline is complete.
+- All four workflows were exposed and selection was either announced from clear intent or requested for ambiguity.
+- `audit` remained strictly read-only.
+- Successful `create`, `transform`, and `animate` routes produced and verified the SVG master, motion specification, animation recipe, static PNG, and animated GIF.
+- A mutating route with missing tooling retained verified intermediates but reported incomplete delivery rather than success.
 - Every paid generation is traceable to a live preflight and explicit approval of that exact batch.
 - Every claimed raster export exists and passes the relevant inspector.
 - Every README-local path stays within the declared repository root after symlink resolution.
@@ -126,8 +157,8 @@ Keep one host-neutral workflow. Do not branch on Codex, Cursor, Claude, or anoth
 
 - If live provider capability, exact model availability, or current cost cannot be confirmed, report the limitation and author the SVG locally.
 - If provider approval is pending, stop before generation. If it is declined, record that once and continue locally.
-- If strict SVG validation fails, correct the source and rerun validation; do not claim readiness.
-- If a required exporter or inspector runtime is missing and installation has not been declined or forbidden, present the exact minimal tool preflight and ask for approval immediately. Use `Export status: blocked` while approval is pending; install nothing yet.
-- If installation is declined, forbidden, or unavailable, keep the validated SVG and motion spec, report `Export status: capability-unavailable`, and create no placeholder.
+- If strict SVG or recipe validation fails, correct the source and rerun validation; do not claim motion readiness.
+- If a required exporter or inspector runtime is missing and installation has not been declined or forbidden, present the exact minimal tool preflight and ask for approval immediately. Use `Animation delivery: blocked` while approval is pending; install nothing yet.
+- If installation is declined, forbidden, or unavailable, keep the validated SVG, motion specification, and checked recipe when possible, report `Animation delivery: incomplete`, and create no placeholder raster.
 - If Playwright cannot find its expected browser, do not classify the raster exporter as unavailable. Reuse an existing configured Chrome or Chromium executable, then an existing `agent-browser`; request approval before any CLI or browser download.
 - If a README asset reference fails root containment, reject it before reading and report the path class.

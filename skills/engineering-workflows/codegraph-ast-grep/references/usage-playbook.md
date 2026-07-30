@@ -1,10 +1,12 @@
 # Usage Playbook
 
-Use CodeGraph for semantic scope, ast-grep for syntax-exact coverage, targeted source reads for confirmation, and project-native validation for correctness.
+Use CodeGraph for semantic scope, ast-grep CLI for syntax-exact coverage, targeted source reads for confirmation, and project-native validation for correctness. These are internal coding behaviors after setup, not public skill workflows.
+
+Persist the following concise rule, adapted to the target repository's existing instruction format: “For repository-scale coding, use CodeGraph for semantic symbols, callers, call paths, and impact; use ast-grep CLI for structural syntax evidence; reconcile both before broad edits.” Do not duplicate an equivalent rule on repeated setup.
 
 ## Contents
 
-- [Choose the smallest workflow](#choose-the-smallest-workflow)
+- [Choose the smallest evidence path](#choose-the-smallest-evidence-path)
 - [Semantic exploration](#semantic-exploration)
 - [Structural search and rules](#structural-search-and-rules)
 - [Impact and refactor planning](#impact-and-refactor-planning)
@@ -12,28 +14,27 @@ Use CodeGraph for semantic scope, ast-grep for syntax-exact coverage, targeted s
 - [Fallback ladder](#fallback-ladder)
 - [Output discipline](#output-discipline)
 
-## Choose the smallest workflow
+## Choose the smallest evidence path
 
-| User need                  | First useful evidence                           | Follow-up only when needed                         |
-| -------------------------- | ----------------------------------------------- | -------------------------------------------------- |
-| Explain a flow             | Focused CodeGraph explore result                | Targeted source and one narrow call follow-up      |
-| Change a shared symbol     | CodeGraph callers/impact surface                | ast-grep variants, project tests/typecheck         |
-| Find an exact code shape   | Narrow ast-grep pattern                         | YAML rule/tests and semantic ownership             |
-| Author a reusable rule     | Known positive/negative examples                | Repo scan and CI/project validation                |
-| Plan a mechanical refactor | Semantic ownership plus structural inventory    | Bounded patch batches and validation               |
-| Repair setup               | Current state/capabilities                      | Approval-gated minimum install/config/index action |
-| Perform a reviewed rewrite | Tested match inventory and approved exact scope | Diff review, project validation, rollback          |
+| User need                  | First useful evidence                           | Follow-up only when needed                    |
+| -------------------------- | ----------------------------------------------- | --------------------------------------------- |
+| Explain a flow             | Focused CodeGraph explore result                | Targeted source and one narrow call follow-up |
+| Change a shared symbol     | CodeGraph callers/impact surface                | ast-grep variants, project tests/typecheck    |
+| Find an exact code shape   | Narrow ast-grep pattern                         | YAML rule/tests and semantic ownership        |
+| Author a reusable rule     | Known positive/negative examples                | Repo scan and CI/project validation           |
+| Plan a mechanical refactor | Semantic ownership plus structural inventory    | Bounded patch batches and validation          |
+| Diagnose setup             | Current state/capabilities                      | Recommend `setup` or `update`; do not repair  |
+| Perform a reviewed rewrite | Tested match inventory and approved exact scope | Diff review, project validation, rollback     |
 
 Do not run every tool because it exists. Use only evidence that changes the answer, scope, or safety decision.
 
 ## Semantic exploration
 
 1. Confirm the project root and graph health.
-2. Complete the selected-stack stable update check once or record the offline/opt-out boundary.
-3. Enumerate the actual MCP/CLI capabilities.
-4. Ask one focused question through exposed `codegraph_explore` or help-confirmed CLI fallback.
-5. Capture the relevant entry point, symbols, call paths, likely dependents/tests, and unsupported/dynamic boundaries.
-6. Read only source needed to confirm the explanation or prepare an edit.
+2. Enumerate the actual MCP/CLI capabilities.
+3. Ask one focused question through exposed `codegraph_explore` or help-confirmed CLI fallback.
+4. Capture the relevant entry point, symbols, call paths, likely dependents/tests, and unsupported/dynamic boundaries.
+5. Read only source needed to confirm the explanation or prepare an edit.
 
 Good questions identify a behavior and boundary:
 

@@ -10,7 +10,7 @@ Review the README delivery for an existing validated SVG, inspected animated GIF
 
 ## Expected Behavior
 
-- Report `Task mode: review`, `Source route: existing-svg`, `Provider state: not-eligible`, `Approval state: not-required`, `SVG readiness: ready`, and `Export status: completed`.
+- Report `Workflow: audit`, `Source route: existing-svg`, `Selection`, `Write scope and protected originals`, `Provider state: not-eligible`, `Approval state: not-required`, `Motion readiness: ready`, and `Animation delivery: completed`.
 - Do not check or call Recraft and do not rerun raster export merely because browser preview failed.
 - Inspect the current browser tool and environment, retry with the managed Chrome or Chromium executable, then use an existing `agent-browser` when available.
 - Inspect `agent-browser` help and run `agent-browser skills get core` when the installed version supports it before driving the browser.

@@ -1,7 +1,7 @@
 interface:
   display_name: "Draw.io Diagrams"
   short_description: "Creates modern, verified, animated draw.io diagrams"
-  default_prompt: "Use $drawio-diagrams to create or edit a modern, readable draw.io diagram. Use my requested design profile, adapt a supplied visual reference safely, or use the technical default; infer the audience and view, keep one abstraction level, preserve formal notation, use relevant logos or semantic icons for primary components and native flow animation unless I opt out, keep .drawio as the source of truth, validate it, and complete semantic, layout, and light/dark self-review."
+  default_prompt: "Use $drawio-diagrams for this diagram task. Expose create, edit-repair, review, and export; select and announce the task-matching workflow with inputs, outputs, profile, theme, animation, icon and authoring routes, write scope, and protected files when intent and authority are clear, otherwise ask before inspection or mutation."
 policy:
   allow_implicit_invocation: true
 dependencies:

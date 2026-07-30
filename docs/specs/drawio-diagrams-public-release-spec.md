@@ -26,7 +26,7 @@ Release `drawio-diagrams` as a public Engineering Workflows skill for creating, 
 - Default to icon-first diagrams wherever the notation supports it: real logos/service stencils for named products and labelled semantic icons for generic concepts or unresolved brands.
 - Route native draw.io stencils first, Lobe Icons for AI/LLM brands, Simple Icons for broad technology brands, then theSVG/domain packs for gaps; do not maintain a static slug catalog or bundle SVG assets.
 - Keep the dependency-free Python validator as a public helper under ADR-0022.
-- Keep repository-specific provenance and named third-party comparison or inspiration analysis outside tracked public artifacts under [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.md).
+- Keep repository-specific provenance and named third-party comparison or inspiration analysis outside tracked public artifacts under [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.short.md) ([Long, canonical](../adrs/0030-separate-public-contracts-from-private-provenance.long.md) · [Guide](../adrs/0030-separate-public-contracts-from-private-provenance.guide.md)).
 
 ## Skill Contract
 
@@ -105,7 +105,7 @@ The skill must:
 
 ### ADR gate
 
-[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.md) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.md) governs the public-contract and private-provenance split. [ADR-0031](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.md) governs explicit approval, bounded recursive inspection, and local browser isolation for fixed-theme rasterization.
+[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.short.md) ([Long, canonical](../adrs/0022-allow-task-specific-python-skill-helpers.long.md) · [Guide](../adrs/0022-allow-task-specific-python-skill-helpers.guide.md)) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.short.md) ([Long, canonical](../adrs/0030-separate-public-contracts-from-private-provenance.long.md) · [Guide](../adrs/0030-separate-public-contracts-from-private-provenance.guide.md)) governs the public-contract and private-provenance split. [ADR-0031](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.short.md) ([Long, canonical](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.long.md) · [Guide](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.guide.md)) governs explicit approval, bounded recursive inspection, and local browser isolation for fixed-theme rasterization.
 
 ### User verification
 

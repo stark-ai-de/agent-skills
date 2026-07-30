@@ -45,7 +45,7 @@ Persist an accepted ADR and implementation contract that make Oxc the formatting
 
 ## File plan
 
-- Add: `docs/adrs/0020-use-oxc-for-formatting-and-linting.md`.
+- Add: [ADR-0020](../adrs/0020-use-oxc-for-formatting-and-linting.short.md) ([Long, canonical](../adrs/0020-use-oxc-for-formatting-and-linting.long.md) · [Guide](../adrs/0020-use-oxc-for-formatting-and-linting.guide.md)).
 - Add: `docs/specs/architecture-compass-oxc-tooling-policy-spec.md`.
 - Update: ADR index, Architecture Compass skill references/templates, validation docs, package version, and changelog.
 - Avoid touching: unrelated skills, installer behavior, and Oxc package versions.
@@ -54,7 +54,7 @@ Persist an accepted ADR and implementation contract that make Oxc the formatting
 
 - ADR required: yes.
 - Existing ADRs consulted: ADR-0013, ADR-0014, ADR-0018, ADR-0019.
-- ADR path: `docs/adrs/0020-use-oxc-for-formatting-and-linting.md`.
+- ADR path: [ADR-0020](../adrs/0020-use-oxc-for-formatting-and-linting.short.md) ([Long, canonical](../adrs/0020-use-oxc-for-formatting-and-linting.long.md) · [Guide](../adrs/0020-use-oxc-for-formatting-and-linting.guide.md)).
 - Implementation blocked until ADR accepted: no; ADR is accepted by maintainer direction.
 
 ## Source challenge

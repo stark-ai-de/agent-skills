@@ -49,7 +49,7 @@ Add a portable decision-to-execution lifecycle to Architecture Compass so unreso
 - Keep `host-collaboration-modes.md` inside Architecture Compass: its route states, architecture checkpoint, and re-entry contract are workflow-specific, not a general activation layer.
 - Do not create a router skill. Agent Skills clients discover from skill names and descriptions before loading skill bodies, so another skill cannot guarantee activation.
 - Cross-host installation changes only the execution host; Architecture Compass remains portable because its evidence and outputs are host-neutral.
-- Backend gateways such as SkillOpt's Codex adapter are unrelated to collaboration-mode routing and remain with their owning workflow under [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md).
+- Backend gateways such as SkillOpt's Codex adapter are unrelated to collaboration-mode routing and remain with their owning workflow under [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.short.md) ([Long, canonical](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.long.md) · [Guide](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.guide.md)).
 
 ## Repo context
 
@@ -164,7 +164,7 @@ After the required write-capable permission is confirmed, re-read repository sta
 
 - ADR required: yes.
 - Existing ADRs consulted: ADR-0007, ADR-0013, ADR-0015, ADR-0016, ADR-0021.
-- ADR path: `docs/adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.md`.
+- ADR path: [ADR-0024](../adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.short.md) ([Long, canonical](../adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.long.md) · [Guide](../adrs/0024-keep-architecture-compass-portable-with-host-mode-adapters.guide.md)).
 - Supersedes: none; ADR-0024 clarifies ADR-0021.
 - Implementation blocked until ADR accepted: no; the maintainer accepted ADR-0024 during the verified planning checkpoint.
 

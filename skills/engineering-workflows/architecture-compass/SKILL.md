@@ -1,205 +1,195 @@
 ---
 name: architecture-compass
-description: Set up ADR governance or refactor/review repositories from explicit ADRs, stack rules, code examples, or a requested new-repo adoption plan. Use when a repo needs agent-facing ADR guardrails or when existing/new code must follow documented source structure, runtime boundaries, request patterns, backend composition, env handling, and validation rules. Do not use for tiny edits, style-only cleanup, or no-evidence tasks that do not request governance adoption.
+description: Set up repository-native ADR governance, audit architecture, or plan and execute ADR-guided refactors through intent-bound workflows. Use when work needs binding agent-facing ADRs, provider-to-local mapping, architecture PR review or drift, Next.js request patterns, source placement, backend/runtime/env/config boundaries, stack deviations, or bounded ADR-governed implementation. Do not use for tiny edits, generic framework education, or work with no architecture or governance consequence.
 license: Apache-2.0
-compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills hosts; uses native planning or read-only controls when available. Works best with repo-local ADRs, agent instructions, stack rules, and representative code examples.
+compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.2.1"
+  version: "0.6.0"
 ---
 
 # Architecture Compass
 
 ## Goal
 
-Set up ADR governance or align/review code against explicit ADRs, stack rules, runtime boundaries, and approved examples. In setup and new-repo modes, record every bundled guardrail as adopted, adapted, deferred, or rejected; conflicting target evidence requires an explicit rejection decision and rationale. Produce durable agent instructions, minimal reversible changes, and validation evidence.
+Make architecture decisions explicit, binding, locally traceable, and executable. Establish repository-native governance, audit implementation, or perform an ADR-guided refactor without overwriting accepted history or broadening authority.
 
 ## When to use
 
-- The user asks to set up ADR usage, ADR guardrails, or agent instructions in a repository.
-- The user asks to make future agents rely on provided ADRs.
-- The user asks to refactor existing code to match ADRs, architecture docs, stack rules, or approved examples.
-- The user asks to add new implementation that must follow existing repository rules and patterns.
-- The user asks to bootstrap a new repository or app with ADR-backed source structure and agent guardrails.
-- The user asks to review a PR, branch, or diff for architecture drift.
-- The user asks where files should live across routes, components, hooks, library modules, server-only modules, shared packages, backend services, env/config, or infrastructure.
-- The task touches Next.js App Router structure, Server Components, Hydrated components, TanStack Query read paths, Server Action write paths, or backend runtime composition.
-- The task may require a stack-rule deviation or a new durable ADR.
+- Establish/reconcile ADR governance or audit architecture, decision coverage, drift, risk, and evidence.
+- Plan or execute bounded ADR-governed work, including broad work that first requires durable decisions.
 
 ## When not to use
 
-- The task is a tiny one-file edit with no architecture or source-shape impact.
-- The task is style-only cleanup, formatting, dependency bumping, or copyediting.
-- The user wants general framework education rather than target-repo refactoring or guardrails.
-- The target repo has no ADRs, docs, examples, or user-provided rules and the user does not want a rule-adoption plan.
-- Another focused skill owns the task better, such as debugging, test-first implementation, PRD writing, or issue slicing.
+- Tiny/style-only or ordinary governed edits with no architecture consequence or ADR-aware boundary check.
+- Generic framework education or requests without target evidence and a governance, audit, planning, or refactoring outcome.
 
-## User-facing actions
+## Workflow selection
 
-Expose two simple actions to users. Choose one first, then select an internal mode only if needed.
+Every direct invocation exposes exactly these public workflows:
 
-### `setup`
+- `setup`: establish or reconcile repository-native ADR governance with `recommended` or `complete` coverage.
+- `audit`: perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment.
+- `refactor`: execute explicit bounded work already governed by accepted local ADRs.
+- `plan-refactor`: collaborate on and persist an approved bounded refactoring specification without implementing it.
+- `plan-run-refactor`: plan, persist, recheck, and execute an approved broad or decision-bearing refactor.
 
-Use when the repository needs durable ADR guardrails. This action may create or update repo-facing instruction files because the user explicitly requested setup.
+There is no `auto` workflow. Route by task evidence:
 
-Canonical prompt:
+| Intent evidence                                                       | Selected workflow   |
+| --------------------------------------------------------------------- | ------------------- |
+| Establish or reconcile ADR governance                                 | `setup/recommended` |
+| Review architecture, ADR coverage, drift, or risk                     | `audit`             |
+| Produce a refactoring plan without execution                          | `plan-refactor`     |
+| Broad implementation or unresolved durable decisions before execution | `plan-run-refactor` |
+| Explicit bounded work fully governed by accepted local ADRs           | `refactor`          |
 
-```text
-Use Architecture Compass in setup mode for this repo.
-```
+For clear direct or agent-discovered intent with sufficient authority, state the complete workflow set, selected workflow and rationale, setup coverage when applicable, exact write scope, expected artifacts, planning/read-only capability, protected state, and separate approval boundaries, then proceed. A bare activation, conflicting cues, or ambiguity about outcome, governance, scope, persistence, or mutation authority requires showing the workflows and asking.
 
-Setup outputs should include:
-
-- agent instructions that say accepted ADRs are binding,
-- ADR discovery paths and index links,
-- ADR precedence and conflict rules,
-- adoption decisions for bundled ADR guardrails: adopt, adapt, defer, or reject,
-- stack-rule and dependency-deviation rules,
-- optional PR checklist when a PR-template convention exists or the user asks for one,
-- future usage prompts for refactor and implementation tasks.
-
-### `refactor`
-
-Use when code, diffs, or new implementation must be aligned with existing ADRs and examples.
-
-Canonical prompt:
-
-```text
-Use Architecture Compass in refactor mode for this repo.
-```
-
-Refactor outputs should include:
-
-- inspected ADRs, docs, stack rules, and examples,
-- extracted rule set with provenance,
-- file placement map or drift report,
-- minimal changes when implementation was requested,
-- validation results and remaining ADR gaps.
-
-## Inputs to inspect
-
-Inspect only the minimum context needed, but include these when relevant:
-
-- User-provided ADRs, architecture docs, stack rules, source-shape rules, or implementation examples.
-- `AGENTS.md`, `STACK_RULES.md`, `README.md`, contribution docs, validation docs, and docs indexes.
-- Existing specs or ADRs that govern source layout, runtime boundaries, request boundaries, packages, env/config, infrastructure, exports, or validation.
-- Representative source files for the area being changed.
-- Current file layout, import aliases, package manager, workspace tooling, test/lint/type-check commands, and CI expectations.
-- Existing generated-file conventions and allowlisted exceptions.
-- Bundled architecture-pattern and guardrail references after target repo evidence is inspected. Read the adoption and host-collaboration routing references first to select the route and controls. In setup and new-repo modes, inspect bundled ADR guardrails as adoption candidates even when target repo evidence exists.
-- Target repository formatting and linting policy. For JavaScript or TypeScript starter setup, treat Oxc as the bundled default unless target ADRs, stack rules, or an explicit maintainer rejection choose another toolchain.
-
-## Collaboration and decision routing
-
-Before mutation, use `references/adoption-workflows.md` to choose a decision phase, direct execution, read-only audit, or review. Unresolved durable choices and broad, multi-boundary, behavior-changing, or phased refactors stay read-only through approval; narrow behavior-preserving ADR-prescribed work stays direct; audits do not require Plan; reviews prefer the host review surface. Plan mode and permissions are separate.
-
-Use `references/host-collaboration-modes.md` for capability evidence, public statuses, fallbacks, the exact route-matching continuation, and the mandatory state recheck. The skill never claims prompt text changed host mode or permissions.
-
-## Workflow
-
-1. Classify the top-level action: `setup` or `refactor`.
-   - `setup`: install or refresh durable ADR guardrails.
-   - `refactor`: align code, diffs, or new implementation with existing ADRs and examples.
-     Internal sub-modes may be `audit`, `refactor`, `new-implementation`, `new-repo-bootstrap`, `pr-review`, `docs-sync`, or `stack-deviation`.
-2. From the request alone, classify the preliminary collaboration route and resolve only its relevant host controls before repository inspection: planning plus read-only enforcement for a decision phase, read-only enforcement for an audit, and the review surface plus read-only enforcement when that surface does not establish a no-write boundary for a review. Direct execution does not request Plan or Read Only merely because either is available. Then follow both routing references. Silence is not a declined transition.
-3. Inspect enough repository evidence to validate the preliminary route, using only non-mutating operations and index-safe Git status while the route remains provisional, then build the rule set from repo evidence and bundled guardrail candidates. If that evidence changes the route, stop before decision work or mutation, resolve the newly required host controls, and continue under the reclassified route. Use the prefilled rows in `assets/setup-report-template.md` as the canonical bundled guardrail inventory for setup and new-repo runs. Label each rule as `target ADR`, `target docs`, `target example`, `target stack rule`, `bundled ADR candidate`, `bundled pattern`, or `assumption`.
-4. Resolve conflicts explicitly:
-   - accepted target ADRs are binding for refactor work,
-   - setup and new-repo work must record whether each bundled ADR guardrail is adopted, adapted, deferred, or rejected,
-   - guardrails that do not fit the current implementation slice should be deferred with a future trigger instead of removed,
-   - target evidence that contradicts a bundled guardrail is conflict evidence, not permission to omit the guardrail silently,
-   - user-confirmed rejection requires an explicit rationale and, when durable, an ADR note or superseding ADR,
-   - target docs outrank current drift,
-   - current code examples count as evidence only when they are identified as approved examples or consistently match the ADR,
-   - stale or contradictory ADRs require a maintainer decision or superseding ADR before broad implementation.
-   - Oxc formatting/linting is the bundled JS/TS starter default, but target ADRs, stack rules, or explicit maintainer rejection outrank that default.
-5. Map files by source role: route entrypoint, React component, hook, domain module, query contract, client query options, server query options, server-only module, Server Action, backend bootstrap, runtime composition, HTTP app, route plugin, service, config/env, infrastructure, test, fixture, generated file, or docs.
-6. Compare the current or proposed implementation against the rule set.
-7. Produce a concise gap report before broad edits. Include file paths, violated rule, severity, recommended change, and validation.
-8. For a decision phase, remain read-only and return the reference's statuses. When implementation was requested, also return allowlisted paths, validation, any required permission transition, and the matching direct, native, or portable-fallback continuation; otherwise return `Execution status: not requested` without an implementation handoff. If a required write-capable control remains inactive or unconfirmed after the route is otherwise ready, return `Execution status: pending write permission` with the matching continuation and stop. Before approved implementation, recheck repository state, ADRs, and target paths; stop on drift.
-9. If implementation is requested, required write permission is confirmed or unnecessary, and the recheck passes, refactor in small reversible slices. Keep framework entrypoints thin and move business behavior behind named modules.
-10. Update relevant docs when rules, contracts, deviations, validation, or agent instructions change. Setup may create its standard guardrail files; otherwise ask before creating missing docs or ADR directories.
-11. Run focused validation for the touched boundary. Prefer target repo commands over generic command guesses.
-12. Return changed files, validation results, remaining risks, skipped checks, and follow-up ADR or validation work.
-
-## Core enforcement rules
-
-Use the routed references for exact checks. Keep ownership and runtime boundaries
-explicit, framework entrypoints thin, trusted server code isolated, request
-reads/writes aligned with the target pattern, backend bootstrap/composition/config
-separated, and infrastructure outside runtime source trees. Target ADRs and
-approved examples decide the concrete shape; bundled patterns do not override
-them.
+Agent-initiated activation may select and announce `audit` without mutation authority. It may select a mutating workflow only when the user's existing task already requests that outcome and scope. Selection never authorizes destructive, paid, irreversible, external, deployment, publication, production, or scope-expanding work.
 
 ## References
 
-Read only what the mode requires:
+Start with [the ADR catalog](references/adr-catalog.md). Select entries by `Scope`, `Category`, `Tags`, and `Applies when`:
 
-- `references/rule-extraction-and-conflict-resolution.md` before deriving rules from ADRs, docs, and examples.
-- `references/repository-source-structure.md` for workspace, source-role, server-only, package, env, infra, export, and validation rules.
-- `references/nextjs-request-patterns.md` for route, component, hydration, retry boundary, query, read, write, and optional realtime patterns.
-- `references/backend-runtime-patterns.md` for backend runtime, HTTP app, service lifecycle, config, and env-loading patterns.
-- `references/adoption-workflows.md` for setup, existing refactors, new repository bootstrap, new feature guardrails, PR review, docs sync, and stack deviation workflows.
-- `references/host-collaboration-modes.md` before routing a decision phase or resuming approved implementation.
-- `references/preferred-stack-profile.md` when the target repo has adopted this stack profile, asks for it, or needs a starter stack profile.
-- `references/checklists.md` before finalizing output.
-- `assets/refactor-report-template.md` when returning an audit or refactor report.
-- `assets/setup-report-template.md` when returning setup results, including the canonical bundled guardrail inventory and new-repo guardrail adoption decisions.
-- `assets/new-repo-adoption-plan-template.md` only when a separate first-implementation layout plan is needed after the setup report.
-- `assets/agent-instructions-template.md` when creating or updating ADR-focused agent instructions.
-- `assets/adr-draft-template.md` when a target repo needs a source-structure ADR draft.
+- Read Short first.
+- Read Long when a selected decision governs the task, a conflict exists, or implementation depends on its invariants.
+- Read Guide only for current procedures, examples, commands, or compatibility notes.
+- Do not load the entire library for a narrow task.
+- Treat Long as canonical. Short cannot relax it; Guide is non-normative.
+
+Route skill behavior through:
+
+- **Workflows:** [AC-ADR-048 Short](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md) · [Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) — finite routing, setup coverage, Plan persistence, and refactor boundaries.
+- **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md) — risk, cadence, receipt identity/reuse, representative observation, and final-gate recovery.
+- **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md) — capability states, index-safe evidence, and fallbacks.
+- **Execution:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) — delegation, checkpoints, mutation, and re-entry.
+- **Claims:** [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md) — evidence stages and public safety.
+- **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md) — evidence ranking and conflict stops without extra authority.
+
+Use the catalog for AC-ADR-001 library authority, AC-ADR-044 lineage, every canonical Long variant, and task-specific target decisions.
+
+## Inputs to inspect
+
+After the route is resolved, inspect only what it needs:
+
+- Outcome, repository identity/HEAD, protected Git/external state, and exact authorized scope.
+- Repository instructions, ADR/index/mapping/history conventions, architecture/stack contracts, and validation receipts.
+- Only representative code, tests, CI, public contracts, and migration/security/delivery evidence needed for the selected route.
+- Supported instruction surfaces: nearest `AGENTS.md`, `CLAUDE.md`, existing `CLAUDE.local.md`, `.claude/rules`, `.cursor/rules`, and legacy `.cursorrules` only as migration evidence.
+
+Do not classify `CONTEXT.md` as a Claude instruction file automatically.
+
+## Authority and collaboration
+
+Use two independent axes:
+
+1. Host/repository instructions, permissions, protected paths, user authorization, and safety constraints decide what may execute.
+2. Applicable accepted or superseding ADRs decide intended architecture.
+
+Current code proves current state, not intended policy. A requested accepted-ADR violation requires a visible warning naming the decision, conflict, affected scope, and resolution options; stop the affected implementation until a successor/adaptation is accepted or the conflict is withdrawn.
+
+Rank architecture sources through AC-ADR-046: applicable accepted or superseding target ADRs; specific canonical target documentation; ADR-linked approved target examples; consistent current implementation; applicable adoptable provider decisions; then general framework defaults. Never blend contradictory sources into an undocumented compromise. Record the sources, affected scope and impact, recommended resolution, and decision owner, and stop only the dependent work. This ranking cannot expand the operational authority granted by the user, host, repository, or permissions.
+
+If evidence changes the route materially, announce the reclassification and resolve its authority before continuing. Planning capability and filesystem permission are independent. Never claim prompt text changed either control.
+
+## Workflow
+
+Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) for the selected route's detailed procedure and the matching report asset before producing its artifact. Keep these entry gates visible:
+
+### `setup`
+
+- Announce `recommended` or `complete` coverage. Use target evidence for `recommended`; evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation.
+- Preserve repository-native identity and accepted history; record each candidate as `adopt`, `adapt`, `defer`, or `reject`, stable provider-to-local mappings, instruction bindings, and the receipt location.
+- Apply the conditional selector only when proven applicable and validate only the authorized governance slice. Setup never authorizes application refactoring, deployment, publication, or production probes.
+
+### `audit`
+
+- Preserve enforceable no-write behavior and perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment.
+- Report prioritized conflicts, missing coverage, implementation/boundary risk, proof gaps, receipt validity, selector classification, and evidence limits.
+- Create no artifact, repair, backup, patch, index change, install, environment mutation, deployment, publication, or production probe; recommend a separate authorized workflow when needed.
+
+### `refactor`
+
+- Verify accepted local ADRs govern the whole bounded change and the request authorizes its exact paths and behavior.
+- Use AC-ADR-049 for risk, proof owners, receipt reuse, rollback, stop conditions, owning-boundary checks, and one final aggregate gate for the frozen candidate.
+- Stop and reclassify on missing governance, decision conflict, unresolved durable choice, scope expansion, or material drift. Direct refactor never invents a durable decision or silently repairs governance.
+
+### `plan-refactor`
+
+- Resolve and approve the bounded specification in the Plan lifecycle while keeping repository/workspace artifacts read-only.
+- After Plan-mode exit, persist only the authorized approved specification and required governance artifacts, validate and report them, emit a bounded copy-ready execution handoff, and stop before source implementation. Without persistence authority, return the same bounded copy-ready handoff and stop without writing.
+
+### `plan-run-refactor`
+
+- Follow `plan-refactor` through approval and bounded governance persistence, then recheck repository, dependencies, permissions, protected paths, and external state.
+- Execute only the unchanged approved plan in reversible slices; stop on material drift, new decisions, failed proof, or scope expansion.
+- Reconcile AC-ADR-049 receipts against the integrated candidate and report stage-accurate evidence without implying deployment, publication, production, or third-party success.
+
+## Plan lifecycle
+
+Use the AC-ADR-048 and AC-ADR-036 Guides for detailed transitions and portable status handling:
+
+1. Report `Planning capability` exactly as `Active | Available but inactive | Unavailable | Explicitly declined | Indeterminate | Not applicable`. `Available but inactive` and `Indeterminate` stop pending confirmed activation; only `Unavailable` permits the portable fallback. Uncertainty never authorizes fallback.
+2. Honor `Explicitly declined` without repeating the unchanged request; use another workflow only when its preconditions hold. `Not applicable` is valid only for a non-Plan workflow.
+3. Write no target repository/workspace artifact while Plan mode is active. Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit. Exit before persistence or implementation.
+4. For execution, recheck state after approval and Plan-mode exit; changed scope, invalidated approval, or material drift requires a new checkpoint.
+
+## Conditional stable-skill selector instruction
+
+Classify this target-repository instruction as `applicable`, `not applicable`, or `indeterminate`. It is applicable only when evidence proves the target publishes a stable public skill with multiple material workflows.
+
+- In `setup`, preserve an equivalent rule or add a generic rule requiring complete finite workflow disclosure, intent-bound selection and rationale, an ambiguity question, mutation only within already-authorized outcome/scope, and separate high-risk/external approvals.
+- In `audit`, report the classification and any missing/equivalent/conflicting rule without writing.
+- Direct `refactor` does not repair a missing rule; route governance repair to `setup`.
+- `indeterminate` never authorizes a write.
+- Never copy this repository's or the provider skill's ADR ID into the target. Use repository-native identity only when local governance requires a decision.
+
+## Public statuses
+
+When material, use the exact evidence-backed `Read-only enforcement`, `Architecture decision status`, and `Execution status` values in the AC-ADR-036 Guide and report asset. Planning and filesystem enforcement remain independent. `completed` covers only the authorized slice/stages; it implies no CI, publication, deployment, production, or third-party success.
+
+## Assets
+
+Assets are derived and non-normative; applicable canonical Long ADRs prevail:
+
+- [`assets/setup-report-template.md`](assets/setup-report-template.md): setup coverage, adoption, mapping, instruction, and validation receipt.
+- [`assets/refactor-report-template.md`](assets/refactor-report-template.md): audit, direct refactor, planning, execution, and evidence receipt.
+- [`assets/new-repo-adoption-plan-template.md`](assets/new-repo-adoption-plan-template.md): separately approved first implementation after setup.
+- [`assets/agent-instructions-template.md`](assets/agent-instructions-template.md): binding target ADR instructions and the conditional selector rule.
+- ADR templates/examples and `assets/adr-index-template.md`: only for authorized governance setup.
 
 ## Scripts
 
-No bundled scripts. Prefer target validation.
+Architecture Compass ships no executable runtime scripts. Use repository-native validators only after their behavior and write effects are understood; do not invent or install a helper as part of audit.
 
 ## Safety rules
 
-- Do not invent repo facts, file paths, commands, accepted ADRs, or validation results.
-- Do not override target repo ADRs with bundled defaults during implementation.
-- Do not drop bundled ADR guardrails in setup mode; defer future-fit guardrails and challenge rejected guardrails before recording the user-confirmed rationale.
-- Do not include secrets, credentials, private links, private repo names, customer data, internal hostnames, or copied full source files in output.
-- Do not perform destructive migrations, broad rewrites, file deletion, or irreversible moves without explicit user approval.
-- Do not create missing docs, ADR folders, or validation scripts without approval, except for standard guardrail files in explicit `setup` mode.
-- Do not turn an audit into an implementation unless the user asked for implementation.
-- Follow `host-collaboration-modes.md`: never claim a mode or permission switch, write through a pending decision, or resume through material drift.
-- Mark missing context as `unspecified` instead of guessing.
+- Do not invent repository facts, paths, commands, ADRs, mappings, validation, or host capability; do not infer mutation from ambiguity.
+- Never override accepted target ADRs with bundled decisions or turn audit into setup, planning, or implementation.
+- Do not install, invoke, vendor, or configure a public skill merely because it is available or recommended.
+- Do not expose secrets, customer data, private provenance, or internal hostnames in reusable artifacts.
+- Destructive, irreversible, external, deployment, publication, production, and scope-expanding work requires separate authority, exact target, stop conditions, and recovery evidence.
+- Do not duplicate proof obligations, reuse invalidated receipts, create ceremonial permanent smoke harnesses, or overstate evidence stage.
+- Stop on scope drift, missing authority, protected-path overlap, ambiguous mapping, unresolved ADR conflict, or failed required validation.
 
 ## Output format
 
-Return in this order:
+Use the matching report asset and AC-ADR-004 evidence table. Include the workflow set and selection, coverage, write scope/status/protected state, inspected and unavailable evidence, decisions/mappings or findings, approved plan or changes, AC-ADR-049 ledger, risks/deferred triggers, and next authorized action.
 
-1. Top-level action, internal mode, collaboration route, explicit `Planning capability` and `Read-only enforcement` fields, and exact architecture/execution statuses.
-2. Inspected evidence and any unavailable evidence.
-3. Setup plan, gap report, or implementation placement map.
-4. Proposed or completed changes.
-5. Docs, ADR, or agent-instruction updates needed.
-6. Validation commands and results.
-7. Stack-deviation result when relevant.
-8. Remaining risks, assumptions, and follow-up actions.
-
-For audit-only tasks, do not paste patches unless asked. For implementation tasks, summarize patches and include validation results.
+For `audit`, provide findings in severity order without patches or repository writes. For plan routes, distinguish approved in-Plan content, pending exit/persistence, persisted artifacts, state-recheck result, and executed work.
 
 ## Completion criteria
 
-- Target repo evidence was inspected before bundled guardrails were adopted or adapted, or the missing evidence is reported.
-- In setup and new-repo modes, each bundled ADR guardrail has an adoption decision, deferred future trigger, or user-confirmed rejection rationale.
-- Rules are linked to their provenance labels.
-- File roles and runtime boundaries are explicit.
-- Changes are minimal and reversible.
-- Collaboration routing, approval, allowlisting, and re-entry satisfy `host-collaboration-modes.md`.
-- Existing docs are updated when repo-facing rules changed.
-- Validation is run or the blocker is stated.
-- No private or source-project-specific material is introduced.
+- Exactly one of the five exposed workflows follows clear intent/authority or resolved ambiguity.
+- Setup uses valid coverage and foundation eligibility; audit remains artifact-free; direct refactor remains governed, bounded, and reversible.
+- Plan routes use the native lifecycle when supported, exit before writes, persist only their authorized governance slice, and recheck before execution.
+- ADR mapping/history, selector handling, protected state, AC-ADR-049 receipts, evidence stages, and limitations reconcile with the final candidate.
 
 ## Failure modes
 
-- If ADRs and examples conflict, stop before broad edits and report the conflict.
-- If target evidence conflicts with a bundled ADR guardrail during setup, ask why the guardrail should be rejected or changed before recording it as rejected.
-- If the target repo has no rules and the action is `setup`, create a starter ADR governance plan. If the action is `refactor`, produce an adoption plan instead of pretending rules exist.
-- If validation commands are unknown, mark them as `unspecified` and infer only from repo scripts when available.
-- If a refactor is too large for one safe pass, split it into phases.
-- If current code violates the ADR in many places, produce a drift report and migrate the touched boundary first.
-- If a durable decision changes, propose an ADR update before implementation depends on it.
-- If decision routing cannot proceed safely, use the transition or fallback rules in `host-collaboration-modes.md` and stop before writing.
+- Ambiguous intent, governance, scope, persistence, or authority exposes all workflows and asks.
+- An accepted-ADR conflict blocks the affected scope; unavailable read-only enforcement blocks potentially mutating audit checks.
+- Planning capability `Available but inactive` or `Indeterminate` waits for confirmation; only `Unavailable` may use the documented fallback without weakening write gates.
+- Material drift, failed validation, or contradictory evidence stops the affected slice, preserves safe disjoint work, and requires a new checkpoint rather than a completion claim.

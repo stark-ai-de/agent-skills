@@ -21,7 +21,7 @@ Do not modify anything and do not fetch remote assets.
 
 ## Expected Behavior
 
-- Report `Task mode: review`, `Source route`, `Provider state: not-eligible`, `Approval state: not-required`, `SVG readiness`, and `Export status: not-requested` using contract-valid values.
+- Report `Workflow: audit`, `Source route`, `Selection`, `Write scope and protected originals`, `Provider state: not-eligible`, `Approval state: not-required`, `Motion readiness`, and `Animation delivery: not-evaluated` using contract-valid values.
 - Invoke or describe the audit with an explicit repository root and root-relative README path.
 - Read only `docs/assets/ok.svg` after canonical containment checks.
 - Reject the POSIX absolute, drive-absolute, UNC, traversal, and symlink-escaping references before reading them.

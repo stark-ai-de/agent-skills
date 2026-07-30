@@ -22,7 +22,7 @@ Make the repository's Codex-related operating workflows available to Cursor Agen
 - The skill name and description drive discovery; no shared router or custom metadata can guarantee activation across clients.
 - Installing a target-specific skill into another host preserves its target evidence and output contract while only collaboration controls adapt.
 - Portable workflows remain single skills; runtime-specific memory/state and execution-prompt workflows remain independent skills.
-- Local CLI-to-API gateways are backend adapters, not skill routers, and stay with their owning workflow until [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.md)'s extraction gate is met.
+- Local CLI-to-API gateways are backend adapters, not skill routers, and stay with their owning workflow until [ADR-0028](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.short.md) ([Long, canonical](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.long.md) · [Guide](../adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.guide.md))'s extraction gate is met.
 
 ## Scope
 
@@ -37,7 +37,7 @@ Make the repository's Codex-related operating workflows available to Cursor Agen
 
 ## Repo context
 
-- Relevant files or areas: `README.md`, `skills/README.md`, `skills/codex-operations/README.md`, `skills/cursor-operations/`, `skills/engineering-workflows/`, `skill-evals/`, `docs/specs.md`, `docs/adrs/0021-place-portable-skills-in-workflow-categories.md`, `CHANGELOG.md`, and `package.json`.
+- Relevant files or areas: `README.md`, `skills/README.md`, `skills/codex-operations/README.md`, `skills/cursor-operations/`, `skills/engineering-workflows/`, `skill-evals/`, `docs/specs.md`, [ADR-0021](../adrs/0021-place-portable-skills-in-workflow-categories.short.md) ([Long, canonical](../adrs/0021-place-portable-skills-in-workflow-categories.long.md) · [Guide](../adrs/0021-place-portable-skills-in-workflow-categories.guide.md)), `CHANGELOG.md`, and `package.json`.
 - Existing public skills under review: portable `codegraph-ast-grep`, Codex-specific `codex-memory-curator`, and Codex-specific `codex-spec-interviewer`.
 - Existing commands or conventions: public skills live under `skills/`, specs live under `docs/specs/`, promoted public skills need eval proof under `skill-evals/`, category README rows must match `SKILL.md` frontmatter descriptions, public skill changes require `metadata.version`, and final validation normally runs through `npm run validate`.
 - External context checked during planning: Cursor Agent Skills docs, Cursor Rules docs, Vercel skills CLI README, Agent Skills specification, and Agent Skills client implementation guide.
@@ -178,7 +178,7 @@ Do not create a new `cursor-*` skill when the only difference is the filesystem 
 ## ADR gate result
 
 - ADR required: yes for the expanded category rule.
-- ADR: [ADR-0021](../adrs/0021-place-portable-skills-in-workflow-categories.md) places portable skills in workflow categories and reserves runtime operation categories for runtime-specific behavior.
+- ADR: [ADR-0021](../adrs/0021-place-portable-skills-in-workflow-categories.short.md) ([Long, canonical](../adrs/0021-place-portable-skills-in-workflow-categories.long.md) · [Guide](../adrs/0021-place-portable-skills-in-workflow-categories.guide.md)) places portable skills in workflow categories and reserves runtime operation categories for runtime-specific behavior.
 - Reason: creating `cursor-spec-interviewer` is a catalog/content addition, but moving `codegraph-ast-grep` out of Codex Operations establishes a reusable public catalog taxonomy rule.
 - ADR trigger: create a short ADR first if implementation later adds a Cursor-specific publishing pipeline, Cursor-specific validation gate, Cursor-only generated artifacts outside the Agent Skills format, or a formal support policy that differs from the generic Agent Skills compatibility stance.
 - Implementation blocked until ADR accepted: no, unless the scope expands into one of the ADR triggers above.

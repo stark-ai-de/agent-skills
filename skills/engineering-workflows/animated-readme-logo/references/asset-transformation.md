@@ -37,10 +37,10 @@ Run:
 python3 scripts/validate_logo_svg.py path/to/logo.svg
 ```
 
-Treat a non-zero exit as blocking. `SVG readiness: ready` requires a real file and a successful strict validation result. If Python is unavailable, report `SVG readiness: blocked`; do not substitute visual confidence for validation.
+Treat a non-zero exit as blocking. `Motion readiness: ready` requires this real strict-validator pass in addition to a complete motion specification and checked animation recipe. If Python is unavailable, report `Motion readiness: blocked`; do not substitute visual confidence for validation.
 
 Also inspect the rendered mark on light, dark, and checkerboard backgrounds. Visual inspection supplements, but never replaces, structural validation.
 
 ## Mutation boundaries
 
-Ask before overwriting a brand file, installing a tool, spending provider credits, publishing, or changing remote state. Creating new derived files is allowed only when the user requested implementation rather than a review or plan.
+Ask before overwriting a brand file, installing a tool, spending provider credits, publishing, or changing remote state. Creating the five absent derived files is allowed only when the user requested `create`, `transform`, or `animate`; `audit` is read-only.

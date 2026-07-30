@@ -2,6 +2,8 @@
 
 Use this as a shape reference, not as a fixed answer.
 
+Selected workflow: `review-chat`. This example creates no durable curation report.
+
 # Codex Memory Review
 
 ## Top Decisions
@@ -48,11 +50,25 @@ Use this as a shape reference, not as a fixed answer.
 | M-2 | `package.json` | Current validation command may differ.    | Verify before moving into `AGENTS.md`.      |
 | M-4 | Current source | Current repo may not use service classes. | Rewrite as a preference, not a global rule. |
 
-## Optional Cleanup Plan Artifact
+## Plan
 
-- Plan path: `codex-memory-cleanup-plan.json`
-- Plan format: `assets/cleanup-plan-template.md`
-- Included because the example has several proposed edits that benefit from ID-by-ID approval.
+- Not applicable: `review-chat` does not plan or execute cleanup.
+
+## Execution Receipt
+
+- Not applicable: read-only route.
+
+## Deferred Work
+
+- M-2 through M-6 remain recommendations only.
+
+## Backup
+
+- Not applicable: no context mutation.
+
+## Verification
+
+- Review classifications reconciled against the cited repository evidence.
 
 ## Config Recommendation
 
@@ -60,8 +76,4 @@ Use Exact Repo Work Mode for the current refactor because stale memory assumptio
 
 ## Recommended Next Action
 
-Confirm whether I should apply the safe cleanup.
-
-```text
-Do you want me to apply the safe cleanup now? I will back up the memory directory first.
-```
+Invoke a cleanup route explicitly if these recommendations should be applied; `plan-run-cleanup-file` is Recommended.

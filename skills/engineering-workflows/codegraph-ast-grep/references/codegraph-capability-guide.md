@@ -2,6 +2,8 @@
 
 Use this reference for semantic exploration, graph freshness, current/legacy command selection, or CodeGraph project-root issues. The installed executable and exposed MCP tools are the command contract.
 
+Use it only for a known repository root. In `doctor`, project-opening diagnostics still need exact-root approval because generated metadata may migrate. A selected `setup` or `update` workflow already covers required in-root initialization/migration when that write scope was announced.
+
 Reviewed upstream baseline: CodeGraph 1.4.1 on 2026-07-12. This date is a maintenance checkpoint, not a runtime version floor.
 
 ## Contents

@@ -5,16 +5,14 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.1.2"
+  version: "0.2.0"
 ---
 
 # Codex Memory Curator
 
 ## Goal
 
-Audit Codex memories as user-owned durable state: expose stale, unsafe, duplicated, or misplaced entries; propose better destinations; add a structured cleanup plan when approval needs precision; and apply cleanup only after a report, backup, and explicit user approval.
-
-When installed or invoked from Cursor, keep the subject scoped to Codex memory files and Codex memory configuration. Do not treat this as a Cursor memory, Cursor rules, or Cursor workspace-state curator.
+Audit Codex memory as user-owned durable state; classify stale, unsafe, duplicated, or misplaced claims and route review, planning, persistence, and cleanup. Even when invoked from Cursor, inspect only Codex memory/config, not Cursor state.
 
 ## Core principle
 
@@ -22,54 +20,65 @@ Memory is context, not truth. The latest user request, current repo files, `AGEN
 
 ## When to use
 
-- The user asks to review, audit, clean up, prune, rewrite, or remove Codex memories.
-- The user mentions `~/.codex/memories`, stale memories, memory pollution, or memories making Codex worse.
-- The user wants to decide whether an entry belongs in memory, `AGENTS.md`, repo docs, a skill, config, or deletion.
-- The user wants to disable, tune, or audit Codex memory behavior.
+- Use for review, placement, configuration, planning, or cleanup of Codex memory and its durable configuration.
+- Use when memory is stale, conflicting, sensitive, noisy, cross-repository, or causing degraded behavior.
 
 ## When not to use
 
-- Do not use for ordinary repo documentation cleanup unless Codex memories are part of the task.
-- Do not use for generic prompt engineering that does not inspect memory files or memory config.
-- Do not use for Cursor rules, Cursor settings, or Cursor workspace-state cleanup unless Codex memories are also explicitly part of the task.
-- Do not modify memories when the user only asked for review.
-- Do not inspect unrelated personal files outside Codex memory/config paths and the current repo files needed to verify conflicts.
+- Do not use for ordinary docs, generic prompt work, or Cursor state unless Codex memory/config is explicitly involved.
+- Keep review requests read-only and inspect no personal files beyond Codex memory/config plus the minimum repository evidence needed for conflicts.
+
+## Workflow selection
+
+Always expose these workflows in this order. `plan-run-cleanup-file` is always first and Recommended:
+
+| Workflow                              | Delivery                             | Result                                                                                   |
+| ------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `plan-run-cleanup-file` (Recommended) | One redacted file record             | Full review, user-approved cleanup plan, backup, execution, and verification.            |
+| `review-chat`                         | Chat only                            | Full read-only review and recommendations.                                               |
+| `review-file`                         | One redacted file record             | Full read-only review and recommendations.                                               |
+| `cleanup-chat`                        | Chat plus backup                     | Full review followed by direct high-confidence atomic cleanup and verification.          |
+| `cleanup-file`                        | One redacted file record plus backup | Persist the review, then directly apply high-confidence atomic cleanup and verification. |
+| `plan-cleanup-chat`                   | Chat only                            | Full review and user-approved cleanup plan; no cleanup.                                  |
+| `plan-cleanup-file`                   | One redacted file record             | Full review and user-approved cleanup plan; no cleanup.                                  |
+| `plan-run-cleanup-chat`               | Chat plus backup                     | Full review, user-approved cleanup plan, backup, execution, and verification.            |
+
+Route from intent instead of adding an `auto` workflow:
+
+- Direct review defaults to `review-chat`; explicit persistence selects `review-file`.
+- Explicit cleanup without a delivery preference selects `plan-run-cleanup-file`.
+- A clear direct request may select another matching route when delivery and execution intent are explicit.
+- Agent-initiated activation may select only a relevant read-only route. Use `review-file` only when the existing task already requests persistence; never infer cleanup.
+- A bare invocation, conflicting cues, or ambiguity about review versus cleanup, chat versus file, execution, Codex home, or mutation authority exposes the table and asks the user to choose.
+- A mutating route may be selected only when the user already requested cleanup of the identified Codex memory scope.
+
+Before substantive inspection, show the complete table plus `Selected`, `Reason`, Codex home/repo target, write scope, expected artifacts, protected state, Plan-mode capability, and remaining separate approvals. If selection is unambiguous, announce it and proceed. If it is ambiguous, stop before inventory and ask.
+
+Workflow selection does not authorize whole-file deletion, destructive recovery, config changes, paid or external actions, deployment, publication, or scope expansion.
 
 ## Inputs to inspect
 
-- Codex home: `${CODEX_HOME:-$HOME/.codex}` or the user-provided Codex home path.
-- Memory files under `<codex-home>/memories`.
-- Memory config at `<codex-home>/config.toml` when present.
-- The current user request and current repo instructions/docs only when needed to verify conflicts.
-- `references/classification-rubric.md` when a classification is not obvious.
-- `references/conflict-resolution.md` when memory may conflict with current prompt, `AGENTS.md`, repo docs, package scripts, ADRs, source, or config.
-- `references/config-modes.md` when recommending memory config changes.
-- `references/memory-store-anatomy.md` when the memory directory contains multiple generated-state file types.
-- `references/safe-editing-procedure.md` before modifying memory files.
-- `assets/review-report-template.md` when report shape is unclear.
-- `assets/cleanup-plan-template.md` when a structured cleanup plan artifact is useful or requested.
+- Resolve the user-provided Codex home or `${CODEX_HOME:-$HOME/.codex}`, then inspect its `memories` and visible `config.toml` surfaces.
+- Inspect current repository evidence only as needed to verify a disputed claim.
+- Load the classification, conflict, config-mode, store-anatomy, and safe-editing references below only when their decision is active. Load the report or plan asset whenever producing that artifact.
 
 ## Safety rules
 
+- Do not inspect when the route is unresolved, and do not mutate unless the selected route and user request authorize cleanup of the exact target scope.
 - Never silently delete, rewrite, truncate, or move memory files.
-- Ask exactly this before content-changing cleanup:
-
-  ```text
-  Do you want me to apply the safe cleanup now? I will back up the memory directory first.
-  ```
-
-- Do not edit unless the user clearly approves that cleanup.
-- Back up the memory directory before approved edits and report the backup path.
+- Back up every exact file before an approved edit and report the backup path.
 - Do not print full secrets, tokens, credentials, customer data, private identifiers, or sensitive personal data.
 - If secret-like data is found, redact values in output, identify file and line when possible, recommend removal, and recommend rotation for real credentials.
-- If the memory schema is unclear, do not edit the original file. Write a sibling `.proposed.md` cleanup plan instead.
+- If the memory schema is unclear, do not edit it directly. Defer it in the current record or chat result.
 - Treat memory files as generated state unless local instructions prove otherwise. Do not rewrite append-only evidence to fix a stale curated claim.
 - Do not apply repo-specific assumptions globally. Prefer `AGENTS.md` or repo docs for repo rules.
 - Do not run broad destructive commands.
 
 ## Workflow
 
-1. Discover Codex home:
+Every route performs the same full-depth review before planning or cleanup:
+
+1. Resolve the selected route, Codex home, repo target, persistence path when applicable, and protected state. Discover Codex home as follows:
 
    Use `${CODEX_HOME}` when set; otherwise use the user's home directory plus `.codex`.
 
@@ -98,37 +107,50 @@ Memory is context, not truth. The latest user request, current repo files, `AGEN
 
 11. Tag high-risk entries as useful context only: `stale`, `duplicated`, `too-broad`, `too-specific`, `repo-specific`, `workflow`, `config`, `sensitive`, `conflicting`, or `useful`.
 12. Add confidence (`high`, `medium`, or `low`) and a proposed action to every entry.
-13. Produce the review report before editing. Add a structured cleanup plan only when the user wants ID-by-ID approval, the schema is unknown, sensitive cleanup is proposed, or the edit set is large enough that a table is hard to approve safely.
-14. If cleanup is approved, load `references/safe-editing-procedure.md`, run `node scripts/backup-memories.mjs`, apply only approved minimal edits by memory ID, re-read changed sections, and show a trimmed diff summary.
+13. Produce the complete review before planning or editing. Route delivery must not reduce review depth.
+
+## Route execution
+
+- `review-chat`: return the review in chat and create no durable curation report.
+- `review-file`: persist the single curation record and make no memory or config change.
+- `cleanup-chat`: derive only high-confidence atomic actions from the completed review, back up every exact file to be changed, apply them, re-read changed sections, and report verification in chat. Create no durable curation report.
+- `cleanup-file`: create the curation record before mutation; if persistence fails, stop. Then back up exact files, apply only high-confidence atomic actions, and complete the same record with execution and verification.
+- `plan-cleanup-chat` and `plan-cleanup-file`: enter the Plan lifecycle, resolve the cleanup plan with the user, and stop after approval without changing Codex state.
+- `plan-run-cleanup-chat` and `plan-run-cleanup-file`: enter the Plan lifecycle, resolve and approve the complete cleanup plan, recheck state, exit Plan mode, back up exact files, execute only the unchanged plan, and verify. Do not ask a generic second cleanup question after plan approval.
+
+Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence atomic edits, moves, or entry deletion in existing, editable, runtime-owned Codex memory. Defer whole-file deletion, new context files, config, `AGENTS.md`, repository docs, skills, generated append-only evidence, uncertain schemas, medium/low-confidence changes, and any scope expansion. A plan-run route may execute broader curation changes only when the approved plan names each destination, write path, backup, rollback, and separate approval boundary.
+
+## Plan lifecycle
+
+The four `plan-*` routes require native Plan mode when the host supports it:
+
+1. Detect support before substantive planning.
+2. If supported and active, plan there. If supported but inactive, or support is indeterminate, stop and ask the user to enter or confirm Plan mode.
+3. Use an in-chat portable fallback only when native Plan mode is definitely unavailable.
+4. Before execution, record plan approval, recheck target files and protected state, stop on material drift, and exit Plan mode before mutation.
+
+Do not invoke `codex-spec-interviewer` inside this curation workflow. If findings require a broader durable rule, repository spec, or unresolved product decision, finish the selected curation route and offer the interviewer as a separate follow-up.
+
+## File delivery contract
+
+File routes persist exactly one redacted curation record. Prefer an existing repository-native report location; otherwise use `<repo>/.agent-reports/codex-memory-curation/<UTC timestamp>-<selection-id>.md`. Create a new path without overwriting and keep all route output in that record.
+
+The record contains `Review`, `Plan`, `Execution Receipt`, `Deferred Work`, `Backup`, and `Verification`. Use `not applicable` with a reason for phases the route does not perform. Create the record before mutation for `cleanup-file` and `plan-run-cleanup-file`; persistence failure blocks cleanup. Chat routes create no report file. Backup directories remain mandatory safety artifacts and do not count as curation reports.
+
+`Explicit --backup-root requires a stable non-sensitive --backup-root-alias; file routes persist the script-reported portable storage locator and <storage-locator>/backup-manifest.json.` Report exact absolute backup and manifest paths only in non-persisted chat, never in repository artifacts.
 
 ## Classification checks
 
-For each atomic claim, ask:
-
-- Is this stable for months?
-- Is this a personal preference or a repo rule?
-- Could this mislead Codex in another repository?
-- Is it phrased too strongly with `always`, `never`, or `must`?
-- Is it duplicated, stale, one-off, or conflicting?
-- Does it contain sensitive data?
-- Does a higher-precedence source contradict it?
-- Would this be more precise as `AGENTS.md`, repo docs, a skill, config, or deletion?
-- Is it short enough to stay in memory?
-
-Load `references/classification-rubric.md` for examples and detailed decision rules.
+For each atomic claim, test stability, scope, portability, strength, duplication, staleness, sensitivity, higher-precedence conflicts, concise phrasing, and whether `AGENTS.md`, repo docs, a skill, config, or deletion is more precise. Load `references/classification-rubric.md` for the detailed rules and examples.
 
 ## References
 
 Read only when needed:
 
-- `references/classification-rubric.md` for detailed classification rules and rewrite examples.
-- `references/conflict-resolution.md` for precedence rules when memory conflicts with current repo evidence.
-- `references/config-modes.md` for memory config mode signals and TOML snippets.
-- `references/example-review-report.md` for report shape examples.
-- `references/memory-store-anatomy.md` for generated-state boundaries and common memory file buckets.
-- `references/safe-editing-procedure.md` before modifying memory files.
-- `assets/review-report-template.md` when a concise report template is useful.
-- `assets/cleanup-plan-template.md` when a structured cleanup plan is needed.
+- Classification and conflict: `references/classification-rubric.md`, `references/conflict-resolution.md`.
+- Config and store boundaries: `references/config-modes.md`, `references/memory-store-anatomy.md`.
+- Safe mutation and examples: `references/safe-editing-procedure.md`, `references/example-review-report.md`.
+- Output artifacts: `assets/review-report-template.md`, `assets/cleanup-plan-template.md`.
 
 ## Scripts
 
@@ -137,88 +159,34 @@ Use only when needed. All scripts are non-interactive, use Node.js stdlib only, 
 ```bash
 node scripts/inventory-memories.mjs [--codex-home PATH] [--json]
 node scripts/scan-memory-risks.mjs [--codex-home PATH] [--json] [--max-findings N] [--include-generated-evidence]
-node scripts/backup-memories.mjs [--codex-home PATH]
+node scripts/backup-memories.mjs [--repo PATH] [--codex-home PATH] [--backup-root PATH --backup-root-alias NAME] [--include PATH ...]
 ```
 
-- `inventory-memories.mjs` is read-only and lists memory files with size/date metadata plus a best-effort file kind.
-- `scan-memory-risks.mjs` is read-only, redacts matching lines by default, labels risk categories, limits returned findings, skips generated evidence unless requested, and exits `1` when findings exist.
-- `backup-memories.mjs` creates a timestamped backup copy under Codex home; it does not edit or delete memory files.
+- Inventory is read-only. The scanner is read-only, redacts by default, bounds findings, skips generated evidence unless requested, and uses exit `1` for findings rather than execution failure.
+- `backup-memories.mjs` creates a no-clobber backup plus `backup-manifest.json`. Unredacted backup payloads and manifests stay outside Git worktrees and outside the resolved Codex memories tree; default and explicit roots equal to or below that source tree, including symlink aliases, fail before discovery can include them or any backup directory is created. The script defaults to deterministic user state and rejects an unsafe `--backup-root` before copying. One or more repeatable `--include PATH` values select exact-only mode; zero includes retain full legacy memory discovery. Selected paths must be readable; every symlink path component and legacy traversal error fails before root creation. It does not edit or delete memory files.
 
 ## Output format
 
-Before edits, lead with this report shape:
+Start with the selected workflow, rationale, Codex home/repo target, write scope, expected artifacts, protected state, Plan-mode state, persistence path or `chat only`, and remaining approvals.
 
-```md
-# Codex Memory Review
+Before producing a report, load and follow [`assets/review-report-template.md`](assets/review-report-template.md) as the canonical heading and field contract. File routes copy that complete template into the one curation record; chat routes render only applicable sections in chat and create no report file. Populate every applicable field, use `not applicable` with a reason for skipped phases, and redact sensitive values.
 
-## Top Decisions
-
-1.
-2.
-3.
-
-## Summary
-
-- Memory files inspected:
-- Entries extracted:
-- Keep:
-- Rewrite:
-- Move to AGENTS.md:
-- Move to repo docs:
-- Move to skill:
-- Move to config:
-- Delete:
-- Ask user:
-
-## Highest-Risk Memories
-
-| ID  | Entry | Risk | Recommendation |
-| --- | ----- | ---- | -------------- |
-
-## Proposed Cleanup Table
-
-| ID  | Current memory | Classification | Risk tags | Confidence | Reason | Proposed action |
-| --- | -------------- | -------------- | --------- | ---------- | ------ | --------------- |
-
-## Conflict Notes
-
-| ID  | Higher source | Conflict | Recommendation |
-| --- | ------------- | -------- | -------------- |
-
-## Optional Cleanup Plan Artifact
-
-- Plan path:
-- Plan format: `assets/cleanup-plan-template.md`
-- Omit this section for simple review-only work unless the user needs ID-by-ID approval.
-
-## Config Recommendation
-
-## Recommended Next Action
-```
-
-After approved edits, also include backup path, files changed, trimmed diff summary, and residual risks.
+Before edits, complete the review and decision tables. After edits, complete the same record's receipt, including Manifest reconciliation and unmatched paths; New paths (`created-no-preimage`) and rollback; Backup mode and manifest path; Backup integrity result; and the row schema `| Changed path | Backup destination | Bytes | SHA-256 | Verification |`.
 
 ## Completion criteria
 
-- Relevant memory files and config were inventoried, or a missing-path message was reported.
-- Entries were extracted as atomic claims.
-- Each entry has exactly one primary classification.
-- Each entry has risk tags, confidence, and a proposed action.
-- The report distinguishes memory, `AGENTS.md`, repo docs, skills, config, deletion, and ask-user cases.
-- Conflicts cite the higher-precedence source that makes the memory stale or misplaced.
-- Generated evidence files are treated as evidence unless approved sensitive-data cleanup requires changing them.
-- A structured cleanup plan is provided when the user wants ID-by-ID approval, the schema is unknown, sensitive cleanup is proposed, or the edit set is large.
-- No memory edit happened before explicit approval.
-- Any approved edit has a backup path and verification diff summary.
+- One of the eight canonical workflows was selected from clear authority or resolved ambiguity; agent activation never inferred cleanup.
+- Applicable memory/config was inventoried or reported missing; generated evidence changed only for explicitly authorized sensitive-data cleanup.
+- Every atomic claim has one classification, risk tags, confidence, action, and higher-precedence conflict evidence when applicable.
+- Plan/direct-cleanup and destination boundaries remain satisfied.
+- Delivery matches the canonical template; every edit has exact backup, manifest reconciliation, re-read, and integrity proof.
 
 ## Failure modes
 
-- No memory directory: report that no local memories directory was found and suggest checking whether memories are enabled or `CODEX_HOME` points elsewhere.
-- Config missing: report that memory behavior may be controlled by app settings or defaults.
-- Memory schema unknown: write proposed replacements to a sibling `.proposed.md` file instead of editing the original.
-- Sensitive data found: redact the value, identify file and line when possible, recommend removal, require backup before edits, and recommend rotation for real credentials.
-- Conflicting rules: cite the conflict, prefer current prompt and repo instructions, then classify as rewrite, move, or delete.
-- Backup failure: do not edit memory files.
+- Missing memory/config: report what is unavailable and whether enablement, app defaults, or a different Codex home may explain it.
+- Unknown schema: defer instead of editing or creating sibling state.
+- Sensitive or conflicting content: redact; cite location and higher source; recommend removal/rotation or classify for rewrite, move, or deletion.
+- Persistence, backup, or approved-state recheck failure: stop before mutation (or before further mutation), report the failure, and return to planning after drift.
 
 ## Final output instruction
 

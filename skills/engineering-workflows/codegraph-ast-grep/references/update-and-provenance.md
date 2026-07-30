@@ -1,6 +1,8 @@
 # Stable Updates and Installation Provenance
 
-Use this reference for the skill's once-per-task analysis-stack update check and every approved tool update. The check is advisory and does not authorize mutation. External version lookup and telemetry are separate choices.
+Use this reference for the selected `update` workflow. It preserves installer provenance while updating stable core tools, running required migrations, reconnecting the client, and verifying readiness. External version lookup and telemetry remain separate choices.
+
+Precondition: `update` was selected from clear user intent or explicit choice and the exact root/write scope was announced. That selection authorizes ordinary in-root stable core updates and required migrations; privilege escalation, channel/scope changes, telemetry, destructive rebuilds, unrelated dependencies, and external services remain separate.
 
 ## Contents
 
@@ -8,14 +10,14 @@ Use this reference for the skill's once-per-task analysis-stack update check and
 - [Respect network and privacy policy](#respect-network-and-privacy-policy)
 - [Discover installed provenance](#discover-installed-provenance)
 - [Resolve the stable target](#resolve-the-stable-target)
-- [Itemized approval checkpoint](#itemized-approval-checkpoint)
-- [Approved update execution](#approved-update-execution)
-- [Configuration and index separation](#configuration-and-index-separation)
+- [Execution manifest](#execution-manifest)
+- [Update execution](#update-execution)
+- [Configuration, migration, and reconnect](#configuration-migration-and-reconnect)
 - [Verification and rollback](#verification-and-rollback)
 
 ## Scope and frequency
 
-Perform the stable-version lookup **at most once per tool per task** before first use, then reuse the result.
+Perform the stable-version lookup **at most once per core tool in the update workflow**, then reuse the result.
 
 Include only the selected analysis stack:
 
@@ -154,11 +156,11 @@ Select the newest **stable** version that is compatible with the active package/
 
 Filter release notes locally for relevant languages, frameworks, platforms, parser fixes, MCP behavior, update/install changes, and known regressions. Do not claim a security reason unless an authoritative advisory or release note supports it.
 
-## Itemized approval checkpoint
+## Execution manifest
 
-If no eligible stable update exists, report the checked state briefly and continue without a prompt.
+If no eligible stable update exists, report the checked state briefly and continue with migration/readiness reconciliation when needed.
 
-If one or more updates exist, actively ask once with independent choices. Include every field:
+Before mutation, present one compact execution manifest. Include every field:
 
 | Component | Installed                  | Stable target/source              | Why it matters              | Exact action          | Scope and expected mutation                   | Restart/reindex            | Rollback                  |
 | --------- | -------------------------- | --------------------------------- | --------------------------- | --------------------- | --------------------------------------------- | -------------------------- | ------------------------- |
@@ -166,18 +168,18 @@ If one or more updates exist, actively ask once with independent choices. Includ
 
 State explicitly:
 
-- approval is separate/itemized for each install or update;
-- approving a package/binary does not approve agent config, prompt hooks, telemetry changes, graph sync/rebuild, or unrelated dependencies;
+- every selected core-tool update is itemized even when the explicit update request authorizes the whole unchanged manifest;
+- the announced update scope covers required in-root config/index/schema migrations and reconnects, but not prompt-hook, telemetry, destructive rebuild, or unrelated dependency expansion;
 - the exact CodeGraph action shows `CODEGRAPH_TELEMETRY=0` unless telemetry was separately approved for that action; default-on telemetry is not approval;
 - project-local actions include the named manifest/lockfile writes;
-- declining one item does not block diagnostics or other approved items;
+- declining or excluding one item does not block diagnosis or other authorized items;
 - a declined item will not be re-asked during the task.
 
 Never offer or run a blanket `update all` operation.
 
-## Approved update execution
+## Update execution
 
-After approval, re-check that the exact proposed version, channel, scope, and command still match the checkpoint. If the target changed, stop and re-present the affected item.
+Before execution, re-check that the exact proposed version, channel, scope, and command still match the announced manifest. If the target changed materially, stop and re-present the affected item.
 
 ### CodeGraph
 
@@ -255,13 +257,13 @@ For Homebrew, MacPorts, Nix, or another declarative channel, show that channel's
 
 Use only the version, channel, permissions, and sandbox/dry-run behavior approved when the tool was selected. Registry codemods, `npx`, `uvx`, and Git sources remain remote code execution even when invoked for one task.
 
-## Configuration and index separation
+## Configuration, migration, and reconnect
 
-A tool update does not authorize configuration repair or refresh.
+The selected `update` workflow includes configuration/index/schema migration and client reconnect when the installed-to-target version requires them and they stay within the announced root and runtime scope.
 
-After a CodeGraph update, inspect current generated/runtime config and diff it against existing config. Offer any needed config change as a separate item. Reviewed CodeGraph 1.4.1 `install --refresh` can rewrite multiple previously configured targets and locations; `--target` does not reliably narrow that refresh path. Prefer a runtime-native, reviewed MCP-only change when narrower behavior is required.
+After a CodeGraph update, inspect current generated/runtime config and diff it against existing config. Include every required migration in the execution receipt. Reviewed CodeGraph 1.4.1 `install --refresh` can rewrite multiple previously configured targets and locations; `--target` does not reliably narrow that refresh path. Prefer a runtime-native, reviewed MCP-only change when narrower behavior is required.
 
-Likewise, treat these separately:
+Report these as distinct effects and ask again only when they exceed the announced update scope:
 
 - MCP server restart/reconnect;
 - Claude prompt hook or runtime instructions;

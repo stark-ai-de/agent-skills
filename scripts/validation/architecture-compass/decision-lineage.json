@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "decisions": [
+    {
+      "id": "AC-ADR-001",
+      "disposition": "material",
+      "relations": [{ "type": "consolidates", "sources": ["ADR-0032", "ADR-0033"] }]
+    },
+    { "id": "AC-ADR-002", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-003",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0029"] }]
+    },
+    {
+      "id": "AC-ADR-004",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0030"] }]
+    },
+    { "id": "AC-ADR-005", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-006", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-007", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-008", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-009", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-010", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-011", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-012", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-013",
+      "disposition": "material",
+      "relations": [{ "type": "consolidates", "sources": ["ADR-0034", "ADR-0035", "ADR-0036"] }]
+    },
+    {
+      "id": "AC-ADR-014",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0034"] }]
+    },
+    { "id": "AC-ADR-015", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-016", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-017", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-018", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-019", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-020", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-021",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0035"] }]
+    },
+    { "id": "AC-ADR-022", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-023", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-024", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-025", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-026",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0037"] }]
+    },
+    {
+      "id": "AC-ADR-027",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0001"] }]
+    },
+    {
+      "id": "AC-ADR-028",
+      "disposition": "material",
+      "relations": [{ "type": "consolidates", "sources": ["ADR-0004", "ADR-0006", "ADR-0009"] }]
+    },
+    {
+      "id": "AC-ADR-029",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0008"] }]
+    },
+    {
+      "id": "AC-ADR-030",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0005"] }]
+    },
+    {
+      "id": "AC-ADR-031",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0007"] }]
+    },
+    {
+      "id": "AC-ADR-032",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0010"] }]
+    },
+    {
+      "id": "AC-ADR-033",
+      "disposition": "material",
+      "relations": [{ "type": "consolidates", "sources": ["ADR-0014", "ADR-0022"] }]
+    },
+    {
+      "id": "AC-ADR-034",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0015"] }]
+    },
+    {
+      "id": "AC-ADR-035",
+      "disposition": "material",
+      "relations": [{ "type": "consolidates", "sources": ["ADR-0021", "ADR-0016"] }]
+    },
+    {
+      "id": "AC-ADR-036",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0024"] }]
+    },
+    {
+      "id": "AC-ADR-037",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0028"] }]
+    },
+    {
+      "id": "AC-ADR-038",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0025", "ADR-0027"] }]
+    },
+    { "id": "AC-ADR-039", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-040",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0034", "ADR-0035", "ADR-0036"] }]
+    },
+    {
+      "id": "AC-ADR-041",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0002"] }]
+    },
+    { "id": "AC-ADR-042", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-043", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-044", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-045",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0038"] }]
+    },
+    { "id": "AC-ADR-046", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-047", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-048",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0038"] }]
+    },
+    { "id": "AC-ADR-049", "disposition": "independent", "relations": [] }
+  ]
+}

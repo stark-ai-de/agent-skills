@@ -1,100 +1,128 @@
-# ADR-Guided Refactor Report
+# Architecture Audit and Refactor Report
 
-## Action and mode
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
 
-Top-level action: `refactor`
+## Intent-bound selection
 
-Internal mode:
-
-`audit | refactor | new-implementation | new-repo-bootstrap | pr-review | docs-sync | stack-deviation`
-
-Collaboration route:
-
-`native decision phase | portable no-write fallback | direct execution | read-only audit | review`
-
-Host capability evidence:
-
-Planning capability: `<Active - evidence | Available but inactive - evidence | Unavailable - evidence | Explicitly declined - user statement | Indeterminate - evidence | Not applicable>`
-
-Read-only enforcement: `<enforced - evidence | available but inactive - evidence | unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not applicable>`
-
-Plan-mode fallback: `<unavailable - evidence | explicitly declined - user statement | indeterminate - evidence | not used>`
-
-Architecture decision status: `<not required | pending | approved | blocked>`
-
-Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+- Public workflows exposed: `setup | audit | refactor | plan-refactor | plan-run-refactor`
+- Selected workflow: `audit | refactor | plan-refactor | plan-run-refactor`
+- Selection rationale and intent evidence:
+- Write scope: `read-only | approved specification/ADR paths | accepted-ADR-governed implementation paths`
+- Planning capability: `<state - evidence>`
+- Read-only enforcement: `<state - evidence>`
+- Architecture decision status: `<not required | pending | approved | blocked>`
+- Execution status: `<not requested | ready for direct execution | pending Plan-mode exit | pending write permission | blocked | completed>`
+- Expected artifacts:
+- Protected paths and pre-existing state:
+- Separate approval boundaries:
 
 ## Inspected evidence
 
-| Evidence                | Status                                | Notes |
-| ----------------------- | ------------------------------------- | ----- |
-| ADRs                    | inspected / unavailable / not present |       |
-| Agent instructions      | inspected / unavailable / not present |       |
-| Stack rules             | inspected / unavailable / not present |       |
-| Representative examples | inspected / unavailable / not present |       |
-| Validation commands     | inspected / unavailable / not present |       |
+| Evidence                                | Status | Revision/path | Notes |
+| --------------------------------------- | ------ | ------------- | ----- |
+| Repository identity and protected state |        |               |       |
+| Agent instructions                      |        |               |       |
+| ADR catalog, local index, and mapping   |        |               |       |
+| Stack/architecture docs                 |        |               |       |
+| Representative code/tests               |        |               |       |
+| Validation/CI                           |        |               |       |
+| Repository-native validation receipts   |        |               |       |
+| Stable public-skill workflow surface    |        |               |       |
 
-## Rule-set summary
+## Selected decisions
 
-| Rule | Provenance | Applies to | Strength |
-| ---- | ---------- | ---------- | -------- |
-|      |            |            |          |
+Use AC-ADR-046 strengths without confusing architecture authority with execution permission: `required` is an applicable accepted local ADR or mandatory target rule; `preferred` is a target-documented default with an allowed evidence-backed deviation; `example` is approved shape guidance; `assumption` is unverified and cannot justify mutation. Lower-ranked current code, provider decisions, and framework defaults cannot override a contradictory `required` rule.
 
-## Gap report
+| Rule | Rule strength | Provider ADR Short | Canonical Long | Local ADR/path | Target provenance | Applies to |
+| ---- | ------------- | ------------------ | -------------- | -------------- | ----------------- | ---------- |
+|      |               |                    |                |                |                   |            |
 
-| Severity                       | File or area | Drift | Rule | Recommended change |
-| ------------------------------ | ------------ | ----- | ---- | ------------------ |
-| blocking / important / cleanup |              |       |      |                    |
+## Findings and disposition
 
-## Proposed slices
+Assign each finding exactly one disposition: `fix-and-prove-now`, `verify-now`, `defer-recorded`, `accept-risk`, or `not-applicable`.
 
-1. Slice name:
-   - Scope:
-   - Files:
-   - Behavior change: yes/no
-   - Validation:
+Severity definitions:
 
-## Approved execution boundary
+- `critical`: active or imminent loss of confidentiality, integrity, availability, data, or control with no safe bounded continuation.
+- `high`: material violation of a binding decision, trust boundary, public contract, migration safety, or release gate that blocks the affected work.
+- `moderate`: behavioral or governance drift with bounded impact and a practical workaround, but which does not meet the critical/high triggers.
+- `low`: localized non-behavioral inconsistency, clarity defect, or maintenance risk with deterministic acceptance and no higher-severity trigger.
 
-Include this section only when implementation was requested; otherwise omit it.
+| Severity | File/area | Concrete drift or risk | Governing ADR | Rule strength | Disposition | Recommended Action | Docs/ADR Impact | Deviation Resolution | Proof obligation | Done-When |
+| -------- | --------- | ---------------------- | ------------- | ------------- | ----------- | ------------------ | --------------- | -------------------- | ---------------- | --------- |
+|          |           |                        |               |               |             |                    |                 |                      |                  |           |
 
-- Approved slice:
-- Allowed target paths:
-- Validation commands:
-- Material assumptions:
-- Execution permission transition: `<required before direct execution | required after native Plan exit | required after portable-fallback approval | not required>`
-- Continuation: `<exact direct/native/portable-fallback continuation from references/host-collaboration-modes.md | not required>`
-- Pre-execution state recheck: passed / material drift found / not applicable
+If two applicable sources conflict, do not blend them. Record both sources, operational authority, affected scope and impact, recommended resolution, decision owner, and whether disjoint work can continue; stop the dependent slice until resolved.
 
-## Docs or ADR updates
+## Workflow boundary
 
-- Required:
-- Optional:
-- Not needed because:
+- Audit remained strictly read-only:
+- Direct refactor was already fully governed and bounded:
+- Missing governance routed to `setup` rather than repaired silently:
+- Unresolved durable decisions routed to a Plan workflow:
+- Material reclassification and authority resolution:
 
-## Stack-deviation result
+## Conditional stable-skill selector instruction
 
-- Preferred option considered:
-- Gap:
-- Chosen option:
-- Docs update needed:
+- Applicability: `applicable | not applicable | indeterminate`
+- Target evidence:
+- Existing equivalent or conflicting rule:
+- Handling: `audit report only | setup required | preserved | not applicable | indeterminate`
 
-## Validation
+## Approved refactoring specification
 
-```bash
-# commands
+Complete this section for `plan-refactor` and `plan-run-refactor`.
+
+- Plan-mode state and transition evidence:
+- Approved outcome and non-goals:
+- Durable decisions resolved:
+- Exact path allowlist:
+- Ordered reversible slices:
+- Proof obligations, owners, and reusable receipts:
+- Rollback and stop conditions:
+- Separate external/high-risk approvals:
+- Plan-mode exit evidence before persistence or execution:
+
+## State recheck and execution
+
+Complete this section for `refactor` and the execution phase of `plan-run-refactor`.
+
+- Root, HEAD, index/worktree, dependency, permission, protected-path, and external-state recheck:
+- Drift result: `unchanged | material drift - stopped`
+- Implemented slices and exact paths:
+- Integrated diff review:
+- Deferred work:
+
+## Validation ledger
+
+Record one AC-ADR-049 receipt per distinct proof obligation and reconcile every delegated receipt against the integrated candidate.
+
+```text
+Receipt ID:
+Risk: low | moderate | high | critical
+Cadence: reuse | final-batch | checkpointed | reproduce-first
+Proof obligation:
+Subject / owning boundary:
+Revision / exact candidate artifact / dirty-tree or content fingerprint:
+Command / scenario / harness:
+Toolchain / config / fixtures / lockfile:
+Evidence stage: source/static | local | CI | publication/install | deployed/production | external/third-party
+Environment:
+Status: verified | failed | not run | unavailable | stale
+Observation / result:
+Observed at / freshness boundary:
+Covered contracts:
+Invalidators / limitations:
+Owner / source / run link:
+Repository-native receipt location:
+Skip reason: none | <why this obligation was not executed and who authorized it>
+Final aggregate gate: <command or scenario, relationship to this receipt, and result>
 ```
 
-Result:
+| Receipt ID | Risk | Cadence | Proof obligation | Subject | Command/scenario/harness | Toolchain | Stage | Environment | Status | Observation/result | Invalidators | Owner | Skip reason | Final aggregate gate relationship |
+| ---------- | ---- | ------- | ---------------- | ------- | ------------------------ | --------- | ----- | ----------- | ------ | ------------------ | ------------ | ----- | ----------- | --------------------------------- |
+|            |      |         |                  |         |                          |           |       |             |        |                    |              |       |             |                                   |
 
-- Passed:
-- Failed:
-- Skipped with reason:
-
-## Remaining risks
-
--
-
-## Done when
+## Remaining risk and next authorized action
 
 -

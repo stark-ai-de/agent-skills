@@ -1,0 +1,44 @@
+# ADR-0001: Use the open Agent Skills specification
+
+ID: ADR-0001
+Title: Use the open Agent Skills specification
+Status: Accepted
+Date: 2026-05-19
+Owner: stark-ai-de
+Scope: repository
+Category: governance
+Tags: agent-skills, portability, specification
+Applies when: Creating or validating a public Agent Skill.
+Adoptable: false
+Variant: Guide
+Canonical variant: Long
+Supersedes: None
+Superseded by: None
+Guide verified: 2026-07-28
+Gist: The repo needs one portable skill format.
+
+Variants: [Short](0001-use-open-agent-skills-spec.short.md) · [Long, canonical](0001-use-open-agent-skills-spec.long.md) · **Guide**
+
+This guide is non-normative. [Long](0001-use-open-agent-skills-spec.long.md) is the authoritative decision; if this guidance conflicts with it, follow Long.
+
+## How to apply
+
+- Locate the policy, catalog, metadata, or repository surfaces governed by the canonical record.
+- Compare the current state with the Long decision and with any later accepted or superseding ADR before proposing a change.
+- Keep one authoritative policy surface; treat templates, reports, and checklists as derived material.
+
+## Verification
+
+- Check the affected policy and generated or derived surfaces for semantic agreement.
+- Run the narrow validator for the governed artifact, then the repository aggregate validation when the change is implementation-ready.
+- Cite the exact files, commands, and evidence boundaries used for the conclusion.
+
+## Historical follow-up context
+
+The original record named these follow-ups. Revalidate them against current repository state before treating them as active work:
+
+- Add validation for frontmatter and naming rules.
+
+## Revisit
+
+Create a new ADR that supersedes this record when the decision changes. Update all three variants and both sides of the supersession metadata in one change.

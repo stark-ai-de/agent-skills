@@ -260,7 +260,9 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
   const hasOpenAiMetadata = existsSync(path.join(repoRoot, openAiMetadataPath));
   const evalPath = publicEvalPath(name);
-  const html = sanitizeSkillHtml(await marked.parse(normalizeSkillMarkdown(parsed.content)));
+  const html = sanitizeSkillHtml(
+    await marked.parse(normalizeSkillMarkdown(parsed.content, skillDir)),
+  );
 
   return {
     body: parsed.content,
@@ -426,7 +428,7 @@ function stripFirstHeading(markdown: string) {
   return markdown.trimStart().replace(/^#\s+.+(?:\n+|$)/, "");
 }
 
-function normalizeSkillMarkdown(markdown: string) {
+function normalizeSkillMarkdown(markdown: string, sourceDir = "") {
   let activeFence: { marker: string; length: number } | undefined;
 
   return stripFirstHeading(markdown)
@@ -446,18 +448,53 @@ function normalizeSkillMarkdown(markdown: string) {
         return line;
       }
 
-      return activeFence ? line : line.replace(/^#\s+/, "## ");
+      if (activeFence) {
+        return line;
+      }
+
+      const withNormalizedHeading = line.replace(/^#\s+/, "## ");
+      return withNormalizedHeading.replace(
+        /(!?\[[^\]\n]*\]\()([^)\s]+)([^)\n]*\))/g,
+        (match, prefix: string, target: string, suffix: string) => {
+          if (!sourceDir || /^(?:[a-z][a-z0-9+.-]*:|#|\/)/i.test(target)) {
+            return match;
+          }
+          const targetMatch = /^([^?#]*)([?#].*)?$/.exec(target);
+          const pathPart = targetMatch?.[1] ?? target;
+          const targetSuffix = targetMatch?.[2] ?? "";
+          const resolved = normalizePath(
+            path.posix.normalize(path.posix.join(sourceDir, pathPart)),
+          );
+          if (resolved === ".." || resolved.startsWith("../")) {
+            return match;
+          }
+          return `${prefix}${repoUrl(resolved)}${targetSuffix}${suffix}`;
+        },
+      );
     })
     .join("\n");
 }
 
 function assertMarkdownNormalizationBehavior() {
-  const fixture = ["# Page title", "", "# Section", "", "```md", "# Example heading", "```"].join(
-    "\n",
-  );
-  const normalized = normalizeSkillMarkdown(fixture);
+  const fixture = [
+    "# Page title",
+    "",
+    "# Section",
+    "",
+    "[Reference](references/example.md)",
+    "",
+    "```md",
+    "# Example heading",
+    "[Literal](references/example.md)",
+    "```",
+  ].join("\n");
+  const normalized = normalizeSkillMarkdown(fixture, "skills/example");
 
-  if (!normalized.includes("## Section") || !normalized.includes("```md\n# Example heading\n```")) {
+  if (
+    !normalized.includes("## Section") ||
+    !normalized.includes(`${REPO_BLOB_URL}/skills/example/references/example.md`) ||
+    !normalized.includes("```md\n# Example heading\n[Literal](references/example.md)\n```")
+  ) {
     throw new Error("Skill Markdown heading normalization changed fenced example content.");
   }
 }

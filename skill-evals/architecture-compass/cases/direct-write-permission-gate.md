@@ -6,7 +6,7 @@ Yes.
 
 ## Prompt
 
-Use Architecture Compass to apply a narrow documentation sync that is fully
+Use Architecture Compass to refactor a narrow documentation sync that is fully
 prescribed by accepted ADR-0003. The approved targets are `AGENTS.md` and
 `docs/architecture.md`; later validation is
 `git diff --check -- AGENTS.md docs/architecture.md`. This is a direct route and
@@ -17,6 +17,7 @@ edit, or validate in this text-only turn; report the permission gate and stop.
 ## Deterministic Assertions
 
 - contains: Planning capability: Not applicable
+- contains: Selected workflow: refactor
 - contains: Read-only enforcement: enforced
 - contains: Architecture decision status: not required
 - contains: Execution status: pending write permission
@@ -32,7 +33,7 @@ edit, or validate in this text-only turn; report the permission gate and stop.
 ## Expected Behavior
 
 - Activate because the request explicitly applies accepted architecture rules.
-- Keep the preliminary and final route direct without requesting Plan mode.
+- Keep the preliminary and final `refactor` route direct without requesting Plan mode.
 - Use the supplied ADR, target, and validation facts without claiming a new
   repository inspection in this tool-disabled case.
 - Record the current read-only sandbox, request the separate host-controlled

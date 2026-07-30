@@ -1142,8 +1142,8 @@ function inspectSvgReadiness(file) {
   return {
     status: "unverified",
     reason: codes.length
-      ? `strict SVG readiness is unverified: ${codes.join(", ")}`
-      : "strict SVG readiness is unverified",
+      ? `strict SVG validation is unverified: ${codes.join(", ")}`
+      : "strict SVG validation is unverified",
   };
 }
 

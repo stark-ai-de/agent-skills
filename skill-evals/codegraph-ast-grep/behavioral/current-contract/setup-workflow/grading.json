@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "setup-workflow",
+  "assertions": [
+    {
+      "id": "select-setup-without-redundant-choice",
+      "passed": true,
+      "evidence": "“Selected workflow: `setup`, because you explicitly requested…”",
+      "failure_reason": null
+    },
+    {
+      "id": "announce-root-writes-and-protected-state",
+      "passed": true,
+      "evidence": "“Root: `/workspace/sample-app`”; “Only the announced setup files changed”",
+      "failure_reason": null
+    },
+    {
+      "id": "preserve-team-pinned-provenance-and-telemetry-boundary",
+      "passed": true,
+      "evidence": "“Team-pinned pnpm dependencies”; “project-local Codex MCP registration…with `CODEGRAPH_TELEMETRY=0`”",
+      "failure_reason": null
+    },
+    {
+      "id": "reconcile-codegraph-ast-grep-codex-and-guidance",
+      "passed": true,
+      "evidence": "Reports both exact tool pins, Codex MCP registration, initialization, and “one concise, non-duplicated repository instruction”",
+      "failure_reason": null
+    },
+    {
+      "id": "report-semantic-structural-and-freshness-proof",
+      "passed": true,
+      "evidence": "“graph is current”; “semantic symbol query succeeded”; “bounded ast-grep CLI query produced the expected match”",
+      "failure_reason": null
+    },
+    {
+      "id": "exclude-experimental-ast-grep-mcp",
+      "passed": true,
+      "evidence": "“No…experimental ast-grep MCP server was introduced”",
+      "failure_reason": null
+    },
+    {
+      "id": "retain-separate-scope-expansion-approval",
+      "passed": true,
+      "evidence": "Scope remains project-local; explicitly excludes global installation, telemetry enablement, prompt hooks, destructive replacement, and unrelated dependencies",
+      "failure_reason": null
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

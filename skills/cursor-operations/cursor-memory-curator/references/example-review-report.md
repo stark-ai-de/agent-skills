@@ -1,5 +1,7 @@
 # Example Cursor Memory Review
 
+Selected workflow: `review-chat`. This example creates no durable curation report.
+
 ## Top Decisions
 
 1. Convert the ignored plain Markdown rule to `.mdc` or move its simple guidance to `AGENTS.md`.
@@ -40,4 +42,4 @@
 
 ## Recommended Next Action
 
-Approve IDs C-1 and C-2 for cleanup, or tell me which entries to revise.
+Invoke a cleanup route explicitly if C-1 and C-2 should be applied; `plan-run-cleanup-file` is Recommended.
