@@ -245,7 +245,9 @@ try {
       () =>
         copyGitCandidateRepository(repositoryRoot, restrictiveUmaskFailureDestinationRoot, {
           testOnlyOnSnapshotEvent({ stage }) {
-            if (stage !== "after-destination-claim" || restrictiveUmaskFailureHookCount > 0) return;
+            if (stage !== "after-destination-publication" || restrictiveUmaskFailureHookCount > 0) {
+              return;
+            }
             restrictiveUmaskFailureHookCount += 1;
             throw new Error("synthetic restrictive-umask publication failure");
           },
@@ -444,7 +446,78 @@ try {
   fs.mkdirSync(publicationRepositoryRoot, { recursive: true });
   runGit(["init", "--quiet"], publicationRepositoryRoot);
   writeFixtureFile(publicationRepositoryRoot, "candidate.txt", "candidate publication bytes\n");
-  runGit(["add", "candidate.txt"], publicationRepositoryRoot);
+  writeFixtureFile(publicationRepositoryRoot, "nested/second.txt", "second publication bytes\n");
+  runGit(["add", "candidate.txt", "nested/second.txt"], publicationRepositoryRoot);
+
+  const atomicDestinationRoot = path.join(tmpRoot, "atomic-copy");
+  const publicationStages = [];
+  let atomicStagingRoot;
+  let publicationRenameCount = 0;
+  const originalRenameSync = fs.renameSync;
+  try {
+    fs.renameSync = (source, destination) => {
+      if (destination === atomicDestinationRoot) {
+        publicationRenameCount += 1;
+        assert.equal(source, atomicStagingRoot);
+        assert.equal(path.dirname(source), path.dirname(destination));
+        assert.equal(fs.existsSync(destination), false);
+        assert.equal(
+          fs.readFileSync(path.join(source, "candidate.txt"), "utf8"),
+          "candidate publication bytes\n",
+        );
+        assert.equal(
+          fs.readFileSync(path.join(source, "nested", "second.txt"), "utf8"),
+          "second publication bytes\n",
+        );
+      }
+      return originalRenameSync(source, destination);
+    };
+
+    copyGitCandidateRepository(publicationRepositoryRoot, atomicDestinationRoot, {
+      testOnlyOnSnapshotEvent({ source, stage, stagingRoot }) {
+        if (stage === "before-destination-publication") {
+          publicationStages.push(stage);
+          atomicStagingRoot = stagingRoot;
+          assert.equal(source, atomicDestinationRoot);
+          assert.equal(fs.existsSync(atomicDestinationRoot), false);
+          assert.equal(
+            fs.readFileSync(path.join(stagingRoot, "candidate.txt"), "utf8"),
+            "candidate publication bytes\n",
+          );
+          assert.equal(
+            fs.readFileSync(path.join(stagingRoot, "nested", "second.txt"), "utf8"),
+            "second publication bytes\n",
+          );
+        }
+        if (stage === "after-destination-publication") {
+          publicationStages.push(stage);
+          assert.equal(source, atomicDestinationRoot);
+          assert.equal(fs.existsSync(stagingRoot), false);
+          assert.equal(
+            fs.readFileSync(path.join(source, "candidate.txt"), "utf8"),
+            "candidate publication bytes\n",
+          );
+          assert.equal(
+            fs.readFileSync(path.join(source, "nested", "second.txt"), "utf8"),
+            "second publication bytes\n",
+          );
+        }
+      },
+    });
+  } finally {
+    fs.renameSync = originalRenameSync;
+  }
+  assert.equal(publicationRenameCount, 1);
+  assert.deepEqual(publicationStages, [
+    "before-destination-publication",
+    "after-destination-publication",
+  ]);
+  assert.deepEqual(
+    fs
+      .readdirSync(tmpRoot)
+      .filter((name) => name.startsWith(`.${path.basename(atomicDestinationRoot)}-`)),
+    [],
+  );
 
   const nonPrivateParentRoot = path.join(tmpRoot, "non-private-parent");
   const nonPrivateDestinationRoot = path.join(nonPrivateParentRoot, "copy");
@@ -472,7 +545,7 @@ try {
       () =>
         copyGitCandidateRepository(publicationRepositoryRoot, swappedParentDestinationRoot, {
           testOnlyOnSnapshotEvent({ stage }) {
-            if (stage !== "before-destination-claim" || swappedParentHookCount > 0) return;
+            if (stage !== "before-destination-publication" || swappedParentHookCount > 0) return;
             swappedParentHookCount += 1;
             fs.renameSync(swappedParentRoot, parkedSwappedParentRoot);
             fs.symlinkSync(
@@ -500,25 +573,53 @@ try {
   }
 
   const competitorDestinationRoot = path.join(tmpRoot, "competitor-copy");
+  const competitorBytes = Buffer.from("competitor survives\n", "utf8");
   let competitorHookCount = 0;
+  let competitorFileIdentity;
   assert.throws(
     () =>
       copyGitCandidateRepository(publicationRepositoryRoot, competitorDestinationRoot, {
-        testOnlyOnSnapshotEvent({ stage }) {
-          if (stage !== "before-destination-claim" || competitorHookCount > 0) return;
+        testOnlyOnSnapshotEvent({ stage, stagingRoot }) {
+          if (stage !== "before-destination-publication" || competitorHookCount > 0) return;
           competitorHookCount += 1;
-          fs.mkdirSync(competitorDestinationRoot);
-          writeFixtureFile(competitorDestinationRoot, "competitor.txt", "competitor survives\n");
+          assert.equal(fs.existsSync(competitorDestinationRoot), false);
+          assert.equal(
+            fs.readFileSync(path.join(stagingRoot, "candidate.txt"), "utf8"),
+            "candidate publication bytes\n",
+          );
+          assert.equal(
+            fs.readFileSync(path.join(stagingRoot, "nested", "second.txt"), "utf8"),
+            "second publication bytes\n",
+          );
+          fs.mkdirSync(competitorDestinationRoot, { mode: 0o700 });
+          const competitorFile = path.join(competitorDestinationRoot, "competitor.txt");
+          fs.writeFileSync(competitorFile, competitorBytes);
+          competitorFileIdentity = fs.lstatSync(competitorFile, { bigint: true });
         },
       }),
     /Clean-copy destination already exists/,
   );
   assert.equal(competitorHookCount, 1);
-  assert.equal(
-    fs.readFileSync(path.join(competitorDestinationRoot, "competitor.txt"), "utf8"),
-    "competitor survives\n",
+  const survivingCompetitorFile = path.join(competitorDestinationRoot, "competitor.txt");
+  assert.deepEqual(fs.readFileSync(survivingCompetitorFile), competitorBytes);
+  const survivingCompetitorIdentity = fs.lstatSync(survivingCompetitorFile, { bigint: true });
+  assert.deepEqual(
+    {
+      device: survivingCompetitorIdentity.dev,
+      inode: survivingCompetitorIdentity.ino,
+      mode: survivingCompetitorIdentity.mode,
+      size: survivingCompetitorIdentity.size,
+    },
+    {
+      device: competitorFileIdentity.dev,
+      inode: competitorFileIdentity.ino,
+      mode: competitorFileIdentity.mode,
+      size: competitorFileIdentity.size,
+    },
   );
+  assert.deepEqual(fs.readdirSync(competitorDestinationRoot), ["competitor.txt"]);
   assert.equal(fs.existsSync(path.join(competitorDestinationRoot, "candidate.txt")), false);
+  assert.equal(fs.existsSync(path.join(competitorDestinationRoot, "nested")), false);
   assert.deepEqual(
     fs
       .readdirSync(tmpRoot)
@@ -526,52 +627,198 @@ try {
     [],
   );
 
-  const claimedFailureDestinationRoot = path.join(tmpRoot, "claimed-failure-copy");
-  let claimedFailureHookCount = 0;
-  assert.throws(
-    () =>
-      copyGitCandidateRepository(publicationRepositoryRoot, claimedFailureDestinationRoot, {
-        testOnlyOnSnapshotEvent({ stage }) {
-          if (stage !== "after-destination-claim" || claimedFailureHookCount > 0) return;
-          claimedFailureHookCount += 1;
-          throw new Error("synthetic post-claim failure");
-        },
-      }),
-    /synthetic post-claim failure/,
-  );
-  assert.equal(claimedFailureHookCount, 1);
-  assertNoCleanCopyArtifacts(tmpRoot, claimedFailureDestinationRoot);
-
-  const replacedClaimDestinationRoot = path.join(tmpRoot, "replaced-claim-copy");
-  const parkedClaimDestinationRoot = path.join(tmpRoot, "replaced-claim-owned-parked");
-  let replacedClaimHookCount = 0;
-  assert.throws(
-    () =>
-      copyGitCandidateRepository(publicationRepositoryRoot, replacedClaimDestinationRoot, {
-        testOnlyOnSnapshotEvent({ stage }) {
-          if (stage !== "after-destination-claim" || replacedClaimHookCount > 0) return;
-          replacedClaimHookCount += 1;
-          fs.renameSync(replacedClaimDestinationRoot, parkedClaimDestinationRoot);
-          fs.mkdirSync(replacedClaimDestinationRoot);
-          writeFixtureFile(
-            replacedClaimDestinationRoot,
-            "competitor.txt",
-            "replacement competitor survives\n",
+  const prePublicationFailureDestinationRoot = path.join(tmpRoot, "pre-publication-failure-copy");
+  const prePublicationUnrelatedRoot = path.join(tmpRoot, "pre-publication-unrelated");
+  const prePublicationPrimaryFailure = new Error("synthetic pre-publication primary failure");
+  const prePublicationCleanupFailure = new Error("synthetic pre-publication cleanup failure");
+  const originalRmSync = fs.rmSync;
+  let prePublicationCleanupHookCount = 0;
+  let prePublicationFailureHookCount = 0;
+  let observedPrePublicationFailure;
+  writeFixtureFile(prePublicationUnrelatedRoot, "custody.txt", "unrelated custody survives\n");
+  try {
+    try {
+      copyGitCandidateRepository(publicationRepositoryRoot, prePublicationFailureDestinationRoot, {
+        testOnlyOnSnapshotEvent({ stage, stagingRoot }) {
+          if (stage !== "before-destination-publication" || prePublicationFailureHookCount > 0) {
+            return;
+          }
+          prePublicationFailureHookCount += 1;
+          assert.equal(fs.existsSync(prePublicationFailureDestinationRoot), false);
+          assert.equal(
+            fs.readFileSync(path.join(stagingRoot, "candidate.txt"), "utf8"),
+            "candidate publication bytes\n",
           );
-          throw new Error("synthetic replaced-claim failure");
+          fs.rmSync = (target, options) => {
+            const result = originalRmSync(target, options);
+            if (target === stagingRoot && prePublicationCleanupHookCount === 0) {
+              prePublicationCleanupHookCount += 1;
+              throw prePublicationCleanupFailure;
+            }
+            return result;
+          };
+          throw prePublicationPrimaryFailure;
         },
-      }),
-    /synthetic replaced-claim failure/,
-  );
-  assert.equal(replacedClaimHookCount, 1);
+      });
+    } catch (error) {
+      observedPrePublicationFailure = error;
+    }
+  } finally {
+    fs.rmSync = originalRmSync;
+  }
+  assert.equal(observedPrePublicationFailure, prePublicationPrimaryFailure);
+  assert.equal(prePublicationFailureHookCount, 1);
+  assert.equal(prePublicationCleanupHookCount, 1);
+  assertNoCleanCopyArtifacts(tmpRoot, prePublicationFailureDestinationRoot);
   assert.equal(
-    fs.readFileSync(path.join(replacedClaimDestinationRoot, "competitor.txt"), "utf8"),
-    "replacement competitor survives\n",
+    fs.readFileSync(path.join(prePublicationUnrelatedRoot, "custody.txt"), "utf8"),
+    "unrelated custody survives\n",
+  );
+
+  const publicationFailureDestinationRoot = path.join(tmpRoot, "publication-failure-copy");
+  const publicationPrimaryFailure = new Error("synthetic post-publication failure");
+  let hiddenPublicationCleanupCount = 0;
+  let observedPublicationFailure;
+  let publicationFailureStagingRoot;
+  let publicationFailureHookCount = 0;
+  let unpublicationRenameCount = 0;
+  try {
+    fs.renameSync = (source, destination) => {
+      if (source === publicationFailureDestinationRoot) {
+        unpublicationRenameCount += 1;
+        assert.equal(destination, publicationFailureStagingRoot);
+        assert.equal(path.dirname(source), path.dirname(destination));
+        assert.equal(fs.existsSync(destination), false);
+        assert.equal(
+          fs.readFileSync(path.join(source, "candidate.txt"), "utf8"),
+          "candidate publication bytes\n",
+        );
+        assert.equal(
+          fs.readFileSync(path.join(source, "nested", "second.txt"), "utf8"),
+          "second publication bytes\n",
+        );
+        const result = originalRenameSync(source, destination);
+        assert.equal(fs.existsSync(source), false);
+        assert.equal(
+          fs.readFileSync(path.join(destination, "candidate.txt"), "utf8"),
+          "candidate publication bytes\n",
+        );
+        assert.equal(
+          fs.readFileSync(path.join(destination, "nested", "second.txt"), "utf8"),
+          "second publication bytes\n",
+        );
+        return result;
+      }
+      return originalRenameSync(source, destination);
+    };
+    fs.rmSync = (target, options) => {
+      if (target === publicationFailureStagingRoot) {
+        hiddenPublicationCleanupCount += 1;
+        assert.equal(fs.existsSync(publicationFailureDestinationRoot), false);
+        assert.equal(
+          fs.readFileSync(path.join(target, "candidate.txt"), "utf8"),
+          "candidate publication bytes\n",
+        );
+        assert.equal(
+          fs.readFileSync(path.join(target, "nested", "second.txt"), "utf8"),
+          "second publication bytes\n",
+        );
+      }
+      return originalRmSync(target, options);
+    };
+    try {
+      copyGitCandidateRepository(publicationRepositoryRoot, publicationFailureDestinationRoot, {
+        testOnlyOnSnapshotEvent({ source, stage, stagingRoot }) {
+          if (stage !== "after-destination-publication" || publicationFailureHookCount > 0) return;
+          publicationFailureHookCount += 1;
+          publicationFailureStagingRoot = stagingRoot;
+          assert.equal(source, publicationFailureDestinationRoot);
+          assert.equal(fs.existsSync(stagingRoot), false);
+          assert.equal(
+            fs.readFileSync(path.join(source, "candidate.txt"), "utf8"),
+            "candidate publication bytes\n",
+          );
+          assert.equal(
+            fs.readFileSync(path.join(source, "nested", "second.txt"), "utf8"),
+            "second publication bytes\n",
+          );
+          throw publicationPrimaryFailure;
+        },
+      });
+    } catch (error) {
+      observedPublicationFailure = error;
+    }
+  } finally {
+    fs.renameSync = originalRenameSync;
+    fs.rmSync = originalRmSync;
+  }
+  assert.equal(observedPublicationFailure, publicationPrimaryFailure);
+  assert.equal(publicationFailureHookCount, 1);
+  assert.equal(unpublicationRenameCount, 1);
+  assert.equal(hiddenPublicationCleanupCount, 1);
+  assertNoCleanCopyArtifacts(tmpRoot, publicationFailureDestinationRoot);
+
+  const replacedPublicationDestinationRoot = path.join(tmpRoot, "replaced-publication-copy");
+  const parkedPublicationDestinationRoot = path.join(tmpRoot, "replaced-publication-owned-parked");
+  const replacementCompetitorBytes = Buffer.from("replacement competitor survives\n", "utf8");
+  const replacedPublicationPrimaryFailure = new Error("synthetic replaced-publication failure");
+  let replacementCompetitorIdentity;
+  let replacedPublicationHookCount = 0;
+  let observedReplacedPublicationFailure;
+  try {
+    copyGitCandidateRepository(publicationRepositoryRoot, replacedPublicationDestinationRoot, {
+      testOnlyOnSnapshotEvent({ source, stage, stagingRoot }) {
+        if (stage !== "after-destination-publication" || replacedPublicationHookCount > 0) return;
+        replacedPublicationHookCount += 1;
+        assert.equal(source, replacedPublicationDestinationRoot);
+        assert.equal(fs.existsSync(stagingRoot), false);
+        assert.equal(
+          fs.readFileSync(path.join(source, "nested", "second.txt"), "utf8"),
+          "second publication bytes\n",
+        );
+        fs.renameSync(replacedPublicationDestinationRoot, parkedPublicationDestinationRoot);
+        fs.mkdirSync(replacedPublicationDestinationRoot, { mode: 0o700 });
+        const competitorFile = path.join(replacedPublicationDestinationRoot, "competitor.txt");
+        fs.writeFileSync(competitorFile, replacementCompetitorBytes);
+        replacementCompetitorIdentity = fs.lstatSync(competitorFile, { bigint: true });
+        throw replacedPublicationPrimaryFailure;
+      },
+    });
+  } catch (error) {
+    observedReplacedPublicationFailure = error;
+  }
+  assert.equal(observedReplacedPublicationFailure, replacedPublicationPrimaryFailure);
+  assert.equal(replacedPublicationHookCount, 1);
+  const replacementCompetitorFile = path.join(replacedPublicationDestinationRoot, "competitor.txt");
+  assert.deepEqual(fs.readFileSync(replacementCompetitorFile), replacementCompetitorBytes);
+  const survivingReplacementIdentity = fs.lstatSync(replacementCompetitorFile, { bigint: true });
+  assert.deepEqual(
+    {
+      device: survivingReplacementIdentity.dev,
+      inode: survivingReplacementIdentity.ino,
+      mode: survivingReplacementIdentity.mode,
+      size: survivingReplacementIdentity.size,
+    },
+    {
+      device: replacementCompetitorIdentity.dev,
+      inode: replacementCompetitorIdentity.ino,
+      mode: replacementCompetitorIdentity.mode,
+      size: replacementCompetitorIdentity.size,
+    },
+  );
+  assert.deepEqual(fs.readdirSync(replacedPublicationDestinationRoot), ["competitor.txt"]);
+  assert.equal(
+    fs.readFileSync(path.join(parkedPublicationDestinationRoot, "candidate.txt"), "utf8"),
+    "candidate publication bytes\n",
+  );
+  assert.equal(
+    fs.readFileSync(path.join(parkedPublicationDestinationRoot, "nested", "second.txt"), "utf8"),
+    "second publication bytes\n",
   );
   assert.deepEqual(
     fs
       .readdirSync(tmpRoot)
-      .filter((name) => name.startsWith(`.${path.basename(replacedClaimDestinationRoot)}-`)),
+      .filter((name) => name.startsWith(`.${path.basename(replacedPublicationDestinationRoot)}-`)),
     [],
   );
 

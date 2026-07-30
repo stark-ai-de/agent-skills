@@ -798,18 +798,28 @@ function prepareStagingDestination(stagingRoot, candidatePath) {
   return path.join(parentRoot, components.at(-1));
 }
 
-function inspectClaimedDestination(destinationRoot) {
+function assertDestinationAbsent(destinationRoot) {
+  try {
+    fs.lstatSync(destinationRoot);
+  } catch (error) {
+    if (error?.code === "ENOENT") return;
+    throw error;
+  }
+  throw new Error(`Clean-copy destination already exists: ${destinationRoot}`);
+}
+
+function inspectPublishedDestination(destinationRoot) {
   const stat = fs.lstatSync(destinationRoot, { bigint: true });
   if (stat.isSymbolicLink() || !stat.isDirectory()) {
-    throw new Error("Clean-copy destination claim is not a directory.");
+    throw new Error("Clean-copy published destination is not a directory.");
   }
   return { device: stat.dev, inode: stat.ino };
 }
 
-function destinationClaimMatches(destinationRoot, claim) {
+function directoryIdentityMatches(directoryRoot, identity) {
   let stat;
   try {
-    stat = fs.lstatSync(destinationRoot, { bigint: true });
+    stat = fs.lstatSync(directoryRoot, { bigint: true });
   } catch (error) {
     if (error?.code === "ENOENT") return false;
     throw error;
@@ -817,58 +827,40 @@ function destinationClaimMatches(destinationRoot, claim) {
   return (
     stat.isDirectory() &&
     !stat.isSymbolicLink() &&
-    stat.dev === claim.device &&
-    stat.ino === claim.inode
+    stat.dev === identity.device &&
+    stat.ino === identity.inode
   );
 }
 
-function populateClaimedDestination(stagingRoot, destinationParent, claim) {
+function cleanupCopyArtifacts(stagingRoot, destinationParent, publication) {
   const { destinationRoot } = destinationParent;
   assertPrivateDestinationParentStable(destinationParent);
-  if (!destinationClaimMatches(destinationRoot, claim)) {
-    throw new Error("Clean-copy destination claim changed before population.");
-  }
-  assertPrivateDestinationParentStable(destinationParent);
-  for (const entry of deterministicSort(fs.readdirSync(stagingRoot))) {
+  if (publication && directoryIdentityMatches(destinationRoot, publication)) {
+    assertDestinationAbsent(stagingRoot);
     assertPrivateDestinationParentStable(destinationParent);
-    if (!destinationClaimMatches(destinationRoot, claim)) {
-      throw new Error("Clean-copy destination claim changed during population.");
+    fs.renameSync(destinationRoot, stagingRoot);
+    assertPrivateDestinationParentStable(destinationParent);
+    if (!directoryIdentityMatches(stagingRoot, publication)) {
+      throw new Error("Clean-copy published destination changed during atomic unpublication.");
     }
-    assertPrivateDestinationParentStable(destinationParent);
-    fs.renameSync(path.join(stagingRoot, entry), path.join(destinationRoot, entry));
-    assertPrivateDestinationParentStable(destinationParent);
   }
-  assertPrivateDestinationParentStable(destinationParent);
-  if (!destinationClaimMatches(destinationRoot, claim)) {
-    throw new Error("Clean-copy destination claim changed after population.");
-  }
-  assertPrivateDestinationParentStable(destinationParent);
-  fs.rmdirSync(stagingRoot);
-  assertPrivateDestinationParentStable(destinationParent);
-}
-
-function cleanupCopyArtifacts(stagingRoot, destinationParent, claim) {
-  const { destinationRoot } = destinationParent;
-  assertPrivateDestinationParentStable(destinationParent);
-  fs.rmSync(stagingRoot, { force: true, recursive: true });
-  assertPrivateDestinationParentStable(destinationParent);
 
   assertPrivateDestinationParentStable(destinationParent);
-  if (claim && destinationClaimMatches(destinationRoot, claim)) {
+  if (!publication || directoryIdentityMatches(stagingRoot, publication)) {
+    fs.rmSync(stagingRoot, { force: true, recursive: true });
     assertPrivateDestinationParentStable(destinationParent);
-    fs.rmSync(destinationRoot, { force: true, recursive: true });
-    assertPrivateDestinationParentStable(destinationParent);
-    return;
   }
   assertPrivateDestinationParentStable(destinationParent);
 }
 
 /**
- * The destination is reserved without clobbering after staging is sealed. Its existing parent must
- * be canonical, symlink-free, owned by the current process user, and mode 0700. The caller must
- * guarantee that no concurrent same-owner process mutates entries inside that parent until this
- * function returns, and must not consume the destination before then; complete-tree visibility
- * during population is not atomic.
+ * The fully sealed staging tree is published at an absent destination with one same-parent rename.
+ * Its existing parent must be canonical, symlink-free, owned by the current process user, and mode
+ * 0700. The caller must guarantee that no concurrent same-owner process mutates entries inside that
+ * parent until this function returns. Under that custody contract, the absence check is no-clobber
+ * and consumers observe either no destination or the complete candidate tree. Consumers must not
+ * read the destination until this synchronous function returns so a post-publication failure can
+ * atomically unpublish the candidate before hidden-tree cleanup.
  */
 export function copyGitCandidateRepository(
   repositoryRoot,
@@ -883,7 +875,7 @@ export function copyGitCandidateRepository(
   const stagingRoot = fs.mkdtempSync(
     path.join(destinationParent.parentRoot, `.${path.basename(destinationRoot)}-`),
   );
-  let destinationClaim = null;
+  let publication = null;
 
   try {
     fs.chmodSync(stagingRoot, 0o700);
@@ -909,36 +901,34 @@ export function copyGitCandidateRepository(
       pass: null,
       phase: "publication",
       source: destinationRoot,
-      stage: "before-destination-claim",
+      stage: "before-destination-publication",
+      stagingRoot,
     });
     assertPrivateDestinationParentStable(destinationParent);
-    try {
-      fs.mkdirSync(destinationRoot, { mode: 0o700 });
-    } catch (error) {
-      if (error?.code === "EEXIST") {
-        throw new Error(`Clean-copy destination already exists: ${destinationRoot}`);
-      }
-      throw error;
-    }
-    destinationClaim = inspectClaimedDestination(destinationRoot);
-    fs.chmodSync(destinationRoot, 0o700);
+    assertDestinationAbsent(destinationRoot);
     assertPrivateDestinationParentStable(destinationParent);
-    if (!destinationClaimMatches(destinationRoot, destinationClaim)) {
-      throw new Error("Clean-copy destination claim changed while setting its mode.");
+    publication = inspectPublishedDestination(stagingRoot);
+    fs.renameSync(stagingRoot, destinationRoot);
+    assertPrivateDestinationParentStable(destinationParent);
+    if (!directoryIdentityMatches(destinationRoot, publication)) {
+      throw new Error("Clean-copy published destination changed during publication.");
     }
     testOnlyOnSnapshotEvent?.({
       candidatePath: null,
       pass: null,
       phase: "publication",
       source: destinationRoot,
-      stage: "after-destination-claim",
+      stage: "after-destination-publication",
+      stagingRoot,
     });
     assertPrivateDestinationParentStable(destinationParent);
-    populateClaimedDestination(stagingRoot, destinationParent, destinationClaim);
+    if (!directoryIdentityMatches(destinationRoot, publication)) {
+      throw new Error("Clean-copy published destination changed after publication.");
+    }
     return result;
   } catch (error) {
     try {
-      cleanupCopyArtifacts(stagingRoot, destinationParent, destinationClaim);
+      cleanupCopyArtifacts(stagingRoot, destinationParent, publication);
     } catch {
       // Cleanup must not replace the primary capture or publication failure.
     }

@@ -2,7 +2,7 @@
 
 ## Should Trigger
 
-Yes, for both variants.
+Yes, for all three variants.
 
 ## Variant A: Plan Mode Unavailable
 
@@ -42,7 +42,7 @@ Use $cursor-spec-interviewer to define a safe migration from polling to webhook 
 - Run the Plan Mode preflight before repository exploration or substantive questions.
 - For Variant A, record `Plan Mode fallback: unavailable` and the runtime evidence or limitation that made Plan Mode unavailable; do not offer Shift+Tab or `/plan` as if they were usable.
 - For Variant B, record `Plan Mode fallback: declined` and the user's explicit choice; do not keep requesting a mode transition.
-- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty.
-- Continue the full interview conversationally, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
-- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Cursor execution-prompt requirements in both variants.
+- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty. Resume the normal workflow only after the host confirms that Plan Mode is active.
+- For Variants A and B, continue the full interview conversationally, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
+- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Cursor execution-prompt requirements in all three variants.
 - Do not treat the mode fallback as a persistence decline. Persist after verification unless the user separately declines persistence or a blocker prevents it.

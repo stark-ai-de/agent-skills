@@ -4,20 +4,9 @@
 
 ### Added
 
-- Added AC-ADR-046 for evidence ranking without expanded operational authority, AC-ADR-047 and AC-ADR-049 as the reciprocal validation-risk successors, AC-ADR-048 as the reciprocal Plan-governance successor, and synchronized their catalog, locks, lineage, and guides.
-- Added byte-exact historical snapshots of all eight legacy Architecture Compass references, a commit/blob/SHA source lock, line-complete disposition coverage, a read-only verifier, runtime-leak protection, and negative integrity fixtures outside the installed skill payload.
-- Expanded clean-copy Architecture Compass install proof from 45 to all 49 ADR triplets.
-
 ### Changed
 
-- Updated `architecture-compass` to 0.6.0 without changing the root package version or creating a release.
-- Reconciled the legacy Next.js request, source-placement, backend/runtime, environment/configuration, host-collaboration, workflow, and stack-comparison references into current ADR Guides with explicit markers and source-linked adaptations instead of restoring the monolithic runtime references.
-- Completed Setup catalog disposition, validation-receipt identity, refactor finding and Done-When fields, candidate-based new-repository planning, task-specific ADR routing, provider-metadata adaptation, and legacy input compatibility without adding public workflows.
-
 ### Fixed
-
-- Corrected identity-poor query keys, unsafe write validation, and inconsistent Next.js/TanStack Query hydration, retry, and realtime examples in the routed Architecture Compass guidance.
-- Corrected validation risk so it follows changed contracts and blast radius rather than observation location, while restricting production fallback to bounded observation of an exact already-authorized low-risk artifact after mandatory gates.
 
 ### Deprecated
 
@@ -34,6 +23,9 @@
 - Added AC-ADR-042 for risk-proportional validation and reusable evidence receipts, AC-ADR-044 plus the exhaustive repo-only decision-lineage manifest, and AC-ADR-045 as the workflow and intent-routing successor to AC-ADR-043 while preserving the AC-ADR-026 -> AC-ADR-043 -> AC-ADR-045 history.
 - Added deterministic focused validators and routing evals for memory curators, Architecture Compass, CodeGraph plus ast-grep, Draw.io, and Animated README Logo, including clear intent, ambiguity, agent-initiated authority, Plan lifecycle, persistence failure, migration, delivery, and read-only cases.
 - Added backup fixtures across the three memory curators for exact-include, zero-include, collision, containment, no-clobber, manifest-integrity, and concurrent-root behavior, and expanded clean-copy Architecture Compass install proof to all 45 ADR triplets.
+- Added AC-ADR-046 for evidence ranking without expanded operational authority, AC-ADR-047 and AC-ADR-049 as the reciprocal validation-risk successors, AC-ADR-048 as the reciprocal Plan-governance successor, and synchronized their catalog, locks, lineage, and guides.
+- Added byte-exact historical snapshots of all eight legacy Architecture Compass references, a commit/blob/SHA source lock, line-complete disposition coverage, a read-only verifier, runtime-leak protection, and negative integrity fixtures outside the installed skill payload.
+- Expanded clean-copy Architecture Compass install proof from 45 to all 49 ADR triplets.
 
 ### Changed
 
@@ -46,6 +38,9 @@
 - Updated `drawio-diagrams` to 0.6.0 without changing its create, edit-repair, review, or export outcomes, while adopting intent-bound routing and focused authority evals.
 - Updated Claude and Cursor spec interviewers to 0.2.3 and the Codex spec interviewer to 0.3.1 with one end-to-end outcome and aligned native Plan-mode, fallback, exit, and save-only persistence behavior.
 - Re-evaluated toolchain, runtime, request, AI, data, UI, validation, security, delivery, and operational guidance against current primary sources; version-sensitive mechanics remain in dated Guides.
+- Updated `architecture-compass` to 0.6.0 without changing the root package version or creating a release.
+- Reconciled the legacy Next.js request, source-placement, backend/runtime, environment/configuration, host-collaboration, workflow, and stack-comparison references into current ADR Guides with explicit markers and source-linked adaptations instead of restoring the monolithic runtime references.
+- Completed Setup catalog disposition, validation-receipt identity, refactor finding and Done-When fields, candidate-based new-repository planning, task-specific ADR routing, provider-metadata adaptation, and legacy input compatibility without adding public workflows.
 
 ### Fixed
 
@@ -58,6 +53,8 @@
 - Prevented Draw.io `review` and Animated README Logo `audit` from falling through into mutating workflows, and made their eval contracts assert the declared selection and protected originals.
 - Bound the current CodeGraph v0.3 Setup, Update, Doctor, ambiguity, and unauthorized-mutation prompts, internal clean-context reviewer outputs, independent 35/35 grading, and provenance to the exact runtime payload without presenting internal evidence as CI, hosted, production, or live-tool proof.
 - Removed contradictory authority and environment-loading guidance plus stale TypeScript preview, AI SDK v5, Vercel KV, elevated Supabase credential, and inconsistent Next.js/TanStack Query examples from the routed Architecture Compass guidance.
+- Corrected identity-poor query keys, unsafe write validation, and inconsistent Next.js/TanStack Query hydration, retry, and realtime examples in the routed Architecture Compass guidance.
+- Corrected validation risk so it follows changed contracts and blast radius rather than observation location, while restricting production fallback to bounded observation of an exact already-authorized low-risk artifact after mandatory gates.
 
 ### Deprecated
 

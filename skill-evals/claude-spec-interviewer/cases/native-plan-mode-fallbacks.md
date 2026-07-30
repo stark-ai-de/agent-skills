@@ -2,7 +2,7 @@
 
 ## Should Trigger
 
-Yes, for both variants.
+Yes, for all three variants.
 
 ## Variant A: Plan Mode Unavailable
 
@@ -42,7 +42,7 @@ Yes, for both variants.
 - Run the Plan-mode preflight before repository exploration or substantive questions.
 - For Variant A, record `Plan mode fallback: unavailable` and the runtime evidence or limitation that made Plan mode unavailable; do not give manual switch instructions as if they were usable.
 - For Variant B, record `Plan mode fallback: declined` from the initial request and do not invoke `EnterPlanMode`.
-- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty.
-- Continue the full interview conversationally in the main conversation, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
-- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Claude Code execution-prompt requirements in both variants.
+- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty. Resume the normal workflow only after the host confirms that Plan mode is active.
+- For Variants A and B, continue the full interview conversationally in the main conversation, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
+- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Claude Code execution-prompt requirements in all three variants.
 - Do not treat the mode fallback as a persistence decline. Persist after verification unless the user separately declines persistence or a blocker prevents it.

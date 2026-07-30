@@ -12,6 +12,7 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 
 - [`animated-readme-logo-provider-routing-and-promotion-spec.md`](animated-readme-logo-provider-routing-and-promotion-spec.md) - portable provider routing, strict asset validation, and public promotion for `animated-readme-logo`.
 - [`animated-readme-logo-export-toolchain-fallback-spec.md`](animated-readme-logo-export-toolchain-fallback-spec.md) - reusable recipe-driven raster export, approval-gated tool installation, and configured-browser fallback routing for `animated-readme-logo`.
+- [`architecture-compass-adr-library-refactor-spec.md`](architecture-compass-adr-library-refactor-spec.md) - approved routed Short/Long/Guide ADR library refactor and repository ADR triplet migration.
 - [`architecture-compass-oxc-tooling-policy-spec.md`](architecture-compass-oxc-tooling-policy-spec.md) - Oxc formatting and linting policy for Architecture Compass guidance.
 - [`architecture-compass-portable-plan-routing-spec.md`](architecture-compass-portable-plan-routing-spec.md) - conditional portable planning and execution lifecycle for Architecture Compass.
 - [`architecture-compass-risk-proportional-validation-spec.md`](architecture-compass-risk-proportional-validation-spec.md) - risk-based validation cadence, reusable evidence receipts, Preview-first environment proof, and bounded low-risk production fallback.
