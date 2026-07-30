@@ -8,7 +8,7 @@ Consider Recraft only for a new mark or an intentional redesign that does not re
 
 Do not use Recraft for:
 
-- `review` work;
+- `audit` work;
 - a clean existing SVG;
 - faithful transformation or cleanup of an existing mark;
 - a request that needs an input image, exact identity preservation, or other reference media;

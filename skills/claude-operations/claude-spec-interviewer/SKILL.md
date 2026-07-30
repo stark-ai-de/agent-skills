@@ -6,7 +6,7 @@ compatibility: Designed for Claude Code-targeted planning across Agent Skills ho
 metadata:
   author: stark-ai-de
   category: claude-operations
-  version: "0.2.2"
+  version: "0.2.3"
 ---
 
 # Claude Spec Interviewer
@@ -14,6 +14,8 @@ metadata:
 ## Goal
 
 Produce a user-verified implementation spec with bounded scope, explicit assumptions and validation, a source challenge, and ADRs for durable decisions when needed. Save it using the repo's confirmed convention; save ADRs only when the ADR gate requires them.
+
+This is one end-to-end outcome, not a public multi-workflow skill. Do not invent review/save variants or add a workflow-selection checkpoint.
 
 ## When to use
 
@@ -48,10 +50,10 @@ Produce a user-verified implementation spec with bounded scope, explicit assumpt
 
 Before repo inspection or substantive questions, identify the current execution host and use only its planning, structured-question, transition, and plan-exit controls. The Claude Code target determines evidence and output contracts, not which host controls are available.
 
-1. Determine whether the current execution host supports Plan mode and whether it is active; if support exists but state is unknown, treat it as inactive.
+1. Classify the current host state as `active`, `supported-inactive`, `definitely-unavailable`, or `indeterminate`. Treat `indeterminate` as `supported-inactive`; uncertainty is never fallback authority.
 2. If active, continue in the main conversation and use the current host's structured-question control for material decisions when available. In Claude Code, that control is `AskUserQuestion`.
 3. If supported but inactive and not explicitly declined, invoke the current host's Plan-mode transition control and wait for host confirmation. In Claude Code, that control is `EnterPlanMode`. If the current host exposes no transition control, give accurate manual activation instructions for that host, ask the user to reply `continue`, and wait. When Claude Code is the execution host, say: `Switch to Plan mode with Shift+Tab, the mode selector, or /plan, then reply continue.` Do not ask the user to resend the request or claim prompt text changed the mode. An explicit decline skips transition and enters the recorded fallback in step 4.
-4. Never fork the interview. Use conversational fallback only when Plan mode is unavailable or explicitly declined, recording `Plan mode fallback: unavailable` or `Plan mode fallback: declined`.
+4. Never fork the interview. Use conversational fallback only when Plan mode is definitely unavailable or explicitly declined, recording `Plan mode fallback: unavailable` or `Plan mode fallback: declined`. An indeterminate state must transition or wait under step 3 instead.
 5. Keep repository and workspace artifacts read-only in Plan mode. Inspection and non-mutating validation are allowed; only a plan artifact created by the current host's plan-exit control is permitted. In Claude Code, that control is `ExitPlanMode`.
 
 ## Workflow

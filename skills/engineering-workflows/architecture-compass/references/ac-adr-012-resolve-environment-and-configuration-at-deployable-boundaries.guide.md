@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Resolve environment-source policy before application bootstrap, then validate once into explicit typed configuration.
 
 Variants: [Short](ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.short.md) · [Long, canonical](ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.long.md) · **Guide**
@@ -29,18 +29,47 @@ Bun automatically reads conventional `.env` files unless disabled and supports `
 
 Node supports environment-file loading through its command-line API in supported releases. Next.js has its own environment loading and client-prefix behavior. Treat each deployable's command and host as the source of truth; do not assume one runtime's precedence applies to another.
 
+After a Bun deployable has selected explicit environment-file handling, keep that choice at its launcher boundary, for example:
+
+```json
+{
+  "scripts": {
+    "dev": "bun --env-file=.env.development.local --watch src/main.ts",
+    "start": "bun --no-env-file src/main.ts"
+  }
+}
+```
+
+This is conditional Bun syntax, not a repository-wide runtime default. Use the equivalent launcher or deployment setting for the runtime and host that the deployable actually selected.
+
 ### Parse an explicit object
 
 Use the repository's adopted schema library, such as Zod 4, in an app-local `config.ts`. Export a pure `parseConfig(env)` and its inferred result type. For Next.js, `@t3-oss/env-nextjs` can help enforce server/client separation when its build-time model fits; `@t3-oss/env-core` is an optional convenience for non-Next processes. Neither replaces deployment-source policy.
 
-Normalize aliases before schema parsing:
+Normalize aliases and empty strings before schema parsing:
 
 ```ts
-const canonical = {
-  PORT: env.SERVICE_PORT ?? env.PORT,
-  DATABASE_URL: env.DATABASE_URL,
+const configSchema = z
+  .object({
+    port: z.coerce.number().int().min(1).max(65_535),
+    databaseUrl: z.url(),
+  })
+  .readonly();
+
+const nonEmpty = (value: string | undefined) => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
 };
+
+export function parseConfig(env: Record<string, string | undefined>) {
+  return configSchema.parse({
+    port: nonEmpty(env.SERVICE_PORT) ?? nonEmpty(env.PORT),
+    databaseUrl: nonEmpty(env.DATABASE_URL),
+  });
+}
 ```
+
+This makes `SERVICE_PORT` the explicit alias winner only when it is non-empty; an empty alias can fall back to `PORT`. If both non-empty values must instead be rejected, encode that as a schema refinement and test it. Keep `parseConfig` pure: it receives an object, reads no ambient environment, and has no logging or client-construction side effect.
 
 Prefer explicit boolean and numeric parsing, URL validation, and discriminated configuration for mutually exclusive modes. Freeze or treat the result as readonly. Pass narrow sections such as `databaseConfig` to the code that owns them.
 
@@ -58,4 +87,5 @@ Prefer explicit boolean and numeric parsing, URL validation, and discriminated c
 - [Node.js CLI: `--env-file`](https://nodejs.org/api/cli.html#--env-filefile)
 - [Next.js: Environment variables](https://nextjs.org/docs/app/guides/environment-variables)
 - [Zod documentation](https://zod.dev/)
+- [T3 Env core](https://env.t3.gg/docs/core)
 - [T3 Env documentation](https://env.t3.gg/docs/introduction)

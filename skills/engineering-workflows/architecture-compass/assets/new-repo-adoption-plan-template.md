@@ -1,67 +1,127 @@
-# New Repository ADR-Guided Adoption Plan
+# New Repository Architecture Adoption Plan
 
 > Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
 
-Use only after `setup-new-repo` has dispositioned every adoptable guardrail and the first implementation slice is separately approved.
+Use this after `setup` establishes repository-native governance. It does not extend setup authority into source implementation.
 
-## Collaboration route
+## Setup handoff
 
-- Planning capability:
-- Read-only enforcement:
-- Architecture decision status:
-- Execution status:
-- Approval evidence:
+- Setup coverage: `recommended | complete`
+- Repository evidence state: `new | evidence-empty`
+- Foundation candidates evaluated: `AC-ADR-005, AC-ADR-006, AC-ADR-018, AC-ADR-019, AC-ADR-021, AC-ADR-022, AC-ADR-049`
+- Provider-to-local mapping path:
+- Accepted local decisions and unresolved decisions:
+- Protected paths and pre-existing state:
+- Setup validation receipt:
 
-## Product and target constraints
+## Candidate Dispositions
 
-- Product shape:
-- Deployment/runtime targets:
-- Security/privacy/compliance:
-- Accessibility baseline:
-- Performance and reliability expectations:
+Do not treat the new-repository foundation as automatic adoption. Preserve each Setup disposition and implement only accepted local decisions.
 
-## Adopted decisions
+Use one of `adopt`, `adapt`, `defer`, or `reject` in the Disposition column.
 
-| AC ADR | Disposition | Target ADR/path | Active rule |
-| ------ | ----------- | --------------- | ----------- |
-|        |             |                 |             |
+| Provider candidate | Disposition | Local ADR/path | Evidence or adaptation | Deferred trigger/owner or rejection rationale |
+| ------------------ | ----------- | -------------- | ---------------------- | --------------------------------------------- |
+| AC-ADR-005         |             |                |                        |                                               |
+| AC-ADR-006         |             |                |                        |                                               |
+| AC-ADR-018         |             |                |                        |                                               |
+| AC-ADR-019         |             |                |                        |                                               |
+| AC-ADR-021         |             |                |                        |                                               |
+| AC-ADR-022         |             |                |                        |                                               |
+| AC-ADR-049         |             |                |                        |                                               |
 
-## Initial layout
+Additional candidates selected by repository evidence:
 
-| Path | Owner | Runtime | Public boundary | Validation |
-| ---- | ----- | ------- | --------------- | ---------- |
-|      |       |         |                 |            |
+| Provider candidate | Disposition | Local ADR/path | Selection evidence | Trigger/owner or rejection rationale |
+| ------------------ | ----------- | -------------- | ------------------ | ------------------------------------ |
+|                    |             |                |                    |                                      |
 
-## Starter implementation
+## First implementation workflow
 
-| Slice | Allowed paths | Acceptance | Stop condition | Rollback |
-| ----- | ------------- | ---------- | -------------- | -------- |
-|       |               |            |                |          |
+- Public workflows exposed: `setup | audit | refactor | plan-refactor | plan-run-refactor`
+- Recommended route: `plan-run-refactor`
+- Selected route: `plan-refactor | plan-run-refactor | refactor`
+- Selection rationale and user-authorized outcome/scope:
+- Planning capability and transition evidence:
+- Expected specification and implementation artifacts:
+- Separate destructive, paid, external, deployment, publication, or production approvals:
 
-## Tooling and platform mechanics
+Use `refactor` only when accepted local ADRs already govern every durable choice and the requested implementation is explicitly bounded. Otherwise use a Plan workflow.
 
-Load the Guides for adopted AC-ADR-013 and AC-ADR-014 decisions. Record exact package versions, compatibility proof, exceptions, and commands here instead of copying a universal pnpm, Bun, Turbo, Oxc, or hosting baseline.
+## Repository contract
 
-## Validation
+- ADR directory, index, and successor convention:
+- Agent instruction surfaces:
+- Validation receipt location:
+- Package/module ownership:
+- Deployable units and runtime boundaries:
+- Public contracts and compatibility policy:
+- Security, data, migration, delivery, and rollback obligations:
 
-```bash
-# install
-# type-check
-# lint/format
-# unit/boundary/e2e tests
-# docs/build
+## Selective Guide / Placement Map
+
+Load only the Guide needed for an accepted candidate and place the resulting rule or implementation at the target repository's owning boundary. A provider Guide is non-normative and does not authorize copying provider paths.
+
+| Accepted local ADR | Provider ADR | Guide path or heading needed | Target owning boundary | Exact target placement | Selection evidence |
+| ------------------ | ------------ | ---------------------------- | ---------------------- | ---------------------- | ------------------ |
+|                    |              |                              |                        |                        |                    |
+
+## Approved bounded plan
+
+- Outcome and non-goals:
+- Exact path allowlist:
+- Ordered reversible slices:
+- Proof obligations and one owner per obligation:
+- Reusable receipts and invalidators:
+- Rollback and stop conditions:
+- Plan-mode exit requirement:
+
+## Execution preflight
+
+- Repository root, branch, HEAD, and status:
+- Accepted ADR and mapping recheck:
+- Dependency/toolchain recheck:
+- Permissions and protected-path recheck:
+- Material drift result:
+
+## Delivery ledger
+
+| Slice | Exact paths | Governing local ADR | Validation | Evidence stage | Environment | Status | Observation/result | Rollback |
+| ----- | ----------- | ------------------- | ---------- | -------------- | ----------- | ------ | ------------------ | -------- |
+|       |             |                     |            |                |             |        |                    |          |
+
+## AC-ADR-049 validation receipts
+
+Record one receipt per distinct proof obligation. Reconcile delegated receipts against the integrated candidate before the final gate.
+
+```text
+Receipt ID:
+Risk: low | moderate | high | critical
+Cadence: reuse | final-batch | checkpointed | reproduce-first
+Proof obligation:
+Subject / owning boundary:
+Revision / exact candidate artifact / dirty-tree or content fingerprint:
+Command / scenario / harness:
+Toolchain / config / fixtures / lockfile:
+Evidence stage: source/static | local | CI | publication/install | deployed/production | external/third-party
+Environment:
+Status: verified | failed | not run | unavailable | stale
+Observation / result:
+Observed at / freshness boundary:
+Covered contracts:
+Invalidators / limitations:
+Owner / source / run link:
+Repository-native receipt location:
+Skip reason: none | <why this obligation was not executed and who authorized it>
+Final aggregate gate: <command or scenario, relationship to this receipt, and result>
 ```
 
-## Approved execution boundary
+| Receipt ID | Risk | Cadence | Proof obligation | Subject | Command/scenario/harness | Toolchain | Stage | Environment | Status | Observation/result | Invalidators | Owner | Skip reason | Final aggregate gate relationship |
+| ---------- | ---- | ------- | ---------------- | ------- | ------------------------ | --------- | ----- | ----------- | ------ | ------------------ | ------------ | ----- | ----------- | --------------------------------- |
+|            |      |         |                  |         |                          |           |       |             |        |                    |              |       |             |                                   |
 
-- Approved slice:
-- Allowed paths:
-- Validation commands:
-- Permission transition:
-- Re-entry and drift check:
+## Deferred decisions and triggers
 
-## Open decisions
-
-| Decision | Why unresolved | Owner | Stop condition |
-| -------- | -------------- | ----- | -------------- |
-|          |                |       |                |
+| Decision | Why deferred | Owner | Trigger | Blocking scope |
+| -------- | ------------ | ----- | ------- | -------------- |
+|          |              |       |         |                |

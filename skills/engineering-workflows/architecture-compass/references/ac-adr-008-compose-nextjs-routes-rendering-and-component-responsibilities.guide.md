@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Keep App Router entrypoints thin, render on the server by default, and isolate only necessary client interaction.
 
 Variants: [Short](ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.short.md) · [Long, canonical](ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.long.md) · **Guide**
@@ -67,6 +67,12 @@ export async function FeatureScreen() {
 
 The controller declares `"use client"` and owns only the interaction that requires it. The UI leaf can remain a plain component receiving data and callbacks.
 
+## Request APIs and prefetch boundaries
+
+In Next.js 16 App Router code, treat `params`, `searchParams`, `cookies()`, and `headers()` as asynchronous request APIs and await them only in the server entrypoint that owns the value. This is the Next.js 16 request-API contract, not an optional style preference. Pass a parsed domain input or browser-safe view model downward instead of passing framework promises through the component tree.
+
+Next.js route prefetch and TanStack Query prefetch solve different problems. `<Link>` and router prefetch prepare route payloads; query prefetch prepares a selected query cache. Use either or both only when the measured navigation path benefits, and do not create duplicate data ownership between the route cache and browser query cache.
+
 ## Rendering-mode checklist
 
 | Question                                     | Awaited server          | Streamed Suspense                          | Client pending                      |
@@ -79,6 +85,8 @@ The controller declares `"use client"` and owns only the interaction that requir
 When hydrating TanStack Query, create server cache state with request- and identity-safe ownership, await required prefetches unless deliberately streaming a pending query, and align the client hook with the chosen error boundary. Avoid a process-global server cache or browser cache that survives an identity change without clearing or partitioning.
 
 Call `connection()` only when the route intentionally requires request-time rendering under the active Next.js caching model. Reading cookies, headers, or other dynamic APIs may already establish request dependence; check the current framework documentation and build output.
+
+Next.js `error.tsx` handles a route-segment render failure. A React Query Error Boundary handles only query errors deliberately thrown into that subtree. When both exist, name which layer owns retry: segment recovery remounts the segment, while query recovery must reset the failed query through the wiring shown in AC-ADR-009.
 
 ## Validation scenarios
 
@@ -94,6 +102,8 @@ Call `connection()` only when the route intentionally requires request-time rend
 - [Next.js project structure and file conventions](https://nextjs.org/docs/app/getting-started/project-structure)
 - [Next.js loading UI and streaming](https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming)
 - [Next.js error handling](https://nextjs.org/docs/app/getting-started/error-handling)
+- [Next.js 16 upgrade guide](https://nextjs.org/docs/app/guides/upgrading/version-16)
 - [Next.js `connection`](https://nextjs.org/docs/app/api-reference/functions/connection)
+- [Next.js asynchronous request APIs](https://nextjs.org/docs/messages/sync-dynamic-apis)
 - [TanStack Query advanced server rendering](https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr)
 - [TanStack Query `QueryErrorResetBoundary`](https://tanstack.com/query/latest/docs/framework/react/reference/QueryErrorResetBoundary)

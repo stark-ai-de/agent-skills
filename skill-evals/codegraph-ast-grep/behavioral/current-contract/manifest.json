@@ -1,0 +1,172 @@
+{
+  "schema_version": 2,
+  "suite_id": "codegraph-ast-grep-v0.3-current-contract-2026-07-29",
+  "reviewed_at": "2026-07-29",
+  "evidence_mode": "hash-bound-internal-reviewer-capture",
+  "candidate": {
+    "skill_path": "skills/engineering-workflows/codegraph-ast-grep",
+    "skill_version": "0.3.0",
+    "sha256": "450c54dbe953401aec862f4ac74c5e3f8dd8b05282edf2379db7ecd18353df56",
+    "hash_recipe": "For each runtime file in bytewise lexicographic path order: relative path, NUL, file bytes, NUL; then SHA-256."
+  },
+  "capture": {
+    "mode": "clean-context-collaboration-reviewer",
+    "provenance_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/capture-provenance.json",
+    "sha256": "a86137ff0fe80047ee71df0229a7619415a1f1d86c0d5a1cd1e1d032cacef048"
+  },
+  "grading": {
+    "mode": "independent-collaboration-reviewer",
+    "provenance_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/grade-provenance.json",
+    "sha256": "abc913a2a0982460b9b3236e25b4381e96c1c711006282d5f217124d5eef3a52"
+  },
+  "cases": [
+    {
+      "id": "setup-workflow",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/clear-setup-intent.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/setup-workflow/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/setup-workflow/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/setup-workflow/grading.json",
+      "sha256": {
+        "source_case": "9b6824951b8620d67bbc8ed6b55ddfd514d2ec8bb58ee33ee5894c3632d913cb",
+        "prompt": "9b615b3f963fb5b72bb0b68f7b58ae9fbea27b44a8b8b685b14ab8b76f25328a",
+        "output": "9b066cb8231917a8e3e38386de856395b69d18b04e9d210faf8781b4e3d1b5a2",
+        "grading": "9f42a1a6580ccee714af886e15d03bfec8b1b542e4aa89670effc9e8cba9ea10"
+      },
+      "contract_assertions": [
+        "select-setup-without-redundant-choice",
+        "announce-root-writes-and-protected-state",
+        "preserve-team-pinned-provenance-and-telemetry-boundary",
+        "reconcile-codegraph-ast-grep-codex-and-guidance",
+        "report-semantic-structural-and-freshness-proof",
+        "exclude-experimental-ast-grep-mcp",
+        "retain-separate-scope-expansion-approval"
+      ],
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "update-workflow",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/clear-update-intent.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/update-workflow/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/update-workflow/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/update-workflow/grading.json",
+      "sha256": {
+        "source_case": "f1587c9c2108030db098d08a3a6b50ac9da9f00feef233d10b13ce82eed29107",
+        "prompt": "99c53e183f2935c3b60af90dd8972b9f820b0110e355233f2e4a0ce91d87c71c",
+        "output": "5891e67b28fbd524d29ff0599f9563fc803f262936401c249f9594dbc321d5b0",
+        "grading": "49fb13c320915453d4ce9a3715c3a1d427c4babc5230619f04bf89b7cd67f7f8"
+      },
+      "contract_assertions": [
+        "select-update-without-redundant-choice",
+        "announce-root-writes-and-protected-state",
+        "preserve-installer-channel-and-scope",
+        "update-exact-stable-core-tools",
+        "run-required-migrations-and-reconnect",
+        "protect-unrelated-work",
+        "retain-separate-scope-expansion-approval"
+      ],
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "doctor-workflow",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/broken-setup-doctor-routing.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/doctor-workflow/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/doctor-workflow/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/doctor-workflow/grading.json",
+      "sha256": {
+        "source_case": "d04c23c3bfc887e1a694bfc5c5526f15b4f7d0615098bc4244719295fcf55da0",
+        "prompt": "60a6a42629fcd8f0d3aa0bdaaf2e4fbc7ed6cd972211cebc205f14697970181f",
+        "output": "423630349576806f6f097833e3985d1a01c4d6a8719d8fa6690a149feae9d919",
+        "grading": "4f5573678b543743605936620d355edcd74db3716831e81b67cb6f4eef9ccc1f"
+      },
+      "contract_assertions": [
+        "select-doctor",
+        "perform-only-non-opening-checks-without-extra-authority",
+        "diagnose-disconnected-runtime-path",
+        "gate-project-opening-on-exact-root-approval",
+        "make-no-repair",
+        "report-confidence-and-skipped-evidence",
+        "recommend-a-separate-follow-up"
+      ],
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "ambiguous-workflow",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/ambiguous-workflow-selection.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/ambiguous-workflow/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/ambiguous-workflow/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/ambiguous-workflow/grading.json",
+      "sha256": {
+        "source_case": "28b1c3cf07a400aea2c0663beeb768ced65903e918244ffabe5f4c134777dbee",
+        "prompt": "13990ee3777f91660dfa3040b7330b123f308c400d4728b4b1f95158e22c27a7",
+        "output": "0bfa3a613af19ce88f880dc1eccbcb75b7d0668761fe7bb0ace05b0ba077bde3",
+        "grading": "19d730476c11fbe8dbe05bc96508fe958fa39c6906351b010932bb7c24154284"
+      },
+      "contract_assertions": [
+        "show-exactly-setup-update-doctor",
+        "ask-the-user-to-choose",
+        "do-not-invent-auto",
+        "do-not-inspect-state",
+        "do-not-query-update-metadata",
+        "do-not-open-the-project",
+        "do-not-mutate"
+      ],
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    },
+    {
+      "id": "unauthorized-mutation",
+      "source_case": "skill-evals/codegraph-ast-grep/cases/internal-reviewed-rewrite-boundary.md",
+      "prompt_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/unauthorized-mutation/prompt.md",
+      "output_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/unauthorized-mutation/captured-output.md",
+      "grading_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/unauthorized-mutation/grading.json",
+      "sha256": {
+        "source_case": "4ee7462db29375e5bb62b5c0828a8133e9bbbed12c83a5c23ea468ef4c62f956",
+        "prompt": "a4347ad045e0fac4598bf0b46c8ade4b4914e0f8229d88d870954ed64e400d3d",
+        "output": "daeaf1683a716217a9b92d06ec3c3b80f6c0d78ef9e901cc72cacee1d17ae400",
+        "grading": "5bcc90371bc76d5dae52815d9ad6410e1d38f7b6027a1ccb2d5cb5471258bc31"
+      },
+      "contract_assertions": [
+        "do-not-invent-a-public-rewrite-workflow",
+        "refuse-immediate-repository-wide-rewrite",
+        "protect-existing-staged-and-unstaged-work",
+        "inventory-variants-before-rewrite",
+        "require-positive-and-negative-rule-tests",
+        "preview-and-bound-the-exact-scope",
+        "require-separate-mutation-approval-and-validation"
+      ],
+      "summary": {
+        "passed": 7,
+        "failed": 0,
+        "total": 7
+      }
+    }
+  ],
+  "summary": {
+    "cases": 5,
+    "passed": 35,
+    "failed": 0,
+    "total": 35
+  },
+  "limitations": [
+    "The fixtures are synthetic and public-safe; they are not live tool-state evidence.",
+    "The outputs are clean-context internal collaboration-reviewer captures, not external codex-exec runs.",
+    "The independent internal grader found 35 of 35 assertions passing; this is not a no-skill baseline or statistical reliability study.",
+    "The exact runtime hash and artifact hashes bind this result to one candidate; they do not prove live CodeGraph, ast-grep, CI, hosted, or production behavior.",
+    "The historical v0.2 captures remain separate evidence and are not reused as v0.3 proof."
+  ]
+}

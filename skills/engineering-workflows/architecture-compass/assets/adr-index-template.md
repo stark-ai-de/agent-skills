@@ -4,6 +4,8 @@
 
 Accepted ADRs are binding until superseded. Normal prose links point to Short and include Long and Guide companions.
 
+When adopting a provider decision, allocate repository-native identity and status. Remove provider-only `Adoptable` metadata and provider IDs from native fields unless this repository explicitly supports them; preserve provenance in the mapping or non-normative Guide instead.
+
 ## Active ADRs
 
 ### <category>

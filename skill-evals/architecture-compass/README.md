@@ -1,70 +1,59 @@
 # Architecture Compass Evals
 
-This folder stores maintainer regression and release proof for the public
-`architecture-compass` skill. The historical promotion evidence remains under
-`runs/`; new dated run summaries must distinguish live, static, source-backed,
-and unavailable runtime proof.
+This folder stores maintainer regression and release evidence for the public `architecture-compass` skill. Historical promotion evidence remains under `runs/`; dated summaries must distinguish static, local, CI, publication, deployed, and external proof.
 
 ## Eval Contract
 
 Passing behavior must:
 
-- activate for ADR governance, architecture placement, setup, refactor, audit,
-  PR review, and stack-deviation work while rejecting unrelated small tasks,
-- route from `references/adr-catalog.md` to Short variants first, then load only
-  the relevant canonical Long ADRs and optional implementation Guides,
-- keep skill-runtime ADRs out of target-repository adoption matrices and apply
-  `adopt`, `adapt`, `defer`, or `reject` only to `target-repository` ADRs marked
-  `Adoptable: true`,
-- inspect target evidence before applying bundled defaults,
-- route unresolved durable decisions and broad, multi-boundary,
-  behavior-changing, or phased refactors through a read-only decision phase
-  without forcing Plan mode on narrow behavior-preserving ADR-backed work,
-  audits, or reviews,
-- treat collaboration mode and filesystem permissions as separate controls,
-- report `Planning capability` and `Read-only enforcement` as explicit separate
-  public fields,
-- request host-controlled transitions instead of claiming prompt text changed a
-  runtime mode,
-- preserve the decision gate when Plan mode is unavailable or explicitly
-  declined and record the fallback evidence,
-- preserve the behavioral no-write gate without repeating the request when a
-  read-only transition is explicitly declined,
-- return the public architecture-decision and execution statuses,
-- return `pending write permission` rather than `ready for direct execution`
-  while a known required write control remains inactive or unconfirmed,
-- hand approved implementation to an exact-path continuation that rechecks
-  repository state and stops on material drift,
-- reconcile provisional subagent reports against current files, canonical Long
-  ADRs, repository identity, and validation before using them as final evidence,
-- distinguish source/static, local, CI, publication/install,
-  deployed/production, and external/third-party proof without promoting one
-  stage into another,
-- produce public-safe output with no private source names, links, secrets, or
-  copied source files.
+- expose exactly `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`, with no recursive `auto` workflow;
+- state the task-derived selection and rationale and proceed when intent and authority are clear, while asking on bare or materially ambiguous activation;
+- limit agent-initiated selection to a relevant read-only audit unless the user's existing request authorizes the mutating outcome and scope;
+- use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
+- keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
+- use native Plan mode for plan workflows when supported, block on indeterminate state, fall back only when native Plan is definitely unavailable, exit before writes, and recheck state before execution;
+- route from `references/adr-catalog.md` to Short variants first, then load only applicable canonical Long ADRs and optional Guides;
+- preserve accepted local ADR identity and history, use repository-native provider mapping, and keep skill-runtime ADRs outside target adoption matrices;
+- rank architecture evidence through AC-ADR-046 independently from operational authority and stop the affected scope when same-rank accepted decisions conflict;
+- preserve current Next.js request, hydration, query-key, retry/reset, validated-write, and realtime lifecycle patterns across AC-ADR-008/009/010/017;
+- preserve conditional backend runtime/configuration and target-dependent source-placement mechanics without turning examples into universal stack or layout defaults;
+- reconcile complete setup matrices, legacy input routing, refactor reports, and validation receipts without missing or duplicate fields;
+- add the generic intent-bound selector instruction only during setup when evidence proves a stable public skill repository with multiple material workflows; audit only reports it;
+- preserve permission, protected-state, risk-based validation, receipt-reuse, portability, host-metadata, public-skill reuse, and evidence-stage boundaries; and
+- produce public-safe output without private paths, source names, secrets, or unsupported completion claims.
 
 ## Eval Artifacts
 
-- `activation-cases.md`: trigger and routing expectations.
-- `rubric.md`: quality and lifecycle safety gates.
+- `activation-cases.md`: activation and intent-routing examples.
+- `rubric.md`: quality and lifecycle hard gates.
 - `cases/`: focused text-only cases with deterministic assertions.
-- `runs/YYYY-MM-DD-summary.md`: dated maintainer evidence after the relevant
-  static and live checks have actually run.
+- [`legacy-case-lineage.json`](legacy-case-lineage.json): machine-checked disposition and material-expectation mapping for the ten cases removed from the reviewed HEAD snapshot.
+- `legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/`: byte-locked source copies outside the installed skill payload.
+- `runs/YYYY-MM-DD-summary.md`: dated evidence only after the named checks actually ran.
 
-Focused lifecycle cases:
+The owning validator binds the lineage to the exact staged-deletion path set and independent HEAD SHA-256 values. Every legacy assertion and expected-behavior bullet maps exactly once to an existing target heading and marker; missing, duplicate, unknown, drifted, or leaked evidence fails validation.
 
-- `cases/conditional-plan-routing-matrix.md`
-- `cases/read-only-transition-gate.md`
-- `cases/read-only-explicitly-declined-fallback.md`
-- `cases/conflicting-adrs-plan-gate.md`
+Focused workflow and lifecycle cases:
+
+- `cases/clear-setup-intent.md`
+- `cases/clear-audit-intent.md`
+- `cases/clear-bounded-refactor-intent.md`
+- `cases/clear-plan-refactor-intent.md`
+- `cases/clear-plan-run-refactor-intent.md`
+- `cases/ambiguous-workflow-selection.md`
+- `cases/agent-initiated-audit-authority.md`
+- `cases/setup-coverage-matrix.md`
+- `cases/audit-strict-read-only.md`
+- `cases/refactor-governance-boundary.md`
+- `cases/plan-mode-lifecycle.md`
+- `cases/plan-mode-unavailable-fallback.md`
+- `cases/plan-mode-indeterminate-stop.md`
+- `cases/plan-mode-declined-stop.md`
+- `cases/plan-run-state-recheck.md`
+- `cases/conflicting-adrs-stop.md`
 - `cases/stack-deviation-routing.md`
-- `cases/native-plan-fallbacks.md`
-- `cases/native-plan-declined-fallback.md`
-- `cases/native-plan-indeterminate-fallback.md`
-- `cases/native-plan-execution-lifecycle.md`
 - `cases/approved-decision-no-implementation.md`
-- `cases/portable-fallback-execution-lifecycle.md`
-- `cases/direct-route-reclassification.md`
+- `cases/plan-refactor-save-only-persistence.md`
 - `cases/direct-write-permission-gate.md`
 - `cases/reentry-material-drift.md`
 - `cases/audit-and-pr-review-routing.md`
@@ -73,62 +62,43 @@ Focused routed-library cases:
 
 - `cases/adr-catalog-short-first-inventory.md`
 - `cases/selective-frontend-routing.md`
+- `cases/nextjs-request-routing.md`
+- `cases/nextjs-query-write-lifecycle.md`
 - `cases/selective-backend-routing.md`
+- `cases/source-placement-parity.md`
 - `cases/cross-category-adr-routing.md`
+- `cases/legacy-input-routing.md`
 - `cases/instruction-adr-authority-conflict.md`
 - `cases/setup-adoptable-only.md`
 - `cases/stale-subagent-reconciliation.md`
 - `cases/evidence-stage-claim-limits.md`
-
-Focused invalid-library cases:
-
 - `cases/invalid-missing-triplet.md`
 - `cases/invalid-id-collision.md`
 - `cases/invalid-metadata-drift.md`
 - `cases/invalid-decision-drift.md`
 - `cases/invalid-catalog-orphan.md`
 - `cases/invalid-legacy-link.md`
+- `cases/repo-native-adr-mapping-and-split.md`
+- `cases/adr-deviation-warning-stop.md`
+- `cases/host-instruction-conventions.md`
+- `cases/setup-target-selector-instruction.md`
+- `cases/audit-target-selector-report-only.md`
+- `cases/portability-taxonomy.md`
+- `cases/host-metadata-gating.md`
+- `cases/worktree-parallelism-gate.md`
+- `cases/public-skill-reuse-consent.md`
+- `cases/opinionated-stack-profile-selection.md`
+- `cases/proportional-planning-evidence.md`
+- `cases/risk-proportional-validation-matrix.md`
+- `cases/validation-evidence-reuse.md`
+- `cases/refactor-report-receipt-completeness.md`
 
 ## Lifecycle Evaluation
 
-Decision-heavy cases are multi-turn. The first turn classifies the work and,
-when appropriate, requests a host-controlled transition. The decision phase
-inspects evidence and asks material questions without repository, untracked,
-ignored, index, or external-state writes. When implementation was requested,
-approval produces enumerated paths, validation commands, and the matching
-execution handoff. An architecture-only approval returns
-`Execution status: not requested` without an implementation continuation.
+Clear task intent is selection evidence, not a new approval. The skill exposes all five workflows, announces the matching route and rationale, and proceeds within the user's existing authority. Bare activation, conflicting cues, or ambiguity about outcome, scope, persistence, governance, or mutation authority requires a question. Selection never grants destructive, paid, irreversible, external, deployment, publication, production, or scope-expanding authority.
 
-The direct permission continuation starts only after its required write-capable
-transition is approved. The native execution continuation starts only after Plan
-mode exits and any separately required write-capable permission transition is
-approved. The portable fallback starts only after explicit implementation
-approval and any required write permission. A known pending write transition returns
-`Execution status: pending write permission` and stops; `ready for direct
-execution` means permission is confirmed or no transition is required. Both
-re-read Git identity and index-safe status when available, governing ADRs, and
-approved target paths. Material drift blocks execution; otherwise changes remain
-inside the approved path allowlist and end with validation evidence.
+Plan cases are multi-turn. While native Plan mode is active, repository/workspace artifacts remain read-only. Supported-inactive and indeterminate states require a host transition and confirmed Plan mode; only definitive unavailability permits a portable in-chat fallback. Approved content is persisted only after Plan-mode exit. `plan-run-refactor` then rechecks repository and external state before executing an unchanged plan.
 
-Audit cases remain read-only without a Plan requirement. PR, branch, and diff
-reviews prefer the host review surface when available. Fallback cases pass only
-when `unavailable`, `explicitly declined`, or `indeterminate` planning capability
-is reported honestly, read-only enforcement is recorded separately, and the same
-no-write decision gate is preserved.
+Audit cases perform no repository, untracked, ignored, index, generated-artifact, install, or external mutation. Direct refactor is available only for bounded, reversible work fully governed by accepted local ADRs. Missing governance routes to setup; unresolved durable decisions or broad implementation route to a Plan workflow.
 
-Routed-library cases pass only when the catalog is the discovery surface, Short
-variants support inventory, canonical Long variants control decisions, and
-Guides are loaded for concrete implementation help rather than as a second
-authority. Cross-category work selects the minimum applicable set. Operational
-instructions and permissions control what an agent may do; accepted Long ADRs
-control architecture intent. A conflict between those axes blocks mutation.
-
-Invalid-library cases are static negative contracts. They must fail validation
-for incomplete triplets, duplicate IDs, shared-metadata drift, catalog orphans,
-or legacy policy links. They do not authorize repairing their described fixture.
-
-`## Deterministic Assertions` provides lightweight output checks. No dated run
-summary should claim the 0.2.0 lifecycle proof until the corresponding static or
-live runtime check has completed. Likewise, no run may claim the 0.3.0 routed
-ADR-library proof until triplet validation and the focused routing cases have
-actually run against the released payload.
+Routed-library cases use the catalog and Short variants for discovery, canonical Long variants for decisions, and Guides only for implementation help. Invalid-library cases are static negative contracts and never authorize repair of their fixture.

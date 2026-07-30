@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Make accepted repository ADRs discoverable and binding for architecture-affecting agent work.
 
 Variants: [Short](ac-adr-005-make-repository-adrs-binding-agent-guardrails.short.md) · **Long, canonical** · [Guide](ac-adr-005-make-repository-adrs-binding-agent-guardrails.guide.md)

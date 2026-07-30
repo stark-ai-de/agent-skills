@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "ambiguous-workflow",
+  "assertions": [
+    {
+      "id": "show-exactly-setup-update-doctor",
+      "passed": true,
+      "evidence": "“exactly three public workflows” followed only by `setup`, `update`, and `doctor`",
+      "failure_reason": null
+    },
+    {
+      "id": "ask-the-user-to-choose",
+      "passed": true,
+      "evidence": "“Which workflow should I use: `setup`, `update`, or `doctor`?”",
+      "failure_reason": null
+    },
+    {
+      "id": "do-not-invent-auto",
+      "passed": true,
+      "evidence": "The response explicitly states that there is “no `auto` mode” and exposes only the three permitted workflows.",
+      "failure_reason": null
+    },
+    {
+      "id": "do-not-inspect-state",
+      "passed": true,
+      "evidence": "“I have not inspected repository or tool state”; protected state remains unknown",
+      "failure_reason": null
+    },
+    {
+      "id": "do-not-query-update-metadata",
+      "passed": true,
+      "evidence": "“I have not…checked remote versions”",
+      "failure_reason": null
+    },
+    {
+      "id": "do-not-open-the-project",
+      "passed": true,
+      "evidence": "“I have not…opened the graph”",
+      "failure_reason": null
+    },
+    {
+      "id": "do-not-mutate",
+      "passed": true,
+      "evidence": "“or changed anything”",
+      "failure_reason": null
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

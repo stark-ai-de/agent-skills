@@ -10,7 +10,7 @@ Design a completely new, clean repository logo for Orbit Ledger and animate it f
 
 ## Expected Behavior
 
-- Report `Task mode: create`, `Source route`, `Provider state`, `Approval state`, `SVG readiness`, and `Export status` using contract-valid values.
+- Report `Workflow: create`, `Source route`, `Selection`, `Write scope and protected originals`, `Provider state`, `Approval state`, `Motion readiness`, and `Animation delivery` using contract-valid values.
 - Query live capability, exact `recraft_v4_1` availability, and the exact current batch cost; do not accept documentation, prompt text, memory, or a prior result as proof.
 - Sanitize the brief and show one 1:1 1k output, no background, and `model_type: utility_vector` before approval.
 - If every live fact is confirmed, report provider available and approval pending, ask for explicit approval of that exact batch, and make no paid call.

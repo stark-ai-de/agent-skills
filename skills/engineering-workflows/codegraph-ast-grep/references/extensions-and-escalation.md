@@ -2,13 +2,15 @@
 
 CodeGraph and ast-grep are the only core tools. Read this reference only when the core workflow and native runtime capabilities cannot safely express the task. Selecting an extension does not authorize installation or execution.
 
+Use this only after the repository root and core-tool limitation are known. Extension installation or execution is a separately authorized scope expansion and never becomes part of normal `setup`, `update`, or `doctor`.
+
 ## Selection order
 
 1. Use existing runtime-native language-server/compiler navigation before adding another semantic server.
 2. Use CodeGraph plus ast-grep for normal exploration, impact, structural search, and reviewed rewrites.
 3. Select one optional extension only when its threshold below is met.
-4. Keep the once-per-task stable metadata check for selected core tools even when the user declines an optional extension or remote code execution; metadata lookup is not tool execution.
-5. Apply the same update check, provenance review, explicit approval, bounded execution, diff review, and project validation to a selected extension.
+4. Do not turn optional-extension evaluation into a stable-version lookup for unrelated tools.
+5. Apply provenance review, explicit approval, bounded execution, diff review, and project validation to a selected extension.
 6. Keep a valid degraded path when the user declines or the extension is unavailable.
 
 ## Decision matrix

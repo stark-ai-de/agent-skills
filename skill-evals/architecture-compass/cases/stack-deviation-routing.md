@@ -17,6 +17,7 @@ permission transition is required before that later execution.
 
 ## Deterministic Assertions
 
+- contains: Selected workflow: refactor
 - contains: Planning capability: Not applicable
 - contains: Read-only enforcement: not applicable
 - contains: Architecture decision status: not required
@@ -28,6 +29,8 @@ permission transition is required before that later execution.
 ## Expected Behavior
 
 - Activate because the request explicitly raises a possible stack deviation.
+- Expose the five workflows and select direct `refactor` because accepted rules
+  already resolve the durable choice and the requested change is bounded.
 - Use the supplied accepted-stack and wrapper evidence without claiming a new
   file inspection in this text-only case.
 - Conclude that the existing stack is sufficient and reject an unnecessary new

@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Give each deployable and source role one clear owner and extract shared packages only for proven boundaries.
 
 Variants: [Short](ac-adr-006-assign-workspace-ownership-and-source-roles.short.md) · [Long, canonical](ac-adr-006-assign-workspace-ownership-and-source-roles.long.md) · **Guide**
@@ -58,6 +58,28 @@ src/lib/          # non-React app modules
 ```
 
 Introduce more specific folders only when the selected runtime and actual files require them. Keep framework metadata and fallback files thin; move reusable fallback UI to components.
+
+## Source-role examples
+
+Use role-specific folders only when the repository has enough files to make the distinction useful:
+
+```text
+src/lib/queries/         # browser-safe read contracts, keys, and client options
+src/lib/search-params/   # URL parsing and serialization, not domain persistence
+src/lib/server-only/     # trusted reads, privileged clients, and server adapters
+src/generated/           # generated runtime sources, visibly marked and reproducible
+infra/ | deploy/ | ops/  # deployment ownership outside hand-written runtime source
+```
+
+Generated database types stay private to the persistence adapter unless a deliberately smaller DTO is part of a public contract. App-local deployment manifests may remain under the owning app, but keep them outside `src/` and document the generator, inputs, owner, and regeneration command.
+
+When target conventions require an exception, record a small allowlist:
+
+| Path     | Reason                                | Owner     | Removal condition        |
+| -------- | ------------------------------------- | --------- | ------------------------ |
+| `<path>` | `<framework or migration constraint>` | `<owner>` | `<observable condition>` |
+
+An allowlist explains a real exception; it is not a substitute for classifying new files.
 
 ## Extraction test
 

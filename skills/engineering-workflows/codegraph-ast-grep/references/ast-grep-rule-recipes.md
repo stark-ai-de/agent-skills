@@ -2,6 +2,8 @@
 
 Use this reference for structural search, reusable rules/tests, outline, or a reviewed rewrite. Verify installed help before using any version-sensitive option.
 
+These are internal coding behaviors after a ready setup, not public skill workflows. An ordinary coding request may authorize a bounded rule or source edit; broad, destructive, or scope-expanding rewrites retain their normal approval boundary.
+
 ## Contents
 
 - [Capability and quoting checks](#capability-and-quoting-checks)

@@ -45,6 +45,8 @@ For a column replacement, a common sequence is: add the new nullable representat
 
 For public packages or APIs, test both old-consumer/new-provider and new-consumer/old-provider combinations that the declared window supports. Search known consumers, publish the deprecation through their normal channel, and measure use where privacy and platform controls permit it.
 
+For a TypeScript 7 transition, inventory direct `tsc` callers separately from compiler-API, transformer, embedded-language, framework, editor, and plugin consumers. Expand by adding the stable TypeScript 7 lane and named TypeScript 6 compatibility commands; migrate supported callers with diagnostic and build comparisons; contract only after every compatibility consumer has current support or an explicitly retained owner and removal condition. A successful TypeScript 7 CLI check does not prove a Next.js build, VS Code or Cursor plugin, or embedded-language workflow has migrated.
+
 ## Verification by stage
 
 - **Source/static:** inventory references, schemas, exports, events, jobs, and fallback code.
@@ -53,6 +55,10 @@ For public packages or APIs, test both old-consumer/new-provider and new-consume
 - **Publication/install:** verify the actual artifact exposes the intended compatibility surface.
 - **Deployed/production:** verify migration counts, reconciliation, errors, latency, and the rollback window.
 - **External:** obtain direct consumer or provider confirmation when the boundary is not controlled by the repository.
+
+## Decision lineage
+
+- `generalizes`: [ADR-0035](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0035-use-stable-native-typescript-with-a-compatibility-lane.long.md).
 
 ## Official sources
 

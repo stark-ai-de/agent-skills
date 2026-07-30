@@ -41,6 +41,18 @@ See [ADR-0016](adrs/0016-use-openai-metadata-for-codex-skills.short.md) ([Long, 
 
 See [ADR-0021](adrs/0021-place-portable-skills-in-workflow-categories.short.md) ([Long, canonical](adrs/0021-place-portable-skills-in-workflow-categories.long.md) · [Guide](adrs/0021-place-portable-skills-in-workflow-categories.guide.md)) and [ADR-0028](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.short.md) ([Long, canonical](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.long.md) · [Guide](adrs/0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction.guide.md)).
 
+## Finite Workflow Selection
+
+A stable public skill with two or more materially different outcomes, artifact classes, or mutation scopes must expose one complete finite workflow set. Do not add a recursive `auto` workflow. Keep capability detection, deterministic fallback, execution-host translation, and effort sizing internal unless they independently change the user-visible outcome or authority boundary.
+
+For a direct invocation with clear task intent and sufficient existing authority, show the complete workflow set, announce the selected workflow and rationale, state write scope and expected artifacts, then proceed. Agent-initiated activation may do the same within the user's already-authorized task; without mutation authority it may select only a relevant read-only route. A bare activation, conflicting cues, or material ambiguity about outcome, scope, persistence, governance, or mutation authority must expose the workflows and ask.
+
+Workflow selection grants no new authority. Destructive, paid, irreversible, externally visible, deployment, publication, production, and scope-expanding actions retain their own approval boundaries. Single-outcome skills do not need an artificial selector.
+
+Keep intent, ambiguity, and authority evals beside each affected skill and validate them through its focused contract. Do not maintain a central skill migration/disposition manifest.
+
+See [ADR-0038](adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.short.md) ([Long, canonical](adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.long.md) · [Guide](adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.guide.md)).
+
 ## Body Shape
 
 Every skill should include:

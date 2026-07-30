@@ -63,6 +63,7 @@ Run:
 npm run validate
 npm run list
 npm run list:incubator
+npm run smoke:fingerprint
 npm run smoke:install
 ```
 

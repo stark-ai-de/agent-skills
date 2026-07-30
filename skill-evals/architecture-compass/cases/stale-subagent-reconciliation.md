@@ -19,6 +19,8 @@ merge both reports.
 - contains: stale
 - contains: reconciled
 - contains: current repository evidence
+- contains: invalidators
+- contains: check owner
 - not_contains: all subagent findings are current
 
 ## Expected Behavior
@@ -26,5 +28,7 @@ merge both reports.
 - Treat every subagent report as provisional until the lead reconciles it with
   current paths, canonical Long ADRs, HEAD, and validation evidence.
 - Exclude or rerun findings invalidated by the ownership change.
+- Keep one check owner and rerun only the proof obligation invalidated by the
+  ownership or contract change; do not rerun an unchanged aggregate baseline.
 - Attribute retained findings to their applicable snapshot and evidence stage.
 - Do not convert missing or stale reports into positive proof.

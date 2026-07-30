@@ -1,7 +1,7 @@
 interface:
   display_name: "Architecture Compass"
-  short_description: "Routes ADR guardrails into repository setup and refactors"
-  default_prompt: "Use $architecture-compass in setup mode to install ADR guardrails, or refactor mode to align code with repository decisions. Inspect target evidence, select applicable ADRs from the routed catalog, read Short first and canonical Long before implementation, then report bounded validation by evidence stage."
+  short_description: "Governs and reviews ADR-guided architecture changes"
+  default_prompt: "Use $architecture-compass for this repository, including architecture PR review, Next.js request patterns, source placement, backend/runtime/env/config boundaries, or stack deviations when relevant. Expose setup, audit, refactor, plan-refactor, and plan-run-refactor; select and explain the task-matching workflow when intent and authority are clear, or ask when they are ambiguous. Rank architecture evidence through AC-ADR-046 without expanding execution authority, preserve accepted history and protected state, and keep later high-risk or external actions behind their own approvals."
 policy:
   allow_implicit_invocation: true
 dependencies:

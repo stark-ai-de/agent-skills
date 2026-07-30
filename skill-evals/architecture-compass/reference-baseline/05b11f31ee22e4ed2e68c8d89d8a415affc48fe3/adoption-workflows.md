@@ -1,0 +1,240 @@
+# Adoption Workflows
+
+Use this reference to choose the top-level user action and the right internal operating mode.
+
+## Top-level action selection
+
+| User-facing action | Use when                                                                                   | Main output                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `setup`            | The user wants ADRs to become durable repo guardrails for future agents and contributors.  | Agent instructions, ADR index, stack rules, setup report, future prompts.    |
+| `refactor`         | The user wants code, diffs, or new implementation aligned with existing ADRs and examples. | Rule set, drift report or placement map, patches when requested, validation. |
+
+## Internal mode selection
+
+| Mode                  | Use when                                                                  | Main output                                                                |
+| --------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `setup-existing-repo` | `setup` action for a repo that already has ADRs or architecture notes.    | Updates to `AGENTS.md`, ADR index, stack rules, and optional PR checklist. |
+| `setup-new-repo`      | `setup` action for a new repo or starter app.                             | Starter ADR governance files and first-implementation guardrails.          |
+| `audit`               | The user wants to know whether current code follows ADRs and examples.    | Drift report and validation recommendations.                               |
+| `refactor`            | The user wants changes applied to existing code.                          | Small implementation slices, docs updates, validation results.             |
+| `new-implementation`  | The user is adding a feature under existing repo rules.                   | File placement map and implementation guardrails.                          |
+| `new-repo-bootstrap`  | The user is starting a repository or app that should follow this pattern. | Starter layout, ADR draft, stack rules, agent rules, examples.             |
+| `pr-review`           | The user wants a diff or PR checked for architecture drift.               | Blocking/non-blocking findings and remediation suggestions.                |
+| `docs-sync`           | Code or rules changed and repo docs must be aligned.                      | Minimal docs and index updates.                                            |
+| `stack-deviation`     | A task may require a new library or pattern.                              | Preferred-stack check and deviation rationale.                             |
+
+## Decision routing matrix
+
+Classify the route before any mutation. Planning means the native host mode when it is active or available, otherwise the portable no-write decision gate in `host-collaboration-modes.md`.
+
+| Internal mode                            | Use a decision phase when                                                                   | Otherwise                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `setup-new-repo` or `new-repo-bootstrap` | Stack, deployable units, ownership, or guardrail adoption is unresolved.                    | Run the fully specified minimal setup directly.                      |
+| `setup-existing-repo`                    | Adoption needs an `adapt` or `reject` decision, or governing ADRs are stale or conflicting. | Apply a mechanical guardrail refresh under accepted ADRs.            |
+| `refactor`                               | Work is broad, multi-boundary, behavior-changing, or needs phases.                          | Apply narrow behavior-preserving ADR alignment directly.             |
+| `new-implementation`                     | Placement, request, runtime, package, or public-contract boundaries are unresolved.         | Apply the fully placed ADR-backed implementation directly.           |
+| `stack-deviation`                        | The task needs an actual durable deviation or new ADR.                                      | Stay direct when the existing stack is sufficient.                   |
+| `audit`                                  | Never solely because an audit was requested.                                                | Perform a read-only audit.                                           |
+| `pr-review`                              | Never for the review itself.                                                                | Prefer the host review surface, otherwise return read-only findings. |
+| `docs-sync`                              | A new durable decision appears during synchronization.                                      | Synchronize an already approved decision directly.                   |
+
+## Decision-to-execution lifecycle
+
+1. Classify the preliminary route from the request without repository inspection or writes.
+2. Resolve only route-relevant host controls. For a decision phase, detect planning capability and read-only enforcement separately and request each available but inactive control independently. For an audit, preserve the read-only boundary without requesting Plan. For a review, prefer the host review surface without requesting Plan and resolve read-only enforcement when that surface does not establish a no-write boundary. Direct execution does not request Plan or Read Only merely because either is available. Do not claim prompt text changed a control, and do not treat silence as a decline.
+3. Under the confirmed route, inspect only enough repository evidence to validate the classification. Use only non-mutating operations and index-safe Git status while the route remains provisional. If that evidence changes the route, stop before decision work or mutation, resolve the newly required host controls, and continue under the reclassified route.
+4. During a decision phase, build the rule, adoption, or placement map and resolve only material choices. Keep repository, untracked, ignored, index, artifact, and external state unchanged.
+5. At the verified checkpoint, return explicit planning-capability and read-only-enforcement fields plus the exact architecture and execution statuses. If implementation was requested, also return allowed target paths, validation commands, any required write-capable permission or control transition, and the bounded continuation from `host-collaboration-modes.md`. Otherwise return `Execution status: not requested` without an implementation continuation.
+6. Before direct execution, after native Plan mode exits, or after explicit implementation approval in the portable fallback, confirm any separately required write-capable permission or control transition. While a known required transition remains inactive or unconfirmed, return `Execution status: pending write permission`, include the matching direct, native, or portable-fallback continuation, and stop. Once confirmed, re-read repository state with index-safe Git status, governing ADRs, and target paths. Stop on material drift.
+7. Apply only the approved slice and path allowlist, then run only the approved validation.
+
+## Setup action
+
+Use setup when the user explicitly asks to make a repository rely on ADRs. Setup is allowed to create standard guardrail files because the action itself is approval to install the governance layer.
+
+### Existing repository setup
+
+Use a decision phase for disputed adoption, adaptation, rejection, or stale ADRs. A mechanical refresh that follows accepted decisions may proceed directly.
+
+1. Discover current ADR locations, architecture docs, stack rules, agent instructions, README/contribution docs, and approved examples.
+2. Preserve the repo's existing ADR directory and naming convention. If none exists, prefer `docs/adr/` unless the repo already uses another convention.
+3. Compare target evidence with the bundled ADR guardrail rows in `assets/setup-report-template.md`. For each guardrail, record `adopt`, `adapt`, `defer`, or `reject`. Do not omit a guardrail because target evidence is sparse. Use `defer` when a guardrail does not fit the current slice but may fit future repo growth. Ask for a user-confirmed rationale when target evidence conflicts with a guardrail.
+4. Add or update agent instructions so they state:
+   - accepted ADRs are binding,
+   - ADRs must be inspected before architecture-affecting code changes,
+   - existing ADR-linked examples should be preferred over generic framework defaults,
+   - conflicts with ADRs must be reported before implementation,
+   - final responses should name the ADRs applied.
+5. Add or update an ADR index that lists active decisions by area.
+6. Add or update stack rules only when the repo has a dependency policy, the user provided one, or a JS/TS starter setup needs the bundled Oxc lint/format default recorded.
+7. Add an optional PR checklist only when a PR-template convention exists or the user asks for one.
+8. Return a setup report and the canonical prompts future agents should use.
+
+### New repository setup
+
+Use a decision phase unless the intended stack, deployable units, ownership, guardrail decisions, target paths, and validation are already specified.
+
+1. Identify the intended stack and deployable units.
+2. Create the smallest useful governance set:
+   - `AGENTS.md`,
+   - `docs/adr/index.md`,
+   - initial source-structure ADR,
+   - optional `STACK_RULES.md`,
+   - optional PR checklist,
+   - minimal example files only for selected stack boundaries.
+3. Treat the bundled ADR guardrail rows in `assets/setup-report-template.md` as the starter baseline. Mark each as adopted, adapted, deferred, or rejected. Use `defer` for guardrails that are not part of the first implementation slice.
+4. For JavaScript or TypeScript starter repos, record Oxc as the default lint/format toolchain unless the maintainer explicitly rejects it or target evidence already selects another accepted toolchain.
+5. Avoid creating unused apps, packages, or backend services before they have owners.
+6. Mark open decisions explicitly instead of pretending the architecture is complete.
+7. Return first-implementation guardrails and validation commands.
+
+### Setup output
+
+Use `assets/setup-report-template.md`. Include:
+
+- action and internal setup mode,
+- collaboration route, capability evidence, and exact decision/execution statuses,
+- files created or changed,
+- ADR discovery paths,
+- active ADRs or starter ADRs,
+- bundled guardrail adoption decisions and challenged rejections,
+- agent instruction summary,
+- future prompts,
+- open decisions,
+- validation performed or skipped.
+
+## Existing repository audit
+
+Remain read-only. Do not require Plan mode solely for an audit, and do not turn findings into edits without a separate implementation request.
+
+1. Read target ADRs and repo rules.
+2. Identify the accepted source-structure pattern.
+3. Sample current files from the touched boundaries.
+4. Map each sampled file to its source role.
+5. Mark drift by severity:
+   - `blocking`: unsafe runtime boundary, secret leakage risk, wrong request/write boundary, broken public package contract.
+   - `important`: structure contradicts ADR and will confuse future work.
+   - `cleanup`: low-risk shallow wrappers, naming drift, docs cross-reference drift.
+6. Return a gap report with recommended refactor slices.
+
+## Existing repository refactor
+
+Use a decision phase for broad, multi-boundary, behavior-changing, or phased refactors. A narrow behavior-preserving change prescribed by accepted ADRs may proceed directly.
+
+1. Start from the audit or create a compact gap report first.
+2. Choose a vertical slice that keeps behavior stable.
+3. Move code to the owner layer before changing behavior.
+4. Preserve public interfaces or update all callers in the same slice.
+5. Add or adjust tests only where the target repo already has a test pattern or where behavior changed.
+6. Update docs when rules or public contracts changed.
+7. Run focused validation.
+
+Avoid broad churn. Do not rename or move unrelated files just because they are near the touched area.
+
+## New implementation guardrail
+
+Before adding a feature, use a decision phase when placement, request, runtime, package, or public-contract boundaries are unresolved. Otherwise use the direct route.
+
+1. Identify the target route, package, backend service, or app.
+2. Select the file pattern:
+   - Next.js route/screen/hydrated/RCC/UI/query/action split,
+   - backend runtime/service split,
+   - domain-core package contract,
+   - UI package component or token change,
+   - tooling package change.
+3. List exact files to create and why each owns its role.
+4. Confirm read/write/request boundaries.
+5. Confirm stack choices and validation commands.
+6. Implement only after the placement map is clear.
+
+## New repository bootstrap
+
+Use this internal mode when the `setup` action targets a new repository or when no target repo rules exist yet.
+
+Resolve stack, deployable-unit, ownership, and first-slice decisions in a read-only phase before creating files unless all are already explicit.
+
+Create or propose:
+
+- `AGENTS.md` or equivalent agent instructions, using `assets/agent-instructions-template.md` as a starting point.
+- Stack rules or dependency decision order.
+- `docs/adr/` or the target repo ADR convention.
+- A source-structure ADR using `assets/adr-draft-template.md`.
+- A docs index if the repo already has docs or the user approves creating one.
+- Minimal example files for the selected stack, not full product examples.
+- Initial validation commands and source-shape reporting plan.
+
+Do not assume every bundled pattern is part of the first implementation slice. Do not silently omit a bundled guardrail; ask or infer the selected stack first, then record the guardrail as adopted, adapted, deferred, or rejected.
+
+## PR review for architecture drift
+
+Focus on architecture rules, not general code style.
+
+Prefer the host review surface when available; otherwise inspect and return findings read-only. Do not require Plan mode or apply fixes as part of the review itself.
+
+Check:
+
+- Did new files go into the correct source roles?
+- Did route handlers and framework files stay thin?
+- Did browser-safe code avoid server-only imports?
+- Did server-only files include required sentinels?
+- Did reads and writes use the accepted request boundaries?
+- Did shared packages remain app-agnostic where required?
+- Did backend services preserve explicit runtime composition?
+- Did env/config reads stay at the app boundary?
+- Did infrastructure artifacts stay outside runtime source trees?
+- Did public package exports remain intentional?
+- Did docs or ADR indexes need updates?
+
+Output findings as `blocking`, `important`, or `cleanup`.
+
+## Docs sync
+
+Update only existing, relevant repo-facing files when architecture-facing behavior changes.
+
+Synchronize accepted decisions directly. If synchronization reveals a new durable choice, stop and route that choice through the decision phase first.
+
+Common docs that may need updates:
+
+- ADR index.
+- Architecture decision summary.
+- `AGENTS.md` or equivalent agent instructions.
+- Stack rules or dependency policy.
+- Source-shape validation docs.
+- Package README or public API docs.
+
+When multiple docs need the same explanation, put durable policy in one canonical file and add concise links from other files.
+
+Ask before creating missing docs or indexes.
+
+## Stack-deviation gate
+
+Use a decision phase only when the result is an actual durable deviation or a new ADR. A check that concludes the existing stack is sufficient remains direct.
+
+Use target stack rules first. Default decision order:
+
+1. Prefer the existing stack and built-in platform capabilities.
+2. If a specialized library is needed, prefer the library named in the target repo’s stack rules.
+3. If the preferred stack is insufficient, explain the technical gap before introducing another dependency.
+4. Update docs if the deviation becomes a repeated pattern.
+
+Return:
+
+```text
+Preferred option considered: <name>
+Reason insufficient: <technical reason or "not insufficient">
+Chosen option: <name>
+Docs update needed: yes/no
+Validation: <commands>
+```
+
+## Phasing large refactors
+
+Split large refactors into phases:
+
+1. Document accepted rule and current drift.
+2. Refactor one boundary with no behavior change.
+3. Add or update tests for behavior touched by the move.
+4. Update imports and public package exports.
+5. Run validation.
+6. Repeat for the next boundary.
+7. Add source-shape reporting only after exceptions are understood.

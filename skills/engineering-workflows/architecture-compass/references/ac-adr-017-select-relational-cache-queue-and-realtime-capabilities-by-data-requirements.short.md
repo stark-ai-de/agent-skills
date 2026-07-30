@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Select each data capability from ownership, consistency, access, lifecycle, scale, and failure requirements instead of a provider default.
 
 Variants: **Short** · [Long, canonical](ac-adr-017-select-relational-cache-queue-and-realtime-capabilities-by-data-requirements.long.md) · [Guide](ac-adr-017-select-relational-cache-queue-and-realtime-capabilities-by-data-requirements.guide.md)

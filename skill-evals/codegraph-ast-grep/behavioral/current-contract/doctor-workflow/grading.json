@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "doctor-workflow",
+  "assertions": [
+    {
+      "id": "select-doctor",
+      "passed": true,
+      "evidence": "“Selected workflow: `doctor`, because you requested diagnosis without repair”",
+      "failure_reason": null
+    },
+    {
+      "id": "perform-only-non-opening-checks-without-extra-authority",
+      "passed": true,
+      "evidence": "“Writes performed: None”; labels evidence “Non-opening”; skips project-opening checks",
+      "failure_reason": null
+    },
+    {
+      "id": "diagnose-disconnected-runtime-path",
+      "passed": true,
+      "evidence": "“active Codex MCP connection is stale from the deleted global executable” and has not respawned from the stored project-local entry",
+      "failure_reason": null
+    },
+    {
+      "id": "gate-project-opening-on-exact-root-approval",
+      "passed": true,
+      "evidence": "Skips status/query because opening can migrate metadata; requires “separate affirmative approval for `/workspace/sample-app`”",
+      "failure_reason": null
+    },
+    {
+      "id": "make-no-repair",
+      "passed": true,
+      "evidence": "“I did not reconnect Codex, edit configuration, sync or rebuild the graph, change packages, or perform any repair”",
+      "failure_reason": null
+    },
+    {
+      "id": "report-confidence-and-skipped-evidence",
+      "passed": true,
+      "evidence": "“Confidence is high”; “graph health itself remains unverified”; identifies skipped status and MCP query",
+      "failure_reason": null
+    },
+    {
+      "id": "recommend-a-separate-follow-up",
+      "passed": true,
+      "evidence": "Recommends an “explicitly authorized Codex MCP reconnect/restart,” then focused setup reconciliation if needed",
+      "failure_reason": null
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

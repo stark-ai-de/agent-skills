@@ -4,16 +4,70 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
+import {
+  assertExactPublicSkillSet,
+  copyGitCandidateRepository,
+} from "./validation/smoke-install-contract.mjs";
+
 const root = process.cwd();
+
+function validatedSkillsCliOverride() {
+  const rawValue = process.env.SKILLS_SMOKE_CLI;
+  if (rawValue === undefined) return undefined;
+
+  const value = rawValue.trim();
+  if (!value) {
+    throw new Error("SKILLS_SMOKE_CLI must not be empty when configured.");
+  }
+  if (!path.isAbsolute(value)) {
+    throw new Error("SKILLS_SMOKE_CLI must be an absolute path.");
+  }
+
+  let stat;
+  try {
+    stat = fs.statSync(value);
+  } catch {
+    throw new Error("SKILLS_SMOKE_CLI must reference an existing file.");
+  }
+  if (!stat.isFile()) {
+    throw new Error("SKILLS_SMOKE_CLI must reference a regular file.");
+  }
+  try {
+    fs.accessSync(value, fs.constants.X_OK);
+  } catch {
+    throw new Error("SKILLS_SMOKE_CLI must reference an executable file.");
+  }
+  return value;
+}
+
+function validatedForceTtySetting() {
+  const rawValue = process.env.SKILLS_SMOKE_FORCE_TTY;
+  if (rawValue === undefined) return false;
+
+  const value = rawValue.trim();
+  if (!new Set(["0", "1"]).has(value)) {
+    throw new Error("SKILLS_SMOKE_FORCE_TTY must be either 0 or 1 when configured.");
+  }
+  return value === "1";
+}
+
+const configuredSkillsCli = validatedSkillsCliOverride();
+const forceSkillsCliTty = validatedForceTtySetting();
+if (forceSkillsCliTty && !configuredSkillsCli) {
+  throw new Error("SKILLS_SMOKE_FORCE_TTY requires an explicit SKILLS_SMOKE_CLI.");
+}
+
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "skills-smoke-"));
 const copyRoot = path.join(tmpRoot, "repo");
 const installRoot = path.join(tmpRoot, "installs");
 const smokeEnvironment = {
   ...process.env,
-  CI: "1",
+  ...(configuredSkillsCli ? {} : { CI: "1" }),
   DISABLE_TELEMETRY: "1",
   DO_NOT_TRACK: "1",
 };
+const skillsCommand = configuredSkillsCli || "npx";
+const skillsPrefixArguments = configuredSkillsCli ? [] : ["--yes", "skills@latest"];
 const installCases = [
   {
     agent: "codex",
@@ -48,6 +102,60 @@ const installCases = [
 ];
 
 const architectureManifests = new Map();
+const legacyCommit = "05b11f31ee22e4ed2e68c8d89d8a415affc48fe3";
+let legacyEvidenceHashes = new Set();
+let decisionLineageHash;
+
+function sha256(file) {
+  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+}
+
+function legacyEvidenceHashSet(repositoryRoot) {
+  const evidenceFiles = [
+    path.join(
+      repositoryRoot,
+      "scripts",
+      "validation",
+      "architecture-compass",
+      "legacy-reference-source-lock.json",
+    ),
+    path.join(
+      repositoryRoot,
+      "scripts",
+      "validation",
+      "architecture-compass",
+      "legacy-reference-coverage.json",
+    ),
+    ...walk(
+      path.join(
+        repositoryRoot,
+        "skill-evals",
+        "architecture-compass",
+        "reference-baseline",
+        legacyCommit,
+      ),
+      () => true,
+    ),
+  ];
+  if (evidenceFiles.length !== 10 || evidenceFiles.some((file) => !fs.existsSync(file))) {
+    throw new Error("Clean-copy legacy-reference evidence is incomplete.");
+  }
+  return new Set(evidenceFiles.map(sha256));
+}
+
+function repoOnlyDecisionLineageHash(repositoryRoot) {
+  const file = path.join(
+    repositoryRoot,
+    "scripts",
+    "validation",
+    "architecture-compass",
+    "decision-lineage.json",
+  );
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+    throw new Error("Clean-copy decision-lineage manifest is missing or not a regular file.");
+  }
+  return sha256(file);
+}
 
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
@@ -69,6 +177,27 @@ function parseSkillName(file) {
   return text.match(/^name:\s*([a-z0-9-]+)$/m)?.[1] ?? null;
 }
 
+function shellQuote(argument) {
+  return `'${String(argument).replaceAll("'", `'"'"'`)}'`;
+}
+
+function runSkills(arguments_, cwd) {
+  const command = forceSkillsCliTty ? "script" : skillsCommand;
+  const commandArguments = forceSkillsCliTty
+    ? [
+        "-qec",
+        [skillsCommand, ...skillsPrefixArguments, ...arguments_].map(shellQuote).join(" "),
+        "/dev/null",
+      ]
+    : [...skillsPrefixArguments, ...arguments_];
+  return spawnSync(command, commandArguments, {
+    cwd,
+    encoding: "utf8",
+    env: smokeEnvironment,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
 function architectureManifest(skillDir) {
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
@@ -79,9 +208,9 @@ function architectureManifest(skillDir) {
   const triplets = references.filter((file) =>
     /^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.(?:short|long|guide)\.md$/.test(path.basename(file)),
   );
-  if (triplets.length !== 75) {
+  if (triplets.length !== 147) {
     throw new Error(
-      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 75.`,
+      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 147.`,
     );
   }
 
@@ -93,14 +222,46 @@ function architectureManifest(skillDir) {
     variantsByStem.set(match[1], variants);
   }
   if (
-    variantsByStem.size !== 25 ||
+    variantsByStem.size !== 49 ||
     [...variantsByStem.values()].some(
       (variants) => !["short", "long", "guide"].every((variant) => variants.has(variant)),
     )
   ) {
     throw new Error(
-      "Installed architecture-compass payload does not contain 25 complete triplets.",
+      "Installed architecture-compass payload does not contain 49 complete triplets.",
     );
+  }
+  const expectedIds = new Set(
+    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(3, "0")),
+  );
+  const actualIds = new Set(
+    [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
+  );
+  const missingIds = [...expectedIds].filter((id) => !actualIds.has(id));
+  const unexpectedIds = [...actualIds].filter((id) => !expectedIds.has(id));
+  if (missingIds.length > 0 || unexpectedIds.length > 0) {
+    throw new Error(
+      `Installed architecture-compass payload has the wrong ADR IDs; missing ${missingIds.join(", ") || "none"}; unexpected ${unexpectedIds.join(", ") || "none"}.`,
+    );
+  }
+  const decisionLineageStem = "ac-adr-044-record-material-decision-lineage-in-non-normative-guides";
+  if (!variantsByStem.has(decisionLineageStem)) {
+    throw new Error("Installed architecture-compass payload is missing the AC-ADR-044 triplet.");
+  }
+  const workflowRoutingStem =
+    "ac-adr-048-persist-approved-governance-before-planned-architecture-refactors";
+  if (!variantsByStem.has(workflowRoutingStem)) {
+    throw new Error("Installed architecture-compass payload is missing the AC-ADR-048 triplet.");
+  }
+  const evidenceRankingStem =
+    "ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority";
+  if (!variantsByStem.has(evidenceRankingStem)) {
+    throw new Error("Installed architecture-compass payload is missing the AC-ADR-046 triplet.");
+  }
+  const validationRiskStem =
+    "ac-adr-049-distinguish-change-risk-from-representative-environment-observation";
+  if (!variantsByStem.has(validationRiskStem)) {
+    throw new Error("Installed architecture-compass payload is missing the AC-ADR-049 triplet.");
   }
 
   const legacyReferences = new Set([
@@ -134,6 +295,31 @@ function architectureManifest(skillDir) {
   }
 
   const files = walk(skillDir, () => true).sort();
+  const leakedLegacyEvidence = files.find((file) => {
+    const parts = path.relative(skillDir, file).split(path.sep);
+    return (
+      new Set(["legacy-reference-source-lock.json", "legacy-reference-coverage.json"]).has(
+        path.basename(file),
+      ) ||
+      parts.includes("reference-baseline") ||
+      legacyReferences.has(path.basename(file)) ||
+      legacyEvidenceHashes.has(sha256(file))
+    );
+  });
+  if (leakedLegacyEvidence) {
+    throw new Error(
+      `Installed architecture-compass payload contains repo-only legacy-reference evidence bytes at ${path.relative(skillDir, leakedLegacyEvidence)}.`,
+    );
+  }
+  const leakedLineageManifest = files.find(
+    (file) =>
+      path.basename(file) === "decision-lineage.json" || sha256(file) === decisionLineageHash,
+  );
+  if (leakedLineageManifest) {
+    throw new Error(
+      `Installed architecture-compass payload contains repo-only decision-lineage bytes at ${path.relative(skillDir, leakedLineageManifest)}.`,
+    );
+  }
   return files
     .map((file) => {
       const rel = path.relative(skillDir, file).split(path.sep).join("/");
@@ -151,46 +337,29 @@ function installAndAssertDestination({ agent, destination, skill }) {
     `${JSON.stringify({ name: `smoke-${agent}`, private: true }, null, 2)}\n`,
   );
 
-  const result = spawnSync(
-    "npx",
-    [
-      "--yes",
-      "skills@latest",
-      "add",
-      copyRoot,
-      "--skill",
-      skill,
-      "--agent",
-      agent,
-      "--yes",
-      "--copy",
-    ],
-    {
-      cwd: projectRoot,
-      encoding: "utf8",
-      env: smokeEnvironment,
-      stdio: ["ignore", "pipe", "pipe"],
-    },
+  const result = runSkills(
+    ["add", copyRoot, "--skill", skill, "--agent", agent, "--yes", "--copy"],
+    projectRoot,
   );
 
   if (result.status !== 0) {
     const output = `${result.stdout}\n${result.stderr}`.trim();
-    console.error(output);
-    console.error(`Smoke install failed for ${skill} with --agent ${agent}.`);
-    process.exit(result.status ?? 1);
+    throw new Error(
+      [`Smoke install failed for ${skill} with --agent ${agent}.`, output]
+        .filter(Boolean)
+        .join("\n"),
+    );
   }
 
   const installedSkillFile = path.join(projectRoot, destination, "SKILL.md");
   if (!fs.existsSync(installedSkillFile)) {
-    console.error(
+    throw new Error(
       `Smoke install placed ${skill} outside the expected ${path.relative(projectRoot, path.dirname(installedSkillFile))} destination for --agent ${agent}.`,
     );
-    process.exit(1);
   }
 
   if (parseSkillName(installedSkillFile) !== skill) {
-    console.error(`Smoke install destination for --agent ${agent} does not contain ${skill}.`);
-    process.exit(1);
+    throw new Error(`Smoke install destination for --agent ${agent} does not contain ${skill}.`);
   }
 
   const alternativeDestinations = [
@@ -202,86 +371,45 @@ function installAndAssertDestination({ agent, destination, skill }) {
     fs.existsSync(path.join(projectRoot, candidate)),
   );
   if (unexpected) {
-    console.error(
+    throw new Error(
       `Smoke install unexpectedly placed ${skill} at ${unexpected} for --agent ${agent}.`,
     );
-    process.exit(1);
   }
 
   console.log(`Smoke installed ${skill} for ${agent} at ${destination}.`);
 
   if (skill === "architecture-compass") {
-    try {
-      architectureManifests.set(agent, architectureManifest(path.dirname(installedSkillFile)));
-    } catch (error) {
-      console.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
+    architectureManifests.set(agent, architectureManifest(path.dirname(installedSkillFile)));
   }
 }
 
 try {
-  fs.cpSync(root, copyRoot, {
-    recursive: true,
-    filter(source) {
-      const rel = path.relative(root, source);
-      if (!rel) return true;
-      const [topLevel] = rel.split(path.sep);
-      return !new Set([".agents", ".codegraph", ".git", "node_modules", "skills-lock.json"]).has(
-        topLevel,
-      );
-    },
-  });
+  const copiedCandidate = copyGitCandidateRepository(root, copyRoot);
+  console.log(`Smoke install copied ${copiedCandidate.fileCount} Git candidate file(s).`);
+  console.log(`Git candidate fingerprint: ${copiedCandidate.algorithm}:${copiedCandidate.digest}`);
 
   const names = walk(path.join(copyRoot, "skills"), (file) => path.basename(file) === "SKILL.md")
     .map(parseSkillName)
     .filter(Boolean)
     .sort();
-  const incubatorNames = walk(
-    path.join(copyRoot, "incubator", "skills"),
-    (file) => path.basename(file) === "SKILL.md",
-  )
-    .map(parseSkillName)
-    .filter(Boolean)
-    .sort();
+  legacyEvidenceHashes = legacyEvidenceHashSet(copyRoot);
+  decisionLineageHash = repoOnlyDecisionLineageHash(copyRoot);
+  const sourceArchitectureManifest = architectureManifest(
+    path.join(copyRoot, "skills", "engineering-workflows", "architecture-compass"),
+  );
 
-  const result = spawnSync("npx", ["--yes", "skills@latest", "add", ".", "--list"], {
-    cwd: copyRoot,
-    encoding: "utf8",
-    env: smokeEnvironment,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const result = runSkills(["add", ".", "--list"], copyRoot);
 
   const output = `${result.stdout}\n${result.stderr}`;
-
-  if (output.includes("agent-browser") || output.includes("grill-me")) {
-    console.error(
-      "Smoke install output included project-local helper skills from .agents/skills/.",
-    );
-    process.exit(1);
-  }
-
-  const leakedIncubator = incubatorNames.filter((name) => output.includes(name));
-  if (leakedIncubator.length > 0) {
-    console.error(
-      `Smoke install output included incubator skill(s): ${leakedIncubator.join(", ")}`,
-    );
-    process.exit(1);
-  }
 
   const noPublicSkills = names.length === 0;
   const noSkillsFound = /no skills found/i.test(output);
 
   if (result.status !== 0 && !(noPublicSkills && noSkillsFound)) {
-    console.error(output.trim());
-    process.exit(result.status ?? 1);
+    throw new Error(output.trim() || "Smoke install list command failed without output.");
   }
 
-  const missing = names.filter((name) => !output.includes(name));
-  if (missing.length > 0) {
-    console.error(`Smoke install output did not list expected skill(s): ${missing.join(", ")}`);
-    process.exit(1);
-  }
+  assertExactPublicSkillSet(names, output);
 
   if (noPublicSkills) {
     console.log("Smoke install found no public skills and no incubator/helper skill leaks.");
@@ -294,14 +422,19 @@ try {
   }
 
   const manifestValues = [...architectureManifests.values()];
+  if (manifestValues.some((manifest) => manifest !== sourceArchitectureManifest)) {
+    throw new Error(
+      "Installed architecture-compass payload differs from the clean-copy source payload.",
+    );
+  }
+  console.log("Architecture Compass installed payload matches the clean-copy source payload.");
   if (
     architectureManifests.size !== 3 ||
     manifestValues.some((manifest) => manifest !== manifestValues[0])
   ) {
-    console.error(
+    throw new Error(
       "Installed architecture-compass payload differs across Codex, Cursor, and Claude Code.",
     );
-    process.exit(1);
   }
   console.log("Architecture Compass payload parity passed for Codex, Cursor, and Claude Code.");
 } finally {

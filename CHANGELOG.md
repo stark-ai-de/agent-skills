@@ -4,42 +4,75 @@
 
 ### Added
 
+- Added AC-ADR-046 for evidence ranking without expanded operational authority, AC-ADR-047 and AC-ADR-049 as the reciprocal validation-risk successors, AC-ADR-048 as the reciprocal Plan-governance successor, and synchronized their catalog, locks, lineage, and guides.
+- Added byte-exact historical snapshots of all eight legacy Architecture Compass references, a commit/blob/SHA source lock, line-complete disposition coverage, a read-only verifier, runtime-leak protection, and negative integrity fixtures outside the installed skill payload.
+- Expanded clean-copy Architecture Compass install proof from 45 to all 49 ADR triplets.
+
 ### Changed
 
+- Updated `architecture-compass` to 0.6.0 without changing the root package version or creating a release.
+- Reconciled the legacy Next.js request, source-placement, backend/runtime, environment/configuration, host-collaboration, workflow, and stack-comparison references into current ADR Guides with explicit markers and source-linked adaptations instead of restoring the monolithic runtime references.
+- Completed Setup catalog disposition, validation-receipt identity, refactor finding and Done-When fields, candidate-based new-repository planning, task-specific ADR routing, provider-metadata adaptation, and legacy input compatibility without adding public workflows.
+
 ### Fixed
+
+- Corrected identity-poor query keys, unsafe write validation, and inconsistent Next.js/TanStack Query hydration, retry, and realtime examples in the routed Architecture Compass guidance.
+- Corrected validation risk so it follows changed contracts and blast radius rather than observation location, while restricting production fallback to bounded observation of an exact already-authorized low-risk artifact after mandatory gates.
 
 ### Deprecated
 
 ### Removed
-
-## v0.14.0 - 2026-07-28
-
-### Added
-
-- Added a routed Architecture Compass library of 25 Short, canonical Long, and implementation Guide ADR triplets spanning skill governance, repository architecture, frontend/backend/runtime boundaries, security and data, tooling, testing, delivery, accessibility, observability, and performance.
-- Added strict repository-ADR and Architecture Compass validators, deterministic triplet scaffolding, selective-routing regression cases, and cross-host installed-payload assertions.
-
-### Changed
-
-- Updated `architecture-compass` to 0.3.0 with a compact catalog-driven dispatcher, explicit skill-runtime versus adoptable target-repository scopes, dual-axis authority handling, reconciled delegation, and evidence-stage reporting.
-- Migrated repository ADR governance from single compact files to linked Short/Long/Guide triplets with Long as the canonical decision and Short-first companion links.
-- Re-evaluated toolchain, runtime, request, AI, data, UI, validation, security, delivery, and operational guidance against current official sources; version-sensitive mechanics now live in dated Guides.
-
-### Fixed
-
-- Removed contradictory authority precedence and environment-loading rules, stale TypeScript preview and AI SDK v5 defaults, Vercel KV guidance, unsafe elevated Supabase credential defaults, and inconsistent Next.js/TanStack Query error and hydration examples.
-
-### Deprecated
-
-- Kept `new-repo-bootstrap` only as a compatibility input alias for `setup-new-repo`.
-
-### Removed
-
-- Removed the eight legacy monolithic Architecture Compass references, the multi-decision ADR draft, and unsuffixed repository ADR paths.
 
 ### Security
 
-- Added first-class least-privilege, trust-boundary, secret/PII redaction, object/action authorization, AI tool approval, data lifecycle, migration, rollback, and staged-evidence guardrails.
+## v0.15.0 - 2026-07-29
+
+### Added
+
+- Added accepted repository ADR-0038 as the successor to ADR-0037 for intent-bound workflow selection, with finite disclosure, ambiguity handling, agent-selection authority, and unchanged high-risk approval boundaries.
+- Expanded Architecture Compass into a routed 45-decision Short/canonical-Long/Guide library covering repository governance, architecture, frontend/backend/runtime boundaries, security and data, tooling, validation, delivery, accessibility, observability, public-skill maintenance, host portability, and release policy.
+- Added AC-ADR-042 for risk-proportional validation and reusable evidence receipts, AC-ADR-044 plus the exhaustive repo-only decision-lineage manifest, and AC-ADR-045 as the workflow and intent-routing successor to AC-ADR-043 while preserving the AC-ADR-026 -> AC-ADR-043 -> AC-ADR-045 history.
+- Added deterministic focused validators and routing evals for memory curators, Architecture Compass, CodeGraph plus ast-grep, Draw.io, and Animated README Logo, including clear intent, ambiguity, agent-initiated authority, Plan lifecycle, persistence failure, migration, delivery, and read-only cases.
+- Added backup fixtures across the three memory curators for exact-include, zero-include, collision, containment, no-clobber, manifest-integrity, and concurrent-root behavior, and expanded clean-copy Architecture Compass install proof to all 45 ADR triplets.
+
+### Changed
+
+- Migrated repository ADR governance to linked Short, canonical Long, and non-normative Guide triplets with stable decision locks, reciprocal successors, direct catalog routing, and Long-first authority on conflict.
+- Updated `architecture-compass` to 0.5.0 with `setup`, strict read-only `audit`, governed `refactor`, `plan-refactor`, and `plan-run-refactor`; setup now uses `recommended` or `complete` coverage and limits the seven-decision foundation to new or evidence-empty repositories.
+- Architecture Compass now selects from clear intent, uses native Plan mode when supported, persists only after Plan-mode exit, rechecks approved state before execution, preserves repository-native ADR mapping and receipts, and conditionally adds the generic selector instruction only for evidenced stable public multi-workflow skill repositories.
+- Updated the Claude, Codex, and Cursor memory curators to 0.2.0 with the same eight routes, `plan-run-cleanup-file` first and Recommended, chat-versus-file delivery, full-depth review, safe direct cleanup, Plan-governed cleanup, exact backups, and one redacted record for file routes.
+- Updated `animated-readme-logo` to 0.5.0 with `audit`, `create`, `transform`, and `animate`; successful mutating workflows now deliver a verified SVG master, motion specification, executable animation recipe, static PNG, and animated GIF, while export remains an internal stage.
+- Updated `codegraph-ast-grep` to 0.3.0 with idempotent `setup`, provenance-preserving `update`, and non-repairing `doctor`; setup persists agent guidance, update runs required config/index/schema migrations and reconnects the client, and semantic/structural coding operations are internal behaviors.
+- Updated `drawio-diagrams` to 0.6.0 without changing its create, edit-repair, review, or export outcomes, while adopting intent-bound routing and focused authority evals.
+- Updated Claude and Cursor spec interviewers to 0.2.3 and the Codex spec interviewer to 0.3.1 with one end-to-end outcome and aligned native Plan-mode, fallback, exit, and save-only persistence behavior.
+- Re-evaluated toolchain, runtime, request, AI, data, UI, validation, security, delivery, and operational guidance against current primary sources; version-sensitive mechanics remain in dated Guides.
+
+### Fixed
+
+- Removed the redundant human-selection round trip for clear authorized intent without permitting mutation from a bare invocation, agent discovery, or ambiguous scope.
+- Prevented Architecture Compass audit from writing, direct refactor from inventing durable decisions or repairing governance, Plan fallback from treating indeterminate support as unavailable, and execution from continuing after material state drift.
+- Prevented accepted local ADRs from being overwritten by provider decisions and prevented provider or skill-runtime ADR identities from being copied into target-repository numbering.
+- Made memory-curator file persistence fail closed before mutation, kept chat routes report-free, and required exact-selection, collision-free, no-clobber backups with deterministic source-to-destination integrity manifests for every cleanup route.
+- Prevented logo workflows from claiming successful delivery without the required animation stack, and preserved verified intermediates when optional tooling is unavailable or declined.
+- Made CodeGraph doctor diagnose without repair and gated project-opening analytics on exact-root authority because generated metadata may migrate.
+- Prevented Draw.io `review` and Animated README Logo `audit` from falling through into mutating workflows, and made their eval contracts assert the declared selection and protected originals.
+- Bound the current CodeGraph v0.3 Setup, Update, Doctor, ambiguity, and unauthorized-mutation prompts, internal clean-context reviewer outputs, independent 35/35 grading, and provenance to the exact runtime payload without presenting internal evidence as CI, hosted, production, or live-tool proof.
+- Removed contradictory authority and environment-loading guidance plus stale TypeScript preview, AI SDK v5, Vercel KV, elevated Supabase credential, and inconsistent Next.js/TanStack Query examples from the routed Architecture Compass guidance.
+
+### Deprecated
+
+### Removed
+
+- Removed the central stable-skill `migrate`/`not-needed` disposition manifest, its validator and package command, and the confirmation-only routing policy from active documentation.
+- Removed superseded public workflow menus: Architecture Compass Setup/Apply variants, CodeGraph analysis-as-mode routes, memory-curator review/plan/cleanup triads, and Animated README Logo's public export mode.
+- Removed eight legacy monolithic Architecture Compass references, unsuffixed repository ADR paths, the colliding validation draft, and its obsolete standalone patch artifact after their approved intent moved into the routed triplets.
+- Removed the unpublished v0.14 release section by folding its complete delta into v0.15.
+
+### Security
+
+- Preserved separate approval for destructive, paid, irreversible, external, deployment, publication, production, telemetry, installation, and scope-expanding actions even when workflow selection is automatic.
+- Added visible stop behavior for accepted-ADR conflicts, scope drift, missing authority, unsafe overwrite, sensitive context, persistence failure, and irreversible migration boundaries.
+- Kept least privilege, trust boundaries, secret/PII redaction, object/action authorization, AI tool approval, data lifecycle, migration, rollback, root-bounded paths, and staged-evidence claims first-class across the public skills.
 
 ## v0.13.0 - 2026-07-24
 

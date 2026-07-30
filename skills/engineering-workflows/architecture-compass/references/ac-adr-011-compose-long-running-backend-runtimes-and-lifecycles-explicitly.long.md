@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Separate process bootstrap, runtime composition, transports, services, start, readiness, and reverse-order cleanup.
 
 Variants: [Short](ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles-explicitly.short.md) · **Long, canonical** · [Guide](ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles-explicitly.guide.md)

@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Resolve environment-source policy before application bootstrap, then validate once into explicit typed configuration.
 
 Variants: [Short](ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.short.md) · **Long, canonical** · [Guide](ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.guide.md)

@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Make runtime audience explicit and expose cross-package code only through intentional compatible entrypoints.
 
 Variants: [Short](ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.short.md) · **Long, canonical** · [Guide](ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.guide.md)

@@ -1,75 +1,46 @@
 # codegraph-ast-grep Evals and Captured Behavior
 
-This folder contains the public `codegraph-ast-grep` scenario catalog, static
-contract checks, and reproducible captured behavioral evidence. It is maintainer
-evidence, not installed runtime content and not a Microsoft SkillOpt optimization
-dataset.
+This folder contains the public `codegraph-ast-grep` scenario catalog,
+deterministic contract checks, a current internal reviewer capture, and
+reproducible historical behavioral evidence. It is maintainer evidence, not
+installed runtime content.
 
-Scenario case files define prompts and expected behavior. They are specifications,
-not passing run evidence by themselves. A behavior claim is supported only when a
-captured output is linked from `behavioral/manifest.json` and its assertions are
-regraded from that output.
+## Current contract coverage
 
-## What the evals cover
+- The finite public workflows are `setup`, `update`, and `doctor`; there is no recursive `auto` workflow.
+- Clear setup/update/broken-state intent selects and announces the matching workflow without another selection checkpoint.
+- Bare or ambiguous invocation exposes all three workflows and asks.
+- Agent-initiated activation can select only read-only `doctor`.
+- Doctor never repairs and needs exact-root approval before a graph-opening diagnostic that may migrate generated metadata.
+- Setup is idempotent and persists repository guidance for automatic CodeGraph semantic scope plus ast-grep CLI structural evidence.
+- Update preserves installer provenance, performs required configuration/index/schema migrations, reconnects the client, and verifies readiness.
+- Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
+- Normal setup excludes the experimental ast-grep MCP server.
 
-- Trigger and non-trigger boundaries.
-- Current-first, installed-help-driven CodeGraph behavior with legacy fallback.
-- CodeGraph MCP/CLI, ast-grep CLI, native LSP, and bounded text fallbacks.
-- Once-per-task stable update checks for selected analysis tools only.
-- Active itemized update consent, decline/offline behavior, and config-refresh separation.
-- Codex, Cursor, Claude Code, and generic MCP setup boundaries.
-- Positive/negative ast-grep rule tests and bounded rewrite safety.
-- Optional Serena, Codemod/JSSG, Semgrep, and language-specialist routing without adding required dependencies.
+Current cases are the files named in the deterministic validator. The five cases
+under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
+bind prompts, internal clean-context reviewer outputs, independent gradings, and
+provenance to the exact v0.3 runtime payload. The independent review records
+35/35 passing assertions. The dated receipt is
+[`2026-07-29-v0.3-internal-reviewer-capture.md`](runs/2026-07-29-v0.3-internal-reviewer-capture.md).
 
-## Cases
-
-Core positive cases:
-
-- `cases/codegraph-mcp-setup.md`
-- `cases/repo-exploration-and-impact.md`
-- `cases/ast-grep-structural-search.md`
-- `cases/refactor-planning.md`
-
-Update/capability/runtime cases:
-
-- `cases/stable-update-consent.md`
-- `cases/offline-update-check.md`
-- `cases/legacy-codegraph-capability-gate.md`
-- `cases/cross-runtime-setup-boundaries.md`
-
-Rewrite/extension cases:
-
-- `cases/bounded-rewrite-after-approval.md`
-- `cases/native-lsp-first.md`
-- `cases/advanced-migration-extension.md`
-- `cases/security-policy-tool-boundary.md`
-
-Negative/boundary cases:
-
-- `cases/typecheck-only-negative.md`
-- `cases/destructive-rewrite-negative.md`
+[`legacy-case-lineage.json`](legacy-case-lineage.json) records the explicit
+disposition of the nine cases removed from the reviewed HEAD snapshot. Its
+byte-locked sources live under
+`legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/`, outside the installed skill
+payload. The owning validator binds the exact deletion set and independent
+HEAD SHA-256 values, requires every material legacy behavior bullet to map once
+to an existing target heading/marker, and executes negative lineage fixtures.
+Those tests mutate or remove only disposable copies under the operating system's
+temporary directory; they never write the repository checkout or Git index, and
+each fixture registers cleanup in `finally`.
 
 ## Captured behavioral suite
 
-[`behavioral/`](behavioral/README.md) contains four fresh Codex final responses,
-their exact synthetic prompts, capture provenance, artifact hashes, and 28
-machine-regraded assertions:
-
-| Capture                       | Source scenario                             | Assertions |
-| ----------------------------- | ------------------------------------------- | ---------- |
-| Stable update consent         | `cases/stable-update-consent.md`            | 7/7        |
-| Offline update-check boundary | `cases/offline-update-check.md`             | 7/7        |
-| Legacy capability gate        | `cases/legacy-codegraph-capability-gate.md` | 7/7        |
-| Destructive rewrite boundary  | `cases/destructive-rewrite-negative.md`     | 7/7        |
-
-The synthetic-fixture harness allowed read-only access only to the candidate and
-its task-routed references; it prohibited CodeGraph, ast-grep, install/update,
-network, and write actions. The JSONL event stream was manually inspected before
-accepting each final message to confirm those reads and the absence of disallowed
-tool actions. The committed final-message artifacts alone do not independently
-prove those facts. They prove only the committed assertions for the named
-candidate/model runs. There is no no-skill or previous-version baseline and no
-statistical reliability claim.
+[`behavioral/`](behavioral/README.md) also retains four historical Codex final
+responses, exact synthetic prompts, capture provenance, artifact hashes, and 28
+machine-regraded assertions. That suite proves only the named v0.2.0 candidate
+behaviors and remains separate from the v0.3 result.
 
 ## Deterministic gate
 
@@ -79,25 +50,9 @@ Run:
 npm run validate:codegraph-ast-grep
 ```
 
-The validator checks the installed runtime contract, required scenario structure,
-capability-gated current/legacy commands, update consent, rewrite sequence,
-optional-tool boundaries, safe command examples, and empty required-tool
-dependency metadata. It also validates the behavioral manifest and artifact
-hashes, recomputes every deterministic assertion from the captured output, and
-reconciles per-case and suite totals.
-
-The gate itself does not query the network, invoke a model, or execute
-CodeGraph/ast-grep. Use `rubric.md` for human output review. `runs/` stores dated
-evidence summaries with exact boundaries; a prose run note without captured
-output and regraded assertions is not behavioral proof.
-
-## Passing behavior
-
-A passing output:
-
-1. inspects state/capabilities before recommending commands;
-2. checks selected analysis-tool stable versions at most once for the task or reports offline/opt-out state, while keeping telemetry separately consented and suppressed by default for CodeGraph checks/updates;
-3. actively asks item-by-item before any eligible update or other mutation;
-4. opens a CodeGraph project only after affirmative approval for that root or in an approved disposable copy, then uses only exposed/help-confirmed semantic and structural capabilities;
-5. reconciles evidence and keeps optional tools non-default;
-6. gates rewrites on tests, preview, exact scope, approval, diff review, and project validation.
+The validator checks the installed runtime contract, current scenario structure,
+all current source/prompt/output/grading/provenance hashes, exact runtime-payload
+binding, the 5/35/0 independent review result, target-guidance persistence,
+provenance-preserving setup/update behavior, doctor authority, current/legacy
+command safety, and historical capture integrity. Validation itself is offline:
+it does not invoke a reviewer, query the network, or execute CodeGraph/ast-grep.

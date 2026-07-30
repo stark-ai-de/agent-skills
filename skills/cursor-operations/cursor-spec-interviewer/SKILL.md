@@ -6,7 +6,7 @@ compatibility: Targets Cursor Agent evidence and execution output while keeping 
 metadata:
   author: stark-ai-de
   category: cursor-operations
-  version: "0.2.2"
+  version: "0.2.3"
 ---
 
 # Cursor Spec Interviewer
@@ -14,6 +14,8 @@ metadata:
 ## Goal
 
 Produce a user-verified implementation spec that Cursor Agent can execute with minimal ambiguity, minimal scope creep, explicit validation, explicit assumptions, a bounded source challenge, and ADRs for durable architectural decisions when needed. Save every final spec using the repo's clear convention or a confirmed destination; save ADR files only when the ADR gate requires one.
+
+This is one end-to-end outcome, not a public multi-workflow skill. Do not invent review/save variants or add a workflow-selection checkpoint.
 
 ## When to use
 
@@ -46,10 +48,10 @@ Produce a user-verified implementation spec that Cursor Agent can execute with m
 
 Before repo inspection or substantive questions, identify the current execution host and use only its planning, structured-question, transition, and plan-exit controls. The Cursor Agent target determines evidence and output contracts, not which host controls are available.
 
-1. Determine whether the current execution host supports Plan Mode and whether it is active; if support exists but state is unknown, treat it as inactive.
+1. Classify the current host state as `active`, `supported-inactive`, `definitely-unavailable`, or `indeterminate`. Treat `indeterminate` as `supported-inactive`; uncertainty is never fallback authority.
 2. If active, continue in the main conversation and use the current host's structured-question control for material decisions when available. In Cursor, that control is `AskQuestion` when the active surface exposes it.
 3. If supported but inactive and not explicitly declined, invoke the current host's Plan Mode transition control and wait for host confirmation. If the current host exposes no transition control, give accurate manual activation instructions for that host, ask the user to reply `continue`, and wait. When Cursor is the execution host, tell editor users to press Shift+Tab and Cursor CLI users to use `/plan` or start with `--mode=plan`. Do not ask the user to resend the request or claim the skill changed modes.
-4. Never fork the interview. Use conversational fallback only when Plan Mode is unavailable or explicitly declined, recording `Plan Mode fallback: unavailable` or `Plan Mode fallback: declined` plus the reason.
+4. Never fork the interview. Use conversational fallback only when Plan Mode is definitely unavailable or explicitly declined, recording `Plan Mode fallback: unavailable` or `Plan Mode fallback: declined` plus the reason. An indeterminate state must transition or wait under step 3 instead.
 5. Keep repository and workspace artifacts read-only in Plan Mode. Inspection and non-mutating validation are allowed; only a plan artifact created by the current host's plan-exit control is permitted.
 
 ## Workflow

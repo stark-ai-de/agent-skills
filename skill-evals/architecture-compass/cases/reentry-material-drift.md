@@ -6,7 +6,7 @@ Yes.
 
 ## Prompt
 
-Continue the approved Architecture Compass refactor after Plan mode. The
+Continue the approved Architecture Compass `plan-run-refactor` after Plan mode. The
 checkpoint allowed only `apps/web/app/orders/page.tsx` and
 `apps/web/components/orders-screen.tsx`. The required index-safe re-entry read
 has completed: repository root and branch are unchanged, full status is clean,
@@ -22,6 +22,7 @@ drift.
 - contains: Planning capability: Not applicable
 - contains: Read-only enforcement: not applicable
 - contains: Architecture decision status: approved
+- contains: Selected workflow: plan-run-refactor
 - contains: Execution status: blocked
 - contains: material drift
 - contains: ADR-0007
@@ -33,6 +34,7 @@ drift.
   not claim a new tool-backed re-read in this text-only case.
 - Identify the changed accepted ownership decision as material drift rather than
   silently expanding or revising the allowlist.
-- Keep the prior architecture decision approved but block execution.
+- Keep the prior architecture decision approved but block execution of the
+  now-stale plan.
 - Change no tracked, untracked, ignored, index, artifact, or external state;
   report that a new checkpoint is required.

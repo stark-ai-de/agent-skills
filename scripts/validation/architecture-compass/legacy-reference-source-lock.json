@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "source": {
+    "repository": "https://github.com/stark-ai-de/agent-skills",
+    "commit": "05b11f31ee22e4ed2e68c8d89d8a415affc48fe3",
+    "directory": "skills/engineering-workflows/architecture-compass/references",
+    "permalink": "https://github.com/stark-ai-de/agent-skills/tree/05b11f31ee22e4ed2e68c8d89d8a415affc48fe3/skills/engineering-workflows/architecture-compass/references"
+  },
+  "baselineDirectory": "skill-evals/architecture-compass/reference-baseline/05b11f31ee22e4ed2e68c8d89d8a415affc48fe3",
+  "files": [
+    {
+      "name": "adoption-workflows.md",
+      "blob": "44892a567aec9fb78572e6703e805df9b15dbe8a",
+      "sha256": "6c27d50c33103165b7aeb9cf61f3f0c5291cc7c11029985cf703fe22610b115d",
+      "bytes": 16999,
+      "lines": 240,
+      "h2Headings": 13,
+      "codeBlocks": 1
+    },
+    {
+      "name": "backend-runtime-patterns.md",
+      "blob": "6dfb5db0ac095f8552353264ead6ab7e50f03320",
+      "sha256": "19c898d50a2c5e19bf8f0418167906e4b5aa5e518de845717765f2a4b2d7e174",
+      "bytes": 9914,
+      "lines": 275,
+      "h2Headings": 11,
+      "codeBlocks": 8
+    },
+    {
+      "name": "checklists.md",
+      "blob": "57abc9025cc35490f1d74081f2076184ecaf57ef",
+      "sha256": "bb5ee887f77218addbc10f175207975fc0fb114ee83783ad228556d318496734",
+      "bytes": 9926,
+      "lines": 153,
+      "h2Headings": 11,
+      "codeBlocks": 0
+    },
+    {
+      "name": "host-collaboration-modes.md",
+      "blob": "3789f26e559f76c29f745121687fa766e1ad1a1d",
+      "sha256": "96c45a86d9766cc35b6322e556ccfd16709dbd6f29e2f10d663c1cba9fb0b38f",
+      "bytes": 14067,
+      "lines": 151,
+      "h2Headings": 6,
+      "codeBlocks": 3
+    },
+    {
+      "name": "nextjs-request-patterns.md",
+      "blob": "6c43f49e31f6fc1fd7e9af5485a1f88abb038c5a",
+      "sha256": "fba2a3b2bf828826708036b7c43afabda90b502dfc80a7ab661d542aa126d589",
+      "bytes": 10894,
+      "lines": 353,
+      "h2Headings": 9,
+      "codeBlocks": 14
+    },
+    {
+      "name": "preferred-stack-profile.md",
+      "blob": "0c8c8f7bb8230307779eb93a7faf8ea89f2135b8",
+      "sha256": "83728b6cdaa11b58124a196647f9595e5d3943c8edf5f8fd019a567ada8b022a",
+      "bytes": 8227,
+      "lines": 105,
+      "h2Headings": 11,
+      "codeBlocks": 0
+    },
+    {
+      "name": "repository-source-structure.md",
+      "blob": "2e77a9f7f349c7bd8a6f9c10255c56f9d8a48fd1",
+      "sha256": "3a07e1e6e11bf0e690c68a2fcefaa29fa6b622d6bb9c1cf9198b4174f501b9a6",
+      "bytes": 13528,
+      "lines": 150,
+      "h2Headings": 11,
+      "codeBlocks": 0
+    },
+    {
+      "name": "rule-extraction-and-conflict-resolution.md",
+      "blob": "0f21741dcc53a06dfe7031529d74209e655ef27f",
+      "sha256": "f95b632d05ffd1e67de81e9359b73d1a8336f1ce6f2cfb0e86660956a67aa781",
+      "bytes": 5389,
+      "lines": 103,
+      "h2Headings": 6,
+      "codeBlocks": 1
+    }
+  ]
+}

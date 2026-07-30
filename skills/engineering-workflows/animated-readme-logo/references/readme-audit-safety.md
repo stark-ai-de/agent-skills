@@ -33,6 +33,6 @@ The audit may read the declared README and root-bounded referenced assets. READM
 
 ## Report
 
-For each local or rejected reference, report its source location, normalized root-relative path when safe, and any compatibility risk. Verify SVG readiness with the bundled strict validator and distinguish static from animated GIF/PNG/APNG/WebP content. A reduced-motion source must be verified static, precede animated candidates, and retain a verified-static final `<img>` fallback.
+For each local or rejected reference, report its source location, normalized root-relative path when safe, and any compatibility risk. Verify the SVG with the bundled strict validator and distinguish static from animated GIF/PNG/APNG/WebP content. A reduced-motion source must be verified static, precede animated candidates, and retain a verified-static final `<img>` fallback.
 
 Summarize rejected absolute, UNC, root-escaping traversal, missing, or symlink-escaping references separately. Never print the canonical root or raw filesystem errors. Exit `0` means clean, `1` means compatibility/readiness findings, and `2` means unsafe input or a path-boundary rejection.

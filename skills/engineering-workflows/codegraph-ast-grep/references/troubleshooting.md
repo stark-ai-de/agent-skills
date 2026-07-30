@@ -1,6 +1,8 @@
 # Troubleshooting
 
-Diagnose the smallest failing layer: update lookup, executable/provenance, runtime MCP connection, selected project root, CodeGraph index/watch state, ast-grep parser/rule, or project validation. Do not turn diagnostics into unapproved repair.
+The `doctor` workflow diagnoses the smallest failing layer: executable/provenance, runtime MCP connection, selected project root, CodeGraph index/watch state, ast-grep parser/rule, repository guidance, or project validation. It never repairs.
+
+Precondition: the exact root is known. A deep diagnostic needs affirmative exact-root approval when it opens a project or can migrate generated state; without approval, skip it and report the evidence gap.
 
 ## Contents
 

@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Every mutation crosses a validated, authenticated, authorized command boundary before trusted state changes.
 
 Variants: **Short** · [Long, canonical](ac-adr-010-protect-writes-behind-validated-command-boundaries.long.md) · [Guide](ac-adr-010-protect-writes-behind-validated-command-boundaries.guide.md)

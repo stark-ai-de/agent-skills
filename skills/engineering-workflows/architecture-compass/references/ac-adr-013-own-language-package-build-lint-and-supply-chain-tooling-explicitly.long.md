@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Assign one owner to each tooling responsibility and gate optimization or replacement tools on repository compatibility evidence.
 
 Variants: [Short](ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.short.md) · **Long, canonical** · [Guide](ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md)

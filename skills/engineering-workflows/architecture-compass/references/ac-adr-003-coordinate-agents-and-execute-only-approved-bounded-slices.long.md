@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Keep one accountable lead, disjoint delegated ownership, and an exact approved execution boundary.
 
 Variants: [Short](ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.short.md) · **Long, canonical** · [Guide](ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md)

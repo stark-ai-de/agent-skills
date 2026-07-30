@@ -51,6 +51,10 @@ If a previously accepted decision changes materially, create a successor triplet
 - Would deleting a report or template lose a rule? If yes, policy still lives outside Long.
 - Does the selected task load a bounded set rather than the whole library?
 
+## Decision lineage
+
+- `consolidates`: [ADR-0032](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0032-adopt-short-long-guide-adr-triplets.long.md), [ADR-0033](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0033-package-architecture-compass-as-a-routed-adr-library.long.md).
+
 ## Official sources
 
 - [Agent Skills specification: progressive disclosure and optional directories](https://agentskills.io/specification)

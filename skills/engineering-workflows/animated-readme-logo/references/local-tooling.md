@@ -20,9 +20,9 @@ When a requested output needs a missing command:
 2. Select the smallest package set. Prefer librsvg plus headless FFmpeg. Use ImageMagick or Inkscape only when a source requires a feature the smaller set lacks.
 3. Present the package names, source, exact install command, persistence scope, expected download or disk impact when discoverable, and post-install verification commands.
 4. Ask for explicit approval of that exact installation. Keep provider approval separate.
-5. Stop before installation with `Export status: blocked` and a clearly labeled local-tool approval pending.
+5. Stop before installation with `Animation delivery: blocked` and a clearly labeled local-tool approval pending.
 6. After approval, install only the displayed set. Verify executable versions and the requested encoder, muxer, and filter support before exporting.
-7. If the user declines, forbids installation, or the install path is unavailable, use `Export status: capability-unavailable` and create no placeholder.
+7. If the user declines, forbids installation, or the install path is unavailable, use `Animation delivery: incomplete`, retain verified intermediates, and create no placeholder.
 
 Never turn an approval for one package manager, version, or package set into a broader update or installation.
 

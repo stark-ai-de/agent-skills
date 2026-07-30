@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Keep App Router entrypoints thin, render on the server by default, and isolate only necessary client interaction.
 
 Variants: [Short](ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.short.md) · **Long, canonical** · [Guide](ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.guide.md)

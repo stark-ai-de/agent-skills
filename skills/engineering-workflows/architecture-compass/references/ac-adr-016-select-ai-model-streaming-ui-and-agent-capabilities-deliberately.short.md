@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Select the smallest AI capability stack that meets measured product needs while preserving explicit trust, data, cost, and tool boundaries.
 
 Variants: **Short** · [Long, canonical](ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.long.md) · [Guide](ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.guide.md)

@@ -1,0 +1,1976 @@
+{
+  "schema": 1,
+  "sourceCommit": "1d454f06375f3b74ba506fef54b664a2517674c0",
+  "baselineDirectory": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0",
+  "cases": [
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/advanced-migration-extension.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/advanced-migration-extension.md",
+      "sourceSha256": "8cfbb48314c1968805531ba40d3e8bbbf54b972ec03720826afd9b2ab33e8f4d",
+      "disposition": "adapted",
+      "reason": "The public advanced-migration trigger is adapted into internal impact/refactor behavior plus an optional Codemod escalation. Routine tasks no longer initiate core-tool update lookup; selected extensions retain separate provenance, approval, bounded execution, and validation.",
+      "expectations": [
+        {
+          "summary": "Use CodeGraph for ownership/impact and ast-grep for initial syntax inventory.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use CodeGraph for ownership/impact and ast-grep for initial syntax inventory."
+          },
+          "outcome": "preserved",
+          "reason": "The current impact sequence preserves the two-tool split by assigning entry points, implementation, callers, dependents, and likely tests to CodeGraph while ast-grep supplies the exact syntax inventory before scope is fixed.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "Ownership: CodeGraph identifies the entry point, implementation, callers, dependents, and likely tests.",
+                "Exact inventory: ast-grep counts the syntax forms that will or will not change."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: mandatory stable lookup during an ordinary migration is rejected; stable lookup now belongs to the explicit update workflow.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Check stable metadata once for the selected installed core tools unless offline/opt-out policy applies; declining optional tools or remote execution does not skip that read-only check."
+          },
+          "outcome": "adapted",
+          "reason": "The former mandatory preflight is adapted: an ordinary migration no longer triggers any stable lookup, while an explicit update checks each selected core tool at most once. Within that workflow, offline or opt-out policy is reported as not checked, and declining an optional or remote-execution item does not cancel other authorized core checks.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Goal",
+              "markers": [
+                "Make a repository's coding agents ready to use CodeGraph for semantic scope and ast-grep CLI for structural evidence."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "`update`",
+              "markers": [
+                "Compare installed core tools with their authoritative stable channels once."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Scope and frequency",
+              "markers": [
+                "Perform the stable-version lookup at most once per core tool in the update workflow, then reuse the result."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Respect network and privacy policy",
+              "markers": ["report remote update state: not checked with the reason;"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Execution manifest",
+              "markers": [
+                "declining or excluding one item does not block diagnosis or other authorized items;"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Explain why the task crosses the threshold for an optional programmatic/multi-step migration tool.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Explain why the task crosses the threshold for an optional programmatic/multi-step migration tool."
+          },
+          "outcome": "preserved",
+          "reason": "The optional migration threshold is preserved: Codemod CLI/JSSG is considered only for a multi-step, parameterized, resumable, or programmatic migration after the agent explains why declarative ast-grep plus a reviewed patch is insufficient.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Multi-step, parameterized, resumable, or programmatic migration",
+                "Declarative ast-grep replacement is insufficient and fixture-tested orchestration adds value"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "Before selection, define why ast-grep CLI plus a reviewed patch is insufficient."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Recommend Codemod CLI/JSSG as the preferred optional advanced extension, not a required core dependency.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Recommend Codemod CLI/JSSG as the preferred optional advanced extension, not a required core dependency."
+          },
+          "outcome": "preserved",
+          "reason": "The current extension contract preserves Codemod CLI/JSSG as optional beyond the advanced-migration threshold, keeps CodeGraph and ast-grep as the only core tools, and makes selection non-authorizing.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Extensions and Escalation",
+              "markers": [
+                "CodeGraph and ast-grep are the only core tools.",
+                "Selecting an extension does not authorize installation or execution."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "Codemod CLI with JSSG is the preferred optional advanced extension when a migration needs more than a single ast-grep rule:"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Require review of exact transform/workflow source, stable version/provenance, requested capabilities, target paths, fixtures, dry-run behavior, and rollback.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Require review of exact transform/workflow source, stable version/provenance, requested capabilities, target paths, fixtures, dry-run behavior, and rollback."
+          },
+          "outcome": "preserved",
+          "reason": "The advanced-extension gate still requires review of exact source, version and install provenance, requested capabilities and permissions, targets, fixtures, dry-run behavior, and rollback before execution.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "Before execution, review the exact transform/workflow source, version, requested capabilities, filesystem/network permissions, target paths, fixtures, dry-run behavior, and rollback."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Approval and update inheritance",
+              "markers": ["identify its authoritative stable source and installation provenance;"]
+            }
+          ]
+        },
+        {
+          "summary": "Include the selected tool in the once-per-task stable update check only after selection.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Include the selected tool in the once-per-task stable update check only after selection."
+          },
+          "outcome": "preserved",
+          "reason": "The extension inheritance rule still adds a selected optional tool to the analysis-stack update check exactly once for the task.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Approval and update inheritance",
+              "markers": [
+                "include it in the analysis-stack update check exactly once for the task;"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Do not run `npx`, a registry codemod, MCP setup, or a transform without explicit approval.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not run `npx`, a registry codemod, MCP setup, or a transform without explicit approval."
+          },
+          "outcome": "preserved",
+          "reason": "Preserved for this migration-plan prompt: the current selector forbids inferring MCP setup unless the user requested setup for the stated root, while the existing extension targets retain approval gates for `npx`, registry codemods, and transforms.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Workflow selection",
+              "markers": [
+                "Selecting `setup` or `update` is allowed only when the user already requested that outcome for the stated root."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Extensions and Escalation",
+              "markers": ["Selecting an extension does not authorize installation or execution."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "Codemod CLI with JSSG is the preferred optional advanced extension when a migration needs more than a single ast-grep rule:"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Optional selected tools",
+              "markers": [
+                "Registry codemods, `npx`, `uvx`, and Git sources remain remote code execution even when invoked for one task."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Require fixture tests, dry-run/diff review, bounded execution, and project-native validation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Require fixture tests, dry-run/diff review, bounded execution, and project-native validation."
+          },
+          "outcome": "preserved",
+          "reason": "The current advanced-migration path preserves fixture orchestration, dry-run or preview, bounded execution, diff review, and project-native validation when declarative ast-grep is insufficient.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Selection order",
+              "markers": [
+                "Apply provenance review, explicit approval, bounded execution, diff review, and project validation to a selected extension."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Language-specific specialists",
+              "markers": ["Require a dry run or patch preview and project-native validation."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Match inventory: identify every known syntax variant and the exact paths in scope."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Declarative ast-grep replacement is insufficient and fixture-tested orchestration adds value"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "fixture-based whole-directory comparison;",
+                "Before execution, review the exact transform/workflow source, version, requested capabilities, filesystem/network permissions, target paths, fixtures, dry-run behavior, and rollback."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/ast-grep-structural-search.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/ast-grep-structural-search.md",
+      "sourceSha256": "bba4838338cc6993dd7019052e83daa090c341e42cec824e6baa248a02d2dbac",
+      "disposition": "adapted",
+      "reason": "The public structural-search trigger is adapted into an internal coding behavior. Narrow patterns, quoting, variants, tested YAML, bounded output, reviewed rewrites, and project validation remain; routine search no longer triggers stable update lookup or a redundant approval for every bounded rule edit.",
+      "expectations": [
+        {
+          "summary": "Inspect ast-grep path/provenance, version/help, existing `sgconfig`, and selected repository paths.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inspect ast-grep path/provenance, version/help, existing `sgconfig`, and selected repository paths."
+          },
+          "outcome": "adapted",
+          "reason": "The current preflight retains executable/version/help and existing ast-grep configuration checks, while provenance is handled by the separate update/provenance workflow and selected repository paths are established by task-scoped search inventory rather than this former compound preflight assertion.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": [
+                "Version/help probes are the safest no-write checks.",
+                "Inspect only relevant config names and paths before reading content:"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Discover installed provenance",
+              "markers": ["Record, without mutation:"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "ast-grep project setup",
+              "markers": ["Inspect existing config first:"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Narrow patterns",
+              "markers": [
+                "Start against one known file, then one directory, then the approved repository scope."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: an internal structural search does not perform a stable update lookup; update intent selects the separate update workflow.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Check the eligible stable ast-grep update once for the task or report why it was not checked; do not update from search intent."
+          },
+          "outcome": "adapted",
+          "reason": "An internal structural search now performs no stable lookup. Only an explicit update workflow checks ast-grep once and reports not checked when policy or network blocks it; search intent cannot select or execute an update because setup and update require a prior user request for that outcome.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "When not to use",
+              "markers": [
+                "Do not activate this skill merely because a coding task can benefit from an already-ready analysis stack."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Workflow selection",
+              "markers": [
+                "Selecting setup or update is allowed only when the user already requested that outcome for the stated root."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Scope and frequency",
+              "markers": [
+                "Perform the stable-version lookup at most once per core tool in the update workflow, then reuse the result."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Respect network and privacy policy",
+              "markers": ["report remote update state: not checked with the reason;"]
+            }
+          ]
+        },
+        {
+          "summary": "Start from one known positive TSX example with shell-safe quoting and explicit language.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Start from one known positive TSX example with shell-safe quoting and explicit language."
+          },
+          "outcome": "preserved",
+          "reason": "The structural-search procedure preserves a known positive and its language, begins against one file, uses explicit `-l` when inference is ambiguous, and retains single-quoted metavariables.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": ["Identify one known positive source example and its language."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Capability and quoting checks",
+              "markers": ["Use single quotes around shell patterns containing $ metavariables:"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Narrow patterns",
+              "markers": [
+                "Start against one known file, then one directory, then the approved repository scope.",
+                "Specify -l when extension inference is ambiguous or input comes from stdin."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Inventory syntax variants such as dot/computed environment access and component declaration shapes.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inventory syntax variants such as dot/computed environment access and component declaration shapes."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy dot/computed environment and component examples are adapted into a broader syntax-variant inventory covering imports, aliases, optional chaining, JSX/TSX, wrappers, computed properties, macros, and generated sources.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": [
+                "Inventory syntax variants: imports, aliases, optional chaining, wrappers, JSX/TSX, generated code, or language-specific shapes."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Narrow patterns",
+              "markers": [
+                "Before claiming coverage, inventory syntax variants such as namespace/default imports, aliases, optional chaining, JSX/TSX, wrappers, computed properties, macros, and generated sources."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Build a relational/reusable YAML rule only after the narrow pattern is understood.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Build a relational/reusable YAML rule only after the narrow pattern is understood."
+          },
+          "outcome": "preserved",
+          "reason": "The current procedure preserves the smallest-pattern-first rule and reserves YAML for relational or composite logic, shared utilities, reusable messages, CI use, or rule tests.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": [
+                "Start with the smallest ast-grep CLI pattern against one file or directory.",
+                "Convert to YAML only when inside, has, follows, precedes, all, any, not, utilities, or reuse justifies it."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Reusable YAML rules",
+              "markers": [
+                "Use YAML when relational/composite logic, shared utilities, CI reuse, messages, or rule tests justify committed configuration."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Add positive and negative test fixtures, run `ast-grep test`, and report known uncovered variants.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Add positive and negative test fixtures, run `ast-grep test`, and report known uncovered variants."
+          },
+          "outcome": "preserved",
+          "reason": "The current rule-test path preserves positive and negative fixtures, an explicit `ast-grep test` run without automatic snapshot acceptance, approved-scope execution, parser-gap reporting, and documentation of unsupported variants.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": [
+                "Add positive and negative rule fixtures before claiming complete coverage.",
+                "Run the rule across the approved scope and report counts/paths plus parser gaps."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Positive and negative tests",
+              "markers": [
+                "Run tests without accepting changed snapshots automatically:",
+                "The second invalid example may reveal that the first rule does not cover computed access.",
+                "Refine the rule or document the unsupported variant; do not call the rule complete while a known invalid fixture fails."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Bound scan paths/output and use `--max-results` only if `scan --help` exposes it.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Bound scan paths/output and use `--max-results` only if `scan --help` exposes it."
+          },
+          "outcome": "preserved",
+          "reason": "The result-bounding contract preserves exact paths, language and help-confirmed globs, permits `--max-results` only when installed `scan --help` exposes it, and requires disclosure of truncated output.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Result bounding",
+              "markers": [
+                "Bound run by exact paths, language, and include/exclude globs exposed by installed help.",
+                "For scan, use --max-results only when ast-grep scan --help exposes it:",
+                "If a limit truncates output, say so and do not present the sample as full coverage."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: ordinary coding authority may cover a bounded rule/source edit, while broad or scope-expanding rewrites retain approval.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not create rule/config files or apply rewrites without approval."
+          },
+          "outcome": "adapted",
+          "reason": "An ordinary coding request may itself authorize a bounded rule or source edit, so a second approval is not required. Reusable sgconfig or rule fixtures are still created only when the user asked for reusable rules or CI, and every rewrite still requires exact reviewed-scope consent, reused only while unchanged; broad or expanded rewrites remain outside that authority.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "ast-grep project setup",
+              "markers": [
+                "Create them only when the user wants reusable rules/CI, show the intended paths, and follow existing repository conventions."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Explicit consent: ask for the reviewed rewrite unless the user already approved this exact unchanged scope.",
+                "Do not treat prior approval as covering a different path, rule, replacement, or count."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "ast-grep Rule Recipes",
+              "markers": [
+                "An ordinary coding request may authorize a bounded rule or source edit; broad, destructive, or scope-expanding rewrites retain their normal approval boundary."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Pair any later patch with project-native validation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Pair any later patch with project-native validation."
+          },
+          "outcome": "preserved",
+          "reason": "The rewrite sequence preserves repository-native validation through the repository's actual targeted tests, typecheck, lint, or build.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Repository-native validation: run the actual targeted tests, typecheck, lint, or build."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/bounded-rewrite-after-approval.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/bounded-rewrite-after-approval.md",
+      "sourceSha256": "dbb38811675a6d2e0a4fcd378e18a05dfe3469c1b42b43aa271f1f7411788768",
+      "disposition": "adapted",
+      "reason": "The former public rewrite trigger is adapted into the internal reviewed-rewrite contract while preserving the exact approved scope/count, no redundant approval, drift stop, diff review, snapshot safety, repository validation, and rollback reporting.",
+      "expectations": [
+        {
+          "summary": "Confirm the reviewed rule/replacement, exact path scope, expected count, repo state, and unchanged approval boundary.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Confirm the reviewed rule/replacement, exact path scope, expected count, repo state, and unchanged approval boundary."
+          },
+          "outcome": "adapted",
+          "reason": "The checks are adapted into the current rewrite sequence: it previews and freezes the reviewed rule or pattern, replacement boundary, language, exact paths or globs, and expected count; protected repository state remains part of task preflight; existing approval is reused only while path, rule, replacement, and count remain unchanged, and any drift requires renewed approval.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Preview: run match-only and record count plus representative results.",
+                "Exact bounded scope: freeze rule/pattern, language, paths/globs, and expected count.",
+                "Do not treat prior approval as covering a different path, rule, replacement, or count."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Inputs to inspect",
+              "markers": [
+                "Exact repository root, nested repositories or monorepo packages, package/declarative policy, and protected Git state."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Do not ask for redundant approval when every reviewed detail still matches.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not ask for redundant approval when every reviewed detail still matches."
+          },
+          "outcome": "preserved",
+          "reason": "The current consent rule preserves approval reuse only while the exact path, rule, replacement, count, target version, and side effects remain unchanged; otherwise approval is renewed.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "If approval was already granted for the exact tested rewrite and unchanged scope, do not ask again.",
+                "Any expanded path, rule, target version, or side effect requires renewed approval."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Explicit consent: ask for the reviewed rewrite unless the user already approved this exact unchanged scope."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Apply only the 12 approved matches and stop if the count/scope changed.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Apply only the 12 approved matches and stop if the count/scope changed."
+          },
+          "outcome": "adapted",
+          "reason": "The literal legacy count of 12 is adapted into an expected-count gate: apply only the frozen reviewed scope and stop for renewed approval if the count, path, rule, or replacement differs.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Exact bounded scope: freeze rule/pattern, language, paths/globs, and expected count.",
+                "Apply: use interactive rewrite or create a normal patch; never silently broaden.",
+                "Do not treat prior approval as covering a different path, rule, replacement, or count."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Do not use a snapshot/update-all or broad non-interactive acceptance shortcut.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not use a snapshot/update-all or broad non-interactive acceptance shortcut."
+          },
+          "outcome": "preserved",
+          "reason": "The current safety and test contracts preserve the ban on untested rewrites, snapshot update-all acceptance, and broad non-interactive rewrites inferred from a single sample.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Safety rules",
+              "markers": [
+                "Do not apply an untested ast-grep rewrite or indiscriminately accept snapshots/update-all behavior."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Positive and negative tests",
+              "markers": [
+                "Never use a snapshot update-all flag as routine validation or as proof that changed output is correct."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Do not run a broad non-interactive rewrite because a pattern matched one sample."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Inspect every changed file/diff and rerun the match to explain remaining occurrences.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inspect every changed file/diff and rerun the match to explain remaining occurrences."
+          },
+          "outcome": "preserved",
+          "reason": "The rewrite sequence preserves per-file diff inspection and a post-change match rerun that explains every remaining occurrence.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Diff review: inspect every changed file and rerun the match to explain remaining occurrences."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Run the repository's actual targeted tests/typecheck/lint/build commands.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Run the repository's actual targeted tests/typecheck/lint/build commands."
+          },
+          "outcome": "preserved",
+          "reason": "The rewrite sequence preserves the repository's actual targeted tests, typecheck, lint, or build rather than substituting generic validation.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Repository-native validation: run the actual targeted tests, typecheck, lint, or build."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Report any mismatch, validation failure, and safe rollback; do not broaden to other paths without new approval.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Report any mismatch, validation failure, and safe rollback; do not broaden to other paths without new approval."
+          },
+          "outcome": "preserved",
+          "reason": "The current rollback and evidence rules preserve reporting of mismatches, failed validation, remaining risk, and reversible scope, and require renewed approval before changing the path, rule, replacement, or count.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Rollback: keep the patch reviewable and use normal version-control reversal only with user authority.",
+                "Do not treat prior approval as covering a different path, rule, replacement, or count."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Evidence reconciliation",
+              "markers": [
+                "report the unresolved boundary instead of silently choosing the larger result."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Output discipline",
+              "markers": ["project validation and remaining risk."]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/codegraph-mcp-setup.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/codegraph-mcp-setup.md",
+      "sourceSha256": "9fb75009ab6a2215842423d079d1297f82d866e9bc3e86205f1268b99ed75b10",
+      "disposition": "adapted",
+      "reason": "The CodeGraph-only setup case is adapted to the agent-complete setup workflow for the supported CodeGraph plus ast-grep CLI stack. Announced in-root setup effects can proceed from clear setup intent; privilege, channel, telemetry, destructive, external, and scope expansion remain separately approved.",
+      "expectations": [
+        {
+          "summary": "Inspect repository/root state, executable/provenance, installed CodeGraph version/help, and existing Codex MCP config names without opening the graph.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inspect repository/root state, executable/provenance, installed CodeGraph version/help, and existing Codex MCP config names without opening the graph."
+          },
+          "outcome": "preserved",
+          "reason": "The setup preflight preserves exact-root and protected-state inspection, executable version/help, relevant configuration discovery, and installed provenance without opening the graph.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": [
+                "Start from the intended project root.",
+                "Version/help probes are the safest no-write checks.",
+                "Inspect only relevant config names and paths before reading content:"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Discover installed provenance",
+              "markers": ["Record, without mutation:"]
+            }
+          ]
+        },
+        {
+          "summary": "Explain that `codegraph status` or an MCP graph query may migrate generated metadata, then obtain affirmative approval for the selected root or use an approved disposable copy before either operation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Explain that `codegraph status` or an MCP graph query may migrate generated metadata, then obtain affirmative approval for the selected root or use an approved disposable copy before either operation."
+          },
+          "outcome": "preserved",
+          "reason": "The preflight preserves the warning that status and MCP queries may migrate generated metadata and requires affirmative approval for the exact root or an approved disposable copy before project-opening verification.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": [
+                "codegraph status, MCP graph queries, and other project-opening diagnostics can repair or migrate metadata in the effective state directory",
+                "Explain that boundary and obtain affirmative approval for the selected root before running one, or use an approved disposable copy."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Project initialization and configuration",
+              "markers": [
+                "Only after project-opening status verification is separately approved, restate the exact approved root and state directory and bind the executable to that root again:"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: setup intent authorizes ordinary stable reconciliation instead of the legacy check-then-itemize sequence; telemetry remains suppressed unless separately consented.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- If CodeGraph is installed, check its eligible stable update once for the task with telemetry suppressed unless separately consented; if newer, ask with an itemized update choice before doing anything."
+          },
+          "outcome": "adapted",
+          "reason": "An explicit setup now authorizes the announced stable reconciliation, so an installed CodeGraph is resolved and reconciled to stable inside setup rather than entering the former check-then-itemized-choice pause. Every lookup and setup command still forces CODEGRAPH_TELEMETRY=0 unless the user separately opts in; a newer version may proceed only within the announced installer channel and scope, while privilege, channel or scope, telemetry, destructive replacement, or unrelated expansion requires separate approval.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Setup and MCP Configuration",
+              "markers": [
+                "That selection covers ordinary in-root package, runtime-config, graph, and guidance reconciliation; privilege escalation, installer-channel/scope changes, telemetry, destructive replacement, and unrelated writes remain separate."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Authorization and verification",
+              "markers": [
+                "An explicit `setup` request for the announced root authorizes the ordinary agent-complete actions below."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Safety rules",
+              "markers": [
+                "Suppress CodeGraph telemetry for skill-driven checks and approved setup/update commands with `CODEGRAPH_TELEMETRY=0` unless the user separately consented to telemetry."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Present personal, team-pinned, ephemeral, or diagnostics-only scope as applicable and show exact install/MCP/init mutations separately.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Present personal, team-pinned, ephemeral, or diagnostics-only scope as applicable and show exact install/MCP/init mutations separately."
+          },
+          "outcome": "preserved",
+          "reason": "The setup contract preserves personal, team-pinned, ephemeral, and diagnostics-only scopes while reporting package, MCP, guidance, initialization, and repository-config changes separately.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Choose an installation scope",
+              "markers": [
+                "| Personal | Existing or user-wide installation | User/global runtime config | One trusted workstation across many repositories |",
+                "| Team-pinned | Project dependency, Nix/devbox/toolchain pin, or documented exact release | Project runtime config | Reproducible team and CI behavior |",
+                "| Ephemeral | Exact package or verified archive in a temp/sandbox path | Printed or temporary config only | CI, evaluation, locked-down hosts |",
+                "| Diagnostics-only | Existing executables only | No writes | Exploration or repair assessment before setup approval |"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Setup principles",
+              "markers": [
+                "Keep CLI/package, MCP registration, agent guidance, project initialization, and repository config as separately reported changes even when the selected setup scope authorizes them together."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Prefer inspected `--print-config` plus Codex-native project/global TOML or `codex mcp` behavior over blindly running the first-party installer.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Prefer inspected `--print-config` plus Codex-native project/global TOML or `codex mcp` behavior over blindly running the first-party installer."
+          },
+          "outcome": "preserved",
+          "reason": "The runtime setup path preserves no-write `--print-config` inspection, prefers runtime-native MCP-only configuration, and uses Codex project/user TOML or `codex mcp` behavior instead of blindly invoking the broader first-party installer.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "First inspect generated MCP configuration without changing runtime config when the installed version supports it:",
+                "Prefer runtime-native MCP-only configuration when that is the user's intent."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Codex",
+              "markers": [
+                "Project scope: trusted .codex/config.toml.",
+                "User scope: ~/.codex/config.toml or codex mcp add after approval.",
+                "Do not use CodeGraph's first-party Codex installer for project-scope or MCP-only intent without inspecting its current target/scope behavior;"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Explain first-party installer side effects that are not visible in the printed snippet.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Explain first-party installer side effects that are not visible in the printed snippet."
+          },
+          "outcome": "preserved",
+          "reason": "The runtime reference preserves the distinction between the printed MCP snippet and the first-party installer's additional runtime-config, instruction, hook, permission, telemetry, and global-package effects.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "--print-config shows an MCP snippet, not every side effect of codegraph install.",
+                "Reviewed CodeGraph 1.4.1 installer behavior can also alter runtime config, legacy instruction markers/hooks, permissions, telemetry choices, global package state, or a Claude prompt hook."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Use the init form documented by installed help; do not assume either current `init` or legacy `init -i` universally.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use the init form documented by installed help; do not assume either current `init` or legacy `init -i` universally."
+          },
+          "outcome": "preserved",
+          "reason": "The initialization contract preserves installed-help authority and permits the legacy `-i` form only when the help-confirmed legacy pin requires it.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Project initialization and configuration",
+              "markers": [
+                "Then run only the form installed help documents.",
+                "Use the help-confirmed legacy -i form only with a legacy pin."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: ordinary announced setup effects may be authorized together, while expansion boundaries remain separate.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not install, update, register MCP, edit config/ignore files, or initialize the graph until the corresponding item is approved."
+          },
+          "outcome": "adapted",
+          "reason": "Explicit setup for an announced root and runtime now authorizes the ordinary approved-channel install or reconciliation, named MCP registration, minimal in-root configuration or guidance, and graph initialization as one agent-complete setup; those effects remain separately reported rather than separately re-approved. Gitignore edits, another runtime or root, privilege, global, channel or trust changes, secrets, telemetry changes, and destructive graph work remain separate boundaries.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Setup principles",
+              "markers": [
+                "Keep CLI/package, MCP registration, agent guidance, project initialization, and repository config as separately reported changes even when the selected setup scope authorizes them together."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Authorization and verification",
+              "markers": [
+                "Install/reconcile CLI package or archive",
+                "Register/edit MCP server",
+                "Initialize/migrate/sync graph",
+                "Create/edit project config and repository guidance"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Project initialization and configuration",
+              "markers": ["Ask before editing `.gitignore`."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Workflow selection",
+              "markers": [
+                "Privileged/global installation, paid or external services, publication/deployment, destructive replacement, telemetry changes, and scope expansion retain separate approval."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Verify with `codex mcp`/`/mcp`, exposed tool inventory, and `codegraph status` only when the selected-root/copy approval explicitly covers that project-opening verification.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Verify with `codex mcp`/`/mcp`, exposed tool inventory, and `codegraph status` only when the selected-root/copy approval explicitly covers that project-opening verification."
+          },
+          "outcome": "preserved",
+          "reason": "The Codex verification path preserves reconnecting the client, checking stored command/args/environment and exposed tools, using `codex mcp` or `/mcp`, and opening status only within the separately approved root boundary.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "After writing it, reconnect/restart and verify both the stored command/args/environment and the exposed CodeGraph tool list."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Codex",
+              "markers": [
+                "Verify with codex mcp list, codex mcp get codegraph, and /mcp when the TUI is available."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Project initialization and configuration",
+              "markers": [
+                "Only after project-opening status verification is separately approved, restate the exact approved root and state directory and bind the executable to that root again:"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: normal setup now reconciles the complete CodeGraph plus ast-grep CLI stack rather than keeping ast-grep unselected.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Keep ast-grep setup separate unless the user also selects it."
+          },
+          "outcome": "adapted",
+          "reason": "Adapted: normal setup now reconciles the complete CodeGraph plus ast-grep CLI stack rather than keeping ast-grep unselected.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "`setup`",
+              "markers": [
+                "Reconcile the stable CodeGraph release and stable ast-grep CLI through the repository's approved installer channel and scope."
+              ]
+            },
+            {
+              "path": "skill-evals/codegraph-ast-grep/cases/clear-setup-intent.md",
+              "heading": "Expected Behavior",
+              "markers": ["Reconcile CodeGraph plus ast-grep CLI"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/cross-runtime-setup-boundaries.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/cross-runtime-setup-boundaries.md",
+      "sourceSha256": "b49fa5b07de1865a2b216497715b4832ddbfe90a3e68b91170316fe573019e1d",
+      "disposition": "adapted",
+      "reason": "Cross-runtime setup remains runtime-specific and private-path-safe, but the approval model is adapted: CLI, configuration, initialization, telemetry, and verification remain separately reported effects while clear setup intent may authorize the announced in-root set together.",
+      "expectations": [
+        {
+          "summary": "Inspect installed CodeGraph help and generated `--print-config` output when available without executing the installer.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inspect installed CodeGraph help and generated `--print-config` output when available without executing the installer."
+          },
+          "outcome": "preserved",
+          "reason": "The cross-runtime preflight preserves installed CodeGraph version/help and no-write generated `--print-config` inspection without executing the installer.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": ["Version/help probes are the safest no-write checks."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "First inspect generated MCP configuration without changing runtime config when the installed version supports it:",
+                "--print-config shows an MCP snippet, not every side effect of codegraph install."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Present Codex project/user TOML or `codex mcp` behavior only for Codex.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Present Codex project/user TOML or `codex mcp` behavior only for Codex."
+          },
+          "outcome": "preserved",
+          "reason": "The runtime-specific guidance preserves Codex-only project/user TOML and `codex mcp` configuration plus Codex-native verification.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Codex",
+              "markers": [
+                "Project scope: trusted .codex/config.toml.",
+                "User scope: ~/.codex/config.toml or codex mcp add after approval.",
+                "Project/user TOML shape:",
+                "Verify with codex mcp list, codex mcp get codegraph, and /mcp when the TUI is available."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Present Cursor `.cursor/mcp.json`/user config with verified workspace/project path handling only for Cursor.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Present Cursor `.cursor/mcp.json`/user config with verified workspace/project path handling only for Cursor."
+          },
+          "outcome": "preserved",
+          "reason": "The Cursor guidance preserves project and user JSON scopes, verified workspace or absolute-project path handling, and Cursor-native MCP verification without transposing another client's format.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Cursor",
+              "markers": [
+                "Project scope: .cursor/mcp.json.",
+                "User scope: ~/.cursor/mcp.json.",
+                "Verify with Cursor's MCP settings or cursor-agent mcp list/cursor-agent mcp list-tools codegraph when available.",
+                "Cursor may launch MCP subprocesses outside the project root. Use the runtime's workspace variable for global config or an approved absolute project path for local config only after current Cursor behavior is verified."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Present current Claude `.mcp.json`/`claude mcp --scope` boundaries only for Claude and label documentation-only verification if the CLI is unavailable.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Present current Claude `.mcp.json`/`claude mcp --scope` boundaries only for Claude and label documentation-only verification if the CLI is unavailable."
+          },
+          "outcome": "preserved",
+          "reason": "The Claude guidance preserves current project and local/user scope discovery, Claude-native verification, and a clearly labeled documentation-only fallback when the CLI is unavailable.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Claude Code",
+              "markers": [
+                "Project/team scope: .mcp.json through current claude mcp add --scope project behavior.",
+                "Local/user behavior: inspect current claude mcp help and ~/.claude.json rather than guessing its storage boundary.",
+                "Verify with claude mcp list, claude mcp get codegraph, or /mcp when available.",
+                "This path is documentation-verified when a Claude CLI is unavailable locally."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Include a generic stdio shape only as a fallback, not as proof for all clients.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Include a generic stdio shape only as a fallback, not as proof for all clients."
+          },
+          "outcome": "adapted",
+          "reason": "The generic stdio example is adapted from fallback-only wording into a valid shape for a verified `PATH` executable, while every other client must use its current scope, destination, path, and verification rules without transposing Codex, Cursor, or Claude formats.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "Generic stdio shape for a verified executable already on the runtime's PATH:"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Other MCP clients",
+              "markers": [
+                "Read the client's current MCP documentation, choose its project/user scope, show the stdio entry and destination, and verify the server/tool list.",
+                "Do not transpose Codex TOML, Cursor JSON, or Claude scope commands into another client."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Explain first-party installer side effects beyond the printed MCP snippet, including possible config/instruction/permission/hook changes.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Explain first-party installer side effects beyond the printed MCP snippet, including possible config/instruction/permission/hook changes."
+          },
+          "outcome": "preserved",
+          "reason": "The cross-runtime warning preserves the distinction between `--print-config` output and the installer's possible config, instruction, permission, telemetry, global-package, legacy-hook, and prompt-hook changes.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": [
+                "--print-config shows an MCP snippet, not every side effect of codegraph install.",
+                "Reviewed CodeGraph 1.4.1 installer behavior can also alter runtime config, legacy instruction markers/hooks, permissions, telemetry choices, global package state, or a Claude prompt hook."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: setup effects remain separately visible, but an explicit setup request may authorize the unchanged announced set together.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Separate CLI install, per-runtime config, graph initialization, telemetry, and verification into independent approval items."
+          },
+          "outcome": "adapted",
+          "reason": "For this no-write proposal, none of the listed effects is authorized to run. The rule is nevertheless adapted at the setup-contract level: after a later explicit setup selection, CLI installation, the named runtime configuration, and graph initialization remain separately reported but may share the announced setup authority; telemetry is never bundled and stays disabled unless separately consented, while project-opening status or semantic verification still needs affirmative exact-root or disposable-copy approval.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": [
+                "Prefix skill-invoked CodeGraph commands with CODEGRAPH_TELEMETRY=0 unless the user separately chose to keep telemetry enabled for that action."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Authorization and verification",
+              "markers": [
+                "Register/edit MCP server",
+                "Named runtime and announced config scope",
+                "Initialize/migrate/sync graph",
+                "Exact announced root and generated state"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Project initialization and configuration",
+              "markers": [
+                "Only after project-opening status verification is separately approved, restate the exact approved root and state directory and bind the executable to that root again:"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Setup principles",
+              "markers": [
+                "Keep CLI/package, MCP registration, agent guidance, project initialization, and repository config as separately reported changes even when the selected setup scope authorizes them together."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Do not write config, install, initialize, or expose private absolute paths.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not write config, install, initialize, or expose private absolute paths."
+          },
+          "outcome": "adapted",
+          "reason": "Because setup is now agent-complete, the legacy prompt's simultaneous setup-proposal request and strict no-write constraint is materially ambiguous and must pause at the finite workflow selector, so configuration, installation, and initialization do not run. If the user later selects announced setup, those writes may proceed and the blanket prohibition is therefore not a setup invariant; strict no-write still blocks project-opening mutation, and private absolute paths remain excluded from public examples.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Workflow selection",
+              "markers": [
+                "A bare invocation or ambiguous intent requires showing all three workflows and asking the user to choose.",
+                "Selecting `setup` or `update` is allowed only when the user already requested that outcome for the stated root."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "Read-only preflight",
+              "markers": [
+                "Under a strict no-write request, skip project-opening commands unless the disposable-copy path was approved."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
+              "heading": "CodeGraph runtime configuration",
+              "markers": ["Do not persist private absolute paths in public examples."]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/native-lsp-first.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/native-lsp-first.md",
+      "sourceSha256": "78cc90a4cc4824865fc252a74d49072fb1125656a8930b56b5c6382f85ab7c21",
+      "disposition": "adapted",
+      "reason": "The native-LSP-first public trigger is adapted into the internal fallback and extension-selection contract. Native language tooling stays first, Serena remains optional, evidence is reconciled, and any reviewed rename retains bounded approval and project validation.",
+      "expectations": [
+        {
+          "summary": "Use the existing native LSP/compiler symbol/reference/rename capabilities before proposing an extra semantic server.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use the existing native LSP/compiler symbol/reference/rename capabilities before proposing an extra semantic server."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy symbol/reference/rename preference is adapted into a native LSP/compiler navigation-first rule; an additional semantic backend is considered only when native support is unavailable or a reusable backend is explicitly wanted.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Selection order",
+              "markers": [
+                "Use existing runtime-native language-server/compiler navigation before adding another semantic server."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Symbols/references/types missing from CodeGraph but supported by the project's language tooling",
+                "Already available in the runtime/project",
+                "No extra server or install is required"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Semantic extension boundary",
+              "markers": ["Prefer native language tools/LSP first."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Fallback ladder",
+              "markers": [
+                "Do not propose installing an optional server when a native LSP or existing tool already answers the task."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Use CodeGraph only for supported cross-language/repository context and ast-grep for syntax variants where useful.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use CodeGraph only for supported cross-language/repository context and ast-grep for syntax variants where useful."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy cross-language phrasing is adapted to verified indexed scope: CodeGraph handles supported semantic context, ast-grep covers syntax variants, and runtime-native LSP or targeted source remains the fallback.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Usage Playbook",
+              "markers": [
+                "Use CodeGraph for semantic scope, ast-grep CLI for syntax-exact coverage, targeted source reads for confirmation, and project-native validation for correctness."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": [
+                "Inventory syntax variants: imports, aliases, optional chaining, wrappers, JSX/TSX, generated code, or language-specific shapes."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Fallback ladder",
+              "markers": ["Runtime-native LSP symbol/reference/type tools."]
+            }
+          ]
+        },
+        {
+          "summary": "Reconcile LSP, structural, and targeted source evidence.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Reconcile LSP, structural, and targeted source evidence."
+          },
+          "outcome": "preserved",
+          "reason": "The evidence map preserves distinct LSP reference/type, ast-grep syntax, and targeted-source proof, then requires the smallest source check and an explicit unresolved boundary when they disagree.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Evidence reconciliation",
+              "markers": [
+                "| ast-grep | Parser-backed syntax matches for the rule/language | Semantic aliases/types/runtime dispatch, missed syntax variants |",
+                "| Runtime-native LSP | Symbols, references, types supported by the language server | Generated/dynamic code, incomplete workspace/project config |",
+                "| Text search/source reads | Literal presence and exact implementation | High noise, no semantic or AST guarantee |",
+                "read the smallest targeted source surface;",
+                "report the unresolved boundary instead of silently choosing the larger result."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Explain that Serena is optional and unnecessary when native tooling already provides trustworthy coverage.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Explain that Serena is optional and unnecessary when native tooling already provides trustworthy coverage."
+          },
+          "outcome": "preserved",
+          "reason": "The extension matrix preserves Serena as optional only when native LSP is unavailable to the agent or a reusable cross-client semantic backend is explicitly wanted.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Dedicated cross-client symbol navigation or refactoring backend",
+                "Native LSP is unavailable to the agent or a reusable MCP semantic backend is explicitly wanted",
+                "Serena is optional, not a CodeGraph prerequisite"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Semantic extension boundary",
+              "markers": ["Prefer native language tools/LSP first."]
+            }
+          ]
+        },
+        {
+          "summary": "Do not install or configure Serena.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not install or configure Serena."
+          },
+          "outcome": "preserved",
+          "reason": "The extension contract preserves non-authorization of Serena installation or execution and directs the agent to native language tools first when they already provide trustworthy coverage.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Dedicated cross-client symbol navigation or refactoring backend",
+                "Native LSP is unavailable to the agent or a reusable MCP semantic backend is explicitly wanted",
+                "Serena is optional, not a CodeGraph prerequisite"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Extensions and Escalation",
+              "markers": ["Selecting an extension does not authorize installation or execution."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Semantic extension boundary",
+              "markers": ["Prefer native language tools/LSP first."]
+            }
+          ]
+        },
+        {
+          "summary": "Keep rename execution approval-gated and pair it with project-native validation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Keep rename execution approval-gated and pair it with project-native validation."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy rename-specific gate is adapted into the general change boundary: exact files and operation require approval, unchanged approval may be reused, expanded scope requires renewal, and repository-native validation remains mandatory.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "Approval: obtain approval for the proposed files/pattern/rewrite, not a generic repository-wide permission.",
+                "Project validation: run actual repository scripts such as targeted tests, typecheck, lint, or build.",
+                "If approval was already granted for the exact tested rewrite and unchanged scope, do not ask again.",
+                "Any expanded path, rule, target version, or side effect requires renewed approval."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/refactor-planning.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/refactor-planning.md",
+      "sourceSha256": "f39bd2c511cf51a2ae34b03fa6fc5922fc0c5abfb134c297c49b4725702ddb82",
+      "disposition": "adapted",
+      "reason": "The public refactor-planning trigger is adapted into internal impact/refactor behavior. Ready setups no longer require a fresh root-opening or stable-update checkpoint for every coding query; semantic/structural reconciliation, tested preview, bounded scope, validation, and optional-extension escalation remain.",
+      "expectations": [
+        {
+          "summary": "Adapted: exact-root approval remains for project-opening diagnostics, not every query against an already-ready setup.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Inspect selected root, tool capabilities/provenance, ast-grep config, and repo status without opening the graph; obtain affirmative approval for that root or an approved disposable copy before graph-state or semantic diagnostics."
+          },
+          "outcome": "adapted",
+          "reason": "On a ready setup, refactor planning reuses the established root, executable provenance, and ast-grep configuration and inspects only the evidence needed for the task instead of repeating the full preflight. Protected repository state is still checked before writes; exact-root or disposable-copy approval remains mandatory when doctor or another unapproved context opens graph state, whereas announced setup or update authority already covers required in-root graph operations.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "When not to use",
+              "markers": [
+                "Do not activate this skill merely because a coding task can benefit from an already-ready analysis stack."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Inputs to inspect",
+              "markers": [
+                "Exact repository root, nested repositories or monorepo packages, package/declarative policy, and protected Git state.",
+                "Effective `CODEGRAPH_DIR` (default `.codegraph/`), root `codegraph.json` when supported, `sgconfig.yml`/`sgconfig.yaml`, and repository instruction files.",
+                "Executable paths, installer channel and scope, version pins, installed help, configured client, and exposed MCP tools."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "CodeGraph Capability Guide",
+              "markers": [
+                "A selected `setup` or `update` workflow already covers required in-root initialization/migration when that write scope was announced."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: stable lookup is update-workflow behavior, not automatic refactor-planning behavior.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Check stable updates for selected CodeGraph/ast-grep at most once with telemetry separately consented, asking item-by-item only when an eligible update exists."
+          },
+          "outcome": "adapted",
+          "reason": "Refactor planning no longer checks versions. In an explicit update workflow, each selected core tool is looked up at most once and eligible changes are itemized, but an unchanged announced manifest proceeds under the update request rather than prompting again item by item; offline or opt-out policy reports not checked, and CodeGraph telemetry remains disabled unless separately consented.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Respect network and privacy policy",
+              "markers": [
+                "Permission to query public release metadata does not enable CodeGraph telemetry.",
+                "report remote update state: not checked with the reason;"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Execution manifest",
+              "markers": [
+                "every selected core-tool update is itemized even when the explicit update request authorizes the whole unchanged manifest;",
+                "the exact CodeGraph action shows CODEGRAPH_TELEMETRY=0 unless telemetry was separately approved for that action; default-on telemetry is not approval;"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Scope and frequency",
+              "markers": [
+                "Perform the stable-version lookup at most once per core tool in the update workflow, then reuse the result."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Use available CodeGraph semantic evidence for ownership, callers/dependents, and likely tests.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use available CodeGraph semantic evidence for ownership, callers/dependents, and likely tests."
+          },
+          "outcome": "preserved",
+          "reason": "The impact sequence preserves CodeGraph evidence for the entry point, implementation, ownership, callers, dependents, and likely tests.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "Ownership: CodeGraph identifies the entry point, implementation, callers, dependents, and likely tests."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Use ast-grep for exact import forms and inventory default/named/aliased/dynamic variants with bounded paths.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use ast-grep for exact import forms and inventory default/named/aliased/dynamic variants with bounded paths."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy literal default/named/aliased/dynamic import list is adapted into a bounded syntax inventory for imports, aliases, namespace/default forms, optional shapes, and documented parser or generated-code gaps; dynamic behavior is not claimed from a name alone.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Structural search and rules",
+              "markers": [
+                "Inventory syntax variants: imports, aliases, optional chaining, wrappers, JSX/TSX, generated code, or language-specific shapes."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Narrow patterns",
+              "markers": [
+                "Start against one known file, then one directory, then the approved repository scope.",
+                "Before claiming coverage, inventory syntax variants such as namespace/default imports, aliases, optional chaining, JSX/TSX, wrappers, computed properties, macros, and generated sources."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Reconcile semantic and structural differences before fixing the patch scope.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Reconcile semantic and structural differences before fixing the patch scope."
+          },
+          "outcome": "preserved",
+          "reason": "The current impact and reconciliation steps preserve a graph-versus-structural disagreement check before patch scope is fixed and require unresolved boundaries to be reported.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "Disagreement check: graph and structural/path evidence are reconciled before scope is fixed."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Evidence reconciliation",
+              "markers": [
+                "report the unresolved boundary instead of silently choosing the larger result."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Produce reviewable batches and project-native validation, not a broad rewrite command.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Produce reviewable batches and project-native validation, not a broad rewrite command."
+          },
+          "outcome": "preserved",
+          "reason": "The current planning path preserves the smallest reviewable patch batches and repository-native validation while the skill rejects an unreviewed broad rewrite.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Impact and refactor planning",
+              "markers": [
+                "Patch boundary: group the smallest reviewable file/symbol batches and identify shared-contract or generated-code boundaries.",
+                "Project validation: run actual repository scripts such as targeted tests, typecheck, lint, or build."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "When not to use",
+              "markers": [
+                "Do not use it for general dependency audits, compiler/runtime proof, or an unreviewed broad rewrite."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "If a rewrite is later requested, require rule tests, match preview/count, exact scope, approval, diff review, and validation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- If a rewrite is later requested, require rule tests, match preview/count, exact scope, approval, diff review, and validation."
+          },
+          "outcome": "preserved",
+          "reason": "The rewrite sequence preserves syntax inventory, positive and negative tests, preview and expected count, frozen exact scope, consent, diff review, and repository-native validation.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+              "heading": "Rewrite sequence",
+              "markers": [
+                "Match inventory: identify every known syntax variant and the exact paths in scope.",
+                "Positive/negative test: prove intended matches and non-matches.",
+                "Preview: run match-only and record count plus representative results.",
+                "Exact bounded scope: freeze rule/pattern, language, paths/globs, and expected count.",
+                "Explicit consent: ask for the reviewed rewrite unless the user already approved this exact unchanged scope.",
+                "Diff review: inspect every changed file and rerun the match to explain remaining occurrences.",
+                "Repository-native validation: run the actual targeted tests, typecheck, lint, or build."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Keep optional codemod tools out unless the migration becomes multi-step/programmatic and the user approves that escalation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Keep optional codemod tools out unless the migration becomes multi-step/programmatic and the user approves that escalation."
+          },
+          "outcome": "preserved",
+          "reason": "The extension boundary preserves Codemod CLI/JSSG outside the core stack until a multi-step or programmatic need makes ast-grep insufficient, and selection still does not authorize execution.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Extensions and Escalation",
+              "markers": ["Selecting an extension does not authorize installation or execution."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": ["Multi-step, parameterized, resumable, or programmatic migration"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Preferred advanced migration extension",
+              "markers": [
+                "Codemod CLI with JSSG is the preferred optional advanced extension when a migration needs more than a single ast-grep rule:"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/repo-exploration-and-impact.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/repo-exploration-and-impact.md",
+      "sourceSha256": "38f791475128eac1688f008037af7e41305a46ba92f185bef3d9f4c390557fb9",
+      "disposition": "adapted",
+      "reason": "Routine exploration and impact analysis are adapted from a public trigger into internal coding behavior. Capability discovery, watcher-aware freshness, targeted reads, evidence reconciliation, uncertainty, provenance, validation, and residual risk remain; ordinary queries no longer initiate update lookup.",
+      "expectations": [
+        {
+          "summary": "Adapted: fresh root approval is scoped to project-opening diagnostics rather than every query on a ready setup.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Confirm the project root, CodeGraph version/help, and actual MCP/CLI capabilities without opening the graph; obtain affirmative approval for that root or an approved disposable copy before status or semantic queries."
+          },
+          "outcome": "adapted",
+          "reason": "Ordinary exploration on a ready setup reuses its established root and enumerates only the capabilities and health evidence needed; it does not repeat version or help probes or request fresh approval for every query. Version and help remain the non-opening discovery path when capability state is unknown, and status or semantic opening still requires exact-root or disposable-copy approval in doctor or an unapproved root, while announced setup or update authority covers its own in-root operations.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "When not to use",
+              "markers": [
+                "Do not activate this skill merely because a coding task can benefit from an already-ready analysis stack."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "CodeGraph Capability Guide",
+              "markers": [
+                "A selected `setup` or `update` workflow already covers required in-root initialization/migration when that write scope was announced."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "Discover capabilities",
+              "markers": [
+                "Under a strict no-write instruction, stop at version/help and filesystem/config inspection unless the disposable-copy path was approved."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: ordinary exploration no longer performs stable update lookup.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Complete the once-per-task stable update check with CodeGraph telemetry suppressed unless separately consented, or report offline/opt-out state; an available update is advisory and approval-gated."
+          },
+          "outcome": "adapted",
+          "reason": "Ordinary exploration now performs no stable lookup. Under an explicit update workflow, each core tool is checked at most once, offline or opt-out policy reports not checked, and CodeGraph runs with telemetry suppressed absent separate consent; eligible changes are itemized and may proceed within unchanged announced update authority, while privilege, channel or scope, telemetry, or destructive expansion remains separately approval-gated.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Respect network and privacy policy",
+              "markers": [
+                "Permission to query public release metadata does not enable CodeGraph telemetry.",
+                "report remote update state: not checked with the reason;"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Execution manifest",
+              "markers": [
+                "every selected core-tool update is itemized even when the explicit update request authorizes the whole unchanged manifest;",
+                "the exact CodeGraph action shows CODEGRAPH_TELEMETRY=0 unless telemetry was separately approved for that action; default-on telemetry is not approval;"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Stable Updates and Installation Provenance",
+              "markers": [
+                "That selection authorizes ordinary in-root stable core updates and required migrations; privilege escalation, channel/scope changes, telemetry, destructive rebuilds, unrelated dependencies, and external services remain separate."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Scope and frequency",
+              "markers": [
+                "Perform the stable-version lookup at most once per core tool in the update workflow, then reuse the result."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Prefer exposed `codegraph_explore`; otherwise use help-confirmed CLI `explore` or narrower legacy/granular capabilities actually present.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Prefer exposed `codegraph_explore`; otherwise use help-confirmed CLI `explore` or narrower legacy/granular capabilities actually present."
+          },
+          "outcome": "preserved",
+          "reason": "The capability ladder preserves the exact branch order: exposed `codegraph_explore`, present granular MCP tools, help-confirmed CLI `explore`, then help-confirmed legacy commands.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "Select MCP or CLI behavior",
+              "markers": [
+                "If codegraph_explore is exposed, use it first for semantic questions.",
+                "If it is not exposed, use only the granular MCP tools that are present.",
+                "If MCP is unavailable, use codegraph explore only when installed CLI help lists it.",
+                "On a legacy CLI without explore, use help-confirmed context, query, callers, callees, impact, affected, node, or files as needed."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Do not assume `codegraph_trace` or a fixed menu of MCP tools exists.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not assume `codegraph_trace` or a fixed menu of MCP tools exists."
+          },
+          "outcome": "preserved",
+          "reason": "The MCP selection rule preserves enumeration of tools actually exposed and explicitly rejects assuming `codegraph_trace` or any remembered fixed menu.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "Select MCP or CLI behavior",
+              "markers": ["Never assume a remembered MCP tool such as `codegraph_trace` exists."]
+            }
+          ]
+        },
+        {
+          "summary": "Use watcher/pending evidence rather than running manual sync ceremonially; permit approved sync for CLI-only/stale/recovery state.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Use watcher/pending evidence rather than running manual sync ceremonially; permit approved sync for CLI-only/stale/recovery state."
+          },
+          "outcome": "preserved",
+          "reason": "The freshness matrix preserves watcher and pending-state evidence, avoids ceremonial manual sync, and permits approved sync for CLI-only, persistent stale, disabled-watcher, CI, or recovery states.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "Initialize and keep the graph fresh",
+              "markers": [
+                "Active MCP server with watcher and no pending/stale evidence | Trust watcher/connect-sync; do not run manual sync ceremonially",
+                "CLI/script outside an agent session | An approved pre-flight codegraph sync may be appropriate",
+                "Manual sync remains valid for CLI-only workflows, disabled watchers, CI/scripts, persistent stale state, and recovery."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Read only targeted source after the graph narrows entry point, call path, affected surface, and likely tests.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Read only targeted source after the graph narrows entry point, call path, affected surface, and likely tests."
+          },
+          "outcome": "preserved",
+          "reason": "The semantic exploration procedure preserves capturing the entry point, call paths, affected surface, and likely tests before reading only the source needed to confirm the result.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Semantic exploration",
+              "markers": [
+                "Capture the relevant entry point, symbols, call paths, likely dependents/tests, and unsupported/dynamic boundaries.",
+                "Read only source needed to confirm the explanation or prepare an edit."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Corroborate critical scope with source/structural evidence and report dynamic/generated/unsupported uncertainty.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Corroborate critical scope with source/structural evidence and report dynamic/generated/unsupported uncertainty."
+          },
+          "outcome": "preserved",
+          "reason": "The evidence contract preserves targeted source corroboration and explicit unsupported, dynamic, generated, stale, and unresolved boundaries rather than treating graph absence as repository absence.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
+              "heading": "Bound and qualify evidence",
+              "markers": [
+                "unsupported/dynamic/generated boundaries;",
+                "targeted source corroboration;",
+                "Use confirmed only when graph evidence and targeted source/structural evidence agree."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Return findings, affected files/symbols/tests, evidence provenance, suggested project validation, and remaining risk.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Return findings, affected files/symbols/tests, evidence provenance, suggested project validation, and remaining risk."
+          },
+          "outcome": "preserved",
+          "reason": "The output contract preserves capability provenance, focused findings with files, symbols, and likely tests, the semantic capture, suggested project validation, and remaining risk.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Output discipline",
+              "markers": [
+                "selected root and capability/version provenance;",
+                "focused findings with paths/symbols and evidence source;",
+                "project validation and remaining risk."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Semantic exploration",
+              "markers": [
+                "Capture the relevant entry point, symbols, call paths, likely dependents/tests, and unsupported/dynamic boundaries."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "skill-evals/codegraph-ast-grep/cases/security-policy-tool-boundary.md",
+      "baselinePath": "skill-evals/codegraph-ast-grep/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/security-policy-tool-boundary.md",
+      "sourceSha256": "524920a8a0db30d4b811118ff2b28381171af53bc056610f01713dff0f6dea7d",
+      "disposition": "adapted",
+      "reason": "The security boundary is adapted into explicit routing to a security workflow with Semgrep only as an optional selected analyzer. Tool limitations, engine qualification, pinned tested rules, report-before-autofix, approval, and residual uncertainty remain; remote-rule/source-egress is not retained as a separate Semgrep-specific branch.",
+      "expectations": [
+        {
+          "summary": "State that CodeGraph semantic relationships and ast-grep structural matches are useful scoping evidence but not taint/security proof.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- State that CodeGraph semantic relationships and ast-grep structural matches are useful scoping evidence but not taint/security proof."
+          },
+          "outcome": "adapted",
+          "reason": "The current security boundary retains the critical limitation that CodeGraph and ast-grep do not establish taint or security proof and routes such claims to a security workflow, while intentionally dropping the separate positive label that their output is `useful scoping evidence` in this security-specific unit.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+              "heading": "Internal coding behaviors",
+              "markers": ["neither core tool is compiler, type, taint, or runtime proof."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Security/taint/policy rule",
+                "CodeGraph/ast-grep provide taint proof, or Semgrep CE is automatically interfile proof"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": [
+                "Route explicit vulnerability, taint, organization-policy, or security autofix work to an appropriate security workflow and consider Semgrep only as that workflow's selected analyzer."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Route the request to an explicit security/policy workflow and consider Semgrep only as an optional selected analyzer.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Route the request to an explicit security/policy workflow and consider Semgrep only as an optional selected analyzer."
+          },
+          "outcome": "preserved",
+          "reason": "The security boundary preserves routing explicit vulnerability, taint, policy, or security-autofix work to a security workflow and treats Semgrep only as an optional analyzer selected there.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": [
+                "Route explicit vulnerability, taint, organization-policy, or security autofix work to an appropriate security workflow and consider Semgrep only as that workflow's selected analyzer."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Verify whether the available Semgrep engine supports the required intrafile/interfile claim and avoid overstating Community Edition coverage.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Verify whether the available Semgrep engine supports the required intrafile/interfile claim and avoid overstating Community Edition coverage."
+          },
+          "outcome": "preserved",
+          "reason": "The Semgrep boundary preserves verification of the selected engine's intrafile or interfile capability and explicitly rejects treating Community Edition as automatic interfile proof.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Decision matrix",
+              "markers": [
+                "Security/taint/policy rule",
+                "The request is explicitly security/policy focused and its selected engine can support the required analysis",
+                "CodeGraph/ast-grep provide taint proof, or Semgrep CE is automatically interfile proof"
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": [
+                "Confirm whether the available engine supports intrafile or interfile analysis needed by the claim."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Require official/pinned rule sources, positive/negative tests, report mode before autofix, and project/security validation.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Require official/pinned rule sources, positive/negative tests, report mode before autofix, and project/security validation."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy combined rule-source and validation requirement is adapted to the security workflow boundary: use official or local tested rules, pin remote sources, run report mode first, and treat autofix as a reviewed exact-scope rewrite with project validation; rule polarity remains the security workflow's responsibility.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": [
+                "Use official/local rules with tests and pin remote rule sources.",
+                "Run match/report mode before autofix.",
+                "Treat autofix as a reviewed rewrite with exact scope and project validation."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Include Semgrep in the once-per-task update/provenance check only after selection.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Include Semgrep in the once-per-task update/provenance check only after selection."
+          },
+          "outcome": "preserved",
+          "reason": "The optional-tool inheritance rules preserve adding Semgrep to provenance and stable-version review exactly once, but only after the security workflow selects it.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
+              "heading": "Scope and frequency",
+              "markers": [
+                "an optional semantic, codemod, or policy tool only after it is selected for the task."
+              ]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Approval and update inheritance",
+              "markers": [
+                "include it in the analysis-stack update check exactly once for the task;"
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Adapted: extension installation/execution and autofix remain approval-gated; the current contract does not retain a separate Semgrep remote-rule/source-upload branch.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Do not install Semgrep, fetch remote rules, upload source, or apply autofix without approval."
+          },
+          "outcome": "adapted",
+          "reason": "Adapted: extension installation/execution and autofix remain approval-gated; the current contract does not retain a separate Semgrep remote-rule/source-upload branch.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Extensions and Escalation",
+              "markers": ["Selecting an extension does not authorize installation or execution."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Approval and update inheritance",
+              "markers": ["show an itemized install/update/execute checkpoint;"]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": [
+                "Run match/report mode before autofix.",
+                "Treat autofix as a reviewed rewrite with exact scope and project validation."
+              ]
+            }
+          ]
+        },
+        {
+          "summary": "Report residual dynamic/runtime uncertainty even when no finding appears.",
+          "source": {
+            "heading": "Expected Behavior",
+            "marker": "- Report residual dynamic/runtime uncertainty even when no finding appears."
+          },
+          "outcome": "adapted",
+          "reason": "The legacy dynamic/runtime residual wording is adapted into the broader rule that no finding is security proof and that unresolved validation limits and remaining risk must still be reported.",
+          "targets": [
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+              "heading": "Security/policy boundary",
+              "markers": ["Do not describe absence of a finding as proof of security."]
+            },
+            {
+              "path": "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
+              "heading": "Output discipline",
+              "markers": ["project validation and remaining risk."]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

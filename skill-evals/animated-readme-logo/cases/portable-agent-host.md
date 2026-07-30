@@ -10,7 +10,7 @@ Create a new README logo source and deterministic motion plan for Northstar Cach
 
 ## Expected Behavior
 
-- Report `Task mode: create`, `Source route`, `Provider state`, `Approval state`, `SVG readiness`, and `Export status` using contract-valid values.
+- Report `Workflow: create`, `Source route`, `Selection`, `Write scope and protected originals`, `Provider state`, `Approval state`, `Motion readiness`, and `Animation delivery` using contract-valid values.
 - Use the same provider eligibility, approval, SVG, motion, export, and README contracts regardless of the named agent.
 - Do not emit Cursor-, Codex-, or Claude-specific commands and do not recommend separate skill copies.
 - Explain that tailoring has no benefit while the tool and output contracts remain shared.

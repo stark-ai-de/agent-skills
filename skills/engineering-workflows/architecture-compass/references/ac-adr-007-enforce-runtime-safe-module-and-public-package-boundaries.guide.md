@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Make runtime audience explicit and expose cross-package code only through intentional compatible entrypoints.
 
 Variants: [Short](ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.short.md) · [Long, canonical](ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.long.md) · **Guide**
@@ -60,6 +60,28 @@ Place the sentinel in each hand-written trusted module rather than relying on a 
 ```
 
 The exact build outputs and conditions depend on the repository toolchain. Test each public subpath from a consumer fixture and make incompatible imports fail deterministically.
+
+## Adaptable file and export conventions
+
+Use these as review heuristics only when they improve the target repository:
+
+- prefer named exports for reusable modules and stable public subpaths;
+- keep one primary runtime value per file unless colocating tightly coupled values is clearer;
+- keep a type beside its primary value, moving shared types only when several owners need the same contract;
+- import packages through declared entrypoints, while package-internal modules use the target's established local convention; and
+- expose selected DTO fields rather than generated database rows, privileged SDK results, or framework context.
+
+For example, a trusted adapter can map persistence output to a narrow contract without exporting the persistence module:
+
+```ts
+import "server-only";
+
+export function toProjectDto(row: ProjectRow): ProjectDto {
+  return { id: row.id, name: row.name, version: row.version };
+}
+```
+
+Do not create a barrel solely to shorten an import. Keep one only when it is the tested public entrypoint, a runtime barrier, or a coherent locality boundary.
 
 ## Boundary review
 

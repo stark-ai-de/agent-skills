@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Add a frontend library only when its owned capability and lifecycle value exceed native and existing-stack complexity.
 
 Variants: [Short](ac-adr-015-select-frontend-capability-libraries-by-product-need.short.md) · [Long, canonical](ac-adr-015-select-frontend-capability-libraries-by-product-need.long.md) · **Guide**
@@ -36,6 +36,16 @@ This guide is non-normative. The packages below are current candidates, not mand
 - **Charts and email:** Recharts is a conditional React charting choice. React Email is a conditional source model for email rendering; test generated output across supported clients.
 
 For each adopted package, pin a supported range through the repository package manager, note the owning subsystem, add representative tests, and record replacement criteria. Do not add all candidates to a starter automatically.
+
+### Stack-deviation comparison
+
+Before adding or replacing a frontend capability library, record:
+
+| Existing or accepted option | Required capability | Evidence-backed gap           | Candidate     | Chosen option            | Docs/ADR impact              | Validation        |
+| --------------------------- | ------------------- | ----------------------------- | ------------- | ------------------------ | ---------------------------- | ----------------- |
+| `<native/current option>`   | `<needed behavior>` | `<gap or "not insufficient">` | `<candidate>` | `<current or candidate>` | `<none, docs, or local ADR>` | `<focused proof>` |
+
+Prefer native, framework, and existing repository capability when it satisfies the requirement. If the evidence-backed gap is `not insufficient`, reject the extra library and continue only with the authorized bounded change. If the chosen option creates a durable deviation from an accepted target rule, stop the affected implementation and use the target repository's ADR change or successor process; AC-ADR-046 ranks the evidence but grants no write authority.
 
 ## Official sources
 

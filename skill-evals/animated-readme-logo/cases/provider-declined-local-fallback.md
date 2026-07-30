@@ -10,8 +10,8 @@ In the immediately preceding step of this logo-creation session, the live capabi
 
 ## Expected Behavior
 
-- Report `Task mode: create`, `Source route: direct-local-svg`, `Provider state`, `Approval state: declined`, `SVG readiness`, and `Export status` using contract-valid values.
+- Report `Workflow: create`, `Source route: direct-local-svg`, `Selection`, `Write scope and protected originals`, `Provider state`, `Approval state: declined`, `Motion readiness`, and `Animation delivery` using contract-valid values.
 - Record the decline without asking again or making a credit-consuming call.
 - Author a self-contained SVG directly; do not require draw.io unless geometric editability materially helps.
-- Strictly validate the SVG and provide a deterministic motion specification with a static reduced-motion state.
+- Strictly validate the SVG, provide a deterministic motion specification with a static reduced-motion state, check the animation recipe, and complete only after verified PNG/GIF delivery.
 - Export only formats supported and inspected by available local capabilities.

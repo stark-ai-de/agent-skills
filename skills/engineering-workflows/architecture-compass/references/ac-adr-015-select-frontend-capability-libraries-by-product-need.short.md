@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Add a frontend library only when its owned capability and lifecycle value exceed native and existing-stack complexity.
 
 Variants: **Short** · [Long, canonical](ac-adr-015-select-frontend-capability-libraries-by-product-need.long.md) · [Guide](ac-adr-015-select-frontend-capability-libraries-by-product-need.guide.md)

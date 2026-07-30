@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Select every runtime and host against the deployable's real compatibility, operations, security, and delivery requirements.
 
 Variants: **Short** · [Long, canonical](ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.long.md) · [Guide](ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md)

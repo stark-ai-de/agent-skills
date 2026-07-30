@@ -2,7 +2,7 @@
 
 ID: AC-ADR-002
 Title: Select Actions, Resolve Authority, and Record Guardrail Adoption
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: skill-runtime
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-026
 Guide verified: 2026-07-28
 Gist: Separate operational authority from architecture authority and record every applicable guardrail disposition.
 

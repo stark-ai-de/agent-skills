@@ -19,6 +19,7 @@ Grade each run against these assertions.
 - When the current host exposes no transition control, gives accurate manual activation instructions for that host, asks the user to reply `continue`, and waits; it does not require the original request to be resent.
 - Does not fork the interview into a subagent.
 - Uses a conversational fallback only when Plan mode is unavailable or explicitly declined, records `unavailable` or `declined` plus the reason in the interview summary, and continues by asking material questions conversationally rather than returning a one-shot inferred spec.
+- Treats indeterminate Plan-mode support or state as supported-but-inactive and transitions or waits; uncertainty never authorizes fallback.
 - Does not treat a Plan-mode fallback as a persistence decline; after the conversational interview and verification checkpoint, normal persistence still applies unless persistence is separately declined or blocked.
 - Writes no repository or workspace artifacts during the Plan-mode interview; only a plan artifact created by the current host's plan-exit control is allowed. `ExitPlanMode` applies only when Claude Code executes the skill.
 - After the verified checkpoint, reports `Persistence status: pending` and invokes the current host's plan-exit control with a save-only persistence plan when available; otherwise it gives an accurate manual handoff for that host.

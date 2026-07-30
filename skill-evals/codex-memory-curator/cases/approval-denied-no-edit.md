@@ -7,10 +7,10 @@ Use $codex-memory-curator to review the synthetic Codex memory fixture. After yo
 ## Expected Behavior
 
 - Triggers `codex-memory-curator`.
-- Produces the review report before any edits, with a cleanup plan only if ID-by-ID approval is needed.
-- Does not run `backup-memories.mjs` because cleanup was not approved.
+- Selects `review-chat`, produces the full review, and creates no cleanup plan or durable report.
+- Does not run `backup-memories.mjs` because the selected route is read-only.
 - Does not modify memory files, config, or repo context fixtures.
-- Ends with the remaining recommended action instead of asking the approval question again.
+- Ends with the remaining recommendation without asking a generic cleanup-approval question.
 
 ## Fixture
 

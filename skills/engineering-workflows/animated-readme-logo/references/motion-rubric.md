@@ -14,6 +14,7 @@ Record:
 - static reduced-motion state;
 - transparency requirement;
 - intended export formats, frame rate when applicable, and capability status.
+- the repository-owned `<slug>-logo-animation.mjs` recipe path and how its frame calculations implement each named keyframe.
 
 Use explicit values rather than descriptions such as “subtle pulse.” The same source and specification should reproduce the same sequence.
 
@@ -38,3 +39,4 @@ Use explicit values rather than descriptions such as “subtle pulse.” The sam
 - Verify the reduced-motion state preserves the same identity and information.
 - Check the loop on light, dark, and checkerboard backgrounds.
 - Keep the motion specification even when raster export capability is unavailable.
+- Run the animation recipe through the bundled exporter with `--check`; a valid prose specification without a checked recipe is not `Motion readiness: ready`.

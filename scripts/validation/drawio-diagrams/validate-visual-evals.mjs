@@ -13,6 +13,7 @@ import { runVisualAssertionRegressions } from "../lib/visual-assertion-regressio
 
 const root = process.cwd();
 const casesDir = path.join(root, "skill-evals/drawio-diagrams/cases");
+const skillPath = path.join(root, "skills/engineering-workflows/drawio-diagrams/SKILL.md");
 const deterministicAssertionKinds = new Set([
   "contains",
   "not_contains",
@@ -95,6 +96,37 @@ function validateSchemaParserRegressions() {
   if (deterministicRegexError("without.*lookup")) {
     throw new Error("draw.io eval schema rejected a valid wildcard regex quantifier");
   }
+}
+
+function validateReviewWorkflowContract() {
+  const text = fs.readFileSync(skillPath, "utf8");
+  const reviewStart = text.indexOf("If `review` is selected, use a strict read-only branch");
+  const authoringStart = text.indexOf("Author or patch `.drawio` XML");
+  const errors = [];
+
+  if (reviewStart === -1) {
+    errors.push("drawio-diagrams/SKILL.md: missing strict read-only review branch");
+    return errors;
+  }
+  if (authoringStart === -1 || reviewStart > authoringStart) {
+    errors.push("drawio-diagrams/SKILL.md: review branch must precede XML authoring");
+    return errors;
+  }
+
+  const reviewBranch = text.slice(reviewStart, authoringStart);
+  for (const marker of [
+    "Do not create backups",
+    "render, rasterize, export",
+    "or fix findings",
+    "then return; do not execute the remaining workflow steps",
+  ]) {
+    if (!reviewBranch.includes(marker)) {
+      errors.push(
+        `drawio-diagrams/SKILL.md: read-only review branch missing ${JSON.stringify(marker)}`,
+      );
+    }
+  }
+  return errors;
 }
 
 function validateCliArgumentRegressions() {
@@ -273,7 +305,10 @@ const args = parseArgs(process.argv.slice(2));
 const caseFiles = args.caseFile
   ? [path.resolve(root, args.caseFile)]
   : walkFiles(casesDir, (file) => file.endsWith(".md")).sort();
-const schemaErrors = caseFiles.flatMap(validateCaseSchema);
+const schemaErrors = [
+  ...validateReviewWorkflowContract(),
+  ...caseFiles.flatMap(validateCaseSchema),
+];
 if (schemaErrors.length) {
   console.error(schemaErrors.join("\n"));
   process.exit(1);

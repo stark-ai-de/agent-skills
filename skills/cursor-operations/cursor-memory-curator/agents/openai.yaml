@@ -1,7 +1,7 @@
 interface:
   display_name: "Cursor Memory Curator"
   short_description: "Audits and safely cleans up Cursor rules and persistent context"
-  default_prompt: "Use $cursor-memory-curator to audit my Cursor rules and persistent context, identify stale or risky entries, and propose a focused cleanup plan."
+  default_prompt: "Use $cursor-memory-curator for my Cursor rules and persistent context. Show all eight workflows with plan-run-cleanup-file first and Recommended; select and announce the intent-bound route when my outcome and authority are clear, otherwise ask me to choose."
 policy:
   allow_implicit_invocation: true
 dependencies:

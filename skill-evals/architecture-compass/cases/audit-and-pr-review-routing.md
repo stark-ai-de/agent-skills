@@ -6,12 +6,12 @@ Yes.
 
 ## Prompt
 
-Use Architecture Compass to audit this checkout against accepted ADRs and then
-review the current branch diff for package-ownership and server-only boundary
-drift. A native host review surface is available. Return findings only; do not
-plan or implement remediation. Read-only enforcement is active for the audit
-independently of Plan mode, and the native review surface establishes the diff
-review's no-write boundary. The supplied evidence says accepted ADR-0002 keeps
+Audit this checkout against accepted ADRs and review the current branch diff for
+package-ownership and server-only boundary drift. A native host review surface
+is available. Return findings only; do not plan or implement remediation.
+Read-only enforcement is active independently of Plan mode, and the native
+review surface establishes the diff review's no-write boundary. The supplied
+evidence says accepted ADR-0002 keeps
 the orders contract in `packages/orders/src/contract.ts`, but the branch moves
 it to `apps/web/lib/orders-contract.ts`. Accepted ADR-0005 requires a
 `server-only` sentinel in hand-written files under `lib/server-only/`, but the
@@ -20,6 +20,7 @@ diff adds `apps/web/lib/server-only/order-client.ts` without that sentinel.
 ## Deterministic Assertions
 
 - contains: Planning capability: Not applicable
+- contains: Selected workflow: audit
 - contains: Read-only enforcement: enforced
 - contains: Architecture decision status: not required
 - contains: Execution status: not requested

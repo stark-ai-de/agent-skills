@@ -15,6 +15,8 @@ This repository contains public Agent Skills.
 - Store every repository ADR as linked `.short.md`, `.long.md`, and `.guide.md` files. Long is canonical; Short is a faithful abstraction; Guide is non-normative.
 - Keep one decision per ADR and do not impose numeric word, paragraph, or section limits.
 - Keep accepted ADR IDs, filename stems, and decision text stable; change architecture through a reciprocal successor ADR, not an in-place decision rewrite.
+- Treat Accepted repository ADRs as binding. If a user requests a conflicting change, name the conflict, warn visibly, and stop the affected implementation until an adaptation or successor decision is accepted.
+- Stable public skills with multiple material workflows must expose their complete finite options. Select, explain, and proceed when task intent and existing authority are clear; ask on bare or materially ambiguous invocation, and never infer mutation beyond the user's requested outcome and scope, as required by ADR-0038.
 - Follow `docs/specs.md` for spec persistence, ADR linkage, filename examples, and repo-facing documentation update rules.
 - Do not copy copyrighted skill text from other repositories. Use them only as inspiration.
 - Do not vendor already-published third-party skills into `skills/`; install them project-locally with `npx skills`.

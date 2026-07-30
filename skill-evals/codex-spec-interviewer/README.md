@@ -44,7 +44,7 @@ When the current Codex surface supports native Plan mode, positive cases are eva
 3. A verified checkpoint ends with approved artifact paths, `Persistence status: pending Plan-mode exit`, and a save-only continuation. Pending persistence is not completion.
 4. After the user exits Plan mode, the continuation persists only the approved spec, any required ADR, and the minimal ADR index entry required by repository convention; it validates them, emits the Codex execution prompt, reports paths, and stops without implementation.
 
-Conversational fallback passes only when native Plan mode is unavailable or the user explicitly declined it, the outcome is recorded as `unavailable` or `declined`, and the interview continues interactively in the conversation.
+Conversational fallback passes only when native Plan mode is definitely unavailable or the user explicitly declined it, the outcome is recorded as `unavailable` or `declined`, and the interview continues interactively in the conversation. Indeterminate support/state uses the supported-but-inactive `/plan` handoff and never falls back.
 
 Passing completed outputs must include a user-verified finalization checkpoint and persisted spec/ADR artifact paths, not only chat-rendered drafts. In declined or blocked persistence cases, passing outputs must write no files, return the complete save-ready spec and any ADR draft in chat, report the path that would have been used plus the decline or blocker, and state that normal persistence completion was not met.
 

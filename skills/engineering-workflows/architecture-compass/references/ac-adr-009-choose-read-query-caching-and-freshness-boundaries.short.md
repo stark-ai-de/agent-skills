@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Put every read at the narrowest trusted boundary and choose cache, freshness, hydration, and realtime behavior explicitly.
 
 Variants: **Short** · [Long, canonical](ac-adr-009-choose-read-query-caching-and-freshness-boundaries.long.md) · [Guide](ac-adr-009-choose-read-query-caching-and-freshness-boundaries.guide.md)

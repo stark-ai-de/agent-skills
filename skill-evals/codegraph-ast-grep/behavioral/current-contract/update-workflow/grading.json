@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "update-workflow",
+  "assertions": [
+    {
+      "id": "select-update-without-redundant-choice",
+      "passed": true,
+      "evidence": "“Selected workflow: `update`, because you explicitly requested…”",
+      "failure_reason": null
+    },
+    {
+      "id": "announce-root-writes-and-protected-state",
+      "passed": true,
+      "evidence": "Names root, manifest/lockfile writes, and protected `src/user-work.ts`",
+      "failure_reason": null
+    },
+    {
+      "id": "preserve-installer-channel-and-scope",
+      "passed": true,
+      "evidence": "“Existing Team-pinned pnpm dependencies were preserved”; “installer channel and project scope were retained”",
+      "failure_reason": null
+    },
+    {
+      "id": "update-exact-stable-core-tools",
+      "passed": true,
+      "evidence": "Exact transitions: CodeGraph `1.3.0`→`1.4.1`, ast-grep `0.43.0`→`0.44.1`; written through pnpm",
+      "failure_reason": null
+    },
+    {
+      "id": "run-required-migrations-and-reconnect",
+      "passed": true,
+      "evidence": "“help-required graph migration completed”; “Codex reconnected successfully”",
+      "failure_reason": null
+    },
+    {
+      "id": "protect-unrelated-work",
+      "passed": true,
+      "evidence": "“`src/user-work.ts` remains byte-for-byte unchanged” and “is untouched”",
+      "failure_reason": null
+    },
+    {
+      "id": "retain-separate-scope-expansion-approval",
+      "passed": true,
+      "evidence": "Explicitly excludes prompt hooks, unrelated dependencies, global installation, telemetry consent, destructive rebuilding, and external services",
+      "failure_reason": null
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7
+  }
+}

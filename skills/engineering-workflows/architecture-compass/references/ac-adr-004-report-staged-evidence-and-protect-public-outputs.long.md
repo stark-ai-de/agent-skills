@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Tie every claim to its actual evidence stage and keep secrets and private provenance out of public artifacts.
 
 Variants: [Short](ac-adr-004-report-staged-evidence-and-protect-public-outputs.short.md) · **Long, canonical** · [Guide](ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md)

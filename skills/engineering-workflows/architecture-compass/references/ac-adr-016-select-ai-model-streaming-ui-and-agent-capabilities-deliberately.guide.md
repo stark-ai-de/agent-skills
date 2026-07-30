@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-30
 Gist: Select the smallest AI capability stack that meets measured product needs while preserving explicit trust, data, cost, and tool boundaries.
 
 Variants: [Short](ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.short.md) · [Long, canonical](ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.long.md) · **Guide**
@@ -32,6 +32,16 @@ Vercel AI Gateway is a separately managed service, not another name for AI SDK. 
 AI Elements is a source registry suited to compatible React/Next.js, shadcn/ui, and Tailwind projects. Imported components become local code. Its message-response component uses Streamdown for streaming markdown. If Streamdown is used directly, restrict link and image protocols/hosts, decide whether data images are allowed, preserve sanitizer behavior when changing plugins, and define raw-HTML policy for model output.
 
 Use AI SDK's bounded agents for ordinary tool loops. Consider LangChain for a broad integration/retrieval ecosystem and `@langchain/langgraph` for explicit graphs, persistence, resumability, or human-in-the-loop workflows. Treat `@openharness/core` as an experimental candidate, not a default: verify its current AI SDK compatibility and review tool/subagent permission behavior, especially shell and filesystem access.
+
+### Stack-deviation comparison
+
+Before adding or replacing an AI SDK, provider, gateway, model path, UI layer, or agent framework, record:
+
+| Existing or accepted option | Required capability | Evidence-backed gap           | Candidate     | Chosen option            | Docs/ADR impact              | Validation        |
+| --------------------------- | ------------------- | ----------------------------- | ------------- | ------------------------ | ---------------------------- | ----------------- |
+| `<current AI path>`         | `<needed behavior>` | `<gap or "not insufficient">` | `<candidate>` | `<current or candidate>` | `<none, docs, or local ADR>` | `<focused proof>` |
+
+Prefer the existing path and built-in capability when they satisfy the requirement. If the evidence-backed gap is `not insufficient`, reject the extra dependency or provider and continue only with the authorized bounded change. If the chosen option creates a durable deviation from an accepted target rule, stop the affected implementation and use the target repository's ADR change or successor process; AC-ADR-046 ranks the evidence but grants no write authority.
 
 ### Tool implementation checklist
 

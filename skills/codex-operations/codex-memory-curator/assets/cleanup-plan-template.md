@@ -1,6 +1,8 @@
 # Cleanup Plan Template
 
-Use this structure when the user needs to approve individual memory cleanup actions.
+Embed this structure in the `Plan` section of the selected route's chat result or single file record when the user needs to approve individual memory cleanup actions. Do not persist it as a second curation artifact.
+
+An explicit `--backup-root` also requires a stable non-sensitive `--backup-root-alias` for the portable storage locator.
 
 ```json
 {
@@ -41,7 +43,17 @@ Use this structure when the user needs to approve individual memory cleanup acti
   "apply_requirements": {
     "requires_explicit_user_approval": true,
     "requires_backup_first": true,
-    "write_proposed_file_when_schema_unknown": true
+    "unknown_schema_action": "defer_without_writing",
+    "backup": {
+      "mode": "exact",
+      "storage_policy": "outside-git-worktree",
+      "storage_root": "deterministic-user-state-or-verified-external-override",
+      "backup_root_alias": null,
+      "persisted_locator_policy": "script-reported-portable-storage-locator-and-manifest-relative-paths-only",
+      "include_paths": [],
+      "manifest": "backup-manifest.json",
+      "receipt_rule": "Every pre-existing changed file must match exactly one verified manifest source entry; an approved new file is created-no-preimage with an explicit rollback."
+    }
   }
 }
 ```

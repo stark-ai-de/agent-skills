@@ -34,6 +34,8 @@ Use `rubric.md` to grade outputs. `runs/` stores run summaries and evidence.
 
 Passing outputs must identify the current execution host and run that host's Plan Mode preflight before substantive interviewing. When Plan Mode is available, they must use the current host's structured-question control, make no repository or workspace changes apart from a plan artifact created by that host's plan-exit control, and finish the verified checkpoint with that control or an accurate manual handoff only when no such control exists. Cursor-native controls apply only when Cursor executes the skill. After leaving Plan Mode, the continuation may persist only the repository-owned approved spec, any required ADR, and the minimal ADR index entry required by repository convention; it must emit the Cursor-targeted execution prompt and stop without implementing the feature.
 
+Conversational fallback is valid only when Plan Mode is definitely unavailable or explicitly declined. Indeterminate support/state follows the supported-but-inactive transition/handoff and never falls back.
+
 Completion requires persisted spec/ADR artifact paths. While still in Plan Mode, passing outputs must write no files, report the approved artifact paths and pending status, and provide the save-only continuation. Only declined or blocked persistence requires the complete save-ready spec and any ADR draft in chat, the intended paths and reason, and an explicit statement that completion was not met.
 
 The 2026-07-13 Codex run is historical routing evidence from an environment with only `cursor-spec-interviewer` installed; it does not prove competing-skill selection, checkpoint verification, Plan-mode exit, or save-only persistence for the strengthened cross-host case.

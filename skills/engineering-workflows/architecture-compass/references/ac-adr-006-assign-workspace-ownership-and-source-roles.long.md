@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-07-28
+Guide verified: 2026-07-29
 Gist: Give each deployable and source role one clear owner and extract shared packages only for proven boundaries.
 
 Variants: [Short](ac-adr-006-assign-workspace-ownership-and-source-roles.short.md) · **Long, canonical** · [Guide](ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md)

@@ -6,7 +6,7 @@ compatibility: Designed for Codex CLI, IDE extension, and Codex app. Native Plan
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Codex Spec Interviewer
@@ -14,6 +14,8 @@ metadata:
 ## Goal
 
 Produce a user-verified implementation spec that Codex can execute with minimal ambiguity, minimal scope creep, explicit validation, explicit assumptions, a bounded source challenge, and ADRs for durable architectural decisions when needed. Save every final spec using the repo's clear convention or a confirmed destination; save ADR files only when the ADR gate requires one.
+
+This is one end-to-end outcome, not a public multi-workflow skill. Do not invent review/save variants or add a workflow-selection checkpoint.
 
 ## When to use
 
@@ -45,7 +47,7 @@ Produce a user-verified implementation spec that Codex can execute with minimal 
 
 Run this preflight before substantive interviewing or repository exploration. A skill cannot change the host's collaboration mode during an active turn, and the user's use of the word "plan" does not prove that native Plan mode is active.
 
-1. Inspect the host-provided mode context and available tools.
+1. Inspect the host-provided mode context and available tools. Classify the state as `active`, `supported-inactive`, `definitely-unavailable`, or `indeterminate`; treat `indeterminate` as `supported-inactive`, never as fallback authority.
 2. If native Plan mode is active, continue the workflow. Use `request_user_input` for material user decisions whenever it is available; otherwise ask one concise question at a time.
 3. If native Plan mode is supported but inactive, do not interview, inspect the repository, or write files. Stop the turn with a brief explanation and this copy-ready command, replacing the placeholder with the user's complete original request:
 
@@ -53,7 +55,7 @@ Run this preflight before substantive interviewing or repository exploration. A 
    /plan Use $codex-spec-interviewer to continue this request: <original request>
    ```
 
-4. If native Plan mode is unavailable, or the user explicitly declines it after the recommendation, continue with the conversational workflow and record `Plan-mode fallback: unavailable - <evidence>` or `Plan-mode fallback: explicitly declined - <user statement>` in the interview summary. Never treat silence or an unknown mode state as a decline. If mode support or state cannot be determined, use the supported-but-inactive handoff instead of falling back.
+4. If native Plan mode is definitely unavailable, or the user explicitly declines it after the recommendation, continue with the conversational workflow and record `Plan-mode fallback: unavailable - <evidence>` or `Plan-mode fallback: explicitly declined - <user statement>` in the interview summary. Never treat silence or an unknown mode state as a decline. If mode support or state is indeterminate, use the supported-but-inactive handoff instead of falling back.
 
 The active Plan-mode interview is read-only. It may inspect repository and external evidence, but it must not create, edit, or persist specs, ADRs, documentation, source files, or other files.
 
