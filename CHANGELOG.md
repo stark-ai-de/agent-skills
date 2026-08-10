@@ -12,6 +12,26 @@
 
 ### Removed
 
+## v0.19.0 - 2026-08-10
+
+### Added
+
+- Added Architecture Compass AC-ADR-050 for accessible semantic receipt markers: `✅` verified/completed, `ℹ️` informational/not needed, `⏭️` intentionally skipped/not run, and `⚠️` limitations or attention-required outcomes.
+- Added capability-aware final receipt profiles (`plain` and `enhanced`) plus a separate `interactive` progress adapter, with compact, host-neutral activation output and accessible plain-text fallbacks.
+- Added host-neutral persistence-surface guidance and an internal/public Architecture Compass ADR boundary with immutable internal decision locks and reciprocal-successor checks, so implementation policy remains distinct from exposed portable decisions.
+
+### Changed
+
+- Updated `architecture-compass` from 0.6.1 to 0.6.2 with capability-aware final receipt profiles, a separate transient progress adapter, host-neutral persistence-surface routing, and separate internal/public ADR guidance.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.18.0 - 2026-08-10
 
 ### Added

@@ -116,6 +116,8 @@ const stem011 = "ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles
 const stem036 = "ac-adr-036-keep-architecture-compass-portable-through-host-adapters";
 const stem039 = "ac-adr-039-prefer-existing-public-skills-conditionally";
 const stem048 = "ac-adr-048-persist-approved-governance-before-planned-architecture-refactors";
+const internalStem001 = "internal-adr-001-resolve-persistence-surfaces-before-writes";
+const internalStem002 = "internal-adr-002-select-capability-aware-receipt-renderers";
 const unsupportedSymlinkCodes = new Set(["EACCES", "EINVAL", "ENOSYS", "ENOTSUP", "EPERM"]);
 
 class UnsupportedSymlinkFixtureError extends Error {
@@ -301,6 +303,13 @@ function prepareAuthorizedShortFingerprint(fixture) {
 
 function tripletFiles(fixture, stem) {
   const references = path.join(fixture, skillRelative, "references");
+  return ["short", "long", "guide"].map((variant) =>
+    path.join(references, `${stem}.${variant}.md`),
+  );
+}
+
+function internalTripletFiles(fixture, stem) {
+  const references = path.join(fixture, skillRelative, "references", "internal");
   return ["short", "long", "guide"].map((variant) =>
     path.join(references, `${stem}.${variant}.md`),
   );
@@ -832,6 +841,133 @@ try {
       },
     },
     {
+      name: "proposed internal record is not shippable",
+      expected: "internal Status must be Accepted or Superseded for shipped runtime records",
+      mutate(fixture) {
+        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+          text.replace("Status: Accepted", "Status: Proposed"),
+        );
+      },
+    },
+    {
+      name: "accepted internal decision drift",
+      expected: "AC-INTERNAL-001: Long Decision drifted from its accepted lock",
+      mutate(fixture) {
+        edit(internalTripletFiles(fixture, internalStem001)[1], (text) =>
+          text.replace(
+            "\n## Invariants",
+            "\nThis sentence changes the accepted internal decision in place.\n\n## Invariants",
+          ),
+        );
+      },
+    },
+    {
+      name: "internal successor missing reciprocal predecessor metadata",
+      expected: "AC-INTERNAL-001 must reciprocally list AC-INTERNAL-002 in Superseded by",
+      mutate(fixture) {
+        for (const file of internalTripletFiles(fixture, internalStem002)) {
+          edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-INTERNAL-001"));
+        }
+      },
+    },
+    {
+      name: "internal decision cannot supersede itself",
+      expected: "AC-INTERNAL-002 cannot supersede itself",
+      mutate(fixture) {
+        for (const file of internalTripletFiles(fixture, internalStem002)) {
+          edit(file, (text) =>
+            text
+              .replace("Status: Accepted", "Status: Superseded")
+              .replace("Supersedes: none", "Supersedes: AC-INTERNAL-002")
+              .replace("Superseded by: none", "Superseded by: AC-INTERNAL-002"),
+          );
+        }
+      },
+    },
+    {
+      name: "internal decisions cannot form a supersession cycle",
+      expected: "Internal ADR supersession cycle detected",
+      mutate(fixture) {
+        for (const [stem, otherId] of [
+          [internalStem001, "AC-INTERNAL-002"],
+          [internalStem002, "AC-INTERNAL-001"],
+        ]) {
+          for (const file of internalTripletFiles(fixture, stem)) {
+            edit(file, (text) =>
+              text
+                .replace("Status: Accepted", "Status: Superseded")
+                .replace("Supersedes: none", `Supersedes: ${otherId}`)
+                .replace("Superseded by: none", `Superseded by: ${otherId}`),
+            );
+          }
+        }
+      },
+    },
+    {
+      name: "internal short navigation target is missing",
+      expected: "variant navigation must be exactly",
+      mutate(fixture) {
+        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+          text.replace(`${internalStem001}.long.md`, "missing.long.md"),
+        );
+      },
+    },
+    {
+      name: "internal malformed navigation",
+      expected: "variant navigation must be exactly",
+      mutate(fixture) {
+        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+          text.replace("Variants: **Short** ·", "Variants: **Short** /"),
+        );
+      },
+    },
+    {
+      name: "internal duplicate navigation",
+      expected: "expected exactly one Variants navigation line",
+      mutate(fixture) {
+        const file = internalTripletFiles(fixture, internalStem001)[0];
+        edit(file, (text) => `${text}\n${text.match(/^Variants: .*$/m)?.[0] ?? ""}\n`);
+      },
+    },
+    {
+      name: "internal public-conflict eval proof is missing",
+      expected: "missing public/internal conflict or promotion assertion",
+      mutate(fixture) {
+        const file = path.join(
+          fixture,
+          evalRelative,
+          "cases",
+          "internal-public-adr-namespace-separation.md",
+        );
+        edit(file, (text) => text.replace("- contains: public Long governs\n", ""));
+      },
+    },
+    {
+      name: "internal promotion eval proof is missing",
+      expected: "missing public/internal conflict or promotion assertion",
+      mutate(fixture) {
+        const file = path.join(
+          fixture,
+          evalRelative,
+          "cases",
+          "internal-public-adr-namespace-separation.md",
+        );
+        edit(file, (text) => text.replace("- contains: decision lock\n", ""));
+      },
+    },
+    {
+      name: "internal record leaked into public catalog",
+      expected: "internal ADR triplet",
+      mutate(fixture) {
+        const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
+        edit(
+          catalog,
+          (text) =>
+            `${text}\n[Leaked internal record](internal-adr-001-resolve-persistence-surfaces-before-writes.short.md)\n`,
+        );
+      },
+    },
+    {
       name: "ID and stem collision",
       expected: "ID collision across stems",
       mutate(fixture) {
@@ -982,6 +1118,39 @@ try {
       mutate(fixture) {
         for (const file of tripletFiles(fixture, stem002)) {
           edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-ADR-001"));
+        }
+      },
+    },
+    {
+      name: "public decision cannot supersede itself",
+      expected: "AC-ADR-002 cannot supersede itself",
+      mutate(fixture) {
+        for (const file of tripletFiles(fixture, stem002)) {
+          edit(file, (text) =>
+            text
+              .replace("Status: Accepted", "Status: Superseded")
+              .replace("Supersedes: none", "Supersedes: AC-ADR-002")
+              .replace("Superseded by: none", "Superseded by: AC-ADR-002"),
+          );
+        }
+      },
+    },
+    {
+      name: "public decisions cannot form a supersession cycle",
+      expected: "Public ADR supersession cycle detected",
+      mutate(fixture) {
+        for (const [stem, otherId] of [
+          [stem002, "AC-ADR-005"],
+          [stem005, "AC-ADR-002"],
+        ]) {
+          for (const file of tripletFiles(fixture, stem)) {
+            edit(file, (text) =>
+              text
+                .replace("Status: Accepted", "Status: Superseded")
+                .replace("Supersedes: none", `Supersedes: ${otherId}`)
+                .replace("Superseded by: none", `Superseded by: ${otherId}`),
+            );
+          }
         }
       },
     },

@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills h
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.1"
+  version: "0.6.2"
 ---
 
 # Architecture Compass
@@ -24,6 +24,10 @@ Make architecture decisions explicit, binding, locally traceable, and executable
 
 - Tiny/style-only or ordinary governed edits with no architecture consequence or ADR-aware boundary check.
 - Generic framework education or requests without target evidence and a governance, audit, planning, or refactoring outcome.
+
+## Activation and receipt presentation
+
+Route activation and receipt presentation through [AC-ADR-053 Short](references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.short.md) · [Long](references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.long.md) · [Guide](references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.guide.md). Start with Short and load Long before conditionally loading `AC-INTERNAL-002` from the internal index for renderer-selection mechanics. This dispatcher does not define a presentation profile or renderer policy.
 
 ## Workflow selection
 
@@ -66,9 +70,12 @@ Route skill behavior through:
 - **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md) — capability states, index-safe evidence, and fallbacks.
 - **Execution:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) — delegation, checkpoints, mutation, and re-entry.
 - **Claims:** [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md) — evidence stages and public safety.
+- **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md) — accessible semantic markers for concise user-facing receipts.
 - **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md) — evidence ranking and conflict stops without extra authority.
 
-Use the catalog for AC-ADR-001 library authority, AC-ADR-044 lineage, every canonical Long variant, and task-specific target decisions.
+When Architecture Compass needs provider implementation mechanics, resolve the applicable exposed AC-ADR from the public catalog and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only the matching internal Short/Long/Guide triplet: `internal-adr-001-resolve-persistence-surfaces-before-writes` for persistence-surface resolution or `internal-adr-002-select-capability-aware-receipt-renderers` for capability-aware receipt adapters. Internal ADRs are implementation policy, are not entries in the public catalog or target-repository adoption flow, and cannot relax an applicable accepted public Long decision.
+
+Use the catalog for AC-ADR-051 public/internal namespace authority, AC-ADR-044 lineage, every canonical Long variant, and task-specific target decisions. AC-ADR-001 remains available as superseded historical context only.
 
 ## Inputs to inspect
 
@@ -80,6 +87,8 @@ After the route is resolved, inspect only what it needs:
 - Supported instruction surfaces: nearest `AGENTS.md`, `CLAUDE.md`, existing `CLAUDE.local.md`, `.claude/rules`, `.cursor/rules`, and legacy `.cursorrules` only as migration evidence.
 
 Do not classify `CONTEXT.md` as a Claude instruction file automatically.
+
+Before persisting a spec, ADR, report, or instruction-surface change, route through [AC-ADR-052 Short](references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.short.md) · [Long](references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.long.md) · [Guide](references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.guide.md). Start with Short and load Long before conditionally loading `AC-INTERNAL-001` from the internal index for persistence-resolution mechanics. This dispatcher does not select or authorize a write surface.
 
 ## Authority and collaboration
 
@@ -150,6 +159,8 @@ Classify this target-repository instruction as `applicable`, `not applicable`, o
 
 When material, use the exact evidence-backed `Read-only enforcement`, `Architecture decision status`, and `Execution status` values in the AC-ADR-036 Guide and report asset. Planning and filesystem enforcement remain independent. `completed` covers only the authorized slice/stages; it implies no CI, publication, deployment, production, or third-party success.
 
+For concise user-facing outcome lists, route status semantics through [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) and presentation through AC-ADR-053 plus the conditional internal renderer route above.
+
 ## Assets
 
 Assets are derived and non-normative; applicable canonical Long ADRs prevail:
@@ -177,6 +188,8 @@ Architecture Compass ships no executable runtime scripts. Use repository-native 
 ## Output format
 
 Use the matching report asset and AC-ADR-004 evidence table. Include the workflow set and selection, coverage, write scope/status/protected state, inspected and unavailable evidence, decisions/mappings or findings, approved plan or changes, AC-ADR-049 ledger, risks/deferred triggers, and next authorized action.
+
+Render the final receipt through AC-ADR-053 and its conditional internal adapter route; keep this section limited to output assembly rather than duplicating their durable presentation policy.
 
 For `audit`, provide findings in severity order without patches or repository writes. For plan routes, distinguish approved in-Plan content, pending exit/persistence, persisted artifacts, state-recheck result, and executed work.
 

@@ -141,6 +141,14 @@
       "disposition": "material",
       "relations": [{ "type": "adapts", "sources": ["ADR-0038"] }]
     },
-    { "id": "AC-ADR-049", "disposition": "independent", "relations": [] }
+    { "id": "AC-ADR-049", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-050", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-051",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0039"] }]
+    },
+    { "id": "AC-ADR-052", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-053", "disposition": "independent", "relations": [] }
   ]
 }

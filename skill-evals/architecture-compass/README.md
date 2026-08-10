@@ -19,7 +19,13 @@ Passing behavior must:
 - preserve conditional backend runtime/configuration and target-dependent source-placement mechanics without turning examples into universal stack or layout defaults;
 - reconcile complete setup matrices, legacy input routing, refactor reports, and validation receipts without missing or duplicate fields;
 - add the generic intent-bound selector instruction only during setup when evidence proves a stable public skill repository with multiple material workflows; audit only reports it;
-- preserve permission, protected-state, risk-based validation, receipt-reuse, portability, host-metadata, public-skill reuse, and evidence-stage boundaries; and
+- preserve permission, protected-state, risk-based validation, receipt-reuse, portability, host-metadata, public-skill reuse, and evidence-stage boundaries;
+- use AC-ADR-050 semantic receipt markers as redundant cues without marking informational, skipped, unavailable, stale, or failed work as verified;
+- select a capability-aware `plain` or `enhanced` final-receipt profile, with `interactive` kept as a separate transient progress adapter, without changing the underlying evidence contract;
+- keep final receipts meaningful without emoji, color, Unicode width, ANSI, or cursor support, and keep initial activation output compact and host-neutral;
+- compare formatting overhead against the same semantic receipt, separating model-token cost from renderer bytes/lines without imposing a decorative hard budget;
+- reject host-wrong persistence instructions, preserve repository-native durable artifacts, and report an indeterminate or blocked write path rather than silently writing another host's file;
+- keep internal Architecture Compass implementation ADRs in a separately validated namespace, out of the public catalog and target adoption matrix, while routing generalized behavior through exposed ADR triplets; and
 - produce public-safe output without private paths, source names, secrets, or unsupported completion claims.
 
 ## Eval Artifacts
@@ -92,6 +98,16 @@ Focused routed-library cases:
 - `cases/risk-proportional-validation-matrix.md`
 - `cases/validation-evidence-reuse.md`
 - `cases/refactor-report-receipt-completeness.md`
+- `cases/semantic-status-marker-receipts.md`
+
+Focused adaptive-output and governance-boundary cases:
+
+- `cases/adaptive-presentation-profiles.md`
+- `cases/receipt-accessibility-fallback.md`
+- `cases/compact-initial-activation.md`
+- `cases/formatting-overhead-comparison.md`
+- `cases/host-wrong-persistence-surface.md`
+- `cases/internal-public-adr-namespace-separation.md`
 
 ## Lifecycle Evaluation
 

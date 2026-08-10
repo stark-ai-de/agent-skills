@@ -11,6 +11,7 @@ const root = process.cwd();
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const skillDir = path.join(root, "skills", "engineering-workflows", "architecture-compass");
 const referencesDir = path.join(skillDir, "references");
+const internalReferencesDir = path.join(referencesDir, "internal");
 const assetsDir = path.join(skillDir, "assets");
 const skillFile = path.join(skillDir, "SKILL.md");
 const catalogFile = path.join(referencesDir, "adr-catalog.md");
@@ -30,7 +31,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 49 }, (_, index) => index + 1);
+const expectedAdrIds = Array.from({ length: 53 }, (_, index) => index + 1);
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -76,8 +77,9 @@ const allowedCategories = new Set([
   "stack-tooling",
   "quality-delivery",
 ]);
+const internalAllowedCategories = new Set([...allowedCategories, "implementation-policy"]);
 const allowedStatuses = new Set(["Accepted", "Superseded"]);
-const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48]);
+const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53]);
 const expectedCategories = new Map([
   [1, "governance"],
   [2, "governance"],
@@ -128,6 +130,10 @@ const expectedCategories = new Map([
   [47, "quality-delivery"],
   [48, "governance"],
   [49, "quality-delivery"],
+  [50, "quality-delivery"],
+  [51, "governance"],
+  [52, "governance"],
+  [53, "quality-delivery"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -188,6 +194,14 @@ const expectedStems = new Map([
   [47, "ac-adr-047-separate-low-and-moderate-validation-risk-with-explicit-triggers"],
   [48, "ac-adr-048-persist-approved-governance-before-planned-architecture-refactors"],
   [49, "ac-adr-049-distinguish-change-risk-from-representative-environment-observation"],
+  [50, "ac-adr-050-use-semantic-status-markers-in-user-facing-receipts"],
+  [51, "ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces"],
+  [52, "ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces"],
+  [53, "ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts"],
+]);
+const expectedInternalStems = new Map([
+  [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
+  [2, "internal-adr-002-select-capability-aware-receipt-renderers"],
 ]);
 const allowedLineageRelations = new Set(["adapts", "consolidates", "generalizes", "diverges-from"]);
 const legacyReferenceFiles = [
@@ -257,6 +271,13 @@ const routedLibraryEvalCases = [
   "source-placement-parity.md",
   "legacy-input-routing.md",
   "refactor-report-receipt-completeness.md",
+  "semantic-status-marker-receipts.md",
+  "adaptive-presentation-profiles.md",
+  "compact-initial-activation.md",
+  "formatting-overhead-comparison.md",
+  "host-wrong-persistence-surface.md",
+  "internal-public-adr-namespace-separation.md",
+  "receipt-accessibility-fallback.md",
 ];
 const expectedEvalCases = [...baselineEvalCases, ...routedLibraryEvalCases];
 const legacyCaseSourceCommit = "1d454f06375f3b74ba506fef54b664a2517674c0";
@@ -609,10 +630,14 @@ function readDecisionLocks() {
   for (const [index, line] of lines.slice(2).entries()) {
     if (!line) continue;
     const [id, stem, shortDigest, longDigest, ...extra] = line.split("\t");
+    const publicIdentity =
+      /^AC-ADR-\d{3}$/.test(id ?? "") && /^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stem ?? "");
+    const internalIdentity =
+      /^AC-INTERNAL-\d{3}$/.test(id ?? "") &&
+      /^internal-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stem ?? "");
     if (
       extra.length ||
-      !/^AC-ADR-\d{3}$/.test(id ?? "") ||
-      !/^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stem ?? "") ||
+      (!publicIdentity && !internalIdentity) ||
       !/^[a-f0-9]{64}$/.test(shortDigest ?? "") ||
       !/^[a-f0-9]{64}$/.test(longDigest ?? "")
     ) {
@@ -636,6 +661,51 @@ function expectedNavigation(stem, variant) {
     return `Variants: [Short](${stem}.short.md) · **Long, canonical** · [Guide](${stem}.guide.md)`;
   }
   return `Variants: [Short](${stem}.short.md) · [Long, canonical](${stem}.long.md) · **Guide**`;
+}
+
+function validateVariantNavigation({ lines, rel, stem, variant, directory, navigationIndex }) {
+  const expectedNav = expectedNavigation(stem, variant);
+  const navigationLines = lines.filter((line) => line.startsWith("Variants: "));
+  const navigation = lines[navigationIndex] ?? "";
+
+  if (navigation !== expectedNav) {
+    fail(`${rel}: variant navigation must be exactly "${expectedNav}"`);
+  }
+  if (navigationLines.length !== 1) {
+    fail(`${rel}: expected exactly one Variants navigation line`);
+  }
+
+  const links = [...navigation.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1]);
+  const expectedLinks = variants
+    .filter((candidate) => candidate !== variant)
+    .map((candidate) => `${stem}.${candidate}.md`);
+  if (links.length !== expectedLinks.length) {
+    fail(`${rel}: variant navigation must contain exactly two sibling links`);
+  } else if (links.some((link, index) => link !== expectedLinks[index])) {
+    fail(`${rel}: variant navigation sibling links must match the approved triplet variants`);
+  }
+
+  for (const link of links) {
+    const resolved = path.resolve(directory, link);
+    const relativeTarget = path.relative(directory, resolved);
+    const escapesDirectory =
+      path.isAbsolute(link) ||
+      relativeTarget === ".." ||
+      relativeTarget.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relativeTarget);
+    if (escapesDirectory) {
+      fail(`${rel}: variant navigation target must remain within its reference namespace: ${link}`);
+      continue;
+    }
+    if (!fs.existsSync(resolved)) {
+      fail(`${rel}: variant navigation target is missing: ${link}`);
+      continue;
+    }
+    const stat = fs.lstatSync(resolved);
+    if (!stat.isFile() || stat.isSymbolicLink()) {
+      fail(`${rel}: variant navigation target must be a regular, non-symlink file: ${link}`);
+    }
+  }
 }
 
 function parseTriplet(file, match) {
@@ -670,14 +740,14 @@ function parseTriplet(file, match) {
   }
 
   while (lines[cursor]?.trim() === "") cursor += 1;
-  const navigation = lines[cursor] ?? "";
-  const expectedNav = expectedNavigation(stem, variant);
-  if (navigation !== expectedNav) {
-    fail(`${rel}: variant navigation must be exactly "${expectedNav}"`);
-  }
-  if (lines.filter((line) => line.startsWith("Variants: ")).length !== 1) {
-    fail(`${rel}: expected exactly one Variants navigation line`);
-  }
+  validateVariantNavigation({
+    lines,
+    rel,
+    stem,
+    variant,
+    directory: path.dirname(file),
+    navigationIndex: cursor,
+  });
 
   const expectedId = `AC-ADR-${rawId}`;
   if (metadata.get("ID") !== expectedId) {
@@ -773,6 +843,153 @@ function parseAdrList(value, rel, field) {
   return value.split(", ");
 }
 
+function parseInternalAdrList(value, rel, field) {
+  if (value === "none") return [];
+  if (!/^AC-INTERNAL-\d{3}(?:, AC-INTERNAL-\d{3})*$/.test(value ?? "")) {
+    fail(`${rel}: ${field} must be "none" or a comma-space-separated AC-INTERNAL ID list`);
+    return [];
+  }
+  return value.split(", ");
+}
+
+function validateSupersessionGraph(edges, namespaceLabel) {
+  const states = new Map();
+  const trail = [];
+
+  function visit(id) {
+    const state = states.get(id);
+    if (state === "visited") return;
+    if (state === "visiting") {
+      const cycleStart = trail.indexOf(id);
+      const cycle = [...trail.slice(cycleStart), id];
+      fail(`${namespaceLabel} supersession cycle detected: ${cycle.join(" -> ")}`);
+      return;
+    }
+
+    states.set(id, "visiting");
+    trail.push(id);
+    for (const targetId of edges.get(id) ?? []) {
+      if (edges.has(targetId)) visit(targetId);
+    }
+    trail.pop();
+    states.set(id, "visited");
+  }
+
+  for (const id of edges.keys()) visit(id);
+}
+
+const internalMetadataFields = [...metadataFields, "Visibility", "Public catalog"];
+const internalTripletPattern =
+  /^(internal-adr-(\d{3})-([a-z0-9]+(?:-[a-z0-9]+)*))\.(short|long|guide)\.md$/;
+
+function parseInternalTriplet(file, match) {
+  const text = readRegularFile(file);
+  const rel = relative(file);
+  const [, stem, rawId, slug, variant] = match;
+  const idNumber = Number(rawId);
+  const lines = text.split(/\r?\n/);
+  const expectedId = `AC-INTERNAL-${rawId}`;
+  const titleMatch = new RegExp(`^# (${expectedId}): (.+)$`).exec(lines[0] ?? "");
+  const navigationIndex = lines.findIndex((line) => line.startsWith("Variants: "));
+
+  if (!titleMatch) {
+    fail(`${rel}: first line must be "# ${expectedId}: Title"`);
+  }
+
+  const metadata = new Map();
+  const metadataLines = lines.slice(1, Math.max(1, navigationIndex));
+  for (const field of internalMetadataFields) {
+    const prefix = `${field}: `;
+    const values = metadataLines
+      .filter((line) => line.startsWith(prefix))
+      .map((line) => line.slice(prefix.length).trim());
+    if (values.length !== 1 || !values[0]) {
+      fail(
+        `${rel}: expected exactly one non-empty "${field}:" metadata field; found ${values.length}`,
+      );
+    } else {
+      metadata.set(field, values[0]);
+    }
+  }
+
+  validateVariantNavigation({
+    lines,
+    rel,
+    stem,
+    variant,
+    directory: path.dirname(file),
+    navigationIndex,
+  });
+
+  if (metadata.get("ID") !== expectedId) fail(`${rel}: ID must be ${expectedId}`);
+  if (titleMatch?.[1] !== expectedId) fail(`${rel}: heading ID must be ${expectedId}`);
+  if (titleMatch && metadata.get("Title") !== titleMatch[2]) {
+    fail(`${rel}: Title metadata must match the H1 title byte-for-byte`);
+  }
+  if (!allowedStatuses.has(metadata.get("Status"))) {
+    fail(`${rel}: internal Status must be Accepted or Superseded for shipped runtime records`);
+  }
+  const expectedStem = expectedInternalStems.get(idNumber);
+  if (expectedStem && stem !== expectedStem) {
+    fail(`${rel}: approved internal inventory stem for ${expectedId} is ${expectedStem}`);
+  }
+  for (const field of ["Date", "Guide verified"]) {
+    if (!isIsoDate(metadata.get(field))) {
+      fail(`${rel}: ${field} must be a real ISO date (YYYY-MM-DD)`);
+    }
+  }
+  if (metadata.get("Owner") !== "stark-ai-de") fail(`${rel}: Owner must be stark-ai-de`);
+  if (metadata.get("Scope") !== "skill-runtime-internal") {
+    fail(`${rel}: Scope must be skill-runtime-internal`);
+  }
+  if (!internalAllowedCategories.has(metadata.get("Category"))) {
+    fail(`${rel}: Category must use the Architecture Compass taxonomy`);
+  }
+  if (metadata.get("Adoptable") !== "false") fail(`${rel}: Adoptable must be false`);
+  if (metadata.get("Visibility") !== "Internal") fail(`${rel}: Visibility must be Internal`);
+  if (metadata.get("Public catalog") !== "Excluded") {
+    fail(`${rel}: Public catalog must be Excluded`);
+  }
+  if (metadata.get("Variant") !== variantLabels.get(variant)) {
+    fail(`${rel}: Variant must match the .${variant}.md filename`);
+  }
+  if (metadata.get("Canonical variant") !== "Long") {
+    fail(`${rel}: Canonical variant must be Long`);
+  }
+  if (!metadata.get("Applies when")?.trim()) fail(`${rel}: Applies when must be non-empty`);
+  if (!metadata.get("Gist")?.trim()) fail(`${rel}: Gist must be non-empty`);
+
+  const tags = metadata.get("Tags") ?? "";
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*(?:, [a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(tags)) {
+    fail(`${rel}: Tags must be a non-empty, comma-space-separated list of lowercase kebab tags`);
+  }
+  if (!/(?:non-authority|not .*authority|not .*public|not .*portable)/i.test(text)) {
+    fail(
+      `${rel}: internal record must explicitly state that it is not public or portable authority`,
+    );
+  }
+
+  let decision = "";
+  if (variant === "short") {
+    decision = sectionText(text, "Decision summary");
+    if (!decision) fail(`${rel}: Short must contain a non-empty Decision summary section`);
+  } else if (variant === "long") {
+    decision = sectionText(text, "Decision");
+    for (const heading of ["Context", "Decision", "Consequences"]) {
+      if (!sectionText(text, heading)) {
+        fail(`${rel}: Long must contain a non-empty ${heading} section`);
+      }
+    }
+  } else {
+    if (!/non-normative/i.test(text)) fail(`${rel}: Guide must state that it is non-normative`);
+    if (/^## (?:Decision|Decision summary|Rules)$/m.test(text)) {
+      fail(`${rel}: Guide must not define normative Decision or Rules sections`);
+    }
+  }
+
+  return { file, rel, text, stem, slug, idNumber, rawId, variant, metadata, decision };
+}
+
 if (!fs.existsSync(referencesDir)) {
   fail(`${relative(referencesDir)}: missing references directory`);
 }
@@ -782,9 +999,11 @@ const referenceEntries = fs.existsSync(referencesDir)
   : [];
 for (const entry of referenceEntries) {
   if (entry.isDirectory()) {
-    fail(
-      `${relative(path.join(referencesDir, entry.name))}: nested reference directories are not permitted`,
-    );
+    if (entry.name !== "internal") {
+      fail(
+        `${relative(path.join(referencesDir, entry.name))}: only the internal reference namespace may be nested`,
+      );
+    }
   } else if (!entry.isFile() || !entry.name.endsWith(".md")) {
     fail(`${relative(path.join(referencesDir, entry.name))}: references must be Markdown files`);
   }
@@ -808,6 +1027,100 @@ for (const fileName of referenceMarkdown) {
   records.push(parseTriplet(path.join(referencesDir, fileName), match));
 }
 
+const internalRecords = [];
+if (!fs.existsSync(internalReferencesDir)) {
+  fail(`${relative(internalReferencesDir)}: missing internal reference namespace`);
+} else if (!fs.lstatSync(internalReferencesDir).isDirectory()) {
+  fail(`${relative(internalReferencesDir)}: internal reference namespace must be a directory`);
+} else {
+  const internalEntries = fs.readdirSync(internalReferencesDir, { withFileTypes: true });
+  for (const entry of internalEntries) {
+    const file = path.join(internalReferencesDir, entry.name);
+    if (entry.isDirectory()) {
+      fail(`${relative(file)}: nested internal reference directories are not permitted`);
+      continue;
+    }
+    if (!entry.isFile() || !entry.name.endsWith(".md")) {
+      fail(`${relative(file)}: internal references must be Markdown files`);
+      continue;
+    }
+    if (entry.name === "internal-adr-index.md") continue;
+    const match = internalTripletPattern.exec(entry.name);
+    if (!match) {
+      fail(
+        `${relative(file)}: internal references may contain only internal-adr-index.md and internal ADR triplets`,
+      );
+      continue;
+    }
+    internalRecords.push(parseInternalTriplet(file, match));
+  }
+}
+
+const internalRecordsById = new Map();
+for (const record of internalRecords) {
+  if (!internalRecordsById.has(record.idNumber)) internalRecordsById.set(record.idNumber, []);
+  internalRecordsById.get(record.idNumber).push(record);
+}
+for (const [idNumber, stem] of expectedInternalStems) {
+  const label = String(idNumber).padStart(3, "0");
+  const idRecords = internalRecordsById.get(idNumber) ?? [];
+  if (idRecords.length !== 3) {
+    fail(`AC-INTERNAL-${label}: expected exactly three variants; found ${idRecords.length}`);
+  }
+  const stems = new Set(idRecords.map((record) => record.stem));
+  if (stems.size > 1) {
+    fail(`AC-INTERNAL-${label}: ID collision across stems: ${[...stems].sort().join(", ")}`);
+  }
+  if (stems.size === 1 && !stems.has(stem)) {
+    fail(`AC-INTERNAL-${label}: approved stem is ${stem}`);
+  }
+  for (const variant of variants) {
+    const count = idRecords.filter((record) => record.variant === variant).length;
+    if (count !== 1) {
+      fail(`AC-INTERNAL-${label}: expected exactly one .${variant}.md variant; found ${count}`);
+    }
+  }
+  const baseline = idRecords.find((record) => record.variant === "long") ?? idRecords[0];
+  if (baseline) {
+    for (const record of idRecords) {
+      for (const field of internalMetadataFields.filter((field) => field !== "Variant")) {
+        if (record.metadata.get(field) !== baseline.metadata.get(field)) {
+          fail(
+            `${record.rel}: ${field} metadata drifts from ${baseline.rel}; only Variant may differ within an internal triplet`,
+          );
+        }
+      }
+    }
+  }
+}
+for (const idNumber of internalRecordsById.keys()) {
+  if (!expectedInternalStems.has(idNumber)) {
+    fail(
+      `AC-INTERNAL-${String(idNumber).padStart(3, "0")}: ID is outside the approved internal inventory`,
+    );
+  }
+}
+const internalIndexFile = path.join(internalReferencesDir, "internal-adr-index.md");
+const internalIndexText = readRegularFile(internalIndexFile);
+const internalIndexRel = relative(internalIndexFile);
+const internalTripletNames = new Set(internalRecords.map((record) => path.basename(record.file)));
+const internalLinks = [...internalIndexText.matchAll(/\[[^\]]+\]\(([^)\s]+)\)/g)].map(
+  (match) => match[1],
+);
+const internalAdrLinks = internalLinks.filter((link) => link.startsWith("internal-adr-"));
+for (const name of internalTripletNames) {
+  if (!internalAdrLinks.includes(name)) fail(`${internalIndexRel}: missing direct link to ${name}`);
+}
+for (const link of internalAdrLinks) {
+  if (link !== path.basename(link) || !internalTripletPattern.test(link)) {
+    fail(
+      `${internalIndexRel}: internal catalog links must be direct internal triplet filenames; found ${link}`,
+    );
+  } else if (!internalTripletNames.has(link)) {
+    fail(`${internalIndexRel}: orphan internal ADR link ${link}`);
+  }
+}
+
 for (const legacy of legacyReferenceFiles) {
   if (fs.existsSync(path.join(referencesDir, legacy))) {
     fail(`${relative(path.join(referencesDir, legacy))}: legacy policy reference must be removed`);
@@ -826,6 +1139,88 @@ const decisionLineageHash =
   fs.existsSync(decisionLineageFile) && fs.lstatSync(decisionLineageFile).isFile()
     ? sha256(fs.readFileSync(decisionLineageFile))
     : null;
+
+const canonicalInternalRecords = new Map(
+  internalRecords
+    .filter((record) => record.variant === "long" && expectedInternalStems.has(record.idNumber))
+    .map((record) => [`AC-INTERNAL-${record.rawId}`, record]),
+);
+
+for (const [idNumber, stem] of expectedInternalStems) {
+  const label = String(idNumber).padStart(3, "0");
+  const lockId = `AC-INTERNAL-${label}`;
+  const idRecords = internalRecordsById.get(idNumber) ?? [];
+  const short = idRecords.find((record) => record.variant === "short");
+  const long = idRecords.find((record) => record.variant === "long");
+  const lock = decisionLocks.get(lockId);
+  if (!lock) {
+    fail(`${relative(decisionLockFile)}: missing ${lockId} accepted-decision lock`);
+  } else if (short && long) {
+    if (lock.stem !== stem) fail(`${lockId}: accepted stem drifted from ${lock.stem}`);
+    if (lock.shortDigest !== sha256(short.decision)) {
+      fail(`${lockId}: Short Decision summary drifted from its accepted lock`);
+    }
+    if (lock.longDigest !== sha256(long.decision)) {
+      fail(`${lockId}: Long Decision drifted from its accepted lock`);
+    }
+  }
+}
+
+const internalSupersessionEdges = new Map();
+for (const [id, record] of canonicalInternalRecords) {
+  const supersedes = parseInternalAdrList(
+    record.metadata.get("Supersedes"),
+    record.rel,
+    "Supersedes",
+  );
+  const supersededBy = parseInternalAdrList(
+    record.metadata.get("Superseded by"),
+    record.rel,
+    "Superseded by",
+  );
+  const status = record.metadata.get("Status");
+  internalSupersessionEdges.set(id, supersedes);
+  if (supersedes.includes(id) || supersededBy.includes(id)) {
+    fail(`${record.rel}: ${id} cannot supersede itself`);
+  }
+  if (status === "Superseded" && supersededBy.length === 0) {
+    fail(`${record.rel}: Status Superseded requires Superseded by`);
+  }
+  if (status !== "Superseded" && supersededBy.length > 0) {
+    fail(`${record.rel}: only Status Superseded may declare Superseded by`);
+  }
+  for (const targetId of supersedes) {
+    const target = canonicalInternalRecords.get(targetId);
+    if (!target) {
+      fail(`${record.rel}: Supersedes references missing ${targetId}`);
+      continue;
+    }
+    const reverse = parseInternalAdrList(
+      target.metadata.get("Superseded by"),
+      target.rel,
+      "Superseded by",
+    );
+    if (!reverse.includes(id)) {
+      fail(`${record.rel}: ${targetId} must reciprocally list ${id} in Superseded by`);
+    }
+  }
+  for (const sourceId of supersededBy) {
+    const source = canonicalInternalRecords.get(sourceId);
+    if (!source) {
+      fail(`${record.rel}: Superseded by references missing ${sourceId}`);
+      continue;
+    }
+    const reverse = parseInternalAdrList(
+      source.metadata.get("Supersedes"),
+      source.rel,
+      "Supersedes",
+    );
+    if (!reverse.includes(id)) {
+      fail(`${record.rel}: ${sourceId} must reciprocally list ${id} in Supersedes`);
+    }
+  }
+}
+validateSupersessionGraph(internalSupersessionEdges, "Internal ADR");
 
 for (const file of regularFiles(skillDir)) {
   const matchesName = path.basename(file) === "decision-lineage.json";
@@ -915,8 +1310,11 @@ for (const id of expectedAdrIds) {
 }
 
 for (const id of decisionLocks.keys()) {
-  const lockNumber = Number(id.slice("AC-ADR-".length));
-  if (!Number.isInteger(lockNumber) || !expectedAdrIdSet.has(lockNumber)) {
+  const publicMatch = /^AC-ADR-(\d{3})$/.exec(id);
+  const internalMatch = /^AC-INTERNAL-(\d{3})$/.exec(id);
+  const validPublic = publicMatch && expectedAdrIdSet.has(Number(publicMatch[1]));
+  const validInternal = internalMatch && expectedInternalStems.has(Number(internalMatch[1]));
+  if (!validPublic && !validInternal) {
     fail(`${relative(decisionLockFile)}: orphan decision lock ${id}`);
   }
 }
@@ -939,6 +1337,7 @@ const canonicalRecords = new Map(
     .filter((record) => record.variant === "long" && expectedAdrIdSet.has(record.idNumber))
     .map((record) => [`AC-ADR-${record.rawId}`, record]),
 );
+const publicSupersessionEdges = new Map();
 for (const [id, record] of canonicalRecords) {
   const supersedes = parseAdrList(record.metadata.get("Supersedes"), record.rel, "Supersedes");
   const supersededBy = parseAdrList(
@@ -947,6 +1346,10 @@ for (const [id, record] of canonicalRecords) {
     "Superseded by",
   );
   const status = record.metadata.get("Status");
+  publicSupersessionEdges.set(id, supersedes);
+  if (supersedes.includes(id) || supersededBy.includes(id)) {
+    fail(`${record.rel}: ${id} cannot supersede itself`);
+  }
   if (status === "Superseded" && supersededBy.length === 0) {
     fail(`${record.rel}: Status Superseded requires Superseded by`);
   }
@@ -977,12 +1380,14 @@ for (const [id, record] of canonicalRecords) {
     }
   }
 }
+validateSupersessionGraph(publicSupersessionEdges, "Public ADR");
 
 const catalogText = readRegularFile(catalogFile);
 const catalogRel = relative(catalogFile);
 const expectedTripletNames = new Set(records.map((record) => path.basename(record.file)));
 const catalogLinks = [...catalogText.matchAll(/\[[^\]]+\]\(([^)\s]+)\)/g)].map((match) => match[1]);
 const catalogAdrLinks = catalogLinks.filter((link) => link.startsWith("ac-adr-"));
+const catalogInternalLinks = catalogLinks.filter((link) => link.startsWith("internal-adr-"));
 
 for (const name of expectedTripletNames) {
   if (!catalogAdrLinks.includes(name)) {
@@ -994,6 +1399,20 @@ for (const link of catalogAdrLinks) {
     fail(`${catalogRel}: AC-ADR catalog links must be direct triplet filenames; found ${link}`);
   } else if (!expectedTripletNames.has(link)) {
     fail(`${catalogRel}: orphan AC-ADR link ${link}`);
+  }
+}
+if (catalogInternalLinks.length > 0) {
+  fail(`${catalogRel}: internal ADR records must be excluded from the public catalog`);
+}
+for (const name of internalTripletNames) {
+  if (catalogText.includes(name)) {
+    fail(`${catalogRel}: internal ADR triplet ${name} must not appear in the public catalog`);
+  }
+}
+for (const idNumber of expectedInternalStems.keys()) {
+  const id = `AC-INTERNAL-${String(idNumber).padStart(3, "0")}`;
+  if (catalogText.includes(id)) {
+    fail(`${catalogRel}: internal ADR ID ${id} must not appear in the public catalog`);
   }
 }
 for (const heading of ["## Skill runtime", "## Target repository", "## Concern views"]) {
@@ -1446,6 +1865,31 @@ for (const caseName of expectedEvalCases) {
   }
 }
 
+const internalNamespaceCaseFile = path.join(
+  evalCasesDir,
+  "internal-public-adr-namespace-separation.md",
+);
+const internalNamespaceCaseText = readRegularFile(internalNamespaceCaseFile);
+const internalNamespaceCaseRel = relative(internalNamespaceCaseFile);
+for (const assertion of [
+  "- contains: public Long governs",
+  "- contains: affected route blocked",
+  "- contains: promotion incomplete",
+  "- contains: new exposed triplet",
+  "- contains: catalog row",
+  "- contains: decision lock",
+  "- contains: lineage entry",
+  "- contains: focused validation",
+  "- not_contains: internal Long governs",
+  "- not_contains: metadata-only promotion complete",
+]) {
+  if (!internalNamespaceCaseText.includes(assertion)) {
+    fail(
+      `${internalNamespaceCaseRel}: missing public/internal conflict or promotion assertion ${JSON.stringify(assertion)}`,
+    );
+  }
+}
+
 const backendRoutingCaseFile = path.join(evalCasesDir, "selective-backend-routing.md");
 const backendRoutingCaseText = readRegularFile(backendRoutingCaseFile);
 const backendRoutingCaseRel = relative(backendRoutingCaseFile);
@@ -1507,7 +1951,7 @@ const legacyCaseLineage = validateLegacyCaseLineage({
 errors.push(...legacyCaseLineage.errors);
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} ADRs, ${records.length} triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
+export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
 
 const isMain =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

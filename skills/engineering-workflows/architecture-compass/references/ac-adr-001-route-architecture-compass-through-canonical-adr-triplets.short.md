@@ -2,7 +2,7 @@
 
 ID: AC-ADR-001
 Title: Route Architecture Compass Through Canonical ADR Triplets
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: skill-runtime
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-051
 Guide verified: 2026-07-28
 Gist: Route each task through a bounded set of ADR triplets and keep Long as the only normative variant.
 
