@@ -21,4 +21,7 @@ Yes
 - contains: review
 - contains: export
 - contains: ambiguous
+- not_contains: preflight completed
+- not_contains: tool detection completed
+- not_contains: backup created
 - not_contains: validation completed

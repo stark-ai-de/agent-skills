@@ -1,6 +1,6 @@
 # Design profiles
 
-Use these profiles as original draw.io style recipes, not as instructions to copy a reference image. Do not reproduce source compositions, text, proprietary artwork, or brand groupings. A profile changes presentation only; architecture content, icon-first coverage, animation policy, routing, accessibility, and validation still apply.
+Use these profiles as original draw.io style recipes, not as instructions to copy a reference image. Do not reproduce source compositions, text, proprietary artwork, or brand groupings. A profile changes presentation only; official organization/product/service assets remain primary, generic semantic icons remain fallback-only for named entities, and architecture content, icon-first coverage, animation policy, routing, accessibility, and validation still apply.
 
 ## Contents
 
@@ -40,16 +40,17 @@ When the user supplies a diagram or image as a style reference, adapt it for the
 
 1. Extract only the reusable system: canvas/surface/text/accent colors, type hierarchy, grid and spacing, corner radius, border weight, connector treatment, icon-chip treatment, and limited gradient/shadow use.
 2. Map those tokens to editable draw.io styles and `light-dark(...)` pairs. Start from the closest built-in profile, then change only the tokens needed to preserve the reference's visual character.
-3. Reapply the shared contrast, icon fidelity, static semantics, animation, routing, and density guardrails. Readability wins over visual similarity.
+3. Reapply the shared contrast, official-artwork fidelity, static semantics, animation, routing, and density guardrails. Readability wins over visual similarity.
 4. Record the result as `design_profile: adapted-<short-name>` for this delivery. Persist a reusable profile or asset only when the user explicitly asks; otherwise leave no cache or global configuration.
 
-Never reproduce the reference's exact composition, text, logos, illustrations, or branded grouping. Report which tokens were adapted and any accessibility-driven substitutions.
+Never reproduce the reference's exact composition, text, logos, illustrations, or branded grouping. Report which tokens were adapted and any accessibility-driven substitutions. If an accessibility exception changes official artwork colors, also disclose the source variant, changed colors, reason, scope, and contrast evidence.
 
 ## Shared guardrails
 
 - Keep an 8 px grid, portable fonts, 12 px body/connector text where practical, 14 px component titles, 4.5:1 text contrast, and 3:1 contrast for essential boundaries and controls.
 - Use `adaptiveColors="auto"` and intentional `light-dark(...)` pairs on every page, including dark-first profiles.
-- Keep logos and native service icons recognizable. Do not recolor them to match a profile; change the chip or card behind them.
+- Keep official organization/product/service logos and native service stencils recognizable and primary whenever available. A generic semantic icon is fallback-only for a named entity; use it only when the official asset cannot be resolved and disclose the substitution.
+- Do not arbitrarily recolor, tint, invert, or dark-mode-filter official artwork to match a profile. Only an explicit user request or a necessary, documented accessibility exception may authorize recoloring; disclose the source variant, changed colors, reason, scope, and contrast evidence. Prefer changing the chip or card behind the asset.
 - Keep arrowheads, labels, and line roles complete without color, glow, texture, or motion. Animation remains progressive enhancement.
 - The content brief wins over the profile recipe. For names-only output, do not invent descriptions, metadata, relationship prose, legends, or sequence badges; retain meaning through names, arrowheads, grouping, and spatial order.
 - Profile accents express hierarchy, focus, or sequence; they do not replace status labels, boundaries, or relationship text.
@@ -74,7 +75,7 @@ Use sparse axonometric or stacked-block geometry, muted navy infrastructure shap
 - Use built-in `shape=isoCube`, `shape=isoCube2`, or `shape=isoRectangle` first; fall back to `shape=cube`, then a small editable three-face block from stock polygons. Do not require a shape index or use a rasterized pseudo-3D scene.
 - Put each title and metadata in a separate horizontal label cell below or beside the isometric shape; never let text cross an internal face seam.
 - Reserve dotted lines for static dependency or telemetry. Directed runtime/data edges retain arrowheads, labels, animation policy, and stronger contrast.
-- Give each component roughly a 140x96 px footprint with at least 56-64 px peer spacing. Use 14-16 px horizontal titles and at least 12 px metadata. Pair recognized products with their real logo/service stencil near the label; use isometric blocks for generic instances, clusters, and deployment units.
+- Give each component roughly a 140x96 px footprint with at least 56-64 px peer spacing. Use 14-16 px horizontal titles and at least 12 px metadata. Pair recognized products with their official logo/service stencil near the label; use isometric blocks for generic instances, clusters, and deployment units.
 
 ## Neon hub
 
@@ -88,7 +89,7 @@ Use a dark-first black/charcoal canvas, one central hub, oversized modular cards
 
 ## Aurora story
 
-Use a 16:9 dark navy or pale lavender canvas, large rounded service columns, numbered flow steps for a single ordered journey, brand logos for named products or semantic icons for generic services, and restrained violet/rose/teal accents. This is a presentation profile, not the default architecture reference style.
+Use a 16:9 dark navy or pale lavender canvas, large rounded service columns, numbered flow steps for a single ordered journey, official brand logos for named products, and semantic icons only for genuinely generic services or unresolved named assets. Use restrained violet/rose/teal accents. This is a presentation profile, not the default architecture reference style.
 
 - Palette: canvas `light-dark(#F3F1FF,#070B2B)`, surface `light-dark(#FFFFFF,#111638)`, text `light-dark(#17112B,#F8FAFC)`, violet `light-dark(#6D28D9,#C084FC)`, rose `light-dark(#BE185D,#F472B6)`, teal `light-dark(#0F766E,#2DD4BF)`, gold `light-dark(#A16207,#FACC15)`.
 - Use `arcSize=16` (a draw.io percentage, not pixels), 160-240 px service cards, 28-32 px page titles, 16 px service titles, at least 12 px labels/badges, clear step numbers when sequence is part of the semantic model, and no more than three accent families on a page.

@@ -71,9 +71,9 @@ Every validator error should identify the page or cell and include a fix hint. W
 
 When rendered output exists, inspect:
 
-- recognized brands use the real logo or an explicitly labelled semantic fallback
+- recognized brands use the official logo/service stencil when available, or an explicitly labelled per-node semantic fallback only when unresolved or intentionally generic/vendor-neutral
 - logo variants do not mix color and monochrome without a source limitation
-- logos are not recolored, inverted, cropped, stretched, or unexpectedly simplified
+- original logo artwork, source variant, and brand colors are preserved; logos are not arbitrarily recolored, inverted, cropped, stretched, filtered, or unexpectedly simplified. Any explicit user-requested or necessary documented accessibility treatment is disclosed.
 - icon-chip dimensions stay consistent inside one visual family
 
 - readable text at normal zoom
@@ -90,9 +90,9 @@ When rendered output exists, inspect:
 - component cards distinguish title, role, metadata, paths, and ports instead of giving every line the same emphasis
 - package/detail rows are visually connected to related runtime services, explained by a legend, or moved to a detail page/layer
 - icons render and align with labels
-- every primary component has a real logo/service stencil or a relevant labelled semantic icon
+- every primary component has an official logo/service stencil when available or a relevant labelled semantic icon for generic/unresolved concepts
 - unresolved brands use per-node semantic fallbacks without removing resolved peer logos
-- logos are not stretched, cropped, recolored, inverted, or mixed between wordmarks and icon-only variants unless intentional
+- logos are not stretched, cropped, recolored, inverted, or mixed between wordmarks and icon-only variants unless explicitly requested or a necessary documented accessibility exception is disclosed
 - logo chips are consistent in size and contrast across a visual family
 - dark SVG preserves contrast, including weak monochrome logos and connector labels
 - fixed light/dark SVG exports declare the requested theme; adaptive SVGs are not relabelled as fixed light

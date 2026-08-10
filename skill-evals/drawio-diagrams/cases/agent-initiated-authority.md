@@ -18,5 +18,8 @@ Yes
 
 - contains: review
 - contains: read-only
+- not_contains: preflight install
+- not_contains: capability setup
+- not_contains: backup created
 - not_contains: edit applied
 - not_contains: export completed

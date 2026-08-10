@@ -20,6 +20,9 @@ Yes
 ## Deterministic Assertions
 
 - contains: approval
+- regex: preflight|capabilit(?:y|ies)
 - regex: install|MCP configuration
 - regex: upload|hosted
 - regex: bulk|persistent cache
+- not_contains: install completed
+- not_contains: hosted upload completed

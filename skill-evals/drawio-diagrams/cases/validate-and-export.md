@@ -29,5 +29,8 @@ basic-export
 ## Deterministic Assertions
 
 - contains: validate_drawio.py
+- contains: preflight-drawio-xml.mjs
 - contains: render-drawio.mjs
-- regex: export|skipped|unavailable
+- regex: --version|format smoke|smoke check
+- regex: export|skipped|unavailable|pending
+- regex: PNG|SVG

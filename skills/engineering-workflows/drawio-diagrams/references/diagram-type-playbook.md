@@ -63,7 +63,7 @@ Use participants as columns. Messages flow top to bottom. Use simple labels and 
 
 ### Architecture/cloud
 
-Choose one architecture view from the content gate below. Use zones only for real scope, deployment, trust, or responsibility boundaries. Use icons with labels, keep data stores distinct, and make current, target, optional, and blocked paths explicit without relying on color alone.
+Choose one architecture view from the content gate below. Use zones only for real scope, deployment, trust, or responsibility boundaries. Use official organization/product/service icons or native stencils with labels whenever the named asset is available; use labelled semantic icons only for generic or unresolved nodes. Preserve source artwork and brand colors, and make current, target, optional, and blocked paths explicit without relying on color alone.
 
 ### Network
 

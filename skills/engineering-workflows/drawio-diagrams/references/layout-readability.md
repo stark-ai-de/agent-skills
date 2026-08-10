@@ -61,8 +61,9 @@ Avoid formatting every line of a component card identically:
 
 Logo handling is part of layout quality:
 
+- Prefer the official organization, product, or service mark whenever the named asset is available; a generic semantic glyph is a per-node fallback for unresolved or intentionally generic/vendor-neutral concepts.
 - Use one chip dimension per visual family, commonly 44x44 or 48x48. Use a non-square chip only when the logo's source viewBox needs it, and then apply that pattern consistently to similar logos.
-- Preserve original logo artwork. Do not recolor, invert, crop, stretch, or replace a detailed source logo with a simplified monochrome glyph when a recognizable official/product icon is available.
+- Preserve the original logo artwork, source variant, and brand colors. Do not arbitrarily recolor, invert, crop, stretch, filter, or replace a detailed source logo with a simplified monochrome glyph when a recognizable official/product icon is available. Change the neutral chip/background for contrast; only an explicit user request or a necessary documented accessibility exception may change the mark, and the receipt must disclose it.
 - When a black, white, or low-contrast logo does not work in dark mode, change the neutral chip/background rather than changing the logo artwork.
 - Verify that every logo remains visible after dark export and that weak marks do not look washed out.
 
