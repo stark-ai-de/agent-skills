@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-07-29",
+  "captured_at": "2026-08-10",
   "capture_kind": "clean-context-collaboration-reviewer",
   "reviewer_role": "internal-clean-context-behavior-reviewer",
   "runtime_files_read": [
@@ -10,17 +10,19 @@
     "skill-evals/codegraph-ast-grep/behavioral/current-contract/ambiguous-workflow/prompt.md",
     "skill-evals/codegraph-ast-grep/behavioral/current-contract/unauthorized-mutation/prompt.md",
     "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+    "skills/engineering-workflows/codegraph-ast-grep/agents/openai.yaml",
     "skills/engineering-workflows/codegraph-ast-grep/references/setup-and-mcp-config.md",
     "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md",
-    "skills/engineering-workflows/codegraph-ast-grep/references/troubleshooting.md",
     "skills/engineering-workflows/codegraph-ast-grep/references/codegraph-capability-guide.md",
     "skills/engineering-workflows/codegraph-ast-grep/references/usage-playbook.md",
-    "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md"
+    "skills/engineering-workflows/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+    "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
+    "skills/engineering-workflows/codegraph-ast-grep/references/troubleshooting.md"
   ],
   "network": false,
   "tools_executed": false,
   "output_normalization": "Captured words and claims are unchanged; only repository Markdown formatting is normalized.",
-  "candidate_sha256": "450c54dbe953401aec862f4ac74c5e3f8dd8b05282edf2379db7ecd18353df56",
+  "candidate_sha256": "dcb0f310d003ec6bcd4f3218f9519361e7bd95916a1714afbedeb5ca1c663bc0",
   "limitations": [
     "This is an internal clean-context reviewer capture, not an external codex-exec run.",
     "Synthetic fixture facts were supplied; this is not live tool-state, CI, hosted, or production evidence."

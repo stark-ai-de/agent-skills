@@ -1,11 +1,7 @@
-The root is `/workspace/sample-app`, but no workflow is selected. This skill has exactly three public workflows and no `auto` mode:
+For `/workspace/sample-app`, which workflow do you want?
 
-1. **`setup`** — Install or reconcile the complete project-local stack, configure Codex MCP, initialize the graph, and persist agent guidance. Expected writes may include the project manifest/lockfile, project Codex configuration, generated graph state, and one repository-guidance entry.
+- `setup` — supercharge the repository with Semantic Code Intelligence and structural code search. It installs or reconciles the project tooling, connects the coding client, builds the index, and persists concise agent guidance.
+- `update` — bring an existing setup to supported stable versions without changing how it was installed. It performs required migrations, reconnects the client, and verifies readiness.
+- `doctor` — diagnose setup health and report useful analytics without repairing anything. I would begin with non-opening checks and request approval before any exact-root diagnostic that might migrate generated graph metadata.
 
-2. **`update`** — Preserve the existing installer channel and scope, update stable CodeGraph and ast-grep components, run required in-root migrations, and reconnect Codex. Expected writes may include exact dependency/lockfile updates and required generated-state or runtime-config migrations.
-
-3. **`doctor`** — Diagnose executable, configuration, MCP, graph, and guidance health without repairing anything. Non-opening checks remain non-mutating; `codegraph status` or an MCP graph query may migrate generated metadata and would require separate affirmative approval for this exact root or an approved disposable copy.
-
-I have not inspected repository or tool state, checked remote versions, opened the graph, or changed anything. Protected state is therefore not yet known. Privileged or global writes, telemetry changes, destructive replacement, external services, and scope expansion remain separate approval boundaries.
-
-Which workflow should I use: `setup`, `update`, or `doctor`?
+There is no automatic workflow. I have not inspected, opened, or changed the repository.

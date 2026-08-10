@@ -12,6 +12,22 @@
 
 ### Removed
 
+## v0.17.0 - 2026-08-10
+
+### Added
+
+### Changed
+
+- Updated `codegraph-ast-grep` to 0.3.1 with plain, benefit-first setup and update descriptions while preserving its workflow, authority, provenance, migration, and verification contracts.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.16.0 - 2026-08-10
 
 ### Added

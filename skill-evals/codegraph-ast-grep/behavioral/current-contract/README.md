@@ -1,7 +1,7 @@
-# Current v0.3 Internal Reviewer Capture
+# Current v0.3.1 Internal Reviewer Capture
 
 This directory is deterministic, regradable maintainer evidence for the current
-`codegraph-ast-grep` `0.3.0` runtime payload. Schema 2 of `manifest.json` binds
+`codegraph-ast-grep` `0.3.1` runtime payload. Schema 2 of `manifest.json` binds
 five public-safe prompts, captured final responses, independent gradings, and
 both provenance records to the exact runtime hash.
 

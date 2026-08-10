@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # CodeGraph + ast-grep
@@ -26,10 +26,10 @@ Do not activate this skill merely because a coding task can benefit from an alre
 
 ## Workflow selection
 
-Always expose these finite workflows when the skill is invoked directly:
+Always expose these finite workflows in plain, benefit-first language when the skill is invoked directly:
 
-- `setup`: idempotently install or reconcile the complete supported stack and persist coding-agent guidance.
-- `update`: preserve installation provenance, update stable core tools, migrate generated state/configuration as required, reconnect the client, and verify readiness.
+- `setup`: supercharge the repository with Semantic Code Intelligence and structural code search, helping coding agents answer faster with fewer tool calls. Install missing pieces, connect the coding client, build the code index, add repository guidance, and safely reuse or repair any existing setup.
+- `update`: bring an existing setup to current stable versions without changing how it was installed. Migrate configuration or index data when needed, reconnect the coding client, and verify that everything still works.
 - `doctor`: diagnose setup health and report analytics without repairing anything.
 
 There is no `auto` workflow. Select by intent:
