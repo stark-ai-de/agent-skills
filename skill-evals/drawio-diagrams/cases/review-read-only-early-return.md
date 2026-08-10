@@ -24,6 +24,9 @@ Yes
 - contains: read-only
 - contains: findings
 - regex: evidence (?:limits|limitations)
+- regex: preflight.{0,}(?:read-only|supplied source)|strict XML
+- not_contains: install proposal
 - not_contains: backup created
+- not_contains: staging directory
 - not_contains: XML updated
 - not_contains: export completed

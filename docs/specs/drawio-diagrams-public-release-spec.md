@@ -6,7 +6,7 @@ status: "final-public-release"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-07-07"
-updated: "2026-07-24"
+updated: "2026-08-10"
 ---
 
 # drawio-diagrams Public Release Spec
@@ -24,9 +24,15 @@ Release `drawio-diagrams` as a public Engineering Workflows skill for creating, 
 - Keep eval proof under `skill-evals/drawio-diagrams/`, outside the runtime payload.
 - Ship no copied third-party reference packs, bundled shape index, or bundled icon pack.
 - Default to icon-first diagrams wherever the notation supports it: real logos/service stencils for named products and labelled semantic icons for generic concepts or unresolved brands.
-- Route native draw.io stencils first, Lobe Icons for AI/LLM brands, Simple Icons for broad technology brands, then theSVG/domain packs for gaps; do not maintain a static slug catalog or bundle SVG assets.
+- Route official organization/product/service assets first, including native vendor stencils and official provider assets; use Lobe Icons for AI/LLM brands, Simple Icons for broad technology brands, then theSVG/domain packs for gaps. Do not maintain a static slug catalog or bundle SVG assets.
 - Keep the dependency-free Python validator as a public helper under ADR-0022.
 - Keep repository-specific provenance and named third-party comparison or inspiration analysis outside tracked public artifacts under [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.short.md) ([Long, canonical](../adrs/0030-separate-public-contracts-from-private-provenance.long.md) · [Guide](../adrs/0030-separate-public-contracts-from-private-provenance.guide.md)).
+- For every named organization, product, platform, model, or service, make the official logo, service stencil, or official provider asset primary whenever available. Generic semantic icons are fallback-only for named entities; they remain the normal primary notation for genuinely generic concepts.
+- Preserve official artwork, aspect ratio, and supplied brand colors. Arbitrary recoloring, tinting, inversion, or dark-mode filtering is prohibited unless the user explicitly requests it or a necessary accessibility exception is documented; disclose the source variant, changed colors, reason, scope, and contrast evidence, and change the surrounding chip/card first.
+- Run a non-mutating capability preflight immediately after workflow and authority selection for `create`, `edit-repair`, and `export`; keep `review` strictly read-only and do not let capability discovery imply mutation or installation authority.
+- Prefer the capability ladder `transactional-native` → `approved-raw-cli-manual` → `fixed-theme-browser-raster` → `browser-url-preview` or `html-viewer-preview` only when explicitly requested → `direct-xml` as the universal editable route. Image generation is allowed only after the user explicitly changes the outcome to a non-editable image and never satisfies `.drawio`, PNG, or SVG completion.
+- Keep approvals independent for tool installation, WSL/Windows or other cross-boundary execution, browser use, hosted/MCP transfer, cache creation, and paid/provider actions. A WSL Windows bridge is an approved raw/manual route and never claims transactional renderer guarantees.
+- Preserve canonical native artifact names. Any maintained fallback artifact carries an explicit route suffix such as `.fallback-windows-raw`, `.fallback-browser-preview`, `.fallback-illustrative-image`, `.raw-cli`, `.windows-bridge`, or `.fixed-theme-browser`, and every fallback receipt states its limitation.
 
 ## Skill Contract
 
@@ -41,6 +47,9 @@ The skill must:
 - Create a backup or alternate output before overwriting an existing `.drawio` file.
 - Validate every generated or edited diagram with `scripts/validate_drawio.py` when `python3` is available.
 - Report visual and dark-mode verification honestly, including skipped checks.
+- Require every mutating/export receipt to include `Capability status`, `Renderer route`, `Tool-install approval`, `Cross-boundary approval`, `Export status`, `Visual verification`, `Evidence scope`, and `Fallback (used/offered)`.
+- On NixOS/WSL, use a Linux-native draw.io executable owned by the active NixOS user profile or a compatible native `nixpkgs#drawio` package only after package-ownership and compatibility checks plus explicit installation approval; do not recommend mutable draw.io configuration or AppImage installation.
+- For named organizations, products, platforms, models, and services, resolve an official logo/service stencil or official provider asset before considering a generic semantic icon. Preserve the original artwork, aspect ratio, and brand colors; disclose any explicitly requested or accessibility-exception recoloring in the receipt.
 
 ## 2026-07-14 Optimization Contract
 
@@ -91,6 +100,20 @@ The skill must:
 - Publish a same-model, same-tool, blind paired architecture-quality benchmark protocol under `skill-evals/`; do not publish named comparative outperformance claims.
 - Keep the official shape index optional and approval-gated. The current quality-focused release does not reverse the public payload decision against bundled third-party indexes.
 
+### 2026-08-10 capability-aware delivery contract
+
+- The preflight runs after workflow and authority selection and before source inspection, authoring, rendering, or export for `create`, `edit-repair`, and `export`. A `review` route performs only read-only inspection and validation.
+- `transactional-native` uses the Linux-native draw.io CLI with `scripts/render-drawio.mjs`; `approved-raw-cli-manual` covers raw Desktop CLI/manual export and the explicitly approved WSL Windows bridge; `fixed-theme-browser-raster` is limited to validated fixed-theme SVG-to-PNG previews; `browser-url-preview` and `html-viewer-preview` are explicit preview transports only; `direct-xml` remains the universal editable route.
+- Each route reports capability, approval, renderer, export, visual, evidence, and fallback status. Raw/manual and cross-boundary routes state that transactional staging/no-clobber guarantees were not proven. Browser URL/HTML previews are not canonical editable artifacts and carry their data-exposure warning.
+- Native artifacts retain canonical names. Fallback outputs use explicit route suffixes and are never relabelled as native exports. Image-generation output is never silently substituted for editable draw.io output.
+- NixOS/WSL setup checks active user-profile ownership and package compatibility before a separately approved `nix profile install nixpkgs#drawio`; mutable configuration and AppImage installation are outside the supported setup path.
+
+### Icon and logo fidelity contract
+
+- Official organization/product/service assets are the primary icon source whenever available, including official native vendor stencils. Generic semantic icons may stand in for a named entity only when its official asset is unavailable, unresolved, or explicitly declined; keep the original label and disclose the per-node fallback.
+- Profiles and themes may adjust the surrounding chip, card, spacing, or neutral background for contrast, but must not arbitrarily recolor, tint, invert, crop, stretch, skew, or dark-mode-filter official artwork. An explicit user request or necessary documented accessibility exception is the only permitted recoloring path; record source variant, changed colors, reason, scope, and contrast evidence.
+- Formal ER/UML/sequence/BPMN notation and genuinely generic concepts retain their native semantic shapes; this rule does not force brand logos into notation that would reduce formal clarity.
+
 ### Publication boundary
 
 - Publish only the product contract, public behavior, validation requirements, and provider or license attribution required to use the skill safely.
@@ -105,7 +128,7 @@ The skill must:
 
 ### ADR gate
 
-[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.short.md) ([Long, canonical](../adrs/0022-allow-task-specific-python-skill-helpers.long.md) · [Guide](../adrs/0022-allow-task-specific-python-skill-helpers.guide.md)) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.short.md) ([Long, canonical](../adrs/0030-separate-public-contracts-from-private-provenance.long.md) · [Guide](../adrs/0030-separate-public-contracts-from-private-provenance.guide.md)) governs the public-contract and private-provenance split. [ADR-0031](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.short.md) ([Long, canonical](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.long.md) · [Guide](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.guide.md)) governs explicit approval, bounded recursive inspection, and local browser isolation for fixed-theme rasterization.
+[ADR-0022](../adrs/0022-allow-task-specific-python-skill-helpers.short.md) ([Long, canonical](../adrs/0022-allow-task-specific-python-skill-helpers.long.md) · [Guide](../adrs/0022-allow-task-specific-python-skill-helpers.guide.md)) governs dependency-free Python validator changes. [ADR-0030](../adrs/0030-separate-public-contracts-from-private-provenance.short.md) ([Long, canonical](../adrs/0030-separate-public-contracts-from-private-provenance.long.md) · [Guide](../adrs/0030-separate-public-contracts-from-private-provenance.guide.md)) governs the public-contract and private-provenance split. [ADR-0031](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.short.md) ([Long, canonical](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.long.md) · [Guide](../adrs/0031-use-approved-bounded-fixed-theme-rasterization.guide.md)) governs explicit approval, bounded recursive inspection, and local browser isolation for fixed-theme rasterization. [ADR-0040](../adrs/0040-route-drawio-exports-through-capability-aware-fallbacks.short.md) ([Long, canonical](../adrs/0040-route-drawio-exports-through-capability-aware-fallbacks.long.md) · [Guide](../adrs/0040-route-drawio-exports-through-capability-aware-fallbacks.guide.md)) governs the capability preflight, fallback ladder, independent approvals, canonical naming, and delivery receipts; it does not rewrite accepted ADR-0027 or ADR-0031.
 
 ### User verification
 
@@ -120,12 +143,14 @@ The maintainer approved this public product contract and the ADR-0030 publicatio
 - Standard adaptive SVG refreshes use `--svg-theme auto`. Viewer-independent light/dark PNGs are rasterized from validated fixed-theme SVGs with the bounded local helper and an explicitly selected local browser executable; comparison instructions reuse the same path for a batch, the helper recursively inspects bounded embedded SVG image data, rejects active or remote-loading content, and the skill does not claim that direct draw.io Desktop PNG export applies a dark theme.
 - Per-artifact wildcard checks for PNG dimensions/nonblank content and SVG validity/theme/animation/self-containment evaluate every match. PNG comparisons use canonical canvas-order RGBA pixels rather than encoding details, fixed SVG/PNG pairs require identical explicit pixel dimensions, profile pairs require a nontrivial changed-pixel floor, relative gallery references resolve to real artifacts, and exact graph assertions reject extra or duplicate semantic cells and listed component-to-group memberships.
 - The external SVG eval names LangSmith and requires editable `.drawio` plus rendered SVG artifacts, embedded image data without a provider URL, fixed aspect ratio, provider/version reporting, and the single rights notice.
+- Icon coverage evals require official organization/product/service assets whenever available, generic semantic icons only as per-node fallbacks for named entities, preserved source artwork/brand colors, and an explicit disclosure for any user-requested or accessibility-exception recoloring.
 - Deterministic checks catch mixed or missing directed-flow animation without penalizing structural or decorative edges, and avoid false orphan warnings for component-card children or declared annotations.
 - Diagram-rule checks warn when a `dataRole=component` card has neither an icon-like shape nor a `dataRole=icon` child. Shape-search regressions cover JSON output, fuzzy and partial matching, type filtering, gzip input, and standard-cache discovery.
 - Desktop CLI is an export/render tool, not an assumed Mermaid importer or layout engine. For `input.drawio`, the standard renderer stages and validates fresh `input.drawio.png` and `input.dark.svg` artifacts before no-clobber installation, including when Desktop exits zero without output; `--page-index` does not rename them. A commit-time collision never deletes the raced destination. Interrupted commits retain partial outputs plus staged files and backups, while successful replacements also retain and report the staging recovery directory because an open writer can still update a renamed backup inode. Fresh installs without prior outputs remove their staging directory after validation.
 - Renderer PNG validation is bounded to non-interlaced output and checks legal IHDR fields, critical chunks, CRCs, the complete concatenated IDAT zlib stream, scanline length, and row filters. Legal interlaced PNG remains outside this renderer-validation subset and fails with an explicit unsupported-mode error.
 - Eval validation rejects suspicious escaped wildcard regexes and keeps at least 20 natural-language positive prompts that do not name the skill, alongside explicit-invocation cases.
 - Tracked public examples are updated with animation, clearer content hierarchy, and modern readable styling where applicable.
+- Capability-aware preflight, route selection, independent approvals, canonical/fallback naming, and the eight receipt fields are covered by focused documentation and eval cases; unavailable capabilities remain explicit rather than becoming unsupported completion claims.
 - The full repository validation required below passes without staging or changing unrelated worktree state.
 - The benchmark protocol uses identical prompts and fixtures, three trials per case, blind visual grading, neutral artifact checks, pinned skill/tool versions, published failures, and an explicit claim threshold.
 
@@ -152,6 +177,7 @@ skills/engineering-workflows/drawio-diagrams/
   scripts/
     lib/
       transactional-render-output.mjs
+    probe-drawio-toolset.mjs
     open-drawio-url.mjs
     preflight-drawio-xml.mjs
     rasterize-themed-svg.mjs

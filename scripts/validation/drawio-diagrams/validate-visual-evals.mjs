@@ -129,6 +129,112 @@ function validateReviewWorkflowContract() {
   return errors;
 }
 
+function validateToolsetCapabilityContract() {
+  const text = fs.readFileSync(skillPath, "utf8");
+  const probePath = path.join(
+    root,
+    "skills/engineering-workflows/drawio-diagrams/scripts/probe-drawio-toolset.mjs",
+  );
+  const requirements = [
+    ["strict XML preflight", /preflight-drawio-xml\.mjs/i],
+    [
+      "Linux-native descriptor boundary",
+      /Linux[^\n]{0,160}(?:\/proc\/self\/fd|native draw\.io)|native draw\.io[^\n]{0,160}\/proc\/self\/fd/i,
+    ],
+    [
+      "version-probed candidate selection",
+      /probe-drawio-toolset\.mjs|--version[^\n]{0,160}(?:candidate|draw\.io|probe)|(?:candidate|draw\.io|probe)[^\n]{0,160}--version/i,
+    ],
+    [
+      "stale/non-executable candidate fallback",
+      /(?:stale|non-executable|unavailable)[^\n]{0,180}(?:candidate|DRAWIO_BIN|fallback)|(?:candidate|DRAWIO_BIN)[^\n]{0,180}(?:stale|non-executable|fallback)/i,
+    ],
+    ["raw/manual export fallback", /raw[^\n]{0,40}manual(?: export)?|raw export/i],
+    [
+      "pinned browser capability",
+      /rasterize-themed-svg\.mjs[^\n]{0,180}(?:pinned|absolute)|(?:pinned|absolute)[^\n]{0,180}rasterize-themed-svg\.mjs/i,
+    ],
+    [
+      "install/setup approval",
+      /(?:install|setup)[^\n]{0,160}(?:explicit approval|approval-gated|approval)/i,
+    ],
+    [
+      "sanitized capability receipt",
+      /saniti[sz](?:ed|e)[^\n]{0,120}(?:receipt|path)|(?:receipt|path)[^\n]{0,120}(?:saniti[sz](?:ed|e)|private|temporary)/i,
+    ],
+  ];
+  const errors = requirements.flatMap(([label, pattern]) =>
+    pattern.test(text)
+      ? []
+      : [`drawio-diagrams/SKILL.md: missing toolset capability marker for ${label}`],
+  );
+  if (!fs.existsSync(probePath)) {
+    errors.push("drawio-diagrams: missing probe-drawio-toolset.mjs runtime helper");
+  } else {
+    const probeText = fs.readFileSync(probePath, "utf8");
+    for (const marker of [
+      "export function probeDrawioToolset",
+      "export function probeBrowser",
+      "export function probeDrawio",
+      "--json",
+    ]) {
+      if (!probeText.includes(marker)) {
+        errors.push(`drawio-diagrams: probe helper is missing ${JSON.stringify(marker)}`);
+      }
+    }
+  }
+  return errors;
+}
+
+function validateCapabilityEvalCoverage(files) {
+  const relativeNames = new Set(files.map((file) => path.relative(root, file)));
+  const requiredCases = [
+    "skill-evals/drawio-diagrams/cases/toolset-native-cli-selection.md",
+    "skill-evals/drawio-diagrams/cases/toolset-drawio-bin-fallback.md",
+    "skill-evals/drawio-diagrams/cases/toolset-wsl-raw-export-fallback.md",
+    "skill-evals/drawio-diagrams/cases/toolset-preflight-install-approval.md",
+    "skill-evals/drawio-diagrams/cases/toolset-install-declined-fallback.md",
+    "skill-evals/drawio-diagrams/cases/browser-preview-capability-limits.md",
+    "skill-evals/drawio-diagrams/cases/sanitized-capability-receipt.md",
+    "skill-evals/drawio-diagrams/cases/review-preflight-read-only.md",
+  ];
+  const errors = requiredCases
+    .filter((file) => !relativeNames.has(file))
+    .map((file) => `draw.io eval corpus is missing required capability case: ${file}`);
+  const corpus = files.map((file) => fs.readFileSync(file, "utf8")).join("\n");
+  const markers = [
+    ["DRAWIO_BIN candidate fallback", /DRAWIO_BIN/i],
+    ["direct WSL Windows candidate", /\/mnt\/c/i],
+    ["native version probe", /--version/i],
+    ["PNG and SVG smoke result", /PNG[\s\S]{0,120}SVG|SVG[\s\S]{0,120}PNG/i],
+    ["browser tri-state", /present[\s\S]{0,120}missing[\s\S]{0,120}indeterminate/i],
+    ["strict preflight", /preflight-drawio-xml\.mjs/i],
+    ["install/setup approval", /install[\s\S]{0,120}approval/i],
+    ["raw/manual fallback", /raw[/-]manual export|direct XML[\s\S]{0,120}fallback/i],
+    ["sanitized receipt", /sanitized[\s\S]{0,120}receipt/i],
+  ];
+  for (const [label, pattern] of markers) {
+    if (!pattern.test(corpus)) errors.push(`draw.io eval corpus is missing ${label} coverage`);
+  }
+  const sideEffectCases = [
+    "skill-evals/drawio-diagrams/cases/ambiguous-workflow-selection.md",
+    "skill-evals/drawio-diagrams/cases/review-preflight-read-only.md",
+  ];
+  for (const file of sideEffectCases) {
+    const full = path.join(root, file);
+    if (!fs.existsSync(full)) continue;
+    const text = fs.readFileSync(full, "utf8");
+    if (
+      !/not_contains: (?:preflight completed|install proposal|backup created|staging directory)/i.test(
+        text,
+      )
+    ) {
+      errors.push(`${file}: ambiguous/review case must assert no preflight side effects`);
+    }
+  }
+  return errors;
+}
+
 function validateCliArgumentRegressions() {
   for (const option of ["--case", "--artifacts-dir"]) {
     const result = spawnSync(process.execPath, [path.resolve(process.argv[1]), option], {
@@ -307,8 +413,10 @@ const caseFiles = args.caseFile
   : walkFiles(casesDir, (file) => file.endsWith(".md")).sort();
 const schemaErrors = [
   ...validateReviewWorkflowContract(),
+  ...validateToolsetCapabilityContract(),
   ...caseFiles.flatMap(validateCaseSchema),
 ];
+if (!args.caseFile) schemaErrors.push(...validateCapabilityEvalCoverage(caseFiles));
 if (schemaErrors.length) {
   console.error(schemaErrors.join("\n"));
   process.exit(1);

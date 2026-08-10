@@ -128,6 +128,8 @@ For rich service boxes, prefer a card built from child cells rather than one und
 
 Every `dataRole=component` cell must either be an icon-like native/service shape itself or contain a `dataRole=icon` child. A plain rounded component card without an icon is an incomplete icon-first component unless the user explicitly opted out of icons.
 
+For a named organization, product, or service, make the official/native mark the `dataRole=icon` child whenever it is available. Preserve its embedded source bytes, brand colors, viewBox, and aspect ratio; generic semantic children are fallback-only for unresolved or intentionally generic/vendor-neutral nodes. Do not encode arbitrary recoloring or filters in the image/style cell. If an explicit user request or necessary documented accessibility exception changes the mark, record that exception in the delivery receipt.
+
 Use `dataRole=annotation` or `dataRole=legend` on non-semantic note cells. These roles make intent clear to editors and prevent false orphan warnings.
 
 This structure improves editing, makes collapse/detail layers easier, and avoids every line looking equally important.

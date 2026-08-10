@@ -46,6 +46,306 @@ const PNG_CHANNELS = new Map([
   [4, 2],
   [6, 4],
 ]);
+const MAX_EXECUTABLE_PREFIX_BYTES = 64 * 1024;
+const MAX_DIAGNOSTIC_CHARS = 512;
+const MAX_COMMAND_OUTPUT_CHARS = 4 * 1024;
+const WINDOWS_PATH_RE = /(?:^[A-Za-z]:[\\/]|^\\\\|(?:^|[\\/])mnt[\\/]?[a-z][\\/])/i;
+const WINDOWS_EXECUTABLE_RE = /\.exe(?:$|[\\/])/i;
+const WINDOWS_WRAPPER_MARKERS = [
+  { pattern: /\bwslpath(?:\.exe)?\b/i, label: "wslpath" },
+  { pattern: /\bcmd(?:\.exe)?\b/i, label: "cmd.exe" },
+  { pattern: /\b(?:powershell|pwsh)(?:\.exe)?\b/i, label: "PowerShell" },
+  { pattern: /(?:^|[\\/])mnt[\\/]?[a-z][\\/]/i, label: "/mnt/<drive>" },
+  { pattern: /\.exe(?:$|[\\s"'\\/])/i, label: ".exe" },
+];
+
+function truncateDiagnostic(value, limit = MAX_DIAGNOSTIC_CHARS) {
+  const text = [...String(value ?? "")]
+    .map((character) => {
+      const codePoint = character.codePointAt(0);
+      return codePoint < 0x20 && ![0x09, 0x0a, 0x0d].includes(codePoint) ? "?" : character;
+    })
+    .join("");
+  if (text.length <= limit) return text;
+  return `${text.slice(0, Math.max(0, limit - 1))}…`;
+}
+
+function commandOutput(result, limit = MAX_COMMAND_OUTPUT_CHARS) {
+  return truncateDiagnostic(
+    [result?.stderr?.trim(), result?.stdout?.trim()].filter(Boolean).join("\n"),
+    limit,
+  );
+}
+
+function displayCommand(value) {
+  const text = String(value || "");
+  if (isWindowsPath(text) || WINDOWS_EXECUTABLE_RE.test(text)) return "<windows-drawio>";
+  const name = path.basename(text);
+  return /^[A-Za-z0-9._+-]+$/.test(name) ? name : "<drawio-cli>";
+}
+
+function displayArtifact(value) {
+  const name = path.basename(String(value || ""));
+  return /^[A-Za-z0-9._+-]+$/.test(name) ? name : "<artifact>";
+}
+
+function safeDiagnostic(value) {
+  const text = String(value ?? "");
+  return truncateDiagnostic(
+    text.replace(/(?:[A-Za-z]:[\\/]|\\\\|\/)[^\s'"`]+/g, (match, offset, source) => {
+      if (source[offset - 1] && /[A-Za-z0-9_.-]/.test(source[offset - 1])) return match;
+      if (/^(?:[A-Za-z]:[\\/]|\\\\)/.test(match)) return "<windows-path>";
+      return `<path>/${path.basename(match)}`;
+    }),
+    MAX_COMMAND_OUTPUT_CHARS,
+  );
+}
+
+function readFilePrefix(file, limit = MAX_EXECUTABLE_PREFIX_BYTES) {
+  let handle;
+  try {
+    handle = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0));
+    const buffer = Buffer.allocUnsafe(limit);
+    let offset = 0;
+    while (offset < buffer.length) {
+      const count = fs.readSync(handle, buffer, offset, buffer.length - offset, offset);
+      if (!count) break;
+      offset += count;
+    }
+    return buffer.subarray(0, offset);
+  } catch {
+    return Buffer.alloc(0);
+  } finally {
+    if (Number.isInteger(handle)) fs.closeSync(handle);
+  }
+}
+
+function isWindowsPath(value) {
+  return WINDOWS_PATH_RE.test(String(value || ""));
+}
+
+function markerLabels(source) {
+  return WINDOWS_WRAPPER_MARKERS.filter(({ pattern }) => pattern.test(source)).map(
+    ({ label }) => label,
+  );
+}
+
+function resolveCommandPath(command, pathValue = process.env.PATH || "") {
+  const value = String(command || "");
+  if (!value) return null;
+  if (value.includes("/") || value.includes("\\")) return path.resolve(value);
+  for (const part of pathValue.split(path.delimiter).filter(Boolean)) {
+    const candidate = path.join(part, value);
+    try {
+      const stat = fs.statSync(candidate);
+      if (stat.isFile() && (process.platform === "win32" || (stat.mode & 0o111) !== 0)) {
+        return candidate;
+      }
+    } catch {
+      // Continue through PATH entries. A stale entry is diagnostic data, not a fatal error.
+    }
+  }
+  return null;
+}
+
+function shellWrapperTarget(source) {
+  const match = source.match(/\bexec\s+(?:['"]([^'"]+)['"]|([^\s;&|]+))/i);
+  const target = match?.[1] || match?.[2];
+  if (!target || target.startsWith("$")) return null;
+  return target;
+}
+
+function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDepth = 12 } = {}) {
+  const original = String(input || "");
+  const resolvedInput = resolveCommandPath(original, pathValue);
+  const chain = [];
+  const diagnostics = [];
+  const visited = new Set();
+  let current =
+    resolvedInput || (original.includes("/") || original.includes("\\") ? original : null);
+  let terminalPath = null;
+  let source = "unknown";
+  let executable = false;
+  let stale = false;
+  let wrapper = false;
+  let wrapperReasons = [];
+  let wrapperTarget = null;
+  let fileKind = "unknown";
+  let shebang = null;
+
+  if (isWindowsPath(original)) {
+    let windowsExists = false;
+    let windowsExecutable = false;
+    try {
+      const windowsStat = fs.statSync(original);
+      windowsExists = windowsStat.isFile();
+      windowsExecutable =
+        windowsExists && (process.platform === "win32" || (windowsStat.mode & 0o111) !== 0);
+    } catch {
+      // A Windows path may be a raw/manual candidate even when unavailable here.
+    }
+    return {
+      input: original,
+      command: original,
+      resolvedPath: original,
+      terminalPath: original,
+      chain: [],
+      source: "windows-path",
+      executable: windowsExecutable,
+      stale: !windowsExists,
+      wrapper: true,
+      windows: true,
+      wrapperReasons: ["Windows executable/path"],
+      wrapperTarget: null,
+      fileKind: "windows-executable",
+      shebang: null,
+      diagnostics: [
+        windowsExists
+          ? "Windows-native path is retained for raw/manual export only"
+          : "Windows-native path is not available in this environment",
+      ],
+    };
+  }
+
+  if (!current) {
+    return {
+      input: original,
+      command: original,
+      resolvedPath: null,
+      terminalPath: null,
+      chain,
+      source,
+      executable,
+      stale: true,
+      wrapper,
+      windows: false,
+      wrapperReasons,
+      wrapperTarget,
+      fileKind,
+      shebang,
+      diagnostics: [`not found on PATH: ${truncateDiagnostic(original)}`],
+    };
+  }
+
+  source = original === resolvedInput ? "path" : "path-command";
+  for (let depth = 0; depth < maxDepth && current; depth += 1) {
+    const lexical = path.resolve(current);
+    if (visited.has(lexical)) {
+      diagnostics.push("executable symlink chain contains a cycle");
+      wrapper = true;
+      wrapperReasons = [...new Set([...wrapperReasons, "symlink cycle"])];
+      break;
+    }
+    visited.add(lexical);
+    let stat;
+    try {
+      stat = fs.lstatSync(lexical);
+    } catch {
+      stale = true;
+      diagnostics.push(`missing executable: ${truncateDiagnostic(lexical)}`);
+      break;
+    }
+    const item = { path: lexical, symlink: stat.isSymbolicLink() };
+    if (stat.isSymbolicLink()) {
+      let target;
+      try {
+        target = fs.readlinkSync(lexical);
+      } catch (error) {
+        stale = true;
+        diagnostics.push(`cannot read symlink: ${truncateDiagnostic(error.message)}`);
+        chain.push(item);
+        break;
+      }
+      item.target = truncateDiagnostic(target);
+      chain.push(item);
+      current = path.resolve(path.dirname(lexical), target);
+      continue;
+    }
+
+    chain.push(item);
+    terminalPath = lexical;
+    executable = stat.isFile() && (process.platform === "win32" || (stat.mode & 0o111) !== 0);
+    if (!stat.isFile()) {
+      stale = true;
+      diagnostics.push("resolved executable is not a regular file");
+      break;
+    }
+    const prefix = readFilePrefix(lexical);
+    const text = prefix.toString("utf8");
+    const firstLine = text.split(/\r?\n/, 1)[0];
+    if (firstLine.startsWith("#!")) shebang = truncateDiagnostic(firstLine.slice(2).trim());
+    const pathMarkers = markerLabels(`${lexical}\n${chain.map((item) => item.path).join("\n")}`);
+    const textMarkers = markerLabels(text);
+    const markers = [...new Set([...pathMarkers, ...textMarkers])];
+    if (markers.length) {
+      wrapper = true;
+      wrapperReasons = [
+        ...new Set([
+          ...wrapperReasons,
+          ...markers.map((label) => `Windows bridge marker: ${label}`),
+        ]),
+      ];
+    }
+    if (WINDOWS_EXECUTABLE_RE.test(lexical) || isWindowsPath(lexical)) {
+      wrapper = true;
+      wrapperReasons = [...new Set([...wrapperReasons, "Windows executable/path"])];
+    }
+    const lowerShebang = (shebang || "").toLowerCase();
+    const shell = /(?:^|[\s/])(?:ba|z|k|c)?sh(?:\s|$)|(?:^|[\s/])dash(?:\s|$)|fish(?:\s|$)/.test(
+      lowerShebang,
+    );
+    if (shell) {
+      wrapper = true;
+      wrapperReasons = [...new Set([...wrapperReasons, "shell wrapper"])];
+      wrapperTarget = shellWrapperTarget(text);
+      if (wrapperTarget && (wrapperTarget.includes("/") || wrapperTarget.includes("\\"))) {
+        const targetPath =
+          wrapperTarget.startsWith("/") || /^[A-Za-z]:[\\/]/.test(wrapperTarget)
+            ? resolveCommandPath(wrapperTarget, pathValue)
+            : path.resolve(path.dirname(lexical), wrapperTarget);
+        if (targetPath && targetPath !== lexical) current = targetPath;
+      }
+    } else if (/\b(?:node|deno|bun|python(?:\d+(?:\.\d+)*)?)\b/i.test(lowerShebang)) {
+      // A directly configured test/utility script is executable and can be a safe
+      // native candidate. It is not treated as a shell wrapper merely because it
+      // is script-backed (the renderer test double uses a Node shebang).
+      fileKind = "script";
+    } else if (prefix.subarray(0, 4).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46]))) {
+      fileKind = "elf";
+    } else if (WINDOWS_EXECUTABLE_RE.test(lexical)) {
+      fileKind = "windows-executable";
+    } else {
+      fileKind = "binary-or-script";
+    }
+    break;
+  }
+  if (!terminalPath && !stale) {
+    stale = true;
+    diagnostics.push("executable symlink chain exceeded the inspection limit");
+  }
+  if (!executable) diagnostics.push("candidate is not executable");
+  const resolvedPath = resolvedInput ? path.resolve(resolvedInput) : null;
+  const windows = wrapperReasons.some((reason) =>
+    /Windows|marker|\.exe|mnt|cmd|PowerShell/i.test(reason),
+  );
+  return {
+    input: original,
+    command: original,
+    resolvedPath,
+    terminalPath,
+    chain,
+    source,
+    executable,
+    stale,
+    wrapper,
+    windows,
+    wrapperReasons,
+    wrapperTarget,
+    fileKind,
+    shebang,
+    diagnostics,
+  };
+}
 
 function usage() {
   return [
@@ -55,9 +355,18 @@ function usage() {
   ].join("\n");
 }
 
-function supportsDescriptorAnchoredChild(drawio) {
+export function supportsDescriptorAnchoredChild(drawio) {
+  const candidate =
+    typeof drawio === "object" && drawio !== null
+      ? drawio
+      : classifyExecutable(drawio, { maxDepth: 12 });
   return (
-    process.platform === "linux" && !/\.exe$/i.test(drawio) && !/^\/mnt\/[a-z]\//i.test(drawio)
+    process.platform === "linux" &&
+    Boolean(candidate.executable) &&
+    !candidate.stale &&
+    !candidate.wrapper &&
+    !candidate.windows &&
+    !isWindowsPath(candidate.terminalPath || candidate.resolvedPath || candidate.input)
   );
 }
 
@@ -84,11 +393,15 @@ function parseArgs(argv) {
   return { help: false, input, pageIndex };
 }
 
-function pathCandidates() {
+export function pathCandidates({
+  pathValue = process.env.PATH || "",
+  platform = process.platform,
+} = {}) {
   const candidates = [];
-  const pathParts = (process.env.PATH || "").split(path.delimiter).filter(Boolean);
+  const pathParts = pathValue.split(path.delimiter).filter(Boolean);
   for (const part of pathParts) {
-    candidates.push(path.join(part, process.platform === "win32" ? "drawio.exe" : "drawio"));
+    candidates.push(path.join(part, platform === "win32" ? "drawio.exe" : "drawio"));
+    candidates.push(path.join(part, platform === "win32" ? "diagrams.net.exe" : "diagrams.net"));
   }
   candidates.push("/Applications/draw.io.app/Contents/MacOS/draw.io");
   candidates.push("C:\\Program Files\\draw.io\\draw.io.exe");
@@ -99,33 +412,125 @@ function pathCandidates() {
   return candidates;
 }
 
-function findDrawio() {
-  const configured = process.env.DRAWIO_BIN;
-  if (configured) {
-    if (fs.existsSync(configured)) return configured;
-    const probe = spawnSync(configured, ["--version"], { encoding: "utf8" });
-    if (!probe.error && probe.status === 0) return configured;
+function probeCandidateVersion(candidate) {
+  if (!candidate?.executable || candidate.stale) return candidate;
+  // A direct Windows path is retained as a raw/manual candidate without
+  // crossing the WSL boundary merely to prove its version. Shell launchers
+  // remain probeable so a WSL bridge can report its raw CLI capability.
+  if (candidate.windows && candidate.chain?.length === 0) return candidate;
+  const result = spawnSync(candidate.command, ["--version"], {
+    encoding: "utf8",
+    timeout: 2_000,
+    maxBuffer: MAX_COMMAND_OUTPUT_CHARS,
+  });
+  candidate.versionProbeStatus = result.error ? null : result.status;
+  candidate.versionProbe = commandOutput(result);
+  if (result.error) {
+    candidate.diagnostics.push(`version probe failed for ${displayCommand(candidate.command)}`);
+  } else if (result.status !== 0) {
+    candidate.diagnostics.push(`version probe exited ${result.status}`);
   }
-  for (const candidate of pathCandidates()) {
-    if (fs.existsSync(candidate)) return candidate;
+  return candidate;
+}
+
+function candidateAvailable(candidate) {
+  if (!candidate?.executable || candidate.stale) return false;
+  if (candidate.windows && candidate.chain?.length === 0) return true;
+  return candidate.versionProbeStatus === 0;
+}
+
+export function inspectDrawioExecutable(input, options = {}) {
+  return classifyExecutable(input, options);
+}
+
+export function discoverDrawioCandidates({
+  env = process.env,
+  pathValue = env.PATH ?? process.env.PATH ?? "",
+  platform = process.platform,
+} = {}) {
+  const inputs = [];
+  if (env.DRAWIO_BIN) inputs.push({ input: env.DRAWIO_BIN, source: "configured" });
+  for (const input of pathCandidates({ pathValue, platform })) {
+    inputs.push({ input, source: "PATH/standard" });
   }
+  const seen = new Set();
+  const identities = new Set();
+  const candidates = [];
+  for (const item of inputs) {
+    const key = String(item.input);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const candidate = classifyExecutable(key, { pathValue });
+    candidate.source = item.source;
+    const identity = candidate.terminalPath || candidate.resolvedPath || key;
+    if (item.source !== "configured" && identities.has(identity)) continue;
+    identities.add(identity);
+    probeCandidateVersion(candidate);
+    if (
+      item.source === "configured" ||
+      candidate.executable ||
+      candidate.terminalPath ||
+      (candidate.windows && !candidate.stale)
+    ) {
+      candidates.push(candidate);
+    }
+  }
+  // Command lookup is deliberately last. It is useful for shell aliases or a
+  // PATH implementation that does not expose a regular executable to stat().
   for (const command of ["drawio", "diagrams.net"]) {
-    const probe = spawnSync(command, ["--version"], { encoding: "utf8" });
-    if (!probe.error && probe.status === 0) return command;
+    const resolvedCommand = resolveCommandPath(command, pathValue);
+    if (
+      candidates.some(
+        (candidate) =>
+          candidate.input === command ||
+          (resolvedCommand && candidate.resolvedPath === path.resolve(resolvedCommand)),
+      )
+    ) {
+      continue;
+    }
+    const probe = spawnSync(command, ["--version"], {
+      encoding: "utf8",
+      timeout: 2_000,
+      maxBuffer: MAX_COMMAND_OUTPUT_CHARS,
+    });
+    if (!probe.error && probe.status === 0) {
+      const candidate = classifyExecutable(command, { pathValue });
+      candidate.source = "command-probe";
+      candidate.versionProbeStatus = probe.status;
+      candidate.versionProbe = truncateDiagnostic(commandOutput(probe));
+      candidates.push(candidate);
+    }
   }
-  return null;
+  return candidates;
+}
+
+export function findDrawio(options = {}) {
+  const candidates = discoverDrawioCandidates(options);
+  const available = candidates.filter(candidateAvailable);
+  const native = available.find((candidate) => supportsDescriptorAnchoredChild(candidate));
+  const selected = native || available[0] || null;
+  if (options.details) return { selected, candidates };
+  return selected?.command || null;
 }
 
 function runDrawio(drawio, args, directoryHandles = []) {
   const result = spawnSync(drawio, args, {
     encoding: "utf8",
+    maxBuffer: MAX_COMMAND_OUTPUT_CHARS,
     stdio: ["ignore", "pipe", "pipe", ...directoryHandles],
   });
   if (result.error || result.status !== 0) {
-    const stderr = result.stderr?.trim();
-    const stdout = result.stdout?.trim();
+    const stderr = truncateDiagnostic(result.stderr?.trim(), MAX_COMMAND_OUTPUT_CHARS);
+    const stdout = truncateDiagnostic(result.stdout?.trim(), MAX_COMMAND_OUTPUT_CHARS);
     throw new Error(
-      [`draw.io export failed: ${drawio} ${args.join(" ")}`, result.error?.message, stderr, stdout]
+      [
+        `draw.io export failed: ${displayCommand(drawio)} ${args.map((arg) => displayCommand(arg)).join(" ")}`,
+        result.error?.code
+          ? `spawn failed (${result.error.code})`
+          : safeDiagnostic(result.error?.message),
+        stderr,
+        stdout,
+      ]
         .filter(Boolean)
         .join("\n"),
     );
@@ -691,8 +1096,10 @@ function validateSvg(file) {
 }
 
 function withCommandOutput(error, result) {
-  const output = [result?.stderr?.trim(), result?.stdout?.trim()].filter(Boolean).join("\n");
-  return new Error([error.message, output].filter(Boolean).join("\n"));
+  const output = safeDiagnostic(
+    [result?.stderr?.trim(), result?.stdout?.trim()].filter(Boolean).join("\n"),
+  );
+  return new Error([safeDiagnostic(error.message), output].filter(Boolean).join("\n"));
 }
 
 function main() {
@@ -700,7 +1107,7 @@ function main() {
   try {
     args = parseArgs(process.argv.slice(2));
   } catch (error) {
-    console.error(error.message);
+    console.error(safeDiagnostic(error.message));
     console.error(usage());
     process.exit(2);
   }
@@ -710,18 +1117,54 @@ function main() {
   }
   const inputPath = path.resolve(args.input);
   if (!fs.existsSync(inputPath)) {
-    console.error(`Input not found: ${inputPath}`);
+    console.error(`Input not found: ${displayArtifact(inputPath)}`);
     process.exit(2);
   }
-  const drawio = findDrawio();
-  if (!drawio) {
-    console.error("draw.io Desktop CLI not found. Install it or open the .drawio file manually.");
+  const drawioDiscovery = findDrawio({ details: true });
+  const drawioCandidate = drawioDiscovery.selected;
+  const drawio = drawioCandidate?.command || null;
+  if (!drawioCandidate) {
+    console.error(
+      "No usable draw.io candidate was found. Open the .drawio file manually or use a raw export.",
+    );
+    const diagnostics = drawioDiscovery.candidates
+      .flatMap((candidate) =>
+        (candidate.diagnostics || []).map((diagnostic) => safeDiagnostic(diagnostic)),
+      )
+      .filter(Boolean)
+      .slice(0, 6);
+    if (diagnostics.length) console.error(`Capability diagnostics: ${diagnostics.join("; ")}`);
+    const rawCandidates = drawioDiscovery.candidates.filter(
+      (candidate) => candidateAvailable(candidate) && !supportsDescriptorAnchoredChild(candidate),
+    );
+    if (rawCandidates.length) {
+      console.error(
+        `Raw/manual candidates retained: ${rawCandidates
+          .slice(0, 3)
+          .map((candidate) => displayCommand(candidate.command))
+          .join(", ")}`,
+      );
+    }
     process.exit(1);
   }
-  if (!supportsDescriptorAnchoredChild(drawio)) {
+  if (!supportsDescriptorAnchoredChild(drawioCandidate)) {
+    const reasons = drawioCandidate.wrapperReasons?.length
+      ? ` (${drawioCandidate.wrapperReasons.join(", ")})`
+      : "";
     console.error(
-      "Transactional rendering requires Linux /proc/self/fd and a Linux-native draw.io CLI; use a raw/manual export plus validation on this platform.",
+      `Transactional rendering rejected the selected draw.io candidate${reasons}; use a raw/manual export plus validation on this platform.`,
     );
+    const rawCandidates = drawioDiscovery.candidates.filter(
+      (candidate) => candidateAvailable(candidate) && !supportsDescriptorAnchoredChild(candidate),
+    );
+    if (rawCandidates.length) {
+      console.error(
+        `Raw/manual candidates retained: ${rawCandidates
+          .slice(0, 3)
+          .map((candidate) => displayCommand(candidate.command))
+          .join(", ")}`,
+      );
+    }
     process.exit(1);
   }
 
@@ -814,9 +1257,9 @@ function main() {
       // public artifacts receive the definitive digest pass only afterwards.
       verifyCommittedRenderArtifacts(committedArtifacts);
     }
-    console.log(`draw.io CLI: ${drawio}`);
-    console.log(`light PNG: ${lightPng}`);
-    console.log(`dark SVG: ${darkSvg}`);
+    console.log(`draw.io CLI: ${displayCommand(drawio)}`);
+    console.log(`light PNG: ${displayArtifact(lightPng)}`);
+    console.log(`dark SVG: ${displayArtifact(darkSvg)}`);
     if (commitResult.recoveryDirectory) {
       console.log(`replacement recovery directory: ${stagingBinding.lexicalPath}`);
     }
@@ -831,7 +1274,7 @@ function main() {
       } catch (cleanupError) {
         preserveStagingDirectory = true;
         console.error(
-          `render staging directory could not be removed safely and was retained: ${cleanupError.message}`,
+          `render staging directory could not be removed safely and was retained: ${safeDiagnostic(cleanupError.message)}`,
         );
       }
     }

@@ -22,3 +22,6 @@ Yes
 - contains: open-drawio-url.mjs
 - contains: editable
 - contains: browser
+- regex: capability|present|missing|indeterminate
+- regex: URL.{0,}(?:limit|length)|oversized|too long|fallback
+- not_contains: hosted upload completed

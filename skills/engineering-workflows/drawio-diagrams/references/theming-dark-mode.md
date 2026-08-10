@@ -66,9 +66,10 @@ Avoid pure transparent edge labels on top-route rails, zone boundaries, or horiz
 
 Brand/logo color mode must be consistent across the diagram:
 
+- For every named organization, product, platform, model, or service, use the official logo, service stencil, or official provider asset whenever available. A generic semantic icon is fallback-only for a named entity; semantic icons remain primary for genuinely generic concepts.
 - If color logos are used, use color logos for all brands that provide color variants.
 - If a brand only provides a black or white logo, use that source variant on a neutral background that preserves contrast in both light and dark mode.
-- Do not recolor black/white logos to match a palette.
+- Do not arbitrarily recolor any official artwork, including black/white logos, to match a palette. Only an explicit user request or a necessary, documented accessibility exception may authorize recoloring; disclose the source variant, changed colors, reason, scope, and contrast evidence in the delivery receipt.
 - Do not rely on dark-mode inversion to make a logo visible. Preserve the original artwork and change the chip/background instead.
 - Do not use a simplified monochrome glyph when a detailed official/product icon is available and materially improves recognition.
 - Do not mix pure icon variants and text wordmarks in the same logo group unless the user requested wordmarks or no icon variant exists.
@@ -88,6 +89,6 @@ Brand/logo color mode must be consistent across the diagram:
 
 ## Verification
 
-Static lint checks `adaptiveColors`, explicit hex contrast, black/white without pairs, and both modes when `light-dark()` is present. Visual tier exports a dark SVG when draw.io Desktop CLI is available. Inspect dark-mode exports for invisible monochrome logos, over-tinted logos, logo inversion/recoloring, washed-out marks, inconsistent chip sizes, connector labels without backgrounds, labels on borders, neutral-chip contrast, mixed profile cues, and excessive profile effects.
+Static lint checks `adaptiveColors`, explicit hex contrast, black/white without pairs, and both modes when `light-dark()` is present. Visual tier exports a dark SVG when draw.io Desktop CLI is available. Inspect dark-mode exports for invisible monochrome logos, over-tinted logos, logo inversion/recoloring, washed-out marks, inconsistent chip sizes, connector labels without backgrounds, labels on borders, neutral-chip contrast, mixed profile cues, and excessive profile effects. If an explicit or accessibility-exception recoloring was authorized, verify that the receipt discloses the source variant, changed colors, reason, scope, and contrast evidence.
 
 Sources: original guidance informed by [IBM's technical-diagram system](https://www.ibm.com/design/language/infographics/technical-diagrams/design/), WCAG [text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html), and [use-of-color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html) criteria, draw.io adaptive-color and consistency guidance, and minimalist/geometric design analysis.
