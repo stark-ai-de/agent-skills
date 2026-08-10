@@ -15,6 +15,13 @@ remain maintainer-local under ADR-0030.
 - Safe defaults: embeds selected public SVGs instead of runtime links, and requires approval for installs, MCP config writes, hosted previews, bulk downloads, external indexes, and persistent caches.
 - Maintenance fit: public runtime payload is original guidance, deterministic helper scripts, and small regression fixtures; copied third-party reference packs and icon/index assets are not shipped in the public skill.
 
+Brand fidelity is an explicit maintainer contract: named organizations,
+products, platforms, models, and services prefer their official logo or native
+service stencil; resolved artwork keeps its original bytes, viewBox, aspect
+ratio, and brand colors; and an unresolved node receives only a labelled,
+per-node semantic fallback. Recoloring is covered separately and must be
+explicitly requested or documented as a necessary accessibility exception.
+
 ## Eval Set
 
 Cases live under `cases/` and follow the SkillOpt markdown schema:
