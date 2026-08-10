@@ -30,6 +30,7 @@ import {
   probeBrowser,
   probeDrawio,
   probeDrawioToolset,
+  probeRuntime,
 } from "../../../skills/engineering-workflows/drawio-diagrams/scripts/probe-drawio-toolset.mjs";
 import {
   findBrowser,
@@ -394,6 +395,27 @@ else process.exit(3);
   ) {
     throw new Error(
       `invalid-version DRAWIO_BIN did not fall back to native PATH candidate: ${JSON.stringify(invalidVersionFallback)}`,
+    );
+  }
+  const invalidRuntime = probeRuntime(invalidVersionDrawio, { env: { ...process.env } });
+  if (!invalidRuntime.available || invalidRuntime.status !== "indeterminate") {
+    throw new Error(
+      `failed runtime version probe was not classified as indeterminate: ${JSON.stringify(invalidRuntime)}`,
+    );
+  }
+  const invalidToolsetProbe = probeDrawio({
+    env: { ...process.env, DRAWIO_BIN: invalidVersionDrawio, PATH: "" },
+  });
+  const invalidToolsetCandidate = invalidToolsetProbe.candidates.find(
+    (candidate) => candidate.command === path.basename(invalidVersionDrawio),
+  );
+  if (
+    !invalidToolsetCandidate ||
+    invalidToolsetCandidate.available ||
+    invalidToolsetCandidate.capabilities.transactional
+  ) {
+    throw new Error(
+      `failed draw.io version probe was advertised as usable: ${JSON.stringify(invalidToolsetProbe)}`,
     );
   }
   const windowsOnly = findDrawio({
