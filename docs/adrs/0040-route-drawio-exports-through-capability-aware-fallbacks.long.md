@@ -2,7 +2,7 @@
 
 ID: ADR-0040
 Title: Route draw.io exports through capability-aware fallback routing
-Status: Proposed
+Status: Accepted
 Date: 2026-08-10
 Owner: stark-ai-de
 Scope: repository
