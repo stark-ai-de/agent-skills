@@ -20,6 +20,11 @@ Grade each run from 0 to 2 for each criterion.
 | Logo fidelity            | Recolors, inverts, stretches, or uses wrong placeholders       | Mostly preserves logos with minor chip/contrast issues        | Preserves real logo artwork, uses consistent chips, and verifies light/dark contrast                                                                                            |
 | Public safety            | Leaks private data or copied payloads                          | Minor cleanup needed                                          | Uses generic examples and no copied third-party payloads                                                                                                                        |
 
+Brand-fidelity runs should fail when an available official mark is replaced by
+a generic glyph, when one unresolved node causes resolved peers to be
+recolored or simplified, or when an explicit recolor lacks source-variant,
+changed-color, reason, scope, and contrast evidence.
+
 Promotion recommendation:
 
 - Average below 1.5: keep incubating.

@@ -235,6 +235,42 @@ function validateCapabilityEvalCoverage(files) {
   return errors;
 }
 
+function validateIconFidelityCoverage(files) {
+  const relativeNames = new Set(files.map((file) => path.relative(root, file)));
+  const requiredCases = [
+    "skill-evals/drawio-diagrams/cases/icon-official-logo-preference.md",
+    "skill-evals/drawio-diagrams/cases/icon-brand-color-preservation.md",
+    "skill-evals/drawio-diagrams/cases/icon-unresolved-peer-invariance.md",
+    "skill-evals/drawio-diagrams/cases/icon-explicit-recolor-disclosure.md",
+    "skill-evals/drawio-diagrams/cases/visual-brand-logo-invariants.md",
+  ];
+  const errors = requiredCases
+    .filter((file) => !relativeNames.has(file))
+    .map((file) => `draw.io eval corpus is missing required icon-fidelity case: ${file}`);
+  const corpus = files
+    .filter((file) => relativeNames.has(path.relative(root, file)))
+    .map((file) => fs.readFileSync(file, "utf8"))
+    .join("\n");
+  const markers = [
+    ["official logo priority", /official[\s\S]{0,120}(?:logo|mark|stencil)/i],
+    ["original artwork and colors", /original[\s\S]{0,120}(?:artwork|colors|bytes)/i],
+    ["per-node semantic fallback", /per-node[\s\S]{0,100}(?:semantic )?fallback/i],
+    [
+      "resolved peer invariance",
+      /resolved[\s\S]{0,100}(?:peer|logo)[\s\S]{0,100}(?:unchanged|without|preserve)/i,
+    ],
+    ["explicit recolor request", /explicit(?:ly)?[\s\S]{0,100}(?:recolor|monochrome)/i],
+    [
+      "recolor evidence fields",
+      /source variant[\s\S]{0,240}changed (?:color|colors)[\s\S]{0,240}(?:reason|scope|contrast)/i,
+    ],
+  ];
+  for (const [label, pattern] of markers) {
+    if (!pattern.test(corpus)) errors.push(`draw.io eval corpus is missing ${label} coverage`);
+  }
+  return errors;
+}
+
 function validateCliArgumentRegressions() {
   for (const option of ["--case", "--artifacts-dir"]) {
     const result = spawnSync(process.execPath, [path.resolve(process.argv[1]), option], {
@@ -417,6 +453,7 @@ const schemaErrors = [
   ...caseFiles.flatMap(validateCaseSchema),
 ];
 if (!args.caseFile) schemaErrors.push(...validateCapabilityEvalCoverage(caseFiles));
+if (!args.caseFile) schemaErrors.push(...validateIconFidelityCoverage(caseFiles));
 if (schemaErrors.length) {
   console.error(schemaErrors.join("\n"));
   process.exit(1);
