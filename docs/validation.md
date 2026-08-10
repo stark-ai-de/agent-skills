@@ -63,7 +63,7 @@ npm run validate:codegraph-ast-grep
 ```
 
 This dedicated gate is offline and deterministic. It statically checks the
-installed skill contract and scenario catalog, verifies the current v0.3
+installed skill contract and scenario catalog, verifies the current v0.3.1
 internal-reviewer source/prompt/output/grading/provenance hashes and 5/35/0
 result, regrades the historical v0.2 assertions from committed final responses,
 and reconciles all totals. Running the gate does not invoke a reviewer, query the
@@ -168,7 +168,7 @@ node scripts/print-release-notes.mjs
 - Release-intent detection checks whether a PR changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files.
 - Release validation checks that the repository package version and changelog release section match, public skill `metadata.version` values are semver and do not exceed the package release, changed existing public skills increase their own version, and public skill validation passes before a tag is created.
 - Script syntax validation checks repository Node scripts and skill shell scripts.
-- CodeGraph + ast-grep contract validation checks the installed-payload allowlist, `setup`/`update`/`doctor` routing, agent guidance, update/migration and doctor safety invariants, fenced Markdown/config command snippets and scanner fixtures, historical captured behavioral hashes, and the separately labeled hash-bound v0.3 internal collaboration-reviewer capture with independent 35/35 grading. Internal reviewer evidence is not CI, hosted, production, or live-tool proof.
+- CodeGraph + ast-grep contract validation checks the installed-payload allowlist, plain benefit-first `setup`/`update`/`doctor` routing, agent guidance, update/migration and doctor safety invariants, fenced Markdown/config command snippets and scanner fixtures, historical captured behavioral hashes, and the separately labeled hash-bound v0.3.1 internal collaboration-reviewer capture with independent 35/35 grading. Internal reviewer evidence is not CI, hosted, production, or live-tool proof.
 - Draw.io validation checks source structure, export/runtime boundaries, and clear-intent, ambiguity, and agent-authority routing cases.
 - Animated README Logo validation checks the `audit`/`create`/`transform`/`animate` contract, required motion/delivery artifacts, provider and tooling gates, runtime fixtures, and deterministic eval assertions.
 - SkillOpt setup validation checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.

@@ -12,17 +12,17 @@ installed runtime content.
 - Bare or ambiguous invocation exposes all three workflows and asks.
 - Agent-initiated activation can select only read-only `doctor`.
 - Doctor never repairs and needs exact-root approval before a graph-opening diagnostic that may migrate generated metadata.
-- Setup is idempotent and persists repository guidance for automatic CodeGraph semantic scope plus ast-grep CLI structural evidence.
-- Update preserves installer provenance, performs required configuration/index/schema migrations, reconnects the client, and verifies readiness.
+- Setup leads with the benefit of Semantic Code Intelligence and structural search, then idempotently persists repository guidance for automatic CodeGraph semantic scope plus ast-grep CLI structural evidence.
+- Update brings stable core tools current without changing their installation provenance, performs required configuration/index/schema migrations, reconnects the client, and verifies readiness.
 - Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
 - Normal setup excludes the experimental ast-grep MCP server.
 
 Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, internal clean-context reviewer outputs, independent gradings, and
-provenance to the exact v0.3 runtime payload. The independent review records
+provenance to the exact v0.3.1 runtime payload. The independent review records
 35/35 passing assertions. The dated receipt is
-[`2026-07-29-v0.3-internal-reviewer-capture.md`](runs/2026-07-29-v0.3-internal-reviewer-capture.md).
+[`2026-08-10-v0.3.1-internal-reviewer-capture.md`](runs/2026-08-10-v0.3.1-internal-reviewer-capture.md).
 
 [`legacy-case-lineage.json`](legacy-case-lineage.json) records the explicit
 disposition of the nine cases removed from the reviewed HEAD snapshot. Its
@@ -40,7 +40,7 @@ each fixture registers cleanup in `finally`.
 [`behavioral/`](behavioral/README.md) also retains four historical Codex final
 responses, exact synthetic prompts, capture provenance, artifact hashes, and 28
 machine-regraded assertions. That suite proves only the named v0.2.0 candidate
-behaviors and remains separate from the v0.3 result.
+behaviors and remains separate from the v0.3.1 result.
 
 ## Deterministic gate
 
