@@ -1075,7 +1075,7 @@ export function validateSvgXml(source, { onElement = null, onText = null } = {})
   return { rootAttributes };
 }
 
-function validateSvg(file) {
+export function validateSvg(file) {
   const { handle, stat } = openArtifact(file, "SVG");
   try {
     if (stat.size > MAX_RENDER_ARTIFACT_BYTES) invalidArtifact("SVG", "file exceeds size limit");

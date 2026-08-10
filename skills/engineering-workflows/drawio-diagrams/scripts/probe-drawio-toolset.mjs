@@ -8,6 +8,8 @@ import { pathToFileURL } from "node:url";
 import {
   discoverDrawioCandidates,
   inspectDrawioExecutable,
+  validatePng,
+  validateSvg,
   supportsDescriptorAnchoredChild,
 } from "./render-drawio.mjs";
 
@@ -15,9 +17,11 @@ const MAX_OUTPUT_CHARS = 4 * 1024;
 const MAX_SPAWN_OUTPUT_CHARS = 64 * 1024;
 const MAX_DIAGNOSTIC_CHARS = 512;
 const MAX_CANDIDATES = 12;
-const MAX_SMOKE_BYTES = 64 * 1024 * 1024;
+const MAX_SMOKE_ARTIFACT_BYTES = 16 * 1024 * 1024;
+const SMOKE_TIMEOUT_MS = 5_000;
 const SCHEMA_VERSION = 1;
 const DRAWIO_FORMATS = ["png", "svg", "pdf", "jpg", "xml", "html"];
+const SMOKE_DRAWIO_SOURCE = `<mxfile host="app.diagrams.net"><diagram name="Capability probe"><mxGraphModel dx="800" dy="600" grid="1" gridSize="8" page="1" pageScale="1" pageWidth="827" pageHeight="1169"><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="probe" value="Capability probe" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="180" height="60" as="geometry"/></mxCell></root></mxGraphModel></diagram></mxfile>`;
 const BROWSER_COMMANDS = [
   "chromium",
   "chromium-browser",
@@ -235,59 +239,130 @@ function formatCapabilities(helpText, known = true) {
   };
 }
 
-const SMOKE_DRAWIO_XML = `<mxfile host="app.diagrams.net"><diagram name="Capability probe"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
-
-function smokeFormat(command, format, env) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-capability-probe-"));
-  const input = path.join(directory, "probe.drawio");
-  const output = path.join(directory, `probe.${format}`);
+function validateSmokeArtifact(file, format) {
+  let stat;
   try {
-    fs.writeFileSync(input, SMOKE_DRAWIO_XML, "utf8");
-    const result = spawnSync(command, ["-x", "-f", format, "-o", output, input], {
-      encoding: "utf8",
-      env,
-      timeout: 5_000,
-      maxBuffer: MAX_SPAWN_OUTPUT_CHARS,
-    });
-    let valid = false;
-    try {
-      const stat = fs.statSync(output);
-      if (stat.isFile() && stat.size > 0 && stat.size <= MAX_SMOKE_BYTES) {
-        const sample = fs.readFileSync(output, { encoding: "utf8", flag: "r" });
-        valid = format === "svg" ? /<svg\b/i.test(sample) : false;
-      }
-    } catch {
-      valid = false;
-    }
-    if (format === "png" && !valid) {
-      try {
-        const header = fs.readFileSync(output).subarray(0, 8);
-        valid = header.equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-      } catch {
-        valid = false;
-      }
-    }
-    return {
-      available: !result.error && result.status === 0 && valid,
-      status: result.error ? null : result.status,
-      diagnostic: result.error
-        ? truncate(result.error.message)
-        : result.status === 0 && valid
-          ? null
-          : `${format} smoke export did not produce a valid artifact`,
-    };
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
+    stat = fs.lstatSync(file);
+  } catch (error) {
+    if (error?.code === "ENOENT") throw new Error(`${format} smoke export created no artifact`);
+    throw error;
   }
+  if (stat.isSymbolicLink()) throw new Error(`${format} smoke output is a symbolic link`);
+  if (!stat.isFile() || stat.size === 0) {
+    throw new Error(`${format} smoke output is empty or not a regular file`);
+  }
+  if (stat.size > MAX_SMOKE_ARTIFACT_BYTES) {
+    throw new Error(`${format} smoke output exceeds the bounded size limit`);
+  }
+  if (format === "png") validatePng(file);
+  else validateSvg(file);
 }
 
-function smokeFormats(command, env) {
-  const png = smokeFormat(command, "png", env);
-  const svg = smokeFormat(command, "svg", env);
+function smokeDrawioCandidate(command, { env = process.env } = {}) {
+  const result = {
+    available: false,
+    status: "indeterminate",
+    attempted: false,
+    formats: { png: null, svg: null },
+    diagnostics: [],
+  };
+  let temporaryDirectory = null;
+  try {
+    temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-capability-probe-"));
+    const input = path.join(temporaryDirectory, "probe.drawio");
+    fs.writeFileSync(input, SMOKE_DRAWIO_SOURCE, "utf8");
+    for (const format of ["png", "svg"]) {
+      const output = path.join(temporaryDirectory, `probe.${format}`);
+      const args = [
+        "-x",
+        "-f",
+        format,
+        ...(format === "png" ? ["-s", "1", "-b", "0"] : ["--svg-theme", "dark", "-e", "-b", "0"]),
+        "-o",
+        output,
+        input,
+      ];
+      result.attempted = true;
+      const smoke = spawnSync(command, args, {
+        cwd: temporaryDirectory,
+        encoding: "utf8",
+        env,
+        timeout: SMOKE_TIMEOUT_MS,
+        maxBuffer: MAX_SPAWN_OUTPUT_CHARS,
+      });
+      if (smoke.error || smoke.status !== 0) {
+        result.status = "rejected";
+        result.formats[format] = false;
+        result.diagnostics.push(
+          `${format} smoke probe ${
+            smoke.error?.code === "ETIMEDOUT"
+              ? "timed out"
+              : smoke.error
+                ? "failed"
+                : `exited ${smoke.status}`
+          }`,
+          commandOutput(smoke),
+        );
+        break;
+      }
+      try {
+        validateSmokeArtifact(output, format);
+      } catch (error) {
+        result.status = "rejected";
+        result.formats[format] = false;
+        result.diagnostics.push(`${format} smoke artifact rejected`, error.message);
+        break;
+      }
+      result.formats[format] = true;
+    }
+    if (result.formats.png === true && result.formats.svg === true) {
+      result.available = true;
+      result.status = "available";
+      result.diagnostics = [];
+    }
+  } catch (error) {
+    result.status = "indeterminate";
+    result.diagnostics.push("temporary format smoke probe could not run", error.message);
+  } finally {
+    if (temporaryDirectory) {
+      try {
+        fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+      } catch (error) {
+        result.available = false;
+        result.status = "indeterminate";
+        result.diagnostics.push(
+          "temporary format smoke artifacts could not be removed",
+          error.message,
+        );
+      }
+    }
+  }
+  result.diagnostics = result.diagnostics
+    .filter(Boolean)
+    .map((item) => redactDiagnostic(item))
+    .slice(0, 6);
+  return result;
+}
+
+function unavailableSmoke(candidate, available) {
+  const status =
+    !candidate?.executable || candidate.stale
+      ? "missing"
+      : available
+        ? "indeterminate"
+        : "rejected";
   return {
-    png: png.available,
-    svg: svg.available,
-    diagnostics: [png.diagnostic, svg.diagnostic].filter(Boolean),
+    available: false,
+    status,
+    attempted: false,
+    formats: { png: null, svg: null },
+    diagnostics: [
+      status === "missing"
+        ? "candidate is unavailable for format smoke"
+        : status === "indeterminate"
+          ? "candidate is retained for raw/manual export; transactional format smoke was not attempted"
+          : "version probe did not establish a usable draw.io executable",
+    ],
   };
 }
 
@@ -307,14 +382,16 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
       ? drawioHelp(command, env)
       : { text: "", status: null, diagnostics: [] };
   const capabilities = formatCapabilities(help.text, help.status === 0);
-  const descriptorAnchored = supportsDescriptorAnchoredChild(candidate);
-  const smoke = available && descriptorAnchored ? smokeFormats(command, env) : null;
-  if (smoke) {
-    capabilities.formats.png = smoke.png;
-    capabilities.formats.svg = smoke.svg;
-    capabilities.formatList = DRAWIO_FORMATS.filter((format) => capabilities.formats[format]);
+  const nativeEligible = supportsDescriptorAnchoredChild(candidate);
+  const smoke =
+    available && nativeEligible
+      ? smokeDrawioCandidate(command, { env })
+      : unavailableSmoke(candidate, available);
+  const formats = { ...capabilities.formats };
+  for (const format of ["png", "svg"]) {
+    if (smoke.formats[format] !== null) formats[format] = smoke.formats[format];
   }
-  const transactional = Boolean(available && descriptorAnchored && smoke?.png && smoke?.svg);
+  const transactional = Boolean(available && nativeEligible && smoke.status === "available");
   return {
     command: redactCommand(command),
     source: candidate.source,
@@ -333,19 +410,23 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
     version: redactDiagnostic(version.version || versionProbe),
     versionProbeStatus: candidate.versionProbeStatus ?? null,
     probes: { version: "--version", help: "--help", smoke: ["png", "svg"] },
+    helpStatus: help.status,
+    smoke,
     diagnostics: [
       ...(candidate.diagnostics || []),
       ...(version.diagnostics || []),
       ...help.diagnostics,
-      ...(smoke?.diagnostics || []),
+      ...smoke.diagnostics,
     ]
       .map((item) => redactDiagnostic(item))
       .slice(0, 8),
     capabilities: {
       ...capabilities,
+      formats,
+      formatList: DRAWIO_FORMATS.filter((format) => formats[format]),
       rawCli: available,
       transactional,
-      smoke: smoke ? { png: smoke.png, svg: smoke.svg } : { png: null, svg: null },
+      smoke: { png: smoke.formats.png, svg: smoke.formats.svg },
     },
   };
 }
@@ -372,11 +453,15 @@ export function probeDrawio({ env = process.env } = {}) {
     selected,
     candidates,
     transactional: {
-      available: Boolean(selected?.capabilities.transactional),
+      available: Boolean(selected?.available && selected?.capabilities.transactional),
       candidate: selected?.command || null,
       reason: selected?.capabilities.transactional
-        ? "Linux-native executable with descriptor-anchored staging"
-        : "No Linux-native direct executable was found",
+        ? "Linux-native executable passed temporary PNG/SVG smoke checks and supports descriptor-anchored staging"
+        : candidates.some(
+              (candidate) => candidate.smoke.attempted && candidate.smoke.status === "rejected",
+            )
+          ? "A draw.io candidate was found, but temporary PNG/SVG smoke checks did not pass"
+          : "No Linux-native direct executable was found",
     },
     raw: {
       available: raw.length > 0,

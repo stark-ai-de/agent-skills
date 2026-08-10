@@ -1,4 +1,4 @@
-import {
+import fs, {
   chmodSync,
   existsSync,
   mkdirSync,
@@ -273,9 +273,51 @@ if (args.includes("--help")) { console.log("-f png|svg|pdf --svg-theme light|dar
 const format = args[args.indexOf("-f") + 1];
 const output = args[args.indexOf("-o") + 1];
 if (!format || !output) process.exit(2);
-if (format === "png") fs.writeFileSync(output, Buffer.from("${smokePngBase64}", "base64"));
-else if (format === "svg") fs.writeFileSync(output, '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="red"/></svg>');
-else process.exit(3);
+const mode = process.env.DRAWIO_PROBE_SMOKE_MODE || "valid";
+const input = args.at(-1);
+const optionValue = (flag) => args[args.indexOf(flag) + 1];
+const png = Buffer.from("${smokePngBase64}", "base64");
+const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="red"/></svg>';
+if (mode === "assert-contract") {
+  const source = fs.readFileSync(input, "utf8");
+  const hasRealDiagram =
+    source.includes('id="probe"') &&
+    source.includes('vertex="1"') &&
+    source.includes('<mxGeometry x="40" y="40" width="180" height="60"');
+  const hasFormatOptions =
+    format === "png"
+      ? optionValue("-s") === "1" && optionValue("-b") === "0"
+      : optionValue("--svg-theme") === "dark" && args.includes("-e") && optionValue("-b") === "0";
+  if (!hasRealDiagram || !hasFormatOptions) process.exit(11);
+}
+if (format === "png") {
+  if (mode === "signature-only-png") {
+    fs.writeFileSync(output, Buffer.from("89504e470d0a1a0a", "hex"));
+  } else if (mode === "symlink-png") {
+    const target = output + ".target";
+    fs.writeFileSync(target, png);
+    fs.symlinkSync(target, output);
+  } else if (mode === "directory-png") {
+    fs.mkdirSync(output);
+  } else if (mode === "empty-png") {
+    fs.writeFileSync(output, Buffer.alloc(0));
+  } else if (mode === "oversized-png") {
+    const handle = fs.openSync(output, "w");
+    try {
+      fs.writeSync(handle, Buffer.from("89504e470d0a1a0a", "hex"));
+      fs.ftruncateSync(handle, 16 * 1024 * 1024 + 1);
+    } finally {
+      fs.closeSync(handle);
+    }
+  } else {
+    fs.writeFileSync(output, png);
+  }
+} else if (format === "svg") {
+  fs.writeFileSync(
+    output,
+    mode === "malformed-svg" ? '<svg xmlns="http://www.w3.org/2000/svg"><g>' : svg,
+  );
+} else process.exit(3);
 `,
     "utf8",
   );
@@ -292,13 +334,14 @@ else process.exit(3);
     "utf8",
   );
   chmodSync(invalidVersionDrawio, 0o755);
-  const windowsExe = path.join(temp, "drawio.exe");
+  const windowsExe = path.join(temp, "mnt", "c", "Program Files", "draw.io", "drawio.exe");
+  mkdirSync(path.dirname(windowsExe), { recursive: true });
   writeFileSync(windowsExe, readFileSync(nativeDrawio), "utf8");
   chmodSync(windowsExe, 0o755);
   const shellWrapper = path.join(temp, "drawio-shell-wrapper");
   writeFileSync(
     shellWrapper,
-    "#!/bin/sh\nexec '/mnt/c/Program Files/draw.io/drawio.exe' \"$@\"\n",
+    '#!/bin/sh\nif [ "$1" = "--version" ]; then printf "draw.io wrapper test 1.0.0\\n"; exit 0; fi\nexec \'/mnt/c/Program Files/draw.io/drawio.exe\' "$@"\n',
     "utf8",
   );
   chmodSync(shellWrapper, 0o755);
@@ -412,7 +455,13 @@ else process.exit(3);
   if (
     !invalidToolsetCandidate ||
     invalidToolsetCandidate.available ||
-    invalidToolsetCandidate.capabilities.transactional
+    invalidToolsetCandidate.capabilities.transactional ||
+    invalidToolsetCandidate.smoke.attempted ||
+    invalidToolsetCandidate.smoke.status !== "rejected" ||
+    invalidToolsetCandidate.smoke.formats.png !== null ||
+    invalidToolsetCandidate.smoke.formats.svg !== null ||
+    invalidToolsetCandidate.capabilities.smoke.png !== null ||
+    invalidToolsetCandidate.capabilities.smoke.svg !== null
   ) {
     throw new Error(
       `failed draw.io version probe was advertised as usable: ${JSON.stringify(invalidToolsetProbe)}`,
@@ -425,6 +474,61 @@ else process.exit(3);
   });
   if (!windowsOnly.selected || supportsDescriptorAnchoredChild(windowsOnly.selected)) {
     throw new Error("Windows-only candidate did not remain a raw/manual fallback");
+  }
+  const windowsToolsetProbe = probeDrawio({
+    env: { ...process.env, DRAWIO_BIN: windowsExe, PATH: "" },
+  });
+  const windowsToolsetCandidate = windowsToolsetProbe.candidates.find(
+    (candidate) => candidate.source === "configured",
+  );
+  if (
+    !windowsToolsetCandidate?.available ||
+    !windowsToolsetCandidate.capabilities.rawCli ||
+    windowsToolsetCandidate.capabilities.transactional ||
+    windowsToolsetCandidate.smoke.available ||
+    windowsToolsetCandidate.smoke.status !== "indeterminate" ||
+    windowsToolsetCandidate.smoke.attempted ||
+    windowsToolsetCandidate.smoke.formats.png !== null ||
+    windowsToolsetCandidate.smoke.formats.svg !== null ||
+    windowsToolsetCandidate.diagnostics.some((item) =>
+      item.includes("version probe did not establish"),
+    ) ||
+    !windowsToolsetCandidate.smoke.diagnostics.some((item) => item.includes("raw/manual export")) ||
+    !windowsToolsetProbe.raw.available ||
+    windowsToolsetProbe.transactional.available ||
+    windowsToolsetProbe.transactional.reason !== "No Linux-native direct executable was found"
+  ) {
+    throw new Error(
+      `Windows raw candidate received a false smoke rejection: ${JSON.stringify(windowsToolsetProbe)}`,
+    );
+  }
+  const wrapperToolsetProbe = probeDrawio({
+    env: { ...process.env, DRAWIO_BIN: shellWrapper, PATH: "" },
+  });
+  const wrapperToolsetCandidate = wrapperToolsetProbe.candidates.find(
+    (candidate) => candidate.source === "configured",
+  );
+  if (
+    !wrapperToolsetCandidate?.available ||
+    wrapperToolsetCandidate.versionProbeStatus !== 0 ||
+    !wrapperToolsetCandidate.capabilities.rawCli ||
+    wrapperToolsetCandidate.capabilities.transactional ||
+    wrapperToolsetCandidate.smoke.available ||
+    wrapperToolsetCandidate.smoke.status !== "indeterminate" ||
+    wrapperToolsetCandidate.smoke.attempted ||
+    wrapperToolsetCandidate.smoke.formats.png !== null ||
+    wrapperToolsetCandidate.smoke.formats.svg !== null ||
+    wrapperToolsetCandidate.diagnostics.some((item) =>
+      item.includes("version probe did not establish"),
+    ) ||
+    !wrapperToolsetCandidate.smoke.diagnostics.some((item) => item.includes("raw/manual export")) ||
+    !wrapperToolsetProbe.raw.available ||
+    wrapperToolsetProbe.transactional.available ||
+    wrapperToolsetProbe.transactional.reason !== "No Linux-native direct executable was found"
+  ) {
+    throw new Error(
+      `version-probed non-native wrapper received a false smoke rejection: ${JSON.stringify(wrapperToolsetProbe)}`,
+    );
   }
 
   const smokeInput = path.join(temp, "native-smoke.drawio");
@@ -460,16 +564,132 @@ else process.exit(3);
   const probeEnv = {
     ...process.env,
     DRAWIO_BIN: nativeDrawio,
+    DRAWIO_PROBE_SMOKE_MODE: "assert-contract",
     PATH: probePath,
   };
   const drawioProbe = probeDrawio({ env: probeEnv });
   if (
     !drawioProbe.transactional.available ||
     drawioProbe.formats.png !== true ||
-    drawioProbe.formats.svg !== true
+    drawioProbe.formats.svg !== true ||
+    drawioProbe.selected?.smoke.available !== true ||
+    drawioProbe.selected?.smoke.status !== "available" ||
+    drawioProbe.selected?.smoke.attempted !== true ||
+    drawioProbe.selected?.smoke.formats.png !== true ||
+    drawioProbe.selected?.smoke.formats.svg !== true ||
+    drawioProbe.selected?.smoke.diagnostics.length !== 0 ||
+    JSON.stringify(drawioProbe.selected?.probes.smoke) !== JSON.stringify(["png", "svg"]) ||
+    drawioProbe.selected?.capabilities.smoke.png !== true ||
+    drawioProbe.selected?.capabilities.smoke.svg !== true
   ) {
     throw new Error(
       `draw.io probe missed transactional or format capability: ${JSON.stringify(drawioProbe)}`,
+    );
+  }
+
+  const probeSmokeMode = (mode) => {
+    const report = probeDrawio({
+      env: { ...probeEnv, DRAWIO_PROBE_SMOKE_MODE: mode },
+    });
+    const candidate = report.candidates.find((item) => item.source === "configured");
+    if (!candidate) {
+      throw new Error(`draw.io smoke fixture omitted configured candidate for ${mode}`);
+    }
+    return { report, candidate };
+  };
+  const rejectedSmokeFixtures = [
+    {
+      mode: "signature-only-png",
+      diagnostic: "invalid PNG artifact",
+      formats: { png: false, svg: null },
+    },
+    {
+      mode: "malformed-svg",
+      diagnostic: "invalid SVG artifact",
+      formats: { png: true, svg: false },
+    },
+    {
+      mode: "symlink-png",
+      diagnostic: "symbolic link",
+      formats: { png: false, svg: null },
+    },
+    {
+      mode: "directory-png",
+      diagnostic: "not a regular file",
+      formats: { png: false, svg: null },
+    },
+    {
+      mode: "empty-png",
+      diagnostic: "empty or not a regular file",
+      formats: { png: false, svg: null },
+    },
+    {
+      mode: "oversized-png",
+      diagnostic: "exceeds the bounded size limit",
+      formats: { png: false, svg: null },
+    },
+  ];
+  for (const fixture of rejectedSmokeFixtures) {
+    const { report, candidate } = probeSmokeMode(fixture.mode);
+    const diagnostic = candidate.smoke.diagnostics.join("\n");
+    if (
+      report.transactional.available ||
+      candidate.smoke.available ||
+      candidate.smoke.status !== "rejected" ||
+      candidate.smoke.attempted !== true ||
+      candidate.smoke.formats.png !== fixture.formats.png ||
+      candidate.smoke.formats.svg !== fixture.formats.svg ||
+      candidate.capabilities.smoke.png !== fixture.formats.png ||
+      candidate.capabilities.smoke.svg !== fixture.formats.svg ||
+      !diagnostic.includes(fixture.diagnostic) ||
+      !candidate.diagnostics.some((item) => item.includes(fixture.diagnostic))
+    ) {
+      throw new Error(
+        `draw.io smoke fixture ${fixture.mode} was not rejected safely: ${JSON.stringify(report)}`,
+      );
+    }
+  }
+
+  const originalRmSync = fs.rmSync;
+  let cleanupFailureIntercepted = false;
+  let cleanupFailureReport;
+  try {
+    fs.rmSync = (target, options) => {
+      if (
+        !cleanupFailureIntercepted &&
+        path.basename(String(target)).startsWith("drawio-capability-probe-")
+      ) {
+        cleanupFailureIntercepted = true;
+        originalRmSync(target, options);
+        throw new Error("synthetic smoke cleanup failure");
+      }
+      return originalRmSync(target, options);
+    };
+    cleanupFailureReport = probeDrawio({
+      env: { ...probeEnv, DRAWIO_PROBE_SMOKE_MODE: "valid" },
+    });
+  } finally {
+    fs.rmSync = originalRmSync;
+  }
+  const cleanupFailureCandidate = cleanupFailureReport.candidates.find(
+    (item) => item.source === "configured",
+  );
+  if (
+    !cleanupFailureIntercepted ||
+    !cleanupFailureCandidate ||
+    cleanupFailureReport.transactional.available ||
+    cleanupFailureCandidate.capabilities.transactional ||
+    cleanupFailureCandidate.smoke.available ||
+    cleanupFailureCandidate.smoke.status !== "indeterminate" ||
+    cleanupFailureCandidate.smoke.attempted !== true ||
+    cleanupFailureCandidate.smoke.formats.png !== true ||
+    cleanupFailureCandidate.smoke.formats.svg !== true ||
+    !cleanupFailureCandidate.smoke.diagnostics.some((item) =>
+      item.includes("temporary format smoke artifacts could not be removed"),
+    )
+  ) {
+    throw new Error(
+      `draw.io smoke cleanup failure was not reported as indeterminate: ${JSON.stringify(cleanupFailureReport)}`,
     );
   }
   const toolsetReport = probeDrawioToolset({ env: probeEnv });
