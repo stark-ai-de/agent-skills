@@ -31,6 +31,17 @@ Cases live under `cases/` and follow the SkillOpt markdown schema:
 - `cases/agent-initiated-authority.md`
 - `cases/review-read-only-early-return.md`
 
+Toolset and safety coverage is deliberately explicit. The corpus includes
+deterministic prompts for Linux-native versus Windows-wrapper draw.io
+selection, direct `/mnt/c` and `DRAWIO_BIN` candidate fallback, native
+`--version` plus PNG/SVG smoke checks, WSL raw-export limits, Python/Node and
+browser present/missing/indeterminate states, fixed-theme browser rasterization
+limits, install/setup approval and declined fallback, sanitized capability
+receipts, and review/ambiguous branches that do not create preflight side
+effects. These cases are response-level evals; the focused validator also
+exercises fake local binaries and browsers so they do not require real draw.io
+Desktop, Chrome, network access, or package installation.
+
 Activation coverage intentionally mixes explicit skill requests with natural-language draw.io work. The corpus validator requires at least 20 positive prompts that do not name `$drawio-diagrams`, so routing quality cannot regress into invocation-only coverage.
 
 - `## Prompt`
@@ -76,22 +87,22 @@ Supported deterministic visual checks are:
 
 `markdown_image` and `markdown_link` check real inline Markdown references outside fenced, indented, inline, and raw-HTML code; relative references must resolve to an artifact in the evaluated package. `png_pixels_differ` requires one same-size PNG per glob and compares canonical canvas-order RGBA pixels rather than PNG encoding, interlace layout, hidden RGB, compression, or metadata. Add `min_changed_basis_points` when exact inequality is too weak, such as profile comparisons where a tiny marker-only change must fail (`25` means 0.25%). `svg_png_dimensions_match` requires one SVG and one PNG, requires explicit positive SVG pixel dimensions, and compares the SVG canvas after fractional dimensions are rounded up like the fixed-theme rasterizer. Wildcard assertions for PNG dimensions, nonblank pixels, SVG animation, and self-contained SVG images require every matched artifact to pass.
 
-These checks prove artifact existence, source structure, basic render validity, animation policy, gallery references, theme-pair differences, and selected icon invariants. Composition quality such as connector crossings, logo recognizability, and nuanced contrast still requires manual inspection or a vision-enabled evaluator; a response-only semantic judge cannot prove those properties.
+These checks prove artifact existence, source structure, basic render validity, animation policy, gallery references, theme-pair differences, and selected icon invariants. The icon/logo cases enforce the brand-fidelity contract through explicit coverage of official-logo preference, original source bytes and colors, recolor disclosure, and per-node fallback that leaves resolved peers unchanged. Composition quality such as connector crossings, logo recognizability, and nuanced contrast still requires manual inspection or a vision-enabled evaluator; a response-only semantic judge cannot prove those properties.
 
 The auto-discovered corpus deliberately spans:
 
 - clear-intent selection, ambiguous invocation, agent-initiated authority boundaries, and read-only review early return
 - architecture context, deployment, dynamic, operations, current/target, C4, and evidence-conflict decisions
 - flowchart, sequence, ER, UML class/state, BPMN, SysML, ML/DL, swimlane, timeline, network, comparison, and Kubernetes notation
-- icon-first defaults, explicit full opt-out, repository contracts, mixed providers, offline and vendor-neutral fallback, logo fidelity, and rights messaging
+- icon-first defaults, explicit full opt-out, repository contracts, mixed providers, offline and vendor-neutral fallback, official-logo preference, original-color/logo-byte fidelity, arbitrary-recolor prohibition, explicit-recolor disclosure, unresolved-brand peer invariance, and rights messaging
 - animation defaults, opt-out, semantic edge roles, static-export completeness, and existing-file preservation
 - page, layer, ID, manual-layout, compressed-XML, linked-asset, backup, and surgical-edit safety
 - light/dark accessibility, non-color state semantics, type floors, density, fan-out routing, the technical default plus four bounded design profiles, task-local reference-style adaptation, and visual review
-- CLI, direct XML, MCP, hosted-preview, oversized browser-fragment fallback, and approval-gated setup paths
+- CLI, direct XML, native/Windows candidate fallback, WSL raw export, capability preflight, MCP, hosted-preview, oversized browser-fragment fallback, fixed-theme browser limits, and approval-gated setup paths
 - Mermaid-to-draw.io conversion, mind maps, multi-page PDF, and near-boundary Mermaid, PlantUML, Graphviz, presentation, standalone SVG, image, chart, and text-only architecture requests
 
 Case files are auto-discovered from `cases/*.md`; split preparation reports the current counts, so no second filename manifest is maintained.
 
 Use `rubric.md` to grade outputs. `runs/` stores promotion review summaries and future run evidence.
 
-Cases other than the three routing cases provide enough task intent to select a workflow directly or state the remaining material ambiguity. Passing outputs must create or edit editable `.drawio` XML when requested, run deterministic validation when `python3` is available, preserve existing diagram structure during edits, report visual/export limitations honestly, keep dense architecture diagrams readable in light and dark mode, embed selected external SVGs without runtime links, and approval-gate hosted services, installs, bulk downloads, persistent caches, and file-writing render/raster helpers.
+Cases other than the routing cases provide enough task intent to select a workflow directly or state the remaining material ambiguity. Passing outputs must create or edit editable `.drawio` XML when requested, run strict preflight and deterministic validation when the required runtimes are available, preserve existing diagram structure during edits, report capability, visual, and export limitations honestly, keep dense architecture diagrams readable in light and dark mode, embed selected external SVGs without runtime links, sanitize receipts so temporary/private paths do not escape, include every mandatory create/edit-repair/export receipt field, and approval-gate hosted services, installs, bulk downloads, persistent caches, cross-boundary execution, browser rasterization, and file-writing fallback helpers. Review and unresolved routing intentionally stop before optional tool preflight and mark those criteria not applicable. Explicit canonical PNG/SVG/PDF requests authorize those named native writes. Missing or indeterminate tools must select the safest documented fallback rather than fabricate an artifact or capability.
