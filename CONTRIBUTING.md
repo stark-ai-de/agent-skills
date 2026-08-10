@@ -57,7 +57,7 @@ Follow [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples,
 
 ## Validation
 
-Run:
+Select checks from changed contracts and owning boundaries as required by [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Common repository gates are:
 
 ```bash
 npm run validate
@@ -66,6 +66,8 @@ npm run list:incubator
 npm run smoke:fingerprint
 npm run smoke:install
 ```
+
+Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it; hosted Validate remains mandatory for every pull request. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
 
 The `npx` command requires network access the first time the CLI is fetched.
 
@@ -89,8 +91,8 @@ pnpm lint
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
-- [ ] `npm run validate` passes.
-- [ ] `npx skills@latest add ./skills --list` works for local catalog discovery.
+- [ ] Checks required by ADR-0041 and the changed contracts pass; release-intent work includes the local aggregate, and hosted Validate is green.
+- [ ] `npx skills@latest add ./skills --list` works when local catalog discovery changed.
 - [ ] `npm run smoke:install` passes when install smoke behavior changed.
 - [ ] No private or sensitive data is included.
 
