@@ -2,7 +2,7 @@
 
 ID: ADR-0039
 Title: Separate Internal Skill Implementation Policy from Exposed Contracts
-Status: Proposed
+Status: Accepted
 Date: 2026-08-05
 Owner: stark-ai-de
 Scope: repository
@@ -12,16 +12,16 @@ Applies when: Adding, changing, routing, or promoting skill implementation rules
 Adoptable: false
 Variant: Long
 Canonical variant: Long
-Supersedes: None
+Supersedes: ADR-0033
 Superseded by: None
 Guide verified: 2026-08-05
-Gist: Implementation-only skill policy stays private while generalized portable behavior is promoted through explicit exposed ADR contracts.
+Gist: Implementation-only skill policy stays internal while generalized portable behavior is promoted through explicit exposed ADR contracts.
 
 Variants: [Short](0039-separate-internal-skill-implementation-policy-from-exposed-contracts.short.md) · **Long, canonical** · [Guide](0039-separate-internal-skill-implementation-policy-from-exposed-contracts.guide.md)
 
 ## Decision
 
-We will separate skill-internal implementation policy from exposed portable contracts: implementation-only Architecture Compass rules may live in a skill-owned internal namespace or compact skill instructions, while generalized, reusable behavior must be promoted into the repository's exposed ADR contract before it is treated as a portable guardrail. Internal records are not public catalog entries or target-repository adoption inputs; accepted exposed decisions remain authoritative, and promotion requires explicit review plus synchronized Short, Long, Guide, catalog, and validation updates.
+We will separate skill-internal implementation policy from exposed portable contracts. The exposed Architecture Compass library remains a flat, catalog-routed Short, Long, and Guide triplet library with distinct `skill-runtime` and `target-repository` scopes, canonical Long decisions, and no duplicate compiled policy layer. Durable implementation-only rules may live in a separately validated, skill-owned internal Short, Long, and Guide triplet namespace; compact skill instructions may only dispatch to those records or state non-durable mechanics. Internal records are not exposed catalog entries, portable authority, or target-repository adoption inputs and cannot override accepted exposed decisions. Generalized, reusable behavior must be promoted into the exposed ADR contract through explicit review and synchronized triplet, catalog, lineage, and validation updates before it is treated as a portable guardrail.
 
 ## Why
 
