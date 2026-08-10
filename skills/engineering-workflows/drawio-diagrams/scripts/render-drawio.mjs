@@ -435,7 +435,7 @@ function probeCandidateVersion(candidate) {
 
 function candidateAvailable(candidate) {
   if (!candidate?.executable || candidate.stale) return false;
-  if (candidate.windows && candidate.chain?.length === 0) return true;
+  if (candidate.windows) return true;
   return candidate.versionProbeStatus === 0;
 }
 
