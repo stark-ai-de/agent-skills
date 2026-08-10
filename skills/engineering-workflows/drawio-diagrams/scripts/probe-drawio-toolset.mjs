@@ -15,6 +15,7 @@ const MAX_OUTPUT_CHARS = 4 * 1024;
 const MAX_SPAWN_OUTPUT_CHARS = 64 * 1024;
 const MAX_DIAGNOSTIC_CHARS = 512;
 const MAX_CANDIDATES = 12;
+const MAX_SMOKE_BYTES = 64 * 1024 * 1024;
 const SCHEMA_VERSION = 1;
 const DRAWIO_FORMATS = ["png", "svg", "pdf", "jpg", "xml", "html"];
 const BROWSER_COMMANDS = [
@@ -134,6 +135,7 @@ function executableInfo(
     path: redactPath(descriptor.resolvedPath || resolved),
     terminalPath: redactPath(descriptor.terminalPath),
     available: Boolean(descriptor.executable && !descriptor.stale),
+    status: !descriptor.executable || descriptor.stale ? "missing" : "indeterminate",
     executable: Boolean(descriptor.executable),
     stale: Boolean(descriptor.stale),
     version: null,
@@ -147,9 +149,12 @@ function executableInfo(
     timeout,
     maxBuffer: MAX_SPAWN_OUTPUT_CHARS,
   });
-  if (!probe.error && probe.status === 0) result.version = redactDiagnostic(commandOutput(probe));
-  else if (probe.error?.code === "ETIMEDOUT") result.diagnostics.push("version probe timed out");
-  else if (probe.error) {
+  if (!probe.error && probe.status === 0) {
+    result.status = "available";
+    result.version = redactDiagnostic(commandOutput(probe));
+  } else if (probe.error?.code === "ETIMEDOUT") {
+    result.diagnostics.push("version probe timed out");
+  } else if (probe.error) {
     result.diagnostics.push(`version probe failed for ${redactCommand(command)}`);
   } else if (probe.status !== 0) result.diagnostics.push(`version probe exited ${probe.status}`);
   return result;
@@ -177,7 +182,7 @@ export function probeRuntime(command, { env = process.env } = {}) {
 
 export function probePython({ env = process.env } = {}) {
   const result = probeRuntime("python3", { env });
-  return { ...result, validatorAvailable: result.available };
+  return { ...result, validatorAvailable: result.status === "available" };
 }
 
 export function probeNode({ env = process.env } = {}) {
@@ -188,7 +193,7 @@ export function probeNode({ env = process.env } = {}) {
     ...result,
     requiredMajor: 18,
     major,
-    supported: Boolean(result.available && major !== null && major >= 18),
+    supported: Boolean(result.status === "available" && major !== null && major >= 18),
   };
 }
 
@@ -230,6 +235,62 @@ function formatCapabilities(helpText, known = true) {
   };
 }
 
+const SMOKE_DRAWIO_XML = `<mxfile host="app.diagrams.net"><diagram name="Capability probe"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
+
+function smokeFormat(command, format, env) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "drawio-capability-probe-"));
+  const input = path.join(directory, "probe.drawio");
+  const output = path.join(directory, `probe.${format}`);
+  try {
+    fs.writeFileSync(input, SMOKE_DRAWIO_XML, "utf8");
+    const result = spawnSync(command, ["-x", "-f", format, "-o", output, input], {
+      encoding: "utf8",
+      env,
+      timeout: 5_000,
+      maxBuffer: MAX_SPAWN_OUTPUT_CHARS,
+    });
+    let valid = false;
+    try {
+      const stat = fs.statSync(output);
+      if (stat.isFile() && stat.size > 0 && stat.size <= MAX_SMOKE_BYTES) {
+        const sample = fs.readFileSync(output, { encoding: "utf8", flag: "r" });
+        valid = format === "svg" ? /<svg\b/i.test(sample) : false;
+      }
+    } catch {
+      valid = false;
+    }
+    if (format === "png" && !valid) {
+      try {
+        const header = fs.readFileSync(output).subarray(0, 8);
+        valid = header.equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      } catch {
+        valid = false;
+      }
+    }
+    return {
+      available: !result.error && result.status === 0 && valid,
+      status: result.error ? null : result.status,
+      diagnostic: result.error
+        ? truncate(result.error.message)
+        : result.status === 0 && valid
+          ? null
+          : `${format} smoke export did not produce a valid artifact`,
+    };
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+function smokeFormats(command, env) {
+  const png = smokeFormat(command, "png", env);
+  const svg = smokeFormat(command, "svg", env);
+  return {
+    png: png.available,
+    svg: svg.available,
+    diagnostics: [png.diagnostic, svg.diagnostic].filter(Boolean),
+  };
+}
+
 function candidateAvailable(candidate) {
   if (!candidate?.executable || candidate.stale) return false;
   if (candidate.windows && candidate.chain?.length === 0) return true;
@@ -246,7 +307,14 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
       ? drawioHelp(command, env)
       : { text: "", status: null, diagnostics: [] };
   const capabilities = formatCapabilities(help.text, help.status === 0);
-  const transactional = supportsDescriptorAnchoredChild(candidate);
+  const descriptorAnchored = supportsDescriptorAnchoredChild(candidate);
+  const smoke = available && descriptorAnchored ? smokeFormats(command, env) : null;
+  if (smoke) {
+    capabilities.formats.png = smoke.png;
+    capabilities.formats.svg = smoke.svg;
+    capabilities.formatList = DRAWIO_FORMATS.filter((format) => capabilities.formats[format]);
+  }
+  const transactional = Boolean(available && descriptorAnchored && smoke?.png && smoke?.svg);
   return {
     command: redactCommand(command),
     source: candidate.source,
@@ -264,11 +332,12 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
     platform: process.platform,
     version: redactDiagnostic(version.version || versionProbe),
     versionProbeStatus: candidate.versionProbeStatus ?? null,
-    probes: { version: "--version", help: "--help" },
+    probes: { version: "--version", help: "--help", smoke: ["png", "svg"] },
     diagnostics: [
       ...(candidate.diagnostics || []),
       ...(version.diagnostics || []),
       ...help.diagnostics,
+      ...(smoke?.diagnostics || []),
     ]
       .map((item) => redactDiagnostic(item))
       .slice(0, 8),
@@ -276,6 +345,7 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
       ...capabilities,
       rawCli: available,
       transactional,
+      smoke: smoke ? { png: smoke.png, svg: smoke.svg } : { png: null, svg: null },
     },
   };
 }
@@ -289,7 +359,7 @@ export function probeDrawio({ env = process.env } = {}) {
     .slice(0, MAX_CANDIDATES)
     .map((candidate) => serialiseDrawioCandidate(candidate, { env }));
   const selected =
-    candidates.find((candidate) => candidate.capabilities.transactional) ||
+    candidates.find((candidate) => candidate.available && candidate.capabilities.transactional) ||
     candidates.find((candidate) => candidate.available) ||
     null;
   const raw = candidates.filter(
@@ -382,7 +452,12 @@ export function probeAgentBrowser({ env = process.env } = {}) {
   }
   return {
     ...result,
-    status: !result.available ? "missing" : result.version ? "present" : "indeterminate",
+    status:
+      result.status === "missing"
+        ? "missing"
+        : result.status === "available" && result.version
+          ? "present"
+          : "indeterminate",
     command: result.command || "agent-browser",
     browserExecutableReuse: Boolean(env.AGENT_BROWSER_EXECUTABLE_PATH),
     skillsCoreHint: /skills\s+get\s+core/.test(help),
@@ -397,7 +472,7 @@ export function probePackageManagers({ env = process.env } = {}) {
   const candidates = PACKAGE_COMMANDS.map((command) => {
     const result = executableInfo(command, { env, args: ["--version"] });
     return { name: command, ...result };
-  }).filter((candidate) => candidate.available);
+  }).filter((candidate) => candidate.status === "available");
   let active = null;
   const userAgent = env.npm_config_user_agent || env.NPM_CONFIG_USER_AGENT || "";
   const userAgentMatch = userAgent.match(/^(pnpm|npm|yarn|bun)\//i);
@@ -421,6 +496,7 @@ export function probePackageManagers({ env = process.env } = {}) {
     nix: candidates.find((candidate) => candidate.name === "nix") || {
       name: "nix",
       available: commandExists("nix", env),
+      status: commandExists("nix", env) ? "indeterminate" : "missing",
     },
   };
 }
@@ -465,7 +541,7 @@ export function probeNixProposal({ env = process.env } = {}) {
   const nixOs = fs.existsSync("/etc/NIXOS") || Boolean(env.NIXOS_VERSION) || Boolean(env.NIX_PATH);
   return {
     nixOs,
-    available: nix.available,
+    available: nix.status === "available",
     userProfile: {
       proposal: "nix profile install nixpkgs#drawio",
       command: "nix profile install nixpkgs#drawio",
@@ -519,11 +595,13 @@ function usage() {
 }
 
 function humanReceipt(report) {
+  const python = report.runtime.python;
+  const node = report.runtime.node;
   const lines = [
     "sanitized capability receipt:",
     `platform: ${report.platform.nodePlatform}/${report.platform.arch}${report.platform.wsl ? " (WSL)" : ""}`,
-    `python3: ${report.runtime.python.available ? report.runtime.python.version || "available" : "unavailable"}`,
-    `node: ${report.runtime.node.supported ? report.runtime.node.version || "available" : report.runtime.node.available ? "unsupported (<18)" : "unavailable"}`,
+    `python3: ${python.status === "available" ? python.version || "available" : python.status}`,
+    `node: ${node.supported ? node.version || "available" : node.status === "indeterminate" ? "indeterminate" : node.available ? "unsupported (<18)" : "unavailable"}`,
     `draw.io: ${report.drawio.selected?.command || "not found"} (version probe: --version)`,
     `transactional renderer: ${report.drawio.transactional.available ? "available" : "unavailable"}`,
     `raw/manual candidates: ${report.drawio.raw.candidates.length || "none"}`,
