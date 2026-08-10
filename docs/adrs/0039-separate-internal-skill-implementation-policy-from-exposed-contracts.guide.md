@@ -2,7 +2,7 @@
 
 ID: ADR-0039
 Title: Separate Internal Skill Implementation Policy from Exposed Contracts
-Status: Proposed
+Status: Accepted
 Date: 2026-08-05
 Owner: stark-ai-de
 Scope: repository
@@ -12,10 +12,10 @@ Applies when: Adding, changing, routing, or promoting skill implementation rules
 Adoptable: false
 Variant: Guide
 Canonical variant: Long
-Supersedes: None
+Supersedes: ADR-0033
 Superseded by: None
 Guide verified: 2026-08-05
-Gist: Implementation-only skill policy stays private while generalized portable behavior is promoted through explicit exposed ADR contracts.
+Gist: Implementation-only skill policy stays internal while generalized portable behavior is promoted through explicit exposed ADR contracts.
 
 Variants: [Short](0039-separate-internal-skill-implementation-policy-from-exposed-contracts.short.md) · [Long, canonical](0039-separate-internal-skill-implementation-policy-from-exposed-contracts.long.md) · **Guide**
 
@@ -24,7 +24,8 @@ This guide is non-normative. [Long](0039-separate-internal-skill-implementation-
 ## How to apply
 
 - Classify a rule as internal when it governs only skill packaging, routing, host adapters, persistence-surface resolution, evaluation mechanics, or other implementation details.
-- Keep internal records in the owning skill's private or internal documentation surface. Do not add them to the public Architecture Compass catalog or target-repository adoption flow.
+- Keep durable internal records as separately validated Short, Long, and Guide triplets in the owning skill's internal documentation surface. Compact skill instructions may dispatch to those records or state non-durable mechanics, but must not become an independent durable policy surface. Do not add internal records to the exposed Architecture Compass catalog or target-repository adoption flow.
+- Keep the exposed library flat and catalog-routed through complete Short, Long, and Guide triplets with Long canonical. Do not use the internal namespace as a duplicate exposed policy layer.
 - Classify a rule as exposed when it defines generalized behavior that other skills, agents, or target repositories should be able to discover and adopt.
 - Promote exposed behavior through a complete Short, Long, Guide triplet with stable metadata, catalog linkage, lineage, and validation updates. Do not silently duplicate an internal record.
 - If an internal note and an accepted exposed decision conflict, follow the exposed decision and open the appropriate successor or correction record.
