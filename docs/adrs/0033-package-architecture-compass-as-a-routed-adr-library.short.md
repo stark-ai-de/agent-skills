@@ -2,7 +2,7 @@
 
 ID: ADR-0033
 Title: Package Architecture Compass as a routed ADR library
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0039
 Guide verified: 2026-07-28
 Gist: Architecture Compass should load only applicable canonical guardrails.
 
