@@ -30,7 +30,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Add a focused home page that makes the skill catalog the first screen.
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
 - Add static favicons, app icons, manifest metadata, SEO metadata, Open Graph metadata, and Twitter card metadata.
-- Add a GitHub Pages workflow that deploys the static site only from `main`; the required `Validate` workflow owns pull-request site-build proof.
+- Make the required `Validate` workflow upload and deploy the static site artifact only after successful validation on `main`; it also owns pull-request site-build proof.
 - Add validation so pull requests catch site build failures before merge.
 - Update existing repo-facing docs that become stale because of the new Pages surface.
 
@@ -70,6 +70,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Related ADRs:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
+  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
 - Unspecified facts:
   - Final deployed Pages URL until repository Pages settings are enabled.
   - Whether a future custom domain will be configured.
@@ -108,7 +109,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN the site is deployed under GitHub Pages, THE SYSTEM SHALL load routes and assets correctly under `/agent-skills/`.
 - WHEN metadata is generated, THE SYSTEM SHALL include title, description, canonical URL, Open Graph image, Twitter card metadata, manifest, theme color, favicon, SVG icon, and apple icon.
 - WHEN the required `Validate` workflow runs on pull requests, THE SYSTEM SHALL build the site without deploying it.
-- WHEN the Pages workflow runs for a relevant `main` push or an explicit manual dispatch from `main`, THE SYSTEM SHALL build and deploy the static artifact with GitHub Pages Actions.
+- WHEN the required `Validate` workflow completes successfully for a `main` push or an explicit manual dispatch from `main`, THE SYSTEM SHALL upload and deploy the validated static artifact with GitHub Pages Actions in that same workflow run.
 
 ### Non-functional requirements
 
@@ -143,12 +144,15 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 
 - ADR required: yes
 - Existing ADRs consulted:
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
+  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
-- ADR draft or path:
+- Accepted ADR path:
+  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - Supersedes:
-  - None
-- Implementation blocked until ADR accepted: no
+  - ADR-0042
+- Implementation blocked until ADR accepted: no; ADR-0043 is accepted.
 
 ## File plan
 
@@ -159,8 +163,12 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - `README.md`
 - `docs/validation.md`
 - `.github/workflows/validate.yml`
-- `.github/workflows/pages.yml`
+- `.github/workflows/publish-release.yml`
 - `site/`
+
+### Expected removed files
+
+- `.github/workflows/pages.yml`
 
 ### Expected new files
 
@@ -207,10 +215,11 @@ The site should use the visual language, metadata conventions, logos, favicons, 
    - foreground `#0c1d2d`
    - Manrope display type and Inter body type when asset licensing permits reuse
 7. Add metadata, manifest, favicons, canonical URLs, Open Graph, Twitter cards, robots, and sitemap behavior.
-8. Add GitHub Pages workflow:
+8. Make the required `Validate` workflow the single trusted Pages artifact producer:
    - keep pull-request site-build proof in the required `Validate` workflow
-   - deploy only for relevant `main` pushes or explicit manual dispatches from `main`
-   - use `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages`
+   - upload and deploy only for relevant `main` pushes or explicit manual dispatches from `main`
+   - use `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages` in the same workflow run
+   - publish a SHA-bound validation receipt for manual release reuse
 9. Add site build validation to the existing PR validation path.
 10. Update README and validation docs with the site URL and commands.
 11. Run automated validation and perform manual browser checks at desktop and mobile widths.
@@ -228,24 +237,25 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `incubator/skills/**/SKILL.md`
 - ADRs/specs checked:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
-  - Existing ADR index through ADR-0016 and accepted ADR-0017
+  - Existing ADR index through ADR-0017, ADR-0042, and accepted ADR-0043
 - External docs checked:
   - Astro GitHub Pages deployment guidance
   - Astro static route/content guidance
   - GitHub Pages custom workflow guidance
+  - GitHub Actions artifact, concurrency, required-check, and workflow-run guidance
   - Tailwind CSS v4 Vite guidance
   - Live `https://stark-ai.de/` page content and metadata behavior
 - Requirements revised:
   - Use Astro instead of Next.js for this repository because the target is a static catalog and GitHub Pages site.
   - Treat the sibling website as the design source, not a build dependency.
-  - Require a short ADR before implementation because this changes repo build/deploy policy.
+  - Require ADR-0043 because this changes repo build/deploy and release-proof policy.
   - Include `skillopt-setup` as an incubator candidate now that its public skill and eval proof are available, without presenting it as a promoted skill.
 - Requirements preserved:
   - Each skill gets a separate page.
   - Website styling, metadata, icons, and favicons should align with `stark-ai.de`.
   - Incubator skills should be visible only as candidate/internal skills, not as promoted public catalog entries.
 - Preceding ADR/spec work needed:
-  - None; ADR-0017 is accepted.
+  - ADR-0043 is accepted and supersedes ADR-0042; ADR-0041 remains the validation-selection authority and ADR-0017 remains the static Astro authority.
 - ADR gate result:
   - ADR required: yes
 - Skipped checks and why:
@@ -277,9 +287,10 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Existing file overwrite needed:
   - no
 - ADR paths:
+  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - ADR persistence:
-  - saved as Proposed
+  - saved as Accepted
 - ADR index updates needed:
   - `docs/adrs.md`
 
@@ -311,7 +322,7 @@ npm run smoke:install
   - Brand assets can be copied if approved and non-secret.
 - Non-blocking unknowns accepted: yes
 - Blocking decisions:
-  - None; ADR-0017 is accepted.
+  - None; ADR-0017 and ADR-0043 are accepted, while ADR-0042 is superseded.
 - Risks and rollout reviewed: yes
 - Validation plan reviewed: yes
 - ADR result reviewed: yes
@@ -323,7 +334,7 @@ npm run smoke:install
 - Primary risk:
   - The new site can drift from `stark-ai.de` styling and metadata after the initial asset copy.
 - Rollback path:
-  - Disable the Pages workflow or remove the Pages deployment source; static site files can remain in the repo until reverted.
+  - Disable the Validate deployment job or remove the Pages deployment source; static site files can remain in the repo until reverted.
 - Migration/backfill needs:
   - None for runtime users; skill installation behavior is unchanged.
 - Feature-flag or phased rollout need:
@@ -343,7 +354,7 @@ npm run smoke:install
 - [ ] Public and incubator skill pages are generated from current `SKILL.md` files.
 - [ ] `skillopt-setup` is generated only as an incubator candidate and links to its eval proof without changing the skill or eval source files.
 - [ ] Brand assets, favicons, manifest, SEO metadata, and social metadata are present.
-- [ ] The required Validate workflow builds the site on PRs; the GitHub Pages workflow deploys only relevant `main` pushes and explicit manual dispatches.
+- [ ] The required Validate workflow builds the site on PRs and deploys only its validated artifact for relevant `main` pushes and explicit manual-main dispatches.
 - [ ] README and validation docs reflect the new site and commands.
 - [ ] Automated validation commands pass.
 - [ ] Manual desktop and mobile checks pass.

@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('{0}-manual-{1}', github.workflow, github.run_id) || format('{0}-{1}-{2}', github.workflow, github.event_name, github.event.pull_request.number || github.ref) }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
@@ -27,6 +27,7 @@ jobs:
         with:
           runtime: node@22
           cache: true
+          cache-dependency-path: pnpm-lock.yaml
           install: false
 
       - run: pnpm install --frozen-lockfile
@@ -49,3 +50,81 @@ jobs:
       - run: npx skills@latest add ./skills --list
 
       - run: npm run smoke:install
+
+      - name: Compute site digest
+        id: site-digest
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        working-directory: site/dist
+        run: |
+          test -n "$(find . -type f -print -quit)"
+          digest=$(find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Configure Pages
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        uses: actions/configure-pages@v6
+
+      - name: Upload validated Pages artifact
+        id: pages-artifact
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist
+          retention-days: 30
+
+      - name: Write validation receipt
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        env:
+          SITE_DIGEST: ${{ steps.site-digest.outputs.digest }}
+          PAGES_ARTIFACT_ID: ${{ steps.pages-artifact.outputs.artifact_id }}
+        run: |
+          jq -n \
+            --arg workflow "$GITHUB_WORKFLOW" \
+            --arg workflow_path ".github/workflows/validate.yml" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg event "$GITHUB_EVENT_NAME" \
+            --arg branch "$GITHUB_REF_NAME" \
+            --arg sha "$GITHUB_SHA" \
+            --arg version "$(node -p "require('./package.json').version")" \
+            --arg site_digest "$SITE_DIGEST" \
+            --arg pages_artifact_id "$PAGES_ARTIFACT_ID" \
+            '{
+              workflow: $workflow,
+              workflow_path: $workflow_path,
+              run_id: $run_id,
+              run_attempt: $run_attempt,
+              event: $event,
+              branch: $branch,
+              sha: $sha,
+              version: $version,
+              site_digest: $site_digest,
+              pages_artifact_id: $pages_artifact_id
+            }' > validation-receipt.json
+
+      - name: Upload validation receipt
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-receipt
+          path: validation-receipt.json
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy:
+    needs: validate
+    if: ${{ needs.validate.result == 'success' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy validated Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages

@@ -28,6 +28,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       release_sha: ${{ steps.version.outputs.release_sha }}
+      validate_run_id: ${{ steps.validate-receipt.outputs.run_id }}
 
     steps:
       - uses: actions/checkout@v6
@@ -39,6 +40,7 @@ jobs:
         with:
           runtime: node@22
           cache: true
+          cache-dependency-path: pnpm-lock.yaml
           install: false
 
       - run: pnpm install --frozen-lockfile
@@ -46,7 +48,7 @@ jobs:
       - id: version
         run: |
           version=$(node -p "require('./package.json').version")
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Require successful hosted Validate run
@@ -59,18 +61,83 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --workflow validate.yml \
             --commit "$RELEASE_SHA" \
-            --status completed \
+            --branch main \
+            --event push \
+            --status success \
             --limit 50 \
-            --json databaseId,status,conclusion \
-            --jq 'map(select(.status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
+            --json databaseId,status,conclusion,event,headBranch,headSha \
+            --jq 'map(select(.status == "completed" and .conclusion == "success" and .event == "push" and .headBranch == "main" and .headSha == env.RELEASE_SHA)) | .[0].databaseId // empty')
 
           if [ -z "$run_id" ]; then
-            echo "No successful Validate run exists for ${RELEASE_SHA}; wait for main validation and retry."
+            echo "No successful main push Validate run exists for $RELEASE_SHA; wait for main validation and retry."
             exit 1
           fi
 
-          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
-          echo "Reusing successful Validate run ${run_id} for ${RELEASE_SHA}."
+          artifact_id=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts" \
+            --jq '.artifacts | map(select(.name == "validation-receipt" and .expired == false)) | .[0].id // empty')
+
+          if [ -z "$artifact_id" ]; then
+            echo "Validate run has no unexpired validation receipt."
+            exit 1
+          fi
+
+          artifact_metadata=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id" \
+            --jq '[.workflow_run.id, .workflow_run.head_sha, .workflow_run.head_branch] | @tsv')
+          IFS=$'\t' read -r artifact_run_id artifact_sha artifact_branch <<< "$artifact_metadata"
+          test "$artifact_run_id" = "$run_id"
+          test "$artifact_sha" = "$RELEASE_SHA"
+          test "$artifact_branch" = "main"
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Reusing successful main push Validate run $run_id for $RELEASE_SHA."
+
+      - name: Download validation receipt
+        uses: actions/download-artifact@v4
+        with:
+          name: validation-receipt
+          path: validation-receipt
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.validate-receipt.outputs.run_id }}
+
+      - name: Verify validation receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+          VALIDATE_RUN_ID: ${{ steps.validate-receipt.outputs.run_id }}
+        run: |
+          test -f validation-receipt/validation-receipt.json
+          test "$(jq -r '.workflow' validation-receipt/validation-receipt.json)" = "Validate"
+          test "$(jq -r '.workflow_path' validation-receipt/validation-receipt.json)" = ".github/workflows/validate.yml"
+          test "$(jq -r '.run_id' validation-receipt/validation-receipt.json)" = "$VALIDATE_RUN_ID"
+          test "$(jq -r '.run_attempt | tonumber > 0' validation-receipt/validation-receipt.json)" = "true"
+          test "$(jq -r '.event' validation-receipt/validation-receipt.json)" = "push"
+          test "$(jq -r '.branch' validation-receipt/validation-receipt.json)" = "main"
+          test "$(jq -r '.sha' validation-receipt/validation-receipt.json)" = "$RELEASE_SHA"
+          test "$(jq -r '.version' validation-receipt/validation-receipt.json)" = "$VERSION"
+          site_digest=$(jq -r '.site_digest' validation-receipt/validation-receipt.json)
+          pages_artifact_id=$(jq -r '.pages_artifact_id' validation-receipt/validation-receipt.json)
+          test "$site_digest" != "null"
+          test -n "$site_digest"
+          test "$pages_artifact_id" != "null"
+          test -n "$pages_artifact_id"
+
+          pages_artifact_metadata=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/artifacts/$pages_artifact_id" \
+            --jq '[.name, .expired, .workflow_run.id, .workflow_run.head_sha, .workflow_run.head_branch] | @tsv')
+          IFS=$'\t' read -r pages_artifact_name pages_artifact_expired pages_run_id pages_sha pages_branch <<< "$pages_artifact_metadata"
+          test "$pages_artifact_name" = "github-pages"
+          test "$pages_artifact_expired" = "false"
+          test "$pages_run_id" = "$VALIDATE_RUN_ID"
+          test "$pages_sha" = "$RELEASE_SHA"
+          test "$pages_branch" = "main"
+
+          echo "Validated Pages artifact $pages_artifact_id belongs to Validate run $VALIDATE_RUN_ID."
+          echo "Validated site digest: $site_digest"
 
       - run: node scripts/validate-release.mjs
 
@@ -78,7 +145,7 @@ jobs:
 
       - name: Print release readiness
         run: |
-          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
+          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using validated main push run ${{ steps.validate-receipt.outputs.run_id }}."
           echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
 
   publish:
@@ -94,7 +161,6 @@ jobs:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 0
 
-      # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -104,11 +170,11 @@ jobs:
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
-          test "$(git rev-parse HEAD)" = "${RELEASE_SHA}"
-          test "$(node -p "require('./package.json').version")" = "${VERSION}"
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(node -p "require('./package.json').version")" = "$VERSION"
 
           main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
-          if [ "${main_sha}" != "${RELEASE_SHA}" ]; then
+          if [ "$main_sha" != "$RELEASE_SHA" ]; then
             echo "main advanced after release readiness; rerun the workflow."
             exit 1
           fi
@@ -118,15 +184,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
-          tag="v${VERSION}"
+          tag="v$VERSION"
 
-          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
-            echo "Tag ${tag} already exists."
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists."
             exit 1
           fi
 
-          if gh release view "${tag}" >/dev/null 2>&1; then
-            echo "GitHub Release ${tag} already exists."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "GitHub Release $tag already exists."
             exit 1
           fi
 
@@ -139,21 +205,21 @@ jobs:
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
-          tag="v${VERSION}"
+          tag="v$VERSION"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${tag}" "${RELEASE_SHA}" -m "${tag}"
-          git push origin "${tag}"
+          git tag -a "$tag" "$RELEASE_SHA" -m "$tag"
+          git push origin "$tag"
 
           latest_flag=("--latest=false")
           if [ "${{ inputs.mark_latest }}" = "true" ]; then
             latest_flag=("--latest")
           fi
 
-          gh release create "${tag}" \
+          gh release create "$tag" \
             --verify-tag \
-            --title "${tag}" \
+            --title "$tag" \
             --notes-file release-notes.md \
             "${latest_flag[@]}"
 

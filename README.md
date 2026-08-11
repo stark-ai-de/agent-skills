@@ -32,7 +32,6 @@
 [![skills.sh](https://skills.sh/b/stark-ai-de/agent-skills)](https://www.skills.sh/stark-ai-de/agent-skills)
 [![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
 [![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
-[![GitHub Pages](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml)
 [![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
 
 Public skills are reviewed before promotion. Draft and experimental workflows stay in the incubator until they have enough evaluation proof and a clear maintenance path.

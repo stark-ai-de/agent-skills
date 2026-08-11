@@ -2,7 +2,7 @@
 
 ID: ADR-0042
 Title: Optimize GitHub Actions with owned gates
-Status: Proposed
+Status: Superseded
 Date: 2026-08-11
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0043
 Guide verified: 2026-08-11
 Gist: Assign checks to their owning events, cache dependencies, cancel stale validation, and reuse exact release-readiness proof.
 

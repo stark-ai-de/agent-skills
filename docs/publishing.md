@@ -168,7 +168,7 @@ node scripts/validate-release.mjs --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, requires a successful hosted `Validate` run for that SHA, runs release-specific invariants, and prints the version it would release. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite.
+The workflow follows [ADR-0043](adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](adrs/0043-deploy-validated-main-artifacts.guide.md)). It reads the release version from `package.json`, records the exact checked-out `main` commit, requires a completed successful `Validate` push on `main` for that exact SHA, downloads and verifies the SHA-bound validation receipt, runs release-specific invariants, and prints the version it would release. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 

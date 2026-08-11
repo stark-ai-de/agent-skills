@@ -2,7 +2,7 @@
 
 ID: ADR-0042
 Title: Optimize GitHub Actions with owned gates
-Status: Proposed
+Status: Superseded
 Date: 2026-08-11
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0043
 Guide verified: 2026-08-11
 Gist: Assign checks to their owning events, cache dependencies, cancel stale validation, and reuse exact release-readiness proof.
 
@@ -25,7 +25,7 @@ This guide is non-normative. [Long](0042-optimize-github-actions-with-owned-gate
 
 - Use `pnpm/setup@v2` after checkout with `runtime: node@22`, `cache: true`, and `install: false`; run `pnpm install --frozen-lockfile` explicitly.
 - Keep the required `Validate` workflow unfiltered for pull requests, add per-event concurrency cancellation for pull requests and pushes, and leave manual dispatches independent.
-- Let the Pages workflow run on relevant `main` changes and explicit dispatches. Site output inputs are `site/**`, `skills/**`, `incubator/**`, `skill-evals/**`, package-manager manifests, and the Pages workflow itself.
+- This record is superseded by [ADR-0043](0043-deploy-validated-main-artifacts.short.md); follow that decision for the current Validate-owned Pages artifact and deployment handoff.
 - In `Publish Release`, require a successful hosted `Validate` run for the checked-out `main` SHA, run release-specific checks, and capture that immutable SHA; the publish job must verify that SHA and current `main` before tagging and must not repeat the aggregate suite.
 
 ## Verification
