@@ -11,12 +11,36 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('{0}-manual-{1}', github.workflow, github.run_id) || format('{0}-{1}-{2}', github.workflow, github.event_name, github.event.pull_request.number || github.ref) }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
-  validate:
+  context:
     runs-on: ubuntu-latest
+    outputs:
+      trusted_main: ${{ steps.context.outputs.trusted_main }}
+      pages_artifact_name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
+      validation_artifact_name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
+
+    steps:
+      - name: Resolve trusted main context
+        id: context
+        run: |
+          echo "trusted_main=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve attempt-scoped artifact names
+        id: artifact-names
+        run: |
+          echo "pages_artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          echo "validation_artifact_name=validation-receipt-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+
+  validate:
+    needs: context
+    runs-on: ubuntu-latest
+    outputs:
+      pages_artifact_name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
+      validation_artifact_name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
+      pages_artifact_id: ${{ steps.pages-artifact.outputs.artifact_id }}
 
     steps:
       - uses: actions/checkout@v6
@@ -31,6 +55,56 @@ jobs:
           install: false
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Resolve smoke contract
+        id: smoke-contract
+        run: |
+          set -euo pipefail
+
+          cli_state="unset"
+          if [[ -v SKILLS_SMOKE_CLI ]]; then
+            cli_state=configured
+          fi
+
+          force_tty="${SKILLS_SMOKE_FORCE_TTY:-0}"
+          if [[ "$force_tty" != "0" && "$force_tty" != "1" ]]; then
+            echo "SKILLS_SMOKE_FORCE_TTY must be either 0 or 1 when configured." >&2
+            exit 1
+          fi
+          if [[ "$force_tty" == "1" && "$cli_state" != "configured" ]]; then
+            echo "SKILLS_SMOKE_FORCE_TTY requires an explicit SKILLS_SMOKE_CLI." >&2
+            exit 1
+          fi
+
+          if [[ "$cli_state" == "configured" ]]; then
+            cli_version="$("$SKILLS_SMOKE_CLI" --version 2>/dev/null)"
+          else
+            cli_version=$(npx --yes skills@latest --version 2>/dev/null)
+          fi
+          cli_version=$(printf '%s\n' "$cli_version" | tr -d '\r' | sed -nE 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | tail -n 1)
+          test -n "$cli_version"
+
+          {
+            echo "skills_smoke_cli=$cli_state"
+            echo "skills_smoke_force_tty=$force_tty"
+            echo "skills_cli_version=$cli_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve attempt-scoped artifact names
+        id: artifact-names
+        run: |
+          echo "pages_artifact_name=${{ needs.context.outputs.pages_artifact_name }}" >> "$GITHUB_OUTPUT"
+          echo "validation_artifact_name=${{ needs.context.outputs.validation_artifact_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Fingerprint candidate before gates
+        id: before-gate
+        run: |
+          set -euo pipefail
+          node scripts/fingerprint-smoke-candidate.mjs --json > before-gate-fingerprint.json
+          digest=$(jq -er '.digest' before-gate-fingerprint.json)
+          file_count=$(jq -er '.fileCount' before-gate-fingerprint.json)
+          echo "candidate_fingerprint=sha256:$digest" >> "$GITHUB_OUTPUT"
+          echo "candidate_file_count=$file_count" >> "$GITHUB_OUTPUT"
 
       - run: npm run validate
 
@@ -49,35 +123,72 @@ jobs:
 
       - run: npx skills@latest add ./skills --list
 
-      - run: npm run smoke:install
+      - name: Smoke install and capture candidate fingerprint
+        id: smoke-copy
+        run: |
+          set -euo pipefail
+          smoke_output=$(mktemp)
+          trap 'rm -f "$smoke_output"' EXIT
+          npm run smoke:install 2>&1 | tee "$smoke_output"
+          fingerprint=$(sed -n 's/^Git candidate fingerprint: //p' "$smoke_output" | tail -n 1)
+          file_count=$(sed -n 's/^Smoke install copied \([0-9][0-9]*\) Git candidate file(s)\.$/\1/p' "$smoke_output" | tail -n 1)
+          test "$fingerprint" = "sha256:${fingerprint#sha256:}"
+          test -n "$file_count"
+          echo "candidate_fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "candidate_file_count=$file_count" >> "$GITHUB_OUTPUT"
 
-      - name: Compute site digest
+      - name: Fingerprint candidate after gates
+        id: after-gate
+        run: |
+          set -euo pipefail
+          node scripts/fingerprint-smoke-candidate.mjs --json > after-gate-fingerprint.json
+          digest=$(jq -er '.digest' after-gate-fingerprint.json)
+          file_count=$(jq -er '.fileCount' after-gate-fingerprint.json)
+          fingerprint="sha256:$digest"
+          test "$fingerprint" = "${{ steps.before-gate.outputs.candidate_fingerprint }}"
+          test "$fingerprint" = "${{ steps.smoke-copy.outputs.candidate_fingerprint }}"
+          test "$file_count" = "${{ steps.before-gate.outputs.candidate_file_count }}"
+          test "$file_count" = "${{ steps.smoke-copy.outputs.candidate_file_count }}"
+          echo "candidate_fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "candidate_file_count=$file_count" >> "$GITHUB_OUTPUT"
+
+      - name: Compute validated site digest
         id: site-digest
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ needs.context.outputs.trusted_main == 'true' }}
         working-directory: site/dist
         run: |
+          set -euo pipefail
           test -n "$(find . -type f -print -quit)"
-          digest=$(find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          digest=$(find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          echo "site_digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Configure Pages
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ needs.context.outputs.trusted_main == 'true' }}
         uses: actions/configure-pages@v6
 
       - name: Upload validated Pages artifact
         id: pages-artifact
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ needs.context.outputs.trusted_main == 'true' }}
         uses: actions/upload-pages-artifact@v5
         with:
+          name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
           path: site/dist
           retention-days: 30
 
       - name: Write validation receipt
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ needs.context.outputs.trusted_main == 'true' }}
         env:
-          SITE_DIGEST: ${{ steps.site-digest.outputs.digest }}
+          CANDIDATE_FINGERPRINT: ${{ steps.after-gate.outputs.candidate_fingerprint }}
+          CANDIDATE_FILE_COUNT: ${{ steps.after-gate.outputs.candidate_file_count }}
           PAGES_ARTIFACT_ID: ${{ steps.pages-artifact.outputs.artifact_id }}
+          PAGES_ARTIFACT_NAME: ${{ steps.artifact-names.outputs.pages_artifact_name }}
+          SITE_DIGEST: ${{ steps.site-digest.outputs.site_digest }}
+          SKILLS_CLI_VERSION: ${{ steps.smoke-contract.outputs.skills_cli_version }}
+          SKILLS_SMOKE_CLI_STATE: ${{ steps.smoke-contract.outputs.skills_smoke_cli }}
+          SKILLS_SMOKE_FORCE_TTY_STATE: ${{ steps.smoke-contract.outputs.skills_smoke_force_tty }}
+          VALIDATION_ARTIFACT_NAME: ${{ steps.artifact-names.outputs.validation_artifact_name }}
         run: |
+          set -euo pipefail
           jq -n \
             --arg workflow "$GITHUB_WORKFLOW" \
             --arg workflow_path ".github/workflows/validate.yml" \
@@ -87,8 +198,15 @@ jobs:
             --arg branch "$GITHUB_REF_NAME" \
             --arg sha "$GITHUB_SHA" \
             --arg version "$(node -p "require('./package.json').version")" \
+            --arg candidate_fingerprint "$CANDIDATE_FINGERPRINT" \
+            --arg candidate_file_count "$CANDIDATE_FILE_COUNT" \
+            --arg skills_cli_version "$SKILLS_CLI_VERSION" \
+            --arg skills_smoke_cli "$SKILLS_SMOKE_CLI_STATE" \
+            --arg skills_smoke_force_tty "$SKILLS_SMOKE_FORCE_TTY_STATE" \
             --arg site_digest "$SITE_DIGEST" \
+            --arg pages_artifact_name "$PAGES_ARTIFACT_NAME" \
             --arg pages_artifact_id "$PAGES_ARTIFACT_ID" \
+            --arg validation_artifact_name "$VALIDATION_ARTIFACT_NAME" \
             '{
               workflow: $workflow,
               workflow_path: $workflow_path,
@@ -98,22 +216,29 @@ jobs:
               branch: $branch,
               sha: $sha,
               version: $version,
+              candidate_fingerprint: $candidate_fingerprint,
+              candidate_file_count: ($candidate_file_count | tonumber),
+              skills_cli_version: $skills_cli_version,
+              skills_smoke_cli: $skills_smoke_cli,
+              skills_smoke_force_tty: $skills_smoke_force_tty,
               site_digest: $site_digest,
-              pages_artifact_id: $pages_artifact_id
+              pages_artifact_name: $pages_artifact_name,
+              pages_artifact_id: $pages_artifact_id,
+              validation_artifact_name: $validation_artifact_name
             }' > validation-receipt.json
 
       - name: Upload validation receipt
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
+        if: ${{ needs.context.outputs.trusted_main == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: validation-receipt
+          name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
           path: validation-receipt.json
           if-no-files-found: error
           retention-days: 30
 
   deploy:
-    needs: validate
-    if: ${{ needs.validate.result == 'success' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')) }}
+    needs: [context, validate]
+    if: ${{ needs.validate.result == 'success' && needs.context.outputs.trusted_main == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -127,4 +252,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
         with:
-          artifact_name: github-pages
+          artifact_name: ${{ needs.validate.outputs.pages_artifact_name }}

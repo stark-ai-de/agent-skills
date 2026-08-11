@@ -40,5 +40,4 @@ ADR-0038	0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-select
 ADR-0039	0039-separate-internal-skill-implementation-policy-from-exposed-contracts	5cae3e99937e39132090a09565d4f48be511331c206d635a68fd1e2a96fab2af
 ADR-0040	0040-route-drawio-exports-through-capability-aware-fallbacks	674629c039f9040e447126f2dd16b78f285c91c3bff501e03c2d66a068489797
 ADR-0041	0041-select-validation-from-changed-contracts-and-owning-boundaries	d68dadcd288da04cd971409e788a84ffaed3e34c9f3a06099d965d1f26f192a2
-ADR-0042	0042-optimize-github-actions-with-owned-gates	ec5bfde9a91bbe8db93649569fa47000587a4980c535ebb5dfdbe05edc82ef5e
-ADR-0043	0043-deploy-validated-main-artifacts	16382621b2efa85d0f41bc186a14ad85f9552809df9b0d02059e42b528a00a7c
+ADR-0042	0042-optimize-github-actions-with-owned-gates	eba5d8e7f02e7b686b3e639d6d86511ef89ce40a665ad4a64a5c5e239116453b

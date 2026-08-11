@@ -7,7 +7,7 @@ status: "draft"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-05-26"
-updated: "2026-07-13"
+updated: "2026-08-11"
 source_request: "Generate a Codex-ready spec for a GitHub Pages setup in this repo using the style, metadata, icons, favicons, and related brand assets of stark-ai.de."
 ---
 
@@ -30,9 +30,9 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Add a focused home page that makes the skill catalog the first screen.
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
 - Add static favicons, app icons, manifest metadata, SEO metadata, Open Graph metadata, and Twitter card metadata.
-- Make the required `Validate` workflow upload and deploy the static site artifact only after successful validation on `main`; it also owns pull-request site-build proof.
+- Keep `Validate` as the single workflow that builds, uploads, and deploys the validated Pages artifact.
 - Add validation so pull requests catch site build failures before merge.
-- Update existing repo-facing docs that become stale because of the new Pages surface.
+- Update existing repo-facing docs, workflow references, receipt contracts, and ADR navigation that become stale because of the Pages ownership change.
 
 ### Non-goals
 
@@ -55,7 +55,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `docs/adrs.md`
   - `docs/validation.md`
   - `.github/workflows/validate.yml`
-  - `.github/workflows/`
+  - `.github/workflows/publish-release.yml`
+  - `.github/workflows/pages.yml` (removed)
   - `package.json`
   - `pnpm-lock.yaml`
 - Existing abstractions/patterns to preserve:
@@ -70,7 +71,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Related ADRs:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
-  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
+  - [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md))
+  - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
 - Unspecified facts:
   - Final deployed Pages URL until repository Pages settings are enabled.
   - Whether a future custom domain will be configured.
@@ -109,7 +111,11 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN the site is deployed under GitHub Pages, THE SYSTEM SHALL load routes and assets correctly under `/agent-skills/`.
 - WHEN metadata is generated, THE SYSTEM SHALL include title, description, canonical URL, Open Graph image, Twitter card metadata, manifest, theme color, favicon, SVG icon, and apple icon.
 - WHEN the required `Validate` workflow runs on pull requests, THE SYSTEM SHALL build the site without deploying it.
-- WHEN the required `Validate` workflow completes successfully for a `main` push or an explicit manual dispatch from `main`, THE SYSTEM SHALL upload and deploy the validated static artifact with GitHub Pages Actions in that same workflow run.
+- WHEN a `push` to `main` succeeds in `Validate`, THE SYSTEM SHALL deploy the exact static artifact produced after its successful validation.
+- WHEN `Validate` is explicitly dispatched from `main` and succeeds, THE SYSTEM SHALL deploy the exact static artifact produced after its successful validation.
+- WHEN a pull request or a manual dispatch from a non-`main` branch runs, THE SYSTEM SHALL validate without creating a Pages artifact or deployment.
+- WHEN a trusted main run produces a receipt, THE RECEIPT SHALL bind the candidate fingerprint and file count before the gates, from the smoke copy, and after the gates; CLI version; normalized smoke overrides; workflow/run/attempt identity; event; branch; SHA; package version; site digest; and exact artifact names and IDs.
+- WHEN a release is prepared, THE SYSTEM SHALL resolve the exact successful main-push Validate run and attempt for the checked-out SHA, verify REST artifact metadata, download by explicit run ID and attempt-scoped name, and reject missing, expired, malformed, or mismatched proof without rerunning the aggregate suite.
 
 ### Non-functional requirements
 
@@ -142,17 +148,18 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 
 ## Architectural decisions
 
-- ADR required: yes
+- ADR required: no new ADR; existing accepted ADR-0042 governs the workflow handoff.
 - Existing ADRs consulted:
-  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
-  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
+  - [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md))
+  - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
 - Accepted ADR path:
-  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
+  - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
 - Supersedes:
-  - ADR-0042
-- Implementation blocked until ADR accepted: no; ADR-0043 is accepted.
+  - None; ADR-0042 is the accepted standalone decision for this change.
+- Implementation blocked until ADR accepted: no; ADR-0017 and ADR-0042 are accepted.
 
 ## File plan
 
@@ -162,8 +169,12 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - `pnpm-lock.yaml`
 - `README.md`
 - `docs/validation.md`
+- `docs/publishing.md`
+- `docs/adrs.md`
+- `scripts/validation/adrs/decision-lock.tsv`
 - `.github/workflows/validate.yml`
 - `.github/workflows/publish-release.yml`
+- `docs/adrs/0042-optimize-github-actions-with-owned-gates.{short,long,guide}.md`
 - `site/`
 
 ### Expected removed files
@@ -215,14 +226,16 @@ The site should use the visual language, metadata conventions, logos, favicons, 
    - foreground `#0c1d2d`
    - Manrope display type and Inter body type when asset licensing permits reuse
 7. Add metadata, manifest, favicons, canonical URLs, Open Graph, Twitter cards, robots, and sitemap behavior.
-8. Make the required `Validate` workflow the single trusted Pages artifact producer:
-   - keep pull-request site-build proof in the required `Validate` workflow
-   - upload and deploy only for relevant `main` pushes or explicit manual dispatches from `main`
-   - use `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages` in the same workflow run
-   - publish a SHA-bound validation receipt for manual release reuse
-9. Add site build validation to the existing PR validation path.
-10. Update README and validation docs with the site URL and commands.
-11. Run automated validation and perform manual browser checks at desktop and mobile widths.
+8. Make `Validate` the single trusted Pages artifact producer:
+   - compute one `trusted_main` output from a `push` to `main` or manual dispatch from `main`
+   - reuse that output for the site digest, Pages configuration, artifact upload, receipt creation, and deployment conditions
+   - upload `github-pages-<run-id>-<run-attempt>` and `validation-receipt-<run-id>-<run-attempt>` only after all validation gates pass
+   - deploy the exact attempt-scoped Pages artifact from a dependent job
+   - preserve validation-only behavior for pull requests and manual non-main dispatches
+9. Make `Publish Release` resolve the exact successful main-push Validate run and attempt, derive both artifact names, verify REST metadata and receipt symmetry, recompute the candidate fingerprint, confirm `main` has not advanced, and skip the aggregate rerun.
+10. Add site build validation to the existing PR validation path.
+11. Update README, validation, publishing, and ADR index/lock docs; remove stale Pages badge and workflow references.
+12. Run automated validation and, after merge, collect hosted rollout evidence separately from local proof.
 
 ## Source challenge
 
@@ -237,27 +250,31 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `incubator/skills/**/SKILL.md`
 - ADRs/specs checked:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
-  - Existing ADR index through ADR-0017, ADR-0042, and accepted ADR-0043
+  - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
+  - [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md))
+  - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
 - External docs checked:
   - Astro GitHub Pages deployment guidance
   - Astro static route/content guidance
   - GitHub Pages custom workflow guidance
-  - GitHub Actions artifact, concurrency, required-check, and workflow-run guidance
   - Tailwind CSS v4 Vite guidance
   - Live `https://stark-ai.de/` page content and metadata behavior
 - Requirements revised:
   - Use Astro instead of Next.js for this repository because the target is a static catalog and GitHub Pages site.
   - Treat the sibling website as the design source, not a build dependency.
-  - Require ADR-0043 because this changes repo build/deploy and release-proof policy.
+  - Keep the existing ADR-0042 ID and filename stem, convert its triplet from Proposed to Accepted, and make it the standalone Validate-owned artifact/deployment decision.
+  - Reject moving Pages production into `publish-release.yml`: it would make catalog freshness release-dependent or require a second trigger/cross-workflow handoff and weaken the one-build provenance boundary.
+  - Normalize deployment scope to every successful `push` to `main` and explicit manual dispatch from `main`; pull requests and manual non-main dispatches remain validation-only.
+  - Bind release reuse to candidate evidence, workflow run and attempt, SHA, receipt fields, and REST artifact metadata; fixed artifact names are not safe on reruns.
   - Include `skillopt-setup` as an incubator candidate now that its public skill and eval proof are available, without presenting it as a promoted skill.
 - Requirements preserved:
   - Each skill gets a separate page.
   - Website styling, metadata, icons, and favicons should align with `stark-ai.de`.
   - Incubator skills should be visible only as candidate/internal skills, not as promoted public catalog entries.
 - Preceding ADR/spec work needed:
-  - ADR-0043 is accepted and supersedes ADR-0042; ADR-0041 remains the validation-selection authority and ADR-0017 remains the static Astro authority.
+  - None; ADR-0017 and ADR-0042 are accepted.
 - ADR gate result:
-  - ADR required: yes
+  - ADR required: no new ADR; existing ADR-0042 is the accepted authority.
 - Skipped checks and why:
   - Asset license audit beyond repo ownership was not completed; implementation must copy only approved assets.
 
@@ -287,22 +304,26 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Existing file overwrite needed:
   - no
 - ADR paths:
-  - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
+  - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
 - ADR persistence:
-  - saved as Accepted
+  - existing triplet converted to Accepted; decision lock added or refreshed
 - ADR index updates needed:
-  - `docs/adrs.md`
+  - `docs/adrs.md` and `scripts/validation/adrs/decision-lock.tsv`
 
 ## Validation
 
 ```bash
 npm run validate
+pnpm lint:actions
+node scripts/validate-adrs.mjs
 pnpm format:check
 pnpm lint
 pnpm --filter ./site build
 npx skills@latest add ./skills --list
+npm run smoke:fingerprint
 npm run smoke:install
+git diff --check
 ```
 
 ### Manual checks
@@ -312,6 +333,8 @@ npm run smoke:install
 - Verify generated links work under the `/agent-skills/` base path.
 - Verify GitHub Pages settings use GitHub Actions as the publishing source.
 - Verify the deployed Pages URL after the first `main` deployment.
+- Hosted matrix after merge: PR cache hit and no deployment; main push and manual-main deployment with receipt/artifact symmetry; manual non-main validation-only behavior; rerun attempt increment and non-colliding artifact names; release dry-run acceptance; wrong event/branch/SHA, missing/expired/malformed receipt or artifacts, and advanced-main rejection.
+- Keep local source/static and CI proof separate from hosted deployment, release dry-run, and actual publication evidence.
 
 ## Verification checkpoint
 
@@ -322,7 +345,7 @@ npm run smoke:install
   - Brand assets can be copied if approved and non-secret.
 - Non-blocking unknowns accepted: yes
 - Blocking decisions:
-  - None; ADR-0017 and ADR-0043 are accepted, while ADR-0042 is superseded.
+  - None; ADR-0017 and ADR-0042 are accepted.
 - Risks and rollout reviewed: yes
 - Validation plan reviewed: yes
 - ADR result reviewed: yes
@@ -334,7 +357,7 @@ npm run smoke:install
 - Primary risk:
   - The new site can drift from `stark-ai.de` styling and metadata after the initial asset copy.
 - Rollback path:
-  - Disable the Validate deployment job or remove the Pages deployment source; static site files can remain in the repo until reverted.
+  - Revert the workflow/documentation change and validate the rollback commit; Pages deployment remains dependent on successful Validate.
 - Migration/backfill needs:
   - None for runtime users; skill installation behavior is unchanged.
 - Feature-flag or phased rollout need:
@@ -343,18 +366,21 @@ npm run smoke:install
   - First implementation should land in a PR with Pages build validation.
   - Enable Pages deployment from GitHub Actions in repository settings before relying on deploys.
   - After merge, verify the deployed Pages URL and add or adjust README links if the URL differs from the assumed project URL.
+  - A missing or expired receipt keeps release readiness incomplete and does not authorize publication.
 - Later adjustment guidance:
   - Do not write a follow-up spec just to enable Pages settings or update the verified deployed URL; treat those as rollout tasks.
   - Write a compact follow-up spec when later work changes scope, such as moving to a custom domain or `stark-ai.de` subpath, adding search/analytics/runtime behavior, or introducing an automated brand-asset sync.
 
 ## Done when
 
-- [x] ADR-0017 is accepted.
+- [x] ADR-0017 and ADR-0042 are accepted.
 - [ ] The Astro site builds locally.
 - [ ] Public and incubator skill pages are generated from current `SKILL.md` files.
 - [ ] `skillopt-setup` is generated only as an incubator candidate and links to its eval proof without changing the skill or eval source files.
 - [ ] Brand assets, favicons, manifest, SEO metadata, and social metadata are present.
-- [ ] The required Validate workflow builds the site on PRs and deploys only its validated artifact for relevant `main` pushes and explicit manual-main dispatches.
+- [ ] The required Validate workflow builds the site on PRs and deploys only its validated artifact for every successful `main` push and explicit manual-main dispatch; PRs and manual non-main dispatches do not deploy.
+- [ ] Receipt candidate fingerprints before the gates, from smoke-copy, and after the gates match, and override paths are not published.
+- [ ] Attempt-scoped artifact names, exact run/SHA/branch/event checks, and fail-closed release rejection cases are hosted-verified.
 - [ ] README and validation docs reflect the new site and commands.
 - [ ] Automated validation commands pass.
 - [ ] Manual desktop and mobile checks pass.
