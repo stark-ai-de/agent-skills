@@ -235,6 +235,66 @@ function validateCapabilityEvalCoverage(files) {
   return errors;
 }
 
+function validateIconFidelityCoverage(files) {
+  const relativeNames = new Set(files.map((file) => path.relative(root, file)));
+  const requiredCases = new Map([
+    [
+      "skill-evals/drawio-diagrams/cases/icon-official-logo-preference.md",
+      [
+        ["official logo priority", /official[\s\S]{0,120}(?:logo|mark|stencil)/i],
+        ["generic queue fallback", /semantic[\s\S]{0,80}(?:queue|fallback|unresolved)/i],
+        ["source artwork preservation", /original[\s\S]{0,120}(?:artwork|brand colors)/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/icon-brand-color-preservation.md",
+      [
+        ["original colors/artwork", /original[\s\S]{0,120}(?:colors|artwork)/i],
+        ["recolor prohibition", /do not[\s\S]{0,80}(?:recolor|invert|filter|tint)/i],
+        ["neutral contrast surface", /neutral[\s\S]{0,80}(?:chip|background)/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/icon-unresolved-peer-invariance.md",
+      [
+        ["per-node semantic fallback", /per-node[\s\S]{0,100}(?:semantic )?fallback/i],
+        ["resolved peer invariance", /resolved[\s\S]{0,100}(?:peer|logo)/i],
+        ["original peer artwork", /original[\s\S]{0,100}(?:artwork|colors)/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/icon-explicit-recolor-disclosure.md",
+      [
+        ["explicit recolor request", /explicit(?:ly)?[\s\S]{0,100}(?:recolor|monochrome)/i],
+        ["source variant disclosure", /source[\s\S]{0,80}variant/i],
+        ["changed color disclosure", /changed[\s\S]{0,80}color/i],
+        ["reason and scope disclosure", /reason[\s\S]{0,100}(?:dark|print)[\s\S]{0,100}scope/i],
+        ["contrast evidence", /contrast[\s\S]{0,80}evidence/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/visual-brand-logo-invariants.md",
+      [
+        ["byte/color preservation", /original[\s\S]{0,120}(?:colors|bytes)/i],
+        ["unresolved semantic fallback", /semantic[\s\S]{0,100}fallback/i],
+        ["resolved peer protection", /resolved[\s\S]{0,100}(?:peer|logo)/i],
+        ["self-contained export contract", /--require-self-contained-images/i],
+      ],
+    ],
+  ]);
+  const errors = [];
+  for (const [relativeFile, markers] of requiredCases) {
+    if (!relativeNames.has(relativeFile)) {
+      errors.push(`draw.io eval corpus is missing required icon-fidelity case: ${relativeFile}`);
+      continue;
+    }
+    const text = fs.readFileSync(path.join(root, relativeFile), "utf8");
+    for (const [label, pattern] of markers) {
+      if (!pattern.test(text)) errors.push(`${relativeFile}: missing ${label} assertion`);
+    }
+  }
+  return errors;
+}
 function validateCliArgumentRegressions() {
   for (const option of ["--case", "--artifacts-dir"]) {
     const result = spawnSync(process.execPath, [path.resolve(process.argv[1]), option], {
@@ -417,6 +477,7 @@ const schemaErrors = [
   ...caseFiles.flatMap(validateCaseSchema),
 ];
 if (!args.caseFile) schemaErrors.push(...validateCapabilityEvalCoverage(caseFiles));
+if (!args.caseFile) schemaErrors.push(...validateIconFidelityCoverage(caseFiles));
 if (schemaErrors.length) {
   console.error(schemaErrors.join("\n"));
   process.exit(1);
