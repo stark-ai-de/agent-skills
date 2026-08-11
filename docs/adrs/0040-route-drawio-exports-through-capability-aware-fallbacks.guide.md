@@ -25,7 +25,7 @@ This guide is non-normative. [Long](0040-route-drawio-exports-through-capability
 
 - After selecting `create`, `edit-repair`, or `export` and confirming authority, run a non-mutating capability preflight. Record available tools, required approvals, candidate route, expected artifacts, and evidence limits before reading, authoring, rendering, or exporting. Keep `review` strictly read-only.
 - Prefer `transactional-native` with a Linux-native draw.io executable and `scripts/render-drawio.mjs`.
-- If unavailable, use `approved-raw-cli-manual` only after the relevant tool-install approval and format smoke test. A WSL Windows bridge additionally requires cross-boundary approval, path conversion with `wslpath`, an explicit `.windows-bridge` suffix, and a statement that transactional staging/no-clobber guarantees are unavailable.
+- If unavailable, use `approved-raw-cli-manual` only after the relevant tool-install approval and format smoke test. A cross-boundary Windows bridge (for example, from WSL) additionally requires cross-boundary approval, path conversion with the host's path-conversion utility, an explicit `.windows-bridge` suffix, and a statement that transactional staging/no-clobber guarantees are unavailable.
 - Use `fixed-theme-browser-raster` only for validated fixed-theme SVG-to-PNG previews and only with the separate browser approval required by ADR-0031. Use `browser-url-preview` or `html-viewer-preview` only when explicitly requested; it is preview transport, not a canonical editable artifact.
 - Use `direct-xml` whenever optional tooling is unavailable or declined. Do not silently switch to image generation; that route requires an explicit changed outcome and is not editable draw.io.
 - Keep native artifact names canonical. Add a route suffix to fallback outputs and do not overwrite a native artifact with a fallback under the native name.
@@ -35,7 +35,7 @@ This guide is non-normative. [Long](0040-route-drawio-exports-through-capability
 
 - Confirm the receipt contains exactly these semantic fields: `Capability status`, `Renderer route`, `Tool-install approval`, `Cross-boundary approval`, `Export status`, `Visual verification`, `Evidence scope`, and `Fallback (used/offered)`.
 - Confirm fallback limitations are stated, especially the missing transactional guarantees for raw/manual/Windows routes and the non-canonical/data-exposure limits of browser URL/HTML previews.
-- Confirm NixOS/WSL native setup checked active user-profile ownership and package compatibility before a separately approved `nix profile install nixpkgs#drawio`; mutable configuration and AppImage installation are not used.
+- Confirm Linux-host native setup checked active user-profile ownership and package compatibility before a separately approved native package installation; mutable configuration and AppImage installation are not used.
 - Run the focused draw.io validators appropriate to the changed artifact. Keep local, CI, publication, hosted, deployment, and live-runtime claims separate.
 
 ## Current references

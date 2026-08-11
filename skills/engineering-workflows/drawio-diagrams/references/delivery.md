@@ -48,7 +48,7 @@ Export and validate every source/theme artifact, even when the CLI is invoked in
 
 Prefer `scripts/render-drawio.mjs name.drawio` for the standard light PNG + dark SVG verification export. It rejects exit-zero runs that create no fresh artifact and validates both formats before commit. Installation is no-clobber at each destination. Interrupted commits retain partial outputs plus staged files and backups instead of deleting concurrent data. A successful replacement also prints and retains its `.drawio-render-*` recovery directory; inspect the public outputs and `backup-*` files before removing it manually. Fresh installs without prior outputs clean their staging directory automatically. Treat raw CLI commands as format probes, not proof that an output was produced.
 
-The transactional renderer intentionally requires Linux `/proc/self/fd` plus a Linux-native draw.io CLI. It holds directory descriptors and passes them to the child exporter so staging, commit, and cleanup cannot follow a raced lexical ancestor. It fails closed on macOS and Windows. Under NixOS/WSL, use a Linux-native draw.io executable owned by the active NixOS user profile or a compatible native `nixpkgs#drawio` package after checking package ownership and host compatibility. Do not use a Windows `draw.io.exe`, mutable draw.io configuration, or an AppImage for the transactional route: Windows binaries cannot consume the inherited Linux descriptor paths. On unsupported platforms, use the approved raw CLI/manual or Windows-bridge fallback below, run the validators against fresh artifacts, inspect both formats, and report that the transactional renderer's filesystem-race guarantees are unavailable.
+The transactional renderer intentionally requires Linux `/proc/self/fd` plus a Linux-native draw.io CLI. It holds directory descriptors and passes them to the child exporter so staging, commit, and cleanup cannot follow a raced lexical ancestor. It fails closed on macOS and Windows. On Linux hosts, including WSL distributions, use a native draw.io executable owned by the active user profile or a compatible package after checking package ownership and host compatibility. Do not use a Windows `draw.io.exe`, mutable draw.io configuration, or an AppImage for the transactional route: Windows binaries cannot consume the inherited Linux descriptor paths. On unsupported platforms, use the approved raw CLI/manual or cross-boundary Windows fallback below, run the validators against fresh artifacts, inspect both formats, and report that the transactional renderer's filesystem-race guarantees are unavailable.
 
 The bounded PNG verifier intentionally accepts only the standard non-interlaced output produced by the supported draw.io export path. It rejects interlaced PNGs with a clear unsupported-mode error even though PNG itself defines an interlaced form.
 
@@ -59,14 +59,14 @@ Native `flowAnimation=1` is preserved in SVG exports when the viewer supports SV
 Run a non-mutating capability preflight after workflow and authority selection. Use the first route whose capability and independent approvals are evidenced:
 
 1. `transactional-native`: `scripts/render-drawio.mjs` plus a Linux-native draw.io CLI. This is the only route that claims the renderer's descriptor-safe staging and no-clobber guarantees.
-2. `approved-raw-cli-manual`: raw Desktop CLI or manual export after a format smoke test. A WSL Windows bridge is allowed only with explicit cross-boundary approval and must use the Windows-bridge suffix; it does not claim transactional guarantees.
+2. `approved-raw-cli-manual`: raw Desktop CLI or manual export after a format smoke test. A cross-boundary Windows bridge is allowed only with explicit cross-boundary approval and must use the Windows-bridge suffix; it does not claim transactional guarantees.
 3. `fixed-theme-browser-raster`: validated fixed-theme SVG rasterized through one explicitly approved local browser executable. This route is only for viewer-independent fixed-theme PNG previews and does not replace the editable source.
 4. `browser-url-preview` or `html-viewer-preview`: `scripts/open-drawio-url.mjs` or an HTML preview only when explicitly requested. Treat the URL/HTML as a preview transport, not a canonical artifact; warn that diagram data can appear in browser history, sync, screenshots, or logs.
 5. `direct-xml`: the universal editable route when no optional renderer is available. It can deliver the `.drawio` source and validator evidence without claiming visual export.
 
 Image generation is outside this ladder. Use it only when the user explicitly changes the desired outcome to a non-editable image, and state that the result is not a draw.io source.
 
-### WSL Windows bridge
+### Cross-boundary Windows bridge
 
 The bridge crosses the Linux/Windows boundary and therefore requires a separate approval from tool installation or browser/hosted approval. Convert paths before invoking a Windows binary and keep the output suffix explicit:
 

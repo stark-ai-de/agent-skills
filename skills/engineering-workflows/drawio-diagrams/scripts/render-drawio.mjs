@@ -124,25 +124,48 @@ function isWindowsPath(value) {
   return WINDOWS_PATH_RE.test(String(value || ""));
 }
 
+function pathDelimiter(platform) {
+  return platform === "win32" ? ";" : path.delimiter;
+}
+
+function windowsPathExtensions(pathext = process.env.PATHEXT) {
+  return String(pathext || ".COM;.EXE;.BAT;.CMD")
+    .split(";")
+    .map((extension) => extension.trim().toLowerCase())
+    .filter((extension) => /^\.[a-z0-9]+$/.test(extension));
+}
+
+function executableNameCandidates(value, { platform = process.platform, pathext } = {}) {
+  if (platform !== "win32" || path.extname(value)) return [value];
+  return [value, ...windowsPathExtensions(pathext).map((extension) => `${value}${extension}`)];
+}
+
 function markerLabels(source) {
   return WINDOWS_WRAPPER_MARKERS.filter(({ pattern }) => pattern.test(source)).map(
     ({ label }) => label,
   );
 }
 
-function resolveCommandPath(command, pathValue = process.env.PATH || "") {
+export function resolveCommandPath(
+  command,
+  { pathValue = process.env.PATH || "", platform = process.platform, pathext } = {},
+) {
   const value = String(command || "");
   if (!value) return null;
-  if (value.includes("/") || value.includes("\\")) return path.resolve(value);
-  for (const part of pathValue.split(path.delimiter).filter(Boolean)) {
-    const candidate = path.join(part, value);
-    try {
-      const stat = fs.statSync(candidate);
-      if (stat.isFile() && (process.platform === "win32" || (stat.mode & 0o111) !== 0)) {
-        return candidate;
+  const names = executableNameCandidates(value, { platform, pathext });
+  const direct = value.includes("/") || value.includes("\\");
+  const parts = direct ? [""] : pathValue.split(pathDelimiter(platform)).filter(Boolean);
+  for (const part of parts) {
+    for (const name of names) {
+      const candidate = direct ? name : path.join(part, name);
+      try {
+        const stat = fs.statSync(candidate);
+        if (stat.isFile() && (platform === "win32" || (stat.mode & 0o111) !== 0)) {
+          return candidate;
+        }
+      } catch {
+        // Continue through the remaining PATH entries and PATHEXT candidates.
       }
-    } catch {
-      // Continue through PATH entries. A stale entry is diagnostic data, not a fatal error.
     }
   }
   return null;
@@ -155,9 +178,12 @@ function shellWrapperTarget(source) {
   return target;
 }
 
-function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDepth = 12 } = {}) {
+function classifyExecutable(
+  input,
+  { pathValue = process.env.PATH || "", maxDepth = 12, platform = process.platform, pathext } = {},
+) {
   const original = String(input || "");
-  const resolvedInput = resolveCommandPath(original, pathValue);
+  const resolvedInput = resolveCommandPath(original, { pathValue, platform, pathext });
   const chain = [];
   const diagnostics = [];
   const visited = new Set();
@@ -180,7 +206,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
       const windowsStat = fs.statSync(original);
       windowsExists = windowsStat.isFile();
       windowsExecutable =
-        windowsExists && (process.platform === "win32" || (windowsStat.mode & 0o111) !== 0);
+      windowsExists && (platform === "win32" || (windowsStat.mode & 0o111) !== 0);
     } catch {
       // A Windows path may be a raw/manual candidate even when unavailable here.
     }
@@ -198,6 +224,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
       wrapperReasons: ["Windows executable/path"],
       wrapperTarget: null,
       fileKind: "windows-executable",
+      crossBoundary: platform !== "win32",
       shebang: null,
       diagnostics: [
         windowsExists
@@ -264,7 +291,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
 
     chain.push(item);
     terminalPath = lexical;
-    executable = stat.isFile() && (process.platform === "win32" || (stat.mode & 0o111) !== 0);
+    executable = stat.isFile() && (platform === "win32" || (stat.mode & 0o111) !== 0);
     if (!stat.isFile()) {
       stale = true;
       diagnostics.push("resolved executable is not a regular file");
@@ -301,7 +328,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
       if (wrapperTarget && (wrapperTarget.includes("/") || wrapperTarget.includes("\\"))) {
         const targetPath =
           wrapperTarget.startsWith("/") || /^[A-Za-z]:[\\/]/.test(wrapperTarget)
-            ? resolveCommandPath(wrapperTarget, pathValue)
+            ? resolveCommandPath(wrapperTarget, { pathValue, platform, pathext })
             : path.resolve(path.dirname(lexical), wrapperTarget);
         if (targetPath && targetPath !== lexical) current = targetPath;
       }
@@ -328,6 +355,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
   const windows = wrapperReasons.some((reason) =>
     /Windows|marker|\.exe|mnt|cmd|PowerShell/i.test(reason),
   );
+  const crossBoundary = platform !== "win32" && isWindowsPath(original);
   return {
     input: original,
     command: original,
@@ -339,6 +367,7 @@ function classifyExecutable(input, { pathValue = process.env.PATH || "", maxDept
     stale,
     wrapper,
     windows,
+    crossBoundary,
     wrapperReasons,
     wrapperTarget,
     fileKind,
@@ -394,11 +423,13 @@ function parseArgs(argv) {
 }
 
 export function pathCandidates({
+  env = process.env,
   pathValue = process.env.PATH || "",
   platform = process.platform,
+  windowsUsersRoot = "/mnt/c/Users",
 } = {}) {
   const candidates = [];
-  const pathParts = pathValue.split(path.delimiter).filter(Boolean);
+  const pathParts = pathValue.split(pathDelimiter(platform)).filter(Boolean);
   for (const part of pathParts) {
     candidates.push(path.join(part, platform === "win32" ? "drawio.exe" : "drawio"));
     candidates.push(path.join(part, platform === "win32" ? "diagrams.net.exe" : "diagrams.net"));
@@ -406,10 +437,42 @@ export function pathCandidates({
   candidates.push("/Applications/draw.io.app/Contents/MacOS/draw.io");
   candidates.push("C:\\Program Files\\draw.io\\draw.io.exe");
   candidates.push("/mnt/c/Program Files/draw.io/draw.io.exe");
-  if (process.env.USER) {
-    candidates.push(`/mnt/c/Users/${process.env.USER}/AppData/Local/Programs/draw.io/draw.io.exe`);
+  if (env.USER) {
+    candidates.push(`${windowsUsersRoot}/${env.USER}/AppData/Local/Programs/draw.io/draw.io.exe`);
   }
-  return candidates;
+  if (platform !== "win32") {
+    for (const profile of discoverWindowsDrawioProfiles({ root: windowsUsersRoot })) {
+      candidates.push(profile.path);
+    }
+  }
+  return [...new Set(candidates)];
+}
+
+const WINDOWS_SYSTEM_PROFILES = new Set([
+  "all users",
+  "default",
+  "default user",
+  "public",
+  "defaultapppool",
+  "wdagutilityaccount",
+]);
+
+export function discoverWindowsDrawioProfiles({ root = "/mnt/c/Users" } = {}) {
+  let entries;
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries
+    .filter(
+      (entry) =>
+        entry.isDirectory() && !WINDOWS_SYSTEM_PROFILES.has(entry.name.trim().toLowerCase()),
+    )
+    .map((entry) => ({
+      profile: entry.name,
+      path: path.join(root, entry.name, "AppData", "Local", "Programs", "draw.io", "drawio.exe"),
+    }));
 }
 
 function probeCandidateVersion(candidate) {
@@ -417,8 +480,8 @@ function probeCandidateVersion(candidate) {
   // A direct Windows path is retained as a raw/manual candidate without
   // crossing the WSL boundary merely to prove its version. Shell launchers
   // remain probeable so a WSL bridge can report its raw CLI capability.
-  if (candidate.windows && candidate.chain?.length === 0) return candidate;
-  const result = spawnSync(candidate.command, ["--version"], {
+  if (candidate.crossBoundary) return candidate;
+  const result = spawnSync(candidate.probeCommand || candidate.command, ["--version"], {
     encoding: "utf8",
     timeout: 2_000,
     maxBuffer: MAX_COMMAND_OUTPUT_CHARS,
@@ -435,6 +498,7 @@ function probeCandidateVersion(candidate) {
 
 function candidateAvailable(candidate) {
   if (!candidate?.executable || candidate.stale) return false;
+  if (candidate.ambiguous) return false;
   if (candidate.windows) return true;
   return candidate.versionProbeStatus === 0;
 }
@@ -447,10 +511,11 @@ export function discoverDrawioCandidates({
   env = process.env,
   pathValue = env.PATH ?? process.env.PATH ?? "",
   platform = process.platform,
+  windowsUsersRoot = "/mnt/c/Users",
 } = {}) {
   const inputs = [];
   if (env.DRAWIO_BIN) inputs.push({ input: env.DRAWIO_BIN, source: "configured" });
-  for (const input of pathCandidates({ pathValue, platform })) {
+  for (const input of pathCandidates({ env, pathValue, platform, windowsUsersRoot })) {
     inputs.push({ input, source: "PATH/standard" });
   }
   const seen = new Set();
@@ -460,8 +525,14 @@ export function discoverDrawioCandidates({
     const key = String(item.input);
     if (seen.has(key)) continue;
     seen.add(key);
-    const candidate = classifyExecutable(key, { pathValue });
+    const candidate = classifyExecutable(key, { pathValue, platform });
     candidate.source = item.source;
+    candidate.profilePath =
+      platform !== "win32" && key.startsWith(`${windowsUsersRoot}${path.sep}`);
+    candidate.probeCommand =
+      /^node(?:\.exe)?$/i.test(path.basename(key)) && platform === process.platform
+        ? process.execPath
+        : null;
     const identity = candidate.terminalPath || candidate.resolvedPath || key;
     if (item.source !== "configured" && identities.has(identity)) continue;
     identities.add(identity);
@@ -478,7 +549,7 @@ export function discoverDrawioCandidates({
   // Command lookup is deliberately last. It is useful for shell aliases or a
   // PATH implementation that does not expose a regular executable to stat().
   for (const command of ["drawio", "diagrams.net"]) {
-    const resolvedCommand = resolveCommandPath(command, pathValue);
+    const resolvedCommand = resolveCommandPath(command, { pathValue, platform });
     if (
       candidates.some(
         (candidate) =>
@@ -494,11 +565,23 @@ export function discoverDrawioCandidates({
       maxBuffer: MAX_COMMAND_OUTPUT_CHARS,
     });
     if (!probe.error && probe.status === 0) {
-      const candidate = classifyExecutable(command, { pathValue });
+      const candidate = classifyExecutable(command, { pathValue, platform });
       candidate.source = "command-probe";
+      candidate.probeCommand =
+        /^node(?:\.exe)?$/i.test(command) && platform === process.platform ? process.execPath : null;
       candidate.versionProbeStatus = probe.status;
       candidate.versionProbe = truncateDiagnostic(commandOutput(probe));
       candidates.push(candidate);
+    }
+  }
+  const availableProfiles = candidates.filter(
+    (candidate) => candidate.profilePath && candidate.executable && !candidate.stale,
+  );
+  if (availableProfiles.length > 1) {
+    const profiles = availableProfiles.map((candidate) => path.basename(candidate.input)).join(", ");
+    for (const candidate of availableProfiles) {
+      candidate.ambiguous = true;
+      candidate.diagnostics.push(`ambiguous Windows user profiles: ${profiles}`);
     }
   }
   return candidates;

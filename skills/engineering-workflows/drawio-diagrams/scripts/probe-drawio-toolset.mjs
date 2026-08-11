@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import {
   discoverDrawioCandidates,
   inspectDrawioExecutable,
+  resolveCommandPath,
   validatePng,
   validateSvg,
   supportsDescriptorAnchoredChild,
@@ -49,24 +50,6 @@ function commandOutput(result, limit = MAX_OUTPUT_CHARS) {
     [result?.stdout?.trim(), result?.stderr?.trim()].filter(Boolean).join("\n"),
     limit,
   );
-}
-
-function pathCommand(value, pathValue = process.env.PATH || "") {
-  const command = String(value || "");
-  if (!command) return null;
-  if (command.includes("/") || command.includes("\\")) return command;
-  for (const entry of pathValue.split(path.delimiter).filter(Boolean)) {
-    const candidate = path.join(entry, command);
-    try {
-      const stat = fs.statSync(candidate);
-      if (stat.isFile() && (process.platform === "win32" || (stat.mode & 0o111) !== 0)) {
-        return candidate;
-      }
-    } catch {
-      // Continue through the remaining PATH entries.
-    }
-  }
-  return null;
 }
 
 function redactPath(value) {
@@ -130,9 +113,15 @@ function executableInfo(
   { args = ["--version"], env = process.env, timeout = 2_000, runProbe = true } = {},
 ) {
   const runtimePath = env.PATH ?? process.env.PATH ?? "";
-  const resolved = pathCommand(command, runtimePath);
+  const resolved = resolveCommandPath(command, {
+    pathValue: runtimePath,
+    platform: process.platform,
+    pathext: env.PATHEXT,
+  });
   const descriptor = inspectDrawioExecutable(command, {
     pathValue: runtimePath,
+    platform: process.platform,
+    pathext: env.PATHEXT,
   });
   const result = {
     command: redactCommand(command),
@@ -146,8 +135,11 @@ function executableInfo(
     diagnostics: descriptor.diagnostics?.map((item) => redactDiagnostic(item)).slice(0, 4) || [],
   };
   if (!result.available || !runProbe) return result;
-  if (descriptor.windows && descriptor.chain?.length === 0) return result;
-  const probe = spawnSync(command, args, {
+  if (descriptor.crossBoundary) return result;
+  const probeCommand =
+    descriptor.probeCommand ||
+    (/^node(?:\.exe)?$/i.test(path.basename(command)) ? process.execPath : command);
+  const probe = spawnSync(probeCommand, args, {
     encoding: "utf8",
     env,
     timeout,
@@ -368,7 +360,8 @@ function unavailableSmoke(candidate, available) {
 
 function candidateAvailable(candidate) {
   if (!candidate?.executable || candidate.stale) return false;
-  if (candidate.windows && candidate.chain?.length === 0) return true;
+  if (candidate.ambiguous) return false;
+  if (candidate.crossBoundary) return true;
   return candidate.versionProbeStatus === 0;
 }
 
@@ -378,7 +371,7 @@ function serialiseDrawioCandidate(candidate, { env = process.env } = {}) {
   const version = executableInfo(command, { env, runProbe: false });
   const available = candidateAvailable(candidate);
   const help =
-    available && !(candidate.windows && candidate.chain?.length === 0)
+    available && !candidate.crossBoundary
       ? drawioHelp(command, env)
       : { text: "", status: null, diagnostics: [] };
   const capabilities = formatCapabilities(help.text, help.status === 0);
@@ -550,7 +543,13 @@ export function probeAgentBrowser({ env = process.env } = {}) {
 }
 
 function commandExists(command, env = process.env) {
-  return Boolean(pathCommand(command, env.PATH ?? process.env.PATH ?? ""));
+  return Boolean(
+    resolveCommandPath(command, {
+      pathValue: env.PATH ?? process.env.PATH ?? "",
+      platform: process.platform,
+      pathext: env.PATHEXT,
+    }),
+  );
 }
 
 export function probePackageManagers({ env = process.env } = {}) {
