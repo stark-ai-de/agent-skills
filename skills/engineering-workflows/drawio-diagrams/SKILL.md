@@ -14,6 +14,10 @@ metadata:
 
 Produce, edit, verify, and deliver high-quality draw.io / diagrams.net diagrams as editable `.drawio` files. Prefer self-contained diagrams that work in both light and dark mode.
 
+## First response contract
+
+For the first substantive response, expose the available presentation choices before authoring: `design_profile` (`technical`, `operator-grid`, `isometric-air`, `neon-hub`, `aurora-story`, or `adapted-<short-name>`), `theme_mode` (`adaptive`, `light`, or `dark`), `animation` (`on`, `off`, or `preserve`), and icon mode (`official-first` with semantic fallback for unresolved or generic nodes). State the selected profile and styling options, or ask only when the requested outcome is materially ambiguous; do not hide these choices until delivery.
+
 ## Official icon and logo policy
 
 Official organization, product, and service icons/logos are the primary visual choice whenever the named asset is available and the notation supports it. Resolve the narrowest official or provider-backed asset before choosing a generic semantic glyph; use a semantic icon only for an intentionally generic/vendor-neutral concept or when the official asset cannot be resolved. A missing asset is a per-node fallback, not a reason to remove or recolor the other resolved logos.

@@ -23,6 +23,7 @@ import {
   findDrawio,
   inspectDrawioExecutable,
   pathCandidates,
+  resolveCommandPath,
   supportsDescriptorAnchoredChild,
   validateSvgXml,
 } from "../../../skills/engineering-workflows/drawio-diagrams/scripts/render-drawio.mjs";
@@ -395,6 +396,59 @@ if (format === "png") {
   ) {
     throw new Error("draw.io candidate list lost native or WSL Windows candidates");
   }
+  const windowsResolverBin = path.join(temp, "windows-resolver-bin");
+  mkdirSync(windowsResolverBin, { recursive: true });
+  writeFileSync(path.join(windowsResolverBin, "drawio.exe"), "windows exe fixture", "utf8");
+  writeFileSync(path.join(windowsResolverBin, "drawio.cmd"), "windows cmd fixture", "utf8");
+  const pathextResolved = resolveCommandPath("drawio", {
+    platform: "win32",
+    pathValue: `${windowsResolverBin};${path.join(temp, "missing")}`,
+    pathext: ".COM;.EXE;.BAT;.CMD",
+  });
+  if (pathextResolved !== path.join(windowsResolverBin, "drawio.exe")) {
+    throw new Error(`PATHEXT resolver did not select .exe candidate: ${pathextResolved}`);
+  }
+  const cmdResolved = resolveCommandPath("drawio", {
+    platform: "win32",
+    pathValue: `${path.join(temp, "missing")};${windowsResolverBin}`,
+    pathext: ".CMD",
+  });
+  if (cmdResolved !== path.join(windowsResolverBin, "drawio.cmd")) {
+    throw new Error(`PATHEXT resolver did not select .cmd candidate: ${cmdResolved}`);
+  }
+
+  const windowsProfilesRoot = path.join(temp, "windows-users");
+  for (const profile of ["alice", "bob"]) {
+    const profileDrawio = path.join(
+      windowsProfilesRoot,
+      profile,
+      "AppData",
+      "Local",
+      "Programs",
+      "draw.io",
+    );
+    mkdirSync(profileDrawio, { recursive: true });
+    writeFileSync(path.join(profileDrawio, "drawio.exe"), `${profile} drawio fixture`, "utf8");
+    chmodSync(path.join(profileDrawio, "drawio.exe"), 0o755);
+  }
+  const profileDiscovery = discoverDrawioCandidates({
+    env: { DRAWIO_BIN: staleDrawio, USER: "linux-user", PATH: "" },
+    pathValue: "",
+    platform: "linux",
+    windowsUsersRoot: windowsProfilesRoot,
+  });
+  const ambiguousProfiles = profileDiscovery.filter((candidate) => candidate.ambiguous);
+  const profileSelection = findDrawio({
+    env: { DRAWIO_BIN: staleDrawio, USER: "linux-user", PATH: "" },
+    pathValue: "",
+    platform: "linux",
+    windowsUsersRoot: windowsProfilesRoot,
+    details: true,
+  });
+  if (ambiguousProfiles.length !== 2 || profileSelection.selected?.profilePath) {
+    throw new Error("WSL profile ambiguity was not recorded and excluded from selection");
+  }
+
   const discoveredCandidates = discoverDrawioCandidates({
     env: { ...process.env, DRAWIO_BIN: staleDrawio, PATH: nativeBin },
     pathValue: nativeBin,

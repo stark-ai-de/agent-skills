@@ -7,7 +7,7 @@
 3. Read-only capability receipt:
    - `node skills/engineering-workflows/drawio-diagrams/scripts/probe-drawio-toolset.mjs`
    - add `--json` when a stable machine-readable receipt is needed; the helper does not install, configure, render, or create caches.
-4. draw.io Desktop CLI:
+4. draw.io Desktop CLI (the entries below cover native and cross-boundary host layouts):
    - `drawio` on PATH
    - Linux-native executable from the active NixOS user profile
    - macOS `/Applications/draw.io.app/Contents/MacOS/draw.io`
@@ -34,9 +34,9 @@ nix eval --raw nixpkgs#drawio.pname 2>/dev/null || true
 
 The preflight receipt should distinguish `available`, `missing`, `rejected`, and `indeterminate` evidence for each capability. A version probe proves executable identity only; a renderer is not called `transactional-native` until the actual executable and temporary PNG/SVG format smoke checks pass. Browser version failure is `indeterminate`, not browser success.
 
-## NixOS/WSL native route
+## Linux-host native route
 
-The preferred transactional renderer on NixOS/WSL is a Linux-native draw.io executable owned by the active NixOS user profile. Before proposing an install, check `type -a drawio`, the active Nix profile, package ownership, and host compatibility; do not silently replace a repository- or user-owned executable. If the checks show that a native package is required and the user separately approves installation, the package-manager route is:
+The preferred transactional renderer on Linux hosts, including WSL distributions, is a native draw.io executable owned by the active user profile. Before proposing an install, check `type -a drawio`, the active package/profile ownership, and host compatibility; do not silently replace a repository- or user-owned executable. If the checks show that a native package is required and the user separately approves installation, use the host's documented package-manager route:
 
 ```bash
 nix profile install nixpkgs#drawio
@@ -61,9 +61,9 @@ Post-install checks: type -a drawio; probe --version and --help; temporary PNG/S
 
 Use the active environment's package manager and source after checking ownership and compatibility. Installation is never performed during preflight; it requires explicit tool-install approval. Do not silently substitute an AppImage or a mutable wrapper.
 
-### WSL Windows bridge
+### Cross-boundary Windows bridge
 
-Calling a Windows Desktop binary from WSL crosses an execution boundary. It requires explicit cross-boundary approval in addition to any tool-install, browser, hosted/MCP, cache, or paid/provider approval. Convert every input and output path with `wslpath` and suffix fallback artifacts with `.windows-bridge`:
+Calling a Windows Desktop binary from a Linux host crosses an execution boundary. It requires explicit cross-boundary approval in addition to any tool-install, browser, hosted/MCP, cache, or paid/provider approval. Convert every input and output path with the host's path-conversion utility and suffix fallback artifacts with `.windows-bridge`:
 
 ```bash
 DRAWIO_EXE='/mnt/c/Program Files/draw.io/draw.io.exe'
