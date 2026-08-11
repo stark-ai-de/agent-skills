@@ -39,7 +39,7 @@ For a narrow Next.js route-structure change, this usually selects the route/comp
 - Use the same shared metadata in all variants and change only `Variant`.
 - Add direct sibling navigation and update the catalog.
 - Search reports, templates, examples, checklists, and `SKILL.md` for duplicated policy; replace it with concise routing or a link.
-- Run the focused Architecture Compass validator and the repository aggregate validation.
+- Select focused checks from the changed ADR contract and owning boundary. Do not run the repository aggregate merely because a triplet changed; use it only when a mandatory gate or distinct proof obligation requires it.
 
 If a previously accepted decision changes materially, create a successor triplet and link supersession in both directions. Do not rewrite the accepted outcome as if it had always said something else.
 

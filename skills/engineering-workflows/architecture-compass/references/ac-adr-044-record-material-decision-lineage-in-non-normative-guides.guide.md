@@ -32,7 +32,7 @@ The canonical phrase `Setup and Apply` names the provider-to-local mapping lifec
 3. Use `adapts` for bounded changes, `consolidates` for a many-to-one merge, `generalizes` for broader applicability, or `diverges-from` for deliberate non-retention.
 4. Mark the AC-ADR `independent` when no public repository-ADR relationship is evidenced. Do not add originality boilerplate to its Guide.
 5. For a material decision, put the typed relationship in a `Decision lineage` section immediately before the Guide's official or current sources.
-6. Synchronize the repo-only lineage manifest and run the Architecture Compass validator.
+6. Synchronize the repo-only lineage manifest and identify the smallest focused checks that prove the changed lineage and triplet surfaces.
 
 ## Boundary checks
 
@@ -45,15 +45,7 @@ The canonical phrase `Setup and Apply` names the provider-to-local mapping lifec
 
 ## Validation
 
-```bash
-npm run validate:architecture-compass
-```
-
-Then run the repository aggregate gate before finalizing the public-skill change:
-
-```bash
-npm run validate
-```
+Select checks from the changed lineage contract, its catalog and lock surfaces, and any explicit repository or user gate. Do not run the repository aggregate merely because an ADR changed. When validation is explicitly excluded, record it as `not run` instead of overriding that boundary.
 
 ## Current sources
 
