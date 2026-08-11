@@ -12,6 +12,22 @@
 
 ### Removed
 
+## v0.18.0 - 2026-08-10
+
+### Added
+
+### Changed
+
+- Updated `architecture-compass` to 0.6.1 by removing standing aggregate-validation commands from non-normative ADR Guides; focused checks now follow changed contracts and owning boundaries, while mandatory repository, release, and user-specified gates remain authoritative.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+### Security
+
 ## v0.17.0 - 2026-08-10
 
 ### Added

@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills h
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.0"
+  version: "0.6.1"
 ---
 
 # Architecture Compass

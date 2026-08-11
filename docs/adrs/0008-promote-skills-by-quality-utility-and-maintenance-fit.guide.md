@@ -30,7 +30,7 @@ This guide is non-normative. [Long](0008-promote-skills-by-quality-utility-and-m
 ## Verification
 
 - Check the affected policy and generated or derived surfaces for semantic agreement.
-- Run the narrow validator for the governed artifact, then the repository aggregate validation when the change is implementation-ready.
+- Select focused checks from the changed contract and owning boundary. Run the repository aggregate only when a mandatory gate or distinct proof obligation requires it.
 - Cite the exact files, commands, and evidence boundaries used for the conclusion.
 
 ## Historical follow-up context

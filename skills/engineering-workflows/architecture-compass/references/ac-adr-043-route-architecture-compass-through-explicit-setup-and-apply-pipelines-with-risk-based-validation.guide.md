@@ -96,14 +96,7 @@ Separate external authorization: <evidence | absent>
 
 ## Validation
 
-For this public skill repository, use the focused Architecture Compass gate while editing and the repository aggregate only after content freeze:
-
-```bash
-npm run validate:architecture-compass
-npm run validate
-```
-
-Target repositories use their own confirmed commands and receipt location.
+This historical workflow does not create a standing validation command. Use the current AC-ADR-049 risk and proof-obligation contract, the owning boundary, and any explicit repository or user requirement. Do not run an aggregate merely because work is being finalized.
 
 ## Source
 

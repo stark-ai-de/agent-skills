@@ -135,14 +135,7 @@ Do not call local, focused, or Preview evidence production proof. Deployment, pu
 
 ## Validation
 
-For this skill repository, run the focused validator while editing and the aggregate gate after content freeze:
-
-```bash
-npm run validate:architecture-compass
-npm run validate
-```
-
-Target repositories use their own confirmed commands and repository-native receipt location.
+Select focused checks from the changed governance contract and owning boundary. Run an aggregate only when a mandatory gate or distinct proof obligation requires it; content freeze alone is not a reason to execute `npm run validate`. Target repositories use their own confirmed commands and repository-native receipt location. If the user explicitly excludes validation, do not run it; record any mandatory gate as unmet and keep completion blocked.
 
 ## Decision lineage
 
