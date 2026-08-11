@@ -237,36 +237,61 @@ function validateCapabilityEvalCoverage(files) {
 
 function validateIconFidelityCoverage(files) {
   const relativeNames = new Set(files.map((file) => path.relative(root, file)));
-  const requiredCases = [
-    "skill-evals/drawio-diagrams/cases/icon-official-logo-preference.md",
-    "skill-evals/drawio-diagrams/cases/icon-brand-color-preservation.md",
-    "skill-evals/drawio-diagrams/cases/icon-unresolved-peer-invariance.md",
-    "skill-evals/drawio-diagrams/cases/icon-explicit-recolor-disclosure.md",
-    "skill-evals/drawio-diagrams/cases/visual-brand-logo-invariants.md",
-  ];
-  const errors = requiredCases
-    .filter((file) => !relativeNames.has(file))
-    .map((file) => `draw.io eval corpus is missing required icon-fidelity case: ${file}`);
-  const corpus = files
-    .filter((file) => relativeNames.has(path.relative(root, file)))
-    .map((file) => fs.readFileSync(file, "utf8"))
-    .join("\n");
-  const markers = [
-    ["official logo priority", /official[\s\S]{0,120}(?:logo|mark|stencil)/i],
-    ["original artwork and colors", /original[\s\S]{0,120}(?:artwork|colors|bytes)/i],
-    ["per-node semantic fallback", /per-node[\s\S]{0,100}(?:semantic )?fallback/i],
+  const requiredCases = new Map([
     [
-      "resolved peer invariance",
-      /resolved[\s\S]{0,100}(?:peer|logo)[\s\S]{0,100}(?:unchanged|without|preserve)/i,
+      "skill-evals/drawio-diagrams/cases/icon-official-logo-preference.md",
+      [
+        ["official logo priority", /official[\s\S]{0,120}(?:logo|mark|stencil)/i],
+        ["generic queue fallback", /semantic[\s\S]{0,80}(?:queue|fallback|unresolved)/i],
+        ["source artwork preservation", /original[\s\S]{0,120}(?:artwork|brand colors)/i],
+      ],
     ],
-    ["explicit recolor request", /explicit(?:ly)?[\s\S]{0,100}(?:recolor|monochrome)/i],
     [
-      "recolor evidence fields",
-      /source variant[\s\S]{0,240}changed (?:color|colors)[\s\S]{0,240}(?:reason|scope|contrast)/i,
+      "skill-evals/drawio-diagrams/cases/icon-brand-color-preservation.md",
+      [
+        ["original colors/artwork", /original[\s\S]{0,120}(?:colors|artwork)/i],
+        ["recolor prohibition", /do not[\s\S]{0,80}(?:recolor|invert|filter|tint)/i],
+        ["neutral contrast surface", /neutral[\s\S]{0,80}(?:chip|background)/i],
+      ],
     ],
-  ];
-  for (const [label, pattern] of markers) {
-    if (!pattern.test(corpus)) errors.push(`draw.io eval corpus is missing ${label} coverage`);
+    [
+      "skill-evals/drawio-diagrams/cases/icon-unresolved-peer-invariance.md",
+      [
+        ["per-node semantic fallback", /per-node[\s\S]{0,100}(?:semantic )?fallback/i],
+        ["resolved peer invariance", /resolved[\s\S]{0,100}(?:peer|logo)/i],
+        ["original peer artwork", /original[\s\S]{0,100}(?:artwork|colors)/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/icon-explicit-recolor-disclosure.md",
+      [
+        ["explicit recolor request", /explicit(?:ly)?[\s\S]{0,100}(?:recolor|monochrome)/i],
+        ["source variant disclosure", /source[\s\S]{0,80}variant/i],
+        ["changed color disclosure", /changed[\s\S]{0,80}color/i],
+        ["reason and scope disclosure", /reason[\s\S]{0,100}(?:dark|print)[\s\S]{0,100}scope/i],
+        ["contrast evidence", /contrast[\s\S]{0,80}evidence/i],
+      ],
+    ],
+    [
+      "skill-evals/drawio-diagrams/cases/visual-brand-logo-invariants.md",
+      [
+        ["byte/color preservation", /original[\s\S]{0,120}(?:colors|bytes)/i],
+        ["unresolved semantic fallback", /semantic[\s\S]{0,100}fallback/i],
+        ["resolved peer protection", /resolved[\s\S]{0,100}(?:peer|logo)/i],
+        ["self-contained export contract", /--require-self-contained-images/i],
+      ],
+    ],
+  ]);
+  const errors = [];
+  for (const [relativeFile, markers] of requiredCases) {
+    if (!relativeNames.has(relativeFile)) {
+      errors.push(`draw.io eval corpus is missing required icon-fidelity case: ${relativeFile}`);
+      continue;
+    }
+    const text = fs.readFileSync(path.join(root, relativeFile), "utf8");
+    for (const [label, pattern] of markers) {
+      if (!pattern.test(text)) errors.push(`${relativeFile}: missing ${label} assertion`);
+    }
   }
   return errors;
 }
