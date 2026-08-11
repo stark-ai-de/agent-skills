@@ -12,6 +12,24 @@
 
 ### Removed
 
+## v0.16.0 - 2026-08-10
+
+### Added
+
+- Added the read-only `probe-drawio-toolset.mjs` capability receipt, deterministic native/raw/browser fallback coverage, and ADR-0040 for capability-aware draw.io export routing.
+- Added native, Windows-bridge, stale-candidate, browser-tristate, smoke-export, receipt-sanitization, and official-logo fidelity regression coverage for `drawio-diagrams`.
+
+### Changed
+
+- Updated `drawio-diagrams` to 0.7.1 with an upfront capability preflight, strict read-only review, explicit transactional/raw-CLI/browser/direct-XML fallback routes, independent approvals, canonical fallback naming, and complete delivery receipts.
+- Made official organization, product, and service logos the primary icon choice whenever available, preserving original artwork and brand colors; generic semantic icons remain per-node fallbacks and recoloring requires explicit authorization or a documented accessibility exception.
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
 ### Security
 
 ## v0.15.0 - 2026-07-29

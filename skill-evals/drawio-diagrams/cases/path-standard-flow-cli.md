@@ -21,5 +21,8 @@ Yes
 
 - contains: .drawio
 - contains: .png
+- contains: preflight-drawio-xml.mjs
 - contains: validate_drawio.py
+- regex: --version|format smoke|smoke check
 - regex: inspect|visual review
+- regex: PNG|SVG

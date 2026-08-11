@@ -61,6 +61,8 @@ Logo cells must preserve the source aspect ratio. Use `aspect=fixed` or an equiv
 
 Icon chips should be consistent within a visual family. Use the same square chip size for peers unless the source logo genuinely requires a different viewBox ratio, and then repeat that non-square pattern for similar marks.
 
+Resolve an official organization/product/service mark before using a generic semantic icon. Preserve the source artwork and original brand colors; adjust the chip/background for readability instead of recoloring the mark. A semantic fallback is per-node and must be labelled when an official asset is unavailable or the request is intentionally vendor-neutral. Explicit recoloring or a necessary accessibility exception must be disclosed.
+
 ## Plus/minus toggle evaluation
 
 The plus/minus control in draw.io is the native collapse/expand control for groups, swimlanes, and containers when folding is enabled. It hides or shows child cells of that group; it does not automatically remove a substring from a single label.

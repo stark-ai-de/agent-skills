@@ -20,6 +20,8 @@ kebab-case-name.validation.json
 
 Use the `.light.*` and `.dark.*` pairs only when the user requests fixed-theme comparison exports. The standard renderer naming below remains unchanged.
 
+Canonical names belong to the native route. If a fallback route produces a maintained artifact, keep the base name only for a verified native result and add an explicit route suffix such as `.fallback-windows-raw`, `.fallback-browser-preview`, `.fallback-illustrative-image`, `.raw-cli`, `.windows-bridge`, or `.fixed-theme-browser` to the fallback artifact. Never present a manual, cross-boundary, browser-preview, or image-generation result as a native export.
+
 ## Export commands
 
 When draw.io Desktop CLI exists:
@@ -46,11 +48,36 @@ Export and validate every source/theme artifact, even when the CLI is invoked in
 
 Prefer `scripts/render-drawio.mjs name.drawio` for the standard light PNG + dark SVG verification export. It rejects exit-zero runs that create no fresh artifact and validates both formats before commit. Installation is no-clobber at each destination. Interrupted commits retain partial outputs plus staged files and backups instead of deleting concurrent data. A successful replacement also prints and retains its `.drawio-render-*` recovery directory; inspect the public outputs and `backup-*` files before removing it manually. Fresh installs without prior outputs clean their staging directory automatically. Treat raw CLI commands as format probes, not proof that an output was produced.
 
-The transactional renderer intentionally requires Linux `/proc/self/fd` plus a Linux-native draw.io CLI. It holds directory descriptors and passes them to the child exporter so staging, commit, and cleanup cannot follow a raced lexical ancestor. It fails closed on macOS and Windows. Under WSL, use a Linux-native draw.io package or AppImage; a Windows `draw.io.exe` cannot consume the inherited Linux descriptor paths. On unsupported platforms, use the raw CLI commands above or export manually, run the validators against the fresh artifacts, inspect both formats, and replace maintained outputs yourself; that fallback does not provide the transactional renderer's filesystem-race guarantees.
+The transactional renderer intentionally requires Linux `/proc/self/fd` plus a Linux-native draw.io CLI. It holds directory descriptors and passes them to the child exporter so staging, commit, and cleanup cannot follow a raced lexical ancestor. It fails closed on macOS and Windows. On Linux hosts, including WSL distributions, use a native draw.io executable owned by the active user profile or a compatible package after checking package ownership and host compatibility. Do not use a Windows `draw.io.exe`, mutable draw.io configuration, or an AppImage for the transactional route: Windows binaries cannot consume the inherited Linux descriptor paths. On unsupported platforms, use the approved raw CLI/manual or cross-boundary Windows fallback below, run the validators against fresh artifacts, inspect both formats, and report that the transactional renderer's filesystem-race guarantees are unavailable.
 
 The bounded PNG verifier intentionally accepts only the standard non-interlaced output produced by the supported draw.io export path. It rejects interlaced PNGs with a clear unsupported-mode error even though PNG itself defines an interlaced form.
 
 Native `flowAnimation=1` is preserved in SVG exports when the viewer supports SVG animation. PNG and PDF are static by design, so arrowheads, labels, protocols, and line semantics must remain complete without motion. Do not promise step-by-step packet playback; native connector animation communicates continuous direction only.
+
+## Capability-aware fallback routes
+
+Run a non-mutating capability preflight after workflow and authority selection. Use the first route whose capability and independent approvals are evidenced:
+
+1. `transactional-native`: `scripts/render-drawio.mjs` plus a Linux-native draw.io CLI. This is the only route that claims the renderer's descriptor-safe staging and no-clobber guarantees.
+2. `approved-raw-cli-manual`: raw Desktop CLI or manual export after a format smoke test. A cross-boundary Windows bridge is allowed only with explicit cross-boundary approval and must use the Windows-bridge suffix; it does not claim transactional guarantees.
+3. `fixed-theme-browser-raster`: validated fixed-theme SVG rasterized through one explicitly approved local browser executable. This route is only for viewer-independent fixed-theme PNG previews and does not replace the editable source.
+4. `browser-url-preview` or `html-viewer-preview`: `scripts/open-drawio-url.mjs` or an HTML preview only when explicitly requested. Treat the URL/HTML as a preview transport, not a canonical artifact; warn that diagram data can appear in browser history, sync, screenshots, or logs.
+5. `direct-xml`: the universal editable route when no optional renderer is available. It can deliver the `.drawio` source and validator evidence without claiming visual export.
+
+Image generation is outside this ladder. Use it only when the user explicitly changes the desired outcome to a non-editable image, and state that the result is not a draw.io source.
+
+### Cross-boundary Windows bridge
+
+The bridge crosses the Linux/Windows boundary and therefore requires a separate approval from tool installation or browser/hosted approval. Convert paths before invoking a Windows binary and keep the output suffix explicit:
+
+```bash
+DRAWIO_EXE='/mnt/c/Program Files/draw.io/draw.io.exe'
+INPUT_WIN="$(wslpath -w "$PWD/name.drawio")"
+OUTPUT_WIN="$(wslpath -w "$PWD/name.windows-bridge.drawio.png")"
+"$DRAWIO_EXE" -x -f png -s 2 -b 10 -o "$OUTPUT_WIN" "$INPUT_WIN"
+```
+
+Treat the command as an approved raw/manual route. It cannot be passed to `scripts/render-drawio.mjs`, cannot inherit Linux descriptor paths, and must report `Cross-boundary approval: granted` plus the corresponding limitation in the receipt.
 
 ## Browser URL delivery
 
@@ -89,6 +116,23 @@ Return:
 - selected design profile and theme mode, including any readability-driven fallback
 - icon/logo providers, styles/slugs, and any per-node semantic substitutions
 - how to open/edit
+
+For every `create`, `edit-repair`, or `export` receipt, include these exact fields (use `not-needed`, `pending`, `blocked`, or `unverified` explicitly when applicable):
+
+```text
+Capability status: ...
+Renderer route: ...
+Tool-install approval: ...
+Cross-boundary approval: ...
+Export status: ...
+Visual verification: ...
+Evidence scope: ...
+Fallback (used/offered): ...
+```
+
+The receipt must state the limitation of every fallback used or offered. A successful local export does not prove CI, publication, hosted, deployment, production, or live-runtime behavior.
+
+For icon/logo delivery, use the official organization, product, platform, model, or service asset whenever available. Generic semantic icons are fallback-only for named entities (but remain the normal notation for genuinely generic concepts). Preserve the source artwork, aspect ratio, and brand colors. Arbitrary recoloring, tinting, inversion, or dark-mode filtering is prohibited unless the user explicitly requests it or a necessary accessibility exception is documented; disclose the source variant, changed colors, reason, scope, and contrast evidence in the receipt. Change the surrounding chip/card first.
 
 When any third-party logo or icon is used, including a native vendor stencil or generic third-party icon, include this once in the response, not inside the diagram:
 

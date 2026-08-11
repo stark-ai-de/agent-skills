@@ -6,9 +6,13 @@ Icons are essential for architecture and technical diagrams. Labels remain manda
 
 Default and recommended mode is `icon-first` whenever the notation supports it. In architecture and technical-system diagrams, every primary component gets a relevant visual symbol plus a label:
 
-- use the real product, vendor, model, or service logo when a recognizable technology is named
-- use a native semantic icon or stencil for generic concepts such as users, queues, documents, policies, and generic services
+- use the official organization, product, vendor, model, or service logo/stencil whenever a named asset is available
+- use a native semantic icon or stencil for genuinely generic concepts such as users, queues, documents, policies, and generic services; for a named entity, a generic semantic icon is fallback-only when the official asset cannot be resolved
 - preserve canonical ER, UML, sequence, BPMN, and flowchart notation when its shapes already carry the visual semantics
+
+### Official-asset priority
+
+For every named organization, product, platform, model, or service, the official logo, service stencil, or official provider asset is the primary visual source whenever one is available. Resolve that asset per node even when another node needs a fallback; one missing asset must not downgrade the whole visual family. Keep the product label beside the mark. Existing embedded assets and local caches satisfy this priority only when their accepted provenance and variant are known; otherwise re-check the current official source before delivery.
 
 Offer `simplified-icons` only when the user explicitly requests non-branded or vendor-neutral output. Lack of network access or one missing logo does not disable icons: use the best semantic icon for that node, keep its label, disclose the substitution, and leave resolved logos intact.
 
@@ -18,7 +22,7 @@ When a detailed official/product logo exists, do not replace it with a simplifie
 
 ## Lookup and setup behavior
 
-Use already embedded icons, built-in draw.io stencils, configured local icon caches, and local manifests first. When the host permits read-only web access, retrieve only the selected public SVGs needed for the diagram and embed them. This is a technical asset lookup, not a legal-clearance decision and not a reason for a separate wizard.
+For edits, reuse an already embedded official/accepted mark when its provenance and variant are known. For new named entities, resolve the official logo, native service stencil, or official provider asset before consulting a generic cache; local caches and manifests are safe shortcuts only when their provenance is known. When the host permits read-only web access, retrieve only the selected public SVGs needed for the diagram and embed them. This is a technical asset lookup, not a legal-clearance decision and not a reason for a separate wizard.
 
 Ask only when the host requires network consent or the action would install a package, write MCP configuration, use a hosted service, download a bulk pack/index, or create a persistent cache. If lookup is unavailable or declined, continue with per-node native semantic icons; do not remove visual symbols or downgrade a whole family to text boxes.
 
@@ -30,20 +34,21 @@ Use the narrowest source that yields a clean, recognizable icon. Preserve provid
 
 | Priority | Source                                               | Best for                                                            | Notes                                                                                                                                                         |
 | -------: | ---------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|        1 | Existing embedded icon or local cache                | repeat edits, offline/private work                                  | Reuse the exact accepted variant.                                                                                                                             |
-|        2 | Native draw.io stencils/style strings                | AWS, Azure, GCP, Kubernetes, networking, architecture primitives    | Usually the most editable and reliable service-level representation.                                                                                          |
-|        3 | [Lobe Icons](https://github.com/lobehub/lobe-icons)  | AI/LLM models, providers, and AI applications                       | Prefer the static SVG package; use color/brand-color symbols before monochrome or text lockups.                                                               |
-|        4 | [Simple Icons](https://simpleicons.org/)             | broad software, SaaS, database, developer-tool, and platform brands | Broad slug-based coverage and brand-color SVG delivery.                                                                                                       |
-|        5 | theSVG registry/cache                                | color/product variants or brands missing above                      | Prefer symbol variants over wordmarks.                                                                                                                        |
-|        6 | Iconify, Devicon, developer-icons, Web3/crypto packs | maintained domain-specific gaps                                     | Fetch only the selected SVG and embed it.                                                                                                                     |
-|        7 | Native/generic vector libraries                      | non-brand concepts and unresolved brands                            | Material Symbols, Tabler, Lucide, Font Awesome, Bootstrap Icons, and Heroicons provide semantic fallbacks. Keep the original product label when substituting. |
+|        1 | Official organization/product/service asset          | named organizations, products, platforms, models, and services     | Primary whenever available; use the official repository/provider or an official native vendor stencil.                                                        |
+|        2 | Existing embedded icon or local cache                | repeat edits, offline/private work                                  | Reuse only the exact accepted official variant; re-check provenance when it is unknown or stale.                                                             |
+|        3 | Native draw.io stencils/style strings                | generic architecture primitives and editable vendor shapes         | Prefer when no named official asset exists or when the notation itself is the semantic source.                                                               |
+|        4 | [Lobe Icons](https://github.com/lobehub/lobe-icons)  | AI/LLM models, providers, and AI applications                       | Use only when it is the selected official/provider asset; preserve the supplied brand colors and artwork.                                                     |
+|        5 | [Simple Icons](https://simpleicons.org/)             | broad software, SaaS, database, developer-tool, and platform brands | Use only when an official or accepted provider asset is unavailable; preserve the supplied brand colors and artwork.                                          |
+|        6 | theSVG registry/cache                                | color/product variants or brands missing above                      | Prefer symbol variants over wordmarks and retain provenance/variant in the receipt.                                                                          |
+|        7 | Iconify, Devicon, developer-icons, Web3/crypto packs | maintained domain-specific gaps                                     | Fetch only the selected SVG and embed it; do not let a generic substitute outrank a resolved official asset.                                                  |
+|        8 | Native/generic vector libraries                      | genuinely generic concepts and unresolved named entities           | Material Symbols, Tabler, Lucide, Font Awesome, Bootstrap Icons, and Heroicons provide semantic fallbacks. Keep the original product label when substituting. |
 
 ## Logo consistency rules
 
 - Prefer pure symbol/icon variants. Do not use a text wordmark, such as a full OpenAI wordmark, unless all logos in that visual group are wordmarks or the user requested wordmarks.
 - If color logos are used in a diagram, use color variants for all logos where the source offers color. Do not mix color logos with monochrome variants except when a brand only offers black/white.
 - If a logo exists only in black or only in white, use exactly that source variant on a background where it remains visible. Do not recolor black/white logos.
-- Do not tint, recolor, crop, stretch, skew, rotate, invert, or dark-mode-filter brand logos.
+- Do not tint, recolor, crop, stretch, skew, rotate, invert, or dark-mode-filter brand logos. Arbitrary recoloring is prohibited; only an explicit user request or a necessary, documented accessibility exception may authorize it. Disclose the source variant, changed colors, reason, scope, and contrast evidence, and prefer changing the chip/background instead.
 - Preserve aspect ratio. Image/logo cells must include `aspect=fixed` or an equivalent fixed-aspect image setting, and their geometry should match the SVG `viewBox` ratio whenever possible.
 - Put fixed-color logos on neutral chip backgrounds that work in light and dark mode. Change the chip/background when contrast is weak instead of changing the logo.
 - Use consistent chip geometry in a visual family. Common default chips are 44x44 or 48x48 with 6-8 px padding; use a non-square chip only when the source viewBox requires it, and then keep similar logos consistent.
@@ -135,7 +140,7 @@ Do not maintain static provider manifests in this skill. Slugs, aliases, variant
 
 Lookup workflow:
 
-1. Search existing embedded assets and local caches first.
+1. For edits, search existing embedded official assets and local caches with known provenance first; for new named entities, use them only when they are known official/accepted variants, then resolve the current official source when provenance is missing or stale.
 2. For AI/LLM brands, query Lobe Icons and retrieve `@lobehub/icons-static-svg@<version>/icons/<slug>.svg` from its documented package/CDN path.
 3. For broad technology brands, query Simple Icons by slug; use its documented SVG/package/CDN path and source color when suitable.
 4. If those sources miss, inspect theSVG or a narrower maintained provider. Prefer pure symbol/icon variants over wordmarks and use `mono`, `light`, or `dark` only when provided by the source.

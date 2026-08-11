@@ -20,5 +20,8 @@ Yes
 ## Deterministic Assertions
 
 - contains: direct XML
+- contains: preflight-drawio-xml.mjs
 - contains: validate_drawio.py
-- contains: skipped
+- regex: skipped|unavailable|fallback
+- not_contains: install completed
+- not_contains: export completed

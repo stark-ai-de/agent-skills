@@ -23,3 +23,5 @@ Yes
 - contains: gateway-workers.drawio
 - regex: too long|oversized|length|size limit
 - regex: fallback|deliver the .drawio|local file
+- not_contains: hosted upload completed
+- not_contains: browser opened successfully
