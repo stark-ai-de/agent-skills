@@ -116,8 +116,9 @@ Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skill
 
 ```bash
 pnpm install
-npm run validate
 ```
+
+Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `npm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request.
 
 <details>
 <summary><strong>Common maintainer commands</strong></summary>

@@ -1,6 +1,6 @@
-# ADR-0041: Optimize GitHub Actions with owned gates
+# ADR-0042: Optimize GitHub Actions with owned gates
 
-ID: ADR-0041
+ID: ADR-0042
 Title: Optimize GitHub Actions with owned gates
 Status: Proposed
 Date: 2026-08-11
@@ -17,9 +17,9 @@ Superseded by: None
 Guide verified: 2026-08-11
 Gist: Assign checks to their owning events, cache dependencies, cancel stale validation, and reuse exact release-readiness proof.
 
-Variants: [Short](0041-optimize-github-actions-with-owned-gates.short.md) · [Long, canonical](0041-optimize-github-actions-with-owned-gates.long.md) · **Guide**
+Variants: [Short](0042-optimize-github-actions-with-owned-gates.short.md) · [Long, canonical](0042-optimize-github-actions-with-owned-gates.long.md) · **Guide**
 
-This guide is non-normative. [Long](0041-optimize-github-actions-with-owned-gates.long.md) is the authoritative decision; if this guidance conflicts with Long, follow Long.
+This guide is non-normative. [Long](0042-optimize-github-actions-with-owned-gates.long.md) is the authoritative decision; if this guidance conflicts with Long, follow Long.
 
 ## How to apply
 
