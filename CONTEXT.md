@@ -10,7 +10,7 @@ This repository publishes public Agent Skills for repo maintenance, Codex operat
 - **category**: The first directory under `skills/`, such as `repo-maintenance`.
 - **stable skill**: A skill intended for public install from this repository.
 - **draft skill**: A proposed or experimental workflow kept outside `skills/` until it is stable.
-- **ADR**: A short repo-level decision record under `docs/adr/`.
+- **ADR**: A short repo-level decision record under `docs/adrs/`.
 - **out-of-scope note**: A lightweight boundary note under `docs/out-of-scope/`.
 
 ## Avoided Synonyms
@@ -24,7 +24,7 @@ This repository publishes public Agent Skills for repo maintenance, Codex operat
 
 - `skills/` contains only stable public skills.
 - `.agents/` and `skills-lock.json` are local-only and ignored from Git.
-- `docs/adr/` records long-lived decisions about repository policy or architecture.
+- `docs/adrs/` records long-lived decisions about repository policy or architecture.
 - `docs/out-of-scope/` records useful boundaries that are not architectural decisions.
 - Category README files must mirror `SKILL.md` frontmatter descriptions.
 
