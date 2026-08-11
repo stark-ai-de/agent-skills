@@ -16,6 +16,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
 
 jobs:
   release-readiness:
@@ -30,19 +35,13 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: pnpm/setup@v2
         with:
-          node-version: 22
-
-      - run: corepack enable
+          runtime: node@22
+          cache: true
+          install: false
 
       - run: pnpm install --frozen-lockfile
-
-      - run: npm run validate
-
-      - run: pnpm format:check
-
-      - run: pnpm lint
 
       - id: version
         run: |
@@ -50,13 +49,36 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Require successful hosted Validate run
+        id: validate-receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
+        run: |
+          run_id=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow validate.yml \
+            --commit "$RELEASE_SHA" \
+            --status completed \
+            --limit 50 \
+            --json databaseId,status,conclusion \
+            --jq 'map(select(.status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
+
+          if [ -z "$run_id" ]; then
+            echo "No successful Validate run exists for ${RELEASE_SHA}; wait for main validation and retry."
+            exit 1
+          fi
+
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+          echo "Reusing successful Validate run ${run_id} for ${RELEASE_SHA}."
+
       - run: node scripts/validate-release.mjs
 
       - run: node scripts/print-release-notes.mjs > release-notes.md
 
       - name: Print release readiness
         run: |
-          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }}."
+          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
           echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
 
   publish:
@@ -72,21 +94,10 @@ jobs:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 0
 
+      # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-
-      - run: corepack enable
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: npm run validate
-
-      - run: pnpm format:check
-
-      - run: pnpm lint
-
-      - run: node scripts/validate-release.mjs
 
       - name: Verify validated release identity
         env:
