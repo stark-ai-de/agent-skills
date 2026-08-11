@@ -295,7 +295,6 @@ function validateIconFidelityCoverage(files) {
   }
   return errors;
 }
-
 function validateCliArgumentRegressions() {
   for (const option of ["--case", "--artifacts-dir"]) {
     const result = spawnSync(process.execPath, [path.resolve(process.argv[1]), option], {
