@@ -1520,14 +1520,38 @@ requirePattern(
 requirePattern(
   skillPath,
   skill,
-  /setup.*supercharge the repository with Semantic Code Intelligence and structural code search.*faster with fewer tool calls/is,
-  "setup disclosure must lead with its semantic and structural benefit",
+  /setup[\s\S]*semantic (?:code )?intelligence/i,
+  "setup disclosure must state the semantic-analysis benefit",
 );
 requirePattern(
   skillPath,
   skill,
-  /update.*current stable versions without changing how it was installed.*Migrate configuration or index data.*verify that everything still works/is,
-  "update disclosure must preserve installation provenance and verification",
+  /setup[\s\S]*(?:structural (?:code )?search|structural syntax|ast-grep)/i,
+  "setup disclosure must state the structural-search benefit",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /setup[\s\S]*(?:faster|fewer tool calls|efficien)/i,
+  "setup disclosure must state an efficiency benefit",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*current stable versions/i,
+  "update disclosure must state the stable-version target",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*(?:without changing how it was installed|preserv(?:e|es)[\s\S]*(?:install|provenance)|installer provenance)/i,
+  "update disclosure must preserve installation provenance",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*(?:migrat|reconnect|verify[\s\S]*work)/i,
+  "update disclosure must state migrations, reconnection, or readiness verification",
 );
 requirePattern(
   skillPath,
