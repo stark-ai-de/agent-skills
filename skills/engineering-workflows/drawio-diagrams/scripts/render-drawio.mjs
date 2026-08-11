@@ -206,7 +206,7 @@ function classifyExecutable(
       const windowsStat = fs.statSync(original);
       windowsExists = windowsStat.isFile();
       windowsExecutable =
-      windowsExists && (platform === "win32" || (windowsStat.mode & 0o111) !== 0);
+        windowsExists && (platform === "win32" || (windowsStat.mode & 0o111) !== 0);
     } catch {
       // A Windows path may be a raw/manual candidate even when unavailable here.
     }
@@ -568,7 +568,9 @@ export function discoverDrawioCandidates({
       const candidate = classifyExecutable(command, { pathValue, platform });
       candidate.source = "command-probe";
       candidate.probeCommand =
-        /^node(?:\.exe)?$/i.test(command) && platform === process.platform ? process.execPath : null;
+        /^node(?:\.exe)?$/i.test(command) && platform === process.platform
+          ? process.execPath
+          : null;
       candidate.versionProbeStatus = probe.status;
       candidate.versionProbe = truncateDiagnostic(commandOutput(probe));
       candidates.push(candidate);
@@ -578,7 +580,9 @@ export function discoverDrawioCandidates({
     (candidate) => candidate.profilePath && candidate.executable && !candidate.stale,
   );
   if (availableProfiles.length > 1) {
-    const profiles = availableProfiles.map((candidate) => path.basename(candidate.input)).join(", ");
+    const profiles = availableProfiles
+      .map((candidate) => path.basename(candidate.input))
+      .join(", ");
     for (const candidate of availableProfiles) {
       candidate.ambiguous = true;
       candidate.diagnostics.push(`ambiguous Windows user profiles: ${profiles}`);
