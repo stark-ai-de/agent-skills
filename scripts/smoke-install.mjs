@@ -208,9 +208,9 @@ function architectureManifest(skillDir) {
   const triplets = references.filter((file) =>
     /^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.(?:short|long|guide)\.md$/.test(path.basename(file)),
   );
-  if (triplets.length !== 147) {
+  if (triplets.length !== 159) {
     throw new Error(
-      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 147.`,
+      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 159.`,
     );
   }
 
@@ -222,17 +222,17 @@ function architectureManifest(skillDir) {
     variantsByStem.set(match[1], variants);
   }
   if (
-    variantsByStem.size !== 49 ||
+    variantsByStem.size !== 53 ||
     [...variantsByStem.values()].some(
       (variants) => !["short", "long", "guide"].every((variant) => variants.has(variant)),
     )
   ) {
     throw new Error(
-      "Installed architecture-compass payload does not contain 49 complete triplets.",
+      "Installed architecture-compass payload does not contain 53 complete public triplets.",
     );
   }
   const expectedIds = new Set(
-    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(3, "0")),
+    Array.from({ length: 53 }, (_, index) => String(index + 1).padStart(3, "0")),
   );
   const actualIds = new Set(
     [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
@@ -242,6 +242,49 @@ function architectureManifest(skillDir) {
   if (missingIds.length > 0 || unexpectedIds.length > 0) {
     throw new Error(
       `Installed architecture-compass payload has the wrong ADR IDs; missing ${missingIds.join(", ") || "none"}; unexpected ${unexpectedIds.join(", ") || "none"}.`,
+    );
+  }
+
+  const internalReferenceRoot = path.join(skillDir, "references", "internal");
+  const expectedInternalReferences = [
+    "internal-adr-index.md",
+    "internal-adr-001-resolve-persistence-surfaces-before-writes.short.md",
+    "internal-adr-001-resolve-persistence-surfaces-before-writes.long.md",
+    "internal-adr-001-resolve-persistence-surfaces-before-writes.guide.md",
+    "internal-adr-002-select-capability-aware-receipt-renderers.short.md",
+    "internal-adr-002-select-capability-aware-receipt-renderers.long.md",
+    "internal-adr-002-select-capability-aware-receipt-renderers.guide.md",
+  ];
+  if (!fs.existsSync(internalReferenceRoot) || !fs.statSync(internalReferenceRoot).isDirectory()) {
+    throw new Error("Installed architecture-compass payload is missing references/internal/.");
+  }
+  const missingInternalReferences = expectedInternalReferences.filter(
+    (file) => !fs.existsSync(path.join(internalReferenceRoot, file)),
+  );
+  if (missingInternalReferences.length > 0) {
+    throw new Error(
+      `Installed architecture-compass payload is missing internal ADR reference(s): ${missingInternalReferences.join(", ")}.`,
+    );
+  }
+  const expectedInternalReferenceSet = new Set(expectedInternalReferences);
+  const unexpectedInternalReferences = walk(internalReferenceRoot, () => true)
+    .map((file) => path.relative(internalReferenceRoot, file).split(path.sep).join("/"))
+    .filter((file) => !expectedInternalReferenceSet.has(file));
+  if (unexpectedInternalReferences.length > 0) {
+    throw new Error(
+      `Installed architecture-compass payload contains unexpected internal ADR reference(s): ${unexpectedInternalReferences.join(", ")}.`,
+    );
+  }
+  const internalTripletReferences = expectedInternalReferences.filter((file) =>
+    /\.(short|long|guide)\.md$/.test(file),
+  );
+  const invalidInternalStatusReferences = internalTripletReferences.filter((file) => {
+    const content = fs.readFileSync(path.join(internalReferenceRoot, file), "utf8");
+    return !/^Status:\s*(?:Accepted|Superseded)\s*$/m.test(content);
+  });
+  if (invalidInternalStatusReferences.length > 0) {
+    throw new Error(
+      `Installed architecture-compass payload contains internal ADR reference(s) without an Accepted or Superseded status: ${invalidInternalStatusReferences.join(", ")}.`,
     );
   }
   const decisionLineageStem = "ac-adr-044-record-material-decision-lineage-in-non-normative-guides";

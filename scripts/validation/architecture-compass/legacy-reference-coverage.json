@@ -465,10 +465,10 @@
       "rationale": "A generic PR-checklist output is no longer mandatory; authorized repository-native checklists may derive mechanics from canonical Long decisions.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.long.md",
           "heading": "Decision",
           "markers": [
-            "Architecture Compass represents every durable skill-runtime rule and bundled target-repository guardrail as exactly one flat Short,"
+            "Architecture Compass permits a separately validated internal ADR namespace beneath the skill's references"
           ]
         },
         {
@@ -1129,10 +1129,10 @@
       "rationale": "The ADR index, instructions, stack rules, source validation, package documentation, and deduplication obligations remain active.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.long.md",
           "heading": "Decision",
           "markers": [
-            "Architecture Compass represents every durable skill-runtime rule and bundled target-repository guardrail as exactly one flat Short,"
+            "Architecture Compass permits a separately validated internal ADR namespace beneath the skill's references"
           ]
         },
         {
@@ -2194,10 +2194,10 @@
       "rationale": "The optional checklist remains possible, but cannot create policy or exceed the selected workflow's exact path allowlist.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.long.md",
           "heading": "Decision",
           "markers": [
-            "Architecture Compass represents every durable skill-runtime rule and bundled target-repository guardrail as exactly one flat Short,"
+            "Architecture Compass permits a separately validated internal ADR namespace beneath the skill's references"
           ]
         },
         {
