@@ -1364,8 +1364,8 @@ const expectedCurrentContractCases = new Map(
       source_case: "skill-evals/codegraph-ast-grep/cases/clear-setup-intent.md",
       source_sha256: "9b6824951b8620d67bbc8ed6b55ddfd514d2ec8bb58ee33ee5894c3632d913cb",
       prompt_sha256: "9b615b3f963fb5b72bb0b68f7b58ae9fbea27b44a8b8b685b14ab8b76f25328a",
-      output_sha256: "9b066cb8231917a8e3e38386de856395b69d18b04e9d210faf8781b4e3d1b5a2",
-      grading_sha256: "9f42a1a6580ccee714af886e15d03bfec8b1b542e4aa89670effc9e8cba9ea10",
+      output_sha256: "561faafef2312dec66d59250f34cdea7996bbca2c02e23f343ac57c17f824f36",
+      grading_sha256: "e891e385840909de2dd5efee5e174cca0804df0467b5baf3cd5feef9630bfeb8",
       contract_assertions: [
         "select-setup-without-redundant-choice",
         "announce-root-writes-and-protected-state",
@@ -1381,8 +1381,8 @@ const expectedCurrentContractCases = new Map(
       source_case: "skill-evals/codegraph-ast-grep/cases/clear-update-intent.md",
       source_sha256: "f1587c9c2108030db098d08a3a6b50ac9da9f00feef233d10b13ce82eed29107",
       prompt_sha256: "99c53e183f2935c3b60af90dd8972b9f820b0110e355233f2e4a0ce91d87c71c",
-      output_sha256: "5891e67b28fbd524d29ff0599f9563fc803f262936401c249f9594dbc321d5b0",
-      grading_sha256: "49fb13c320915453d4ce9a3715c3a1d427c4babc5230619f04bf89b7cd67f7f8",
+      output_sha256: "9700761e5108b830350a7819c38ab0d6fa5d43222e5871b7ab0a02fb53c6e7c7",
+      grading_sha256: "fc8659036ff28b75ef500cf2d51073657b1fdaa18f29fc8135759c9f0f6cb87e",
       contract_assertions: [
         "select-update-without-redundant-choice",
         "announce-root-writes-and-protected-state",
@@ -1398,8 +1398,8 @@ const expectedCurrentContractCases = new Map(
       source_case: "skill-evals/codegraph-ast-grep/cases/broken-setup-doctor-routing.md",
       source_sha256: "d04c23c3bfc887e1a694bfc5c5526f15b4f7d0615098bc4244719295fcf55da0",
       prompt_sha256: "60a6a42629fcd8f0d3aa0bdaaf2e4fbc7ed6cd972211cebc205f14697970181f",
-      output_sha256: "423630349576806f6f097833e3985d1a01c4d6a8719d8fa6690a149feae9d919",
-      grading_sha256: "4f5573678b543743605936620d355edcd74db3716831e81b67cb6f4eef9ccc1f",
+      output_sha256: "aa3883675f0db94dd14d99dd7c82a2d19a7471858cd8dbf74a9bf1d40394a3fa",
+      grading_sha256: "fde7c6d42cbc8b89036e93bab9572d0e34d09c91ff06a6170ddaea5dd05ed2d0",
       contract_assertions: [
         "select-doctor",
         "perform-only-non-opening-checks-without-extra-authority",
@@ -1415,8 +1415,8 @@ const expectedCurrentContractCases = new Map(
       source_case: "skill-evals/codegraph-ast-grep/cases/ambiguous-workflow-selection.md",
       source_sha256: "28b1c3cf07a400aea2c0663beeb768ced65903e918244ffabe5f4c134777dbee",
       prompt_sha256: "13990ee3777f91660dfa3040b7330b123f308c400d4728b4b1f95158e22c27a7",
-      output_sha256: "0bfa3a613af19ce88f880dc1eccbcb75b7d0668761fe7bb0ace05b0ba077bde3",
-      grading_sha256: "19d730476c11fbe8dbe05bc96508fe958fa39c6906351b010932bb7c24154284",
+      output_sha256: "3cfbc8875a8305277e9620014d3796bd7347552cbb48f4d1da708ae5a356c15c",
+      grading_sha256: "7e0d6087750dac90dac4bcc90e31102d169dff3f223ea468e33658d350017d22",
       contract_assertions: [
         "show-exactly-setup-update-doctor",
         "ask-the-user-to-choose",
@@ -1432,8 +1432,8 @@ const expectedCurrentContractCases = new Map(
       source_case: "skill-evals/codegraph-ast-grep/cases/internal-reviewed-rewrite-boundary.md",
       source_sha256: "4ee7462db29375e5bb62b5c0828a8133e9bbbed12c83a5c23ea468ef4c62f956",
       prompt_sha256: "a4347ad045e0fac4598bf0b46c8ade4b4914e0f8229d88d870954ed64e400d3d",
-      output_sha256: "daeaf1683a716217a9b92d06ec3c3b80f6c0d78ef9e901cc72cacee1d17ae400",
-      grading_sha256: "5bcc90371bc76d5dae52815d9ad6410e1d38f7b6027a1ccb2d5cb5471258bc31",
+      output_sha256: "46c5a094dd104cfbe60cf1ee5ef102afd773c898b166ba9de6f79471acaad294",
+      grading_sha256: "8de14ecf0b7d7bf89d9b2344a8d7b2660aefd2944e01a9b5a183835dff59a2a1",
       contract_assertions: [
         "do-not-invent-a-public-rewrite-workflow",
         "refuse-immediate-repository-wide-rewrite",
@@ -1502,7 +1502,7 @@ const extensions = runtime.get(extensionPath);
 const openAiPath = runtimePaths[1];
 const openAi = runtime.get(openAiPath);
 
-requirePattern(skillPath, skill, /version:\s*"0\.3\.0"/, "metadata.version must be 0.3.0");
+requirePattern(skillPath, skill, /version:\s*"0\.3\.1"/, "metadata.version must be 0.3.1");
 const workflowSection = /## Workflow selection([\s\S]*?)(?=\n## Inputs to inspect)/.exec(skill);
 const expectedWorkflows = ["setup", "update", "doctor"];
 const listedWorkflows = workflowSection
@@ -1511,6 +1511,48 @@ const listedWorkflows = workflowSection
 if (JSON.stringify(listedWorkflows) !== JSON.stringify(expectedWorkflows)) {
   fail(`${skillPath}: workflow selection must contain exactly setup, update, and doctor in order`);
 }
+requirePattern(
+  skillPath,
+  skill,
+  /expose these finite workflows in plain, benefit-first language/i,
+  "direct workflow disclosure must be plain and benefit-first",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /setup[\s\S]*semantic (?:code )?intelligence/i,
+  "setup disclosure must state the semantic-analysis benefit",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /setup[\s\S]*(?:structural (?:code )?search|structural syntax|ast-grep)/i,
+  "setup disclosure must state the structural-search benefit",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /setup[\s\S]*(?:faster|fewer tool calls|efficien)/i,
+  "setup disclosure must state an efficiency benefit",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*current stable versions/i,
+  "update disclosure must state the stable-version target",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*(?:without changing how it was installed|preserv(?:e|es)[\s\S]*(?:install|provenance)|installer provenance)/i,
+  "update disclosure must preserve installation provenance",
+);
+requirePattern(
+  skillPath,
+  skill,
+  /update[\s\S]*(?:migrat|reconnect|verify[\s\S]*work)/i,
+  "update disclosure must state migrations, reconnection, or readiness verification",
+);
 requirePattern(
   skillPath,
   skill,
@@ -2140,7 +2182,7 @@ let currentContractFailed = 0;
 if (currentContractManifest) {
   if (
     currentContractManifest.schema_version !== 2 ||
-    currentContractManifest.suite_id !== "codegraph-ast-grep-v0.3-current-contract-2026-07-29" ||
+    currentContractManifest.suite_id !== "codegraph-ast-grep-v0.3.1-current-contract-2026-08-10" ||
     currentContractManifest.evidence_mode !== "hash-bound-internal-reviewer-capture" ||
     !isValidIsoDate(currentContractManifest.reviewed_at)
   ) {
@@ -2149,7 +2191,7 @@ if (currentContractManifest) {
   if (
     currentContractManifest.candidate?.skill_path !==
       "skills/engineering-workflows/codegraph-ast-grep" ||
-    currentContractManifest.candidate?.skill_version !== "0.3.0" ||
+    currentContractManifest.candidate?.skill_version !== "0.3.1" ||
     currentContractManifest.candidate?.sha256 !== currentRuntimeCandidateHash ||
     currentContractManifest.candidate?.hash_recipe !==
       "For each runtime file in bytewise lexicographic path order: relative path, NUL, file bytes, NUL; then SHA-256."
@@ -2229,7 +2271,7 @@ if (currentContractManifest) {
     JSON.stringify(manifestCases.map((entry) => entry.id)) !==
       JSON.stringify([...expectedCurrentContractCases.keys()])
   ) {
-    fail(`${currentContractManifestPath}: expected the five captured v0.3 contract cases`);
+    fail(`${currentContractManifestPath}: expected the five captured v0.3.1 contract cases`);
   } else {
     const seenSources = new Set();
     const seenPrompts = new Set();
@@ -2239,7 +2281,7 @@ if (currentContractManifest) {
       const caseLabel = `${currentContractManifestPath}:${entry.id || "<missing-id>"}`;
       const expected = expectedCurrentContractCases.get(entry.id);
       if (!expected) {
-        fail(`${caseLabel}: case is outside the reviewed v0.3 contract`);
+        fail(`${caseLabel}: case is outside the reviewed v0.3.1 contract`);
         continue;
       }
       if (entry.source_case !== expected.source_case) {
@@ -2470,7 +2512,7 @@ if (currentContractManifest) {
   );
 
   const currentContractRunPath =
-    "skill-evals/codegraph-ast-grep/runs/2026-07-29-v0.3-internal-reviewer-capture.md";
+    "skill-evals/codegraph-ast-grep/runs/2026-08-10-v0.3.1-internal-reviewer-capture.md";
   const currentContractRun = requireFile(currentContractRunPath);
   for (const marker of [
     currentRuntimeCandidateHash,
@@ -2861,7 +2903,7 @@ requirePattern(
 );
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3 internal reviewer captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
+export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3.1 internal reviewer captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
 const isMain =

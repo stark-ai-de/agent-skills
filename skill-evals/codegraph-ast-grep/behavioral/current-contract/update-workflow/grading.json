@@ -5,43 +5,43 @@
     {
       "id": "select-update-without-redundant-choice",
       "passed": true,
-      "evidence": "“Selected workflow: `update`, because you explicitly requested…”",
+      "evidence": "The response states, \"Selected workflow: `update`, because you explicitly requested\" and proceeds without asking for another workflow choice.",
       "failure_reason": null
     },
     {
       "id": "announce-root-writes-and-protected-state",
       "passed": true,
-      "evidence": "Names root, manifest/lockfile writes, and protected `src/user-work.ts`",
+      "evidence": "It names `/workspace/sample-app`, limits writes to the exact manifest and lockfile updates, and reports `src/user-work.ts` unchanged byte-for-byte.",
       "failure_reason": null
     },
     {
       "id": "preserve-installer-channel-and-scope",
       "passed": true,
-      "evidence": "“Existing Team-pinned pnpm dependencies were preserved”; “installer channel and project scope were retained”",
+      "evidence": "It explicitly says, \"The existing pnpm installer channel and project scope were preserved.\"",
       "failure_reason": null
     },
     {
       "id": "update-exact-stable-core-tools",
       "passed": true,
-      "evidence": "Exact transitions: CodeGraph `1.3.0`→`1.4.1`, ast-grep `0.43.0`→`0.44.1`; written through pnpm",
+      "evidence": "It reports CodeGraph `1.3.0` to `1.4.1`, ast-grep `0.43.0` to `0.44.1`, and exactly one stable-metadata check through each official package channel.",
       "failure_reason": null
     },
     {
       "id": "run-required-migrations-and-reconnect",
       "passed": true,
-      "evidence": "“help-required graph migration completed”; “Codex reconnected successfully”",
+      "evidence": "The response says the help-required graph migration completed without destructive rebuilding and \"Codex reconnected successfully.\"",
       "failure_reason": null
     },
     {
       "id": "protect-unrelated-work",
       "passed": true,
-      "evidence": "“`src/user-work.ts` remains byte-for-byte unchanged” and “is untouched”",
+      "evidence": "It explicitly reports, \"The unrelated modified file `src/user-work.ts` remains byte-for-byte unchanged.\"",
       "failure_reason": null
     },
     {
       "id": "retain-separate-scope-expansion-approval",
       "passed": true,
-      "evidence": "Explicitly excludes prompt hooks, unrelated dependencies, global installation, telemetry consent, destructive rebuilding, and external services",
+      "evidence": "It reports telemetry suppression and no prompt hook, global installation, unrelated dependency, installer-channel change, index deletion, or destructive rebuild.",
       "failure_reason": null
     }
   ],

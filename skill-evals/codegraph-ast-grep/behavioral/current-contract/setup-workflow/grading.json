@@ -5,43 +5,43 @@
     {
       "id": "select-setup-without-redundant-choice",
       "passed": true,
-      "evidence": "“Selected workflow: `setup`, because you explicitly requested…”",
+      "evidence": "The response states, \"Selected workflow: `setup`, because you explicitly requested\" and proceeds directly to the completed setup.",
       "failure_reason": null
     },
     {
       "id": "announce-root-writes-and-protected-state",
       "passed": true,
-      "evidence": "“Root: `/workspace/sample-app`”; “Only the announced setup files changed”",
+      "evidence": "It names `/workspace/sample-app`, itemizes the limited setup writes, and says the previously clean protected state changed only through those announced artifacts.",
       "failure_reason": null
     },
     {
       "id": "preserve-team-pinned-provenance-and-telemetry-boundary",
       "passed": true,
-      "evidence": "“Team-pinned pnpm dependencies”; “project-local Codex MCP registration…with `CODEGRAPH_TELEMETRY=0`”",
+      "evidence": "It reports \"Team-pinned pnpm dependencies,\" project-local executables, `CODEGRAPH_TELEMETRY=0`, and no global installation or telemetry consent.",
       "failure_reason": null
     },
     {
       "id": "reconcile-codegraph-ast-grep-codex-and-guidance",
       "passed": true,
-      "evidence": "Reports both exact tool pins, Codex MCP registration, initialization, and “one concise, non-duplicated repository instruction”",
+      "evidence": "The response reports both pinned tools, project-local Codex MCP configuration, graph initialization and reconnect, plus \"one non-duplicated repository instruction.\"",
       "failure_reason": null
     },
     {
       "id": "report-semantic-structural-and-freshness-proof",
       "passed": true,
-      "evidence": "“graph is current”; “semantic symbol query succeeded”; “bounded ast-grep CLI query produced the expected match”",
+      "evidence": "It says, \"The graph is current for `/workspace/sample-app`; one semantic symbol query and one bounded ast-grep CLI match succeeded.\"",
       "failure_reason": null
     },
     {
       "id": "exclude-experimental-ast-grep-mcp",
       "passed": true,
-      "evidence": "“No…experimental ast-grep MCP server was introduced”",
+      "evidence": "The response explicitly says no \"experimental ast-grep MCP server was introduced.\"",
       "failure_reason": null
     },
     {
       "id": "retain-separate-scope-expansion-approval",
       "passed": true,
-      "evidence": "Scope remains project-local; explicitly excludes global installation, telemetry enablement, prompt hooks, destructive replacement, and unrelated dependencies",
+      "evidence": "It confirms no global installation, telemetry consent, prompt hook, publication action, unrelated dependency, or destructive replacement entered the authorized setup.",
       "failure_reason": null
     }
   ],

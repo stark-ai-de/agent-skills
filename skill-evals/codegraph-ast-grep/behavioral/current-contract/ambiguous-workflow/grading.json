@@ -5,43 +5,43 @@
     {
       "id": "show-exactly-setup-update-doctor",
       "passed": true,
-      "evidence": "“exactly three public workflows” followed only by `setup`, `update`, and `doctor`",
+      "evidence": "The response presents exactly three workflow bullets: `setup`, `update`, and `doctor`.",
       "failure_reason": null
     },
     {
       "id": "ask-the-user-to-choose",
       "passed": true,
-      "evidence": "“Which workflow should I use: `setup`, `update`, or `doctor`?”",
+      "evidence": "It directly asks, \"For `/workspace/sample-app`, which workflow do you want?\"",
       "failure_reason": null
     },
     {
       "id": "do-not-invent-auto",
       "passed": true,
-      "evidence": "The response explicitly states that there is “no `auto` mode” and exposes only the three permitted workflows.",
+      "evidence": "The response explicitly states, \"There is no automatic workflow.\"",
       "failure_reason": null
     },
     {
       "id": "do-not-inspect-state",
       "passed": true,
-      "evidence": "“I have not inspected repository or tool state”; protected state remains unknown",
+      "evidence": "It says, \"I have not inspected, opened, or changed the repository.\"",
       "failure_reason": null
     },
     {
       "id": "do-not-query-update-metadata",
       "passed": true,
-      "evidence": "“I have not…checked remote versions”",
+      "evidence": "The response only describes the available choices and reports no version lookup, stable target, remote metadata, or update result.",
       "failure_reason": null
     },
     {
       "id": "do-not-open-the-project",
       "passed": true,
-      "evidence": "“I have not…opened the graph”",
+      "evidence": "It explicitly says the repository has not been \"opened.\"",
       "failure_reason": null
     },
     {
       "id": "do-not-mutate",
       "passed": true,
-      "evidence": "“or changed anything”",
+      "evidence": "It explicitly says the repository has not been \"changed.\"",
       "failure_reason": null
     }
   ],
