@@ -100,9 +100,11 @@ jobs:
         id: before-gate
         run: |
           set -euo pipefail
-          node scripts/fingerprint-smoke-candidate.mjs --json > before-gate-fingerprint.json
-          digest=$(jq -er '.digest' before-gate-fingerprint.json)
-          file_count=$(jq -er '.fileCount' before-gate-fingerprint.json)
+          fingerprint_file=$(mktemp)
+          trap 'rm -f "$fingerprint_file"' EXIT
+          node scripts/fingerprint-smoke-candidate.mjs --json > "$fingerprint_file"
+          digest=$(jq -er '.digest' "$fingerprint_file")
+          file_count=$(jq -er '.fileCount' "$fingerprint_file")
           echo "candidate_fingerprint=sha256:$digest" >> "$GITHUB_OUTPUT"
           echo "candidate_file_count=$file_count" >> "$GITHUB_OUTPUT"
 
@@ -141,9 +143,11 @@ jobs:
         id: after-gate
         run: |
           set -euo pipefail
-          node scripts/fingerprint-smoke-candidate.mjs --json > after-gate-fingerprint.json
-          digest=$(jq -er '.digest' after-gate-fingerprint.json)
-          file_count=$(jq -er '.fileCount' after-gate-fingerprint.json)
+          fingerprint_file=$(mktemp)
+          trap 'rm -f "$fingerprint_file"' EXIT
+          node scripts/fingerprint-smoke-candidate.mjs --json > "$fingerprint_file"
+          digest=$(jq -er '.digest' "$fingerprint_file")
+          file_count=$(jq -er '.fileCount' "$fingerprint_file")
           fingerprint="sha256:$digest"
           test "$fingerprint" = "${{ steps.before-gate.outputs.candidate_fingerprint }}"
           test "$fingerprint" = "${{ steps.smoke-copy.outputs.candidate_fingerprint }}"
