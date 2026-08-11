@@ -30,7 +30,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Add a focused home page that makes the skill catalog the first screen.
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
 - Add static favicons, app icons, manifest metadata, SEO metadata, Open Graph metadata, and Twitter card metadata.
-- Add a GitHub Pages workflow that builds the static site and deploys only from `main`.
+- Add a GitHub Pages workflow that deploys the static site only from `main`; the required `Validate` workflow owns pull-request site-build proof.
 - Add validation so pull requests catch site build failures before merge.
 - Update existing repo-facing docs that become stale because of the new Pages surface.
 
@@ -107,8 +107,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN a user views incubator pages, THE SYSTEM SHALL clearly label them as candidate skills outside the promoted public catalog.
 - WHEN the site is deployed under GitHub Pages, THE SYSTEM SHALL load routes and assets correctly under `/agent-skills/`.
 - WHEN metadata is generated, THE SYSTEM SHALL include title, description, canonical URL, Open Graph image, Twitter card metadata, manifest, theme color, favicon, SVG icon, and apple icon.
-- WHEN the Pages workflow runs on `main`, THE SYSTEM SHALL build and deploy the static artifact with GitHub Pages Actions.
-- WHEN the Pages workflow runs on pull requests, THE SYSTEM SHALL build the site but not deploy it.
+- WHEN the required `Validate` workflow runs on pull requests, THE SYSTEM SHALL build the site without deploying it.
+- WHEN the Pages workflow runs for a relevant `main` push or an explicit manual dispatch from `main`, THE SYSTEM SHALL build and deploy the static artifact with GitHub Pages Actions.
 
 ### Non-functional requirements
 
@@ -208,8 +208,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
    - Manrope display type and Inter body type when asset licensing permits reuse
 7. Add metadata, manifest, favicons, canonical URLs, Open Graph, Twitter cards, robots, and sitemap behavior.
 8. Add GitHub Pages workflow:
-   - build on pull requests without deploy
-   - deploy only from `main`
+   - keep pull-request site-build proof in the required `Validate` workflow
+   - deploy only for relevant `main` pushes or explicit manual dispatches from `main`
    - use `actions/configure-pages`, `actions/upload-pages-artifact`, and `actions/deploy-pages`
 9. Add site build validation to the existing PR validation path.
 10. Update README and validation docs with the site URL and commands.
@@ -343,7 +343,7 @@ npm run smoke:install
 - [ ] Public and incubator skill pages are generated from current `SKILL.md` files.
 - [ ] `skillopt-setup` is generated only as an incubator candidate and links to its eval proof without changing the skill or eval source files.
 - [ ] Brand assets, favicons, manifest, SEO metadata, and social metadata are present.
-- [ ] GitHub Pages workflow builds on PRs and deploys only from `main`.
+- [ ] The required Validate workflow builds the site on PRs; the GitHub Pages workflow deploys only relevant `main` pushes and explicit manual dispatches.
 - [ ] README and validation docs reflect the new site and commands.
 - [ ] Automated validation commands pass.
 - [ ] Manual desktop and mobile checks pass.

@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -19,11 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: pnpm/setup@v2
         with:
-          node-version: 22
-
-      - run: corepack enable
+          runtime: node@22
+          cache: true
+          install: false
 
       - run: pnpm install --frozen-lockfile
 
