@@ -29,7 +29,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       release_sha: ${{ steps.version.outputs.release_sha }}
       validate_run_id: ${{ steps.validate-receipt.outputs.run_id }}
-      validate_run_attempt: ${{ steps.validate-receipt.outputs.run_attempt }}
+      validate_job_attempt: ${{ steps.validate-receipt.outputs.validate_job_attempt }}
       pages_artifact_name: ${{ steps.validate-receipt.outputs.pages_artifact_name }}
       validation_artifact_name: ${{ steps.validate-receipt.outputs.validation_artifact_name }}
 
@@ -78,9 +78,7 @@ jobs:
 
           test -n "$run_json"
           run_id=$(jq -er '.databaseId | tostring' <<< "$run_json")
-          run_attempt=$(jq -er '.attempt | tostring' <<< "$run_json")
           test "$run_id" -gt 0
-          test "$run_attempt" -gt 0
 
           run_metadata=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id")
           test "$(jq -er '.status' <<< "$run_metadata")" = "completed"
@@ -88,11 +86,17 @@ jobs:
           test "$(jq -er '.event' <<< "$run_metadata")" = "push"
           test "$(jq -er '.head_branch' <<< "$run_metadata")" = "main"
           test "$(jq -er '.head_sha' <<< "$run_metadata")" = "$RELEASE_SHA"
-          test "$(jq -er '.run_attempt | tostring' <<< "$run_metadata")" = "$run_attempt"
           test "$(jq -er '.path' <<< "$run_metadata")" = ".github/workflows/validate.yml"
 
-          pages_artifact_name="github-pages-${run_id}-${run_attempt}"
-          validation_artifact_name="validation-receipt-${run_id}-${run_attempt}"
+          validation_job_json=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?filter=all" --paginate --jq '.jobs[]' | jq -s 'map(select(.name == "validate" and .status == "completed" and .conclusion == "success" and (.run_attempt | numbers))) | sort_by(.run_attempt, .completed_at) | last // empty')
+          test -n "$validation_job_json"
+          validation_job_attempt=$(jq -er '.run_attempt | tostring' <<< "$validation_job_json")
+          validation_job_id=$(jq -er '.id | tostring' <<< "$validation_job_json")
+          test "$validation_job_attempt" -gt 0
+          test "$validation_job_id" -gt 0
+
+          pages_artifact_name="github-pages-${run_id}-${validation_job_attempt}"
+          validation_artifact_name="validation-receipt-${run_id}-${validation_job_attempt}"
 
           artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts" --paginate --jq '.artifacts[]' || true)
           validation_metadata=$(printf '%s\n' "$artifacts" | jq -s --arg name "$validation_artifact_name" '[.[] | select(.name == $name and .expired == false)]')
@@ -104,12 +108,12 @@ jobs:
 
           {
             echo "run_id=$run_id"
-            echo "run_attempt=$run_attempt"
+            echo "validate_job_attempt=$validation_job_attempt"
             echo "pages_artifact_name=$pages_artifact_name"
             echo "validation_artifact_name=$validation_artifact_name"
             echo "validation_artifact_id=$validation_artifact_id"
           } >> "$GITHUB_OUTPUT"
-          echo "Reusing successful main-push Validate run $run_id attempt $run_attempt for $RELEASE_SHA."
+          echo "Reusing successful main-push Validate run $run_id validation job $validation_job_id attempt $validation_job_attempt for $RELEASE_SHA."
 
       - name: Download exact validation receipt artifact
         uses: actions/download-artifact@v4
@@ -137,7 +141,7 @@ jobs:
           RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
           VERSION: ${{ steps.version.outputs.version }}
           VALIDATE_RUN_ID: ${{ steps.validate-receipt.outputs.run_id }}
-          VALIDATE_RUN_ATTEMPT: ${{ steps.validate-receipt.outputs.run_attempt }}
+          VALIDATE_JOB_ATTEMPT: ${{ steps.validate-receipt.outputs.validate_job_attempt }}
           PAGES_ARTIFACT_NAME: ${{ steps.validate-receipt.outputs.pages_artifact_name }}
           VALIDATION_ARTIFACT_NAME: ${{ steps.validate-receipt.outputs.validation_artifact_name }}
         run: |
@@ -148,7 +152,8 @@ jobs:
           test "$(jq -er '.workflow' "$receipt")" = "Validate"
           test "$(jq -er '.workflow_path' "$receipt")" = ".github/workflows/validate.yml"
           test "$(jq -er '.run_id' "$receipt")" = "$VALIDATE_RUN_ID"
-          test "$(jq -er '.run_attempt' "$receipt")" = "$VALIDATE_RUN_ATTEMPT"
+          test "$(jq -er '.run_attempt' "$receipt")" = "$VALIDATE_JOB_ATTEMPT"
+          test "$(jq -er '.validation_job_attempt' "$receipt")" = "$VALIDATE_JOB_ATTEMPT"
           test "$(jq -er '.event' "$receipt")" = "push"
           test "$(jq -er '.branch' "$receipt")" = "main"
           test "$(jq -er '.sha' "$receipt")" = "$RELEASE_SHA"
@@ -170,9 +175,9 @@ jobs:
           test "$skills_smoke_force_tty" = "0" || test "$skills_smoke_force_tty" = "1"
           [[ "$site_digest" =~ ^[a-f0-9]{64}$ ]]
           test "$pages_artifact_name" = "$PAGES_ARTIFACT_NAME"
-          test "$pages_artifact_name" = "github-pages-${VALIDATE_RUN_ID}-${VALIDATE_RUN_ATTEMPT}"
+          test "$pages_artifact_name" = "github-pages-${VALIDATE_RUN_ID}-${VALIDATE_JOB_ATTEMPT}"
           test "$validation_artifact_name" = "$VALIDATION_ARTIFACT_NAME"
-          test "$validation_artifact_name" = "validation-receipt-${VALIDATE_RUN_ID}-${VALIDATE_RUN_ATTEMPT}"
+          test "$validation_artifact_name" = "validation-receipt-${VALIDATE_RUN_ID}-${VALIDATE_JOB_ATTEMPT}"
           test "$pages_artifact_id" -gt 0
 
           pages_metadata=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$pages_artifact_id")
@@ -181,7 +186,26 @@ jobs:
           test "$(jq -er '.workflow_run.id | tostring' <<< "$pages_metadata")" = "$VALIDATE_RUN_ID"
           test "$(jq -er '.workflow_run.head_sha' <<< "$pages_metadata")" = "$RELEASE_SHA"
           test "$(jq -er '.workflow_run.head_branch' <<< "$pages_metadata")" = "main"
-          test -s "${RUNNER_TEMP}/pages-artifact/artifact.tar"
+          pages_archive="${RUNNER_TEMP}/pages-artifact/artifact.tar"
+          test -s "$pages_archive"
+
+          while IFS= read -r entry; do
+            case "$entry" in
+              /*|..|../*|*/../*)
+                echo "Unsafe Pages artifact entry: $entry" >&2
+                exit 1
+                ;;
+            esac
+          done < <(tar -tf "$pages_archive")
+          extracted_pages=$(mktemp -d)
+          trap 'rm -rf "$extracted_pages"' EXIT
+          tar --extract --file "$pages_archive" --directory "$extracted_pages" --no-same-owner --no-same-permissions
+          if find "$extracted_pages" \( -type l -o -type b -o -type c -o -type p \) -print -quit | grep -q .; then
+            echo "Pages artifact contains a non-regular entry." >&2
+            exit 1
+          fi
+          artifact_site_digest=$(cd "$extracted_pages" && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          test "$artifact_site_digest" = "$site_digest"
 
           current_fingerprint=$(node scripts/fingerprint-smoke-candidate.mjs --json)
           test "sha256:$(jq -er '.digest' <<< "$current_fingerprint")" = "$candidate_fingerprint"
@@ -189,7 +213,7 @@ jobs:
 
           main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
           test "$main_sha" = "$RELEASE_SHA"
-          echo "Validated receipt and Pages artifact $pages_artifact_id for run $VALIDATE_RUN_ID attempt $VALIDATE_RUN_ATTEMPT."
+          echo "Validated receipt and Pages artifact $pages_artifact_id for run $VALIDATE_RUN_ID validation job attempt $VALIDATE_JOB_ATTEMPT."
 
       - run: node scripts/validate-release.mjs
 
@@ -197,7 +221,7 @@ jobs:
 
       - name: Print release readiness
         run: |
-          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using validated main-push run ${{ steps.validate-receipt.outputs.run_id }} attempt ${{ steps.validate-receipt.outputs.run_attempt }}."
+          echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using validated main-push run ${{ steps.validate-receipt.outputs.run_id }} validation job attempt ${{ steps.validate-receipt.outputs.validate_job_attempt }}."
           echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
 
   publish:
@@ -206,6 +230,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
 
     steps:
       - uses: actions/checkout@v6
@@ -216,21 +241,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-
-      - name: Verify validated release identity
-        env:
-          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
-          VERSION: ${{ needs.release-readiness.outputs.version }}
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
-          test "$(node -p "require('./package.json').version")" = "$VERSION"
-
-          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
-          if [ "$main_sha" != "$RELEASE_SHA" ]; then
-            echo "main advanced after release readiness; rerun the workflow."
-            exit 1
-          fi
 
       - name: Verify tag and release do not exist
         env:
@@ -250,8 +260,117 @@ jobs:
             exit 1
           fi
 
-      - name: Build release notes
-        run: node scripts/print-release-notes.mjs > release-notes.md
+      - name: Download exact proof for publication boundary
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.release-readiness.outputs.validation_artifact_name }}
+          path: ${{ runner.temp }}/publication-validation-receipt
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+
+      - name: Download exact Pages artifact for publication boundary
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.release-readiness.outputs.pages_artifact_name }}
+          path: ${{ runner.temp }}/publication-pages-artifact
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+
+      - name: Revalidate proof at publication boundary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+          VALIDATE_RUN_ID: ${{ needs.release-readiness.outputs.validate_run_id }}
+          VALIDATE_JOB_ATTEMPT: ${{ needs.release-readiness.outputs.validate_job_attempt }}
+          PAGES_ARTIFACT_NAME: ${{ needs.release-readiness.outputs.pages_artifact_name }}
+          VALIDATION_ARTIFACT_NAME: ${{ needs.release-readiness.outputs.validation_artifact_name }}
+        run: |
+          set -euo pipefail
+
+          receipt="${RUNNER_TEMP}/publication-validation-receipt/validation-receipt.json"
+          test -f "$receipt"
+          test "$(jq -er '.workflow' "$receipt")" = "Validate"
+          test "$(jq -er '.workflow_path' "$receipt")" = ".github/workflows/validate.yml"
+          test "$(jq -er '.run_id' "$receipt")" = "$VALIDATE_RUN_ID"
+          test "$(jq -er '.run_attempt' "$receipt")" = "$VALIDATE_JOB_ATTEMPT"
+          test "$(jq -er '.validation_job_attempt' "$receipt")" = "$VALIDATE_JOB_ATTEMPT"
+          test "$(jq -er '.event' "$receipt")" = "push"
+          test "$(jq -er '.branch' "$receipt")" = "main"
+          test "$(jq -er '.sha' "$receipt")" = "$RELEASE_SHA"
+          test "$(jq -er '.version' "$receipt")" = "$VERSION"
+
+          candidate_fingerprint=$(jq -er '.candidate_fingerprint' "$receipt")
+          candidate_file_count=$(jq -er '.candidate_file_count' "$receipt")
+          skills_cli_version=$(jq -er '.skills_cli_version' "$receipt")
+          skills_smoke_cli=$(jq -er '.skills_smoke_cli' "$receipt")
+          skills_smoke_force_tty=$(jq -er '.skills_smoke_force_tty' "$receipt")
+          site_digest=$(jq -er '.site_digest' "$receipt")
+          pages_artifact_name=$(jq -er '.pages_artifact_name' "$receipt")
+          pages_artifact_id=$(jq -er '.pages_artifact_id | tostring' "$receipt")
+          validation_artifact_name=$(jq -er '.validation_artifact_name' "$receipt")
+
+          [[ "$candidate_fingerprint" =~ ^sha256:[a-f0-9]{64}$ ]]
+          test "$candidate_file_count" -gt 0
+          [[ "$skills_cli_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$skills_smoke_cli" = "unset" || test "$skills_smoke_cli" = "configured"
+          test "$skills_smoke_force_tty" = "0" || test "$skills_smoke_force_tty" = "1"
+          [[ "$site_digest" =~ ^[a-f0-9]{64}$ ]]
+          test "$pages_artifact_name" = "$PAGES_ARTIFACT_NAME"
+          test "$pages_artifact_name" = "github-pages-${VALIDATE_RUN_ID}-${VALIDATE_JOB_ATTEMPT}"
+          test "$validation_artifact_name" = "$VALIDATION_ARTIFACT_NAME"
+          test "$validation_artifact_name" = "validation-receipt-${VALIDATE_RUN_ID}-${VALIDATE_JOB_ATTEMPT}"
+          test "$pages_artifact_id" -gt 0
+
+          artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATE_RUN_ID/artifacts" --paginate --jq '.artifacts[]' || true)
+          validation_metadata=$(printf '%s\n' "$artifacts" | jq -s --arg name "$VALIDATION_ARTIFACT_NAME" '[.[] | select(.name == $name and .expired == false)]')
+          test "$(jq -er 'length' <<< "$validation_metadata")" = "1"
+          test "$(jq -er '.[0].workflow_run.id | tostring' <<< "$validation_metadata")" = "$VALIDATE_RUN_ID"
+          test "$(jq -er '.[0].workflow_run.head_sha' <<< "$validation_metadata")" = "$RELEASE_SHA"
+          test "$(jq -er '.[0].workflow_run.head_branch' <<< "$validation_metadata")" = "main"
+
+          pages_metadata=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$pages_artifact_id")
+          test "$(jq -er '.name' <<< "$pages_metadata")" = "$PAGES_ARTIFACT_NAME"
+          test "$(jq -er '.expired' <<< "$pages_metadata")" = "false"
+          test "$(jq -er '.workflow_run.id | tostring' <<< "$pages_metadata")" = "$VALIDATE_RUN_ID"
+          test "$(jq -er '.workflow_run.head_sha' <<< "$pages_metadata")" = "$RELEASE_SHA"
+          test "$(jq -er '.workflow_run.head_branch' <<< "$pages_metadata")" = "main"
+
+          pages_archive="${RUNNER_TEMP}/publication-pages-artifact/artifact.tar"
+          test -s "$pages_archive"
+          while IFS= read -r entry; do
+            case "$entry" in
+              /*|..|../*|*/../*)
+                echo "Unsafe Pages artifact entry: $entry" >&2
+                exit 1
+                ;;
+            esac
+          done < <(tar -tf "$pages_archive")
+          extracted_pages=$(mktemp -d)
+          trap 'rm -rf "$extracted_pages"' EXIT
+          tar --extract --file "$pages_archive" --directory "$extracted_pages" --no-same-owner --no-same-permissions
+          if find "$extracted_pages" -type l -o -type b -o -type c -o -type p | grep -q .; then
+            echo "Pages artifact contains a non-regular entry." >&2
+            exit 1
+          fi
+          artifact_site_digest=$(cd "$extracted_pages" && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          test "$artifact_site_digest" = "$site_digest"
+
+          current_fingerprint=$(node scripts/fingerprint-smoke-candidate.mjs --json)
+          test "sha256:$(jq -er '.digest' <<< "$current_fingerprint")" = "$candidate_fingerprint"
+          test "$(jq -er '.fileCount' <<< "$current_fingerprint")" = "$candidate_file_count"
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(node -p "require('./package.json').version")" = "$VERSION"
+
+          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$main_sha" != "$RELEASE_SHA" ]; then
+            echo "main advanced before publication; rerun the workflow."
+            exit 1
+          fi
 
       - name: Publish GitHub Release
         env:
@@ -261,6 +380,10 @@ jobs:
         run: |
           set -euo pipefail
           tag="v$VERSION"
+
+          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          test "$main_sha" = "$RELEASE_SHA"
+          node scripts/print-release-notes.mjs > release-notes.md
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -114,8 +114,9 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN a `push` to `main` succeeds in `Validate`, THE SYSTEM SHALL deploy the exact static artifact produced after its successful validation.
 - WHEN `Validate` is explicitly dispatched from `main` and succeeds, THE SYSTEM SHALL deploy the exact static artifact produced after its successful validation.
 - WHEN a pull request or a manual dispatch from a non-`main` branch runs, THE SYSTEM SHALL validate without creating a Pages artifact or deployment.
-- WHEN a trusted main run produces a receipt, THE RECEIPT SHALL bind the candidate fingerprint and file count before the gates, from the smoke copy, and after the gates; CLI version; normalized smoke overrides; workflow/run/attempt identity; event; branch; SHA; package version; site digest; and exact artifact names and IDs.
-- WHEN a release is prepared, THE SYSTEM SHALL resolve the exact successful main-push Validate run and attempt for the checked-out SHA, verify REST artifact metadata, download by explicit run ID and attempt-scoped name, and reject missing, expired, malformed, or mismatched proof without rerunning the aggregate suite.
+- WHEN a trusted main run produces a receipt, THE RECEIPT SHALL bind the candidate fingerprint and file count before the gates, from the smoke copy, and after the gates; CLI version; normalized smoke overrides; workflow/run identity; artifact-producing validation-job attempt; event; branch; SHA; package version; site digest sealed before later mutable checks; and exact artifact names and IDs.
+- WHEN a release is prepared, THE SYSTEM SHALL resolve the exact successful main-push Validate run for the checked-out SHA, discover the successful artifact-producing Validate job attempt, verify REST artifact metadata, download by explicit run ID and attempt-scoped name, recompute the Pages digest from the downloaded artifact, and reject missing, expired, malformed, or mismatched proof without rerunning the aggregate suite.
+- WHEN production Pages deployments are queued from different triggers, THE SYSTEM SHALL serialize them in one deployment concurrency group and verify immediately before deployment that `refs/heads/main` still equals the run SHA, failing stale runs closed.
 
 ### Non-functional requirements
 
@@ -229,10 +230,12 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 8. Make `Validate` the single trusted Pages artifact producer:
    - compute one `trusted_main` output from a `push` to `main` or manual dispatch from `main`
    - reuse that output for the site digest, Pages configuration, artifact upload, receipt creation, and deployment conditions
-   - upload `github-pages-<run-id>-<run-attempt>` and `validation-receipt-<run-id>-<run-attempt>` only after all validation gates pass
+   - seal and hash `site/dist` immediately after the build, run pinned external CLI checks only in isolated temporary copies, and assert the sealed digest before upload
+   - upload `github-pages-<run-id>-<validation-job-attempt>` and `validation-receipt-<run-id>-<validation-job-attempt>` only after all validation gates pass
    - deploy the exact attempt-scoped Pages artifact from a dependent job
+   - serialize production deployments and reject a deployment whose `refs/heads/main` no longer equals its run SHA
    - preserve validation-only behavior for pull requests and manual non-main dispatches
-9. Make `Publish Release` resolve the exact successful main-push Validate run and attempt, derive both artifact names, verify REST metadata and receipt symmetry, recompute the candidate fingerprint, confirm `main` has not advanced, and skip the aggregate rerun.
+9. Make `Publish Release` resolve the exact successful main-push Validate run and successful artifact-producing job attempt, derive both artifact names, verify REST metadata and receipt symmetry, recompute the candidate and Pages digests, repeat those checks at the publication boundary, confirm `main` has not advanced, and skip the aggregate rerun.
 10. Add site build validation to the existing PR validation path.
 11. Update README, validation, publishing, and ADR index/lock docs; remove stale Pages badge and workflow references.
 12. Run automated validation and, after merge, collect hosted rollout evidence separately from local proof.
@@ -320,7 +323,7 @@ node scripts/validate-adrs.mjs
 pnpm format:check
 pnpm lint
 pnpm --filter ./site build
-npx skills@latest add ./skills --list
+npx --yes skills@1.5.22 add ./skills --list
 npm run smoke:fingerprint
 npm run smoke:install
 git diff --check

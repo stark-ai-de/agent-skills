@@ -76,7 +76,7 @@ From the repository root:
 ```bash
 npm run validate
 npm run list
-npx skills@latest add ./skills --list
+npx --yes skills@1.5.22 add ./skills --list
 npm run smoke:fingerprint
 npm run smoke:install
 ```
@@ -130,7 +130,7 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 - Category README files exist and match `SKILL.md` frontmatter.
 - Clean-copy smoke install passes without listing project-local helper skills.
 - `npm run validate` passes.
-- `npx skills@latest add ./skills --list` works from the local checkout.
+- `npx --yes skills@1.5.22 add ./skills --list` works from the local checkout.
 - At least one promoted skill can be locally installed after maintainer approval.
 - GitHub Actions validation and publish release workflows are configured.
 
@@ -168,7 +168,7 @@ node scripts/validate-release.mjs --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, resolves the latest successful hosted `Validate` main-push run and run attempt for that SHA, derives the attempt-scoped Pages and receipt artifact names, verifies REST metadata and the receipt contract, and reruns only the focused candidate identity and release-specific checks. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite. A missing, expired, malformed, tampered, wrong-event, wrong-branch, wrong-SHA, or advanced-main proof is rejected.
+The workflow reads the release version from `package.json`, records the exact `main` commit, resolves the latest successful hosted `Validate` main-push run for that SHA, discovers the successful artifact-producing `validate` job attempt through the Actions API, derives the attempt-scoped Pages and receipt artifact names, verifies REST metadata and the receipt contract, recomputes the Pages digest from the downloaded tar, and reruns only the focused candidate identity and release-specific checks. With `dry_run: false`, the publish job downloads the same proof again, repeats the receipt, artifact, candidate, Pages-digest, tag, and final `main` checks immediately before publication, checks out and tags the exact commit, and fails closed if `main` advanced. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite. A missing, expired, malformed, tampered, wrong-event, wrong-branch, wrong-SHA, wrong-attempt, digest-mismatched, or advanced-main proof is rejected.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
@@ -215,7 +215,7 @@ For Claude Code release artifacts, verify the source archive includes `skills/cl
 2. Run `npm run smoke:fingerprint` and record the initial candidate digest and file count before any broader local gate.
 3. Run `npm run validate`.
 4. Run `pnpm format:check` and `pnpm lint`.
-5. Run `npx skills@latest add ./skills --list` locally.
+5. Run `npx --yes skills@1.5.22 add ./skills --list` locally when reproducing the CI discovery check.
 6. Run `npm run smoke:install` and require its emitted digest and file count to match the initial fingerprint.
 7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest and file count to remain unchanged.
 8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.

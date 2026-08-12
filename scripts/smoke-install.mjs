@@ -10,6 +10,7 @@ import {
 } from "./validation/smoke-install-contract.mjs";
 
 const root = process.cwd();
+const defaultSkillsCliPackage = "skills@1.5.22";
 
 function validatedSkillsCliOverride() {
   const rawValue = process.env.SKILLS_SMOKE_CLI;
@@ -67,7 +68,7 @@ const smokeEnvironment = {
   DO_NOT_TRACK: "1",
 };
 const skillsCommand = configuredSkillsCli || "npx";
-const skillsPrefixArguments = configuredSkillsCli ? [] : ["--yes", "skills@latest"];
+const skillsPrefixArguments = configuredSkillsCli ? [] : ["--yes", defaultSkillsCliPackage];
 const installCases = [
   {
     agent: "codex",

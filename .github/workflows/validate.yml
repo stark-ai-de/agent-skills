@@ -19,20 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       trusted_main: ${{ steps.context.outputs.trusted_main }}
-      pages_artifact_name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
-      validation_artifact_name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
 
     steps:
       - name: Resolve trusted main context
         id: context
         run: |
           echo "trusted_main=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve attempt-scoped artifact names
-        id: artifact-names
-        run: |
-          echo "pages_artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-          echo "validation_artifact_name=validation-receipt-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
 
   validate:
     needs: context
@@ -79,7 +71,7 @@ jobs:
           if [[ "$cli_state" == "configured" ]]; then
             cli_version="$("$SKILLS_SMOKE_CLI" --version 2>/dev/null)"
           else
-            cli_version=$(npx --yes skills@latest --version 2>/dev/null)
+            cli_version=$(npx --yes skills@1.5.22 --version 2>/dev/null)
           fi
           cli_version=$(printf '%s\n' "$cli_version" | tr -d '\r' | sed -nE 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | tail -n 1)
           test -n "$cli_version"
@@ -93,8 +85,8 @@ jobs:
       - name: Resolve attempt-scoped artifact names
         id: artifact-names
         run: |
-          echo "pages_artifact_name=${{ needs.context.outputs.pages_artifact_name }}" >> "$GITHUB_OUTPUT"
-          echo "validation_artifact_name=${{ needs.context.outputs.validation_artifact_name }}" >> "$GITHUB_OUTPUT"
+          echo "pages_artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          echo "validation_artifact_name=validation-receipt-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
 
       - name: Fingerprint candidate before gates
         id: before-gate
@@ -110,6 +102,14 @@ jobs:
 
       - run: npm run validate
 
+      - name: Seal validated site output
+        id: site-seal
+        run: |
+          set -euo pipefail
+          test -n "$(find site/dist -type f -print -quit)"
+          digest=$(cd site/dist && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          echo "site_digest=$digest" >> "$GITHUB_OUTPUT"
+
       - run: pnpm format:check
 
       - run: pnpm lint
@@ -123,7 +123,16 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
         run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
 
-      - run: npx skills@latest add ./skills --list
+      - name: Discover public skills in an isolated copy
+        run: |
+          set -euo pipefail
+          isolated_root=$(mktemp -d)
+          trap 'rm -rf "$isolated_root"' EXIT
+          cp -a -- skills "$isolated_root/skills"
+          (
+            cd "$isolated_root"
+            npx --yes skills@1.5.22 add ./skills --list
+          )
 
       - name: Smoke install and capture candidate fingerprint
         id: smoke-copy
@@ -156,14 +165,14 @@ jobs:
           echo "candidate_fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
           echo "candidate_file_count=$file_count" >> "$GITHUB_OUTPUT"
 
-      - name: Compute validated site digest
+      - name: Assert sealed site output
         id: site-digest
         if: ${{ needs.context.outputs.trusted_main == 'true' }}
-        working-directory: site/dist
         run: |
           set -euo pipefail
-          test -n "$(find . -type f -print -quit)"
-          digest=$(find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          test -n "$(find site/dist -type f -print -quit)"
+          digest=$(cd site/dist && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
+          test "$digest" = "${{ steps.site-seal.outputs.site_digest }}"
           echo "site_digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Configure Pages
@@ -198,6 +207,7 @@ jobs:
             --arg workflow_path ".github/workflows/validate.yml" \
             --arg run_id "$GITHUB_RUN_ID" \
             --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg validation_job_attempt "$GITHUB_RUN_ATTEMPT" \
             --arg event "$GITHUB_EVENT_NAME" \
             --arg branch "$GITHUB_REF_NAME" \
             --arg sha "$GITHUB_SHA" \
@@ -216,6 +226,7 @@ jobs:
               workflow_path: $workflow_path,
               run_id: $run_id,
               run_attempt: $run_attempt,
+              validation_job_attempt: $validation_job_attempt,
               event: $event,
               branch: $branch,
               sha: $sha,
@@ -244,7 +255,11 @@ jobs:
     needs: [context, validate]
     if: ${{ needs.validate.result == 'success' && needs.context.outputs.trusted_main == 'true' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages-production
+      cancel-in-progress: false
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
@@ -252,6 +267,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Verify deployment is current main
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          main_sha=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
+          if [ "$main_sha" != "$EXPECTED_SHA" ]; then
+            echo "Skipping stale Pages deployment: main is $main_sha, but this run validates $EXPECTED_SHA." >&2
+            exit 1
+          fi
+
       - name: Deploy validated Pages artifact
         id: deployment
         uses: actions/deploy-pages@v5
