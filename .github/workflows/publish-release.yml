@@ -39,14 +39,9 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - uses: pnpm/setup@v2
+      - uses: actions/setup-node@v6
         with:
-          runtime: node@22
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
-          install: false
-
-      - run: pnpm install --frozen-lockfile
+          node-version: 22
 
       - id: version
         run: |
@@ -148,7 +143,13 @@ jobs:
           set -euo pipefail
 
           receipt="${RUNNER_TEMP}/validation-receipt/validation-receipt.json"
+          report="${RUNNER_TEMP}/validation-receipt/validation-report.json"
           test -f "$receipt"
+          test -f "$report"
+          node scripts/ci/verify-validation-proof.mjs \
+            --manifest scripts/ci/validation-manifest.json \
+            --receipt "$receipt" \
+            --report "$report"
           test "$(jq -er '.workflow' "$receipt")" = "Validate"
           test "$(jq -er '.workflow_path' "$receipt")" = ".github/workflows/validate.yml"
           test "$(jq -er '.run_id' "$receipt")" = "$VALIDATE_RUN_ID"
@@ -182,7 +183,7 @@ jobs:
 
           pages_metadata=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$pages_artifact_id")
           test "$(jq -er '.name' <<< "$pages_metadata")" = "$PAGES_ARTIFACT_NAME"
-          test "$(jq -er '.expired' <<< "$pages_metadata")" = "false"
+          jq -e '.expired == false' <<< "$pages_metadata" >/dev/null
           test "$(jq -er '.workflow_run.id | tostring' <<< "$pages_metadata")" = "$VALIDATE_RUN_ID"
           test "$(jq -er '.workflow_run.head_sha' <<< "$pages_metadata")" = "$RELEASE_SHA"
           test "$(jq -er '.workflow_run.head_branch' <<< "$pages_metadata")" = "main"
@@ -215,7 +216,7 @@ jobs:
           test "$main_sha" = "$RELEASE_SHA"
           echo "Validated receipt and Pages artifact $pages_artifact_id for run $VALIDATE_RUN_ID validation job attempt $VALIDATE_JOB_ATTEMPT."
 
-      - run: node scripts/validate-release.mjs
+      - run: node scripts/validate-release-metadata.mjs
 
       - run: node scripts/print-release-notes.mjs > release-notes.md
 
@@ -293,7 +294,13 @@ jobs:
           set -euo pipefail
 
           receipt="${RUNNER_TEMP}/publication-validation-receipt/validation-receipt.json"
+          report="${RUNNER_TEMP}/publication-validation-receipt/validation-report.json"
           test -f "$receipt"
+          test -f "$report"
+          node scripts/ci/verify-validation-proof.mjs \
+            --manifest scripts/ci/validation-manifest.json \
+            --receipt "$receipt" \
+            --report "$report"
           test "$(jq -er '.workflow' "$receipt")" = "Validate"
           test "$(jq -er '.workflow_path' "$receipt")" = ".github/workflows/validate.yml"
           test "$(jq -er '.run_id' "$receipt")" = "$VALIDATE_RUN_ID"
@@ -335,7 +342,7 @@ jobs:
 
           pages_metadata=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$pages_artifact_id")
           test "$(jq -er '.name' <<< "$pages_metadata")" = "$PAGES_ARTIFACT_NAME"
-          test "$(jq -er '.expired' <<< "$pages_metadata")" = "false"
+          jq -e '.expired == false' <<< "$pages_metadata" >/dev/null
           test "$(jq -er '.workflow_run.id | tostring' <<< "$pages_metadata")" = "$VALIDATE_RUN_ID"
           test "$(jq -er '.workflow_run.head_sha' <<< "$pages_metadata")" = "$RELEASE_SHA"
           test "$(jq -er '.workflow_run.head_branch' <<< "$pages_metadata")" = "main"

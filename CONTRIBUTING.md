@@ -57,19 +57,20 @@ Follow [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples,
 
 ## Validation
 
-Select checks from changed contracts and owning boundaries as required by [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Common repository gates are:
+Select local checks from changed contracts and owning boundaries. [ADR-0044](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)) governs hosted scope and trusted proof, while [ADR-0045](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) governs the Architecture Compass fixture workers. Common repository gates are:
 
 ```bash
 npm run validate
+npm run validate:ci-contract
 npm run list
 npm run list:incubator
 npm run smoke:fingerprint
 npm run smoke:install
 ```
 
-Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it; hosted Validate remains mandatory for every pull request. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
+Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it. Hosted `Validate` remains unfiltered and mandatory with one stable required `validate` job. Pull requests execute the fail-closed union of compatible base and candidate plans; `main` pushes and every manual dispatch execute the full gate set. An affected pull-request run can publish its diagnostic report but cannot create trusted proof or Pages artifacts. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
 
-The `npx` command requires network access the first time the CLI is fetched.
+`pnpm install` provides the exact root `skills@1.5.22` executable used by hosted CI. Use `pnpm exec skills add ./skills --list` for an exact local discovery reproduction. Hosted smoke passes that executable explicitly; a direct local `npm run smoke:install` retains the same exact-version `npx` fallback unless `SKILLS_SMOKE_CLI` is configured. Public `npx skills@latest` examples still require network access when the CLI is not already cached.
 
 Optional Oxc checks:
 
@@ -91,8 +92,8 @@ pnpm lint
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
-- [ ] Checks required by ADR-0041 and the changed contracts pass; release-intent work includes the local aggregate, and hosted Validate is green.
-- [ ] `npx skills@latest add ./skills --list` works when local catalog discovery changed.
+- [ ] Checks required by ADR-0044, ADR-0045, and the changed contracts pass; release-intent work includes the local aggregate, and the stable hosted Validate job is green for the effective plan.
+- [ ] `pnpm exec skills add ./skills --list` works when local catalog discovery changed.
 - [ ] `npm run smoke:install` passes when install smoke behavior changed.
 - [ ] No private or sensitive data is included.
 

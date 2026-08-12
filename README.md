@@ -117,23 +117,26 @@ Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skill
 pnpm install
 ```
 
-Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `npm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request.
+Select local checks from changed contracts and owning boundaries. Run the local `npm run validate` aggregate for release intent or another mandatory gate. Under [ADR-0044](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)), hosted `Validate` remains unfiltered with one stable required job: pull requests use a fail-closed union of compatible base and candidate plans, while every `main` push and manual dispatch runs the full gate set. Affected runs publish diagnostics only; Pages and reusable release proof require successful full trusted-main validation.
+
+[ADR-0045](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) keeps Architecture Compass mutation fixtures process-isolated and deterministically accounted. Hosted validation defaults to one fixture worker until the approved two/three-worker benchmark establishes a faster stable setting.
 
 <details>
 <summary><strong>Common maintainer commands</strong></summary>
 
-| Command                                 | Purpose                                                  |
-| --------------------------------------- | -------------------------------------------------------- |
-| `npm run list`                          | List promoted public skills                              |
-| `npm run list:incubator`                | List incubator skills                                    |
-| `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts |
-| `npm run smoke:fingerprint`             | Fingerprint the exact clean-copy candidate set read-only |
-| `npm run smoke:install`                 | Test clean-copy discovery and exact host destinations    |
-| `npx skills@latest add ./skills --list` | Check local public skill discovery                       |
-| `pnpm --filter ./site build`            | Build the generated catalog                              |
-| `pnpm format:check`                     | Check formatting                                         |
-| `pnpm lint`                             | Lint repository scripts                                  |
-| `node scripts/validate-release.mjs`     | Validate release readiness                               |
+| Command                                | Purpose                                                  |
+| -------------------------------------- | -------------------------------------------------------- |
+| `npm run list`                         | List promoted public skills                              |
+| `npm run list:incubator`               | List incubator skills                                    |
+| `npm run validate`                     | Validate skills, ADRs, scripts, and repository contracts |
+| `npm run validate:ci-contract`         | Test affected planning, execution, and proof contracts   |
+| `npm run smoke:fingerprint`            | Fingerprint the exact clean-copy candidate set read-only |
+| `npm run smoke:install`                | Test clean-copy discovery and exact host destinations    |
+| `pnpm exec skills add ./skills --list` | Check discovery with the exact installed CLI             |
+| `pnpm --filter ./site build`           | Build the generated catalog                              |
+| `pnpm format:check`                    | Check formatting                                         |
+| `pnpm lint`                            | Lint repository scripts                                  |
+| `node scripts/validate-release.mjs`    | Validate release readiness                               |
 
 Scaffold a skill only when its destination is clear:
 

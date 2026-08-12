@@ -74,12 +74,16 @@ The `-a` option selects the installation host, not the skill's target runtime. A
 From the repository root:
 
 ```bash
+pnpm install
+npm run smoke:fingerprint
 npm run validate
 npm run list
-npx --yes skills@1.5.22 add ./skills --list
-npm run smoke:fingerprint
+pnpm exec skills add ./skills --list
 npm run smoke:install
+npm run smoke:fingerprint
 ```
+
+The root lockfile installs exact `skills@1.5.22`, and `pnpm exec skills` exercises the same executable used by hosted validation. Hosted validation passes that executable to the smoke harness. A direct local smoke invocation retains the same exact-version `npx` fallback unless `SKILLS_SMOKE_CLI` is configured explicitly.
 
 `npm run smoke:fingerprint` reads the exact candidate set without copying or changing repository state. Its deterministic SHA-256 binds each sorted repository-relative path, normalized permission mode, byte size, and content hash. Run it immediately before and after the broader gates used by a validation receipt, compare both values with the fingerprint emitted by `npm run smoke:install`, and require an exact match.
 
@@ -130,13 +134,17 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 - Category README files exist and match `SKILL.md` frontmatter.
 - Clean-copy smoke install passes without listing project-local helper skills.
 - `npm run validate` passes.
-- `npx --yes skills@1.5.22 add ./skills --list` works from the local checkout.
+- `pnpm exec skills add ./skills --list` works from the local checkout after the frozen install.
 - At least one promoted skill can be locally installed after maintainer approval.
 - GitHub Actions validation and publish release workflows are configured.
 
 ## Release Process
 
 Releases are prepared in the same pull request that changes the public catalog, then published manually from `main`.
+
+[ADR-0044](adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)) keeps the required `Validate` workflow unfiltered with one stable `validate` job. Pull requests use the fail-closed union of compatible base and candidate plans and upload diagnostic reports only; every `main` push and manual dispatch runs the full manifest. A full manual run from a non-`main` branch remains diagnostic. Only successful full validation from a trusted `main` context can create Pages or reusable release proof.
+
+[ADR-0045](adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) governs Architecture Compass fixture sharding. Hosted validation defaults to one worker pending the accepted two/three-worker benchmark, so parallel fixture timing is not yet release proof.
 
 ### Prepare In The Change PR
 
@@ -168,7 +176,7 @@ node scripts/validate-release.mjs --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, resolves the latest successful hosted `Validate` main-push run for that SHA, discovers the successful artifact-producing `validate` job attempt through the Actions API, derives the attempt-scoped Pages and receipt artifact names, verifies REST metadata and the receipt contract, recomputes the Pages digest from the downloaded tar, and reruns only the focused candidate identity and release-specific checks. With `dry_run: false`, the publish job downloads the same proof again, repeats the receipt, artifact, candidate, Pages-digest, tag, and final `main` checks immediately before publication, checks out and tags the exact commit, and fails closed if `main` advanced. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite. A missing, expired, malformed, tampered, wrong-event, wrong-branch, wrong-SHA, wrong-attempt, digest-mismatched, or advanced-main proof is rejected.
+The workflow reads the release version from `package.json`, records the exact `main` commit, resolves the latest successful hosted `Validate` main-push run for that SHA, discovers the successful artifact-producing `validate` job attempt through the Actions API, derives the attempt-scoped Pages and receipt artifact names, and verifies REST metadata plus receipt schema v2. The receipt carries the full validation report and binds full scope, plan/manifest/report digests, the exact full gate set, fixture-inventory digest, successful skills/smoke evidence, candidate and CLI identity, and Pages artifact identity. Readiness recomputes candidate and Pages digests, confirms `main` freshness, and runs dependency-free release metadata validation without a pnpm install or aggregate rerun. With `dry_run: false`, the publish job downloads the same proof again, repeats the receipt, artifact, candidate, Pages-digest, tag, and final `main` checks immediately before publication, checks out and tags the exact commit, and fails closed if `main` advanced. A non-v2, affected, incomplete, missing, expired, malformed, tampered, wrong-event, wrong-branch, wrong-SHA, wrong-attempt, digest-mismatched, or advanced-main proof is rejected.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
@@ -215,7 +223,7 @@ For Claude Code release artifacts, verify the source archive includes `skills/cl
 2. Run `npm run smoke:fingerprint` and record the initial candidate digest and file count before any broader local gate.
 3. Run `npm run validate`.
 4. Run `pnpm format:check` and `pnpm lint`.
-5. Run `npx --yes skills@1.5.22 add ./skills --list` locally when reproducing the CI discovery check.
+5. Run `pnpm exec skills add ./skills --list` locally when reproducing the exact CI discovery check.
 6. Run `npm run smoke:install` and require its emitted digest and file count to match the initial fingerprint.
 7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest and file count to remain unchanged.
 8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.

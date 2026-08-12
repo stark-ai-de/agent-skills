@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -28,6 +28,7 @@ import {
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const frozenInventoryPath = path.join(scriptDir, "test-validator-case-inventory.json");
 const root = process.env.LEGACY_LINEAGE_TEST_ROOT
   ? path.resolve(process.env.LEGACY_LINEAGE_TEST_ROOT)
   : path.resolve(scriptDir, "..", "..", "..");
@@ -385,12 +386,32 @@ async function expectSuccess(name, mutate) {
   }
 }
 
-const repositoryGuardRoot = process.env.LEGACY_LINEAGE_GUARD_ROOT
-  ? path.resolve(process.env.LEGACY_LINEAGE_GUARD_ROOT)
-  : root;
-const repositoryGuards = captureRepositoryGuards(repositoryGuardRoot);
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
 
-try {
+function sha256Json(value) {
+  return `sha256:${crypto
+    .createHash("sha256")
+    .update(`${canonicalJson(value)}\n`)
+    .digest("hex")}`;
+}
+
+function writeJsonAtomic(file, value) {
+  fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true });
+  const temporary = `${path.resolve(file)}.tmp-${process.pid}`;
+  fs.writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
+  fs.renameSync(temporary, path.resolve(file));
+}
+
+async function runSharedPreflight() {
   assertAmbientGitSteeringIgnored();
   assertCommonMarkdownParserCases(extractLegacyMaterialUnits);
   assertCommonMaterialFingerprintCases(sourceMaterialFingerprints);
@@ -501,1515 +522,1576 @@ try {
   } finally {
     fs.rmSync(baselineFixture, { recursive: true, force: true });
   }
+}
 
-  const cases = [
-    {
-      name: "scalar legacy source lock root",
-      expected: "legacy-reference-source-lock.json: top level must be a JSON object",
-      mutate(fixture) {
-        fs.writeFileSync(path.join(fixture, sourceLockRelative), "false\n", "utf8");
+async function runWorker({ workerIndex, workerCount, reportFile }) {
+  const frozenInventory = JSON.parse(fs.readFileSync(frozenInventoryPath, "utf8"));
+  const inventoryDigest = sha256Json(frozenInventory.cases);
+  const results = [];
+  let fatal = null;
+  try {
+    const cases = [
+      {
+        name: "scalar legacy source lock root",
+        expected: "legacy-reference-source-lock.json: top level must be a JSON object",
+        mutate(fixture) {
+          fs.writeFileSync(path.join(fixture, sourceLockRelative), "false\n", "utf8");
+        },
       },
-    },
-    {
-      name: "scalar legacy coverage root",
-      expected: "legacy-reference-coverage.json: top level must be a JSON object",
-      mutate(fixture) {
-        fs.writeFileSync(path.join(fixture, coverageRelative), "42\n", "utf8");
+      {
+        name: "scalar legacy coverage root",
+        expected: "legacy-reference-coverage.json: top level must be a JSON object",
+        mutate(fixture) {
+          fs.writeFileSync(path.join(fixture, coverageRelative), "42\n", "utf8");
+        },
       },
-    },
-    {
-      name: "wrong-typed legacy baseline directory",
-      expected: "baselineDirectory must be skill-evals/architecture-compass/reference-baseline/",
-      mutate(fixture) {
-        edit(path.join(fixture, sourceLockRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.baselineDirectory = 42;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+      {
+        name: "wrong-typed legacy baseline directory",
+        expected: "baselineDirectory must be skill-evals/architecture-compass/reference-baseline/",
+        mutate(fixture) {
+          edit(path.join(fixture, sourceLockRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.baselineDirectory = 42;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "wrong-typed legacy source file name",
-      expected: "name must be a string",
-      mutate(fixture) {
-        edit(path.join(fixture, sourceLockRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.files[0].name = [manifest.files[0].name];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+      {
+        name: "wrong-typed legacy source file name",
+        expected: "name must be a string",
+        mutate(fixture) {
+          edit(path.join(fixture, sourceLockRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.files[0].name = [manifest.files[0].name];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "legacy source lock with invalid UTF-8",
-      expected: "legacy-reference-source-lock.json: must be valid UTF-8",
-      mutate(fixture) {
-        fs.appendFileSync(path.join(fixture, sourceLockRelative), Buffer.from([0xff]));
+      {
+        name: "legacy source lock with invalid UTF-8",
+        expected: "legacy-reference-source-lock.json: must be valid UTF-8",
+        mutate(fixture) {
+          fs.appendFileSync(path.join(fixture, sourceLockRelative), Buffer.from([0xff]));
+        },
       },
-    },
-    {
-      name: "legacy coverage with invalid UTF-8",
-      expected: "legacy-reference-coverage.json: must be valid UTF-8",
-      mutate(fixture) {
-        fs.appendFileSync(path.join(fixture, coverageRelative), Buffer.from([0xff]));
+      {
+        name: "legacy coverage with invalid UTF-8",
+        expected: "legacy-reference-coverage.json: must be valid UTF-8",
+        mutate(fixture) {
+          fs.appendFileSync(path.join(fixture, coverageRelative), Buffer.from([0xff]));
+        },
       },
-    },
-    {
-      name: "legacy target with invalid UTF-8",
-      expected: "must be valid UTF-8",
-      mutate(fixture) {
-        const manifest = JSON.parse(fs.readFileSync(path.join(fixture, coverageRelative), "utf8"));
-        const target = manifest.units[0].targets[0];
-        fs.appendFileSync(path.join(fixture, target.path), Buffer.from([0xff]));
+      {
+        name: "legacy target with invalid UTF-8",
+        expected: "must be valid UTF-8",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, coverageRelative), "utf8"),
+          );
+          const target = manifest.units[0].targets[0];
+          fs.appendFileSync(path.join(fixture, target.path), Buffer.from([0xff]));
+        },
       },
-    },
-    {
-      name: "active Architecture Compass eval with invalid UTF-8",
-      expected: "skill-evals/architecture-compass/cases/clear-setup-intent.md: must be valid UTF-8",
-      mutate(fixture) {
-        fs.appendFileSync(
-          path.join(fixture, evalRelative, "cases", "clear-setup-intent.md"),
-          Buffer.from([0xff]),
-        );
+      {
+        name: "active Architecture Compass eval with invalid UTF-8",
+        expected:
+          "skill-evals/architecture-compass/cases/clear-setup-intent.md: must be valid UTF-8",
+        mutate(fixture) {
+          fs.appendFileSync(
+            path.join(fixture, evalRelative, "cases", "clear-setup-intent.md"),
+            Buffer.from([0xff]),
+          );
+        },
       },
-    },
-    {
-      name: "Architecture Compass decision lock with invalid UTF-8",
-      expected: "scripts/validation/architecture-compass/decision-lock.tsv: must be valid UTF-8",
-      mutate(fixture) {
-        fs.appendFileSync(path.join(fixture, lockRelative), Buffer.from([0xff]));
+      {
+        name: "Architecture Compass decision lock with invalid UTF-8",
+        expected: "scripts/validation/architecture-compass/decision-lock.tsv: must be valid UTF-8",
+        mutate(fixture) {
+          fs.appendFileSync(path.join(fixture, lockRelative), Buffer.from([0xff]));
+        },
       },
-    },
-    {
-      name: "HTML-comment-only public-reference coverage marker",
-      expected: 'target section is missing marker "coverage-hidden-comment-marker"',
-      mutate(fixture) {
-        installHiddenCoverageMarker(
-          fixture,
-          "coverage-hidden-comment-marker",
-          "<!-- coverage-hidden-comment-marker -->",
-        );
+      {
+        name: "HTML-comment-only public-reference coverage marker",
+        expected: 'target section is missing marker "coverage-hidden-comment-marker"',
+        mutate(fixture) {
+          installHiddenCoverageMarker(
+            fixture,
+            "coverage-hidden-comment-marker",
+            "<!-- coverage-hidden-comment-marker -->",
+          );
+        },
       },
-    },
-    {
-      name: "raw-HTML-block-only public-reference coverage marker",
-      expected: 'target section is missing marker "coverage-hidden-raw-html-marker"',
-      mutate(fixture) {
-        installHiddenCoverageMarker(
-          fixture,
-          "coverage-hidden-raw-html-marker",
-          '<script type="text/plain">\ncoverage-hidden-raw-html-marker\n</script>',
-        );
+      {
+        name: "raw-HTML-block-only public-reference coverage marker",
+        expected: 'target section is missing marker "coverage-hidden-raw-html-marker"',
+        mutate(fixture) {
+          installHiddenCoverageMarker(
+            fixture,
+            "coverage-hidden-raw-html-marker",
+            '<script type="text/plain">\ncoverage-hidden-raw-html-marker\n</script>',
+          );
+        },
       },
-    },
-    {
-      name: "link-definition-only public-reference coverage marker",
-      expected: 'target section is missing marker "coverage-hidden-link-marker"',
-      mutate(fixture) {
-        installHiddenCoverageMarker(
-          fixture,
-          "coverage-hidden-link-marker",
-          '[coverage-hidden-link-marker]: /coverage "coverage-hidden-link-marker"',
-        );
+      {
+        name: "link-definition-only public-reference coverage marker",
+        expected: 'target section is missing marker "coverage-hidden-link-marker"',
+        mutate(fixture) {
+          installHiddenCoverageMarker(
+            fixture,
+            "coverage-hidden-link-marker",
+            '[coverage-hidden-link-marker]: /coverage "coverage-hidden-link-marker"',
+          );
+        },
       },
-    },
-    {
-      name: "unmatched backtick cannot expose an HTML-comment coverage marker",
-      expected: 'target section is missing marker "coverage-hidden-backtick-comment-marker"',
-      mutate(fixture) {
-        installHiddenCoverageMarker(
-          fixture,
-          "coverage-hidden-backtick-comment-marker",
-          [
-            "`orphan code-span opener",
-            "<!-- coverage-hidden-backtick-comment-marker -->",
-            "`later unmatched closer",
-          ].join("\n"),
-        );
+      {
+        name: "unmatched backtick cannot expose an HTML-comment coverage marker",
+        expected: 'target section is missing marker "coverage-hidden-backtick-comment-marker"',
+        mutate(fixture) {
+          installHiddenCoverageMarker(
+            fixture,
+            "coverage-hidden-backtick-comment-marker",
+            [
+              "`orphan code-span opener",
+              "<!-- coverage-hidden-backtick-comment-marker -->",
+              "`later unmatched closer",
+            ].join("\n"),
+          );
+        },
       },
-    },
-    {
-      name: "unmatched backtick cannot expose a raw-HTML coverage marker",
-      expected: 'target section is missing marker "coverage-hidden-backtick-script-marker"',
-      mutate(fixture) {
-        installHiddenCoverageMarker(
-          fixture,
-          "coverage-hidden-backtick-script-marker",
-          [
-            "`orphan code-span opener",
-            "<script>",
+      {
+        name: "unmatched backtick cannot expose a raw-HTML coverage marker",
+        expected: 'target section is missing marker "coverage-hidden-backtick-script-marker"',
+        mutate(fixture) {
+          installHiddenCoverageMarker(
+            fixture,
             "coverage-hidden-backtick-script-marker",
-            "</script>",
-            "`later unmatched closer",
-          ].join("\n"),
-        );
+            [
+              "`orphan code-span opener",
+              "<script>",
+              "coverage-hidden-backtick-script-marker",
+              "</script>",
+              "`later unmatched closer",
+            ].join("\n"),
+          );
+        },
       },
-    },
-    {
-      name: "source lock mutates after its semantic parse",
-      expected: "validated semantic bytes changed after the original snapshot",
-      mutate() {},
-      run(fixture) {
-        const sourceLock = path.join(fixture, sourceLockRelative);
-        const coverage = path.join(fixture, coverageRelative);
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (!fired && file === coverage && phase === "before-open") {
-            fs.appendFileSync(sourceLock, " ", "utf8");
-            fired = true;
+      {
+        name: "source lock mutates after its semantic parse",
+        expected: "validated semantic bytes changed after the original snapshot",
+        mutate() {},
+        run(fixture) {
+          const sourceLock = path.join(fixture, sourceLockRelative);
+          const coverage = path.join(fixture, coverageRelative);
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (!fired && file === coverage && phase === "before-open") {
+              fs.appendFileSync(sourceLock, " ", "utf8");
+              fired = true;
+            }
+          });
+          if (!fired) throw new Error("source-lock post-parse mutation hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "validated target mutates before payload traversal",
+        expected: "validated semantic bytes changed after the original snapshot",
+        mutate() {},
+        run(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, coverageRelative), "utf8"),
+          );
+          let selected = null;
+          for (const target of manifest.units.flatMap((unit) => unit.targets)) {
+            const targetFile = path.join(fixture, target.path);
+            const text = fs.readFileSync(targetFile, "utf8");
+            const marker = target.markers.find(
+              (candidate) => typeof candidate === "string" && text.includes(candidate),
+            );
+            if (marker) {
+              selected = { marker, targetFile };
+              break;
+            }
           }
-        });
-        if (!fired) throw new Error("source-lock post-parse mutation hook did not execute");
-        return result;
+          if (!selected)
+            throw new Error("target mutation fixture found no literal reviewed marker");
+          const skillRoot = path.join(fixture, skillRelative);
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (!fired && file === skillRoot && phase === "before-directory-open") {
+              edit(selected.targetFile, (text) =>
+                text.replace(selected.marker, "x".repeat(selected.marker.length)),
+              );
+              fired = true;
+            }
+          });
+          if (!fired) throw new Error("target pre-traversal mutation hook did not execute");
+          return result;
+        },
       },
-    },
-    {
-      name: "validated target mutates before payload traversal",
-      expected: "validated semantic bytes changed after the original snapshot",
-      mutate() {},
-      run(fixture) {
-        const manifest = JSON.parse(fs.readFileSync(path.join(fixture, coverageRelative), "utf8"));
-        let selected = null;
-        for (const target of manifest.units.flatMap((unit) => unit.targets)) {
+      {
+        name: "HTML-comment-only legacy-case target marker",
+        expected: 'is missing marker "HTML-only lineage marker"',
+        mutate(fixture) {
+          const manifestFile = path.join(fixture, legacyCaseLineageRelative);
+          const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+          const target = manifest.cases[0].expectations[0].targets[0];
+          fs.appendFileSync(
+            path.join(fixture, target.path),
+            "\n\n## HTML Comment Target\n\n<!-- HTML-only lineage marker -->\n",
+            "utf8",
+          );
+          target.heading = "HTML Comment Target";
+          target.markers = ["HTML-only lineage marker"];
+          fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+        },
+      },
+      {
+        name: "four-backtick-fenced legacy-case target marker",
+        expected: 'is missing marker "fenced-only lineage marker"',
+        mutate(fixture) {
+          const manifestFile = path.join(fixture, legacyCaseLineageRelative);
+          const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+          const target = manifest.cases[0].expectations[0].targets[0];
+          fs.appendFileSync(
+            path.join(fixture, target.path),
+            [
+              "",
+              "## Fenced Marker Target",
+              "",
+              "````md",
+              "```",
+              "fenced-only lineage marker",
+              "```",
+              "````",
+              "",
+            ].join("\n"),
+            "utf8",
+          );
+          target.heading = "Fenced Marker Target";
+          target.markers = ["fenced-only lineage marker"];
+          fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+        },
+      },
+      {
+        name: "nested-blockquoted legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "nested-blockquoted-evidence.md"),
+            source
+              .split(/\r?\n/)
+              .map((line) => `> > > ${line}`)
+              .join("\n"),
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "metadata-bearing JSONL legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          const jsonl = [
+            "--- export metadata: legacy evidence ---",
+            ...source
+              .split(/\r?\n/)
+              .map((line, index) => JSON.stringify({ sequence: index + 1, payload: { line } })),
+          ].join("\n");
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "metadata-evidence.jsonl"),
+            jsonl,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "line-wrapped legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "line-wrapped-evidence.txt"),
+            source
+              .split(/\r?\n/)
+              .map((line, index) => `line ${String(index + 1).padStart(4, "0")} | ${line}`)
+              .join("\n"),
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "short material fingerprint in unapproved runtime file",
+        expected: "legacy-case material-unit fingerprint must not leak",
+        mutate(fixture) {
+          const { marker } = prepareAuthorizedShortFingerprint(fixture);
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "short-material-leak.txt"),
+            `${marker}\n`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "duplicate authorized short fingerprint in its target heading",
+        expected: "legacy-case material-unit fingerprint must not leak",
+        mutate(fixture) {
+          const { marker, target } = prepareAuthorizedShortFingerprint(fixture);
           const targetFile = path.join(fixture, target.path);
-          const text = fs.readFileSync(targetFile, "utf8");
-          const marker = target.markers.find(
-            (candidate) => typeof candidate === "string" && text.includes(candidate),
+          edit(targetFile, (text) => {
+            const heading = `## ${target.heading}`;
+            if (!text.includes(heading)) throw new Error(`Missing exact target heading ${heading}`);
+            return text.replace(heading, `${heading}\n\n${marker}`);
+          });
+        },
+      },
+      {
+        name: "authorized short fingerprint copied under another heading",
+        expected: "legacy-case material-unit fingerprint must not leak",
+        mutate(fixture) {
+          const { marker, target } = prepareAuthorizedShortFingerprint(fixture);
+          fs.appendFileSync(
+            path.join(fixture, target.path),
+            `\n\n## Unapproved Fingerprint Copy\n\n${marker}\n`,
+            "utf8",
           );
-          if (marker) {
-            selected = { marker, targetFile };
-            break;
-          }
-        }
-        if (!selected) throw new Error("target mutation fixture found no literal reviewed marker");
-        const skillRoot = path.join(fixture, skillRelative);
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (!fired && file === skillRoot && phase === "before-directory-open") {
-            edit(selected.targetFile, (text) =>
-              text.replace(selected.marker, "x".repeat(selected.marker.length)),
-            );
-            fired = true;
-          }
-        });
-        if (!fired) throw new Error("target pre-traversal mutation hook did not execute");
-        return result;
+        },
       },
-    },
-    {
-      name: "HTML-comment-only legacy-case target marker",
-      expected: 'is missing marker "HTML-only lineage marker"',
-      mutate(fixture) {
-        const manifestFile = path.join(fixture, legacyCaseLineageRelative);
-        const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
-        const target = manifest.cases[0].expectations[0].targets[0];
-        fs.appendFileSync(
-          path.join(fixture, target.path),
-          "\n\n## HTML Comment Target\n\n<!-- HTML-only lineage marker -->\n",
-          "utf8",
-        );
-        target.heading = "HTML Comment Target";
-        target.markers = ["HTML-only lineage marker"];
-        fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+      {
+        name: "missing variant",
+        expected: "expected exactly three variants",
+        mutate(fixture) {
+          fs.rmSync(tripletFiles(fixture, stem001)[2]);
+        },
       },
-    },
-    {
-      name: "four-backtick-fenced legacy-case target marker",
-      expected: 'is missing marker "fenced-only lineage marker"',
-      mutate(fixture) {
-        const manifestFile = path.join(fixture, legacyCaseLineageRelative);
-        const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
-        const target = manifest.cases[0].expectations[0].targets[0];
-        fs.appendFileSync(
-          path.join(fixture, target.path),
-          [
-            "",
-            "## Fenced Marker Target",
-            "",
-            "````md",
-            "```",
-            "fenced-only lineage marker",
-            "```",
-            "````",
-            "",
-          ].join("\n"),
-          "utf8",
-        );
-        target.heading = "Fenced Marker Target";
-        target.markers = ["fenced-only lineage marker"];
-        fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-      },
-    },
-    {
-      name: "nested-blockquoted legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "nested-blockquoted-evidence.md"),
-          source
-            .split(/\r?\n/)
-            .map((line) => `> > > ${line}`)
-            .join("\n"),
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "metadata-bearing JSONL legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        const jsonl = [
-          "--- export metadata: legacy evidence ---",
-          ...source
-            .split(/\r?\n/)
-            .map((line, index) => JSON.stringify({ sequence: index + 1, payload: { line } })),
-        ].join("\n");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "metadata-evidence.jsonl"),
-          jsonl,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "line-wrapped legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "line-wrapped-evidence.txt"),
-          source
-            .split(/\r?\n/)
-            .map((line, index) => `line ${String(index + 1).padStart(4, "0")} | ${line}`)
-            .join("\n"),
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "short material fingerprint in unapproved runtime file",
-      expected: "legacy-case material-unit fingerprint must not leak",
-      mutate(fixture) {
-        const { marker } = prepareAuthorizedShortFingerprint(fixture);
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "short-material-leak.txt"),
-          `${marker}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "duplicate authorized short fingerprint in its target heading",
-      expected: "legacy-case material-unit fingerprint must not leak",
-      mutate(fixture) {
-        const { marker, target } = prepareAuthorizedShortFingerprint(fixture);
-        const targetFile = path.join(fixture, target.path);
-        edit(targetFile, (text) => {
-          const heading = `## ${target.heading}`;
-          if (!text.includes(heading)) throw new Error(`Missing exact target heading ${heading}`);
-          return text.replace(heading, `${heading}\n\n${marker}`);
-        });
-      },
-    },
-    {
-      name: "authorized short fingerprint copied under another heading",
-      expected: "legacy-case material-unit fingerprint must not leak",
-      mutate(fixture) {
-        const { marker, target } = prepareAuthorizedShortFingerprint(fixture);
-        fs.appendFileSync(
-          path.join(fixture, target.path),
-          `\n\n## Unapproved Fingerprint Copy\n\n${marker}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "missing variant",
-      expected: "expected exactly three variants",
-      mutate(fixture) {
-        fs.rmSync(tripletFiles(fixture, stem001)[2]);
-      },
-    },
-    {
-      name: "proposed internal record is not shippable",
-      expected: "internal Status must be Accepted or Superseded for shipped runtime records",
-      mutate(fixture) {
-        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
-          text.replace("Status: Accepted", "Status: Proposed"),
-        );
-      },
-    },
-    {
-      name: "accepted internal decision drift",
-      expected: "AC-INTERNAL-001: Long Decision drifted from its accepted lock",
-      mutate(fixture) {
-        edit(internalTripletFiles(fixture, internalStem001)[1], (text) =>
-          text.replace(
-            "\n## Invariants",
-            "\nThis sentence changes the accepted internal decision in place.\n\n## Invariants",
-          ),
-        );
-      },
-    },
-    {
-      name: "internal successor missing reciprocal predecessor metadata",
-      expected: "AC-INTERNAL-001 must reciprocally list AC-INTERNAL-002 in Superseded by",
-      mutate(fixture) {
-        for (const file of internalTripletFiles(fixture, internalStem002)) {
-          edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-INTERNAL-001"));
-        }
-      },
-    },
-    {
-      name: "internal decision cannot supersede itself",
-      expected: "AC-INTERNAL-002 cannot supersede itself",
-      mutate(fixture) {
-        for (const file of internalTripletFiles(fixture, internalStem002)) {
-          edit(file, (text) =>
-            text
-              .replace("Status: Accepted", "Status: Superseded")
-              .replace("Supersedes: none", "Supersedes: AC-INTERNAL-002")
-              .replace("Superseded by: none", "Superseded by: AC-INTERNAL-002"),
+      {
+        name: "proposed internal record is not shippable",
+        expected: "internal Status must be Accepted or Superseded for shipped runtime records",
+        mutate(fixture) {
+          edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+            text.replace("Status: Accepted", "Status: Proposed"),
           );
-        }
+        },
       },
-    },
-    {
-      name: "internal decisions cannot form a supersession cycle",
-      expected: "Internal ADR supersession cycle detected",
-      mutate(fixture) {
-        for (const [stem, otherId] of [
-          [internalStem001, "AC-INTERNAL-002"],
-          [internalStem002, "AC-INTERNAL-001"],
-        ]) {
-          for (const file of internalTripletFiles(fixture, stem)) {
+      {
+        name: "accepted internal decision drift",
+        expected: "AC-INTERNAL-001: Long Decision drifted from its accepted lock",
+        mutate(fixture) {
+          edit(internalTripletFiles(fixture, internalStem001)[1], (text) =>
+            text.replace(
+              "\n## Invariants",
+              "\nThis sentence changes the accepted internal decision in place.\n\n## Invariants",
+            ),
+          );
+        },
+      },
+      {
+        name: "internal successor missing reciprocal predecessor metadata",
+        expected: "AC-INTERNAL-001 must reciprocally list AC-INTERNAL-002 in Superseded by",
+        mutate(fixture) {
+          for (const file of internalTripletFiles(fixture, internalStem002)) {
+            edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-INTERNAL-001"));
+          }
+        },
+      },
+      {
+        name: "internal decision cannot supersede itself",
+        expected: "AC-INTERNAL-002 cannot supersede itself",
+        mutate(fixture) {
+          for (const file of internalTripletFiles(fixture, internalStem002)) {
             edit(file, (text) =>
               text
                 .replace("Status: Accepted", "Status: Superseded")
-                .replace("Supersedes: none", `Supersedes: ${otherId}`)
-                .replace("Superseded by: none", `Superseded by: ${otherId}`),
+                .replace("Supersedes: none", "Supersedes: AC-INTERNAL-002")
+                .replace("Superseded by: none", "Superseded by: AC-INTERNAL-002"),
             );
           }
-        }
+        },
       },
-    },
-    {
-      name: "internal short navigation target is missing",
-      expected: "variant navigation must be exactly",
-      mutate(fixture) {
-        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
-          text.replace(`${internalStem001}.long.md`, "missing.long.md"),
-        );
+      {
+        name: "internal decisions cannot form a supersession cycle",
+        expected: "Internal ADR supersession cycle detected",
+        mutate(fixture) {
+          for (const [stem, otherId] of [
+            [internalStem001, "AC-INTERNAL-002"],
+            [internalStem002, "AC-INTERNAL-001"],
+          ]) {
+            for (const file of internalTripletFiles(fixture, stem)) {
+              edit(file, (text) =>
+                text
+                  .replace("Status: Accepted", "Status: Superseded")
+                  .replace("Supersedes: none", `Supersedes: ${otherId}`)
+                  .replace("Superseded by: none", `Superseded by: ${otherId}`),
+              );
+            }
+          }
+        },
       },
-    },
-    {
-      name: "internal malformed navigation",
-      expected: "variant navigation must be exactly",
-      mutate(fixture) {
-        edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
-          text.replace("Variants: **Short** ·", "Variants: **Short** /"),
-        );
+      {
+        name: "internal short navigation target is missing",
+        expected: "variant navigation must be exactly",
+        mutate(fixture) {
+          edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+            text.replace(`${internalStem001}.long.md`, "missing.long.md"),
+          );
+        },
       },
-    },
-    {
-      name: "internal duplicate navigation",
-      expected: "expected exactly one Variants navigation line",
-      mutate(fixture) {
-        const file = internalTripletFiles(fixture, internalStem001)[0];
-        edit(file, (text) => `${text}\n${text.match(/^Variants: .*$/m)?.[0] ?? ""}\n`);
+      {
+        name: "internal malformed navigation",
+        expected: "variant navigation must be exactly",
+        mutate(fixture) {
+          edit(internalTripletFiles(fixture, internalStem001)[0], (text) =>
+            text.replace("Variants: **Short** ·", "Variants: **Short** /"),
+          );
+        },
       },
-    },
-    {
-      name: "internal public-conflict eval proof is missing",
-      expected: "missing public/internal conflict or promotion assertion",
-      mutate(fixture) {
-        const file = path.join(
-          fixture,
-          evalRelative,
-          "cases",
-          "internal-public-adr-namespace-separation.md",
-        );
-        edit(file, (text) => text.replace("- contains: public Long governs\n", ""));
+      {
+        name: "internal duplicate navigation",
+        expected: "expected exactly one Variants navigation line",
+        mutate(fixture) {
+          const file = internalTripletFiles(fixture, internalStem001)[0];
+          edit(file, (text) => `${text}\n${text.match(/^Variants: .*$/m)?.[0] ?? ""}\n`);
+        },
       },
-    },
-    {
-      name: "internal promotion eval proof is missing",
-      expected: "missing public/internal conflict or promotion assertion",
-      mutate(fixture) {
-        const file = path.join(
-          fixture,
-          evalRelative,
-          "cases",
-          "internal-public-adr-namespace-separation.md",
-        );
-        edit(file, (text) => text.replace("- contains: decision lock\n", ""));
+      {
+        name: "internal public-conflict eval proof is missing",
+        expected: "missing public/internal conflict or promotion assertion",
+        mutate(fixture) {
+          const file = path.join(
+            fixture,
+            evalRelative,
+            "cases",
+            "internal-public-adr-namespace-separation.md",
+          );
+          edit(file, (text) => text.replace("- contains: public Long governs\n", ""));
+        },
       },
-    },
-    {
-      name: "internal record leaked into public catalog",
-      expected: "internal ADR triplet",
-      mutate(fixture) {
-        const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
-        edit(
-          catalog,
-          (text) =>
-            `${text}\n[Leaked internal record](internal-adr-001-resolve-persistence-surfaces-before-writes.short.md)\n`,
-        );
+      {
+        name: "internal promotion eval proof is missing",
+        expected: "missing public/internal conflict or promotion assertion",
+        mutate(fixture) {
+          const file = path.join(
+            fixture,
+            evalRelative,
+            "cases",
+            "internal-public-adr-namespace-separation.md",
+          );
+          edit(file, (text) => text.replace("- contains: decision lock\n", ""));
+        },
       },
-    },
-    {
-      name: "ID and stem collision",
-      expected: "ID collision across stems",
-      mutate(fixture) {
-        const references = path.join(fixture, skillRelative, "references");
-        for (const variant of ["short", "long", "guide"]) {
+      {
+        name: "internal record leaked into public catalog",
+        expected: "internal ADR triplet",
+        mutate(fixture) {
+          const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
+          edit(
+            catalog,
+            (text) =>
+              `${text}\n[Leaked internal record](internal-adr-001-resolve-persistence-surfaces-before-writes.short.md)\n`,
+          );
+        },
+      },
+      {
+        name: "ID and stem collision",
+        expected: "ID collision across stems",
+        mutate(fixture) {
+          const references = path.join(fixture, skillRelative, "references");
+          for (const variant of ["short", "long", "guide"]) {
+            fs.copyFileSync(
+              path.join(references, `${stem001}.${variant}.md`),
+              path.join(references, `ac-adr-001-collision.${variant}.md`),
+            );
+          }
+        },
+      },
+      {
+        name: "shared metadata drift",
+        expected: "Category metadata drifts",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[2], (text) =>
+            text.replace("Category: governance", "Category: backend"),
+          );
+        },
+      },
+      {
+        name: "wrong canonical variant",
+        expected: "Canonical variant must be Long",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[0], (text) =>
+            text.replace("Canonical variant: Long", "Canonical variant: Short"),
+          );
+        },
+      },
+      {
+        name: "invalid scope and adoptability",
+        expected: "Scope must be target-repository",
+        mutate(fixture) {
+          for (const file of tripletFiles(fixture, stem005)) {
+            edit(file, (text) => text.replace("Scope: target-repository", "Scope: skill-runtime"));
+          }
+        },
+      },
+      {
+        name: "skill-runtime adoptability",
+        expected: "Adoptable must be false for skill-runtime ADRs",
+        mutate(fixture) {
+          for (const file of tripletFiles(fixture, stem036)) {
+            edit(file, (text) => text.replace("Adoptable: false", "Adoptable: true"));
+          }
+        },
+      },
+      {
+        name: "catalog orphan",
+        expected: "orphan AC-ADR link",
+        mutate(fixture) {
+          const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
+          edit(catalog, (text) => `${text}\n[Orphan](ac-adr-999-orphan.short.md)\n`);
+        },
+      },
+      {
+        name: "setup matrix missing eligible ADR",
+        expected: "setup adoption matrix is missing AC-ADR-005",
+        mutate(fixture) {
+          const setupReport = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "setup-report-template.md",
+          );
+          edit(setupReport, (text) =>
+            text.replace(
+              "| AC-ADR-005   |             |                 |                     |                        |                     |\n",
+              "",
+            ),
+          );
+        },
+      },
+      {
+        name: "setup matrix duplicate eligible ADR",
+        expected: "setup adoption matrix contains duplicate AC-ADR-005",
+        mutate(fixture) {
+          const setupReport = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "setup-report-template.md",
+          );
+          edit(setupReport, (text) =>
+            text.replace(
+              "| AC-ADR-005   |             |                 |                     |                        |                     |\n",
+              "| AC-ADR-005   |             |                 |                     |                        |                     |\n| AC-ADR-005   |             |                 |                     |                        |                     |\n",
+            ),
+          );
+        },
+      },
+      {
+        name: "setup report stale catalog count",
+        expected: "eligible catalog count must be 35; found 34",
+        mutate(fixture) {
+          const setupReport = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "setup-report-template.md",
+          );
+          edit(setupReport, (text) =>
+            text.replace(
+              "Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `35`",
+              "Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `34`",
+            ),
+          );
+        },
+      },
+      {
+        name: "setup report inconsistent total count",
+        expected: "count equality total must be 35; found 34",
+        mutate(fixture) {
+          const setupReport = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "setup-report-template.md",
+          );
+          edit(setupReport, (text) =>
+            text.replace(
+              "Count equality: `selected + not-selected = total = 35`: `pass | fail`",
+              "Count equality: `selected + not-selected = total = 34`: `pass | fail`",
+            ),
+          );
+        },
+      },
+      {
+        name: "removed legacy reference",
+        expected: "stale legacy reference path",
+        mutate(fixture) {
+          const skill = path.join(fixture, skillRelative, "SKILL.md");
+          edit(skill, (text) => `${text}\nLegacy: references/nextjs-request-patterns.md\n`);
+        },
+      },
+      {
+        name: "accepted decision drift",
+        expected: "Long Decision drifted from its accepted lock",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[1], (text) =>
+            text.replace(
+              "\n## Invariants",
+              "\nThis sentence changes the accepted decision in place.\n\n## Invariants",
+            ),
+          );
+        },
+      },
+      {
+        name: "unsuffixed AC-ADR link",
+        expected: "unsuffixed AC-ADR path is forbidden",
+        mutate(fixture) {
+          const skill = path.join(fixture, skillRelative, "SKILL.md");
+          edit(skill, (text) => `${text}\nLegacy: references/${stem001}.md\n`);
+        },
+      },
+      {
+        name: "missing catalog route",
+        expected: "missing direct link",
+        mutate(fixture) {
+          const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
+          edit(catalog, (text) => text.replace(`${stem001}.guide.md`, "missing-guide.md"));
+        },
+      },
+      {
+        name: "non-reciprocal supersession",
+        expected: "must reciprocally list",
+        mutate(fixture) {
+          for (const file of tripletFiles(fixture, stem002)) {
+            edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-ADR-001"));
+          }
+        },
+      },
+      {
+        name: "public decision cannot supersede itself",
+        expected: "AC-ADR-002 cannot supersede itself",
+        mutate(fixture) {
+          for (const file of tripletFiles(fixture, stem002)) {
+            edit(file, (text) =>
+              text
+                .replace("Status: Accepted", "Status: Superseded")
+                .replace("Supersedes: none", "Supersedes: AC-ADR-002")
+                .replace("Superseded by: none", "Superseded by: AC-ADR-002"),
+            );
+          }
+        },
+      },
+      {
+        name: "public decisions cannot form a supersession cycle",
+        expected: "Public ADR supersession cycle detected",
+        mutate(fixture) {
+          for (const [stem, otherId] of [
+            [stem002, "AC-ADR-005"],
+            [stem005, "AC-ADR-002"],
+          ]) {
+            for (const file of tripletFiles(fixture, stem)) {
+              edit(file, (text) =>
+                text
+                  .replace("Status: Accepted", "Status: Superseded")
+                  .replace("Supersedes: none", `Supersedes: ${otherId}`)
+                  .replace("Superseded by: none", `Superseded by: ${otherId}`),
+              );
+            }
+          }
+        },
+      },
+      {
+        name: "accepted successor missing predecessor",
+        expected: "must reciprocally list",
+        mutate(fixture) {
+          for (const file of tripletFiles(fixture, stem048)) {
+            edit(file, (text) => text.replace("Supersedes: AC-ADR-045", "Supersedes: none"));
+          }
+        },
+      },
+      {
+        name: "normative guide section",
+        expected: "Guide must not define normative Decision or Rules sections",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[2], (text) => `${text}\n## Rules\n\nHidden rule.\n`);
+        },
+      },
+      {
+        name: "invalid lineage JSON",
+        expected: "invalid JSON",
+        mutate(fixture) {
+          edit(path.join(fixture, lineageRelative), () => "{");
+        },
+      },
+      {
+        name: "missing lineage disposition",
+        expected: "missing AC-ADR-044 lineage disposition",
+        mutate(fixture) {
+          const lineage = path.join(fixture, lineageRelative);
+          edit(lineage, (text) => {
+            const manifest = JSON.parse(text);
+            manifest.decisions = manifest.decisions.filter((entry) => entry.id !== "AC-ADR-044");
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "material lineage drift",
+        expected: "Decision lineage does not match",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[2], (text) =>
+            text.replace("- `consolidates`:", "- `generalizes`:"),
+          );
+        },
+      },
+      {
+        name: "independent lineage section",
+        expected: "independent disposition must omit Decision lineage",
+        mutate(fixture) {
+          edit(
+            tripletFiles(fixture, stem039)[2],
+            (text) =>
+              `${text}\n## Decision lineage ##\n\n- \`adapts\`: [ADR-0001](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0001-use-open-agent-skills-spec.long.md).\n`,
+          );
+        },
+      },
+      {
+        name: "legacy provenance heading",
+        expected: "legacy Source provenance heading is forbidden",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[2], (text) =>
+            text.replace("## Decision lineage", "## Source provenance ##"),
+          );
+        },
+      },
+      {
+        name: "unsupported lineage relation",
+        expected: "unsupported relation",
+        mutate(fixture) {
+          const lineage = path.join(fixture, lineageRelative);
+          edit(lineage, (text) => {
+            const manifest = JSON.parse(text);
+            manifest.decisions[0].relations[0].type = "informed-by";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "lineage source status",
+        expected: "lineage target Status must be Accepted or Superseded",
+        mutate(fixture) {
+          edit(repositoryAdrLong(fixture, "0032"), (text) =>
+            text.replace("Status: Accepted", "Status: Proposed"),
+          );
+        },
+      },
+      {
+        name: "lineage source ID",
+        expected: "lineage target ID must be ADR-0032",
+        mutate(fixture) {
+          edit(repositoryAdrLong(fixture, "0032"), (text) =>
+            text.replace("ID: ADR-0032", "ID: ADR-9999"),
+          );
+        },
+      },
+      {
+        name: "lineage source variant",
+        expected: "lineage target Variant must be Long",
+        mutate(fixture) {
+          edit(repositoryAdrLong(fixture, "0032"), (text) =>
+            text.replace("Variant: Long", "Variant: Guide"),
+          );
+        },
+      },
+      {
+        name: "missing lineage source",
+        expected: "ADR-0032 must resolve to exactly one repository Long ADR; found 0",
+        mutate(fixture) {
+          fs.rmSync(repositoryAdrLong(fixture, "0032"));
+        },
+      },
+      {
+        name: "lineage heading outside Guide",
+        expected: "Decision lineage is permitted only in Guide",
+        mutate(fixture) {
+          edit(
+            tripletFiles(fixture, stem001)[0],
+            (text) => `${text}\n### Decision lineage ###\n\nThis heading is not permitted here.\n`,
+          );
+        },
+      },
+      {
+        name: "primary source only in lineage",
+        expected: "primary source link outside Decision lineage",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem001)[2], (text) =>
+            text.replace(/\n## Official sources\n[\s\S]*$/, "\n"),
+          );
+        },
+      },
+      {
+        name: "repo-only lineage manifest in skill payload",
+        expected:
+          "repo-only decision-lineage manifest must not enter the skill payload by filename or exact content hash",
+        mutate(fixture) {
           fs.copyFileSync(
-            path.join(references, `${stem001}.${variant}.md`),
-            path.join(references, `ac-adr-001-collision.${variant}.md`),
+            path.join(fixture, lineageRelative),
+            path.join(fixture, skillRelative, "assets", "decision-lineage.json"),
           );
-        }
+        },
       },
-    },
-    {
-      name: "shared metadata drift",
-      expected: "Category metadata drifts",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[2], (text) =>
-          text.replace("Category: governance", "Category: backend"),
-        );
-      },
-    },
-    {
-      name: "wrong canonical variant",
-      expected: "Canonical variant must be Long",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[0], (text) =>
-          text.replace("Canonical variant: Long", "Canonical variant: Short"),
-        );
-      },
-    },
-    {
-      name: "invalid scope and adoptability",
-      expected: "Scope must be target-repository",
-      mutate(fixture) {
-        for (const file of tripletFiles(fixture, stem005)) {
-          edit(file, (text) => text.replace("Scope: target-repository", "Scope: skill-runtime"));
-        }
-      },
-    },
-    {
-      name: "skill-runtime adoptability",
-      expected: "Adoptable must be false for skill-runtime ADRs",
-      mutate(fixture) {
-        for (const file of tripletFiles(fixture, stem036)) {
-          edit(file, (text) => text.replace("Adoptable: false", "Adoptable: true"));
-        }
-      },
-    },
-    {
-      name: "catalog orphan",
-      expected: "orphan AC-ADR link",
-      mutate(fixture) {
-        const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
-        edit(catalog, (text) => `${text}\n[Orphan](ac-adr-999-orphan.short.md)\n`);
-      },
-    },
-    {
-      name: "setup matrix missing eligible ADR",
-      expected: "setup adoption matrix is missing AC-ADR-005",
-      mutate(fixture) {
-        const setupReport = path.join(fixture, skillRelative, "assets", "setup-report-template.md");
-        edit(setupReport, (text) =>
-          text.replace(
-            "| AC-ADR-005   |             |                 |                     |                        |                     |\n",
-            "",
-          ),
-        );
-      },
-    },
-    {
-      name: "setup matrix duplicate eligible ADR",
-      expected: "setup adoption matrix contains duplicate AC-ADR-005",
-      mutate(fixture) {
-        const setupReport = path.join(fixture, skillRelative, "assets", "setup-report-template.md");
-        edit(setupReport, (text) =>
-          text.replace(
-            "| AC-ADR-005   |             |                 |                     |                        |                     |\n",
-            "| AC-ADR-005   |             |                 |                     |                        |                     |\n| AC-ADR-005   |             |                 |                     |                        |                     |\n",
-          ),
-        );
-      },
-    },
-    {
-      name: "setup report stale catalog count",
-      expected: "eligible catalog count must be 35; found 34",
-      mutate(fixture) {
-        const setupReport = path.join(fixture, skillRelative, "assets", "setup-report-template.md");
-        edit(setupReport, (text) =>
-          text.replace(
-            "Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `35`",
-            "Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `34`",
-          ),
-        );
-      },
-    },
-    {
-      name: "setup report inconsistent total count",
-      expected: "count equality total must be 35; found 34",
-      mutate(fixture) {
-        const setupReport = path.join(fixture, skillRelative, "assets", "setup-report-template.md");
-        edit(setupReport, (text) =>
-          text.replace(
-            "Count equality: `selected + not-selected = total = 35`: `pass | fail`",
-            "Count equality: `selected + not-selected = total = 34`: `pass | fail`",
-          ),
-        );
-      },
-    },
-    {
-      name: "removed legacy reference",
-      expected: "stale legacy reference path",
-      mutate(fixture) {
-        const skill = path.join(fixture, skillRelative, "SKILL.md");
-        edit(skill, (text) => `${text}\nLegacy: references/nextjs-request-patterns.md\n`);
-      },
-    },
-    {
-      name: "accepted decision drift",
-      expected: "Long Decision drifted from its accepted lock",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[1], (text) =>
-          text.replace(
-            "\n## Invariants",
-            "\nThis sentence changes the accepted decision in place.\n\n## Invariants",
-          ),
-        );
-      },
-    },
-    {
-      name: "unsuffixed AC-ADR link",
-      expected: "unsuffixed AC-ADR path is forbidden",
-      mutate(fixture) {
-        const skill = path.join(fixture, skillRelative, "SKILL.md");
-        edit(skill, (text) => `${text}\nLegacy: references/${stem001}.md\n`);
-      },
-    },
-    {
-      name: "missing catalog route",
-      expected: "missing direct link",
-      mutate(fixture) {
-        const catalog = path.join(fixture, skillRelative, "references", "adr-catalog.md");
-        edit(catalog, (text) => text.replace(`${stem001}.guide.md`, "missing-guide.md"));
-      },
-    },
-    {
-      name: "non-reciprocal supersession",
-      expected: "must reciprocally list",
-      mutate(fixture) {
-        for (const file of tripletFiles(fixture, stem002)) {
-          edit(file, (text) => text.replace("Supersedes: none", "Supersedes: AC-ADR-001"));
-        }
-      },
-    },
-    {
-      name: "public decision cannot supersede itself",
-      expected: "AC-ADR-002 cannot supersede itself",
-      mutate(fixture) {
-        for (const file of tripletFiles(fixture, stem002)) {
-          edit(file, (text) =>
-            text
-              .replace("Status: Accepted", "Status: Superseded")
-              .replace("Supersedes: none", "Supersedes: AC-ADR-002")
-              .replace("Superseded by: none", "Superseded by: AC-ADR-002"),
+      {
+        name: "renamed lineage manifest bytes in skill payload",
+        expected:
+          "repo-only decision-lineage manifest must not enter the skill payload by filename or exact content hash",
+        mutate(fixture) {
+          fs.copyFileSync(
+            path.join(fixture, lineageRelative),
+            path.join(fixture, skillRelative, "assets", "architecture-map.json"),
           );
-        }
+        },
       },
-    },
-    {
-      name: "public decisions cannot form a supersession cycle",
-      expected: "Public ADR supersession cycle detected",
-      mutate(fixture) {
-        for (const [stem, otherId] of [
-          [stem002, "AC-ADR-005"],
-          [stem005, "AC-ADR-002"],
-        ]) {
-          for (const file of tripletFiles(fixture, stem)) {
-            edit(file, (text) =>
-              text
-                .replace("Status: Accepted", "Status: Superseded")
-                .replace("Supersedes: none", `Supersedes: ${otherId}`)
-                .replace("Superseded by: none", `Superseded by: ${otherId}`),
+      {
+        name: "single-source consolidation",
+        expected: "consolidates requires at least two sources",
+        mutate(fixture) {
+          const lineage = path.join(fixture, lineageRelative);
+          edit(lineage, (text) => {
+            const manifest = JSON.parse(text);
+            const decision = manifest.decisions.find((entry) => entry.id === "AC-ADR-028");
+            decision.relations[0].sources = decision.relations[0].sources.slice(0, 1);
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy-case disposition",
+        expected: "must use the exact legacy-case lineage case schema",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            delete manifest.cases[0].disposition;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "duplicate legacy-case disposition",
+        expected: "duplicate legacy source path; found 2 dispositions",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases.push(structuredClone(manifest.cases[0]));
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "unknown legacy-case disposition",
+        expected: "disposition must be preserved, adapted, or explicitly-rejected",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].disposition = "omitted";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy-case unit outcome",
+        expected: "must use the exact expectation schema",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            delete manifest.cases[0].expectations[0].outcome;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing adapted legacy-case unit reason",
+        expected: "reason must explain this source-unit disposition",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations[0].outcome = "adapted";
+            manifest.cases[0].expectations[0].reason = "";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "duplicate legacy-case material mapping",
+        expected: "is not mapped exactly once; found 2",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations.push(structuredClone(manifest.cases[0].expectations[0]));
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "wrong legacy-case source hash",
+        expected: "source sha256 does not match the independent HEAD trust anchor",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].sourceSha256 = "0".repeat(64);
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy-case target",
+        expected: "missing required file",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations[0].targets[0].path =
+              "skill-evals/architecture-compass/cases/no-such-replacement.md";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy-case target marker",
+        expected: "No such legacy-case target marker",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations[0].targets[0].markers = [
+              "No such legacy-case target marker",
+            ];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy-case target heading",
+        expected: 'target heading "No such legacy-case target heading" must exist exactly once',
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations[0].targets[0].heading =
+              "No such legacy-case target heading";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "duplicate legacy-case target heading",
+        expected: "must exist exactly once",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const target = manifest.cases[0].expectations[0].targets[0];
+          fs.appendFileSync(
+            path.join(fixture, target.path),
+            `\n\n## ${target.heading}\n\n${target.markers[0]}\n`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "uncovered staged-deletion legacy case",
+        expected: "uncovered staged-deletion contract",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases.shift();
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "unexpected staged-deletion legacy case",
+        expected: "source is outside the exact staged-deletion contract",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const extra = structuredClone(manifest.cases[0]);
+            extra.sourcePath =
+              "skill-evals/architecture-compass/cases/not-in-the-reviewed-deletion-set.md";
+            manifest.cases.push(extra);
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "unmapped legacy-case material expectation",
+        expected: "is not mapped exactly once; found 0",
+        mutate(fixture) {
+          edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.cases[0].expectations.shift();
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "legacy-case source bytes in runtime payload",
+        expected: "legacy case source bytes must not leak into the installed runtime payload",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          fs.copyFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            path.join(fixture, skillRelative, "assets", "legacy-case-leak.md"),
+          );
+        },
+      },
+      {
+        name: "legacy-case baseline filename in runtime payload",
+        expected: "legacy-case evidence filename must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const baselinePath = manifest.cases[0].baselinePath;
+          fs.copyFileSync(
+            path.join(fixture, baselinePath),
+            path.join(fixture, skillRelative, "assets", path.basename(baselinePath)),
+          );
+        },
+      },
+      {
+        name: "legacy-case manifest filename in runtime payload",
+        expected: "legacy-case evidence filename must not leak",
+        mutate(fixture) {
+          fs.copyFileSync(
+            path.join(fixture, legacyCaseLineageRelative),
+            path.join(fixture, skillRelative, "assets", "legacy-case-lineage.json"),
+          );
+        },
+      },
+      {
+        name: "renamed legacy-case manifest content in runtime payload",
+        expected: "legacy-case lineage manifest content must not leak",
+        mutate(fixture) {
+          fs.copyFileSync(
+            path.join(fixture, legacyCaseLineageRelative),
+            path.join(fixture, skillRelative, "assets", "renamed-lineage-map.json"),
+          );
+        },
+      },
+      {
+        name: "wrapped legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "wrapped-evidence.md"),
+            `# Runtime wrapper\n\n${source}`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "markdown-blockquoted legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "blockquoted-evidence.md"),
+            source
+              .split(/\r?\n/)
+              .map((line) => `> ${line}`)
+              .join("\n"),
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "JSON-encoded legacy-case source lines in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "encoded-evidence.json"),
+            `${JSON.stringify(source.split(/\r?\n/), null, 2)}\n`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "JSON-string legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "encoded-evidence-string.json"),
+            `${JSON.stringify(source)}\n`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "JSONL legacy-case source lines in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(
+            path.join(fixture, manifest.cases[0].baselinePath),
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "encoded-evidence.jsonl"),
+            `${source
+              .split(/\r?\n/)
+              .map((line) => JSON.stringify(line))
+              .join("\n")}\n`,
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "partial legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath));
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "partial-evidence.md"),
+            source.subarray(0, Math.min(source.length, 512)),
+          );
+        },
+      },
+      {
+        name: "short unaligned legacy-case source in runtime payload",
+        expected: "legacy-case source segment must not leak",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
+          );
+          const source = fs
+            .readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8")
+            .replace(/\s+/g, " ")
+            .trim();
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "short-unaligned-evidence.md"),
+            source.slice(37, 228),
+            "utf8",
+          );
+        },
+      },
+      {
+        name: "missing legacy coverage unit",
+        expected: "coverage partition expected line 1",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units.shift();
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "duplicate legacy coverage ID",
+        expected: "duplicate coverage ID",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[1].id = manifest.units[0].id;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "overlapping legacy source ranges",
+        expected: "coverage partition expected line 12, found 11",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[1].source.startLine = 11;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "wrong legacy source commit",
+        expected: "source commit must be the reviewed",
+        mutate(fixture) {
+          edit(path.join(fixture, sourceLockRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.source.commit = "0000000000000000000000000000000000000000";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "wrong legacy source blob",
+        expected: "Git blob hash does not match the baseline bytes",
+        mutate(fixture) {
+          edit(path.join(fixture, sourceLockRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.files[0].blob = "0000000000000000000000000000000000000000";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "wrong legacy range hash",
+        expected: "source sha256 does not match the locked line range",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].source.sha256 = "0".repeat(64);
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "legacy coverage line gap",
+        expected: "coverage partition expected line 1, found 2",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].source.startLine = 2;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "unknown legacy disposition",
+        expected: "disposition must be preserved, adapted, or explicitly-rejected",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].disposition = "omitted";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy summary",
+        expected: "summary must be a non-empty reviewed short description",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].summary = "";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "unvalidated currentSources field",
+        expected: "must use the exact coverage-unit schema",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].currentSources = [
+              "skills/engineering-workflows/architecture-compass/references/does-not-exist.long.md",
+            ];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing legacy target",
+        expected: "every coverage unit requires at least one active target",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].targets = [];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "missing Accepted Long target",
+        expected: "every legacy unit requires an exact Accepted canonical Long Decision target",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].targets = manifest.units[0].targets.filter(
+              (target) => !target.path.endsWith(".long.md"),
             );
-          }
-        }
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "accepted successor missing predecessor",
-      expected: "must reciprocally list",
-      mutate(fixture) {
-        for (const file of tripletFiles(fixture, stem048)) {
-          edit(file, (text) => text.replace("Supersedes: AC-ADR-045", "Supersedes: none"));
-        }
-      },
-    },
-    {
-      name: "normative guide section",
-      expected: "Guide must not define normative Decision or Rules sections",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[2], (text) => `${text}\n## Rules\n\nHidden rule.\n`);
-      },
-    },
-    {
-      name: "invalid lineage JSON",
-      expected: "invalid JSON",
-      mutate(fixture) {
-        edit(path.join(fixture, lineageRelative), () => "{");
-      },
-    },
-    {
-      name: "missing lineage disposition",
-      expected: "missing AC-ADR-044 lineage disposition",
-      mutate(fixture) {
-        const lineage = path.join(fixture, lineageRelative);
-        edit(lineage, (text) => {
-          const manifest = JSON.parse(text);
-          manifest.decisions = manifest.decisions.filter((entry) => entry.id !== "AC-ADR-044");
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "material lineage drift",
-      expected: "Decision lineage does not match",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[2], (text) =>
-          text.replace("- `consolidates`:", "- `generalizes`:"),
-        );
-      },
-    },
-    {
-      name: "independent lineage section",
-      expected: "independent disposition must omit Decision lineage",
-      mutate(fixture) {
-        edit(
-          tripletFiles(fixture, stem039)[2],
-          (text) =>
-            `${text}\n## Decision lineage ##\n\n- \`adapts\`: [ADR-0001](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0001-use-open-agent-skills-spec.long.md).\n`,
-        );
-      },
-    },
-    {
-      name: "legacy provenance heading",
-      expected: "legacy Source provenance heading is forbidden",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[2], (text) =>
-          text.replace("## Decision lineage", "## Source provenance ##"),
-        );
-      },
-    },
-    {
-      name: "unsupported lineage relation",
-      expected: "unsupported relation",
-      mutate(fixture) {
-        const lineage = path.join(fixture, lineageRelative);
-        edit(lineage, (text) => {
-          const manifest = JSON.parse(text);
-          manifest.decisions[0].relations[0].type = "informed-by";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "lineage source status",
-      expected: "lineage target Status must be Accepted or Superseded",
-      mutate(fixture) {
-        edit(repositoryAdrLong(fixture, "0032"), (text) =>
-          text.replace("Status: Accepted", "Status: Proposed"),
-        );
-      },
-    },
-    {
-      name: "lineage source ID",
-      expected: "lineage target ID must be ADR-0032",
-      mutate(fixture) {
-        edit(repositoryAdrLong(fixture, "0032"), (text) =>
-          text.replace("ID: ADR-0032", "ID: ADR-9999"),
-        );
-      },
-    },
-    {
-      name: "lineage source variant",
-      expected: "lineage target Variant must be Long",
-      mutate(fixture) {
-        edit(repositoryAdrLong(fixture, "0032"), (text) =>
-          text.replace("Variant: Long", "Variant: Guide"),
-        );
-      },
-    },
-    {
-      name: "missing lineage source",
-      expected: "ADR-0032 must resolve to exactly one repository Long ADR; found 0",
-      mutate(fixture) {
-        fs.rmSync(repositoryAdrLong(fixture, "0032"));
-      },
-    },
-    {
-      name: "lineage heading outside Guide",
-      expected: "Decision lineage is permitted only in Guide",
-      mutate(fixture) {
-        edit(
-          tripletFiles(fixture, stem001)[0],
-          (text) => `${text}\n### Decision lineage ###\n\nThis heading is not permitted here.\n`,
-        );
-      },
-    },
-    {
-      name: "primary source only in lineage",
-      expected: "primary source link outside Decision lineage",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem001)[2], (text) =>
-          text.replace(/\n## Official sources\n[\s\S]*$/, "\n"),
-        );
-      },
-    },
-    {
-      name: "repo-only lineage manifest in skill payload",
-      expected:
-        "repo-only decision-lineage manifest must not enter the skill payload by filename or exact content hash",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, lineageRelative),
-          path.join(fixture, skillRelative, "assets", "decision-lineage.json"),
-        );
-      },
-    },
-    {
-      name: "renamed lineage manifest bytes in skill payload",
-      expected:
-        "repo-only decision-lineage manifest must not enter the skill payload by filename or exact content hash",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, lineageRelative),
-          path.join(fixture, skillRelative, "assets", "architecture-map.json"),
-        );
-      },
-    },
-    {
-      name: "single-source consolidation",
-      expected: "consolidates requires at least two sources",
-      mutate(fixture) {
-        const lineage = path.join(fixture, lineageRelative);
-        edit(lineage, (text) => {
-          const manifest = JSON.parse(text);
-          const decision = manifest.decisions.find((entry) => entry.id === "AC-ADR-028");
-          decision.relations[0].sources = decision.relations[0].sources.slice(0, 1);
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy-case disposition",
-      expected: "must use the exact legacy-case lineage case schema",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          delete manifest.cases[0].disposition;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "duplicate legacy-case disposition",
-      expected: "duplicate legacy source path; found 2 dispositions",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases.push(structuredClone(manifest.cases[0]));
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "unknown legacy-case disposition",
-      expected: "disposition must be preserved, adapted, or explicitly-rejected",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].disposition = "omitted";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy-case unit outcome",
-      expected: "must use the exact expectation schema",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          delete manifest.cases[0].expectations[0].outcome;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing adapted legacy-case unit reason",
-      expected: "reason must explain this source-unit disposition",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations[0].outcome = "adapted";
-          manifest.cases[0].expectations[0].reason = "";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "duplicate legacy-case material mapping",
-      expected: "is not mapped exactly once; found 2",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations.push(structuredClone(manifest.cases[0].expectations[0]));
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "wrong legacy-case source hash",
-      expected: "source sha256 does not match the independent HEAD trust anchor",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].sourceSha256 = "0".repeat(64);
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy-case target",
-      expected: "missing required file",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations[0].targets[0].path =
-            "skill-evals/architecture-compass/cases/no-such-replacement.md";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy-case target marker",
-      expected: "No such legacy-case target marker",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations[0].targets[0].markers = [
-            "No such legacy-case target marker",
-          ];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy-case target heading",
-      expected: 'target heading "No such legacy-case target heading" must exist exactly once',
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations[0].targets[0].heading =
-            "No such legacy-case target heading";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "duplicate legacy-case target heading",
-      expected: "must exist exactly once",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const target = manifest.cases[0].expectations[0].targets[0];
-        fs.appendFileSync(
-          path.join(fixture, target.path),
-          `\n\n## ${target.heading}\n\n${target.markers[0]}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "uncovered staged-deletion legacy case",
-      expected: "uncovered staged-deletion contract",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases.shift();
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "unexpected staged-deletion legacy case",
-      expected: "source is outside the exact staged-deletion contract",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          const extra = structuredClone(manifest.cases[0]);
-          extra.sourcePath =
-            "skill-evals/architecture-compass/cases/not-in-the-reviewed-deletion-set.md";
-          manifest.cases.push(extra);
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "unmapped legacy-case material expectation",
-      expected: "is not mapped exactly once; found 0",
-      mutate(fixture) {
-        edit(path.join(fixture, legacyCaseLineageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.cases[0].expectations.shift();
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "legacy-case source bytes in runtime payload",
-      expected: "legacy case source bytes must not leak into the installed runtime payload",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        fs.copyFileSync(
-          path.join(fixture, manifest.cases[0].baselinePath),
-          path.join(fixture, skillRelative, "assets", "legacy-case-leak.md"),
-        );
-      },
-    },
-    {
-      name: "legacy-case baseline filename in runtime payload",
-      expected: "legacy-case evidence filename must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const baselinePath = manifest.cases[0].baselinePath;
-        fs.copyFileSync(
-          path.join(fixture, baselinePath),
-          path.join(fixture, skillRelative, "assets", path.basename(baselinePath)),
-        );
-      },
-    },
-    {
-      name: "legacy-case manifest filename in runtime payload",
-      expected: "legacy-case evidence filename must not leak",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, legacyCaseLineageRelative),
-          path.join(fixture, skillRelative, "assets", "legacy-case-lineage.json"),
-        );
-      },
-    },
-    {
-      name: "renamed legacy-case manifest content in runtime payload",
-      expected: "legacy-case lineage manifest content must not leak",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, legacyCaseLineageRelative),
-          path.join(fixture, skillRelative, "assets", "renamed-lineage-map.json"),
-        );
-      },
-    },
-    {
-      name: "wrapped legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "wrapped-evidence.md"),
-          `# Runtime wrapper\n\n${source}`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "markdown-blockquoted legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "blockquoted-evidence.md"),
-          source
-            .split(/\r?\n/)
-            .map((line) => `> ${line}`)
-            .join("\n"),
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "JSON-encoded legacy-case source lines in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "encoded-evidence.json"),
-          `${JSON.stringify(source.split(/\r?\n/), null, 2)}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "JSON-string legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "encoded-evidence-string.json"),
-          `${JSON.stringify(source)}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "JSONL legacy-case source lines in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8");
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "encoded-evidence.jsonl"),
-          `${source
-            .split(/\r?\n/)
-            .map((line) => JSON.stringify(line))
-            .join("\n")}\n`,
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "partial legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs.readFileSync(path.join(fixture, manifest.cases[0].baselinePath));
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "partial-evidence.md"),
-          source.subarray(0, Math.min(source.length, 512)),
-        );
-      },
-    },
-    {
-      name: "short unaligned legacy-case source in runtime payload",
-      expected: "legacy-case source segment must not leak",
-      mutate(fixture) {
-        const manifest = JSON.parse(
-          fs.readFileSync(path.join(fixture, legacyCaseLineageRelative), "utf8"),
-        );
-        const source = fs
-          .readFileSync(path.join(fixture, manifest.cases[0].baselinePath), "utf8")
-          .replace(/\s+/g, " ")
-          .trim();
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "short-unaligned-evidence.md"),
-          source.slice(37, 228),
-          "utf8",
-        );
-      },
-    },
-    {
-      name: "missing legacy coverage unit",
-      expected: "coverage partition expected line 1",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units.shift();
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "duplicate legacy coverage ID",
-      expected: "duplicate coverage ID",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[1].id = manifest.units[0].id;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "overlapping legacy source ranges",
-      expected: "coverage partition expected line 12, found 11",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[1].source.startLine = 11;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "wrong legacy source commit",
-      expected: "source commit must be the reviewed",
-      mutate(fixture) {
-        edit(path.join(fixture, sourceLockRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.source.commit = "0000000000000000000000000000000000000000";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "wrong legacy source blob",
-      expected: "Git blob hash does not match the baseline bytes",
-      mutate(fixture) {
-        edit(path.join(fixture, sourceLockRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.files[0].blob = "0000000000000000000000000000000000000000";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "wrong legacy range hash",
-      expected: "source sha256 does not match the locked line range",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].source.sha256 = "0".repeat(64);
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "legacy coverage line gap",
-      expected: "coverage partition expected line 1, found 2",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].source.startLine = 2;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "unknown legacy disposition",
-      expected: "disposition must be preserved, adapted, or explicitly-rejected",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].disposition = "omitted";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy summary",
-      expected: "summary must be a non-empty reviewed short description",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].summary = "";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "unvalidated currentSources field",
-      expected: "must use the exact coverage-unit schema",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].currentSources = [
-            "skills/engineering-workflows/architecture-compass/references/does-not-exist.long.md",
-          ];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing legacy target",
-      expected: "every coverage unit requires at least one active target",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].targets = [];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing Accepted Long target",
-      expected: "every legacy unit requires an exact Accepted canonical Long Decision target",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].targets = manifest.units[0].targets.filter(
-            (target) => !target.path.endsWith(".long.md"),
+      {
+        name: "non-Accepted Long target",
+        expected: "canonical Long target Status must be Accepted",
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, coverageRelative), "utf8"),
           );
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "non-Accepted Long target",
-      expected: "canonical Long target Status must be Accepted",
-      mutate(fixture) {
-        const manifest = JSON.parse(fs.readFileSync(path.join(fixture, coverageRelative), "utf8"));
-        const target = manifest.units[0].targets.find((candidate) =>
-          candidate.path.endsWith(".long.md"),
-        );
-        edit(path.join(fixture, target.path), (text) =>
-          text.replace("Status: Accepted", "Status: Superseded"),
-        );
-      },
-    },
-    {
-      name: "Long target does not name Decision",
-      expected: "canonical Long target heading must be Decision",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
           const target = manifest.units[0].targets.find((candidate) =>
             candidate.path.endsWith(".long.md"),
           );
-          target.heading = "Context";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-    {
-      name: "missing Long Decision marker",
-      expected: 'target section is missing marker "No such Long marker"',
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          const target = manifest.units[0].targets.find((candidate) =>
-            candidate.path.endsWith(".long.md"),
+          edit(path.join(fixture, target.path), (text) =>
+            text.replace("Status: Accepted", "Status: Superseded"),
           );
-          target.markers = ["No such Long marker"];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+        },
       },
-    },
-    {
-      name: "missing legacy target heading",
-      expected: 'target heading "No such heading" must exist exactly once',
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].targets[0].heading = "No such heading";
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+      {
+        name: "Long target does not name Decision",
+        expected: "canonical Long target heading must be Decision",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const target = manifest.units[0].targets.find((candidate) =>
+              candidate.path.endsWith(".long.md"),
+            );
+            target.heading = "Context";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "missing legacy target marker",
-      expected: 'target section is missing marker "No such marker"',
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          manifest.units[0].targets[0].markers = ["No such marker"];
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+      {
+        name: "missing Long Decision marker",
+        expected: 'target section is missing marker "No such Long marker"',
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const target = manifest.units[0].targets.find((candidate) =>
+              candidate.path.endsWith(".long.md"),
+            );
+            target.markers = ["No such Long marker"];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "removed Next.js hydration marker",
-      expected: 'target section is missing marker "HydrationBoundary"',
-      mutate(fixture) {
-        const manifest = JSON.parse(fs.readFileSync(path.join(fixture, coverageRelative), "utf8"));
-        const target = manifest.units
-          .flatMap((unit) => unit.targets)
-          .find((candidate) => candidate.markers.includes("HydrationBoundary"));
-        edit(path.join(fixture, target.path), (text) =>
-          text.replaceAll("HydrationBoundary", "RemovedHydrationMarker"),
-        );
+      {
+        name: "missing legacy target heading",
+        expected: 'target heading "No such heading" must exist exactly once',
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].targets[0].heading = "No such heading";
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-    },
-    {
-      name: "missing expectedVersion accepted before numeric conversion",
-      expected: 'target section is missing marker "const expectedVersionField = z .string()"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem010)[2], (text) =>
-          text.replace(
-            `const expectedVersionField = z
+      {
+        name: "missing legacy target marker",
+        expected: 'target section is missing marker "No such marker"',
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            manifest.units[0].targets[0].markers = ["No such marker"];
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "removed Next.js hydration marker",
+        expected: 'target section is missing marker "HydrationBoundary"',
+        mutate(fixture) {
+          const manifest = JSON.parse(
+            fs.readFileSync(path.join(fixture, coverageRelative), "utf8"),
+          );
+          const target = manifest.units
+            .flatMap((unit) => unit.targets)
+            .find((candidate) => candidate.markers.includes("HydrationBoundary"));
+          edit(path.join(fixture, target.path), (text) =>
+            text.replaceAll("HydrationBoundary", "RemovedHydrationMarker"),
+          );
+        },
+      },
+      {
+        name: "missing expectedVersion accepted before numeric conversion",
+        expected: 'target section is missing marker "const expectedVersionField = z .string()"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem010)[2], (text) =>
+            text.replace(
+              `const expectedVersionField = z
   .string()
   .trim()
   .regex(/^(0|[1-9]\\d*)$/, "expectedVersion must be a non-negative integer")
   .transform((value) => Number(value))
   .pipe(z.number().int().min(0).max(Number.MAX_SAFE_INTEGER));`,
-            "const expectedVersionField = z.coerce.number().int().nonnegative();",
-          ),
-        );
-      },
-    },
-    {
-      name: "empty expectedVersion accepted before numeric conversion",
-      expected: 'target section is missing marker ".regex(/^(0|[1-9]\\\\d*)$/"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem010)[2], (text) =>
-          text.replace(
-            '  .regex(/^(0|[1-9]\\d*)$/, "expectedVersion must be a non-negative integer")',
-            "  .min(0)",
-          ),
-        );
-      },
-    },
-    {
-      name: "unscoped realtime subscription",
-      expected:
-        'target section is missing marker "const subscription = subscribeToProjects({ actorKey: identity.actorKey, tenantKey: identity.tenantKey, privilegeKey: identity.privilegeKey, locale: identity.locale, filters: canonicalFilters, resourceScope,"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text.replace(
-            "    actorKey: identity.actorKey,\n    tenantKey: identity.tenantKey,\n    privilegeKey: identity.privilegeKey,\n    locale: identity.locale,\n    filters: canonicalFilters,\n    resourceScope,\n",
-            "",
-          ),
-        );
-      },
-    },
-    {
-      name: "query options reintroduce raw versus canonical filter drift",
-      expected:
-        'target section is missing marker "queryFn: () => fetchProjectsHttp(contract.canonicalFilters)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text
-            .replace(
-              'queryKey: ["projects", identity, canonicalFilters] as const',
-              'queryKey: ["projects", identity, filterInput] as const',
-            )
-            .replace(
-              "export const projectsClientOptions = (contract: ProjectsQueryContract) =>",
-              "export const projectsClientOptions = (contract: ProjectsQueryContract, rawFilters: ProjectFilterInput) =>",
-            )
-            .replace(
-              "queryFn: () => fetchProjectsHttp(contract.canonicalFilters)",
-              "queryFn: () => fetchProjectsHttp(rawFilters)",
-            )
-            .replace(
-              "export const projectsServerOptions = (actor: Actor, contract: ProjectsQueryContract) =>",
-              "export const projectsServerOptions = (actor: Actor, contract: ProjectsQueryContract, rawFilters: ProjectFilterInput) =>",
-            )
-            .replace(
-              "queryFn: () => loadProjects({ actor, filters: contract.canonicalFilters })",
-              "queryFn: () => loadProjects({ actor, filters: rawFilters })",
+              "const expectedVersionField = z.coerce.number().int().nonnegative();",
             ),
-        );
+          );
+        },
       },
-    },
-    {
-      name: "hydration consumer drops the shared canonical contract",
-      expected: 'target section is missing marker "<ProjectsList contract={contract} />"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text
-            .replace(
-              "<ProjectsList contract={contract} />",
-              "<ProjectsList identity={props.identity} filters={props.filters} />",
-            )
-            .replace(
-              "<ProjectsSuspenseList contract={contract} />",
-              "<ProjectsSuspenseList identity={identity} filters={filters} />",
+      {
+        name: "empty expectedVersion accepted before numeric conversion",
+        expected: 'target section is missing marker ".regex(/^(0|[1-9]\\\\d*)$/"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem010)[2], (text) =>
+            text.replace(
+              '  .regex(/^(0|[1-9]\\d*)$/, "expectedVersion must be a non-negative integer")',
+              "  .min(0)",
             ),
-        );
+          );
+        },
       },
-    },
-    {
-      name: "retry consumer drops the shared canonical contract",
-      expected: 'target section is missing marker "<ProjectsSuspenseList contract={contract} />"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text.replace(
-            `<Suspense fallback={<ProjectsSkeleton />}>
+      {
+        name: "unscoped realtime subscription",
+        expected:
+          'target section is missing marker "const subscription = subscribeToProjects({ actorKey: identity.actorKey, tenantKey: identity.tenantKey, privilegeKey: identity.privilegeKey, locale: identity.locale, filters: canonicalFilters, resourceScope,"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text.replace(
+              "    actorKey: identity.actorKey,\n    tenantKey: identity.tenantKey,\n    privilegeKey: identity.privilegeKey,\n    locale: identity.locale,\n    filters: canonicalFilters,\n    resourceScope,\n",
+              "",
+            ),
+          );
+        },
+      },
+      {
+        name: "query options reintroduce raw versus canonical filter drift",
+        expected:
+          'target section is missing marker "queryFn: () => fetchProjectsHttp(contract.canonicalFilters)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text
+              .replace(
+                'queryKey: ["projects", identity, canonicalFilters] as const',
+                'queryKey: ["projects", identity, filterInput] as const',
+              )
+              .replace(
+                "export const projectsClientOptions = (contract: ProjectsQueryContract) =>",
+                "export const projectsClientOptions = (contract: ProjectsQueryContract, rawFilters: ProjectFilterInput) =>",
+              )
+              .replace(
+                "queryFn: () => fetchProjectsHttp(contract.canonicalFilters)",
+                "queryFn: () => fetchProjectsHttp(rawFilters)",
+              )
+              .replace(
+                "export const projectsServerOptions = (actor: Actor, contract: ProjectsQueryContract) =>",
+                "export const projectsServerOptions = (actor: Actor, contract: ProjectsQueryContract, rawFilters: ProjectFilterInput) =>",
+              )
+              .replace(
+                "queryFn: () => loadProjects({ actor, filters: contract.canonicalFilters })",
+                "queryFn: () => loadProjects({ actor, filters: rawFilters })",
+              ),
+          );
+        },
+      },
+      {
+        name: "hydration consumer drops the shared canonical contract",
+        expected: 'target section is missing marker "<ProjectsList contract={contract} />"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text
+              .replace(
+                "<ProjectsList contract={contract} />",
+                "<ProjectsList identity={props.identity} filters={props.filters} />",
+              )
+              .replace(
+                "<ProjectsSuspenseList contract={contract} />",
+                "<ProjectsSuspenseList identity={identity} filters={filters} />",
+              ),
+          );
+        },
+      },
+      {
+        name: "retry consumer drops the shared canonical contract",
+        expected: 'target section is missing marker "<ProjectsSuspenseList contract={contract} />"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text.replace(
+              `<Suspense fallback={<ProjectsSkeleton />}>
             <ProjectsSuspenseList contract={contract} />
           </Suspense>
         </ErrorBoundary>`,
-            `<Suspense fallback={<ProjectsSkeleton />}>
+              `<Suspense fallback={<ProjectsSkeleton />}>
             <ProjectsSuspenseList identity={identity} filters={filters} />
           </Suspense>
         </ErrorBoundary>`,
-          ),
-        );
+            ),
+          );
+        },
       },
-    },
-    {
-      name: "realtime resource scope reintroduces raw filter drift",
-      expected:
-        'target section is missing marker "projectResourceScope({ actorKey: identity.actorKey, tenantKey: identity.tenantKey, privilegeKey: identity.privilegeKey, locale: identity.locale, filters: canonicalFilters, })"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text.replace(
-            `projectResourceScope({
+      {
+        name: "realtime resource scope reintroduces raw filter drift",
+        expected:
+          'target section is missing marker "projectResourceScope({ actorKey: identity.actorKey, tenantKey: identity.tenantKey, privilegeKey: identity.privilegeKey, locale: identity.locale, filters: canonicalFilters, })"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text.replace(
+              `projectResourceScope({
       actorKey: identity.actorKey,
       tenantKey: identity.tenantKey,
       privilegeKey: identity.privilegeKey,
       locale: identity.locale,
       filters: canonicalFilters,
     })`,
-            `projectResourceScope({
+              `projectResourceScope({
       actorKey: identity.actorKey,
       tenantKey: identity.tenantKey,
       privilegeKey: identity.privilegeKey,
       locale: identity.locale,
       filters: filterInput,
     })`,
-          ),
-        );
-      },
-    },
-    {
-      name: "realtime cache operations drop the contract-derived query key",
-      expected: 'target section is missing marker "queryClient.setQueryData(queryKey"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text
-            .replace("queryClient.setQueryData(queryKey", 'queryClient.setQueryData(["projects"]')
-            .replaceAll(
-              "queryClient.invalidateQueries({ queryKey, exact: true })",
-              'queryClient.invalidateQueries({ queryKey: ["projects"] })',
             ),
-        );
+          );
+        },
       },
-    },
-    {
-      name: "realtime subscription omits privilege resubscription dependency",
-      expected:
-        'target section is missing marker "return () => subscription.unsubscribe(); }, [ canonicalFilters, identity.actorKey, identity.locale, identity.privilegeKey, identity.tenantKey, queryClient, queryKey, resourceScope, ]);"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem009)[2], (text) =>
-          text.replace(
-            `return () => subscription.unsubscribe();
+      {
+        name: "realtime cache operations drop the contract-derived query key",
+        expected: 'target section is missing marker "queryClient.setQueryData(queryKey"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text
+              .replace("queryClient.setQueryData(queryKey", 'queryClient.setQueryData(["projects"]')
+              .replaceAll(
+                "queryClient.invalidateQueries({ queryKey, exact: true })",
+                'queryClient.invalidateQueries({ queryKey: ["projects"] })',
+              ),
+          );
+        },
+      },
+      {
+        name: "realtime subscription omits privilege resubscription dependency",
+        expected:
+          'target section is missing marker "return () => subscription.unsubscribe(); }, [ canonicalFilters, identity.actorKey, identity.locale, identity.privilegeKey, identity.tenantKey, queryClient, queryKey, resourceScope, ]);"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem009)[2], (text) =>
+            text.replace(
+              `return () => subscription.unsubscribe();
 }, [
   canonicalFilters,
   identity.actorKey,
@@ -2020,7 +2102,7 @@ try {
   queryKey,
   resourceScope,
 ]);`,
-            `return () => subscription.unsubscribe();
+              `return () => subscription.unsubscribe();
 }, [
   canonicalFilters,
   identity.actorKey,
@@ -2030,447 +2112,449 @@ try {
   queryKey,
   resourceScope,
 ]);`,
-          ),
-        );
-      },
-    },
-    {
-      name: "backend runtime start drops AbortSignal",
-      expected: 'missing backend lifecycle marker "operation: (signal) => runtime!.start(signal)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "operation: (signal) => runtime!.start(signal)",
-            "operation: () => runtime!.start()",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend runtime acquisition drops AbortSignal",
-      expected:
-        'missing backend lifecycle marker "operation: (signal) => runtimeOwner!.acquire(signal)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "operation: (signal) => runtimeOwner!.acquire(signal)",
-            "operation: () => runtimeOwner!.acquire()",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend signal handlers registered after runtime acquisition",
-      expected: "signal handlers must precede runtime acquisition",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) => {
-          const registrations =
-            '  process.on("SIGINT", onSigint);\n  process.on("SIGTERM", onSigterm);\n';
-          return text
-            .replace(registrations, "")
-            .replace(
-              "        runtimeOwner = prepareRuntimeAcquisition(config, bootstrapLogger);",
-              `        runtimeOwner = prepareRuntimeAcquisition(config, bootstrapLogger);\n${registrations}`,
-            );
-        });
-      },
-    },
-    {
-      name: "backend database acquisition precedes disposer registration",
-      expected: "database disposer must precede external acquisition",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "    closeStack.push((cleanupSignal) => databaseOwner.close(cleanupSignal));\n    const database = await createDatabase(databaseOwner, signal);",
-            "    const database = await createDatabase(databaseOwner, signal);\n    closeStack.push((cleanupSignal) => databaseOwner.close(cleanupSignal));",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend late operation rejection loses observer",
-      expected:
-        'missing backend lifecycle marker "const operationOutcome = settle(Promise.resolve().then(() => operation(signal)))"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "const operationOutcome = settle(Promise.resolve().then(() => operation(signal)))",
-            "const operationOutcome = operation(signal)",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend aggregate error drops primary-cleanup ordering",
-      expected:
-        'missing backend lifecycle marker "return new AggregateError([primary, cleanup], message, { cause: primary })"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "return new AggregateError([primary, cleanup], message, { cause: primary })",
-            "return new AggregateError([cleanup], message, { cause: cleanup })",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend internal close terminal bypasses failure preservation",
-      expected:
-        "missing coupled backend lifecycle contract close deadline and direct-rejection escalation",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "terminal: (failure) => invokeTerminalPreservingFailure(failure)",
-            "terminal",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend direct close rejection bypasses failure preservation",
-      expected:
-        "missing coupled backend lifecycle contract close deadline and direct-rejection escalation",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "return invokeTerminalPreservingFailure({ stage, cause: error })",
-            "return terminal({ stage, cause: error })",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend close terminal aggregate reverses failure order",
-      expected: "missing coupled backend lifecycle contract close terminal error preservation",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "        failure.cause,\n        terminalError,",
-            "        terminalError,\n        failure.cause,",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend shared shutdown rejection is discarded",
-      expected: "missing coupled backend lifecycle contract observed shared shutdown",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "      (error) => lifecycleDone.resolve({ ok: false, error }),",
-            "      () => lifecycleDone.resolve({ ok: true }),",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend startup failure reintroduces a falsy truthiness gate",
-      expected:
-        "missing coupled backend lifecycle contract tagged falsy-safe startup failure unwind",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "    if (!startupOutcome.ok) {",
-            "    if (!startupOutcome.ok && startupOutcome.error) {",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend main no longer awaits lifecycle completion",
-      expected: 'missing backend lifecycle marker "const outcome = await lifecycleDone.promise"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "const outcome = await lifecycleDone.promise",
-            "const outcome = { ok: true } as const",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend outer finally loses signal-handler cleanup",
-      expected: "missing coupled backend lifecycle contract guaranteed signal-handler cleanup",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "    // Also runs when an injected terminal function throws in deterministic tests.\n    removeSignalHandlers();",
-            "    // Handler cleanup removed by negative fixture.",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend listener bind drops AbortSignal",
-      expected:
-        'missing backend lifecycle marker "operation: (signal) => listenerOwner!.bind(signal)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "operation: (signal) => listenerOwner!.bind(signal)",
-            "operation: () => listenerOwner!.bind()",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend drain drops AbortSignal",
-      expected: 'missing backend lifecycle marker "operation: (signal) => listener!.drain(signal)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "operation: (signal) => listener!.drain(signal)",
-            "operation: () => listener!.drain()",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend admission stop drops AbortSignal",
-      expected:
-        'missing backend lifecycle marker "operation: (signal) => listener!.stopAdmission(signal)"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "operation: (signal) => listener!.stopAdmission(signal)",
-            "operation: () => listener!.stopAdmission()",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend drain gate starts open before admission stop",
-      expected: "missing coupled backend lifecycle contract admission stop before drain",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace("let admissionStopped = false", "let admissionStopped = true"),
-        );
-      },
-    },
-    {
-      name: "backend drain gate opens before admission stop settles",
-      expected: "missing coupled backend lifecycle contract admission stop before drain",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text
-            .replace(
-              '            await withDeadline({\n              stage: "listener-stop-admission",',
-              '            const admissionStop = withDeadline({\n              stage: "listener-stop-admission",',
-            )
-            .replace(
-              "            admissionStopped = true;\n          } catch (error) {",
-              "            admissionStopped = true;\n            await admissionStop;\n          } catch (error) {",
             ),
-        );
-      },
-    },
-    {
-      name: "backend drain runs without confirmed admission stop",
-      expected: "missing coupled backend lifecycle contract admission stop before drain",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace("if (admissionStopped) {", "if (true) {"),
-        );
-      },
-    },
-    {
-      name: "backend partial bind loses synchronous disposer contract",
-      expected:
-        'missing backend lifecycle marker "must synchronously return a closeable adapter **before** `bind(signal)` can open a socket"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "must synchronously return a closeable adapter **before** `bind(signal)` can open a socket",
-            "may return a closeable adapter after binding begins",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving start test removed",
-      expected:
-        'missing backend lifecycle marker "Return a never-resolving `runtime.start(signal)`"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "Return a never-resolving `runtime.start(signal)`",
-            "Return a rejected `runtime.start(signal)`",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving bind test removed",
-      expected:
-        'missing backend lifecycle marker "Let `bind(signal)` open a test socket and then never resolve"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "Let `bind(signal)` open a test socket and then never resolve",
-            "Let `bind(signal)` reject before opening a test socket",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving drain test removed",
-      expected: 'missing backend lifecycle marker "make `drain(signal)` never resolve"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "make `drain(signal)` never resolve",
-            "make `drain(signal)` reject immediately",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving admission-stop test removed",
-      expected: 'missing backend lifecycle marker "Make `stopAdmission(signal)` never resolve"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "Make `stopAdmission(signal)` never resolve",
-            "Make `stopAdmission(signal)` reject immediately",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving listener-close test removed",
-      expected:
-        'missing backend lifecycle marker "Make `listenerOwner.close(signal)` never resolve"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "Make `listenerOwner.close(signal)` never resolve",
-            "Make `listenerOwner.close(signal)` reject immediately",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend never-resolving runtime-close test removed",
-      expected:
-        'missing backend lifecycle marker "Make `runtimeOwner.close(signal)` never resolve"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "Make `runtimeOwner.close(signal)` never resolve",
-            "Make `runtimeOwner.close(signal)` reject immediately",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend listener close stage mislabeled",
-      expected: "missing coupled backend lifecycle contract listener closeOrTerminate call site",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replaceAll('"listener-close"', '"listener-bind"'),
-        );
-      },
-    },
-    {
-      name: "backend listener close call drops owner cleanup",
-      expected: "missing coupled backend lifecycle contract listener closeOrTerminate call site",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "(signal) => listenerOwner?.close(signal) ?? Promise.resolve()",
-            "async () => {}",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend runtime close stage mislabeled",
-      expected: "missing coupled backend lifecycle contract runtime closeOrTerminate call site",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replaceAll('"runtime-close"', '"runtime-start"'),
-        );
-      },
-    },
-    {
-      name: "backend runtime close call drops owner cleanup",
-      expected: "missing coupled backend lifecycle contract runtime closeOrTerminate call site",
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace(
-            "(signal) => runtimeOwner?.close(signal) ?? Promise.resolve()",
-            "async () => {}",
-          ),
-        );
-      },
-    },
-    {
-      name: "backend shutdown terminal escalation removed",
-      expected: 'missing backend lifecycle marker "function terminalShutdownFailure"',
-      mutate(fixture) {
-        edit(tripletFiles(fixture, stem011)[2], (text) =>
-          text.replace("function terminalShutdownFailure", "function recordShutdownFailure"),
-        );
-      },
-    },
-    {
-      name: "backend lifecycle eval assertion removed",
-      expected:
-        'missing backend lifecycle assertion "- contains: never-resolving drain terminal escalation"',
-      mutate(fixture) {
-        const backendCase = path.join(
-          fixture,
-          evalRelative,
-          "cases",
-          "selective-backend-routing.md",
-        );
-        edit(backendCase, (text) =>
-          text.replace("- contains: never-resolving drain terminal escalation\n", ""),
-        );
-      },
-    },
-    {
-      name: "unsplit legacy code examples",
-      expected: "split the unit so each historical code example is reviewable",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          const unit = manifest.units.find(
-            (entry) => entry.id === "legacy:nextjs-request-patterns:07.02",
           );
-          unit.source.endLine = 229;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+        },
       },
-    },
-    {
-      name: "legacy coverage boundary inside an open code fence",
-      expected: "section boundary splits a Markdown code fence",
-      mutate(fixture) {
-        edit(path.join(fixture, coverageRelative), (text) => {
-          const manifest = JSON.parse(text);
-          const unit = manifest.units.find(
-            (entry) => entry.id === "legacy:nextjs-request-patterns:07.02",
+      {
+        name: "backend runtime start drops AbortSignal",
+        expected:
+          'missing backend lifecycle marker "operation: (signal) => runtime!.start(signal)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "operation: (signal) => runtime!.start(signal)",
+              "operation: () => runtime!.start()",
+            ),
           );
-          unit.source.endLine = 209;
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
+        },
       },
-    },
-    {
-      name: "historical code mapped only to arbitrary Guide prose",
-      expected:
-        "every preserved or adapted historical code example requires a current Guide code or example target",
-      mutate(fixture) {
-        const guide = path.join(
-          fixture,
-          skillRelative,
-          "references",
-          "ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.guide.md",
-        );
-        edit(guide, (text) =>
-          text.replace(
-            `\`\`\`json
+      {
+        name: "backend runtime acquisition drops AbortSignal",
+        expected:
+          'missing backend lifecycle marker "operation: (signal) => runtimeOwner!.acquire(signal)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "operation: (signal) => runtimeOwner!.acquire(signal)",
+              "operation: () => runtimeOwner!.acquire()",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend signal handlers registered after runtime acquisition",
+        expected: "signal handlers must precede runtime acquisition",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) => {
+            const registrations =
+              '  process.on("SIGINT", onSigint);\n  process.on("SIGTERM", onSigterm);\n';
+            return text
+              .replace(registrations, "")
+              .replace(
+                "        runtimeOwner = prepareRuntimeAcquisition(config, bootstrapLogger);",
+                `        runtimeOwner = prepareRuntimeAcquisition(config, bootstrapLogger);\n${registrations}`,
+              );
+          });
+        },
+      },
+      {
+        name: "backend database acquisition precedes disposer registration",
+        expected: "database disposer must precede external acquisition",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "    closeStack.push((cleanupSignal) => databaseOwner.close(cleanupSignal));\n    const database = await createDatabase(databaseOwner, signal);",
+              "    const database = await createDatabase(databaseOwner, signal);\n    closeStack.push((cleanupSignal) => databaseOwner.close(cleanupSignal));",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend late operation rejection loses observer",
+        expected:
+          'missing backend lifecycle marker "const operationOutcome = settle(Promise.resolve().then(() => operation(signal)))"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "const operationOutcome = settle(Promise.resolve().then(() => operation(signal)))",
+              "const operationOutcome = operation(signal)",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend aggregate error drops primary-cleanup ordering",
+        expected:
+          'missing backend lifecycle marker "return new AggregateError([primary, cleanup], message, { cause: primary })"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "return new AggregateError([primary, cleanup], message, { cause: primary })",
+              "return new AggregateError([cleanup], message, { cause: cleanup })",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend internal close terminal bypasses failure preservation",
+        expected:
+          "missing coupled backend lifecycle contract close deadline and direct-rejection escalation",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "terminal: (failure) => invokeTerminalPreservingFailure(failure)",
+              "terminal",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend direct close rejection bypasses failure preservation",
+        expected:
+          "missing coupled backend lifecycle contract close deadline and direct-rejection escalation",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "return invokeTerminalPreservingFailure({ stage, cause: error })",
+              "return terminal({ stage, cause: error })",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend close terminal aggregate reverses failure order",
+        expected: "missing coupled backend lifecycle contract close terminal error preservation",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "        failure.cause,\n        terminalError,",
+              "        terminalError,\n        failure.cause,",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend shared shutdown rejection is discarded",
+        expected: "missing coupled backend lifecycle contract observed shared shutdown",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "      (error) => lifecycleDone.resolve({ ok: false, error }),",
+              "      () => lifecycleDone.resolve({ ok: true }),",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend startup failure reintroduces a falsy truthiness gate",
+        expected:
+          "missing coupled backend lifecycle contract tagged falsy-safe startup failure unwind",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "    if (!startupOutcome.ok) {",
+              "    if (!startupOutcome.ok && startupOutcome.error) {",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend main no longer awaits lifecycle completion",
+        expected: 'missing backend lifecycle marker "const outcome = await lifecycleDone.promise"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "const outcome = await lifecycleDone.promise",
+              "const outcome = { ok: true } as const",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend outer finally loses signal-handler cleanup",
+        expected: "missing coupled backend lifecycle contract guaranteed signal-handler cleanup",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "    // Also runs when an injected terminal function throws in deterministic tests.\n    removeSignalHandlers();",
+              "    // Handler cleanup removed by negative fixture.",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend listener bind drops AbortSignal",
+        expected:
+          'missing backend lifecycle marker "operation: (signal) => listenerOwner!.bind(signal)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "operation: (signal) => listenerOwner!.bind(signal)",
+              "operation: () => listenerOwner!.bind()",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend drain drops AbortSignal",
+        expected:
+          'missing backend lifecycle marker "operation: (signal) => listener!.drain(signal)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "operation: (signal) => listener!.drain(signal)",
+              "operation: () => listener!.drain()",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend admission stop drops AbortSignal",
+        expected:
+          'missing backend lifecycle marker "operation: (signal) => listener!.stopAdmission(signal)"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "operation: (signal) => listener!.stopAdmission(signal)",
+              "operation: () => listener!.stopAdmission()",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend drain gate starts open before admission stop",
+        expected: "missing coupled backend lifecycle contract admission stop before drain",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace("let admissionStopped = false", "let admissionStopped = true"),
+          );
+        },
+      },
+      {
+        name: "backend drain gate opens before admission stop settles",
+        expected: "missing coupled backend lifecycle contract admission stop before drain",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text
+              .replace(
+                '            await withDeadline({\n              stage: "listener-stop-admission",',
+                '            const admissionStop = withDeadline({\n              stage: "listener-stop-admission",',
+              )
+              .replace(
+                "            admissionStopped = true;\n          } catch (error) {",
+                "            admissionStopped = true;\n            await admissionStop;\n          } catch (error) {",
+              ),
+          );
+        },
+      },
+      {
+        name: "backend drain runs without confirmed admission stop",
+        expected: "missing coupled backend lifecycle contract admission stop before drain",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace("if (admissionStopped) {", "if (true) {"),
+          );
+        },
+      },
+      {
+        name: "backend partial bind loses synchronous disposer contract",
+        expected:
+          'missing backend lifecycle marker "must synchronously return a closeable adapter **before** `bind(signal)` can open a socket"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "must synchronously return a closeable adapter **before** `bind(signal)` can open a socket",
+              "may return a closeable adapter after binding begins",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving start test removed",
+        expected:
+          'missing backend lifecycle marker "Return a never-resolving `runtime.start(signal)`"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "Return a never-resolving `runtime.start(signal)`",
+              "Return a rejected `runtime.start(signal)`",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving bind test removed",
+        expected:
+          'missing backend lifecycle marker "Let `bind(signal)` open a test socket and then never resolve"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "Let `bind(signal)` open a test socket and then never resolve",
+              "Let `bind(signal)` reject before opening a test socket",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving drain test removed",
+        expected: 'missing backend lifecycle marker "make `drain(signal)` never resolve"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "make `drain(signal)` never resolve",
+              "make `drain(signal)` reject immediately",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving admission-stop test removed",
+        expected: 'missing backend lifecycle marker "Make `stopAdmission(signal)` never resolve"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "Make `stopAdmission(signal)` never resolve",
+              "Make `stopAdmission(signal)` reject immediately",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving listener-close test removed",
+        expected:
+          'missing backend lifecycle marker "Make `listenerOwner.close(signal)` never resolve"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "Make `listenerOwner.close(signal)` never resolve",
+              "Make `listenerOwner.close(signal)` reject immediately",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend never-resolving runtime-close test removed",
+        expected:
+          'missing backend lifecycle marker "Make `runtimeOwner.close(signal)` never resolve"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "Make `runtimeOwner.close(signal)` never resolve",
+              "Make `runtimeOwner.close(signal)` reject immediately",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend listener close stage mislabeled",
+        expected: "missing coupled backend lifecycle contract listener closeOrTerminate call site",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replaceAll('"listener-close"', '"listener-bind"'),
+          );
+        },
+      },
+      {
+        name: "backend listener close call drops owner cleanup",
+        expected: "missing coupled backend lifecycle contract listener closeOrTerminate call site",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "(signal) => listenerOwner?.close(signal) ?? Promise.resolve()",
+              "async () => {}",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend runtime close stage mislabeled",
+        expected: "missing coupled backend lifecycle contract runtime closeOrTerminate call site",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replaceAll('"runtime-close"', '"runtime-start"'),
+          );
+        },
+      },
+      {
+        name: "backend runtime close call drops owner cleanup",
+        expected: "missing coupled backend lifecycle contract runtime closeOrTerminate call site",
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace(
+              "(signal) => runtimeOwner?.close(signal) ?? Promise.resolve()",
+              "async () => {}",
+            ),
+          );
+        },
+      },
+      {
+        name: "backend shutdown terminal escalation removed",
+        expected: 'missing backend lifecycle marker "function terminalShutdownFailure"',
+        mutate(fixture) {
+          edit(tripletFiles(fixture, stem011)[2], (text) =>
+            text.replace("function terminalShutdownFailure", "function recordShutdownFailure"),
+          );
+        },
+      },
+      {
+        name: "backend lifecycle eval assertion removed",
+        expected:
+          'missing backend lifecycle assertion "- contains: never-resolving drain terminal escalation"',
+        mutate(fixture) {
+          const backendCase = path.join(
+            fixture,
+            evalRelative,
+            "cases",
+            "selective-backend-routing.md",
+          );
+          edit(backendCase, (text) =>
+            text.replace("- contains: never-resolving drain terminal escalation\n", ""),
+          );
+        },
+      },
+      {
+        name: "unsplit legacy code examples",
+        expected: "split the unit so each historical code example is reviewable",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const unit = manifest.units.find(
+              (entry) => entry.id === "legacy:nextjs-request-patterns:07.02",
+            );
+            unit.source.endLine = 229;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "legacy coverage boundary inside an open code fence",
+        expected: "section boundary splits a Markdown code fence",
+        mutate(fixture) {
+          edit(path.join(fixture, coverageRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const unit = manifest.units.find(
+              (entry) => entry.id === "legacy:nextjs-request-patterns:07.02",
+            );
+            unit.source.endLine = 209;
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
+      },
+      {
+        name: "historical code mapped only to arbitrary Guide prose",
+        expected:
+          "every preserved or adapted historical code example requires a current Guide code or example target",
+        mutate(fixture) {
+          const guide = path.join(
+            fixture,
+            skillRelative,
+            "references",
+            "ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.guide.md",
+          );
+          edit(guide, (text) =>
+            text.replace(
+              `\`\`\`json
 {
   "scripts": {
     "dev": "bun --env-file=.env.development.local --watch src/main.ts",
@@ -2478,7 +2562,7 @@ try {
   }
 }
 \`\`\``,
-            `Launcher illustration expressed only as ordinary prose:
+              `Launcher illustration expressed only as ordinary prose:
 
 {
   "scripts": {
@@ -2486,976 +2570,1686 @@ try {
     "start": "bun --no-env-file src/main.ts"
   }
 }`,
-          ),
-        );
+            ),
+          );
+        },
       },
-    },
-    {
-      name: "repo-only legacy evidence in skill payload",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, coverageRelative),
-          path.join(fixture, skillRelative, "assets", "legacy-reference-coverage.json"),
-        );
+      {
+        name: "repo-only legacy evidence in skill payload",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          fs.copyFileSync(
+            path.join(fixture, coverageRelative),
+            path.join(fixture, skillRelative, "assets", "legacy-reference-coverage.json"),
+          );
+        },
       },
-    },
-    {
-      name: "renamed legacy baseline bytes in skill payload",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          path.join(fixture, skillRelative, "assets", "historical-pattern.md"),
-        );
-      },
-    },
-    {
-      name: "wrapped renamed legacy baseline bytes in skill payload",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "wrapped-historical-pattern.md"),
-          Buffer.concat([
-            Buffer.from("wrapper prefix\n", "utf8"),
-            fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
-            Buffer.from("wrapper suffix\n", "utf8"),
-          ]),
-        );
-      },
-    },
-    {
-      name: "wrapped renamed legacy source lock in skill payload",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "wrapped-source-custody.txt"),
-          Buffer.concat([
-            Buffer.from("wrapper prefix\n", "utf8"),
-            fs.readFileSync(path.join(fixture, sourceLockRelative)),
-            Buffer.from("wrapper suffix\n", "utf8"),
-          ]),
-        );
-      },
-    },
-    {
-      name: "wrapped renamed legacy coverage in skill payload",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "wrapped-coverage-custody.txt"),
-          Buffer.concat([
-            Buffer.from("wrapper prefix\n", "utf8"),
-            fs.readFileSync(path.join(fixture, coverageRelative)),
-            Buffer.from("wrapper suffix\n", "utf8"),
-          ]),
-        );
-      },
-    },
-    {
-      name: "forbidden payload hash uses every descriptor read phase",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        fs.copyFileSync(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          path.join(fixture, skillRelative, "assets", "exact-forbidden-evidence.md"),
-        );
-      },
-      run(fixture) {
-        const target = path.join(fixture, skillRelative, "assets", "exact-forbidden-evidence.md");
-        const observedPhases = new Set();
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (file === target) observedPhases.add(phase);
-        });
-        for (const phase of ["before-open", "after-open", "after-read"]) {
-          if (!observedPhases.has(phase)) {
-            throw new Error(`forbidden payload hash did not execute ${phase}`);
-          }
-        }
-        return result;
-      },
-    },
-    {
-      name: "payload mutation during a later semantic final seal",
-      expected: "validated payload bytes changed after the original leak scan",
-      mutate(fixture) {
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "late-final-seal-victim.md"),
-          "harmless payload before the final seal\n",
-          "utf8",
-        );
-      },
-      run(fixture) {
-        const victim = path.join(fixture, skillRelative, "assets", "late-final-seal-victim.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
-          if (
-            fired ||
-            kind !== "semantic" ||
-            pass !== "forward" ||
-            phase !== "before-final-record-seal"
-          ) {
-            return;
-          }
-          fired = true;
+      {
+        name: "renamed legacy baseline bytes in skill payload",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
           fs.copyFileSync(
             path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            victim,
+            path.join(fixture, skillRelative, "assets", "historical-pattern.md"),
           );
-        });
-        if (!fired) throw new Error("late payload final-seal mutation hook did not execute");
-        return result;
+        },
       },
-    },
-    {
-      name: "payload sibling addition during a later semantic final seal",
-      expected: "directory changed before payload traversal publication",
-      mutate() {},
-      run(fixture) {
-        const sibling = path.join(fixture, skillRelative, "assets", "late-final-seal-sibling.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
-          if (
-            fired ||
-            kind !== "semantic" ||
-            pass !== "forward" ||
-            phase !== "before-final-record-seal"
-          ) {
-            return;
-          }
-          fired = true;
-          fs.writeFileSync(sibling, "late sibling outside the original traversal\n", "utf8");
-        });
-        if (!fired) throw new Error("late payload sibling-add hook did not execute");
-        return result;
+      {
+        name: "wrapped renamed legacy baseline bytes in skill payload",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "wrapped-historical-pattern.md"),
+            Buffer.concat([
+              Buffer.from("wrapper prefix\n", "utf8"),
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+              Buffer.from("wrapper suffix\n", "utf8"),
+            ]),
+          );
+        },
       },
-    },
-    {
-      name: "payload removal during the reverse final seal",
-      expected: "retained payload descriptor no longer matches the current payload path",
-      mutate(fixture) {
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "reverse-final-seal-victim.md"),
-          "harmless payload before reverse removal\n",
-          "utf8",
-        );
+      {
+        name: "wrapped renamed legacy source lock in skill payload",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "wrapped-source-custody.txt"),
+            Buffer.concat([
+              Buffer.from("wrapper prefix\n", "utf8"),
+              fs.readFileSync(path.join(fixture, sourceLockRelative)),
+              Buffer.from("wrapper suffix\n", "utf8"),
+            ]),
+          );
+        },
       },
-      run(fixture) {
-        const victim = path.join(fixture, skillRelative, "assets", "reverse-final-seal-victim.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
-          if (
-            fired ||
-            kind !== "semantic" ||
-            pass !== "reverse" ||
-            phase !== "before-final-record-seal"
-          ) {
-            return;
-          }
-          fired = true;
-          fs.unlinkSync(victim);
-        });
-        if (!fired) throw new Error("reverse payload removal hook did not execute");
-        return result;
+      {
+        name: "wrapped renamed legacy coverage in skill payload",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "wrapped-coverage-custody.txt"),
+            Buffer.concat([
+              Buffer.from("wrapper prefix\n", "utf8"),
+              fs.readFileSync(path.join(fixture, coverageRelative)),
+              Buffer.from("wrapper suffix\n", "utf8"),
+            ]),
+          );
+        },
       },
-    },
-    {
-      name: "final reverse traversal mutation is terminally resealed",
-      expected: "validated payload bytes changed after the original leak scan",
-      mutate(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const trigger = path.join(skill, "00-final-traversal-trigger");
-        const victim = path.join(skill, "zz-final-traversal-victim");
-        fs.mkdirSync(trigger);
-        fs.mkdirSync(victim);
-        fs.writeFileSync(path.join(trigger, "child.md"), "final traversal trigger\n", "utf8");
-        fs.writeFileSync(
-          path.join(victim, "payload.md"),
-          "harmless payload before the terminal reseal\n",
-          "utf8",
-        );
-      },
-      run(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const trigger = path.join(skill, "00-final-traversal-trigger");
-        const victim = path.join(skill, "zz-final-traversal-victim", "payload.md");
-        let finalReverseSealObserved = false;
-        let fired = false;
-        const result = runLegacyEvidenceValidator(
-          fixture,
-          ({ direction, file, kind, pass, phase }) => {
-            if (kind === "payload" && pass === "reverse" && phase === "before-final-record-seal") {
-              finalReverseSealObserved = true;
-              return;
+      {
+        name: "forbidden payload hash uses every descriptor read phase",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          fs.copyFileSync(
+            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
+            path.join(fixture, skillRelative, "assets", "exact-forbidden-evidence.md"),
+          );
+        },
+        run(fixture) {
+          const target = path.join(fixture, skillRelative, "assets", "exact-forbidden-evidence.md");
+          const observedPhases = new Set();
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (file === target) observedPhases.add(phase);
+          });
+          for (const phase of ["before-open", "after-open", "after-read"]) {
+            if (!observedPhases.has(phase)) {
+              throw new Error(`forbidden payload hash did not execute ${phase}`);
             }
+          }
+          return result;
+        },
+      },
+      {
+        name: "payload mutation during a later semantic final seal",
+        expected: "validated payload bytes changed after the original leak scan",
+        mutate(fixture) {
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "late-final-seal-victim.md"),
+            "harmless payload before the final seal\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const victim = path.join(fixture, skillRelative, "assets", "late-final-seal-victim.md");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
             if (
               fired ||
-              !finalReverseSealObserved ||
-              direction !== "reverse" ||
-              file !== trigger ||
+              kind !== "semantic" ||
+              pass !== "forward" ||
+              phase !== "before-final-record-seal"
+            ) {
+              return;
+            }
+            fired = true;
+            fs.writeFileSync(
+              victim,
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+            );
+          });
+          if (!fired) throw new Error("late payload final-seal mutation hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload sibling addition during a later semantic final seal",
+        expected: "directory changed before payload traversal publication",
+        mutate() {},
+        run(fixture) {
+          const sibling = path.join(fixture, skillRelative, "assets", "late-final-seal-sibling.md");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
+            if (
+              fired ||
+              kind !== "semantic" ||
+              pass !== "forward" ||
+              phase !== "before-final-record-seal"
+            ) {
+              return;
+            }
+            fired = true;
+            fs.writeFileSync(sibling, "late sibling outside the original traversal\n", "utf8");
+          });
+          if (!fired) throw new Error("late payload sibling-add hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload removal during the reverse final seal",
+        expected: "retained payload descriptor no longer matches the current payload path",
+        mutate(fixture) {
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "reverse-final-seal-victim.md"),
+            "harmless payload before reverse removal\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const victim = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "reverse-final-seal-victim.md",
+          );
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ kind, pass, phase }) => {
+            if (
+              fired ||
+              kind !== "semantic" ||
+              pass !== "reverse" ||
+              phase !== "before-final-record-seal"
+            ) {
+              return;
+            }
+            fired = true;
+            fs.unlinkSync(victim);
+          });
+          if (!fired) throw new Error("reverse payload removal hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "final reverse traversal mutation is terminally resealed",
+        expected: "validated payload bytes changed after the original leak scan",
+        mutate(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const trigger = path.join(skill, "00-final-traversal-trigger");
+          const victim = path.join(skill, "zz-final-traversal-victim");
+          fs.mkdirSync(trigger);
+          fs.mkdirSync(victim);
+          fs.writeFileSync(path.join(trigger, "child.md"), "final traversal trigger\n", "utf8");
+          fs.writeFileSync(
+            path.join(victim, "payload.md"),
+            "harmless payload before the terminal reseal\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const trigger = path.join(skill, "00-final-traversal-trigger");
+          const victim = path.join(skill, "zz-final-traversal-victim", "payload.md");
+          let finalReverseSealObserved = false;
+          let fired = false;
+          const result = runLegacyEvidenceValidator(
+            fixture,
+            ({ direction, file, kind, pass, phase }) => {
+              if (
+                kind === "payload" &&
+                pass === "reverse" &&
+                phase === "before-final-record-seal"
+              ) {
+                finalReverseSealObserved = true;
+                return;
+              }
+              if (
+                fired ||
+                !finalReverseSealObserved ||
+                direction !== "reverse" ||
+                file !== trigger ||
+                phase !== "before-witness-child-revalidation"
+              ) {
+                return;
+              }
+              fired = true;
+              fs.writeFileSync(
+                victim,
+                fs.readFileSync(
+                  path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
+                ),
+              );
+            },
+          );
+          if (!finalReverseSealObserved) {
+            throw new Error("terminal reseal fixture did not observe the reverse record seal");
+          }
+          if (!fired) throw new Error("final reverse traversal mutation hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload traversal exception closes every retained descriptor",
+        expected: "synthetic payload traversal failure",
+        mutate(fixture) {
+          processFileDescriptorCount();
+          fs.writeFileSync(
+            path.join(fixture, skillRelative, "assets", "exceptional-traversal-victim.md"),
+            "harmless payload before exceptional traversal\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          const before = processFileDescriptorCount();
+          let fired = false;
+          let thrown = null;
+          try {
+            validateLegacyReferenceEvidence({
+              root: fixture,
+              testOnlyReadPhaseHook({ file, phase }) {
+                if (fired || file !== assets || phase !== "after-directory-children") return;
+                fired = true;
+                throw new Error("synthetic payload traversal failure");
+              },
+            });
+          } catch (error) {
+            thrown = error;
+          }
+          if (!fired) throw new Error("exceptional payload traversal hook did not execute");
+          if (!thrown) throw new Error("exceptional payload traversal did not propagate");
+          const after = processFileDescriptorCount();
+          if (after !== before) {
+            throw new Error(
+              `payload traversal leaked descriptors: before=${before}, after=${after}`,
+            );
+          }
+          return { status: 1, output: thrown.message };
+        },
+      },
+      {
+        name: "regular payload leaf changes before descriptor open",
+        expected: "file identity changed while opening the descriptor",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-regular-leaf-race.md",
+          );
+          fs.writeFileSync(target, "original payload race fixture\n", "utf8");
+        },
+        run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-regular-leaf-race.md",
+          );
+          let beforeOpenFired = false;
+          let afterOpenFired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (file !== target) return;
+            if (phase === "before-open" && !beforeOpenFired) {
+              beforeOpenFired = true;
+              fs.renameSync(target, `${target}.original`);
+              fs.writeFileSync(target, "replacement payload race fixture\n", "utf8");
+            }
+            if (phase === "after-open") afterOpenFired = true;
+          });
+          if (!beforeOpenFired) throw new Error("regular payload leaf race hook did not execute");
+          if (afterOpenFired) {
+            throw new Error("regular payload leaf race reached the post-open read phase");
+          }
+          return result;
+        },
+      },
+      {
+        name: "regular payload parent changes before descriptor open",
+        expected: "parent path components changed while reading the opened descriptor",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-regular-parent-race",
+            "target.md",
+          );
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.writeFileSync(target, "hard-linked payload race fixture\n", "utf8");
+          const replacementParent = `${path.dirname(target)}.replacement`;
+          fs.mkdirSync(replacementParent);
+          fs.linkSync(target, path.join(replacementParent, path.basename(target)));
+        },
+        run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-regular-parent-race",
+            "target.md",
+          );
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== target || phase !== "before-open") return;
+            fired = true;
+            const parent = path.dirname(target);
+            const originalParent = `${parent}.original`;
+            fs.renameSync(parent, originalParent);
+            fs.renameSync(`${parent}.replacement`, parent);
+          });
+          if (!fired) throw new Error("regular payload parent race hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload directory swap cannot hide forbidden evidence",
+        expected: "directory identity changed during cwd-anchored traversal",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-directory-race",
+            "hidden-evidence.md",
+          );
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(
+            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
+            target,
+          );
+        },
+        run(fixture) {
+          const directory = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-directory-race",
+          );
+          const parkedDirectory = `${directory}.original`;
+          let opened = false;
+          let restored = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (file !== directory) return;
+            if (phase === "after-directory-open" && !opened) {
+              opened = true;
+              fs.renameSync(directory, parkedDirectory);
+              fs.mkdirSync(directory);
+            } else if (phase === "after-directory-read" && opened && !restored) {
+              restored = true;
+              fs.rmdirSync(directory);
+              fs.renameSync(parkedDirectory, directory);
+            }
+          });
+          if (!opened || !restored) {
+            throw new Error("payload directory race did not execute both swap phases");
+          }
+          return result;
+        },
+      },
+      {
+        name: "payload directory changes after enumeration before child open",
+        expected: "directory identity changed during cwd-anchored traversal",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-return-race",
+            "hidden-evidence.md",
+          );
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(
+            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
+            target,
+          );
+        },
+        run(fixture) {
+          const directory = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-return-race",
+          );
+          const target = path.join(directory, "hidden-evidence.md");
+          const parkedDirectory = `${directory}.original`;
+          const filePhases = new Set();
+          let swapped = false;
+          let restored = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (file === directory && phase === "after-directory-return" && !swapped) {
+              swapped = true;
+              fs.renameSync(directory, parkedDirectory);
+              fs.mkdirSync(directory);
+            }
+            if (file === target) {
+              filePhases.add(phase);
+              if (phase === "after-read" && swapped && !restored) {
+                restored = true;
+                fs.rmdirSync(directory);
+                fs.renameSync(parkedDirectory, directory);
+              }
+            }
+          });
+          if (!swapped || !restored) {
+            throw new Error("payload post-enumeration race did not swap and restore");
+          }
+          for (const phase of ["before-open", "after-open", "after-read"]) {
+            if (!filePhases.has(phase)) {
+              throw new Error(`cwd-anchored child read did not execute ${phase}`);
+            }
+          }
+          return result;
+        },
+      },
+      {
+        name: "special payload traversal entry",
+        expected: "unsupported special entry in skill-payload traversal",
+        mutate() {},
+        run(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ entries, file, phase }) => {
+            if (fired || file !== assets || phase !== "after-directory-read") return;
+            fired = true;
+            entries.push({
+              isDirectory: () => false,
+              isFile: () => false,
+              isSymbolicLink: () => false,
+              name: "synthetic-special-entry",
+            });
+          });
+          if (!fired) throw new Error("special payload traversal hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload leaf changes to FIFO before descriptor open",
+        expected: "opened descriptor is not a regular file",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-fifo-race.md",
+          );
+          fs.writeFileSync(target, "harmless payload before FIFO swap\n", "utf8");
+        },
+        async run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-fifo-race.md",
+          );
+          const writer = spawn(
+            process.execPath,
+            [
+              "-e",
+              'setTimeout(() => { const fs = require("node:fs"); const fd = fs.openSync(process.argv[1], "w"); fs.closeSync(fd); }, 2000);',
+              target,
+            ],
+            { stdio: "ignore" },
+          );
+          let fired = false;
+          const startedAt = Date.now();
+          let result;
+          try {
+            result = runLegacyEvidenceValidator(fixture, ({ file, openFlags, phase }) => {
+              if (fired || file !== target || phase !== "before-open") return;
+              fired = true;
+              const requiredOpenFlags = fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK;
+              if ((openFlags & requiredOpenFlags) !== requiredOpenFlags) {
+                throw new Error("legacy-reference read hook did not expose O_NOFOLLOW|O_NONBLOCK");
+              }
+              fs.renameSync(target, `${target}.original`);
+              createFixtureFifo(target);
+            });
+          } finally {
+            if (writer.exitCode === null && writer.signalCode === null) writer.kill("SIGKILL");
+            if (writer.exitCode === null && writer.signalCode === null) {
+              await new Promise((resolve) => writer.once("close", resolve));
+            }
+          }
+          const elapsedMs = Date.now() - startedAt;
+          if (!fired) throw new Error("payload FIFO race hook did not execute");
+          if (elapsedMs >= 1000) {
+            throw new Error(`payload FIFO open did not fail promptly (${elapsedMs}ms)`);
+          }
+          return result;
+        },
+      },
+      {
+        name: "payload leaf changes to a symlink before descriptor open",
+        expected:
+          "repo-only legacy-reference evidence custody cannot be verified through skill-payload symlinks",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-leaf-race.md",
+          );
+          fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
+        },
+        run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-leaf-race.md",
+          );
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== target || phase !== "before-open") return;
+            fired = true;
+            if (typeof fs.constants.O_NOFOLLOW !== "number") {
+              const error = new Error("O_NOFOLLOW is unavailable");
+              error.code = "ENOTSUP";
+              throw new UnsupportedSymlinkFixtureError(error);
+            }
+            const original = `${target}.original`;
+            fs.renameSync(target, original);
+            createFixtureSymlink(original, target, "file");
+          });
+          if (!fired) throw new Error("payload leaf race hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload bytes mutate between descriptor fstat observations",
+        expected: "file identity changed while reading the opened descriptor",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-content-race.md",
+          );
+          fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
+        },
+        run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-content-race.md",
+          );
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== target || phase !== "after-open") return;
+            fired = true;
+            fs.appendFileSync(target, "changed during descriptor read\n", "utf8");
+          });
+          if (!fired) throw new Error("payload content race hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload bytes mutate after child reads before traversal publication",
+        expected: "payload leaf changed after descriptor read before traversal publication",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-late-content-race.md",
+          );
+          fs.writeFileSync(target, "harmless payload before late drift\n", "utf8");
+        },
+        run(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          const target = path.join(assets, "legacy-evidence-late-content-race.md");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== assets || phase !== "after-directory-children") return;
+            fired = true;
+            fs.writeFileSync(
+              target,
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+            );
+          });
+          if (!fired) throw new Error("late payload content race hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload bytes mutate during later child witness revalidation",
+        expected: "payload leaf changed after descriptor read before traversal publication",
+        mutate(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          fs.writeFileSync(
+            path.join(assets, "00-witness-victim.md"),
+            "harmless payload before recursive revalidation\n",
+            "utf8",
+          );
+          const child = path.join(assets, "zz-witness-child");
+          fs.mkdirSync(child);
+          fs.writeFileSync(path.join(child, "child.md"), "slow child witness\n", "utf8");
+        },
+        run(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          const victim = path.join(assets, "00-witness-victim.md");
+          const child = path.join(assets, "zz-witness-child");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== child || phase !== "before-witness-child-revalidation") return;
+            fired = true;
+            fs.writeFileSync(
+              victim,
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+            );
+          });
+          if (!fired) throw new Error("recursive witness drift hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload child subtree mutates during later sibling revalidation",
+        expected: "payload leaf changed after descriptor read before traversal publication",
+        mutate(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          const victimChild = path.join(assets, "00-victim-child");
+          const triggerChild = path.join(assets, "zz-trigger-child");
+          fs.mkdirSync(victimChild);
+          fs.mkdirSync(triggerChild);
+          fs.writeFileSync(
+            path.join(victimChild, "payload.md"),
+            "harmless nested payload before sibling revalidation\n",
+            "utf8",
+          );
+          fs.copyFileSync(
+            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
+            path.join(victimChild, "must-be-discarded.md"),
+          );
+          fs.writeFileSync(path.join(triggerChild, "child.md"), "later sibling witness\n", "utf8");
+        },
+        run(fixture) {
+          const assets = path.join(fixture, skillRelative, "assets");
+          const victim = path.join(assets, "00-victim-child", "payload.md");
+          const triggerChild = path.join(assets, "zz-trigger-child");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
+            if (
+              fired ||
+              direction !== "forward" ||
+              file !== triggerChild ||
               phase !== "before-witness-child-revalidation"
             ) {
               return;
             }
             fired = true;
+            fs.writeFileSync(
+              victim,
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+            );
+          });
+          if (!fired) throw new Error("nested sibling witness drift hook did not execute");
+          if (
+            result.output.includes(
+              "repo-only legacy-reference evidence bytes must not enter the skill payload",
+            )
+          ) {
+            throw new Error("invalidated child subtree records were published to the leak scan");
+          }
+          return result;
+        },
+      },
+      {
+        name: "payload child subtree mutates in the final reverse witness pass",
+        expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
+        mutate(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const triggerChild = path.join(skill, "00-reverse-trigger-child");
+          const victimChild = path.join(skill, "zz-reverse-victim-child");
+          fs.mkdirSync(triggerChild);
+          fs.mkdirSync(victimChild);
+          fs.writeFileSync(
+            path.join(triggerChild, "child.md"),
+            "reverse trigger witness\n",
+            "utf8",
+          );
+          fs.writeFileSync(
+            path.join(victimChild, "payload.md"),
+            "harmless nested payload before reverse sibling revalidation\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const triggerChild = path.join(skill, "00-reverse-trigger-child");
+          const victim = path.join(skill, "zz-reverse-victim-child", "payload.md");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
+            if (
+              fired ||
+              direction !== "reverse" ||
+              file !== triggerChild ||
+              phase !== "before-witness-child-revalidation"
+            ) {
+              return;
+            }
+            fired = true;
+            fs.writeFileSync(
+              victim,
+              fs.readFileSync(path.join(fixture, legacyBaselineRelative, "adoption-workflows.md")),
+            );
+          });
+          if (!fired) throw new Error("reverse sibling witness drift hook did not execute");
+          return result;
+        },
+      },
+      {
+        name: "payload child path swaps inode in the final reverse witness pass",
+        expected: "retained payload descriptor no longer matches the current payload path",
+        mutate(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const triggerChild = path.join(skill, "00-path-swap-trigger");
+          const victimChild = path.join(skill, "zz-path-swap-victim");
+          fs.mkdirSync(triggerChild);
+          fs.mkdirSync(victimChild);
+          fs.writeFileSync(path.join(triggerChild, "child.md"), "path swap trigger\n", "utf8");
+          fs.writeFileSync(
+            path.join(victimChild, "payload.md"),
+            "harmless payload before reverse path swap\n",
+            "utf8",
+          );
+        },
+        run(fixture) {
+          const skill = path.join(fixture, skillRelative);
+          const triggerChild = path.join(skill, "00-path-swap-trigger");
+          const victim = path.join(skill, "zz-path-swap-victim", "payload.md");
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
+            if (
+              fired ||
+              direction !== "reverse" ||
+              file !== triggerChild ||
+              phase !== "before-witness-child-revalidation"
+            ) {
+              return;
+            }
+            fired = true;
+            fs.renameSync(victim, `${victim}.original`);
             fs.copyFileSync(
               path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
               victim,
             );
-          },
-        );
-        if (!finalReverseSealObserved) {
-          throw new Error("terminal reseal fixture did not observe the reverse record seal");
-        }
-        if (!fired) throw new Error("final reverse traversal mutation hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload traversal exception closes every retained descriptor",
-      expected: "synthetic payload traversal failure",
-      mutate(fixture) {
-        processFileDescriptorCount();
-        fs.writeFileSync(
-          path.join(fixture, skillRelative, "assets", "exceptional-traversal-victim.md"),
-          "harmless payload before exceptional traversal\n",
-          "utf8",
-        );
-      },
-      run(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        const before = processFileDescriptorCount();
-        let fired = false;
-        let thrown = null;
-        try {
-          validateLegacyReferenceEvidence({
-            root: fixture,
-            testOnlyReadPhaseHook({ file, phase }) {
-              if (fired || file !== assets || phase !== "after-directory-children") return;
-              fired = true;
-              throw new Error("synthetic payload traversal failure");
-            },
           });
-        } catch (error) {
-          thrown = error;
-        }
-        if (!fired) throw new Error("exceptional payload traversal hook did not execute");
-        if (!thrown) throw new Error("exceptional payload traversal did not propagate");
-        const after = processFileDescriptorCount();
-        if (after !== before) {
-          throw new Error(`payload traversal leaked descriptors: before=${before}, after=${after}`);
-        }
-        return { status: 1, output: thrown.message };
+          if (!fired) throw new Error("reverse payload path-swap hook did not execute");
+          return result;
+        },
       },
-    },
-    {
-      name: "regular payload leaf changes before descriptor open",
-      expected: "file identity changed while opening the descriptor",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-regular-leaf-race.md",
-        );
-        fs.writeFileSync(target, "original payload race fixture\n", "utf8");
-      },
-      run(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-regular-leaf-race.md",
-        );
-        let beforeOpenFired = false;
-        let afterOpenFired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (file !== target) return;
-          if (phase === "before-open" && !beforeOpenFired) {
-            beforeOpenFired = true;
-            fs.renameSync(target, `${target}.original`);
+      {
+        name: "payload parent changes after descriptor read",
+        expected: "parent path components changed while reading the opened descriptor",
+        mutate(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-parent-race",
+            "target.md",
+          );
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
+        },
+        run(fixture) {
+          const target = path.join(
+            fixture,
+            skillRelative,
+            "assets",
+            "legacy-evidence-parent-race",
+            "target.md",
+          );
+          let fired = false;
+          const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
+            if (fired || file !== target || phase !== "after-read") return;
+            fired = true;
+            const parent = path.dirname(target);
+            fs.renameSync(parent, `${parent}.original`);
+            fs.mkdirSync(parent);
             fs.writeFileSync(target, "replacement payload race fixture\n", "utf8");
-          }
-          if (phase === "after-open") afterOpenFired = true;
-        });
-        if (!beforeOpenFired) throw new Error("regular payload leaf race hook did not execute");
-        if (afterOpenFired) {
-          throw new Error("regular payload leaf race reached the post-open read phase");
-        }
-        return result;
-      },
-    },
-    {
-      name: "regular payload parent changes before descriptor open",
-      expected: "parent path components changed while reading the opened descriptor",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-regular-parent-race",
-          "target.md",
-        );
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, "hard-linked payload race fixture\n", "utf8");
-        const replacementParent = `${path.dirname(target)}.replacement`;
-        fs.mkdirSync(replacementParent);
-        fs.linkSync(target, path.join(replacementParent, path.basename(target)));
-      },
-      run(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-regular-parent-race",
-          "target.md",
-        );
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== target || phase !== "before-open") return;
-          fired = true;
-          const parent = path.dirname(target);
-          const originalParent = `${parent}.original`;
-          fs.renameSync(parent, originalParent);
-          fs.renameSync(`${parent}.replacement`, parent);
-        });
-        if (!fired) throw new Error("regular payload parent race hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload directory swap cannot hide forbidden evidence",
-      expected: "directory identity changed during cwd-anchored traversal",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-directory-race",
-          "hidden-evidence.md",
-        );
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.copyFileSync(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          target,
-        );
-      },
-      run(fixture) {
-        const directory = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-directory-race",
-        );
-        const parkedDirectory = `${directory}.original`;
-        let opened = false;
-        let restored = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (file !== directory) return;
-          if (phase === "after-directory-open" && !opened) {
-            opened = true;
-            fs.renameSync(directory, parkedDirectory);
-            fs.mkdirSync(directory);
-          } else if (phase === "after-directory-read" && opened && !restored) {
-            restored = true;
-            fs.rmdirSync(directory);
-            fs.renameSync(parkedDirectory, directory);
-          }
-        });
-        if (!opened || !restored) {
-          throw new Error("payload directory race did not execute both swap phases");
-        }
-        return result;
-      },
-    },
-    {
-      name: "payload directory changes after enumeration before child open",
-      expected: "directory identity changed during cwd-anchored traversal",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-return-race",
-          "hidden-evidence.md",
-        );
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.copyFileSync(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          target,
-        );
-      },
-      run(fixture) {
-        const directory = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-return-race",
-        );
-        const target = path.join(directory, "hidden-evidence.md");
-        const parkedDirectory = `${directory}.original`;
-        const filePhases = new Set();
-        let swapped = false;
-        let restored = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (file === directory && phase === "after-directory-return" && !swapped) {
-            swapped = true;
-            fs.renameSync(directory, parkedDirectory);
-            fs.mkdirSync(directory);
-          }
-          if (file === target) {
-            filePhases.add(phase);
-            if (phase === "after-read" && swapped && !restored) {
-              restored = true;
-              fs.rmdirSync(directory);
-              fs.renameSync(parkedDirectory, directory);
-            }
-          }
-        });
-        if (!swapped || !restored) {
-          throw new Error("payload post-enumeration race did not swap and restore");
-        }
-        for (const phase of ["before-open", "after-open", "after-read"]) {
-          if (!filePhases.has(phase)) {
-            throw new Error(`cwd-anchored child read did not execute ${phase}`);
-          }
-        }
-        return result;
-      },
-    },
-    {
-      name: "special payload traversal entry",
-      expected: "unsupported special entry in skill-payload traversal",
-      mutate() {},
-      run(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ entries, file, phase }) => {
-          if (fired || file !== assets || phase !== "after-directory-read") return;
-          fired = true;
-          entries.push({
-            isDirectory: () => false,
-            isFile: () => false,
-            isSymbolicLink: () => false,
-            name: "synthetic-special-entry",
           });
-        });
-        if (!fired) throw new Error("special payload traversal hook did not execute");
-        return result;
+          if (!fired) throw new Error("payload parent race hook did not execute");
+          return result;
+        },
       },
-    },
-    ...(process.platform === "win32"
-      ? []
-      : [
-          {
-            name: "payload leaf changes to FIFO before descriptor open",
-            expected: "opened descriptor is not a regular file",
-            mutate(fixture) {
-              const target = path.join(
-                fixture,
-                skillRelative,
-                "assets",
-                "legacy-evidence-fifo-race.md",
-              );
-              fs.writeFileSync(target, "harmless payload before FIFO swap\n", "utf8");
-            },
-            run(fixture) {
-              const target = path.join(
-                fixture,
-                skillRelative,
-                "assets",
-                "legacy-evidence-fifo-race.md",
-              );
-              const writer = spawn(
-                process.execPath,
-                [
-                  "-e",
-                  'setTimeout(() => { const fs = require("node:fs"); const fd = fs.openSync(process.argv[1], "w"); fs.closeSync(fd); }, 2000);',
-                  target,
-                ],
-                { stdio: "ignore" },
-              );
-              let fired = false;
-              const startedAt = Date.now();
-              let result;
-              try {
-                result = runLegacyEvidenceValidator(fixture, ({ file, openFlags, phase }) => {
-                  if (fired || file !== target || phase !== "before-open") return;
-                  fired = true;
-                  const requiredOpenFlags = fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK;
-                  if ((openFlags & requiredOpenFlags) !== requiredOpenFlags) {
-                    throw new Error(
-                      "legacy-reference read hook did not expose O_NOFOLLOW|O_NONBLOCK",
-                    );
-                  }
-                  fs.renameSync(target, `${target}.original`);
-                  createFixtureFifo(target);
-                });
-              } finally {
-                if (writer.exitCode === null && writer.signalCode === null) writer.kill("SIGKILL");
-              }
-              const elapsedMs = Date.now() - startedAt;
-              if (!fired) throw new Error("payload FIFO race hook did not execute");
-              if (elapsedMs >= 1000) {
-                throw new Error(`payload FIFO open did not fail promptly (${elapsedMs}ms)`);
-              }
-              return result;
-            },
-          },
-        ]),
-    {
-      name: "payload leaf changes to a symlink before descriptor open",
-      expected:
-        "repo-only legacy-reference evidence custody cannot be verified through skill-payload symlinks",
-      mutate(fixture) {
-        const target = path.join(fixture, skillRelative, "assets", "legacy-evidence-leaf-race.md");
-        fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
+      {
+        name: "symlinked legacy baseline parent",
+        expected: "every path component must be symlink-free",
+        mutate(fixture) {
+          const baselineParent = path.dirname(path.join(fixture, legacyBaselineRelative));
+          const custodyDirectory = `${baselineParent}-symlink-target`;
+          fs.renameSync(baselineParent, custodyDirectory);
+          createFixtureSymlink(custodyDirectory, baselineParent, "dir");
+        },
       },
-      run(fixture) {
-        const target = path.join(fixture, skillRelative, "assets", "legacy-evidence-leaf-race.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== target || phase !== "before-open") return;
-          fired = true;
-          if (typeof fs.constants.O_NOFOLLOW !== "number") {
-            const error = new Error("O_NOFOLLOW is unavailable");
-            error.code = "ENOTSUP";
-            throw new UnsupportedSymlinkFixtureError(error);
-          }
-          const original = `${target}.original`;
-          fs.renameSync(target, original);
-          createFixtureSymlink(original, target, "file");
-        });
-        if (!fired) throw new Error("payload leaf race hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload bytes mutate between descriptor fstat observations",
-      expected: "file identity changed while reading the opened descriptor",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-content-race.md",
-        );
-        fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
-      },
-      run(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-content-race.md",
-        );
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== target || phase !== "after-open") return;
-          fired = true;
-          fs.appendFileSync(target, "changed during descriptor read\n", "utf8");
-        });
-        if (!fired) throw new Error("payload content race hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload bytes mutate after child reads before traversal publication",
-      expected: "payload leaf changed after descriptor read before traversal publication",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-late-content-race.md",
-        );
-        fs.writeFileSync(target, "harmless payload before late drift\n", "utf8");
-      },
-      run(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        const target = path.join(assets, "legacy-evidence-late-content-race.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== assets || phase !== "after-directory-children") return;
-          fired = true;
-          fs.copyFileSync(
+      {
+        name: "renamed legacy evidence symlink in skill payload",
+        expected:
+          "repo-only legacy-reference evidence custody cannot be verified through skill-payload symlinks",
+        mutate(fixture) {
+          createFixtureSymlink(
             path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            target,
+            path.join(fixture, skillRelative, "assets", "historical-pattern-link.md"),
+            "file",
           );
-        });
-        if (!fired) throw new Error("late payload content race hook did not execute");
-        return result;
+        },
       },
-    },
-    {
-      name: "payload bytes mutate during later child witness revalidation",
-      expected: "payload leaf changed after descriptor read before traversal publication",
-      mutate(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        fs.writeFileSync(
-          path.join(assets, "00-witness-victim.md"),
-          "harmless payload before recursive revalidation\n",
-          "utf8",
-        );
-        const child = path.join(assets, "zz-witness-child");
-        fs.mkdirSync(child);
-        fs.writeFileSync(path.join(child, "child.md"), "slow child witness\n", "utf8");
+      {
+        name: "snapshot and manifest changed behind trust anchor",
+        expected: "source blob must match the independent trust anchor",
+        mutate(fixture) {
+          const baseline = path.join(fixture, legacyBaselineRelative, "adoption-workflows.md");
+          edit(baseline, (text) => text.replace("Architecture", "architecturE"));
+          edit(path.join(fixture, sourceLockRelative), (text) => {
+            const manifest = JSON.parse(text);
+            const bytes = fs.readFileSync(baseline);
+            manifest.files[0].blob = crypto
+              .createHash("sha1")
+              .update(`blob ${bytes.length}\0`)
+              .update(bytes)
+              .digest("hex");
+            manifest.files[0].sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+            return `${JSON.stringify(manifest, null, 2)}\n`;
+          });
+        },
       },
-      run(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        const victim = path.join(assets, "00-witness-victim.md");
-        const child = path.join(assets, "zz-witness-child");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== child || phase !== "before-witness-child-revalidation") return;
-          fired = true;
-          fs.copyFileSync(
-            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            victim,
-          );
-        });
-        if (!fired) throw new Error("recursive witness drift hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload child subtree mutates during later sibling revalidation",
-      expected: "payload leaf changed after descriptor read before traversal publication",
-      mutate(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        const victimChild = path.join(assets, "00-victim-child");
-        const triggerChild = path.join(assets, "zz-trigger-child");
-        fs.mkdirSync(victimChild);
-        fs.mkdirSync(triggerChild);
-        fs.writeFileSync(
-          path.join(victimChild, "payload.md"),
-          "harmless nested payload before sibling revalidation\n",
-          "utf8",
-        );
-        fs.copyFileSync(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          path.join(victimChild, "must-be-discarded.md"),
-        );
-        fs.writeFileSync(path.join(triggerChild, "child.md"), "later sibling witness\n", "utf8");
-      },
-      run(fixture) {
-        const assets = path.join(fixture, skillRelative, "assets");
-        const victim = path.join(assets, "00-victim-child", "payload.md");
-        const triggerChild = path.join(assets, "zz-trigger-child");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
-          if (
-            fired ||
-            direction !== "forward" ||
-            file !== triggerChild ||
-            phase !== "before-witness-child-revalidation"
-          ) {
-            return;
-          }
-          fired = true;
-          fs.copyFileSync(
-            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            victim,
-          );
-        });
-        if (!fired) throw new Error("nested sibling witness drift hook did not execute");
-        if (
-          result.output.includes(
-            "repo-only legacy-reference evidence bytes must not enter the skill payload",
-          )
-        ) {
-          throw new Error("invalidated child subtree records were published to the leak scan");
-        }
-        return result;
-      },
-    },
-    {
-      name: "payload child subtree mutates in the final reverse witness pass",
-      expected: "repo-only legacy-reference evidence bytes must not enter the skill payload",
-      mutate(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const triggerChild = path.join(skill, "00-reverse-trigger-child");
-        const victimChild = path.join(skill, "zz-reverse-victim-child");
-        fs.mkdirSync(triggerChild);
-        fs.mkdirSync(victimChild);
-        fs.writeFileSync(path.join(triggerChild, "child.md"), "reverse trigger witness\n", "utf8");
-        fs.writeFileSync(
-          path.join(victimChild, "payload.md"),
-          "harmless nested payload before reverse sibling revalidation\n",
-          "utf8",
-        );
-      },
-      run(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const triggerChild = path.join(skill, "00-reverse-trigger-child");
-        const victim = path.join(skill, "zz-reverse-victim-child", "payload.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
-          if (
-            fired ||
-            direction !== "reverse" ||
-            file !== triggerChild ||
-            phase !== "before-witness-child-revalidation"
-          ) {
-            return;
-          }
-          fired = true;
-          fs.copyFileSync(
-            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            victim,
-          );
-        });
-        if (!fired) throw new Error("reverse sibling witness drift hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload child path swaps inode in the final reverse witness pass",
-      expected: "retained payload descriptor no longer matches the current payload path",
-      mutate(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const triggerChild = path.join(skill, "00-path-swap-trigger");
-        const victimChild = path.join(skill, "zz-path-swap-victim");
-        fs.mkdirSync(triggerChild);
-        fs.mkdirSync(victimChild);
-        fs.writeFileSync(path.join(triggerChild, "child.md"), "path swap trigger\n", "utf8");
-        fs.writeFileSync(
-          path.join(victimChild, "payload.md"),
-          "harmless payload before reverse path swap\n",
-          "utf8",
-        );
-      },
-      run(fixture) {
-        const skill = path.join(fixture, skillRelative);
-        const triggerChild = path.join(skill, "00-path-swap-trigger");
-        const victim = path.join(skill, "zz-path-swap-victim", "payload.md");
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ direction, file, phase }) => {
-          if (
-            fired ||
-            direction !== "reverse" ||
-            file !== triggerChild ||
-            phase !== "before-witness-child-revalidation"
-          ) {
-            return;
-          }
-          fired = true;
-          fs.renameSync(victim, `${victim}.original`);
-          fs.copyFileSync(
-            path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-            victim,
-          );
-        });
-        if (!fired) throw new Error("reverse payload path-swap hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "payload parent changes after descriptor read",
-      expected: "parent path components changed while reading the opened descriptor",
-      mutate(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-parent-race",
-          "target.md",
-        );
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, "harmless payload race fixture\n", "utf8");
-      },
-      run(fixture) {
-        const target = path.join(
-          fixture,
-          skillRelative,
-          "assets",
-          "legacy-evidence-parent-race",
-          "target.md",
-        );
-        let fired = false;
-        const result = runLegacyEvidenceValidator(fixture, ({ file, phase }) => {
-          if (fired || file !== target || phase !== "after-read") return;
-          fired = true;
-          const parent = path.dirname(target);
-          fs.renameSync(parent, `${parent}.original`);
-          fs.mkdirSync(parent);
-          fs.writeFileSync(target, "replacement payload race fixture\n", "utf8");
-        });
-        if (!fired) throw new Error("payload parent race hook did not execute");
-        return result;
-      },
-    },
-    {
-      name: "symlinked legacy baseline parent",
-      expected: "every path component must be symlink-free",
-      mutate(fixture) {
-        const baselineParent = path.dirname(path.join(fixture, legacyBaselineRelative));
-        const custodyDirectory = `${baselineParent}-symlink-target`;
-        fs.renameSync(baselineParent, custodyDirectory);
-        createFixtureSymlink(custodyDirectory, baselineParent, "dir");
-      },
-    },
-    {
-      name: "renamed legacy evidence symlink in skill payload",
-      expected:
-        "repo-only legacy-reference evidence custody cannot be verified through skill-payload symlinks",
-      mutate(fixture) {
-        createFixtureSymlink(
-          path.join(fixture, legacyBaselineRelative, "adoption-workflows.md"),
-          path.join(fixture, skillRelative, "assets", "historical-pattern-link.md"),
-          "file",
-        );
-      },
-    },
-    {
-      name: "snapshot and manifest changed behind trust anchor",
-      expected: "source blob must match the independent trust anchor",
-      mutate(fixture) {
-        const baseline = path.join(fixture, legacyBaselineRelative, "adoption-workflows.md");
-        edit(baseline, (text) => text.replace("Architecture", "architecturE"));
-        edit(path.join(fixture, sourceLockRelative), (text) => {
-          const manifest = JSON.parse(text);
-          const bytes = fs.readFileSync(baseline);
-          manifest.files[0].blob = crypto
-            .createHash("sha1")
-            .update(`blob ${bytes.length}\0`)
-            .update(bytes)
-            .digest("hex");
-          manifest.files[0].sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
-          return `${JSON.stringify(manifest, null, 2)}\n`;
-        });
-      },
-    },
-  ];
+    ];
 
-  const skippedSymlinkCases = [];
-  const skippedCapabilityCases = [];
-  for (const testCase of cases) {
-    const result = await expectFailure(
-      testCase.name,
-      testCase.mutate,
-      testCase.expected,
-      testCase.run,
-    );
-    if (result.skipped && result.kind === "symlink") {
-      skippedSymlinkCases.push(`${testCase.name}: ${result.reason}`);
-    } else if (result.skipped) {
-      skippedCapabilityCases.push(`${testCase.name}: ${result.reason}`);
+    const sharedCases = commonLegacyLineageFailureCases({
+      evidenceDirectoryRelative: `${evalRelative}/reference-baseline`,
+      evidenceRelative: `${evalRelative}/README.md`,
+      manifestRelative: legacyCaseLineageRelative,
+      prepareAuthorizedShortFingerprint,
+      runtimeRelative: skillRelative,
+      sourceDerivedFingerprintRegression: {
+        expectedLength: 18,
+        marker: "- contains: ADR-0004",
+      },
+      sourceMaterialFingerprints,
+    });
+    const sharedPositiveCases = commonLegacyLineagePositiveCases({
+      manifestRelative: legacyCaseLineageRelative,
+      prepareAuthorizedShortFingerprint,
+    });
+    const registry = [
+      ...cases.map((testCase) => ({
+        id: `local-negative:${testCase.name}`,
+        expectedOutcome: "failure",
+        applicability:
+          testCase.name === "payload leaf changes to FIFO before descriptor open" ? "posix" : "all",
+        async execute() {
+          return expectFailure(testCase.name, testCase.mutate, testCase.expected, testCase.run);
+        },
+      })),
+      ...sharedCases.map((testCase) => ({
+        id: `shared-negative:${testCase.name}`,
+        expectedOutcome: "failure",
+        applicability: "all",
+        async execute() {
+          const execute = testCase.run
+            ? async (fixture) => {
+                const result = await testCase.run(fixture, runLegacyCaseLineage);
+                return {
+                  status: result.errors.length === 0 ? 0 : 1,
+                  output: result.errors.join("\n"),
+                };
+              }
+            : runValidator;
+          return expectFailure(testCase.name, testCase.mutate, testCase.expected, execute);
+        },
+      })),
+      ...sharedPositiveCases.map((testCase) => ({
+        id: `shared-positive:${testCase.name}`,
+        expectedOutcome: "success",
+        applicability: "all",
+        async execute() {
+          const fixture = copyFixture();
+          try {
+            testCase.mutate(fixture);
+            const result = runLegacyCaseLineage(fixture);
+            if (result.errors.length > 0) {
+              throw new Error(`${testCase.name} failed:\n${result.errors.join("\n")}`);
+            }
+            return { skipped: false };
+          } finally {
+            fs.rmSync(fixture, { recursive: true, force: true });
+          }
+        },
+      })),
+      {
+        id: "local-positive:harmless numeric runtime evidence",
+        expectedOutcome: "success",
+        applicability: "all",
+        async execute() {
+          const fixture = copyFixture();
+          try {
+            harmlessNumericEvidenceMutation(skillRelative)(fixture);
+            const result = runLegacyCaseLineage(fixture);
+            if (result.errors.length > 0) {
+              throw new Error(
+                `harmless numeric runtime evidence failed:\n${result.errors.join("\n")}`,
+              );
+            }
+            return { skipped: false };
+          } finally {
+            fs.rmSync(fixture, { recursive: true, force: true });
+          }
+        },
+      },
+      {
+        id: "local-positive:Long marker matching ignores formatting whitespace",
+        expectedOutcome: "success",
+        applicability: "all",
+        async execute() {
+          await expectSuccess("Long marker matching ignores formatting whitespace", (fixture) => {
+            edit(path.join(fixture, coverageRelative), (text) => {
+              const manifest = JSON.parse(text);
+              const target = manifest.units[0].targets.find((candidate) =>
+                candidate.path.endsWith(".long.md"),
+              );
+              target.markers[0] = target.markers[0].replaceAll(" ", " \n\t");
+              return `${JSON.stringify(manifest, null, 2)}\n`;
+            });
+          });
+          return { skipped: false };
+        },
+      },
+    ].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+
+    const generatedInventory = registry.map(({ id, expectedOutcome, applicability }) => ({
+      id,
+      expectedOutcome,
+      applicability,
+    }));
+    if (JSON.stringify(generatedInventory) !== JSON.stringify(frozenInventory.cases)) {
+      throw new Error("Architecture Compass fixture registry differs from the frozen inventory.");
     }
-  }
+    if (new Set(registry.map((testCase) => testCase.id)).size !== registry.length) {
+      throw new Error("Architecture Compass fixture registry contains duplicate stable IDs.");
+    }
 
-  const sharedCases = commonLegacyLineageFailureCases({
-    evidenceDirectoryRelative: `${evalRelative}/reference-baseline`,
-    evidenceRelative: `${evalRelative}/README.md`,
-    manifestRelative: legacyCaseLineageRelative,
-    prepareAuthorizedShortFingerprint,
-    runtimeRelative: skillRelative,
-    sourceDerivedFingerprintRegression: {
-      expectedLength: 18,
-      marker: "- contains: ADR-0004",
-    },
-    sourceMaterialFingerprints,
-  });
-  const skippedSharedCapabilities = [];
-  for (const testCase of sharedCases) {
-    try {
-      const execute = testCase.run
-        ? async (fixture) => {
-            const result = testCase.run(fixture, runLegacyCaseLineage);
-            return {
-              status: result.errors.length === 0 ? 0 : 1,
-              output: result.errors.join("\n"),
-            };
-          }
-        : runValidator;
-      const result = await expectFailure(
-        testCase.name,
-        testCase.mutate,
-        testCase.expected,
-        execute,
-      );
-      if (result.skipped) {
-        skippedSharedCapabilities.push(`${testCase.name}: ${result.reason}`);
-      }
-    } catch (error) {
-      if (error instanceof UnsupportedFixtureCapabilityError) {
-        skippedSharedCapabilities.push(`${testCase.name}: ${error.message}`);
+    for (const [ordinal, testCase] of registry.entries()) {
+      if (ordinal % workerCount !== workerIndex) continue;
+      const startedAt = Date.now();
+      if (testCase.applicability === "posix" && process.platform === "win32") {
+        results.push({
+          id: testCase.id,
+          ordinal,
+          expectedOutcome: testCase.expectedOutcome,
+          status: "not-applicable",
+          skipBucket: "platform",
+          reason: "POSIX fixture is not applicable on Windows",
+          durationMs: 0,
+        });
         continue;
       }
-      throw error;
-    }
-  }
-
-  const sharedPositiveCases = commonLegacyLineagePositiveCases({
-    manifestRelative: legacyCaseLineageRelative,
-    prepareAuthorizedShortFingerprint,
-  });
-  for (const testCase of sharedPositiveCases) {
-    const fixture = copyFixture();
-    try {
-      testCase.mutate(fixture);
-      const result = runLegacyCaseLineage(fixture);
-      if (result.errors.length > 0) {
-        throw new Error(`${testCase.name} failed:\n${result.errors.join("\n")}`);
+      try {
+        const result = await testCase.execute();
+        results.push({
+          id: testCase.id,
+          ordinal,
+          expectedOutcome: testCase.expectedOutcome,
+          status: result?.skipped ? "skipped" : "passed",
+          skipBucket: result?.skipped ? (result.kind ?? "capability") : null,
+          reason: result?.skipped ? result.reason : null,
+          durationMs: Date.now() - startedAt,
+        });
+      } catch (error) {
+        results.push({
+          id: testCase.id,
+          ordinal,
+          expectedOutcome: testCase.expectedOutcome,
+          status: "failed",
+          skipBucket: null,
+          reason: error instanceof Error ? error.message : String(error),
+          durationMs: Date.now() - startedAt,
+        });
+        throw error;
       }
-    } finally {
-      fs.rmSync(fixture, { recursive: true, force: true });
     }
-  }
-
-  const harmlessNumericFixture = copyFixture();
-  try {
-    harmlessNumericEvidenceMutation(skillRelative)(harmlessNumericFixture);
-    const result = runLegacyCaseLineage(harmlessNumericFixture);
-    if (result.errors.length > 0) {
-      throw new Error(`harmless numeric runtime evidence failed:\n${result.errors.join("\n")}`);
-    }
+  } catch (error) {
+    fatal = { message: error.message, stack: error.stack ?? null };
   } finally {
-    fs.rmSync(harmlessNumericFixture, { recursive: true, force: true });
+    writeJsonAtomic(reportFile, {
+      schemaVersion: 1,
+      workerIndex,
+      workerCount,
+      inventoryDigest,
+      results,
+      fatal,
+    });
+  }
+  if (fatal) throw new Error(fatal.message);
+}
+
+function parseWorkerArguments(argv) {
+  const values = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index];
+    if (new Set(["--worker-index", "--worker-count", "--worker-report"]).has(argument)) {
+      values[argument] = argv[index + 1];
+      index += 1;
+    } else {
+      throw new Error(`Unknown Architecture Compass fixture argument: ${argument}`);
+    }
+  }
+  if (values["--worker-index"] === undefined) return null;
+  const workerIndex = Number(values["--worker-index"]);
+  const workerCount = Number(values["--worker-count"]);
+  if (!Number.isSafeInteger(workerIndex) || !Number.isSafeInteger(workerCount)) {
+    throw new Error("Worker index and count must be integers.");
+  }
+  if (workerCount < 1 || workerCount > 3 || workerIndex < 0 || workerIndex >= workerCount) {
+    throw new Error("Worker index/count is outside the supported shard range.");
+  }
+  if (!values["--worker-report"]) throw new Error("--worker-report is required.");
+  return { workerIndex, workerCount, reportFile: path.resolve(values["--worker-report"]) };
+}
+
+function resolveWorkerCount() {
+  const configured = process.env.ARCHITECTURE_FIXTURE_WORKERS ?? "1";
+  if (!/^(?:auto|[123])$/.test(configured)) {
+    throw new Error("ARCHITECTURE_FIXTURE_WORKERS must be auto, 1, 2, or 3.");
+  }
+  const requested = configured === "auto" ? 3 : Number(configured);
+  return Math.min(requested, Math.max(1, os.availableParallelism() - 1), 3);
+}
+
+function createRunRoot(temporaryParent, runRootModeSetter) {
+  const runRoot = fs.mkdtempSync(
+    path.join(path.resolve(temporaryParent), "architecture-compass-workers-"),
+  );
+  try {
+    runRootModeSetter(runRoot, 0o700);
+    return runRoot;
+  } catch (error) {
+    try {
+      fs.rmSync(runRoot, { recursive: true, force: true });
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        "Architecture Compass fixture run-root setup and cleanup failed.",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+}
+
+async function withTemporaryDirectoryEnvironment(temporaryRoot, callback) {
+  const variableNames = ["TMPDIR", "TMP", "TEMP"];
+  const previous = new Map(variableNames.map((name) => [name, process.env[name]]));
+  for (const name of variableNames) process.env[name] = temporaryRoot;
+  try {
+    return await callback();
+  } finally {
+    for (const [name, value] of previous) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+}
+
+function terminateWorker(child, signal = "SIGTERM", windowsTreeKill = spawnSync) {
+  if (!child.pid) return;
+  try {
+    if (process.platform === "win32") {
+      const result = windowsTreeKill("taskkill", ["/pid", String(child.pid), "/t", "/f"], {
+        encoding: "utf8",
+        stdio: "ignore",
+        windowsHide: true,
+      });
+      if (result.error) {
+        throw new Error(
+          `Architecture Compass fixture worker tree ${child.pid} could not start taskkill: ${result.error.message}`,
+        );
+      }
+      if (result.status !== 0) {
+        throw new Error(
+          `Architecture Compass fixture worker tree ${child.pid} taskkill failed with status ${result.status ?? "unknown"}.`,
+        );
+      }
+    } else {
+      process.kill(-child.pid, signal);
+    }
+  } catch (error) {
+    if (error.code !== "ESRCH") throw error;
+  }
+}
+
+function releaseWorkerHandles(child) {
+  child.stdin?.destroy();
+  child.stdout?.destroy();
+  child.stderr?.destroy();
+  child.unref();
+}
+
+function processGroupExists(pid) {
+  if (process.platform === "win32") return false;
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (error) {
+    if (error.code === "ESRCH") return false;
+    if (error.code === "EPERM") return true;
+    throw error;
+  }
+}
+
+async function waitForProcessGroupExit(pid, timeoutMs, pollIntervalMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (processGroupExists(pid)) {
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+  return true;
+}
+
+async function waitForWorkerExit(child, timeoutMs, pollIntervalMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (child.exitCode === null && child.signalCode === null) {
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+  return true;
+}
+
+async function settleWorkerProcessGroup(
+  child,
+  { terminationGraceMs, killGraceMs, settlementPollMs, windowsTreeKill },
+) {
+  if (!child?.pid) return;
+  if (process.platform === "win32") {
+    if (child.exitCode === 0 && child.signalCode === null) return;
+    terminateWorker(child, "SIGKILL", windowsTreeKill);
+    if (!(await waitForWorkerExit(child, killGraceMs, settlementPollMs))) {
+      throw new Error(
+        `Architecture Compass fixture worker ${child.pid} remained alive ${killGraceMs}ms after taskkill.`,
+      );
+    }
+    return;
   }
 
-  await expectSuccess("Long marker matching ignores formatting whitespace", (fixture) => {
-    edit(path.join(fixture, coverageRelative), (text) => {
-      const manifest = JSON.parse(text);
-      const target = manifest.units[0].targets.find((candidate) =>
-        candidate.path.endsWith(".long.md"),
-      );
-      target.markers[0] = target.markers[0].replaceAll(" ", " \n\t");
-      return `${JSON.stringify(manifest, null, 2)}\n`;
-    });
-  });
+  terminateWorker(child, "SIGTERM");
+  if (await waitForProcessGroupExit(child.pid, terminationGraceMs, settlementPollMs)) return;
 
-  console.log(
-    `Architecture Compass validator fixtures passed: ${
-      cases.length +
-      sharedCases.length -
-      skippedSymlinkCases.length -
-      skippedCapabilityCases.length -
-      skippedSharedCapabilities.length
-    } negative cases and ${sharedPositiveCases.length + 2} positive cases.${
-      skippedSymlinkCases.length > 0
-        ? ` ${skippedSymlinkCases.length} symlink fixture(s) skipped because the platform denied symlink creation: ${skippedSymlinkCases.join("; ")}.`
-        : " All 3 symlink fixtures executed."
-    }${
-      skippedCapabilityCases.length > 0
-        ? ` ${skippedCapabilityCases.length} capability fixture(s) skipped: ${skippedCapabilityCases.join("; ")}.`
-        : " All legacy-reference capability fixtures executed."
-    }${
-      skippedSharedCapabilities.length > 0
-        ? ` ${skippedSharedCapabilities.length} shared capability fixture(s) skipped: ${skippedSharedCapabilities.join("; ")}.`
-        : " All shared symlink and FIFO capability fixtures executed."
-    } The special-entry fixture executed.${
-      process.platform === "win32"
-        ? " The POSIX FIFO fixture was not applicable on Windows."
-        : skippedCapabilityCases.some((entry) => entry.includes("FIFO"))
-          ? " The POSIX FIFO fixture was skipped because the host capability was unavailable."
-          : " The POSIX FIFO fixture executed."
-    }`,
+  terminateWorker(child, "SIGKILL");
+  if (await waitForProcessGroupExit(child.pid, killGraceMs, settlementPollMs)) return;
+
+  throw new Error(
+    `Architecture Compass fixture worker process group ${child.pid} remained alive ${killGraceMs}ms after SIGKILL.`,
   );
-} finally {
-  assertRepositoryGuardsUnchanged(
-    repositoryGuardRoot,
-    repositoryGuards,
-    "Architecture Compass validator suite",
+}
+
+function structuredWorkerFailure(completion, frozenInventory, workerCount, inventoryDigest) {
+  if (!fs.existsSync(completion.reportFile)) return null;
+  let report;
+  try {
+    report = JSON.parse(fs.readFileSync(completion.reportFile, "utf8"));
+  } catch {
+    return null;
+  }
+  if (
+    report?.schemaVersion !== 1 ||
+    report.workerIndex !== completion.workerIndex ||
+    report.workerCount !== workerCount ||
+    report.inventoryDigest !== inventoryDigest ||
+    !report.fatal ||
+    typeof report.fatal.message !== "string" ||
+    report.fatal.message.length === 0 ||
+    (report.fatal.stack !== null && typeof report.fatal.stack !== "string") ||
+    !Array.isArray(report.results) ||
+    Object.hasOwn(report, "preflight")
+  ) {
+    return null;
+  }
+
+  const expectedResults = frozenInventory.cases
+    .map((entry, ordinal) => ({ ...entry, ordinal }))
+    .filter(({ ordinal }) => ordinal % workerCount === completion.workerIndex);
+  if (report.results.length > expectedResults.length) return null;
+  for (const [index, result] of report.results.entries()) {
+    const expected = expectedResults[index];
+    if (
+      result?.id !== expected.id ||
+      result.ordinal !== expected.ordinal ||
+      result.expectedOutcome !== expected.expectedOutcome ||
+      !Number.isSafeInteger(result.durationMs) ||
+      result.durationMs < 0
+    ) {
+      return null;
+    }
+    const isLast = index === report.results.length - 1;
+    if (isLast) {
+      if (
+        result.status !== "failed" ||
+        result.skipBucket !== null ||
+        typeof result.reason !== "string" ||
+        result.reason.length === 0 ||
+        report.fatal.message !== result.reason
+      ) {
+        return null;
+      }
+      continue;
+    }
+    if (result.status === "passed") {
+      if (result.reason !== null || result.skipBucket !== null) return null;
+      continue;
+    }
+    if (
+      !new Set(["skipped", "not-applicable"]).has(result.status) ||
+      typeof result.reason !== "string" ||
+      result.reason.length === 0 ||
+      typeof result.skipBucket !== "string" ||
+      result.skipBucket.length === 0
+    ) {
+      return null;
+    }
+    if (
+      result.status === "not-applicable" &&
+      !(
+        process.platform === "win32" &&
+        expected.applicability === "posix" &&
+        result.skipBucket === "platform"
+      )
+    ) {
+      return null;
+    }
+  }
+
+  const failedCase = report.results.at(-1);
+  if (!failedCase) {
+    return {
+      workerIndex: completion.workerIndex,
+      message: `Architecture Compass fixture worker ${completion.workerIndex} failed before case execution: ${report.fatal.message}`,
+    };
+  }
+  return {
+    workerIndex: completion.workerIndex,
+    message: `Architecture Compass fixture worker ${completion.workerIndex} failed case ${failedCase.id}: ${failedCase.reason}`,
+  };
+}
+
+export async function runCoordinator({
+  workerProgram = fileURLToPath(import.meta.url),
+  workerCount = resolveWorkerCount(),
+  temporaryParent = os.tmpdir(),
+  reportFile = process.env.ARCHITECTURE_FIXTURE_REPORT
+    ? path.resolve(process.env.ARCHITECTURE_FIXTURE_REPORT)
+    : null,
+  coordinatorPreflight = runSharedPreflight,
+  workerEnvironment = {},
+  workerTimeoutMs = 30 * 60 * 1000,
+  terminationGraceMs = 3000,
+  killGraceMs = 3000,
+  settlementPollMs = 50,
+  runRootModeSetter = fs.chmodSync,
+  windowsTreeKill = spawnSync,
+} = {}) {
+  if (!Number.isSafeInteger(workerCount) || workerCount < 1 || workerCount > 3) {
+    throw new Error("Architecture Compass worker count must be an integer from 1 through 3.");
+  }
+  if (typeof coordinatorPreflight !== "function") {
+    throw new Error("coordinatorPreflight must be a function.");
+  }
+  if (typeof runRootModeSetter !== "function") {
+    throw new Error("runRootModeSetter must be a function.");
+  }
+  if (typeof windowsTreeKill !== "function") {
+    throw new Error("windowsTreeKill must be a function.");
+  }
+  for (const [name, value] of Object.entries({
+    workerTimeoutMs,
+    terminationGraceMs,
+    killGraceMs,
+    settlementPollMs,
+  })) {
+    if (!Number.isSafeInteger(value) || value < 1) {
+      throw new Error(`${name} must be a positive integer.`);
+    }
+  }
+  const frozenInventory = JSON.parse(fs.readFileSync(frozenInventoryPath, "utf8"));
+  const inventoryDigest = sha256Json(frozenInventory.cases);
+  const repositoryGuardRoot = process.env.LEGACY_LINEAGE_GUARD_ROOT
+    ? path.resolve(process.env.LEGACY_LINEAGE_GUARD_ROOT)
+    : root;
+  const repositoryGuards = captureRepositoryGuards(repositoryGuardRoot);
+  const runRoot = createRunRoot(temporaryParent, runRootModeSetter);
+  const children = [];
+  const childCompletions = [];
+  const childSettlements = new Map();
+  let stopping = false;
+  let receivedSignal = null;
+  let failure = null;
+  let coordinatorReport = null;
+  let rejectSettlementFailure;
+  const settlementFailure = new Promise((_, reject) => {
+    rejectSettlementFailure = reject;
+  });
+  const settleChild = (child) => {
+    if (!childSettlements.has(child)) {
+      childSettlements.set(
+        child,
+        settleWorkerProcessGroup(child, {
+          terminationGraceMs,
+          killGraceMs,
+          settlementPollMs,
+          windowsTreeKill,
+        }),
+      );
+    }
+    return childSettlements.get(child);
+  };
+  const settleAllChildren = async () => {
+    const results = await Promise.allSettled(children.map((child) => settleChild(child)));
+    const errors = results
+      .filter((result) => result.status === "rejected")
+      .map((result) => result.reason);
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) {
+      throw new AggregateError(
+        errors,
+        "Multiple Architecture Compass fixture worker process groups failed to terminate.",
+      );
+    }
+  };
+  let activeSettlement = null;
+  const stopWorkers = (signal = null) => {
+    if (signal) receivedSignal ??= signal;
+    stopping = true;
+    activeSettlement ??= settleAllChildren();
+    activeSettlement.catch(rejectSettlementFailure);
+    return activeSettlement;
+  };
+  const signalHandlers = new Map(
+    ["SIGINT", "SIGTERM"].map((signal) => [signal, () => stopWorkers(signal)]),
   );
+  for (const [signal, handler] of signalHandlers) process.once(signal, handler);
+  let workerTimeout = null;
+  try {
+    const preflightRoot = path.join(runRoot, "coordinator", "fixtures");
+    fs.mkdirSync(preflightRoot, { recursive: true, mode: 0o700 });
+    await withTemporaryDirectoryEnvironment(preflightRoot, coordinatorPreflight);
+
+    for (let workerIndex = 0; workerIndex < workerCount; workerIndex += 1) {
+      const workerRoot = path.join(runRoot, `worker-${workerIndex}`);
+      const temporaryRoot = path.join(workerRoot, "fixtures");
+      const reportFile = path.join(workerRoot, "report.json");
+      fs.mkdirSync(temporaryRoot, { recursive: true, mode: 0o700 });
+      const child = spawn(
+        process.execPath,
+        [
+          workerProgram,
+          "--worker-index",
+          String(workerIndex),
+          "--worker-count",
+          String(workerCount),
+          "--worker-report",
+          reportFile,
+        ],
+        {
+          cwd: root,
+          detached: process.platform !== "win32",
+          env: {
+            ...process.env,
+            ...workerEnvironment,
+            TMPDIR: temporaryRoot,
+            TMP: temporaryRoot,
+            TEMP: temporaryRoot,
+            ARCHITECTURE_FIXTURE_INVENTORY_PATH: frozenInventoryPath,
+            ARCHITECTURE_FIXTURE_INVENTORY_DIGEST: inventoryDigest,
+          },
+          stdio: ["ignore", "pipe", "pipe"],
+        },
+      );
+      children.push(child);
+      if (stopping) settleChild(child).catch(rejectSettlementFailure);
+      child.stdout.on("data", (chunk) => process.stdout.write(chunk));
+      child.stderr.on("data", (chunk) => process.stderr.write(chunk));
+      let spawnError = null;
+      const completion = new Promise((resolve) => {
+        child.once("error", (error) => {
+          spawnError = error;
+          stopWorkers();
+        });
+        child.once("close", (code, signal) => {
+          if ((code !== 0 || signal) && !stopping) {
+            stopWorkers();
+          }
+          resolve({ workerIndex, reportFile, code, signal, error: spawnError });
+        });
+      });
+      childCompletions.push(completion);
+    }
+    const workerExecutionTimeout = new Promise((_, reject) => {
+      workerTimeout = setTimeout(() => {
+        stopWorkers();
+        reject(
+          new Error(`Architecture Compass fixture workers timed out after ${workerTimeoutMs}ms.`),
+        );
+      }, workerTimeoutMs);
+    });
+    const completionsResult = await Promise.race([
+      Promise.all(childCompletions),
+      settlementFailure,
+      workerExecutionTimeout,
+    ]);
+    clearTimeout(workerTimeout);
+    workerTimeout = null;
+    if (receivedSignal) {
+      throw new Error(`Architecture Compass fixture execution received ${receivedSignal}.`);
+    }
+    const structuredFailures = completionsResult
+      .filter((completion) => completion.error || completion.code !== 0 || completion.signal)
+      .map((completion) =>
+        structuredWorkerFailure(completion, frozenInventory, workerCount, inventoryDigest),
+      )
+      .filter(Boolean)
+      .sort((left, right) => left.workerIndex - right.workerIndex);
+    if (structuredFailures.length > 0) {
+      throw new Error(structuredFailures[0].message);
+    }
+    const reports = [];
+    for (const completion of completionsResult) {
+      if (completion.error || completion.code !== 0 || completion.signal) {
+        throw new Error(
+          `Architecture Compass fixture worker ${completion.workerIndex} failed: ${completion.error?.message ?? completion.signal ?? completion.code}`,
+        );
+      }
+      if (!fs.existsSync(completion.reportFile)) {
+        throw new Error(
+          `Architecture Compass fixture worker ${completion.workerIndex} did not write a report.`,
+        );
+      }
+      const report = JSON.parse(fs.readFileSync(completion.reportFile, "utf8"));
+      if (
+        report.schemaVersion !== 1 ||
+        report.workerIndex !== completion.workerIndex ||
+        report.workerCount !== workerCount ||
+        report.inventoryDigest !== inventoryDigest ||
+        report.fatal ||
+        Object.hasOwn(report, "preflight")
+      ) {
+        throw new Error(
+          `Architecture Compass fixture worker ${completion.workerIndex} wrote an invalid report.`,
+        );
+      }
+      const expectedIds = frozenInventory.cases
+        .filter((_, ordinal) => ordinal % workerCount === completion.workerIndex)
+        .map(({ id }) => id);
+      if (JSON.stringify(report.results.map(({ id }) => id)) !== JSON.stringify(expectedIds)) {
+        throw new Error(
+          `Architecture Compass fixture worker ${completion.workerIndex} reported missing, duplicate, unexpected, or wrong-shard IDs.`,
+        );
+      }
+      if (
+        report.results.some(
+          (result) => !new Set(["passed", "skipped", "not-applicable"]).has(result.status),
+        )
+      ) {
+        throw new Error(
+          `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid outcome.`,
+        );
+      }
+      const expectedResults = frozenInventory.cases
+        .map((entry, ordinal) => ({ ...entry, ordinal }))
+        .filter(({ ordinal }) => ordinal % workerCount === completion.workerIndex);
+      for (const [resultIndex, result] of report.results.entries()) {
+        const expected = expectedResults[resultIndex];
+        if (
+          result.id !== expected.id ||
+          result.ordinal !== expected.ordinal ||
+          result.expectedOutcome !== expected.expectedOutcome
+        ) {
+          throw new Error(
+            `Architecture Compass fixture worker ${completion.workerIndex} reported contradictory case metadata for ${expected.id}.`,
+          );
+        }
+        if (!Number.isSafeInteger(result.durationMs) || result.durationMs < 0) {
+          throw new Error(
+            `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid duration for ${expected.id}.`,
+          );
+        }
+        if (result.status === "passed") {
+          if (result.reason !== null || result.skipBucket !== null) {
+            throw new Error(
+              `Architecture Compass fixture worker ${completion.workerIndex} reported skip metadata for passed case ${expected.id}.`,
+            );
+          }
+        } else if (
+          typeof result.reason !== "string" ||
+          result.reason.length === 0 ||
+          typeof result.skipBucket !== "string" ||
+          result.skipBucket.length === 0
+        ) {
+          throw new Error(
+            `Architecture Compass fixture worker ${completion.workerIndex} omitted skip metadata for ${expected.id}.`,
+          );
+        }
+        if (
+          result.status === "not-applicable" &&
+          !(
+            process.platform === "win32" &&
+            expected.applicability === "posix" &&
+            result.skipBucket === "platform"
+          )
+        ) {
+          throw new Error(
+            `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid applicability result for ${expected.id}.`,
+          );
+        }
+        if (
+          process.platform === "win32" &&
+          expected.applicability === "posix" &&
+          result.status !== "not-applicable"
+        ) {
+          throw new Error(
+            `Architecture Compass fixture worker ${completion.workerIndex} executed POSIX-only case ${expected.id} on Windows.`,
+          );
+        }
+      }
+      reports.push(report);
+    }
+    const results = reports
+      .flatMap((report) => report.results)
+      .sort((left, right) => left.ordinal - right.ordinal);
+    if (
+      results.length !== frozenInventory.cases.length ||
+      new Set(results.map(({ id }) => id)).size !== frozenInventory.cases.length
+    ) {
+      throw new Error(
+        "Architecture Compass fixture merge did not account for every frozen case exactly once.",
+      );
+    }
+    const deterministicResults = results.map(
+      ({ id, ordinal, expectedOutcome, status, skipBucket }) => ({
+        id,
+        ordinal,
+        expectedOutcome,
+        status,
+        skipBucket,
+      }),
+    );
+    coordinatorReport = {
+      schemaVersion: 1,
+      workerCount,
+      inventoryDigest,
+      preflight: "passed",
+      accountingDigest: sha256Json(deterministicResults),
+      results,
+    };
+    const negativePassed = results.filter(
+      (result) => result.expectedOutcome === "failure" && result.status === "passed",
+    ).length;
+    const positivePassed = results.filter(
+      (result) => result.expectedOutcome === "success" && result.status === "passed",
+    ).length;
+    const skipped = results.filter((result) => result.status !== "passed");
+    console.log(
+      `Architecture Compass validator fixtures passed with ${workerCount} worker(s): ${negativePassed} negative cases and ${positivePassed} positive cases.${
+        skipped.length > 0
+          ? ` ${skipped.length} fixture(s) skipped or not applicable: ${skipped.map((result) => `${result.id}: ${result.reason}`).join("; ")}.`
+          : " All 325 frozen fixtures executed."
+      }`,
+    );
+  } catch (error) {
+    failure = error;
+    stopWorkers();
+  } finally {
+    if (workerTimeout) clearTimeout(workerTimeout);
+    if (failure || receivedSignal) stopWorkers();
+    const cleanupErrors = [];
+    let groupsSettled = false;
+    try {
+      await settleAllChildren();
+      groupsSettled = true;
+      await Promise.allSettled(childCompletions);
+    } catch (error) {
+      for (const child of children) releaseWorkerHandles(child);
+      cleanupErrors.push(error);
+    }
+    try {
+      assertRepositoryGuardsUnchanged(
+        repositoryGuardRoot,
+        repositoryGuards,
+        "Architecture Compass validator suite",
+      );
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+    if (groupsSettled) {
+      try {
+        fs.rmSync(runRoot, { recursive: true, force: true });
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+    if (cleanupErrors.length > 0) {
+      failure = failure
+        ? new AggregateError(
+            [failure, ...cleanupErrors],
+            "Architecture Compass fixture execution and cleanup failed.",
+            { cause: failure },
+          )
+        : cleanupErrors.length === 1
+          ? cleanupErrors[0]
+          : new AggregateError(cleanupErrors, "Architecture Compass fixture cleanup failed.");
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+    if (!failure && !receivedSignal && reportFile) {
+      try {
+        writeJsonAtomic(reportFile, coordinatorReport);
+      } catch (error) {
+        failure = error;
+      }
+    }
+    for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler);
+  }
+  if (receivedSignal) {
+    process.kill(process.pid, receivedSignal);
+    return;
+  }
+  if (failure) throw failure;
+}
+
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+function formatFailure(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (!(error instanceof AggregateError)) return message;
+  return [message, ...error.errors.map((cause) => `caused by: ${formatFailure(cause)}`)].join("\n");
+}
+
+if (isMain) {
+  try {
+    const workerOptions = parseWorkerArguments(process.argv.slice(2));
+    if (workerOptions) await runWorker(workerOptions);
+    else await runCoordinator();
+  } catch (error) {
+    console.error(
+      `Architecture Compass validator fixture execution failed: ${formatFailure(error)}`,
+    );
+    process.exitCode = 1;
+  }
 }

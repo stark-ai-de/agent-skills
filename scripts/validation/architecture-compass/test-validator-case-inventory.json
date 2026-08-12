@@ -1,0 +1,1631 @@
+{
+  "schemaVersion": 1,
+  "capturedFrom": "0123371e5dfe86157dd3f17b9ba4be75fd60062b",
+  "cases": [
+    {
+      "id": "local-negative:Architecture Compass decision lock with invalid UTF-8",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:HTML-comment-only legacy-case target marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:HTML-comment-only public-reference coverage marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:ID and stem collision",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:JSON-encoded legacy-case source lines in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:JSON-string legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:JSONL legacy-case source lines in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:Long target does not name Decision",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:accepted decision drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:accepted internal decision drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:accepted successor missing predecessor",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:active Architecture Compass eval with invalid UTF-8",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:authorized short fingerprint copied under another heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend admission stop drops AbortSignal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend aggregate error drops primary-cleanup ordering",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend close terminal aggregate reverses failure order",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend database acquisition precedes disposer registration",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend direct close rejection bypasses failure preservation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend drain drops AbortSignal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend drain gate opens before admission stop settles",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend drain gate starts open before admission stop",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend drain runs without confirmed admission stop",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend internal close terminal bypasses failure preservation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend late operation rejection loses observer",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend lifecycle eval assertion removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend listener bind drops AbortSignal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend listener close call drops owner cleanup",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend listener close stage mislabeled",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend main no longer awaits lifecycle completion",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving admission-stop test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving bind test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving drain test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving listener-close test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving runtime-close test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend never-resolving start test removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend outer finally loses signal-handler cleanup",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend partial bind loses synchronous disposer contract",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend runtime acquisition drops AbortSignal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend runtime close call drops owner cleanup",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend runtime close stage mislabeled",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend runtime start drops AbortSignal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend shared shutdown rejection is discarded",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend shutdown terminal escalation removed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend signal handlers registered after runtime acquisition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:backend startup failure reintroduces a falsy truthiness gate",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:catalog orphan",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:duplicate authorized short fingerprint in its target heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:duplicate legacy coverage ID",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:duplicate legacy-case disposition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:duplicate legacy-case material mapping",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:duplicate legacy-case target heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:empty expectedVersion accepted before numeric conversion",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:final reverse traversal mutation is terminally resealed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:forbidden payload hash uses every descriptor read phase",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:four-backtick-fenced legacy-case target marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:historical code mapped only to arbitrary Guide prose",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:hydration consumer drops the shared canonical contract",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:independent lineage section",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal decision cannot supersede itself",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal decisions cannot form a supersession cycle",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal duplicate navigation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal malformed navigation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal promotion eval proof is missing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal public-conflict eval proof is missing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal record leaked into public catalog",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal short navigation target is missing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:internal successor missing reciprocal predecessor metadata",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:invalid lineage JSON",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:invalid scope and adoptability",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy coverage boundary inside an open code fence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy coverage line gap",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy coverage with invalid UTF-8",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy provenance heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy source lock with invalid UTF-8",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy target with invalid UTF-8",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy-case baseline filename in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy-case manifest filename in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:legacy-case source bytes in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:line-wrapped legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:lineage heading outside Guide",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:lineage source ID",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:lineage source status",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:lineage source variant",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:link-definition-only public-reference coverage marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:markdown-blockquoted legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:material lineage drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:metadata-bearing JSONL legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing Accepted Long target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing Long Decision marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing adapted legacy-case unit reason",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing catalog route",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing expectedVersion accepted before numeric conversion",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy coverage unit",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy summary",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy target heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy target marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy-case disposition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy-case target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy-case target heading",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy-case target marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing legacy-case unit outcome",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing lineage disposition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing lineage source",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:missing variant",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:nested-blockquoted legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:non-Accepted Long target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:non-reciprocal supersession",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:normative guide section",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:overlapping legacy source ranges",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:partial legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload bytes mutate after child reads before traversal publication",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload bytes mutate between descriptor fstat observations",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload bytes mutate during later child witness revalidation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload child path swaps inode in the final reverse witness pass",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload child subtree mutates during later sibling revalidation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload child subtree mutates in the final reverse witness pass",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload directory changes after enumeration before child open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload directory swap cannot hide forbidden evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload leaf changes to FIFO before descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "posix"
+    },
+    {
+      "id": "local-negative:payload leaf changes to a symlink before descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload mutation during a later semantic final seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload parent changes after descriptor read",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload removal during the reverse final seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload sibling addition during a later semantic final seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:payload traversal exception closes every retained descriptor",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:primary source only in lineage",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:proposed internal record is not shippable",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:public decision cannot supersede itself",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:public decisions cannot form a supersession cycle",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:query options reintroduce raw versus canonical filter drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:raw-HTML-block-only public-reference coverage marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:realtime cache operations drop the contract-derived query key",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:realtime resource scope reintroduces raw filter drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:realtime subscription omits privilege resubscription dependency",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:regular payload leaf changes before descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:regular payload parent changes before descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:removed Next.js hydration marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:removed legacy reference",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:renamed legacy baseline bytes in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:renamed legacy evidence symlink in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:renamed legacy-case manifest content in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:renamed lineage manifest bytes in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:repo-only legacy evidence in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:repo-only lineage manifest in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:retry consumer drops the shared canonical contract",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:scalar legacy coverage root",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:scalar legacy source lock root",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:setup matrix duplicate eligible ADR",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:setup matrix missing eligible ADR",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:setup report inconsistent total count",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:setup report stale catalog count",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:shared metadata drift",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:short material fingerprint in unapproved runtime file",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:short unaligned legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:single-source consolidation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:skill-runtime adoptability",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:snapshot and manifest changed behind trust anchor",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:source lock mutates after its semantic parse",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:special payload traversal entry",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:symlinked legacy baseline parent",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:uncovered staged-deletion legacy case",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unexpected staged-deletion legacy case",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unknown legacy disposition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unknown legacy-case disposition",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unmapped legacy-case material expectation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unmatched backtick cannot expose a raw-HTML coverage marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unmatched backtick cannot expose an HTML-comment coverage marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unscoped realtime subscription",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unsplit legacy code examples",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unsuffixed AC-ADR link",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unsupported lineage relation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:unvalidated currentSources field",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:validated target mutates before payload traversal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrapped legacy-case source in runtime payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrapped renamed legacy baseline bytes in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrapped renamed legacy coverage in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrapped renamed legacy source lock in skill payload",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong canonical variant",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong legacy range hash",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong legacy source blob",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong legacy source commit",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong legacy-case source hash",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong-typed legacy baseline directory",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-negative:wrong-typed legacy source file name",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "local-positive:Long marker matching ignores formatting whitespace",
+      "expectedOutcome": "success",
+      "applicability": "all"
+    },
+    {
+      "id": "local-positive:harmless numeric runtime evidence",
+      "expectedOutcome": "success",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:18-character source-derived fingerprint leaks outside its authorized target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:JSONL records preserve document-order nested leaves",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:active target leaf symlink",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:active target parent symlink",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:active target with an invalid UTF-8 byte fails before semantic parsing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:array-valued source heading is rejected before source-unit keying",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:array-valued source marker is rejected before source-unit keying",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:backtick-wrapped long legacy evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:backtick-wrapped short material fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:blockquote link reference definition metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:bold-wrapped long legacy evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:bold-wrapped short material fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:case disposition is derived from aggregate expectation outcomes",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:compact ordinary JSON object preserves document-order leaves",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:compatibility-named CommonMark character references expose a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:decimal CommonMark character references expose a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:declaration metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:direct baseline self-map",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:direct evidence-custody target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:direct legacy source self-map",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:direct manifest self-map",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:display-none element metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:distinct target paths cannot share one hardlinked file identity",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:dot segment target path alias is rejected before policy caching",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:double-quoted link title with parenthesis metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:double-quoted raw HTML attribute metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:duplicate material source units under one heading fail closed",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:earlier runtime snapshot changes while a later file opens",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:empty string manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:entity text inside a code span cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:escaped-bracket link reference label metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:eval target does not authorize a runtime copy",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:explicitly rejected expectation without active decision target",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:explicitly rejected outcome requires rejection wording",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:explicitly rejected target marker must remain visible",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:false manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:final retained-descriptor read failure is finalized and closes its descriptor",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:generic target marker must appear exactly once in its visible section",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hardlinked baseline target under an active path",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hardlinked child of a configured evidence directory",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hardlinked configured evidence target under an active path",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hardlinked manifest target under an active path",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:head title element metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hexadecimal CommonMark character references expose a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:hidden element metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:image alt metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:inline HTML cannot hide a short rendered fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:inline link cannot hide a short rendered fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid emphasis metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 1 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 10 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 11 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 12 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 2 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 3 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 4 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 5 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 6 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 7 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 8 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:invalid inline target syntax 9 cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:link reference definition metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:link title metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:list link reference definition metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:literal backslash-n text metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:literal backslash-r text metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:literal backslash-r\\n text metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:literal backslash-t text metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:manifest changes after its read revalidation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:manifest with an invalid UTF-8 byte fails before JSON parsing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline CDATA metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline declaration metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline link reference label metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline link reference title body metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline link reference title metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline processing instruction metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline script block metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:multiline style block metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:named CommonMark character references expose a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:nested array leaf positions preserve chunk streams",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:nested numeric-record stream inside a JSONL record",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:nested repeated wrappers reconstruct legacy evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:nested target scopes cannot double-authorize one occurrence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:new runtime sibling appears during final directory seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:null manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:numeric target marker is rejected even when its text is visible",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:numeric-record JSON with empty leaves reconstructs legacy evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:numeric-record keys above Number safe integer sort exactly",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:one manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:ordinary target outside active target roots",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:parent segment target path alias is rejected before policy caching",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:plain split JSON keys preserve document order",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:pretty ordinary JSON object preserves document-order leaves",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:processing instruction metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:repeated named wrappers with empty records reconstruct legacy evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:repeated separator target path alias is rejected before policy caching",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:restored staged-deletion source is rejected even outside target evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime FIFO entry",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime leaf mutated while retained descriptors close is caught by final policy seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime leaf swaps to FIFO before nonblocking descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime leaf swaps to symlink before descriptor open",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime parent becomes a symlink to the same directory during file seal",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime payload hardlink to a configured evidence descendant",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime policy directory is replaced after capture",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:runtime symlink entry",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:script block metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:set-equivalent duplicate targets ignore object and marker order",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:single emphasis cannot hide a short rendered fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:single-quoted link title with parenthesis metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:single-quoted raw HTML attribute metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:sparse retained descriptor growth is finalized without allocating its new size",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:split JSON fields cannot authorize a visible target marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:split link reference destination metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:split wrapper metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:string manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:style block metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:target heading and marker inside a raw script block are not visible evidence",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:target is replaced by a same-bytes inode after read revalidation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:target parent swaps during realpath resolution",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:target policy changes to a forbidden hardlink during later policy validation",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:template block metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:top-level JSON array preserves document-order nested leaves",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:true manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:typed JSON leaf paths resist slash-key collisions",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unicode-escaped JSON key exposes a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unicode-escaped JSON leaf exposes a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unicode-escaped JSONL key exposes a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unicode-escaped JSONL leaf exposes a short fingerprint",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unicode-escaped split JSON keys preserve document order",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unindented link reference destination metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:unmatched backtick metadata cannot authorize a plain marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:validation root swaps to a symlink after policy capture",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:visible authorization does not offset a split numeric JSON duplicate",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:wrong angle-bracket text inside inline code cannot satisfy the expected code marker",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-negative:zero manifest root fails the root schema without throwing",
+      "expectedOutcome": "failure",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-positive:authorized contiguous JSON leaf counts as one visible occurrence",
+      "expectedOutcome": "success",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-positive:explicitly rejected expectation retains a visible active decision target",
+      "expectedOutcome": "success",
+      "applicability": "all"
+    },
+    {
+      "id": "shared-positive:valid single emphasis preserves rendered target authorization",
+      "expectedOutcome": "success",
+      "applicability": "all"
+    }
+  ]
+}

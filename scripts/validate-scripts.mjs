@@ -36,6 +36,14 @@ const shellScripts = [
 for (const script of nodeScripts) check(process.execPath, ["--check", script]);
 for (const script of shellScripts) check("bash", ["-n", script]);
 check(process.execPath, ["scripts/validation/smoke-install-contract.test.mjs"]);
+check(process.execPath, ["scripts/ci/plan-validation.test.mjs"]);
+check(process.execPath, ["scripts/ci/run-validation-plan.test.mjs"]);
+check(process.execPath, ["scripts/ci/install-validation-dependencies.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-proof-contract.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-diagnostic.test.mjs"]);
+check(process.execPath, [
+  "scripts/validation/architecture-compass/test-validator-coordinator.test.mjs",
+]);
 
 console.log(
   `Validated syntax for ${nodeScripts.length} Node script(s) and ${shellScripts.length} shell script(s).`,

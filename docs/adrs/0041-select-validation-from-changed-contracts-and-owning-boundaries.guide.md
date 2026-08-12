@@ -2,7 +2,7 @@
 
 ID: ADR-0041
 Title: Select validation from changed contracts and owning boundaries
-Status: Accepted
+Status: Superseded
 Date: 2026-08-10
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0044
 Guide verified: 2026-08-10
 Gist: Repository changes use risk-based owning-boundary proof and exact evidence reuse, with aggregates reserved for mandatory gates.
 

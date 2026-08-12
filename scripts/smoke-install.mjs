@@ -10,7 +10,12 @@ import {
 } from "./validation/smoke-install-contract.mjs";
 
 const root = process.cwd();
-const defaultSkillsCliPackage = "skills@1.5.22";
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const exactSkillsCliVersion = packageJson.devDependencies?.skills;
+if (!/^\d+\.\d+\.\d+$/.test(exactSkillsCliVersion ?? "")) {
+  throw new Error("package.json must pin an exact skills CLI devDependency.");
+}
+const defaultSkillsCliPackage = `skills@${exactSkillsCliVersion}`;
 
 function validatedSkillsCliOverride() {
   const rawValue = process.env.SKILLS_SMOKE_CLI;
@@ -63,7 +68,7 @@ const copyRoot = path.join(tmpRoot, "repo");
 const installRoot = path.join(tmpRoot, "installs");
 const smokeEnvironment = {
   ...process.env,
-  ...(configuredSkillsCli ? {} : { CI: "1" }),
+  CI: "1",
   DISABLE_TELEMETRY: "1",
   DO_NOT_TRACK: "1",
 };
@@ -442,7 +447,7 @@ try {
     path.join(copyRoot, "skills", "engineering-workflows", "architecture-compass"),
   );
 
-  const result = runSkills(["add", ".", "--list"], copyRoot);
+  const result = runSkills(["add", ".", "--list", "--yes"], copyRoot);
 
   const output = `${result.stdout}\n${result.stderr}`;
 

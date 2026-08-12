@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "globalInvalidators": [
+    ".github/**",
+    "scripts/ci/**",
+    "package.json",
+    "site/package.json",
+    "pnpm-lock.yaml",
+    "site/pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "oxfmt.json",
+    ".oxfmtignore",
+    "oxlint.json",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "docs/specs.md",
+    "docs/validation.md",
+    "docs/publishing.md",
+    "docs/adrs.md"
+  ],
+  "knownPaths": [
+    ".gitignore",
+    ".npmignore",
+    "CHANGELOG.md",
+    "CONTEXT.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md",
+    "docs/**",
+    "incubator/**",
+    "scripts/**",
+    "skill-evals/**",
+    "skills/**",
+    "site/**"
+  ],
+  "gates": [
+    {
+      "id": "skills",
+      "command": ["npm", "run", "validate:skills"],
+      "paths": [
+        "skills/**",
+        "incubator/**",
+        "skill-evals/**",
+        "README.md",
+        "scripts/validate-skills.mjs"
+      ],
+      "installProfiles": ["root"],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "memory-curators",
+      "command": ["npm", "run", "validate:memory-curators"],
+      "paths": [
+        "skills/codex-operations/codex-memory-curator/**",
+        "skills/cursor-operations/cursor-memory-curator/**",
+        "skills/claude-operations/claude-memory-curator/**",
+        "skill-evals/codex-memory-curator/**",
+        "skill-evals/cursor-memory-curator/**",
+        "skill-evals/claude-memory-curator/**",
+        "scripts/validate-memory-curators.mjs",
+        "scripts/validation/memory-curators/**"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "adrs",
+      "command": ["npm", "run", "validate:adrs"],
+      "paths": [
+        "**/*.md",
+        "scripts/validation/adrs/**",
+        "scripts/validate-adrs.mjs",
+        "scripts/new-adr.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "architecture-compass",
+      "command": ["node", "scripts/ci/run-architecture-compass-gate.mjs"],
+      "paths": [
+        "docs/adrs/**",
+        "skills/engineering-workflows/architecture-compass/**",
+        "skill-evals/architecture-compass/**",
+        "scripts/validate-architecture-compass.mjs",
+        "scripts/validation/architecture-compass/**",
+        "scripts/validation/lib/legacy-case-lineage.mjs",
+        "scripts/validation/lib/legacy-case-lineage-test-harness.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 2400000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "actions",
+      "command": ["npm", "run", "lint:actions"],
+      "paths": [".github/**", "scripts/lint-actions.mjs"],
+      "installProfiles": ["root"],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "scripts",
+      "command": ["npm", "run", "validate:scripts"],
+      "paths": ["scripts/**", "skills/**", "incubator/**"],
+      "installProfiles": [],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "codegraph",
+      "command": ["npm", "run", "validate:codegraph-ast-grep"],
+      "paths": [
+        "skills/engineering-workflows/codegraph-ast-grep/**",
+        "skill-evals/codegraph-ast-grep/**",
+        "scripts/validate-codegraph-ast-grep-contract.mjs",
+        "scripts/validation/codegraph-ast-grep/**",
+        "scripts/validation/lib/legacy-case-lineage.mjs",
+        "scripts/validation/lib/legacy-case-lineage-test-harness.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "drawio",
+      "command": ["npm", "run", "validate:drawio"],
+      "paths": [
+        "skills/engineering-workflows/drawio-diagrams/**",
+        "skill-evals/drawio-diagrams/**",
+        "scripts/validate-drawio-fixtures.mjs",
+        "scripts/validate-drawio-visual-evals.mjs",
+        "scripts/validation/drawio-diagrams/**",
+        "scripts/lib/visual-assertions.mjs",
+        "scripts/visual-assertion-regressions.mjs",
+        "scripts/validation/lib/visual-assertions.mjs",
+        "scripts/validation/lib/visual-assertion-regressions.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "animated-logo",
+      "command": ["npm", "run", "validate:animated-readme-logo"],
+      "paths": [
+        "skills/engineering-workflows/animated-readme-logo/**",
+        "incubator/skills/engineering-workflows/animated-readme-logo/**",
+        "skill-evals/animated-readme-logo/**",
+        "scripts/validate-animated-readme-logo.mjs",
+        "scripts/validate-animated-readme-logo-evals.mjs",
+        "scripts/lib/animated-image.mjs",
+        "scripts/validation/animated-readme-logo/**",
+        "scripts/lib/visual-assertions.mjs",
+        "scripts/visual-assertion-regressions.mjs",
+        "scripts/validation/lib/visual-assertions.mjs",
+        "scripts/validation/lib/visual-assertion-regressions.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "skillopt",
+      "command": ["npm", "run", "validate:skillopt"],
+      "paths": [
+        "incubator/skills/skill-maintenance/skillopt-setup/**",
+        "skills/engineering-workflows/drawio-diagrams/**",
+        "skill-evals/skillopt-setup/**",
+        "scripts/validate-skillopt-setup.mjs",
+        "scripts/validation/skillopt-setup/**",
+        "scripts/lib/visual-assertions.mjs",
+        "scripts/visual-assertion-regressions.mjs",
+        "scripts/validation/lib/visual-assertions.mjs",
+        "scripts/validation/lib/visual-assertion-regressions.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "site",
+      "command": ["npm", "run", "validate:site"],
+      "paths": ["site/**", "skills/**", "incubator/**", "skill-evals/**", "README.md"],
+      "installProfiles": ["site"],
+      "timeoutMs": 600000,
+      "prerequisites": [],
+      "aggregate": true,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "format",
+      "command": [
+        "pnpm",
+        "exec",
+        "oxfmt",
+        "--config",
+        "oxfmt.json",
+        "--ignore-path",
+        ".oxfmtignore",
+        "--check",
+        "--no-error-on-unmatched-pattern"
+      ],
+      "paths": [
+        "docs/**",
+        "incubator/**",
+        "scripts/**",
+        "skill-evals/**",
+        "skills/**",
+        "site/**",
+        "CHANGELOG.md",
+        "CONTEXT.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "SECURITY.md"
+      ],
+      "installProfiles": ["root"],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": false,
+      "trustedProofRequired": true,
+      "changedFiles": true
+    },
+    {
+      "id": "script-lint",
+      "command": ["pnpm", "lint"],
+      "paths": ["scripts/**"],
+      "installProfiles": ["root"],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": false,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "release-metadata",
+      "command": [
+        "node",
+        "scripts/ci/run-release-metadata-gate.mjs",
+        "--event",
+        "{{event}}",
+        "--base-sha",
+        "{{baseSha}}"
+      ],
+      "paths": [
+        "package.json",
+        "CHANGELOG.md",
+        "skills/**",
+        "scripts/check-release-intent.mjs",
+        "scripts/validate-release.mjs",
+        "scripts/validate-release-metadata.mjs"
+      ],
+      "installProfiles": [],
+      "timeoutMs": 300000,
+      "prerequisites": [],
+      "aggregate": false,
+      "trustedProofRequired": true
+    },
+    {
+      "id": "smoke-install",
+      "command": ["npm", "run", "smoke:install"],
+      "paths": [
+        "skills/**",
+        "incubator/**",
+        "scripts/smoke-install.mjs",
+        "scripts/fingerprint-smoke-candidate.mjs",
+        "scripts/validation/smoke-install-contract.mjs",
+        "scripts/validation/smoke-install-contract.test.mjs",
+        "scripts/validation/architecture-compass/legacy-reference-source-lock.json",
+        "scripts/validation/architecture-compass/legacy-reference-coverage.json",
+        "scripts/validation/architecture-compass/decision-lineage.json",
+        "skill-evals/architecture-compass/reference-baseline/**"
+      ],
+      "installProfiles": ["root"],
+      "timeoutMs": 600000,
+      "prerequisites": ["skills"],
+      "aggregate": false,
+      "trustedProofRequired": true
+    }
+  ]
+}
