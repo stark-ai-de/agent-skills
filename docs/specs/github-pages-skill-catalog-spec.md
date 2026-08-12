@@ -230,7 +230,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 8. Make `Validate` the single trusted Pages artifact producer:
    - compute one `trusted_main` output from a `push` to `main` or manual dispatch from `main`
    - reuse that output for the site digest, Pages configuration, artifact upload, receipt creation, and deployment conditions
-   - seal and hash `site/dist` immediately after the build, run pinned external CLI checks only in isolated temporary copies, and assert the sealed digest before upload
+   - seal and hash the complete `site/dist` file set immediately after the build, upload it with hidden files included, run pinned external CLI checks only in isolated temporary copies, and assert the sealed digest before upload
    - upload `github-pages-<run-id>-<validation-job-attempt>` and `validation-receipt-<run-id>-<validation-job-attempt>` only after all validation gates pass
    - deploy the exact attempt-scoped Pages artifact from a dependent job
    - serialize production deployments and reject a deployment whose `refs/heads/main` no longer equals its run SHA
