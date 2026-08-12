@@ -39,6 +39,7 @@ check(process.execPath, ["scripts/validation/smoke-install-contract.test.mjs"]);
 check(process.execPath, ["scripts/ci/plan-validation.test.mjs"]);
 check(process.execPath, ["scripts/ci/run-validation-plan.test.mjs"]);
 check(process.execPath, ["scripts/ci/install-validation-dependencies.test.mjs"]);
+check(process.execPath, ["scripts/ci/run-release-metadata-gate.test.mjs"]);
 check(process.execPath, ["scripts/ci/validation-proof-contract.test.mjs"]);
 check(process.execPath, ["scripts/ci/validation-diagnostic.test.mjs"]);
 check(process.execPath, [

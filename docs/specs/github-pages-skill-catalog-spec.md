@@ -66,7 +66,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - Hosted validation uses a versioned gate manifest, fail-closed base/candidate pull-request planning, sequential execution, and a diagnostic report.
   - Generated or local helper skill installs under `.agents/` are not catalog content.
 - Commands and toolchain:
-  - Node `>=22.13.0`
+  - Node `>=22.20.0`
   - `pnpm`
   - Existing root validation scripts
 - Related ADRs:
