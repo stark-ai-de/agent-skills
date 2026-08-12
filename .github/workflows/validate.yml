@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload diagnostic validation report
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: validation-report-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/validation-report.json
@@ -173,7 +173,7 @@ jobs:
 
       - name: Upload validation proof
         if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
           path: ${{ runner.temp }}/validation-proof
