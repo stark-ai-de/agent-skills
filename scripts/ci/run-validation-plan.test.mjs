@@ -242,6 +242,29 @@ test("runner escalates after the group leader exits and a descendant ignores TER
   assert.equal(fs.existsSync(marker), false);
 });
 
+test("runner rejects a successful leader with a live mutating process-group descendant", async (t) => {
+  if (process.platform === "win32") {
+    t.skip("POSIX process-group semantics are not available on Windows");
+    return;
+  }
+  const descendant = `setTimeout(() => require('fs').writeFileSync('tracked.txt', 'late mutation\\n'), 600)`;
+  const leader = `const child = require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(descendant)}], { stdio: 'ignore' }); child.unref();`;
+  const fixture_ = fixture(t, [
+    {
+      id: "successful-leader-tree",
+      command: [process.execPath, "-e", leader],
+    },
+  ]);
+
+  const result = await run(fixture_);
+  await new Promise((resolve) => setTimeout(resolve, 750));
+
+  assert.equal(result.failed, true);
+  assert.equal(result.report.gates[0].status, "failed");
+  assert.match(result.report.gates[0].reason, /process group remained active/);
+  assert.equal(fs.readFileSync(path.join(fixture_.root, "tracked.txt"), "utf8"), "original\n");
+});
+
 test("affected formatter is a deterministic no-op for deletion-only supported paths", async (t) => {
   const fixture_ = fixture(
     t,
@@ -290,7 +313,42 @@ test("affected formatter is a deterministic no-op for unsupported extant paths",
   assert.equal(result.report.gates[0].reason, "no extant supported changed files");
 });
 
-test("changed-file formatting recognizes TOML but excludes unsupported Dockerfiles", () => {
+for (const extension of ["mts", "cts"]) {
+  test(`affected formatter executes an extant .${extension} path`, async (t) => {
+    const fixture_ = fixture(
+      t,
+      [
+        {
+          id: "format",
+          command: [process.execPath, "-e", "process.exit(9)"],
+          changedFiles: true,
+        },
+        { id: "unselected", command: [process.execPath, "-e", "process.exit(0)"] },
+      ],
+      ["format"],
+    );
+    const changedPath = `config.${extension}`;
+    fs.writeFileSync(path.join(fixture_.root, changedPath), "export const value = 1;\n");
+    execute("git", ["add", changedPath], { cwd: fixture_.root });
+    execute("git", ["commit", "--quiet", "-m", `add ${extension} fixture`], {
+      cwd: fixture_.root,
+    });
+    const plan = JSON.parse(fs.readFileSync(fixture_.planFile, "utf8"));
+    plan.scope = "affected";
+    plan.changedPaths = [changedPath];
+    writeJsonAtomic(fixture_.planFile, plan);
+
+    const result = await run(fixture_);
+
+    assert.equal(result.failed, true);
+    assert.equal(result.report.gates[0].status, "failed");
+    assert.equal(result.report.gates[0].exitCode, 9);
+  });
+}
+
+test("changed-file formatting recognizes TypeScript module variants and TOML", () => {
+  assert.equal(isFormatSupported("src/config.mts"), true);
+  assert.equal(isFormatSupported("src/config.cts"), true);
   assert.equal(isFormatSupported("fixtures/config.toml"), true);
   assert.equal(isFormatSupported("site/Dockerfile"), false);
 });

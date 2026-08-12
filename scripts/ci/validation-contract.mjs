@@ -204,7 +204,7 @@ export function planDigest(plan) {
 }
 
 export function isFormatSupported(file) {
-  return /(?:^|\/)[^/]+\.(?:cjs|css|html|js|json|jsonc|jsx|md|mdx|mjs|scss|toml|ts|tsx|yaml|yml)$/.test(
+  return /(?:^|\/)[^/]+\.(?:cjs|css|cts|html|js|json|jsonc|jsx|md|mdx|mjs|mts|scss|toml|ts|tsx|yaml|yml)$/.test(
     file,
   );
 }

@@ -1,5 +1,10 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+
+import {
+  releaseChildHandles,
+  settleDetachedProcessGroup,
+} from "../validation/lib/process-group.mjs";
 
 const commands = [
   [process.execPath, "scripts/validate-architecture-compass.mjs"],
@@ -18,56 +23,14 @@ const TERMINATION_GRACE_MS = 5000;
 const KILL_GRACE_MS = 5000;
 const SETTLEMENT_POLL_MS = 50;
 
-function terminate(child, signal = "SIGTERM") {
-  if (!child?.pid) return;
-  try {
-    if (process.platform === "win32") {
-      spawnSync("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
-    } else process.kill(-child.pid, signal);
-  } catch (error) {
-    if (error.code !== "ESRCH") throw error;
-  }
-}
-
-function releaseChildHandles(child) {
-  child.stdin?.destroy();
-  child.stdout?.destroy();
-  child.stderr?.destroy();
-  child.unref();
-}
-
-function processGroupExists(pid) {
-  if (process.platform === "win32") return false;
-  try {
-    process.kill(-pid, 0);
-    return true;
-  } catch (error) {
-    if (error.code === "ESRCH") return false;
-    if (error.code === "EPERM") return true;
-    throw error;
-  }
-}
-
 async function settle(child) {
-  if (!child?.pid) return;
-  terminate(child);
-  if (process.platform === "win32") return;
-
-  let deadline = Date.now() + TERMINATION_GRACE_MS;
-  while (processGroupExists(child.pid) && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, SETTLEMENT_POLL_MS));
-  }
-  if (processGroupExists(child.pid)) terminate(child, "SIGKILL");
-
-  deadline = Date.now() + KILL_GRACE_MS;
-  while (processGroupExists(child.pid) && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, SETTLEMENT_POLL_MS));
-  }
-  if (processGroupExists(child.pid)) {
-    throw new Error(
-      `Architecture Compass gate process group ${child.pid} remained alive ${KILL_GRACE_MS}ms after SIGKILL.`,
-    );
-  }
+  return await settleDetachedProcessGroup(child, {
+    terminationGraceMs: TERMINATION_GRACE_MS,
+    killGraceMs: KILL_GRACE_MS,
+    terminationPollMs: SETTLEMENT_POLL_MS,
+    killPollMs: SETTLEMENT_POLL_MS,
+    processGroupLabel: "Architecture Compass gate process group",
+  });
 }
 
 function beginSettlement(child) {
@@ -108,15 +71,18 @@ try {
       child.once("close", (code, signal) => resolve({ code, signal, error: spawnError }));
     });
     const result = await Promise.race([completion, settlementFailure]);
-    if (receivedSignal || result.error || result.code !== 0 || result.signal) {
-      await beginSettlement(child);
-    }
+    const settlement = await beginSettlement(child);
     activeChild = null;
     if (receivedSignal) break;
     if (result.error) throw result.error;
     if (result.code !== 0 || result.signal) {
       throw new Error(
         `Architecture Compass gate command failed: ${result.signal ?? result.code ?? "unknown status"}`,
+      );
+    }
+    if (settlement.hadSurvivingProcessGroup) {
+      throw new Error(
+        "Architecture Compass gate command left its process group active after successful leader exit.",
       );
     }
   }

@@ -25,6 +25,7 @@ import {
   harmlessNumericEvidenceMutation,
   UnsupportedFixtureCapabilityError,
 } from "../lib/legacy-case-lineage-test-harness.mjs";
+import { releaseChildHandles, settleDetachedProcessGroup } from "../lib/process-group.mjs";
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -3671,97 +3672,6 @@ async function withTemporaryDirectoryEnvironment(temporaryRoot, callback) {
   }
 }
 
-function terminateWorker(child, signal = "SIGTERM", windowsTreeKill = spawnSync) {
-  if (!child.pid) return;
-  try {
-    if (process.platform === "win32") {
-      const result = windowsTreeKill("taskkill", ["/pid", String(child.pid), "/t", "/f"], {
-        encoding: "utf8",
-        stdio: "ignore",
-        windowsHide: true,
-      });
-      if (result.error) {
-        throw new Error(
-          `Architecture Compass fixture worker tree ${child.pid} could not start taskkill: ${result.error.message}`,
-        );
-      }
-      if (result.status !== 0) {
-        throw new Error(
-          `Architecture Compass fixture worker tree ${child.pid} taskkill failed with status ${result.status ?? "unknown"}.`,
-        );
-      }
-    } else {
-      process.kill(-child.pid, signal);
-    }
-  } catch (error) {
-    if (error.code !== "ESRCH") throw error;
-  }
-}
-
-function releaseWorkerHandles(child) {
-  child.stdin?.destroy();
-  child.stdout?.destroy();
-  child.stderr?.destroy();
-  child.unref();
-}
-
-function processGroupExists(pid) {
-  if (process.platform === "win32") return false;
-  try {
-    process.kill(-pid, 0);
-    return true;
-  } catch (error) {
-    if (error.code === "ESRCH") return false;
-    if (error.code === "EPERM") return true;
-    throw error;
-  }
-}
-
-async function waitForProcessGroupExit(pid, timeoutMs, pollIntervalMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (processGroupExists(pid)) {
-    if (Date.now() >= deadline) return false;
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-  }
-  return true;
-}
-
-async function waitForWorkerExit(child, timeoutMs, pollIntervalMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (child.exitCode === null && child.signalCode === null) {
-    if (Date.now() >= deadline) return false;
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-  }
-  return true;
-}
-
-async function settleWorkerProcessGroup(
-  child,
-  { terminationGraceMs, killGraceMs, settlementPollMs, windowsTreeKill },
-) {
-  if (!child?.pid) return;
-  if (process.platform === "win32") {
-    if (child.exitCode === 0 && child.signalCode === null) return;
-    terminateWorker(child, "SIGKILL", windowsTreeKill);
-    if (!(await waitForWorkerExit(child, killGraceMs, settlementPollMs))) {
-      throw new Error(
-        `Architecture Compass fixture worker ${child.pid} remained alive ${killGraceMs}ms after taskkill.`,
-      );
-    }
-    return;
-  }
-
-  terminateWorker(child, "SIGTERM");
-  if (await waitForProcessGroupExit(child.pid, terminationGraceMs, settlementPollMs)) return;
-
-  terminateWorker(child, "SIGKILL");
-  if (await waitForProcessGroupExit(child.pid, killGraceMs, settlementPollMs)) return;
-
-  throw new Error(
-    `Architecture Compass fixture worker process group ${child.pid} remained alive ${killGraceMs}ms after SIGKILL.`,
-  );
-}
-
 function structuredWorkerFailure(completion, frozenInventory, workerCount, inventoryDigest) {
   if (!fs.existsSync(completion.reportFile)) return null;
   let report;
@@ -3911,11 +3821,16 @@ export async function runCoordinator({
     if (!childSettlements.has(child)) {
       childSettlements.set(
         child,
-        settleWorkerProcessGroup(child, {
+        settleDetachedProcessGroup(child, {
           terminationGraceMs,
           killGraceMs,
-          settlementPollMs,
+          terminationPollMs: settlementPollMs,
+          killPollMs: settlementPollMs,
           windowsTreeKill,
+          validateWindowsTreeKill: true,
+          windowsTreeLabel: "Architecture Compass fixture worker tree",
+          windowsExitLabel: "Architecture Compass fixture worker",
+          processGroupLabel: "Architecture Compass fixture worker process group",
         }),
       );
     }
@@ -4186,7 +4101,7 @@ export async function runCoordinator({
       groupsSettled = true;
       await Promise.allSettled(childCompletions);
     } catch (error) {
-      for (const child of children) releaseWorkerHandles(child);
+      for (const child of children) releaseChildHandles(child);
       cleanupErrors.push(error);
     }
     try {

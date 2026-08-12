@@ -1,10 +1,14 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { fingerprintGitCandidateRepository } from "../validation/smoke-install-contract.mjs";
+import {
+  settleDetachedProcessGroup,
+  terminateProcessGroup,
+} from "../validation/lib/process-group.mjs";
 import {
   digestJson,
   isFormatSupported,
@@ -112,57 +116,6 @@ function expandedCommand(gate, values, plan, repository) {
   return command;
 }
 
-function terminateChild(child, signal = "SIGTERM") {
-  if (!child.pid) return;
-  try {
-    if (process.platform === "win32") {
-      spawnSync("taskkill", ["/pid", String(child.pid), "/t", "/f"], {
-        stdio: "ignore",
-        windowsHide: true,
-      });
-    } else process.kill(-child.pid, signal);
-  } catch (error) {
-    if (error.code !== "ESRCH") throw error;
-  }
-}
-
-function processGroupExists(pid) {
-  if (process.platform === "win32") return false;
-  try {
-    process.kill(-pid, 0);
-    return true;
-  } catch (error) {
-    if (error.code === "ESRCH") return false;
-    if (error.code === "EPERM") return true;
-    throw error;
-  }
-}
-
-async function settleProcessGroup(child, graceMs = 5000) {
-  if (!child.pid) return;
-  terminateChild(child);
-  if (process.platform === "win32") return;
-  const groupPid = child.pid;
-  const deadline = Date.now() + graceMs;
-  while (processGroupExists(groupPid) && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  if (processGroupExists(groupPid)) {
-    try {
-      process.kill(-groupPid, "SIGKILL");
-    } catch (error) {
-      if (error.code !== "ESRCH") throw error;
-    }
-    const killDeadline = Date.now() + 1000;
-    while (processGroupExists(groupPid) && Date.now() < killDeadline) {
-      await new Promise((resolve) => setTimeout(resolve, 25));
-    }
-    if (processGroupExists(groupPid)) {
-      throw new Error(`Process group ${groupPid} remained alive after SIGKILL.`);
-    }
-  }
-}
-
 async function runCommand({
   command,
   cwd,
@@ -195,8 +148,8 @@ async function runCommand({
   let escalationTimer = null;
   const timer = setTimeout(() => {
     timedOut = true;
-    terminateChild(child);
-    escalationTimer = setTimeout(() => terminateChild(child, "SIGKILL"), 5000);
+    terminateProcessGroup(child);
+    escalationTimer = setTimeout(() => terminateProcessGroup(child, { signal: "SIGKILL" }), 5000);
     escalationTimer.unref();
   }, timeoutMs);
 
@@ -206,18 +159,22 @@ async function runCommand({
   });
   clearTimeout(timer);
   let terminationError = null;
-  if (
-    result.error ||
-    timedOut ||
-    result.code !== 0 ||
-    result.signal ||
-    cancellationControl?.receivedSignal
-  ) {
-    try {
-      await settleProcessGroup(child);
-    } catch (error) {
-      terminationError = error;
-    }
+  let residualProcessGroup = false;
+  try {
+    const settlement = await settleDetachedProcessGroup(child, {
+      terminationPollMs: 50,
+      killPollMs: 25,
+      processGroupFailureMessage: (pid) => `Process group ${pid} remained alive after SIGKILL.`,
+    });
+    const leaderSucceeded =
+      !result.error &&
+      !timedOut &&
+      result.code === 0 &&
+      !result.signal &&
+      !cancellationControl?.receivedSignal;
+    residualProcessGroup = leaderSucceeded && settlement.hadSurvivingProcessGroup;
+  } catch (error) {
+    terminationError = error;
   }
   if (escalationTimer) clearTimeout(escalationTimer);
   activeChildren.delete(child);
@@ -225,6 +182,7 @@ async function runCommand({
     ...result,
     timedOut,
     terminationError,
+    residualProcessGroup,
     durationMs: Date.now() - started,
     stdout,
     stderr,
@@ -369,6 +327,7 @@ async function skillsCliVersion(executable, repository, cancellationControl) {
     result.error ||
     result.timedOut ||
     result.terminationError ||
+    result.residualProcessGroup ||
     result.code !== 0 ||
     result.signal
   ) {
@@ -380,6 +339,81 @@ async function skillsCliVersion(executable, repository, cancellationControl) {
   const version = result.output.match(/\b(\d+\.\d+\.\d+)\b/)?.[1];
   if (!version) throw new Error("Could not parse the exact installed skills CLI version.");
   return version;
+}
+
+const defaultGateHandler = Object.freeze({
+  captureOutput: false,
+  beforeSpawn() {},
+  environment() {
+    return {};
+  },
+  async afterSuccess() {},
+});
+
+function createGateHandlers({
+  architectureReport,
+  architectureWorkers,
+  before,
+  control,
+  exactCli,
+  repository,
+  skillsSmokeForceTty,
+  state,
+}) {
+  return new Map([
+    [
+      "architecture-compass",
+      {
+        ...defaultGateHandler,
+        beforeSpawn() {
+          fs.rmSync(architectureReport, { force: true });
+        },
+        environment() {
+          return {
+            ARCHITECTURE_FIXTURE_WORKERS: architectureWorkers,
+            ARCHITECTURE_FIXTURE_REPORT: architectureReport,
+          };
+        },
+        async afterSuccess() {
+          state.fixtureInventoryDigest = validateArchitectureEvidence(
+            architectureReport,
+            repository,
+          );
+        },
+      },
+    ],
+    [
+      "smoke-install",
+      {
+        ...defaultGateHandler,
+        captureOutput: true,
+        environment() {
+          return exactCli
+            ? { SKILLS_SMOKE_CLI: exactCli, SKILLS_SMOKE_FORCE_TTY: skillsSmokeForceTty }
+            : {};
+        },
+        async afterSuccess(result) {
+          state.smokeEvidence = parseSmokeEvidence(result.output);
+          if (
+            state.smokeEvidence.candidateFingerprint !== before.digest ||
+            state.smokeEvidence.candidateFileCount !== before.fileCount
+          ) {
+            throw new Error(
+              "Smoke-install candidate evidence does not match the validation boundary.",
+            );
+          }
+          state.cliVersion = await skillsCliVersion(exactCli, repository, control);
+          if (!state.cliVersion) throw new Error("The exact installed skills CLI is unavailable.");
+          const expectedCliVersion = expectedSkillsCliVersion(repository);
+          if (state.cliVersion !== expectedCliVersion) {
+            throw new Error(
+              `The installed skills CLI version ${state.cliVersion} does not match root devDependency ${expectedCliVersion}.`,
+            );
+          }
+        },
+      },
+    ],
+  ]);
 }
 
 function writeGithubOutput(values) {
@@ -396,9 +430,11 @@ function installSignalHandlers(control) {
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.once(signal, () => {
       control.receivedSignal ??= signal;
-      for (const child of activeChildren) terminateChild(child);
+      for (const child of activeChildren) terminateProcessGroup(child);
       setTimeout(() => {
-        for (const child of activeChildren) terminateChild(child, "SIGKILL");
+        for (const child of activeChildren) {
+          terminateProcessGroup(child, { signal: "SIGKILL" });
+        }
       }, 5000).unref();
       process.exitCode = 1;
     });
@@ -426,9 +462,21 @@ export async function executeValidationPlan(options, control = { receivedSignal:
   const gates = [];
   const dependencyInstallOutcome = options.dependencyInstallOutcome ?? "success";
   let failed = dependencyInstallOutcome !== "success";
-  let smokeEvidence = null;
-  let cliVersion = null;
-  let fixtureInventoryDigest = null;
+  const state = {
+    smokeEvidence: null,
+    cliVersion: null,
+    fixtureInventoryDigest: null,
+  };
+  const gateHandlers = createGateHandlers({
+    architectureReport,
+    architectureWorkers: options.architectureWorkers,
+    before,
+    control,
+    exactCli,
+    repository,
+    skillsSmokeForceTty,
+    state,
+  });
 
   for (const gate of manifest.gates) {
     if (!selected.has(gate.id)) continue;
@@ -467,30 +515,21 @@ export async function executeValidationPlan(options, control = { receivedSignal:
       continue;
     }
     console.log(`\n[validation:${gate.id}] ${command.join(" ")}`);
-    if (gate.id === "architecture-compass") {
-      fs.rmSync(architectureReport, { force: true });
-    }
+    const handler = gateHandlers.get(gate.id) ?? defaultGateHandler;
+    handler.beforeSpawn();
     const environment = {
       ...process.env,
       VALIDATION_EVENT: options.event,
       VALIDATION_BASE_SHA: options.baseSha,
       VALIDATION_PLAN_FILE: path.resolve(options.plan),
-      ...(gate.id === "architecture-compass"
-        ? {
-            ARCHITECTURE_FIXTURE_WORKERS: options.architectureWorkers,
-            ARCHITECTURE_FIXTURE_REPORT: architectureReport,
-          }
-        : {}),
-      ...(gate.id === "smoke-install" && exactCli
-        ? { SKILLS_SMOKE_CLI: exactCli, SKILLS_SMOKE_FORCE_TTY: skillsSmokeForceTty }
-        : {}),
+      ...handler.environment(),
     };
     const result = await runCommand({
       command,
       cwd: repository,
       environment,
       timeoutMs: gate.timeoutMs,
-      captureOutput: gate.id === "smoke-install",
+      captureOutput: handler.captureOutput,
       cancellationControl: control,
     });
     const passed =
@@ -498,6 +537,7 @@ export async function executeValidationPlan(options, control = { receivedSignal:
       !result.error &&
       !result.timedOut &&
       !result.terminationError &&
+      !result.residualProcessGroup &&
       result.code === 0;
     const gateResult = {
       id: gate.id,
@@ -510,51 +550,25 @@ export async function executeValidationPlan(options, control = { receivedSignal:
           ? `validation received ${control.receivedSignal}`
           : result.terminationError
             ? `process-group termination failed: ${result.terminationError.message}`
-            : result.timedOut
-              ? `timed out after ${gate.timeoutMs}ms`
-              : result.error?.message ||
-                `exited with ${result.signal ?? result.code ?? "unknown status"}`,
+            : result.residualProcessGroup
+              ? "process group remained active after successful leader exit"
+              : result.timedOut
+                ? `timed out after ${gate.timeoutMs}ms`
+                : result.error?.message ||
+                  `exited with ${result.signal ?? result.code ?? "unknown status"}`,
     };
     gates.push(gateResult);
     if (!passed) {
       failed = true;
       continue;
     }
-    if (gate.id === "architecture-compass") {
-      try {
-        fixtureInventoryDigest = validateArchitectureEvidence(architectureReport, repository);
-      } catch (error) {
-        gateResult.status = "failed";
-        gateResult.exitCode = 1;
-        gateResult.reason = error.message;
-        failed = true;
-      }
-    }
-    if (gate.id === "smoke-install") {
-      try {
-        smokeEvidence = parseSmokeEvidence(result.output);
-        if (
-          smokeEvidence.candidateFingerprint !== before.digest ||
-          smokeEvidence.candidateFileCount !== before.fileCount
-        ) {
-          throw new Error(
-            "Smoke-install candidate evidence does not match the validation boundary.",
-          );
-        }
-        cliVersion = await skillsCliVersion(exactCli, repository, control);
-        if (!cliVersion) throw new Error("The exact installed skills CLI is unavailable.");
-        const expectedCliVersion = expectedSkillsCliVersion(repository);
-        if (cliVersion !== expectedCliVersion) {
-          throw new Error(
-            `The installed skills CLI version ${cliVersion} does not match root devDependency ${expectedCliVersion}.`,
-          );
-        }
-      } catch (error) {
-        gateResult.status = "failed";
-        gateResult.exitCode = 1;
-        gateResult.reason = error.message;
-        failed = true;
-      }
+    try {
+      await handler.afterSuccess(result);
+    } catch (error) {
+      gateResult.status = "failed";
+      gateResult.exitCode = 1;
+      gateResult.reason = error.message;
+      failed = true;
     }
   }
 
@@ -567,9 +581,9 @@ export async function executeValidationPlan(options, control = { receivedSignal:
       failed = true;
     }
     if (
-      smokeEvidence &&
-      (smokeEvidence.candidateFingerprint !== before.digest ||
-        smokeEvidence.candidateFileCount !== before.fileCount)
+      state.smokeEvidence &&
+      (state.smokeEvidence.candidateFingerprint !== before.digest ||
+        state.smokeEvidence.candidateFileCount !== before.fileCount)
     ) {
       fingerprintError = "Smoke-install candidate evidence does not match the validation boundary.";
       const smokeGate = gates.find((gate) => gate.id === "smoke-install");
@@ -598,11 +612,11 @@ export async function executeValidationPlan(options, control = { receivedSignal:
     candidateFingerprintAfter: after.digest,
     candidateFileCountAfter: after.fileCount,
     fingerprintError,
-    smokeEvidence,
-    skillsCliVersion: cliVersion,
+    smokeEvidence: state.smokeEvidence,
+    skillsCliVersion: state.cliVersion,
     skillsSmokeCli: selected.has("smoke-install") ? skillsSmokeCli : null,
     skillsSmokeForceTty: selected.has("smoke-install") ? skillsSmokeForceTty : null,
-    fixtureInventoryDigest,
+    fixtureInventoryDigest: state.fixtureInventoryDigest,
   };
   const report = { ...reportWithoutDigest, reportDigest: digestJson(reportWithoutDigest) };
   writeJsonAtomic(options.report, report);
