@@ -174,16 +174,38 @@ test("manifest schema 1 rejects gates excluded from trusted full proof", () => {
   assert.throws(() => validateManifest(manifest), /requires every gate in trusted full proof/);
 });
 
-test("release workflow accepts the boolean false non-expired artifact state", () => {
+test("release workflow invokes one shared verifier at both proof boundaries", () => {
   const directory = path.dirname(fileURLToPath(import.meta.url));
   const workflow = fs.readFileSync(
     path.resolve(directory, "../../.github/workflows/publish-release.yml"),
     "utf8",
   );
   assert.equal(
-    workflow.match(/jq -e '\.expired == false'/g)?.length,
+    workflow.match(/node scripts\/ci\/verify-release-proof\.mjs/g)?.length,
     2,
-    "both release proof boundaries must test boolean false without jq -e command substitution",
+    "release readiness and publication must use the same checked-in verifier",
   );
-  assert.doesNotMatch(workflow, /jq -er '\.expired'/);
+  assert.equal(workflow.match(/--boundary release-readiness/g)?.length, 1);
+  assert.equal(workflow.match(/--boundary publication/g)?.length, 1);
+  for (const argument of [
+    "--github-repository",
+    "--manifest",
+    "--receipt",
+    "--report",
+    "--pages-archive",
+    "--release-sha",
+    "--version",
+    "--validate-run-id",
+    "--validate-job-attempt",
+    "--pages-artifact-name",
+    "--validation-artifact-name",
+  ]) {
+    assert.equal(
+      workflow.match(new RegExp(argument, "g"))?.length,
+      2,
+      `both proof boundaries must pass ${argument}`,
+    );
+  }
+  assert.doesNotMatch(workflow, /node scripts\/ci\/verify-validation-proof\.mjs/);
+  assert.doesNotMatch(workflow, /pages_metadata=|validation_metadata=|artifact_site_digest=/);
 });
