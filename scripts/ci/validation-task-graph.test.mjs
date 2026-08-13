@@ -834,7 +834,7 @@ test("result-store metadata is verified with bounded trust context and cross-cor
   );
 });
 
-test("resolution lookup shares one absolute deadline and one total observation budget", async (t) => {
+test("resolution lookup bounds each task independently while sharing one observation budget", async (t) => {
   const { common } = fixture(t);
   const configured = withManifest(common, (manifest) => {
     manifest.gates.push({
@@ -850,6 +850,12 @@ test("resolution lookup shares one absolute deadline and one total observation b
   };
   const store = createMemoryStore();
   await passTask(configured, store);
+  const originalDateNow = Date.now;
+  let currentTime = Date.parse("2026-08-13T12:00:00.000Z");
+  Date.now = () => currentTime;
+  t.after(() => {
+    Date.now = originalDateNow;
+  });
   const calls = [];
   await resolve(configured, {
     store: {
@@ -858,10 +864,15 @@ test("resolution lookup shares one absolute deadline and one total observation b
         calls.push(input);
         return store.lookup(input);
       },
+      async verify(input) {
+        const verified = await store.verify(input);
+        currentTime += 20_001;
+        return verified;
+      },
     },
   });
   assert.equal(calls.length, 2);
-  assert.equal(calls[0].deadline, calls[1].deadline);
+  assert.notEqual(calls[0].deadline, calls[1].deadline);
   assert.equal(calls[0].limit, 1000);
   assert.equal(calls[1].limit, 999);
 

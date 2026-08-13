@@ -1322,7 +1322,6 @@ export async function resolve(options, adapters) {
   const gitInputs = options.gitInputs ?? {};
   const taskById = new Map();
   const tasks = [];
-  const lookupDeadline = new Date(Date.now() + STORE_TIMEOUT_MS).toISOString();
   let remainingObservationBudget = LOOKUP_LIMIT;
 
   for (const gate of manifest.gates.filter(({ id }) => plan.selectedGates.includes(id))) {
@@ -1451,6 +1450,7 @@ export async function resolve(options, adapters) {
     } else if (remainingObservationBudget === 0) {
       task.missReason = "resolution-wide result-store observation budget exhausted";
     } else {
+      const lookupDeadline = new Date(Date.now() + STORE_TIMEOUT_MS).toISOString();
       let candidates = [];
       try {
         const lookupStarted = performance.now();
