@@ -2,7 +2,7 @@
 
 ID: ADR-0044
 Title: Select validation scope by trust context and owned gates
-Status: Accepted
+Status: Superseded
 Date: 2026-08-12
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0041, ADR-0043
-Superseded by: None
+Superseded by: ADR-0046
 Guide verified: 2026-08-12
 Gist: Pull requests run a fail-closed union of affected owned gates, while main and manual validation remain full and trusted proof remains full-only.
 

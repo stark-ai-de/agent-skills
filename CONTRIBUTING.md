@@ -57,7 +57,7 @@ Follow [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples,
 
 ## Validation
 
-Select local checks from changed contracts and owning boundaries. [ADR-0044](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)) governs hosted scope and trusted proof, while [ADR-0045](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) governs the Architecture Compass fixture workers. Common repository gates are:
+Select local checks from changed contracts and owning boundaries. [ADR-0046](docs/adrs/0046-assemble-validation-proof-from-content-addressed-task-results.short.md) ([Long, canonical](docs/adrs/0046-assemble-validation-proof-from-content-addressed-task-results.long.md) · [Guide](docs/adrs/0046-assemble-validation-proof-from-content-addressed-task-results.guide.md)) governs the hosted content-addressed task graph and trusted aggregate proof, while [ADR-0047](docs/adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.short.md) ([Long, canonical](docs/adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.long.md) · [Guide](docs/adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.guide.md)) governs the Architecture Compass hosted shards and local workers. Common repository gates are:
 
 ```bash
 npm run validate
@@ -68,7 +68,7 @@ npm run smoke:fingerprint
 npm run smoke:install
 ```
 
-Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it. Hosted `Validate` remains unfiltered and mandatory with one stable required `validate` job. Pull requests execute the fail-closed union of compatible base and candidate plans; `main` pushes and every manual dispatch execute the full gate set. An affected pull-request run can publish its diagnostic report but cannot create trusted proof or Pages artifacts. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
+Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it. Hosted `Validate` remains unfiltered and mandatory with one stable required `validate` aggregator. Pull requests select the fail-closed union of compatible base and candidate plans; `main` pushes and every manual dispatch select the full logical gate set. Each selected gate is satisfied by either a current execution or an exact verified immutable result, and only misses create gate jobs or install dependencies. Pull-request results are computation evidence only; protected `main` independently assembles current Pages and release proof. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
 
 `pnpm install` provides the exact root `skills@1.5.22` executable used by hosted CI. Use `pnpm exec skills add ./skills --list` for an exact local discovery reproduction. Hosted smoke passes that executable explicitly; a direct local `npm run smoke:install` retains the same exact-version `npx` fallback unless `SKILLS_SMOKE_CLI` is configured. Public `npx skills@latest` examples still require network access when the CLI is not already cached.
 
@@ -92,7 +92,7 @@ pnpm lint
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
-- [ ] Checks required by ADR-0044, ADR-0045, and the changed contracts pass; release-intent work includes the local aggregate, and the stable hosted Validate job is green for the effective plan.
+- [ ] Checks required by ADR-0046, ADR-0047, and the changed contracts pass; release-intent work includes the local aggregate, and the stable hosted Validate check is green for the effective task graph.
 - [ ] `pnpm exec skills add ./skills --list` works when local catalog discovery changed.
 - [ ] `npm run smoke:install` passes when install smoke behavior changed.
 - [ ] No private or sensitive data is included.

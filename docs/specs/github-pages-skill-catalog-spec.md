@@ -7,7 +7,7 @@ status: "draft"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-05-26"
-updated: "2026-08-12"
+updated: "2026-08-13"
 source_request: "Generate a Codex-ready spec for a GitHub Pages setup in this repo using the style, metadata, icons, favicons, and related brand assets of stark-ai.de."
 ---
 
@@ -31,7 +31,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
 - Add static favicons, app icons, manifest metadata, SEO metadata, Open Graph metadata, and Twitter card metadata.
 - Keep `Validate` as the single trusted workflow that produces and deploys a validated Pages artifact after successful full trusted-main validation.
-- Keep one unfiltered stable required `validate` job. Pull requests whose affected or fail-full plan selects the site gate catch site build failures before merge.
+- Keep one unfiltered stable required `validate` aggregator. Pull requests whose affected or fail-full plan selects the site task catch site build or restore failures before merge.
 - Update existing repo-facing docs, workflow references, receipt contracts, and ADR navigation that become stale because of the Pages ownership change.
 
 ### Non-goals
@@ -63,7 +63,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - `SKILL.md` frontmatter `name` and `description` are canonical.
   - Incubator skills remain visible as candidate/internal material and must not be presented as promoted public skills.
   - Repo validation runs through `npm run validate`, `pnpm format:check`, and `pnpm lint`.
-  - Hosted validation uses a versioned gate manifest, fail-closed base/candidate pull-request planning, sequential execution, and a diagnostic report.
+  - Hosted validation uses manifest schema v2, fail-closed base/candidate pull-request planning, a content-addressed task graph, dynamic miss jobs, immutable result artifacts, and one stable aggregate report.
   - Generated or local helper skill installs under `.agents/` are not catalog content.
 - Commands and toolchain:
   - Node `>=22.20.0`
@@ -72,9 +72,9 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Related ADRs:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
-  - Historical: [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)), [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md)), and [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md)) are Superseded lineage records.
-  - Current: [ADR-0044](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)) governs validation scope and trusted proof.
-  - Current: [ADR-0045](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) governs Architecture Compass fixture execution.
+  - Historical: [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)), [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md)), [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md)), [ADR-0044](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md)), and [ADR-0045](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md)) are Superseded lineage records.
+  - Current: [ADR-0046](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.short.md) ([Long, canonical](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.long.md) · [Guide](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.guide.md)) governs content-addressed validation and trusted aggregate proof.
+  - Current: [ADR-0047](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.short.md) ([Long, canonical](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.long.md) · [Guide](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.guide.md)) governs Architecture Compass hosted and local fixture distribution.
 - Unspecified facts:
   - Final deployed Pages URL until repository Pages settings are enabled.
   - Whether a future custom domain will be configured.
@@ -112,14 +112,21 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN a user views incubator pages, THE SYSTEM SHALL clearly label them as candidate skills outside the promoted public catalog.
 - WHEN the site is deployed under GitHub Pages, THE SYSTEM SHALL load routes and assets correctly under `/agent-skills/`.
 - WHEN metadata is generated, THE SYSTEM SHALL include title, description, canonical URL, Open Graph image, Twitter card metadata, manifest, theme color, favicon, SVG icon, and apple icon.
-- WHEN `Validate` runs for a pull request, `main` push, or manual dispatch, THE SYSTEM SHALL create the same unfiltered required `validate` job.
+- WHEN `Validate` runs for a pull request, `main` push, or manual dispatch, THE SYSTEM SHALL create the same unfiltered required `validate` aggregator.
 - WHEN a pull request runs, THE SYSTEM SHALL use the fail-closed union of compatible base and candidate plans; WHEN that effective plan selects the site gate, THE SYSTEM SHALL build the site without creating Pages or reusable proof.
 - IF pull-request planning is missing, malformed, incompatible, full, unknown, unmatched, or globally invalidated, THEN THE SYSTEM SHALL select the complete gate set.
-- WHEN a `push` to `main` or any manual dispatch runs, THE SYSTEM SHALL execute the complete manifest gate set.
-- WHEN a full `push` to `main` or full manual dispatch from `main` succeeds, THE SYSTEM SHALL deploy the exact sealed static artifact produced by that run. A full manual run from another branch remains diagnostic and SHALL NOT create Pages or reusable proof.
-- WHEN any hosted run writes a validation report, THE SYSTEM SHALL retain it as diagnostic evidence and compare candidate fingerprints before and after the selected gates.
-- WHEN a successful full trusted-main run produces receipt schema v2, THE RECEIPT SHALL bind full scope; plan, manifest, and gate-report digests; exact full gate IDs and outcomes; fixture-inventory digest; successful skills/smoke evidence; candidate fingerprint and file count; exact installed CLI version and normalized override state; workflow/run/job-attempt identity; event; branch; SHA; package version; sealed site digest; and artifact names and IDs.
-- WHEN a release is prepared, THE SYSTEM SHALL resolve the exact successful full main-push Validate run for the checked-out SHA, verify receipt schema v2 and its validation report, discover the successful artifact-producing Validate job attempt, verify REST artifact metadata, download by explicit run ID and attempt-scoped name, recompute candidate and Pages digests, and reject affected, incomplete, missing, expired, malformed, or mismatched proof without a dependency install or aggregate rerun.
+- WHEN a `push` to `main` or any manual dispatch runs, THE SYSTEM SHALL select the complete logical manifest task set; each selected task SHALL be satisfied by a current successful execution or one exact verified reusable result.
+- WHEN manifest schema v2 describes a task, THE SYSTEM SHALL keep affected-selection paths separate from its complete entrypoint, helper, workspace, dependency, tool, environment, logical Git, prerequisite, evidence, and restored-output closure.
+- WHEN a task key is computed, THE SYSTEM SHALL bind canonical repository, contract, path/type/mode/size/content, command, dependency, prerequisite, sanitized environment, exact tool/platform, evidence, and output identity while excluding commit SHA, run ID, timestamps, and duration.
+- WHEN `validation_reuse=auto`, THE SYSTEM SHALL immediately reuse eligible exact results and create jobs only for misses; WHEN `off`, it SHALL execute every selected task; WHEN `verify`, it SHALL re-execute would-be hits and hard-fail semantic evidence or output drift.
+- WHEN result discovery runs, THE SYSTEM SHALL treat Actions cache only as an untrusted lookup index and accept only immutable task artifacts downloaded by exact ID after strict producer, metadata, digest, schema, key, evidence, prerequisite, and archive verification. Missing, unavailable, or expired storage SHALL become a miss; malformed or contradictory proof SHALL fail closed.
+- WHEN an eligible execution fails, THE SYSTEM SHALL record a tombstone that blocks older successes in the same trust/control-plane scope, and a current failure SHALL NOT fall back to an older pass.
+- WHEN the site task is reused, THE SYSTEM SHALL restore `site/dist` into a private temporary directory, independently tree-hash it, atomically install it, and require the verified digest before a current protected-main run repackages it as a new current Pages artifact.
+- WHEN a full protected-main aggregate succeeds, THE SYSTEM SHALL deploy the exact current-run Pages artifact. Pull-request results remain computation evidence, and a manual run from another branch remains diagnostic; neither grants deployment or publication authority.
+- WHEN any hosted run writes validation report schema v2, THE SYSTEM SHALL retain it as diagnostic evidence and bind every selected task's executed/reused status, key, receipt, producer, lookup time, evidence/output identity, complete result-set digest, and candidate fingerprints before and after assembly.
+- WHEN a successful full protected-main run produces trusted receipt schema v3, THE RECEIPT SHALL bind the current candidate/main identity, report and complete result-set digests, every accepted task and output receipt, every unique producer, and the current Pages artifact plus the existing plan, manifest, candidate, CLI, fixture, and package evidence.
+- WHEN a release is prepared, THE SYSTEM SHALL resolve the exact successful full main-push aggregate for the checked-out SHA, verify receipt schema v3 and report schema v2, recursively verify every unique producer and authoritative artifact, recompute candidate and Pages digests, and reject lower-integrity, incomplete, missing, expired, malformed, tombstoned, or mismatched proof without a dependency install or aggregate rerun.
+- WHEN Architecture Compass misses, THE SYSTEM SHALL partition the frozen 325-case inventory by stable ordinal modulo three, run three hosted shards with up to three isolated local workers each, seal each baseline capsule, and emit one gate result only after exact 325/325 accounting. A verified hit SHALL create no Architecture Compass job or process.
 - WHEN production Pages deployments are queued from different triggers, THE SYSTEM SHALL serialize them in one deployment concurrency group and verify immediately before deployment that `refs/heads/main` still equals the run SHA, failing stale runs closed.
 
 ### Non-functional requirements
@@ -153,18 +160,18 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 
 ## Architectural decisions
 
-- ADR required: no additional ADR; current accepted ADR-0044 governs validation scope and trusted proof, while ADR-0045 governs fixture sharding.
+- ADR required: satisfied by accepted ADR-0046 for content-addressed validation and accepted ADR-0047 for hosted/local Architecture Compass distribution.
 - Existing ADRs consulted:
   - [ADR-0013](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.short.md) ([Long, canonical](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.long.md) · [Guide](../adrs/0013-persist-specs-and-adrs-as-repo-artifacts.guide.md))
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
   - Historical: [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)), [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md)), and [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
 - Current accepted ADR paths:
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
-  - [ADR-0044](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md))
-  - [ADR-0045](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md))
+  - [ADR-0046](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.short.md) ([Long, canonical](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.long.md) · [Guide](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.guide.md))
+  - [ADR-0047](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.short.md) ([Long, canonical](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.long.md) · [Guide](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.guide.md))
 - Supersession lineage:
-  - ADR-0042 is superseded by ADR-0043; ADR-0043 and ADR-0041 are superseded by ADR-0044. ADR-0045 is complementary and has no predecessor.
-- Implementation blocked until ADR accepted: no; ADR-0017, ADR-0044, and ADR-0045 are accepted and locked.
+  - ADR-0042 is superseded by ADR-0043; ADR-0043 and ADR-0041 are superseded by ADR-0044; ADR-0044 is superseded by ADR-0046. ADR-0045 is superseded by ADR-0047.
+- Implementation blocked until ADR accepted: no; ADR-0017, ADR-0046, and ADR-0047 are accepted and locked.
 
 ## File plan
 
@@ -186,6 +193,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - `docs/adrs/0043-deploy-validated-main-artifacts.{short,long,guide}.md`
 - `docs/adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.{short,long,guide}.md`
 - `docs/adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.{short,long,guide}.md`
+- `docs/adrs/0046-assemble-validation-proof-from-content-addressed-task-results.{short,long,guide}.md`
+- `docs/adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.{short,long,guide}.md`
 - `site/`
 
 ### Expected removed files
@@ -221,7 +230,7 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - `incubator/skills/**/SKILL.md`, except for explicitly approved metadata fixes.
 - `.agents/`
 - `docs/specs/do-not-publish/`
-- Skill validation behavior unrelated to site, affected-planning, proof-v2, or Architecture Compass fixture contracts.
+- Skill validation semantics unrelated to site, task-input closure, trusted proof, or Architecture Compass fixture contracts.
 
 ## Execution plan
 
@@ -238,19 +247,20 @@ The site should use the visual language, metadata conventions, logos, favicons, 
    - Manrope display type and Inter body type when asset licensing permits reuse
 7. Add metadata, manifest, favicons, canonical URLs, Open Graph, Twitter cards, robots, and sitemap behavior.
 8. Make `Validate` the single trusted Pages artifact producer:
-   - keep one unfiltered, stable required `validate` job for pull requests, `main` pushes, and manual dispatch
+   - keep one unfiltered, stable required `validate` aggregator for pull requests, `main` pushes, and manual dispatch
    - use a fail-closed union of compatible base and candidate plans for pull requests; use the complete manifest for `main` and manual events
-   - compute one `trusted_main` output from a `push` to `main` or manual dispatch from `main`
-   - reuse that output for the site digest, Pages configuration, artifact upload, receipt creation, and deployment conditions
-   - upload the versioned validation report as diagnostics for full and affected runs, while excluding affected reports from trusted proof
-   - install only the selected root/site dependency profiles and reuse exact installed `skills@1.5.22` for listing and smoke checks
-   - seal and hash the complete `site/dist` file set immediately after the build, upload it with hidden files included, run pinned external CLI checks only in isolated temporary copies, and assert the sealed digest before upload
-   - upload `github-pages-<run-id>-<validation-job-attempt>` and receipt schema v2 at `validation-receipt-<run-id>-<validation-job-attempt>` only after every full gate passes in a trusted-main context
-   - deploy the exact attempt-scoped Pages artifact from a dependent job
+   - resolve canonical task keys under manifest schema v2, verify immutable result artifacts, and create jobs only for misses
+   - expose `validation_reuse: auto|off|verify`, defaulting to `auto`, with `off` and namespace/epoch bumps as rollback controls
+   - install only dependency profiles required by misses and skip gate dependency installation on a complete hit
+   - publish every executed task as an immutable attempt-safe artifact; use Actions cache only as a disposable lookup index
+   - write validation report schema v2 from the complete executed/reused result set and issue trusted receipt schema v3 only from a successful current protected-main aggregate
+   - restore reusable `site/dist` into a temporary directory, independently verify its tree digest, atomically install it, then create and rehash a new current-run Pages artifact
+   - upload attempt-scoped Pages and proof artifacts only after the full protected-main aggregate succeeds
+   - deploy the exact current attempt-scoped Pages artifact from a dependent job
    - serialize production deployments and reject a deployment whose `refs/heads/main` no longer equals its run SHA
    - preserve diagnostic-only behavior for pull requests and full manual non-main dispatches
-9. Keep Architecture Compass fixtures in isolated deterministic workers under ADR-0045, defaulting hosted execution to one until the accepted two/three-worker benchmark chooses a stable faster setting.
-10. Make `Publish Release` resolve the exact successful full main-push Validate run and successful artifact-producing job attempt, derive both artifact names, verify report/receipt v2 and REST metadata symmetry, recompute candidate and Pages digests, run dependency-free release metadata validation, repeat proof checks at the publication boundary, confirm `main` has not advanced, and skip both dependency installation and the aggregate rerun.
+9. On an Architecture Compass miss, freeze the 325-case inventory, create three stable modulo shards, use up to three isolated local workers per shard, materialize sealed copy-on-write capsules with normal-copy fallback, and require one strict aggregate result under ADR-0047.
+10. Make `Publish Release` resolve the exact successful full main-push aggregate and current proof artifact, verify report v2/receipt v3 plus every unique producer and immutable task artifact, recompute candidate and Pages digests, run dependency-free release metadata validation, repeat proof checks at publication, confirm `main` has not advanced, and skip both dependency installation and the aggregate rerun.
 11. Select the site build on a pull request only when its owning paths or a fail-full condition require it.
 12. Update README, validation, publishing, and ADR index/lock docs; remove stale Pages badge and workflow references.
 13. Run automated validation and, after merge, collect hosted rollout evidence separately from local proof.
@@ -272,8 +282,8 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md))
   - [ADR-0042](../adrs/0042-optimize-github-actions-with-owned-gates.short.md) ([Long, canonical](../adrs/0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](../adrs/0042-optimize-github-actions-with-owned-gates.guide.md))
   - [ADR-0043](../adrs/0043-deploy-validated-main-artifacts.short.md) ([Long, canonical](../adrs/0043-deploy-validated-main-artifacts.long.md) · [Guide](../adrs/0043-deploy-validated-main-artifacts.guide.md))
-  - [ADR-0044](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md))
-  - [ADR-0045](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md))
+  - [ADR-0046](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.short.md) ([Long, canonical](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.long.md) · [Guide](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.guide.md))
+  - [ADR-0047](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.short.md) ([Long, canonical](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.long.md) · [Guide](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.guide.md))
 - External docs checked:
   - Astro GitHub Pages deployment guidance
   - Astro static route/content guidance
@@ -285,18 +295,18 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - Treat the sibling website as the design source, not a build dependency.
   - Historical 2026-08-11 work accepted ADR-0042 as a standalone Validate-owned artifact/deployment decision. Its ID, stem, and Decision remain locked, but the current reciprocal lineage is ADR-0042 to ADR-0043 to ADR-0044.
   - Reject moving Pages production into `publish-release.yml`: it would make catalog freshness release-dependent or require a second trigger/cross-workflow handoff and weaken the one-build provenance boundary.
-  - Normalize validation scope to affected, fail-closed pull requests and full `main`/manual events. Deployment and reusable proof remain limited to successful full `main` pushes and full manual dispatches from `main`; pull requests and manual non-main runs are diagnostic-only.
-  - Keep Architecture Compass at one hosted fixture worker until the ADR-0045 benchmark authorizes a stable faster count.
-  - Bind release reuse to candidate evidence, workflow run and attempt, SHA, receipt fields, and REST artifact metadata; fixed artifact names are not safe on reruns.
+  - Preserve affected, fail-closed pull requests and full logical `main`/manual selections while allowing an exact task result to satisfy a selected gate. Deployment and current proof remain protected-main aggregate authority; pull requests and manual non-main runs cannot deploy or publish.
+  - Create three hosted Architecture Compass shards with up to three local workers only on a miss; a hit creates no fixture job.
+  - Bind release reuse to the current candidate and aggregate plus every task key, producer run/job/attempt, immutable artifact, receipt, output, and REST metadata; fixed names or unverified cache entries are not proof.
   - Include `skillopt-setup` as an incubator candidate now that its public skill and eval proof are available, without presenting it as a promoted skill.
 - Requirements preserved:
   - Each skill gets a separate page.
   - Website styling, metadata, icons, and favicons should align with `stark-ai.de`.
   - Incubator skills should be visible only as candidate/internal skills, not as promoted public catalog entries.
 - Preceding ADR/spec work needed:
-  - None; ADR-0017, ADR-0044, and ADR-0045 are accepted. ADR-0041 through ADR-0043 remain immutable historical lineage.
+  - None; ADR-0017, ADR-0046, and ADR-0047 are accepted. ADR-0041 through ADR-0045 remain immutable historical lineage.
 - ADR gate result:
-  - ADR required: no additional ADR; ADR-0044 is the current validation/proof authority and ADR-0045 is the fixture authority.
+  - ADR required and satisfied: ADR-0046 is the current validation/proof authority and ADR-0047 is the fixture authority.
 - Skipped checks and why:
   - Asset license audit beyond repo ownership was not completed; implementation must copy only approved assets.
 
@@ -327,10 +337,10 @@ The site should use the visual language, metadata conventions, logos, favicons, 
   - no
 - ADR paths:
   - [ADR-0017](../adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](../adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](../adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md))
-  - [ADR-0044](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.short.md) ([Long, canonical](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.long.md) · [Guide](../adrs/0044-select-validation-scope-by-trust-context-and-owned-gates.guide.md))
-  - [ADR-0045](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.short.md) ([Long, canonical](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.long.md) · [Guide](../adrs/0045-shard-mutation-fixtures-with-bounded-isolated-workers.guide.md))
+  - [ADR-0046](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.short.md) ([Long, canonical](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.long.md) · [Guide](../adrs/0046-assemble-validation-proof-from-content-addressed-task-results.guide.md))
+  - [ADR-0047](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.short.md) ([Long, canonical](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.long.md) · [Guide](../adrs/0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers.guide.md))
 - ADR persistence:
-  - ADR-0044 and ADR-0045 accepted and locked; ADR-0041 through ADR-0043 retained as reciprocal Superseded history without changing their Decisions
+  - ADR-0046 and ADR-0047 accepted and locked; ADR-0041 through ADR-0045 retained as reciprocal Superseded history without changing their Decisions
 - ADR index updates needed:
   - `docs/adrs.md` and `scripts/validation/adrs/decision-lock.tsv`
 
@@ -357,8 +367,8 @@ git diff --check
 - Verify generated links work under the `/agent-skills/` base path.
 - Verify GitHub Pages settings use GitHub Actions as the publishing source.
 - Verify the deployed Pages URL after the first `main` deployment.
-- Hosted matrix after merge: affected and fail-full pull-request plans retain the stable required job and create no trusted proof; main push and manual-main full runs deploy with receipt-v2/artifact symmetry; manual non-main runs are full but diagnostic-only; rerun attempts do not collide; release dry run accepts exact full main-push proof and rejects affected, incomplete, wrong event/branch/SHA, missing/expired/malformed proof, and advanced main.
-- Keep the Architecture Compass default at one worker until alternating hosted two/three-worker measurements satisfy ADR-0045 equivalence, stability, and performance requirements.
+- Hosted matrix before merge: cold `off` executes every selected task and accounts for Architecture Compass 325/325 across three shards; identical-commit `auto` reuses every eligible result without a gate process or gate dependency install and completes within three minutes and at least 90% faster; `verify` re-executes hits with equal semantic evidence/output digests; partial changes execute only invalidated closures; global/control-plane changes miss all affected tasks.
+- Hosted matrix after merge: protected main promotes only computation whose producer control plane exactly matches current main, rebuilds the current Pages artifact from verified site bytes, rejects lower-integrity or tampered proof, recursively verifies receipt-v3 producer chains, and preserves publication-time revalidation.
 - Keep local source/static and CI proof separate from hosted deployment, release dry-run, and actual publication evidence.
 
 ## Verification checkpoint
@@ -370,7 +380,7 @@ git diff --check
   - Brand assets can be copied if approved and non-secret.
 - Non-blocking unknowns accepted: yes
 - Blocking decisions:
-  - None; ADR-0017, ADR-0044, and ADR-0045 are accepted.
+  - None; ADR-0017, ADR-0046, and ADR-0047 are accepted.
 - Risks and rollout reviewed: yes
 - Validation plan reviewed: yes
 - ADR result reviewed: yes
@@ -382,7 +392,7 @@ git diff --check
 - Primary risk:
   - The new site can drift from `stark-ai.de` styling and metadata after the initial asset copy.
 - Rollback path:
-  - Revert the workflow/documentation change and validate the rollback commit; Pages deployment remains dependent on successful Validate.
+  - Set `validation_reuse=off` as the workflow default or bump the task namespace/epoch, validate fresh execution, and leave existing artifacts untouched; Pages deployment remains dependent on a successful current protected-main aggregate.
 - Migration/backfill needs:
   - None for runtime users; skill installation behavior is unchanged.
 - Feature-flag or phased rollout need:
@@ -391,22 +401,22 @@ git diff --check
   - First implementation should land in a PR with Pages build validation.
   - Enable Pages deployment from GitHub Actions in repository settings before relying on deploys.
   - After merge, verify the deployed Pages URL and add or adjust README links if the URL differs from the assumed project URL.
-  - A missing or expired receipt keeps release readiness incomplete and does not authorize publication.
+  - A missing or expired task result executes fresh. A missing or expired assembled current-main receipt keeps release readiness incomplete and does not authorize publication.
 - Later adjustment guidance:
   - Do not write a follow-up spec just to enable Pages settings or update the verified deployed URL; treat those as rollout tasks.
   - Write a compact follow-up spec when later work changes scope, such as moving to a custom domain or `stark-ai.de` subpath, adding search/analytics/runtime behavior, or introducing an automated brand-asset sync.
 
 ## Done when
 
-- [x] ADR-0017, ADR-0044, and ADR-0045 are accepted; ADR-0041 through ADR-0043 are preserved as Superseded lineage.
+- [x] ADR-0017, ADR-0046, and ADR-0047 are accepted; ADR-0041 through ADR-0045 are preserved as Superseded lineage.
 - [ ] The Astro site builds locally.
 - [ ] Public and incubator skill pages are generated from current `SKILL.md` files.
 - [ ] `skillopt-setup` is generated only as an incubator candidate and links to its eval proof without changing the skill or eval source files.
 - [ ] Brand assets, favicons, manifest, SEO metadata, and social metadata are present.
-- [ ] The required `validate` job is unfiltered and stable; affected pull requests build the site only when selected, and no pull request creates trusted proof or deploys.
-- [ ] Every `main` push and manual dispatch is full; successful trusted-main runs alone create receipt v2 and deploy the exact sealed artifact, while manual non-main runs remain diagnostic.
-- [ ] Receipt candidate fingerprints before and after the gates match smoke-copy evidence, the exact installed CLI version is recorded without its path, and receipt v2 binds the complete plan/manifest/gate/fixture/artifact proof.
-- [ ] Attempt-scoped artifact names, exact full scope, run/SHA/branch/event checks, and fail-closed release rejection cases are hosted-verified.
+- [ ] The required `validate` aggregator is unfiltered and stable; affected pull requests build or restore the site only when selected, and no pull request deploys or publishes.
+- [ ] Every `main` push and manual dispatch is logically full; only misses create jobs, and a successful current protected-main aggregate creates receipt v3 and deploys the exact current Pages artifact while manual non-main runs remain diagnostic.
+- [ ] Candidate fingerprints before and after assembly match, report v2 binds every executed/reused task, and receipt v3 binds the complete plan/manifest/control-plane/result/output/producer proof without leaking paths or environment secrets.
+- [ ] Cold, exact-hit, verify, partial-invalidation, global-invalidation, attempt-safe artifacts, 325/325 shard accounting, and fail-closed release rejection cases are hosted-verified.
 - [ ] README and validation docs reflect the new site and commands.
 - [ ] Automated validation commands pass.
 - [ ] Manual desktop and mobile checks pass.

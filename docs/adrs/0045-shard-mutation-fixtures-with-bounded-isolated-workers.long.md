@@ -2,7 +2,7 @@
 
 ID: ADR-0045
 Title: Shard mutation fixtures with bounded isolated workers
-Status: Accepted
+Status: Superseded
 Date: 2026-08-12
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0047
 Guide verified: 2026-08-12
 Gist: Architecture Compass fixtures use deterministic bounded worker processes with complete case accounting and one-worker equivalence.
 

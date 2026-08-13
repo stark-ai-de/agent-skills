@@ -44,3 +44,5 @@ ADR-0042	0042-optimize-github-actions-with-owned-gates	eba5d8e7f02e7b686b3e639d6
 ADR-0043	0043-deploy-validated-main-artifacts	16382621b2efa85d0f41bc186a14ad85f9552809df9b0d02059e42b528a00a7c
 ADR-0044	0044-select-validation-scope-by-trust-context-and-owned-gates	b852ecda452595e72d124907fd3f7cf4e99fd50f58339143e7da5cdeb401d2f9
 ADR-0045	0045-shard-mutation-fixtures-with-bounded-isolated-workers	c51015d5940014fcbd09dd9afa483b2e9f183dc02765cbda15adf89b91b09d68
+ADR-0046	0046-assemble-validation-proof-from-content-addressed-task-results	58d482dfdc494bd57d1486438cd254191a8f89576a7743f0011a427b5525f3d2
+ADR-0047	0047-distribute-architecture-compass-fixtures-across-hosted-and-local-workers	f0237ec05557e64e1345c8ffe15a977f8be43cf3aab4e4139adbb874ba45cd46
