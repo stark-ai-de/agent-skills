@@ -36,6 +36,53 @@ function response(body, status = 200, headers = {}) {
   );
 }
 
+function zipCrc32(bytes) {
+  let value = 0xffffffff;
+  for (const byte of bytes) {
+    value ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = (value >>> 1) ^ ((value & 1) === 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (value ^ 0xffffffff) >>> 0;
+}
+
+function singleFileZip(name, bytes, mode) {
+  const nameBytes = Buffer.from(name, "utf8");
+  const crc = zipCrc32(bytes);
+  const local = Buffer.alloc(30 + nameBytes.length);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt16LE(0x800, 6);
+  local.writeUInt16LE(0, 8);
+  local.writeUInt32LE(crc, 14);
+  local.writeUInt32LE(bytes.length, 18);
+  local.writeUInt32LE(bytes.length, 22);
+  local.writeUInt16LE(nameBytes.length, 26);
+  nameBytes.copy(local, 30);
+
+  const central = Buffer.alloc(46 + nameBytes.length);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(0x0314, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt16LE(0x800, 8);
+  central.writeUInt16LE(0, 10);
+  central.writeUInt32LE(crc, 16);
+  central.writeUInt32LE(bytes.length, 20);
+  central.writeUInt32LE(bytes.length, 24);
+  central.writeUInt16LE(nameBytes.length, 28);
+  central.writeUInt32LE(((0o100000 | mode) * 0x10000) >>> 0, 38);
+  nameBytes.copy(central, 46);
+
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(1, 8);
+  end.writeUInt16LE(1, 10);
+  end.writeUInt32LE(central.length, 12);
+  end.writeUInt32LE(local.length + bytes.length, 16);
+  return Buffer.concat([local, bytes, central, end]);
+}
+
 function receipt(overrides = {}) {
   return {
     schemaVersion: 1,
@@ -1021,6 +1068,59 @@ test("canonical inner task bundle survives outer mode normalization", (context) 
   assert.equal(fs.statSync(path.join(restored, "outputs/site/bin")).mode & 0o7777, 0o750);
   assert.equal(fs.statSync(path.join(restored, "outputs/site/bin/tool")).mode & 0o7777, 0o751);
   assert.equal(fs.readFileSync(path.join(restored, "outputs/site/bin/tool"), "utf8"), "payload\n");
+});
+
+test("lookup accepts the publisher's private outer task-bundle mode", async (context) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "github-private-task-bundle-"));
+  context.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const publication = path.join(root, "publication");
+  fs.mkdirSync(publication, { recursive: true, mode: 0o700 });
+  fs.chmodSync(publication, 0o700);
+  const document = receipt();
+  fs.writeFileSync(path.join(publication, "receipt.json"), _internal.canonicalJson(document), {
+    mode: 0o600,
+  });
+  fs.writeFileSync(
+    path.join(publication, "bundle.json"),
+    _internal.canonicalJson({ schemaVersion: 1 }),
+    { mode: 0o600 },
+  );
+  const packed = packCanonicalTaskBundle(
+    publication,
+    path.join(root, "transport", TASK_BUNDLE_FILE),
+  );
+  const zip = singleFileZip(TASK_BUNDLE_FILE, fs.readFileSync(packed.file), 0o600);
+  const digest = `sha256:${crypto.createHash("sha256").update(zip).digest("hex")}`;
+  const artifact = {
+    id: 404,
+    name: document.source.artifactName,
+    size_in_bytes: zip.length,
+    digest,
+    expired: false,
+    created_at: CREATED_AT,
+  };
+  const fetchImpl = async (url) => {
+    const pathname = new URL(url).pathname;
+    if (pathname.endsWith("/actions/artifacts") && new URL(url).search) {
+      return response({ total_count: 1, artifacts: [artifact] });
+    }
+    if (pathname.endsWith("/actions/artifacts/404/zip")) return response(zip);
+    throw new Error(`Unexpected request: ${url}`);
+  };
+  const store = createGitHubValidationTaskStore({
+    repository: "example/repository",
+    token: "test-token",
+    indexFile: path.join(root, "index.json"),
+    fetchImpl,
+  });
+
+  const found = await store.lookup({
+    repositoryIdentity: "example/repository",
+    gateId: "skills",
+    taskKey: SHA,
+  });
+
+  assert.equal(found.observations.length, 1);
 });
 
 test("artifact names bind a full task key and attempt-safe producer identity", () => {

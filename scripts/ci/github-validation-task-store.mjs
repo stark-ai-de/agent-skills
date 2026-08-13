@@ -688,10 +688,12 @@ function createDefaultArchive({ requestBytes, temporaryRoot }) {
           if (
             entries.length !== 1 ||
             entries[0].directory ||
-            entries[0].name !== TASK_BUNDLE_FILE ||
-            entries[0].mode !== 0o644
+            entries[0].name !== TASK_BUNDLE_FILE
           ) {
             throw new Error("GitHub artifact must contain exactly one canonical task bundle file.");
+          }
+          if (!new Set([0o600, 0o644]).has(entries[0].mode)) {
+            throw new Error("GitHub artifact canonical task bundle file mode is unsupported.");
           }
           const inner = parseCanonicalTaskBundle(entryBytes(bytes, entries[0]));
           return { buffer: bytes, digest, entries, inner };
