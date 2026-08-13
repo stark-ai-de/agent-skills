@@ -270,8 +270,20 @@
           "site/astro.config.mjs",
           "site/scripts/**"
         ],
-        "packageProfiles": [],
-        "tools": ["bash", "env", "git", "mkfifo", "node", "npm", "sh", "sleep", "tar"],
+        "packageProfiles": ["root"],
+        "tools": [
+          "bash",
+          "env",
+          "git",
+          "mkfifo",
+          "node",
+          "npm",
+          "oxfmt",
+          "pnpm",
+          "sh",
+          "sleep",
+          "tar"
+        ],
         "environment": ["CI", "TZ", "LANG", "LC_ALL"],
         "gitInputs": []
       },

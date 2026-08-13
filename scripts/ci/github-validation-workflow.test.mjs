@@ -116,6 +116,7 @@ test("the actions miss installs and binds the checksum-pinned actionlint binary"
 
 test("the scripts task key binds stable hosted policies and producers observe exact bytes", () => {
   const scriptsGate = manifest.gates.find(({ id }) => id === "scripts");
+  assert.deepEqual(scriptsGate.execution.packageProfiles, ["root"]);
   assert.deepEqual(scriptsGate.execution.tools, [
     "bash",
     "env",
@@ -123,6 +124,8 @@ test("the scripts task key binds stable hosted policies and producers observe ex
     "mkfifo",
     "node",
     "npm",
+    "oxfmt",
+    "pnpm",
     "sh",
     "sleep",
     "tar",
