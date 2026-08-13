@@ -869,7 +869,12 @@ export function createGitHubValidationTaskStore(options) {
             });
           };
           const commit = await boundedJson(`git/commits/${sha}`);
-          if (commit?.sha !== sha || !/^[a-f0-9]{40}$/.test(commit?.tree?.sha ?? "")) {
+          if (
+            commit?.sha !== sha ||
+            !/^[a-f0-9]{40}$/.test(commit?.tree?.sha ?? "") ||
+            !Array.isArray(commit?.parents) ||
+            commit.parents.some((parent) => !/^[a-f0-9]{40}$/.test(parent?.sha ?? ""))
+          ) {
             throw new Error("Producer Git commit tree metadata is malformed.");
           }
           const loadTree = async (treeSha) => {
@@ -980,7 +985,13 @@ export function createGitHubValidationTaskStore(options) {
             }
           };
           await walkCi(ciSha, "scripts/ci");
-          return controlPlaneFromWitnesses(witnesses);
+          return {
+            ...controlPlaneFromWitnesses(witnesses),
+            commit: {
+              sha: commit.sha,
+              parents: commit.parents.map(({ sha: parentSha }) => parentSha),
+            },
+          };
         })(),
       );
     }
@@ -1083,7 +1094,6 @@ export function createGitHubValidationTaskStore(options) {
       [digest, locator.digest, "artifact digest"],
       [size, locator.size, "artifact size"],
       [String(artifact.workflow_run?.id ?? ""), locator.runId, "artifact run ID"],
-      [artifact.workflow_run?.head_sha, receipt.source.sha, "artifact head SHA"],
     ]) {
       if (actual !== expected) throw new Error(`GitHub ${label} contradicts the producer locator.`);
     }
@@ -1098,14 +1108,13 @@ export function createGitHubValidationTaskStore(options) {
       id: locator.runId,
       attempt: locator.runAttempt,
       event: receipt.source.event,
-      sha: receipt.source.sha,
       workflowPath: receipt.source.workflowPath,
     };
     for (const [actual, expected, label] of [
       [String(run.id ?? ""), expectedRun.id, "run ID"],
       [String(run.run_attempt ?? ""), expectedRun.attempt, "run attempt"],
       [run.event, expectedRun.event, "run event"],
-      [run.head_sha, expectedRun.sha, "run head SHA"],
+      [run.head_sha, artifact.workflow_run?.head_sha, "run head SHA"],
       [String(run.path ?? "").split("@", 1)[0], expectedRun.workflowPath, "workflow path"],
       [jobCheckRunId(job), locator.jobId, "job check-run ID"],
       [job.name, locator.jobName, "job name"],
@@ -1152,6 +1161,29 @@ export function createGitHubValidationTaskStore(options) {
     ) {
       throw new Error("Producer Git control-plane bytes do not match the current trust context.");
     }
+    if (receipt.source.event === "pull_request") {
+      const refMatch = /^refs\/pull\/([1-9]\d*)\/merge$/.exec(receipt.source.ref ?? "");
+      const pullRequests = run.pull_requests;
+      if (
+        !refMatch ||
+        !Array.isArray(pullRequests) ||
+        pullRequests.length !== 1 ||
+        String(pullRequests[0]?.number ?? "") !== refMatch[1] ||
+        pullRequests[0]?.head?.repo?.id !== run.head_repository.id ||
+        pullRequests[0]?.base?.repo?.id !== run.repository.id
+      ) {
+        throw new Error("GitHub pull-request source metadata is contradictory.");
+      }
+      if (
+        producerIdentity.commit?.sha !== receipt.source.sha ||
+        producerIdentity.commit?.parents?.length !== 2 ||
+        producerIdentity.commit.parents[1] !== run.head_sha
+      ) {
+        throw new Error("GitHub pull-request merge candidate parents are contradictory.");
+      }
+    } else if (run.head_sha !== receipt.source.sha) {
+      throw new Error("GitHub producer run head SHA is contradictory.");
+    }
     if (inspected.digest !== locator.digest || inspected.size !== locator.size) {
       throw new Error("Downloaded GitHub artifact contradicts the producer locator.");
     }
@@ -1173,7 +1205,7 @@ export function createGitHubValidationTaskStore(options) {
       jobConclusion: job.conclusion,
       event: run.event,
       ref: receipt.source.ref,
-      sha: run.head_sha,
+      sha: receipt.source.sha,
       artifact: {
         id: locator.id,
         name: locator.name,

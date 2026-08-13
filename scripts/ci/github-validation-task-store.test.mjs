@@ -85,6 +85,9 @@ function githubFixture({
   runStatus = "completed",
   runConclusion = "success",
   headRepository = document.source.repository,
+  runHeadSha = document.source.sha,
+  pullRequests = [],
+  producerCommit = { sha: document.source.sha, parents: [] },
 } = {}) {
   const requests = [];
   const artifact = {
@@ -98,7 +101,7 @@ function githubFixture({
       id: 101,
       repository_id: 501,
       head_repository_id: headRepository === document.source.repository ? 501 : 502,
-      head_sha: document.source.sha,
+      head_sha: runHeadSha,
       head_branch: "feature",
     },
   };
@@ -118,8 +121,9 @@ function githubFixture({
         conclusion: runConclusion,
         event: document.source.event,
         head_branch: "feature",
-        head_sha: document.source.sha,
+        head_sha: runHeadSha,
         path: document.source.workflowPath,
+        pull_requests: pullRequests,
         repository: { id: 501, full_name: document.source.repository },
         head_repository: {
           id: headRepository === document.source.repository ? 501 : 502,
@@ -159,6 +163,7 @@ function githubFixture({
   const verifyProducerControlPlane = async () => ({
     workflowDigest: document.source.workflowDigest,
     controlPlaneDigest: document.source.controlPlaneDigest,
+    commit: producerCommit,
   });
   return { artifact, archive, fetchImpl, requests, verifyProducerControlPlane };
 }
@@ -183,7 +188,7 @@ function remoteControlPlaneSetup(context) {
   const gitDocuments = new Map([
     [
       `/git/commits/${document.source.sha}`,
-      { sha: document.source.sha, tree: { sha: treeShas[0] } },
+      { sha: document.source.sha, tree: { sha: treeShas[0] }, parents: [] },
     ],
     [
       `/git/trees/${treeShas[0]}`,
@@ -329,6 +334,66 @@ test("authoritative verification correlates the exact artifact, run, job, and ar
   assert.ok(fixture.requests.some((request) => request.endsWith("/actions/runs/101")));
   assert.ok(
     fixture.requests.some((request) => request.includes("/actions/runs/101/attempts/2/jobs")),
+  );
+});
+
+test("pull-request verification binds the artifact head to the exact merge candidate", async () => {
+  const headSha = "c".repeat(40);
+  const baseSha = "d".repeat(40);
+  const mergeSha = "e".repeat(40);
+  const document = receipt();
+  document.source.event = "pull_request";
+  document.source.ref = "refs/pull/52/merge";
+  document.source.sha = mergeSha;
+  const pullRequests = [
+    {
+      number: 52,
+      head: { sha: "f".repeat(40), repo: { id: 501 } },
+      base: { sha: "a".repeat(40), repo: { id: 501 } },
+    },
+  ];
+  const options = {
+    document,
+    runHeadSha: headSha,
+    pullRequests,
+    producerCommit: { sha: mergeSha, parents: [baseSha, headSha] },
+  };
+  const fixture = githubFixture(options);
+  const store = createGitHubValidationTaskStore({
+    repository: "example/repository",
+    token: "test-token",
+    fetchImpl: fixture.fetchImpl,
+    archive: fixture.archive,
+    verifyProducerControlPlane: fixture.verifyProducerControlPlane,
+  });
+  const verification = {
+    locator: locator(document),
+    receipt: document,
+    trustContext: {
+      repository: document.source.repository,
+      workflowPath: document.source.workflowPath,
+      workflowDigest: document.source.workflowDigest,
+      controlPlaneDigest: document.source.controlPlaneDigest,
+    },
+  };
+
+  const verified = await store.verify(verification);
+  assert.equal(verified.verified, true);
+  assert.equal(verified.sha, mergeSha);
+
+  const contradictory = githubFixture({
+    ...options,
+    producerCommit: { sha: mergeSha, parents: [baseSha, "f".repeat(40)] },
+  });
+  await assert.rejects(
+    createGitHubValidationTaskStore({
+      repository: "example/repository",
+      token: "test-token",
+      fetchImpl: contradictory.fetchImpl,
+      archive: contradictory.archive,
+      verifyProducerControlPlane: contradictory.verifyProducerControlPlane,
+    }).verify(verification),
+    /merge candidate parents are contradictory/,
   );
 });
 
@@ -548,7 +613,7 @@ test("producer control-plane verification walks bounded non-recursive Git trees"
   const gitDocuments = new Map([
     [
       `/git/commits/${document.source.sha}`,
-      { sha: document.source.sha, tree: { sha: treeShas[0] } },
+      { sha: document.source.sha, tree: { sha: treeShas[0] }, parents: [] },
     ],
     [
       `/git/trees/${treeShas[0]}`,
