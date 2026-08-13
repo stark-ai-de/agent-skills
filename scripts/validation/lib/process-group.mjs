@@ -77,6 +77,7 @@ async function waitForChildExit(child, timeoutMs, pollIntervalMs) {
 export async function settleDetachedProcessGroup(
   child,
   {
+    naturalExitGraceMs = 250,
     terminationGraceMs = 5000,
     killGraceMs = 1000,
     terminationPollMs = 50,
@@ -110,6 +111,15 @@ export async function settleDetachedProcessGroup(
   }
 
   if (!processGroupExists(child.pid)) {
+    return { hadSurvivingProcessGroup: false, escalated: false };
+  }
+
+  const leaderSucceeded = child.exitCode === 0 && child.signalCode === null;
+  if (
+    leaderSucceeded &&
+    naturalExitGraceMs > 0 &&
+    (await waitForProcessGroupExit(child.pid, naturalExitGraceMs, terminationPollMs))
+  ) {
     return { hadSurvivingProcessGroup: false, escalated: false };
   }
 

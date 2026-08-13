@@ -265,6 +265,29 @@ test("runner rejects a successful leader with a live mutating process-group desc
   assert.equal(fs.readFileSync(path.join(fixture_.root, "tracked.txt"), "utf8"), "original\n");
 });
 
+test("runner permits a successful leader while a short-lived helper drains naturally", async (t) => {
+  if (process.platform === "win32") {
+    t.skip("POSIX process-group semantics are not available on Windows");
+    return;
+  }
+  const marker = path.join(os.tmpdir(), `validation-short-helper-${process.pid}-${Date.now()}`);
+  t.after(() => fs.rmSync(marker, { force: true }));
+  const helper = `const fs=require('fs'); process.on('SIGTERM', () => { fs.writeFileSync(${JSON.stringify(marker)}, 'signaled'); process.exit(0); }); process.on('disconnect', () => setTimeout(() => {}, 75)); process.send('ready');`;
+  const leader = `const child = require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(helper)}], { stdio: ['ignore', 'ignore', 'ignore', 'ipc'] }); child.once('message', () => { child.disconnect(); child.unref(); });`;
+  const fixture_ = fixture(t, [
+    {
+      id: "successful-leader-short-helper",
+      command: [process.execPath, "-e", leader],
+    },
+  ]);
+
+  const result = await run(fixture_);
+
+  assert.equal(result.failed, false, JSON.stringify(result.report.gates[0]));
+  assert.equal(result.report.gates[0].status, "passed");
+  assert.equal(fs.existsSync(marker), false, "short-lived helper must not receive SIGTERM");
+});
+
 test("affected formatter is a deterministic no-op for deletion-only supported paths", async (t) => {
   const fixture_ = fixture(
     t,
@@ -390,7 +413,16 @@ test("affected formatter passes when every extant supported path is ignored", as
   plan.changedPaths = ["ignored/only.md"];
   writeJsonAtomic(fixture_.planFile, plan);
   const result = await run(fixture_);
-  assert.equal(result.failed, false);
+  assert.equal(
+    result.failed,
+    false,
+    JSON.stringify({
+      gate: result.report.gates[0],
+      fingerprintError: result.report.fingerprintError,
+      candidateFingerprintBefore: result.report.candidateFingerprintBefore,
+      candidateFingerprintAfter: result.report.candidateFingerprintAfter,
+    }),
+  );
   assert.equal(result.report.gates[0].status, "passed");
 });
 
