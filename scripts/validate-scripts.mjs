@@ -37,16 +37,25 @@ for (const script of nodeScripts) check(process.execPath, ["--check", script]);
 for (const script of shellScripts) check("bash", ["-n", script]);
 check(process.execPath, ["scripts/validation/smoke-install-contract.test.mjs"]);
 check(process.execPath, ["scripts/ci/plan-validation.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-task-graph.test.mjs"]);
+check(process.execPath, ["scripts/ci/run-validation-task.test.mjs"]);
+check(process.execPath, ["scripts/ci/actionlint-contract.test.mjs"]);
 check(process.execPath, ["scripts/ci/run-validation-plan.test.mjs"]);
-check(process.execPath, ["scripts/ci/run-architecture-compass-gate.test.mjs"]);
 check(process.execPath, ["scripts/ci/install-validation-dependencies.test.mjs"]);
 check(process.execPath, ["scripts/ci/run-release-metadata-gate.test.mjs"]);
-check(process.execPath, ["scripts/ci/validation-proof-contract.test.mjs"]);
-check(process.execPath, ["scripts/ci/verify-release-proof.test.mjs"]);
-check(process.execPath, ["scripts/ci/validation-diagnostic.test.mjs"]);
+check(process.execPath, ["scripts/ci/run-architecture-compass-gate.test.mjs"]);
+check(process.execPath, ["scripts/validation/architecture-compass/fixture-capsule.test.mjs"]);
+check(process.execPath, ["scripts/validation/architecture-compass/hosted-shards.test.mjs"]);
 check(process.execPath, [
   "scripts/validation/architecture-compass/test-validator-coordinator.test.mjs",
 ]);
+check(process.execPath, ["scripts/validation/architecture-compass/validate-root.test.mjs"]);
+check(process.execPath, ["scripts/ci/github-validation-task-store.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-task-cli.test.mjs"]);
+check(process.execPath, ["scripts/ci/github-validation-workflow.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-proof-contract.test.mjs"]);
+check(process.execPath, ["scripts/ci/verify-release-proof.test.mjs"]);
+check(process.execPath, ["scripts/ci/validation-diagnostic.test.mjs"]);
 
 console.log(
   `Validated syntax for ${nodeScripts.length} Node script(s) and ${shellScripts.length} shell script(s).`,

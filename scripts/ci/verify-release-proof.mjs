@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 import { digestJson, readJson, validateManifest } from "./validation-contract.mjs";
 import { validateReceipt } from "./validation-proof-contract.mjs";
 import { fingerprintGitCandidateRepository } from "../validation/smoke-install-contract.mjs";
+import { _internal as taskGraphInternal, digestOutput } from "./validation-task-graph.mjs";
+import {
+  createGitHubValidationTaskStore,
+  localControlPlaneIdentity,
+} from "./github-validation-task-store.mjs";
 
 const digestSiteCommand = String.raw`set -euo pipefail
 find . -type f -print0 \
@@ -25,13 +30,18 @@ function parseArguments(arguments_) {
     "--manifest",
     "--receipt",
     "--report",
+    "--accepted-tasks",
     "--pages-archive",
     "--release-sha",
     "--version",
     "--validate-run-id",
     "--validate-job-attempt",
+    "--validate-job-id",
     "--pages-artifact-name",
     "--validation-artifact-name",
+    "--validation-artifact-id",
+    "--expected-workflow-digest",
+    "--expected-control-plane-digest",
   ]);
   for (let index = 0; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
@@ -41,7 +51,22 @@ function parseArguments(arguments_) {
     options[argument.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = value;
     index += 1;
   }
-  for (const argument of valueArguments) {
+  const requiredArguments = [
+    "--boundary",
+    "--repository-root",
+    "--github-repository",
+    "--manifest",
+    "--receipt",
+    "--report",
+    "--pages-archive",
+    "--release-sha",
+    "--version",
+    "--validate-run-id",
+    "--validate-job-attempt",
+    "--pages-artifact-name",
+    "--validation-artifact-name",
+  ];
+  for (const argument of requiredArguments) {
     const name = argument.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
     if (!options[name]) throw new Error(`${argument} is required.`);
   }
@@ -65,7 +90,8 @@ function parseArguments(arguments_) {
     }
   }
   options.repositoryRoot = path.resolve(options.repositoryRoot);
-  for (const field of ["manifest", "receipt", "report", "pagesArchive"]) {
+  for (const field of ["manifest", "receipt", "report", "pagesArchive", "acceptedTasks"]) {
+    if (!options[field]) continue;
     options[field] = path.resolve(options[field]);
   }
   return options;
@@ -120,6 +146,97 @@ function requireDigest(value, label, { prefix = true } = {}) {
   return value;
 }
 
+function requireObject(value, label) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value;
+}
+
+function requireExactKeys(value, required, label) {
+  requireObject(value, label);
+  const allowed = new Set(required);
+  const missing = required.filter((field) => !Object.hasOwn(value, field));
+  const unknown = Object.keys(value).filter((field) => !allowed.has(field));
+  if (missing.length > 0 || unknown.length > 0) {
+    throw new Error(
+      `${label} fields are invalid (missing: ${missing.join(", ") || "none"}; unknown: ${unknown.join(", ") || "none"}).`,
+    );
+  }
+}
+
+function validateAcceptedTaskContract(accepted, options, trustedReceipt) {
+  requireExactKeys(accepted, ["gateId", "receipt", "locator", "taskContract"], "accepted task");
+  requireExactKeys(
+    accepted.taskContract,
+    ["gateId", "taskKey", "keyMaterial", "gateContract", "evidence", "restoreOutputs"],
+    `${accepted.gateId ?? "unknown"} task contract`,
+  );
+  const contract = accepted.taskContract;
+  requireObject(contract.keyMaterial, `${accepted.gateId} task key material`);
+  requireObject(contract.gateContract, `${accepted.gateId} gate contract`);
+  if (!Array.isArray(contract.restoreOutputs)) {
+    throw new Error(`${accepted.gateId} task restore outputs must be an array.`);
+  }
+  requireEqual(contract.gateId, accepted.gateId, `${accepted.gateId} contract gate ID`);
+  requireEqual(contract.taskKey, digestJson(contract.keyMaterial), `${accepted.gateId} task key`);
+  requireEqual(contract.keyMaterial.gateId, contract.gateId, `${accepted.gateId} keyed gate ID`);
+  requireEqual(
+    contract.keyMaterial.repositoryIdentity,
+    options.githubRepository,
+    `${accepted.gateId} keyed repository identity`,
+  );
+  requireEqual(
+    contract.keyMaterial.enginePolicyDigest,
+    options.expectedControlPlaneDigest,
+    `${accepted.gateId} keyed control-plane identity`,
+  );
+  requireEqual(
+    contract.keyMaterial.gateContractDigest,
+    digestJson(contract.gateContract),
+    `${accepted.gateId} gate contract digest`,
+  );
+  requireEqual(contract.gateContract.id, contract.gateId, `${accepted.gateId} gate contract ID`);
+  requireEqual(
+    digestJson(contract.evidence),
+    digestJson(contract.gateContract.evidence),
+    `${accepted.gateId} evidence contract`,
+  );
+  requireEqual(
+    digestJson(contract.restoreOutputs),
+    digestJson(contract.gateContract.restoreOutputs),
+    `${accepted.gateId} output contract`,
+  );
+  if (
+    !Array.isArray(contract.gateContract.prerequisites) ||
+    !Array.isArray(contract.keyMaterial.prerequisiteKeys) ||
+    contract.gateContract.prerequisites.length !== contract.keyMaterial.prerequisiteKeys.length
+  ) {
+    throw new Error(`${accepted.gateId} prerequisite contract is malformed.`);
+  }
+  requireEqual(
+    contract.keyMaterial.evidenceOutputContractDigest,
+    digestJson({ evidence: contract.evidence, restoreOutputs: contract.restoreOutputs }),
+    `${accepted.gateId} evidence/output contract digest`,
+  );
+  const validated = taskGraphInternal.validateGateReceipt(accepted.receipt, {
+    repositoryIdentity: options.githubRepository,
+    workflowPath: ".github/workflows/validate.yml",
+    workflowDigest: options.expectedWorkflowDigest,
+    gateId: contract.gateId,
+    taskKey: contract.taskKey,
+    controlPlaneDigest: options.expectedControlPlaneDigest,
+    manifestDigest: trustedReceipt.manifest_digest,
+    restoreOutputs: contract.restoreOutputs,
+    evidence: contract.evidence,
+    keyMaterial: contract.keyMaterial,
+  });
+  if (validated.kind !== "result" || validated.reusable !== true) {
+    throw new Error(`${accepted.gateId} task receipt is not a reusable successful result.`);
+  }
+  return validated;
+}
+
 function verifyWorkflowRunArtifact(metadata, expected, label) {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
     throw new Error(`${label} metadata is malformed.`);
@@ -129,10 +246,27 @@ function verifyWorkflowRunArtifact(metadata, expected, label) {
   requireEqual(String(metadata.workflow_run?.id ?? ""), expected.runId, `${label} run ID`);
   requireEqual(metadata.workflow_run?.head_sha, expected.sha, `${label} head SHA`);
   requireEqual(metadata.workflow_run?.head_branch, "main", `${label} head branch`);
+  if (expected.repositoryId !== undefined) {
+    requireEqual(
+      String(metadata.workflow_run?.repository_id ?? ""),
+      expected.repositoryId,
+      `${label} repository ID`,
+    );
+    requireEqual(
+      String(metadata.workflow_run?.head_repository_id ?? ""),
+      expected.headRepositoryId,
+      `${label} head repository ID`,
+    );
+    requireDigest(
+      /^[a-f0-9]{64}$/.test(metadata.digest ?? "") ? `sha256:${metadata.digest}` : metadata.digest,
+      `${label} digest`,
+    );
+    requirePositiveInteger(metadata.size_in_bytes, `${label} size`);
+  }
   return metadata;
 }
 
-function fetchArtifactMetadata(options, pagesArtifactId) {
+function fetchArtifactMetadata(options, pagesArtifactId, repositories = {}) {
   const pages = readCommandJson(
     "gh",
     [
@@ -165,10 +299,17 @@ function fetchArtifactMetadata(options, pagesArtifactId) {
       name: options.validationArtifactName,
       runId: options.validateRunId,
       sha: options.releaseSha,
+      ...repositories,
     },
     "validation artifact",
   );
-  requirePositiveInteger(validationArtifact.id, "validation artifact ID");
+  const validationArtifactId = requirePositiveInteger(
+    validationArtifact.id,
+    "validation artifact ID",
+  );
+  if (options.validationArtifactId) {
+    requireEqual(validationArtifactId, options.validationArtifactId, "validation artifact ID");
+  }
 
   const pagesArtifact = readCommandJson(
     "gh",
@@ -181,15 +322,179 @@ function fetchArtifactMetadata(options, pagesArtifactId) {
       name: options.pagesArtifactName,
       runId: options.validateRunId,
       sha: options.releaseSha,
+      ...repositories,
     },
     "Pages artifact",
   );
   requireEqual(String(pagesArtifact.id ?? ""), pagesArtifactId, "Pages artifact ID");
   return {
     pagesArtifactId,
-    validationArtifactId: String(validationArtifact.id),
+    validationArtifactId,
   };
 }
+
+function verifyCurrentValidationProducer(options, receipt) {
+  const runMetadata = readCommandJson(
+    "gh",
+    ["api", `repos/${options.githubRepository}/actions/runs/${options.validateRunId}`],
+    { cwd: options.repositoryRoot },
+  );
+  for (const [actual, expected, label] of [
+    [String(runMetadata.id ?? ""), options.validateRunId, "validation run ID"],
+    [String(runMetadata.run_attempt ?? ""), options.validateJobAttempt, "validation run attempt"],
+    [runMetadata.status, "completed", "validation run status"],
+    [runMetadata.conclusion, "success", "validation run conclusion"],
+    [runMetadata.event, "push", "validation run event"],
+    [runMetadata.head_branch, "main", "validation run branch"],
+    [runMetadata.head_sha, options.releaseSha, "validation run SHA"],
+    [
+      String(runMetadata.path ?? "").split("@", 1)[0],
+      ".github/workflows/validate.yml",
+      "validation workflow path",
+    ],
+    [runMetadata.repository?.full_name, options.githubRepository, "validation repository"],
+    [
+      runMetadata.head_repository?.full_name,
+      options.githubRepository,
+      "validation head repository",
+    ],
+  ]) {
+    requireEqual(actual, expected, label);
+  }
+  const repositoryId = requirePositiveInteger(
+    runMetadata.repository?.id,
+    "validation repository ID",
+  );
+  const headRepositoryId = requirePositiveInteger(
+    runMetadata.head_repository?.id,
+    "validation head repository ID",
+  );
+  requireEqual(headRepositoryId, repositoryId, "validation head repository ID");
+  const jobPages = readCommandJson(
+    "gh",
+    [
+      "api",
+      `repos/${options.githubRepository}/actions/runs/${options.validateRunId}/attempts/${options.validateJobAttempt}/jobs?filter=all&per_page=100`,
+      "--paginate",
+      "--slurp",
+    ],
+    { cwd: options.repositoryRoot },
+  );
+  if (!Array.isArray(jobPages)) throw new Error("Validation job inventory is malformed.");
+  const jobs = [];
+  for (const [index, page] of jobPages.entries()) {
+    if (!Array.isArray(page?.jobs)) {
+      throw new Error(`Validation job inventory page ${index + 1} is malformed.`);
+    }
+    jobs.push(...page.jobs);
+  }
+  const matches = jobs.filter(
+    (job) =>
+      /\/check-runs\/([1-9]\d*)$/.exec(job?.check_run_url ?? "")?.[1] === options.validateJobId,
+  );
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one Validate check-run ${options.validateJobId}, found ${matches.length}.`,
+    );
+  }
+  for (const [actual, expected, label] of [
+    [matches[0].name, "Validate", "validation job name"],
+    [matches[0].status, "completed", "validation job status"],
+    [matches[0].conclusion, "success", "validation job conclusion"],
+    [receipt.validation_job_id, options.validateJobId, "receipt validation job ID"],
+    [receipt.validation_job_name, "Validate", "receipt validation job name"],
+  ]) {
+    requireEqual(actual, expected, label);
+  }
+  return { repositoryId, headRepositoryId };
+}
+
+async function verifyTaskProducers(options, receipt, acceptedDocument, store) {
+  if (
+    acceptedDocument?.schemaVersion !== 1 ||
+    acceptedDocument.taskResultSetDigest !== receipt.task_result_set_digest ||
+    !Array.isArray(acceptedDocument.tasks) ||
+    acceptedDocument.tasks.length !== receipt.tasks.length
+  ) {
+    throw new Error("Accepted task receipt set is missing or contradicts the trusted receipt.");
+  }
+  const acceptedByGate = new Map();
+  for (const accepted of acceptedDocument.tasks) {
+    if (
+      typeof accepted?.gateId !== "string" ||
+      !accepted.receipt ||
+      !accepted.locator ||
+      !accepted.taskContract ||
+      acceptedByGate.has(accepted.gateId)
+    ) {
+      throw new Error("Accepted task receipt set contains a malformed or duplicate identity.");
+    }
+    acceptedByGate.set(accepted.gateId, accepted);
+  }
+  const artifactIds = new Set();
+  const validatedByGate = new Map();
+  const trustContext = {
+    repository: options.githubRepository,
+    workflowPath: ".github/workflows/validate.yml",
+    workflowDigest: options.expectedWorkflowDigest,
+    controlPlaneDigest: options.expectedControlPlaneDigest,
+  };
+  for (const task of receipt.tasks) {
+    const accepted = acceptedByGate.get(task.gate_id);
+    if (!accepted) throw new Error(`Trusted task ${task.gate_id} is missing its accepted receipt.`);
+    const validatedReceipt = validateAcceptedTaskContract(accepted, options, receipt);
+    for (const [actual, expected, label] of [
+      [validatedReceipt.gateId, task.gate_id, "gate ID"],
+      [validatedReceipt.taskKey, task.task_key, "task key"],
+      [validatedReceipt.receiptDigest, task.receipt_digest, "receipt digest"],
+      [validatedReceipt.evidenceDigest, task.evidence_digest, "evidence digest"],
+      [digestJson(validatedReceipt.source), digestJson(task.producer), "producer"],
+      [digestJson(accepted.locator), digestJson(task.producer_locator), "producer locator"],
+      [digestJson(validatedReceipt.outputs), digestJson(task.outputs), "output receipts"],
+    ]) {
+      requireEqual(actual, expected, `${task.gate_id} ${label}`);
+    }
+    const artifactId = requirePositiveInteger(accepted.locator.id, `${task.gate_id} artifact ID`);
+    if (artifactIds.has(artifactId)) {
+      throw new Error(`Duplicate task artifact identity: ${artifactId}.`);
+    }
+    artifactIds.add(artifactId);
+    validatedByGate.set(task.gate_id, { accepted, validatedReceipt, artifactId });
+  }
+  for (const [gateId, { accepted }] of validatedByGate) {
+    const { prerequisites } = accepted.taskContract.gateContract;
+    const { prerequisiteKeys } = accepted.taskContract.keyMaterial;
+    for (const [index, prerequisiteGate] of prerequisites.entries()) {
+      const prerequisite = validatedByGate.get(prerequisiteGate);
+      if (!prerequisite) {
+        throw new Error(`${gateId} prerequisite ${prerequisiteGate} has no accepted task receipt.`);
+      }
+      requireEqual(
+        prerequisite.accepted.taskContract.taskKey,
+        prerequisiteKeys[index],
+        `${gateId} prerequisite ${prerequisiteGate} task key`,
+      );
+    }
+  }
+  for (const { accepted, validatedReceipt } of validatedByGate.values()) {
+    const deadline = new Date(Date.now() + 20_000).toISOString();
+    const verified = await store.verify({
+      locator: accepted.locator,
+      receipt: validatedReceipt,
+      trustContext,
+      deadline,
+      timeoutMs: 20_000,
+    });
+    if (verified?.verified !== true || verified.artifact?.expired !== false) {
+      throw new Error(
+        `${validatedReceipt.gateId} producer did not yield authoritative reusable proof.`,
+      );
+    }
+  }
+  return artifactIds.size;
+}
+
+export const _releaseProofInternal = Object.freeze({ verifyTaskProducers });
 
 function archiveEntries(archive) {
   const output = run("tar", ["--quoting-style=escape", "--list", "--file", archive]);
@@ -261,7 +566,7 @@ function inspectExtractedTree(directory) {
   return files;
 }
 
-function verifyPagesArchive(archive, expectedDigest) {
+function verifyPagesArchive(archive, expectedDigest, { contentAddressed = false } = {}) {
   const archiveStat = fs.lstatSync(archive);
   if (!archiveStat.isFile() || archiveStat.isSymbolicLink() || archiveStat.size === 0) {
     throw new Error("Pages artifact archive must be a non-empty regular, non-symlink file.");
@@ -277,12 +582,14 @@ function verifyPagesArchive(archive, expectedDigest) {
       "--directory",
       extracted,
       "--no-same-owner",
-      "--no-same-permissions",
+      ...(contentAddressed ? ["--same-permissions"] : ["--no-same-permissions"]),
       "--delay-directory-restore",
     ]);
     inspectExtractedTree(extracted);
-    const digest = run("bash", ["-c", digestSiteCommand], { cwd: extracted }).trim();
-    requireDigest(digest, "extracted Pages artifact digest", { prefix: false });
+    const digest = contentAddressed
+      ? digestOutput(extracted, "directory").digest
+      : run("bash", ["-c", digestSiteCommand], { cwd: extracted }).trim();
+    requireDigest(digest, "extracted Pages artifact digest", { prefix: contentAddressed });
     requireEqual(digest, expectedDigest, "Pages artifact digest");
     return digest;
   } finally {
@@ -322,7 +629,7 @@ function verifyCheckedOutCandidate(options, receipt) {
   requireEqual(match[1], options.releaseSha, "origin main SHA");
 }
 
-export function verifyReleaseProof(options) {
+export async function verifyReleaseProof(options, dependencies = {}) {
   const manifest = validateManifest(readJson(options.manifest));
   const receipt = readJson(options.receipt);
   const report = readJson(options.report);
@@ -340,6 +647,37 @@ export function verifyReleaseProof(options) {
   if (!Array.isArray(inventory.cases) || inventory.cases.length === 0) {
     throw new Error("The frozen Architecture Compass fixture inventory is malformed.");
   }
+  const isV3 = receipt.schema_version === 3;
+  if (isV3) {
+    for (const field of [
+      "acceptedTasks",
+      "validateJobId",
+      "expectedWorkflowDigest",
+      "expectedControlPlaneDigest",
+      "validationArtifactId",
+    ]) {
+      if (!options[field]) {
+        throw new Error(
+          `--${field.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)} is required for receipt v3.`,
+        );
+      }
+    }
+    requirePositiveInteger(options.validateJobId, "Validate job check-run ID");
+    requirePositiveInteger(options.validationArtifactId, "Validation artifact ID");
+    requireDigest(options.expectedWorkflowDigest, "expected workflow digest");
+    requireDigest(options.expectedControlPlaneDigest, "expected control-plane digest");
+    const identity = localControlPlaneIdentity(options.repositoryRoot);
+    requireEqual(
+      identity.workflowDigest,
+      options.expectedWorkflowDigest,
+      "checked-out workflow digest",
+    );
+    requireEqual(
+      identity.controlPlaneDigest,
+      options.expectedControlPlaneDigest,
+      "checked-out control-plane digest",
+    );
+  }
   validateReceipt(receipt, report, manifest, {
     skillsCliVersion,
     fixtureInventoryDigest: digestJson(inventory.cases),
@@ -351,15 +689,23 @@ export function verifyReleaseProof(options) {
     version: options.version,
     runId: options.validateRunId,
     runAttempt: options.validateJobAttempt,
+    validationJobId: options.validateJobId,
+    validationJobName: isV3 ? "Validate" : undefined,
     pagesArtifactName: options.pagesArtifactName,
     validationArtifactName: options.validationArtifactName,
+    repository: isV3 ? options.githubRepository : undefined,
+    ref: isV3 ? "refs/heads/main" : undefined,
+    refProtected: isV3 ? "true" : undefined,
+    workflowDigest: options.expectedWorkflowDigest,
+    controlPlaneDigest: options.expectedControlPlaneDigest,
+    proofLevel: isV3 ? "release" : undefined,
   });
 
   requireDigest(receipt.candidate_fingerprint, "receipt candidate fingerprint");
   if (!Number.isSafeInteger(receipt.candidate_file_count) || receipt.candidate_file_count <= 0) {
     throw new Error("receipt candidate file count must be a positive safe integer.");
   }
-  requireDigest(receipt.site_digest, "receipt site digest", { prefix: false });
+  requireDigest(receipt.site_digest, "receipt site digest", { prefix: isV3 });
   const expectedPagesName = `github-pages-${options.validateRunId}-${options.validateJobAttempt}`;
   const expectedValidationName = `validation-receipt-${options.validateRunId}-${options.validateJobAttempt}`;
   requireEqual(options.pagesArtifactName, expectedPagesName, "expected Pages artifact name");
@@ -375,14 +721,29 @@ export function verifyReleaseProof(options) {
     "receipt Pages artifact ID",
   );
 
-  const artifactIdentity = fetchArtifactMetadata(options, pagesArtifactId);
-  verifyPagesArchive(options.pagesArchive, receipt.site_digest);
+  let currentRepositories = {};
+  let producerCount = 0;
+  if (isV3) {
+    currentRepositories = verifyCurrentValidationProducer(options, receipt);
+    const accepted = readJson(options.acceptedTasks);
+    const store =
+      dependencies.store ??
+      createGitHubValidationTaskStore({
+        repository: options.githubRepository,
+        token: dependencies.token ?? process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN,
+        temporaryRoot: os.tmpdir(),
+      });
+    producerCount = await verifyTaskProducers(options, receipt, accepted, store);
+  }
+  const artifactIdentity = fetchArtifactMetadata(options, pagesArtifactId, currentRepositories);
+  verifyPagesArchive(options.pagesArchive, receipt.site_digest, { contentAddressed: isV3 });
   verifyCheckedOutCandidate(options, receipt);
   return {
     ...artifactIdentity,
     boundary: options.boundary,
     releaseSha: options.releaseSha,
     siteDigest: receipt.site_digest,
+    producerCount,
   };
 }
 
@@ -393,7 +754,7 @@ function isMain() {
 if (isMain()) {
   try {
     const options = parseArguments(process.argv.slice(2));
-    const result = verifyReleaseProof(options);
+    const result = await verifyReleaseProof(options);
     console.log(
       `Verified ${result.boundary} release proof for ${result.releaseSha} with Pages artifact ${result.pagesArtifactId} and validation artifact ${result.validationArtifactId}.`,
     );

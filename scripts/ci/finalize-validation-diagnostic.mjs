@@ -133,8 +133,8 @@ function readCandidatePlan(file, manifest) {
 }
 
 function validateExistingReport(report, boundary, after, afterFileCount) {
-  if (report?.schemaVersion !== 1) {
-    throw new Error("Validation report schema must be 1.");
+  if (!new Set([1, 2]).has(report?.schemaVersion)) {
+    throw new Error("Validation report schema must be 1 or 2.");
   }
   if (!Array.isArray(report.selectedGates) || !Array.isArray(report.gates)) {
     throw new Error("Validation report gate accounting is malformed.");
@@ -173,22 +173,55 @@ function writeFailedReport({
   const selectedGates =
     plan?.selectedGates ?? (manifest === null ? ["diagnostic"] : manifestGateIds(manifest));
   const reason = [options.reason, ...failures].filter(Boolean).join(" ");
+  const gates = selectedGates.map((id, index) => ({
+    id,
+    status: index === 0 ? "failed" : "skipped",
+    source: "executed",
+    taskKey: digestJson({ kind: "diagnostic-task", id, plan: plan?.candidatePlanDigest ?? null }),
+    receiptDigest: null,
+    producer: null,
+    producerLocator: null,
+    lookupDurationMs: 0,
+    lookupResult: "miss",
+    lookupMissCount: 1,
+    lookupRejectCount: 0,
+    evidenceDigest: digestJson({ kind: "diagnostic-failure", id, reason }),
+    outputs: [],
+    durationMs: 0,
+    reason,
+  }));
+  const taskResultSetDigest = digestJson(
+    gates.map(({ id, taskKey, receiptDigest, status }) => ({
+      id,
+      taskKey,
+      receiptDigest,
+      status,
+    })),
+  );
   const reportWithoutDigest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    proofLevel: "diagnostic",
     planDigest:
       plan === null
         ? digestJson({ kind: "pre-run-failure", reason: options.reason })
         : planDigest(plan),
     manifestDigest: syntheticManifestDigest(manifest),
+    controlPlaneDigest: digestJson({
+      kind: "unavailable-diagnostic-control-plane",
+      manifestDigest: syntheticManifestDigest(manifest),
+    }),
     scope: plan?.scope ?? "full",
     selectedGates,
-    gates: selectedGates.map((id, index) => ({
-      id,
-      status: index === 0 ? "failed" : "skipped",
-      exitCode: index === 0 ? 1 : null,
-      durationMs: 0,
-      reason,
-    })),
+    gates,
+    counts: {
+      executed: gates.length,
+      reused: 0,
+      passed: 0,
+      failed: gates.filter(({ status }) => status === "failed").length,
+      misses: gates.length,
+      rejects: 0,
+    },
+    taskResultSetDigest,
     candidateFingerprintBefore: boundary.candidateFingerprint,
     candidateFileCountBefore: boundary.candidateFileCount,
     candidateFingerprintAfter: after,
@@ -199,12 +232,6 @@ function writeFailedReport({
       boundary.candidateFileCount === finalFingerprint.fileCount
         ? null
         : "The materialized Git candidate changed before validation diagnostics were finalized."),
-    smokeEvidence: null,
-    skillsCliVersion: null,
-    skillsSmokeCli: null,
-    skillsSmokeForceTty: null,
-    fixtureInventoryDigest: null,
-    diagnosticFailure: reason,
   };
   writeJsonAtomic(options.report, {
     ...reportWithoutDigest,

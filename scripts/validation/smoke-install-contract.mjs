@@ -138,6 +138,14 @@ function gitCommandOutput(repositoryRoot, environment, arguments_, label) {
   return result.stdout;
 }
 
+export function sanitizedGitCommandOutput(
+  repositoryRoot,
+  arguments_,
+  label = "Git command failed",
+) {
+  return gitCommandOutput(repositoryRoot, sanitizedGitEnvironment(), arguments_, label);
+}
+
 function decodeGitReportedPath(output, label) {
   if (output.length === 0 || output.at(-1) !== 0x0a) {
     throw new Error(`${label} was not terminated by a line feed.`);

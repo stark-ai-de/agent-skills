@@ -3,10 +3,24 @@ import fs from "node:fs";
 import path from "node:path";
 
 export const PLAN_SCHEMA_VERSION = 1;
-export const REPORT_SCHEMA_VERSION = 1;
+export const MANIFEST_SCHEMA_VERSION = 2;
+export const REPORT_SCHEMA_VERSION = 2;
+export const TASK_KEY_SCHEMA_VERSION = 1;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function requireExactKeys(value, required, optional, label) {
+  if (!isPlainObject(value)) throw new Error(`${label} must be an object.`);
+  const allowed = new Set([...required, ...optional]);
+  const missing = required.filter((field) => !Object.hasOwn(value, field));
+  const unknown = Object.keys(value).filter((field) => !allowed.has(field));
+  if (missing.length > 0 || unknown.length > 0) {
+    throw new Error(
+      `${label} fields are invalid (missing: ${missing.join(", ") || "none"}; unknown: ${unknown.join(", ") || "none"}).`,
+    );
+  }
 }
 
 function requireUniqueStringArray(value, label, { allowEmpty = true } = {}) {
@@ -18,6 +32,87 @@ function requireUniqueStringArray(value, label, { allowEmpty = true } = {}) {
     throw new Error(`${label} must be ${allowEmpty ? "a" : "a non-empty"} string array.`);
   }
   if (new Set(value).size !== value.length) throw new Error(`${label} contains duplicates.`);
+}
+
+function requireInputArray(value, label, { allowEmpty = true } = {}) {
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
+    throw new Error(`${label} must be ${allowEmpty ? "an" : "a non-empty"} input array.`);
+  }
+  const paths = [];
+  for (const [index, input] of value.entries()) {
+    if (typeof input === "string") {
+      if (input.length === 0) throw new Error(`${label}[${index}] path must not be empty.`);
+      paths.push(input);
+      continue;
+    }
+    requireExactKeys(input, ["path", "allowEmpty"], [], `${label}[${index}]`);
+    if (typeof input.path !== "string" || input.path.length === 0 || input.allowEmpty !== true) {
+      throw new Error(`${label}[${index}] requires a path and explicit allowEmpty: true.`);
+    }
+    paths.push(input.path);
+  }
+  if (new Set(paths).size !== paths.length) throw new Error(`${label} contains duplicate paths.`);
+}
+
+function validateEvidenceContract(evidence, gateId) {
+  if (!isPlainObject(evidence) || typeof evidence.kind !== "string") {
+    throw new Error(`${gateId}: evidence must declare a kind.`);
+  }
+  const label = `${gateId}: evidence`;
+  switch (evidence.kind) {
+    case "exit-code":
+    case "pinned-actionlint-exit-code":
+    case "smoke-candidate-and-cli":
+    case "output-tree":
+    case "release-metadata":
+      requireExactKeys(evidence, ["kind"], [], label);
+      break;
+    case "capability-complete-exit-code":
+      requireExactKeys(
+        evidence,
+        ["kind", "requiredCapabilities", "outputMarkers"],
+        ["forbiddenOutputMarkers"],
+        label,
+      );
+      requireUniqueStringArray(evidence.requiredCapabilities, `${label}.requiredCapabilities`, {
+        allowEmpty: false,
+      });
+      if (!isPlainObject(evidence.outputMarkers)) {
+        throw new Error(`${label}.outputMarkers must be an object.`);
+      }
+      if (
+        JSON.stringify(Object.keys(evidence.outputMarkers).sort()) !==
+          JSON.stringify([...evidence.requiredCapabilities].sort()) ||
+        Object.values(evidence.outputMarkers).some(
+          (marker) => typeof marker !== "string" || marker.length === 0,
+        )
+      ) {
+        throw new Error(
+          `${label}.outputMarkers must bind one non-empty observed marker per capability.`,
+        );
+      }
+      if (evidence.forbiddenOutputMarkers !== undefined) {
+        requireUniqueStringArray(
+          evidence.forbiddenOutputMarkers,
+          `${label}.forbiddenOutputMarkers`,
+          { allowEmpty: false },
+        );
+      }
+      break;
+    case "architecture-compass-accounting-v1":
+      requireExactKeys(
+        evidence,
+        ["kind", "expectedCaseCount", "expectedHostedShardCount"],
+        [],
+        label,
+      );
+      if (evidence.expectedCaseCount !== 325 || evidence.expectedHostedShardCount !== 3) {
+        throw new Error(`${label} must bind the audited 325 cases and three hosted shards.`);
+      }
+      break;
+    default:
+      throw new Error(`${gateId}: unsupported evidence kind ${evidence.kind}.`);
+  }
 }
 
 function requireDigestOrNull(value, label) {
@@ -57,7 +152,10 @@ export function writeJsonAtomic(file, value) {
 }
 
 export function validateManifest(manifest) {
-  if (!isPlainObject(manifest) || manifest.schemaVersion !== PLAN_SCHEMA_VERSION) {
+  if (
+    !isPlainObject(manifest) ||
+    !new Set([1, MANIFEST_SCHEMA_VERSION]).has(manifest.schemaVersion)
+  ) {
     throw new Error(
       `Unsupported validation manifest schema: ${manifest?.schemaVersion ?? "missing"}`,
     );
@@ -67,6 +165,33 @@ export function validateManifest(manifest) {
   }
   requireUniqueStringArray(manifest.globalInvalidators, "globalInvalidators");
   requireUniqueStringArray(manifest.knownPaths, "knownPaths", { allowEmpty: false });
+  if (manifest.schemaVersion === MANIFEST_SCHEMA_VERSION) {
+    requireExactKeys(
+      manifest,
+      [
+        "schemaVersion",
+        "taskKeySchemaVersion",
+        "packageProfiles",
+        "globalInvalidators",
+        "knownPaths",
+        "gates",
+      ],
+      [],
+      "schema 2 validation manifest",
+    );
+    if (!isPlainObject(manifest.packageProfiles)) {
+      throw new Error("Schema 2 validation manifest must declare packageProfiles.");
+    }
+    for (const [profile, contract] of Object.entries(manifest.packageProfiles)) {
+      if (!new Set(["root", "site"]).has(profile) || !isPlainObject(contract)) {
+        throw new Error(`Unknown package profile contract: ${profile}`);
+      }
+      requireExactKeys(contract, ["inputs"], [], `${profile}: package profile`);
+      requireInputArray(contract.inputs, `${profile}: package profile inputs`, {
+        allowEmpty: false,
+      });
+    }
+  }
   const ids = new Set();
   for (const [gateIndex, gate] of manifest.gates.entries()) {
     if (!isPlainObject(gate) || !/^[a-z][a-z0-9-]*$/.test(gate.id ?? "")) {
@@ -81,9 +206,11 @@ export function validateManifest(manifest) {
     ) {
       throw new Error(`${gate.id}: command must be a non-empty argument array.`);
     }
-    requireUniqueStringArray(gate.paths, `${gate.id}: paths`);
-    requireUniqueStringArray(gate.installProfiles, `${gate.id}: installProfiles`);
-    const unknownProfiles = gate.installProfiles.filter(
+    const paths = gateSelectionPaths(gate);
+    requireUniqueStringArray(paths, `${gate.id}: selection paths`);
+    const installProfiles = gateInstallProfiles(gate);
+    requireUniqueStringArray(installProfiles, `${gate.id}: package profiles`);
+    const unknownProfiles = installProfiles.filter(
       (profile) => !new Set(["root", "site"]).has(profile),
     );
     if (unknownProfiles.length > 0) {
@@ -103,6 +230,108 @@ export function validateManifest(manifest) {
     }
     if (gate.changedFiles !== undefined && typeof gate.changedFiles !== "boolean") {
       throw new Error(`${gate.id}: changedFiles must be a boolean when present.`);
+    }
+    if (manifest.schemaVersion === MANIFEST_SCHEMA_VERSION) {
+      requireExactKeys(
+        gate,
+        [
+          "id",
+          "command",
+          "selection",
+          "execution",
+          "evidence",
+          "restoreOutputs",
+          "epoch",
+          "timeoutMs",
+          "prerequisites",
+          "aggregate",
+          "trustedProofRequired",
+        ],
+        ["changedFiles"],
+        `${gate.id}: gate`,
+      );
+      if (manifest.taskKeySchemaVersion !== TASK_KEY_SCHEMA_VERSION) {
+        throw new Error(
+          `Unsupported task-key schema: ${manifest.taskKeySchemaVersion ?? "missing"}`,
+        );
+      }
+      if (!isPlainObject(gate.selection) || !isPlainObject(gate.execution)) {
+        throw new Error(`${gate.id}: schema 2 requires selection and execution objects.`);
+      }
+      requireExactKeys(
+        gate.selection,
+        ["paths", "deriveFromExecutionInputs"],
+        [],
+        `${gate.id}: selection`,
+      );
+      if (gate.selection.deriveFromExecutionInputs !== true) {
+        throw new Error(`${gate.id}: schema 2 selection must derive from execution inputs.`);
+      }
+      requireExactKeys(
+        gate.execution,
+        [
+          "entrypoints",
+          "helpers",
+          "workspaceInputs",
+          "packageProfiles",
+          "tools",
+          "environment",
+          "gitInputs",
+        ],
+        [],
+        `${gate.id}: execution`,
+      );
+      for (const field of ["entrypoints", "helpers", "workspaceInputs"]) {
+        requireInputArray(gate.execution[field], `${gate.id}: execution.${field}`);
+      }
+      for (const field of ["packageProfiles", "tools", "environment", "gitInputs"]) {
+        requireUniqueStringArray(gate.execution[field], `${gate.id}: execution.${field}`);
+      }
+      validateEvidenceContract(gate.evidence, gate.id);
+      if (!Array.isArray(gate.restoreOutputs)) {
+        throw new Error(`${gate.id}: restoreOutputs must be an array.`);
+      }
+      const outputIds = new Set();
+      for (const output of gate.restoreOutputs) {
+        if (
+          !isPlainObject(output) ||
+          !/^[a-z][a-z0-9-]*$/.test(output.id ?? "") ||
+          typeof output.path !== "string" ||
+          output.path.length === 0 ||
+          !new Set(["directory", "file"]).has(output.kind)
+        ) {
+          throw new Error(`${gate.id}: every restore output needs an id, path, and kind.`);
+        }
+        const normalizedPath = output.path.replaceAll("\\", "/");
+        if (
+          path.isAbsolute(output.path) ||
+          output.path.includes("\\") ||
+          normalizedPath.includes("//") ||
+          normalizedPath.endsWith("/") ||
+          normalizedPath
+            .split("/")
+            .some((segment) => segment === "" || segment === "." || segment === "..") ||
+          normalizedPath === ".." ||
+          normalizedPath.startsWith("../") ||
+          normalizedPath.includes("/../") ||
+          normalizedPath === "."
+        ) {
+          throw new Error(`${gate.id}: restore output ${output.id} escapes the repository.`);
+        }
+        requireExactKeys(output, ["id", "path", "kind"], [], `${gate.id}: output ${output.id}`);
+        if (outputIds.has(output.id)) throw new Error(`${gate.id}: duplicate output ${output.id}.`);
+        for (const previous of gate.restoreOutputs.slice(0, gate.restoreOutputs.indexOf(output))) {
+          const left = previous.path.replaceAll("\\", "/").replace(/\/$/, "");
+          const right = normalizedPath.replace(/\/$/, "");
+          if (left === right || left.startsWith(`${right}/`) || right.startsWith(`${left}/`)) {
+            throw new Error(`${gate.id}: restore output paths overlap.`);
+          }
+        }
+        outputIds.add(output.id);
+      }
+      if (!Number.isSafeInteger(gate.epoch) || gate.epoch < 1) {
+        throw new Error(`${gate.id}: epoch must be a positive integer.`);
+      }
     }
     for (const prerequisite of gate.prerequisites) {
       const prerequisiteIndex = manifest.gates.findIndex(
@@ -127,6 +356,14 @@ export function validateManifest(manifest) {
 
 export function manifestGateIds(manifest, predicate = () => true) {
   return manifest.gates.filter(predicate).map((gate) => gate.id);
+}
+
+export function gateSelectionPaths(gate) {
+  return gate.selection?.paths ?? gate.paths;
+}
+
+export function gateInstallProfiles(gate) {
+  return gate.execution?.packageProfiles ?? gate.installProfiles;
 }
 
 export function validatePlan(
@@ -177,7 +414,7 @@ export function validatePlan(
     ...new Set(
       manifest.gates
         .filter(({ id }) => plan.selectedGates.includes(id))
-        .flatMap(({ installProfiles }) => installProfiles),
+        .flatMap((gate) => gateInstallProfiles(gate)),
     ),
   ].sort();
   if (JSON.stringify(plan.installProfiles) !== JSON.stringify(expectedProfiles)) {

@@ -14,11 +14,13 @@ import {
   validateManifest,
   validatePlan,
 } from "./validation-contract.mjs";
+import { _internal as taskGraphInternal } from "./validation-task-graph.mjs";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const planner = path.join(directory, "plan-validation.mjs");
 const manifestPath = path.join(directory, "validation-manifest.json");
 const manifest = validateManifest(readJson(manifestPath));
+const repository = path.resolve(directory, "../..");
 const stableGateOrder = [
   "skills",
   "memory-curators",
@@ -98,9 +100,12 @@ test("name-status parsing retains both rename paths and deletion paths", () => {
     { status: "R100", paths: ["docs/old.md", "docs/new.md"] },
     { status: "D", paths: ["skills/x/y/SKILL.md"] },
   ]);
+  assert.throws(() => parseNameStatus(Buffer.from([0x4d, 0, 0xff, 0])), /invalid UTF-8/);
 });
 
 test("manifest preserves the approved stable full gate order", () => {
+  assert.equal(manifest.schemaVersion, 2);
+  assert.equal(manifest.taskKeySchemaVersion, 1);
   assert.deepEqual(
     manifest.gates.map(({ id }) => id),
     stableGateOrder,
@@ -113,16 +118,196 @@ test("manifest preserves the approved stable full gate order", () => {
   );
 });
 
+test("manifest v2 declares a complete cache contract for every gate", () => {
+  assert.equal(manifest.gates.length, 15);
+  for (const gate of manifest.gates) {
+    assert.ok(gate.selection.paths.length > 0, `${gate.id}: selection paths`);
+    assert.equal(
+      gate.selection.deriveFromExecutionInputs,
+      true,
+      `${gate.id}: selection derives from execution inputs`,
+    );
+    assert.ok(gate.execution.entrypoints.length > 0, `${gate.id}: entrypoints`);
+    assert.ok(Array.isArray(gate.execution.helpers), `${gate.id}: helpers`);
+    assert.ok(gate.execution.workspaceInputs.length > 0, `${gate.id}: workspace inputs`);
+    assert.ok(Array.isArray(gate.execution.packageProfiles), `${gate.id}: package profiles`);
+    assert.ok(gate.execution.tools.length > 0, `${gate.id}: tools`);
+    assert.ok(Array.isArray(gate.execution.environment), `${gate.id}: environment`);
+    assert.ok(Array.isArray(gate.execution.gitInputs), `${gate.id}: Git inputs`);
+    assert.equal(typeof gate.evidence.kind, "string", `${gate.id}: evidence`);
+    assert.ok(Array.isArray(gate.restoreOutputs), `${gate.id}: outputs`);
+    assert.ok(Number.isSafeInteger(gate.epoch) && gate.epoch > 0, `${gate.id}: epoch`);
+    assert.equal(gate.paths, undefined, `${gate.id}: legacy paths alias is forbidden`);
+    assert.equal(gate.installProfiles, undefined, `${gate.id}: legacy profiles alias is forbidden`);
+  }
+  assert.deepEqual(manifest.packageProfiles.site.inputs, [
+    "site/package.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+  ]);
+  assert.equal(manifest.globalInvalidators.includes("site/pnpm-lock.yaml"), false);
+  assert.deepEqual(manifest.gates.find(({ id }) => id === "site").restoreOutputs, [
+    { id: "site-dist", path: "site/dist", kind: "directory" },
+  ]);
+});
+
+function contractPath(input) {
+  return typeof input === "string" ? input : input.path;
+}
+
+function gateInputPatterns(gate) {
+  return [
+    ...manifest.globalInvalidators,
+    ...gate.execution.entrypoints,
+    ...gate.execution.helpers,
+    ...gate.execution.workspaceInputs,
+    ...gate.execution.packageProfiles.flatMap(
+      (profile) => manifest.packageProfiles[profile].inputs,
+    ),
+  ].map(contractPath);
+}
+
+function staticRelativeImports(file) {
+  const source = fs.readFileSync(path.join(repository, file), "utf8");
+  const imports = [];
+  const patterns = [
+    /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g,
+    /import\s*\(\s*["']([^"']+)["']\s*\)/g,
+  ];
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) {
+      if (match[1].startsWith(".")) imports.push(match[1]);
+    }
+  }
+  return [...new Set(imports)].map((specifier) => {
+    const resolved = path.resolve(repository, path.dirname(file), specifier);
+    const relative = path.relative(repository, resolved).split(path.sep).join("/");
+    if (relative.startsWith("../") || path.isAbsolute(relative)) {
+      throw new Error(`${file} imports outside the repository: ${specifier}`);
+    }
+    for (const candidate of [relative, `${relative}.mjs`, `${relative}.js`]) {
+      if (fs.existsSync(path.join(repository, candidate))) return candidate;
+    }
+    throw new Error(`${file} imports an absent repository module: ${specifier}`);
+  });
+}
+
+test("all 15 task closures cover every reachable static repository import", () => {
+  const trackedFiles = execute(
+    "git",
+    ["-c", "core.quotePath=false", "ls-files", "--cached", "--others", "--exclude-standard"],
+    { cwd: repository },
+  )
+    .split("\n")
+    .filter(Boolean);
+  for (const gate of manifest.gates) {
+    const patterns = gateInputPatterns(gate);
+    const queue = trackedFiles.filter(
+      (file) =>
+        /\.(?:mjs|js)$/.test(file) &&
+        [...gate.execution.entrypoints, ...gate.execution.helpers]
+          .map(contractPath)
+          .some((pattern) => taskGraphInternal.matches(file, pattern)),
+    );
+    const visited = new Set();
+    const uncovered = [];
+    while (queue.length > 0) {
+      const importer = queue.shift();
+      if (visited.has(importer)) continue;
+      visited.add(importer);
+      for (const imported of staticRelativeImports(importer)) {
+        if (!patterns.some((pattern) => taskGraphInternal.matches(imported, pattern))) {
+          uncovered.push(`${importer} -> ${imported}`);
+        }
+        if (/\.(?:mjs|js)$/.test(imported)) queue.push(imported);
+      }
+    }
+    assert.deepEqual(uncovered, [], `${gate.id}: uncovered static imports`);
+  }
+});
+
+test("dynamic and conditional validation inputs are explicitly bound", () => {
+  const expected = {
+    scripts: ["site/astro.config.mjs", "site/scripts/validate-seo.mjs"],
+    "architecture-compass": ["scripts/validation/smoke-install-contract.mjs"],
+    codegraph: ["scripts/validation/smoke-install-contract.mjs"],
+    skillopt: ["scripts/validation/drawio-diagrams/validate-fixtures.mjs"],
+    drawio: [
+      "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py",
+      "skills/engineering-workflows/drawio-diagrams/references/examples/architecture-icons.drawio",
+      "skills/engineering-workflows/drawio-diagrams/references/examples/animation-static-dependency.drawio",
+    ],
+    "animated-logo": [
+      "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py",
+      "skills/engineering-workflows/drawio-diagrams/references/examples/architecture-icons.drawio",
+      "skills/engineering-workflows/drawio-diagrams/references/examples/animation-static-dependency.drawio",
+    ],
+    format: [".editorconfig", ".vscode/settings.json", "skills.sh.json"],
+  };
+  for (const [gateId, requiredPaths] of Object.entries(expected)) {
+    const gate = manifest.gates.find(({ id }) => id === gateId);
+    const patterns = gateInputPatterns(gate);
+    for (const requiredPath of requiredPaths) {
+      assert.ok(
+        patterns.some((pattern) => taskGraphInternal.matches(requiredPath, pattern)),
+        `${gateId}: ${requiredPath} must contribute to the task key`,
+      );
+    }
+  }
+});
+
+test("fixture-heavy gates bind generated interpreter launchers", () => {
+  assert.deepEqual(manifest.gates.find(({ id }) => id === "drawio").execution.tools, [
+    "env",
+    "node",
+    "npm",
+    "python3",
+    "sh",
+  ]);
+  assert.deepEqual(manifest.gates.find(({ id }) => id === "skillopt").execution.tools, [
+    "env",
+    "git",
+    "node",
+    "npm",
+    "python3",
+    "sh",
+  ]);
+});
+
+test("affected planning derives ownership from execution helpers and workspace inputs", (t) => {
+  const architecturePlan = runPlanner(t, [
+    { status: "M", paths: ["scripts/validation/lib/process-group.mjs"] },
+  ]);
+  assert.ok(architecturePlan.selectedGates.includes("architecture-compass"));
+
+  const logoPlan = runPlanner(t, [
+    {
+      status: "M",
+      paths: [
+        "skills/engineering-workflows/drawio-diagrams/references/examples/animation-static-dependency.drawio",
+      ],
+    },
+  ]);
+  assert.ok(logoPlan.selectedGates.includes("animated-logo"));
+});
+
 test("Markdown documentation changes select ADR link validation and formatting", (t) => {
   const plan = runPlanner(t, [{ status: "M", paths: ["docs/operator-guide.md"] }]);
   assert.equal(plan.scope, "affected");
-  assert.deepEqual(plan.selectedGates, ["adrs", "format"]);
+  assert.deepEqual(plan.selectedGates, ["skills", "adrs", "format", "smoke-install"]);
 });
 
 test("ADR changes select ADR, Architecture Compass, and formatting owners", (t) => {
   const plan = runPlanner(t, [{ status: "M", paths: ["docs/adrs/0040-example.long.md"] }]);
   assert.equal(plan.scope, "affected");
-  assert.deepEqual(plan.selectedGates, ["adrs", "architecture-compass", "format"]);
+  assert.deepEqual(plan.selectedGates, [
+    "skills",
+    "adrs",
+    "architecture-compass",
+    "format",
+    "smoke-install",
+  ]);
 });
 
 test("every stable gate has an owning path class", (t) => {
@@ -268,17 +453,25 @@ test("resolver executes and unions compatible base and candidate plans", (t) => 
   const candidateSha = commit(root, "docs change");
   const output = path.join(temporaryRoot(t), "effective.json");
 
-  const plan = resolveValidationPlan({
-    repository: root,
-    manifest: path.join(root, "scripts", "ci", "validation-manifest.json"),
-    planner: path.join(root, "scripts", "ci", "plan-validation.mjs"),
-    event: "pull_request",
-    baseSha,
-    candidateSha,
-    output,
-  });
+  const previousGitDir = process.env.GIT_DIR;
+  process.env.GIT_DIR = path.join(root, "ambient-steering-must-not-apply");
+  let plan;
+  try {
+    plan = resolveValidationPlan({
+      repository: root,
+      manifest: path.join(root, "scripts", "ci", "validation-manifest.json"),
+      planner: path.join(root, "scripts", "ci", "plan-validation.mjs"),
+      event: "pull_request",
+      baseSha,
+      candidateSha,
+      output,
+    });
+  } finally {
+    if (previousGitDir === undefined) delete process.env.GIT_DIR;
+    else process.env.GIT_DIR = previousGitDir;
+  }
   assert.equal(plan.scope, "affected");
-  assert.deepEqual(plan.selectedGates, ["adrs", "format"]);
+  assert.deepEqual(plan.selectedGates, ["skills", "adrs", "format", "smoke-install"]);
   assert.match(plan.reason, /base\/candidate union/);
   assert.match(plan.basePlanDigest, /^sha256:[a-f0-9]{64}$/);
   assert.match(plan.candidatePlanDigest, /^sha256:[a-f0-9]{64}$/);

@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import {
   canonicalMaterialFingerprint,
@@ -17,19 +17,26 @@ import {
   assertAmbientGitSteeringIgnored,
   assertEarlyManifestErrorsFinalized,
   assertFixtureSetupFailureCleanup,
-  assertRepositoryGuardsUnchanged,
-  captureRepositoryGuards,
   commonLegacyLineageFailureCases,
   commonLegacyLineagePositiveCases,
   createFixtureFifo,
   harmlessNumericEvidenceMutation,
   UnsupportedFixtureCapabilityError,
 } from "../lib/legacy-case-lineage-test-harness.mjs";
-import { releaseChildHandles, settleDetachedProcessGroup } from "../lib/process-group.mjs";
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
+import { validateArchitecture } from "./validate.mjs";
+import { materializeBaselineCapsule } from "./fixture-capsule.mjs";
+import {
+  architectureFixtureDirectories,
+  architectureFixtureFiles,
+  runFixtureCoordinator,
+} from "./fixture-coordinator.mjs";
+import { architectureValueDigest } from "./hosted-shards.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const frozenInventoryPath = path.join(scriptDir, "test-validator-case-inventory.json");
+const frozenInventoryPath = process.env.ARCHITECTURE_FIXTURE_INVENTORY_PATH
+  ? path.resolve(process.env.ARCHITECTURE_FIXTURE_INVENTORY_PATH)
+  : path.join(scriptDir, "test-validator-case-inventory.json");
 const root = process.env.LEGACY_LINEAGE_TEST_ROOT
   ? path.resolve(process.env.LEGACY_LINEAGE_TEST_ROOT)
   : path.resolve(scriptDir, "..", "..", "..");
@@ -141,58 +148,105 @@ function createFixtureSymlink(target, link, type) {
   }
 }
 
-const directoryCopyPlan = Object.freeze([skillRelative, evalRelative, repositoryAdrsRelative]);
-const fileCopyPlan = Object.freeze([
-  lockRelative,
-  lineageRelative,
-  sourceLockRelative,
-  coverageRelative,
-]);
+const directoryCopyPlan = architectureFixtureDirectories;
+const fileCopyPlan = architectureFixtureFiles;
+
+let activeCaseTelemetry = null;
+let activeMaterializationStrategies = null;
+
+function measureCasePhase(phase, operation) {
+  const startedAt = process.hrtime.bigint();
+  try {
+    return operation();
+  } finally {
+    if (activeCaseTelemetry) {
+      const elapsedNanoseconds = process.hrtime.bigint() - startedAt;
+      activeCaseTelemetry[phase] += Number(elapsedNanoseconds / 1_000_000n);
+    }
+  }
+}
+
+async function measureCasePhaseAsync(phase, operation) {
+  const startedAt = process.hrtime.bigint();
+  try {
+    return await operation();
+  } finally {
+    if (activeCaseTelemetry) {
+      const elapsedNanoseconds = process.hrtime.bigint() - startedAt;
+      activeCaseTelemetry[phase] += Number(elapsedNanoseconds / 1_000_000n);
+    }
+  }
+}
 
 function copyFixture({
+  sourceRoot = root,
   copyDirectory = fs.cpSync,
   copyFile = fs.copyFileSync,
   onCreate = () => {},
 } = {}) {
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-compass-validator-"));
-  try {
-    onCreate(fixture);
-    for (const relative of directoryCopyPlan) {
-      const destination = path.join(fixture, relative);
-      fs.mkdirSync(path.dirname(destination), { recursive: true });
-      copyDirectory(path.join(root, relative), destination, {
-        recursive: true,
-        force: false,
-        errorOnExist: true,
-        preserveTimestamps: false,
-      });
+  return measureCasePhase("materializeMs", () => {
+    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-compass-validator-"));
+    try {
+      onCreate(fixture);
+      const baselineCapsule = process.env.ARCHITECTURE_FIXTURE_BASELINE;
+      if (baselineCapsule) {
+        fs.rmSync(fixture, { recursive: true, force: true });
+        const materializeCopyFile =
+          process.env.ARCHITECTURE_FIXTURE_FORCE_COPY === "1"
+            ? (source, destination, mode) => {
+                if (mode === fs.constants.COPYFILE_FICLONE) {
+                  const error = new Error("copy-on-write disabled");
+                  error.code = "ENOTSUP";
+                  throw error;
+                }
+                copyFile(source, destination, 0);
+              }
+            : copyFile;
+        const materialized = materializeBaselineCapsule({
+          capsuleRoot: baselineCapsule,
+          destinationRoot: fixture,
+          copyFile: materializeCopyFile,
+        });
+        activeMaterializationStrategies?.add(materialized.strategy);
+        return materialized.root;
+      }
+      for (const relative of directoryCopyPlan) {
+        const destination = path.join(fixture, relative);
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        copyDirectory(path.join(sourceRoot, relative), destination, {
+          recursive: true,
+          force: false,
+          errorOnExist: true,
+          preserveTimestamps: false,
+        });
+      }
+      for (const relative of fileCopyPlan) {
+        const destination = path.join(fixture, relative);
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        copyFile(path.join(sourceRoot, relative), destination);
+      }
+      return fixture;
+    } catch (error) {
+      fs.rmSync(fixture, { recursive: true, force: true });
+      throw error;
     }
-    for (const relative of fileCopyPlan) {
-      const destination = path.join(fixture, relative);
-      fs.mkdirSync(path.dirname(destination), { recursive: true });
-      copyFile(path.join(root, relative), destination);
-    }
-    return fixture;
-  } catch (error) {
-    fs.rmSync(fixture, { recursive: true, force: true });
-    throw error;
-  }
+  });
 }
 
-let importSequence = 0;
 async function runValidator(fixture) {
-  const previousCwd = process.cwd();
-  process.chdir(fixture);
-  try {
-    importSequence += 1;
-    const module = await import(`${pathToFileURL(validator).href}?fixture=${importSequence}`);
-    return {
-      status: module.validationErrors.length === 0 ? 0 : 1,
-      output: module.validationErrors.join("\n"),
-    };
-  } finally {
-    process.chdir(previousCwd);
+  if (
+    path.resolve(validator) !==
+    path.join(root, "scripts", "validation", "architecture-compass", "validate.mjs")
+  ) {
+    throw new Error(
+      "LEGACY_LINEAGE_ARCHITECTURE_VALIDATOR no longer supports alternate modules; pass the fixture root to validateArchitecture instead.",
+    );
   }
+  const result = validateArchitecture(fixture);
+  return {
+    status: result.validationErrors.length === 0 ? 0 : 1,
+    output: result.validationErrors.join("\n"),
+  };
 }
 
 function runLegacyCaseLineage(fixture, testOnlyReadPhaseHook = null) {
@@ -332,7 +386,7 @@ async function expectFailure(name, mutate, expected, run = runValidator) {
   const fixture = copyFixture();
   try {
     try {
-      mutate(fixture);
+      measureCasePhase("mutateMs", () => mutate(fixture));
     } catch (error) {
       if (
         error instanceof UnsupportedSymlinkFixtureError ||
@@ -348,7 +402,7 @@ async function expectFailure(name, mutate, expected, run = runValidator) {
     }
     let result;
     try {
-      result = await run(fixture);
+      result = await measureCasePhaseAsync("validateMs", () => run(fixture));
     } catch (error) {
       if (
         error instanceof UnsupportedSymlinkFixtureError ||
@@ -370,39 +424,21 @@ async function expectFailure(name, mutate, expected, run = runValidator) {
     }
     return { skipped: false };
   } finally {
-    fs.rmSync(fixture, { recursive: true, force: true });
+    measureCasePhase("cleanupMs", () => fs.rmSync(fixture, { recursive: true, force: true }));
   }
 }
 
 async function expectSuccess(name, mutate) {
   const fixture = copyFixture();
   try {
-    mutate(fixture);
-    const result = await runValidator(fixture);
+    measureCasePhase("mutateMs", () => mutate(fixture));
+    const result = await measureCasePhaseAsync("validateMs", () => runValidator(fixture));
     if (result.status !== 0) {
       throw new Error(`${name}: expected success; status=${result.status}\n${result.output}`);
     }
   } finally {
-    fs.rmSync(fixture, { recursive: true, force: true });
+    measureCasePhase("cleanupMs", () => fs.rmSync(fixture, { recursive: true, force: true }));
   }
-}
-
-function canonicalJson(value) {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
-  if (value !== null && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function sha256Json(value) {
-  return `sha256:${crypto
-    .createHash("sha256")
-    .update(`${canonicalJson(value)}\n`)
-    .digest("hex")}`;
 }
 
 function writeJsonAtomic(file, value) {
@@ -412,7 +448,7 @@ function writeJsonAtomic(file, value) {
   fs.renameSync(temporary, path.resolve(file));
 }
 
-async function runSharedPreflight() {
+export async function runSharedArchitecturePreflight(preflightRoot = root) {
   assertAmbientGitSteeringIgnored();
   assertCommonMarkdownParserCases(extractLegacyMaterialUnits);
   assertCommonMaterialFingerprintCases(sourceMaterialFingerprints);
@@ -487,9 +523,10 @@ async function runSharedPreflight() {
     expectedMessage: "synthetic fixture setup failure",
     create(onCreate) {
       return copyFixture({
+        sourceRoot: preflightRoot,
         onCreate,
         copyDirectory(source, destination, options) {
-          if (source === path.join(root, evalRelative)) {
+          if (source === path.join(preflightRoot, evalRelative)) {
             throw new Error("synthetic fixture setup failure");
           }
           fs.cpSync(source, destination, options);
@@ -503,9 +540,10 @@ async function runSharedPreflight() {
     expectedMessage: "synthetic copyFile setup failure",
     create(onCreate) {
       return copyFixture({
+        sourceRoot: preflightRoot,
         onCreate,
         copyFile(source, destination) {
-          if (source === path.join(root, coverageRelative)) {
+          if (source === path.join(preflightRoot, coverageRelative)) {
             throw new Error("synthetic copyFile setup failure");
           }
           fs.copyFileSync(source, destination);
@@ -514,7 +552,7 @@ async function runSharedPreflight() {
     },
   });
 
-  const baselineFixture = copyFixture();
+  const baselineFixture = copyFixture({ sourceRoot: preflightRoot });
   try {
     const baseline = await runValidator(baselineFixture);
     if (baseline.status !== 0) {
@@ -523,13 +561,32 @@ async function runSharedPreflight() {
   } finally {
     fs.rmSync(baselineFixture, { recursive: true, force: true });
   }
+  return {
+    schemaVersion: 1,
+    parserContract: "passed",
+    fixtureSetupContract: "passed",
+    baselineValidation: "passed",
+  };
 }
 
-async function runWorker({ workerIndex, workerCount, reportFile }) {
+async function runWorker({
+  workerIndex,
+  workerCount,
+  hostedShardIndex = 0,
+  hostedShardCount = 1,
+  taskKey,
+  taskDigest,
+  preflightEvidenceDigest,
+  reportFile,
+}) {
+  const workerStartedAt = Date.now();
+  let caseExecutionStartedAt = null;
   const frozenInventory = JSON.parse(fs.readFileSync(frozenInventoryPath, "utf8"));
-  const inventoryDigest = sha256Json(frozenInventory.cases);
+  const inventoryDigest = architectureValueDigest(frozenInventory.cases);
   const results = [];
+  const materializationStrategies = new Set();
   let fatal = null;
+  activeMaterializationStrategies = materializationStrategies;
   try {
     const cases = [
       {
@@ -3487,14 +3544,16 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
         async execute() {
           const fixture = copyFixture();
           try {
-            testCase.mutate(fixture);
-            const result = runLegacyCaseLineage(fixture);
+            measureCasePhase("mutateMs", () => testCase.mutate(fixture));
+            const result = measureCasePhase("validateMs", () => runLegacyCaseLineage(fixture));
             if (result.errors.length > 0) {
               throw new Error(`${testCase.name} failed:\n${result.errors.join("\n")}`);
             }
             return { skipped: false };
           } finally {
-            fs.rmSync(fixture, { recursive: true, force: true });
+            measureCasePhase("cleanupMs", () =>
+              fs.rmSync(fixture, { recursive: true, force: true }),
+            );
           }
         },
       })),
@@ -3505,8 +3564,10 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
         async execute() {
           const fixture = copyFixture();
           try {
-            harmlessNumericEvidenceMutation(skillRelative)(fixture);
-            const result = runLegacyCaseLineage(fixture);
+            measureCasePhase("mutateMs", () =>
+              harmlessNumericEvidenceMutation(skillRelative)(fixture),
+            );
+            const result = measureCasePhase("validateMs", () => runLegacyCaseLineage(fixture));
             if (result.errors.length > 0) {
               throw new Error(
                 `harmless numeric runtime evidence failed:\n${result.errors.join("\n")}`,
@@ -3514,7 +3575,9 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
             }
             return { skipped: false };
           } finally {
-            fs.rmSync(fixture, { recursive: true, force: true });
+            measureCasePhase("cleanupMs", () =>
+              fs.rmSync(fixture, { recursive: true, force: true }),
+            );
           }
         },
       },
@@ -3550,9 +3613,21 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
       throw new Error("Architecture Compass fixture registry contains duplicate stable IDs.");
     }
 
+    caseExecutionStartedAt = Date.now();
     for (const [ordinal, testCase] of registry.entries()) {
-      if (ordinal % workerCount !== workerIndex) continue;
+      if (
+        ordinal % hostedShardCount !== hostedShardIndex ||
+        Math.floor(ordinal / hostedShardCount) % workerCount !== workerIndex
+      ) {
+        continue;
+      }
       const startedAt = Date.now();
+      const phaseTelemetry = {
+        materializeMs: 0,
+        mutateMs: 0,
+        validateMs: 0,
+        cleanupMs: 0,
+      };
       if (testCase.applicability === "posix" && process.platform === "win32") {
         results.push({
           id: testCase.id,
@@ -3562,9 +3637,11 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
           skipBucket: "platform",
           reason: "POSIX fixture is not applicable on Windows",
           durationMs: 0,
+          phaseTelemetry: { materializeMs: 0, mutateMs: 0, validateMs: 0, cleanupMs: 0 },
         });
         continue;
       }
+      activeCaseTelemetry = phaseTelemetry;
       try {
         const result = await testCase.execute();
         results.push({
@@ -3575,6 +3652,7 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
           skipBucket: result?.skipped ? (result.kind ?? "capability") : null,
           reason: result?.skipped ? result.reason : null,
           durationMs: Date.now() - startedAt,
+          phaseTelemetry,
         });
       } catch (error) {
         results.push({
@@ -3585,20 +3663,33 @@ async function runWorker({ workerIndex, workerCount, reportFile }) {
           skipBucket: null,
           reason: error instanceof Error ? error.message : String(error),
           durationMs: Date.now() - startedAt,
+          phaseTelemetry,
         });
         throw error;
+      } finally {
+        activeCaseTelemetry = null;
       }
     }
   } catch (error) {
     fatal = { message: error.message, stack: error.stack ?? null };
   } finally {
+    activeMaterializationStrategies = null;
     writeJsonAtomic(reportFile, {
       schemaVersion: 1,
       workerIndex,
       workerCount,
+      hostedShardIndex,
+      hostedShardCount,
+      taskKey,
+      taskDigest,
+      preflightEvidenceDigest,
       inventoryDigest,
       results,
       fatal,
+      phaseTelemetry: {
+        startupMs: (caseExecutionStartedAt ?? Date.now()) - workerStartedAt,
+      },
+      materializationStrategy: materializationStrategies.has("copy") ? "copy" : "clone",
     });
   }
   if (fatal) throw new Error(fatal.message);
@@ -3608,7 +3699,18 @@ function parseWorkerArguments(argv) {
   const values = {};
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (new Set(["--worker-index", "--worker-count", "--worker-report"]).has(argument)) {
+    if (
+      new Set([
+        "--worker-index",
+        "--worker-count",
+        "--hosted-shard-index",
+        "--hosted-shard-count",
+        "--task-key",
+        "--task-digest",
+        "--preflight-evidence-digest",
+        "--worker-report",
+      ]).has(argument)
+    ) {
       values[argument] = argv[index + 1];
       index += 1;
     } else {
@@ -3618,534 +3720,38 @@ function parseWorkerArguments(argv) {
   if (values["--worker-index"] === undefined) return null;
   const workerIndex = Number(values["--worker-index"]);
   const workerCount = Number(values["--worker-count"]);
+  const hostedShardIndex = Number(values["--hosted-shard-index"] ?? 0);
+  const hostedShardCount = Number(values["--hosted-shard-count"] ?? 1);
   if (!Number.isSafeInteger(workerIndex) || !Number.isSafeInteger(workerCount)) {
     throw new Error("Worker index and count must be integers.");
   }
   if (workerCount < 1 || workerCount > 3 || workerIndex < 0 || workerIndex >= workerCount) {
     throw new Error("Worker index/count is outside the supported shard range.");
   }
-  if (!values["--worker-report"]) throw new Error("--worker-report is required.");
-  return { workerIndex, workerCount, reportFile: path.resolve(values["--worker-report"]) };
-}
-
-function resolveWorkerCount() {
-  const configured = process.env.ARCHITECTURE_FIXTURE_WORKERS ?? "1";
-  if (!/^(?:auto|[123])$/.test(configured)) {
-    throw new Error("ARCHITECTURE_FIXTURE_WORKERS must be auto, 1, 2, or 3.");
-  }
-  const requested = configured === "auto" ? 3 : Number(configured);
-  return Math.min(requested, Math.max(1, os.availableParallelism() - 1), 3);
-}
-
-function createRunRoot(temporaryParent, runRootModeSetter) {
-  const runRoot = fs.mkdtempSync(
-    path.join(path.resolve(temporaryParent), "architecture-compass-workers-"),
-  );
-  try {
-    runRootModeSetter(runRoot, 0o700);
-    return runRoot;
-  } catch (error) {
-    try {
-      fs.rmSync(runRoot, { recursive: true, force: true });
-    } catch (cleanupError) {
-      throw new AggregateError(
-        [error, cleanupError],
-        "Architecture Compass fixture run-root setup and cleanup failed.",
-        { cause: error },
-      );
-    }
-    throw error;
-  }
-}
-
-async function withTemporaryDirectoryEnvironment(temporaryRoot, callback) {
-  const variableNames = ["TMPDIR", "TMP", "TEMP"];
-  const previous = new Map(variableNames.map((name) => [name, process.env[name]]));
-  for (const name of variableNames) process.env[name] = temporaryRoot;
-  try {
-    return await callback();
-  } finally {
-    for (const [name, value] of previous) {
-      if (value === undefined) delete process.env[name];
-      else process.env[name] = value;
-    }
-  }
-}
-
-function structuredWorkerFailure(completion, frozenInventory, workerCount, inventoryDigest) {
-  if (!fs.existsSync(completion.reportFile)) return null;
-  let report;
-  try {
-    report = JSON.parse(fs.readFileSync(completion.reportFile, "utf8"));
-  } catch {
-    return null;
-  }
   if (
-    report?.schemaVersion !== 1 ||
-    report.workerIndex !== completion.workerIndex ||
-    report.workerCount !== workerCount ||
-    report.inventoryDigest !== inventoryDigest ||
-    !report.fatal ||
-    typeof report.fatal.message !== "string" ||
-    report.fatal.message.length === 0 ||
-    (report.fatal.stack !== null && typeof report.fatal.stack !== "string") ||
-    !Array.isArray(report.results) ||
-    Object.hasOwn(report, "preflight")
+    !new Set([1, 3]).has(hostedShardCount) ||
+    !Number.isSafeInteger(hostedShardIndex) ||
+    hostedShardIndex < 0 ||
+    hostedShardIndex >= hostedShardCount
   ) {
-    return null;
+    throw new Error("Hosted shard index/count is outside the supported range.");
   }
-
-  const expectedResults = frozenInventory.cases
-    .map((entry, ordinal) => ({ ...entry, ordinal }))
-    .filter(({ ordinal }) => ordinal % workerCount === completion.workerIndex);
-  if (report.results.length > expectedResults.length) return null;
-  for (const [index, result] of report.results.entries()) {
-    const expected = expectedResults[index];
-    if (
-      result?.id !== expected.id ||
-      result.ordinal !== expected.ordinal ||
-      result.expectedOutcome !== expected.expectedOutcome ||
-      !Number.isSafeInteger(result.durationMs) ||
-      result.durationMs < 0
-    ) {
-      return null;
+  if (!values["--worker-report"]) throw new Error("--worker-report is required.");
+  for (const name of ["--task-key", "--task-digest", "--preflight-evidence-digest"]) {
+    if (!/^sha256:[a-f0-9]{64}$/.test(values[name] ?? "")) {
+      throw new Error(`${name} must be a SHA-256 digest.`);
     }
-    const isLast = index === report.results.length - 1;
-    if (isLast) {
-      if (
-        result.status !== "failed" ||
-        result.skipBucket !== null ||
-        typeof result.reason !== "string" ||
-        result.reason.length === 0 ||
-        report.fatal.message !== result.reason
-      ) {
-        return null;
-      }
-      continue;
-    }
-    if (result.status === "passed") {
-      if (result.reason !== null || result.skipBucket !== null) return null;
-      continue;
-    }
-    if (
-      !new Set(["skipped", "not-applicable"]).has(result.status) ||
-      typeof result.reason !== "string" ||
-      result.reason.length === 0 ||
-      typeof result.skipBucket !== "string" ||
-      result.skipBucket.length === 0
-    ) {
-      return null;
-    }
-    if (
-      result.status === "not-applicable" &&
-      !(
-        process.platform === "win32" &&
-        expected.applicability === "posix" &&
-        result.skipBucket === "platform"
-      )
-    ) {
-      return null;
-    }
-  }
-
-  const failedCase = report.results.at(-1);
-  if (!failedCase) {
-    return {
-      workerIndex: completion.workerIndex,
-      message: `Architecture Compass fixture worker ${completion.workerIndex} failed before case execution: ${report.fatal.message}`,
-    };
   }
   return {
-    workerIndex: completion.workerIndex,
-    message: `Architecture Compass fixture worker ${completion.workerIndex} failed case ${failedCase.id}: ${failedCase.reason}`,
+    workerIndex,
+    workerCount,
+    hostedShardIndex,
+    hostedShardCount,
+    taskKey: values["--task-key"],
+    taskDigest: values["--task-digest"],
+    preflightEvidenceDigest: values["--preflight-evidence-digest"],
+    reportFile: path.resolve(values["--worker-report"]),
   };
-}
-
-export async function runCoordinator({
-  workerProgram = fileURLToPath(import.meta.url),
-  workerCount = resolveWorkerCount(),
-  temporaryParent = os.tmpdir(),
-  reportFile = process.env.ARCHITECTURE_FIXTURE_REPORT
-    ? path.resolve(process.env.ARCHITECTURE_FIXTURE_REPORT)
-    : null,
-  coordinatorPreflight = runSharedPreflight,
-  workerEnvironment = {},
-  workerTimeoutMs = 30 * 60 * 1000,
-  terminationGraceMs = 3000,
-  killGraceMs = 3000,
-  settlementPollMs = 50,
-  runRootModeSetter = fs.chmodSync,
-  windowsTreeKill = spawnSync,
-} = {}) {
-  if (!Number.isSafeInteger(workerCount) || workerCount < 1 || workerCount > 3) {
-    throw new Error("Architecture Compass worker count must be an integer from 1 through 3.");
-  }
-  if (typeof coordinatorPreflight !== "function") {
-    throw new Error("coordinatorPreflight must be a function.");
-  }
-  if (typeof runRootModeSetter !== "function") {
-    throw new Error("runRootModeSetter must be a function.");
-  }
-  if (typeof windowsTreeKill !== "function") {
-    throw new Error("windowsTreeKill must be a function.");
-  }
-  for (const [name, value] of Object.entries({
-    workerTimeoutMs,
-    terminationGraceMs,
-    killGraceMs,
-    settlementPollMs,
-  })) {
-    if (!Number.isSafeInteger(value) || value < 1) {
-      throw new Error(`${name} must be a positive integer.`);
-    }
-  }
-  const frozenInventory = JSON.parse(fs.readFileSync(frozenInventoryPath, "utf8"));
-  const inventoryDigest = sha256Json(frozenInventory.cases);
-  const repositoryGuardRoot = process.env.LEGACY_LINEAGE_GUARD_ROOT
-    ? path.resolve(process.env.LEGACY_LINEAGE_GUARD_ROOT)
-    : root;
-  const repositoryGuards = captureRepositoryGuards(repositoryGuardRoot);
-  const runRoot = createRunRoot(temporaryParent, runRootModeSetter);
-  const children = [];
-  const childCompletions = [];
-  const childSettlements = new Map();
-  let stopping = false;
-  let receivedSignal = null;
-  let failure = null;
-  let coordinatorReport = null;
-  let rejectSettlementFailure;
-  const settlementFailure = new Promise((_, reject) => {
-    rejectSettlementFailure = reject;
-  });
-  const settleChild = (child) => {
-    if (!childSettlements.has(child)) {
-      childSettlements.set(
-        child,
-        settleDetachedProcessGroup(child, {
-          terminationGraceMs,
-          killGraceMs,
-          terminationPollMs: settlementPollMs,
-          killPollMs: settlementPollMs,
-          windowsTreeKill,
-          validateWindowsTreeKill: true,
-          windowsTreeLabel: "Architecture Compass fixture worker tree",
-          windowsExitLabel: "Architecture Compass fixture worker",
-          processGroupLabel: "Architecture Compass fixture worker process group",
-        }),
-      );
-    }
-    return childSettlements.get(child);
-  };
-  const settleAllChildren = async () => {
-    const results = await Promise.allSettled(children.map((child) => settleChild(child)));
-    const errors = results
-      .filter((result) => result.status === "rejected")
-      .map((result) => result.reason);
-    if (errors.length === 1) throw errors[0];
-    if (errors.length > 1) {
-      throw new AggregateError(
-        errors,
-        "Multiple Architecture Compass fixture worker process groups failed to terminate.",
-      );
-    }
-  };
-  let activeSettlement = null;
-  const stopWorkers = (signal = null) => {
-    if (signal) receivedSignal ??= signal;
-    stopping = true;
-    activeSettlement ??= settleAllChildren();
-    activeSettlement.catch(rejectSettlementFailure);
-    return activeSettlement;
-  };
-  const signalHandlers = new Map(
-    ["SIGINT", "SIGTERM"].map((signal) => [signal, () => stopWorkers(signal)]),
-  );
-  for (const [signal, handler] of signalHandlers) process.once(signal, handler);
-  let workerTimeout = null;
-  try {
-    const preflightRoot = path.join(runRoot, "coordinator", "fixtures");
-    fs.mkdirSync(preflightRoot, { recursive: true, mode: 0o700 });
-    await withTemporaryDirectoryEnvironment(preflightRoot, coordinatorPreflight);
-
-    for (let workerIndex = 0; workerIndex < workerCount; workerIndex += 1) {
-      const workerRoot = path.join(runRoot, `worker-${workerIndex}`);
-      const temporaryRoot = path.join(workerRoot, "fixtures");
-      const reportFile = path.join(workerRoot, "report.json");
-      fs.mkdirSync(temporaryRoot, { recursive: true, mode: 0o700 });
-      const child = spawn(
-        process.execPath,
-        [
-          workerProgram,
-          "--worker-index",
-          String(workerIndex),
-          "--worker-count",
-          String(workerCount),
-          "--worker-report",
-          reportFile,
-        ],
-        {
-          cwd: root,
-          detached: process.platform !== "win32",
-          env: {
-            ...process.env,
-            ...workerEnvironment,
-            TMPDIR: temporaryRoot,
-            TMP: temporaryRoot,
-            TEMP: temporaryRoot,
-            ARCHITECTURE_FIXTURE_INVENTORY_PATH: frozenInventoryPath,
-            ARCHITECTURE_FIXTURE_INVENTORY_DIGEST: inventoryDigest,
-          },
-          stdio: ["ignore", "pipe", "pipe"],
-        },
-      );
-      children.push(child);
-      if (stopping) settleChild(child).catch(rejectSettlementFailure);
-      child.stdout.on("data", (chunk) => process.stdout.write(chunk));
-      child.stderr.on("data", (chunk) => process.stderr.write(chunk));
-      let spawnError = null;
-      const completion = new Promise((resolve) => {
-        child.once("error", (error) => {
-          spawnError = error;
-          stopWorkers();
-        });
-        child.once("close", (code, signal) => {
-          if ((code !== 0 || signal) && !stopping) {
-            stopWorkers();
-          }
-          resolve({ workerIndex, reportFile, code, signal, error: spawnError });
-        });
-      });
-      childCompletions.push(completion);
-    }
-    const workerExecutionTimeout = new Promise((_, reject) => {
-      workerTimeout = setTimeout(() => {
-        stopWorkers();
-        reject(
-          new Error(`Architecture Compass fixture workers timed out after ${workerTimeoutMs}ms.`),
-        );
-      }, workerTimeoutMs);
-    });
-    const completionsResult = await Promise.race([
-      Promise.all(childCompletions),
-      settlementFailure,
-      workerExecutionTimeout,
-    ]);
-    clearTimeout(workerTimeout);
-    workerTimeout = null;
-    if (receivedSignal) {
-      throw new Error(`Architecture Compass fixture execution received ${receivedSignal}.`);
-    }
-    const structuredFailures = completionsResult
-      .filter((completion) => completion.error || completion.code !== 0 || completion.signal)
-      .map((completion) =>
-        structuredWorkerFailure(completion, frozenInventory, workerCount, inventoryDigest),
-      )
-      .filter(Boolean)
-      .sort((left, right) => left.workerIndex - right.workerIndex);
-    if (structuredFailures.length > 0) {
-      throw new Error(structuredFailures[0].message);
-    }
-    const reports = [];
-    for (const completion of completionsResult) {
-      if (completion.error || completion.code !== 0 || completion.signal) {
-        throw new Error(
-          `Architecture Compass fixture worker ${completion.workerIndex} failed: ${completion.error?.message ?? completion.signal ?? completion.code}`,
-        );
-      }
-      if (!fs.existsSync(completion.reportFile)) {
-        throw new Error(
-          `Architecture Compass fixture worker ${completion.workerIndex} did not write a report.`,
-        );
-      }
-      const report = JSON.parse(fs.readFileSync(completion.reportFile, "utf8"));
-      if (
-        report.schemaVersion !== 1 ||
-        report.workerIndex !== completion.workerIndex ||
-        report.workerCount !== workerCount ||
-        report.inventoryDigest !== inventoryDigest ||
-        report.fatal ||
-        Object.hasOwn(report, "preflight")
-      ) {
-        throw new Error(
-          `Architecture Compass fixture worker ${completion.workerIndex} wrote an invalid report.`,
-        );
-      }
-      const expectedIds = frozenInventory.cases
-        .filter((_, ordinal) => ordinal % workerCount === completion.workerIndex)
-        .map(({ id }) => id);
-      if (JSON.stringify(report.results.map(({ id }) => id)) !== JSON.stringify(expectedIds)) {
-        throw new Error(
-          `Architecture Compass fixture worker ${completion.workerIndex} reported missing, duplicate, unexpected, or wrong-shard IDs.`,
-        );
-      }
-      if (
-        report.results.some(
-          (result) => !new Set(["passed", "skipped", "not-applicable"]).has(result.status),
-        )
-      ) {
-        throw new Error(
-          `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid outcome.`,
-        );
-      }
-      const expectedResults = frozenInventory.cases
-        .map((entry, ordinal) => ({ ...entry, ordinal }))
-        .filter(({ ordinal }) => ordinal % workerCount === completion.workerIndex);
-      for (const [resultIndex, result] of report.results.entries()) {
-        const expected = expectedResults[resultIndex];
-        if (
-          result.id !== expected.id ||
-          result.ordinal !== expected.ordinal ||
-          result.expectedOutcome !== expected.expectedOutcome
-        ) {
-          throw new Error(
-            `Architecture Compass fixture worker ${completion.workerIndex} reported contradictory case metadata for ${expected.id}.`,
-          );
-        }
-        if (!Number.isSafeInteger(result.durationMs) || result.durationMs < 0) {
-          throw new Error(
-            `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid duration for ${expected.id}.`,
-          );
-        }
-        if (result.status === "passed") {
-          if (result.reason !== null || result.skipBucket !== null) {
-            throw new Error(
-              `Architecture Compass fixture worker ${completion.workerIndex} reported skip metadata for passed case ${expected.id}.`,
-            );
-          }
-        } else if (
-          typeof result.reason !== "string" ||
-          result.reason.length === 0 ||
-          typeof result.skipBucket !== "string" ||
-          result.skipBucket.length === 0
-        ) {
-          throw new Error(
-            `Architecture Compass fixture worker ${completion.workerIndex} omitted skip metadata for ${expected.id}.`,
-          );
-        }
-        if (
-          result.status === "not-applicable" &&
-          !(
-            process.platform === "win32" &&
-            expected.applicability === "posix" &&
-            result.skipBucket === "platform"
-          )
-        ) {
-          throw new Error(
-            `Architecture Compass fixture worker ${completion.workerIndex} reported an invalid applicability result for ${expected.id}.`,
-          );
-        }
-        if (
-          process.platform === "win32" &&
-          expected.applicability === "posix" &&
-          result.status !== "not-applicable"
-        ) {
-          throw new Error(
-            `Architecture Compass fixture worker ${completion.workerIndex} executed POSIX-only case ${expected.id} on Windows.`,
-          );
-        }
-      }
-      reports.push(report);
-    }
-    const results = reports
-      .flatMap((report) => report.results)
-      .sort((left, right) => left.ordinal - right.ordinal);
-    if (
-      results.length !== frozenInventory.cases.length ||
-      new Set(results.map(({ id }) => id)).size !== frozenInventory.cases.length
-    ) {
-      throw new Error(
-        "Architecture Compass fixture merge did not account for every frozen case exactly once.",
-      );
-    }
-    const deterministicResults = results.map(
-      ({ id, ordinal, expectedOutcome, status, skipBucket }) => ({
-        id,
-        ordinal,
-        expectedOutcome,
-        status,
-        skipBucket,
-      }),
-    );
-    coordinatorReport = {
-      schemaVersion: 1,
-      workerCount,
-      inventoryDigest,
-      preflight: "passed",
-      accountingDigest: sha256Json(deterministicResults),
-      results,
-    };
-    const negativePassed = results.filter(
-      (result) => result.expectedOutcome === "failure" && result.status === "passed",
-    ).length;
-    const positivePassed = results.filter(
-      (result) => result.expectedOutcome === "success" && result.status === "passed",
-    ).length;
-    const skipped = results.filter((result) => result.status !== "passed");
-    console.log(
-      `Architecture Compass validator fixtures passed with ${workerCount} worker(s): ${negativePassed} negative cases and ${positivePassed} positive cases.${
-        skipped.length > 0
-          ? ` ${skipped.length} fixture(s) skipped or not applicable: ${skipped.map((result) => `${result.id}: ${result.reason}`).join("; ")}.`
-          : " All 325 frozen fixtures executed."
-      }`,
-    );
-  } catch (error) {
-    failure = error;
-    stopWorkers();
-  } finally {
-    if (workerTimeout) clearTimeout(workerTimeout);
-    if (failure || receivedSignal) stopWorkers();
-    const cleanupErrors = [];
-    let groupsSettled = false;
-    try {
-      await settleAllChildren();
-      groupsSettled = true;
-      await Promise.allSettled(childCompletions);
-    } catch (error) {
-      for (const child of children) releaseChildHandles(child);
-      cleanupErrors.push(error);
-    }
-    try {
-      assertRepositoryGuardsUnchanged(
-        repositoryGuardRoot,
-        repositoryGuards,
-        "Architecture Compass validator suite",
-      );
-    } catch (error) {
-      cleanupErrors.push(error);
-    }
-    if (groupsSettled) {
-      try {
-        fs.rmSync(runRoot, { recursive: true, force: true });
-      } catch (error) {
-        cleanupErrors.push(error);
-      }
-    }
-    if (cleanupErrors.length > 0) {
-      failure = failure
-        ? new AggregateError(
-            [failure, ...cleanupErrors],
-            "Architecture Compass fixture execution and cleanup failed.",
-            { cause: failure },
-          )
-        : cleanupErrors.length === 1
-          ? cleanupErrors[0]
-          : new AggregateError(cleanupErrors, "Architecture Compass fixture cleanup failed.");
-    }
-    await new Promise((resolve) => setImmediate(resolve));
-    if (!failure && !receivedSignal && reportFile) {
-      try {
-        writeJsonAtomic(reportFile, coordinatorReport);
-      } catch (error) {
-        failure = error;
-      }
-    }
-    for (const [signal, handler] of signalHandlers) process.removeListener(signal, handler);
-  }
-  if (receivedSignal) {
-    process.kill(process.pid, receivedSignal);
-    return;
-  }
-  if (failure) throw failure;
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -4160,7 +3766,7 @@ if (isMain) {
   try {
     const workerOptions = parseWorkerArguments(process.argv.slice(2));
     if (workerOptions) await runWorker(workerOptions);
-    else await runCoordinator();
+    else await runFixtureCoordinator({ root, workerProgram: fileURLToPath(import.meta.url) });
   } catch (error) {
     console.error(
       `Architecture Compass validator fixture execution failed: ${formatFailure(error)}`,

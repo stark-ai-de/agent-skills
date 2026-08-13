@@ -3,67 +3,63 @@ name: Validate
 on:
   workflow_dispatch:
     inputs:
-      architecture_workers:
-        description: Architecture Compass fixture workers for full benchmark runs
+      validation_reuse:
+        description: Reuse verified task results, force fresh execution, or verify hits
         required: true
-        default: "1"
+        default: auto
         type: choice
-        options:
-          - auto
-          - "1"
-          - "2"
-          - "3"
+        options: [auto, "off", verify]
+      architecture_workers:
+        description: Local workers in each hosted Architecture Compass shard
+        required: true
+        default: auto
+        type: choice
+        options: [auto, "1", "2", "3"]
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    outputs:
-      trusted_main: ${{ steps.context.outputs.trusted_main }}
-      validation_scope: ${{ steps.validation.outputs.validation_scope }}
-      pages_artifact_name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
-      validation_artifact_name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
-      pages_artifact_id: ${{ steps.pages-artifact.outputs.artifact_id }}
+env:
+  VALIDATION_NODE_VERSION: 22.20.0
+  VALIDATION_RESOLUTION_ARTIFACT: validation-resolution-v1-${{ github.run_id }}-${{ github.run_attempt }}
 
+jobs:
+  resolve:
+    name: Resolve validation tasks
+    runs-on: ubuntu-24.04
+    outputs:
+      validation_scope: ${{ steps.tasks.outputs.validation_scope }}
+      root_matrix: ${{ steps.tasks.outputs.root_matrix }}
+      has_root_misses: ${{ steps.tasks.outputs.has_root_misses }}
+      has_skills_miss: ${{ steps.tasks.outputs.has_skills_miss }}
+      has_architecture_miss: ${{ steps.tasks.outputs.has_architecture_miss }}
+      has_smoke_miss: ${{ steps.tasks.outputs.has_smoke_miss }}
+      skills_status: ${{ steps.tasks.outputs.skills_status }}
+      skills_task_key: ${{ steps.tasks.outputs.skills_task_key }}
+      architecture_task_key: ${{ steps.tasks.outputs.architecture_task_key }}
+      smoke_task_key: ${{ steps.tasks.outputs.smoke_task_key }}
+      all_reused: ${{ steps.tasks.outputs.all_reused }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
-      - name: Initialize validation diagnostic boundary
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22.20.0
+
+      - name: Initialize candidate boundary
         run: node scripts/ci/initialize-validation-diagnostic.mjs --output "$RUNNER_TEMP/validation-boundary.json"
 
-      - uses: pnpm/setup@v2
-        with:
-          runtime: node@22
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
-          install: false
-
-      - name: Resolve validation context
-        id: context
-        run: |
-          echo "trusted_main=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve attempt-scoped artifact names
-        id: artifact-names
-        run: |
-          echo "pages_artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-          echo "validation_artifact_name=validation-receipt-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve full or affected validation plan
-        id: validation-plan
-        continue-on-error: true
+      - name: Resolve full or affected plan
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
         run: |
@@ -71,144 +67,628 @@ jobs:
             --event "$GITHUB_EVENT_NAME" \
             --base-sha "${BASE_SHA:-none}" \
             --candidate-sha "$GITHUB_SHA" \
-            --output "$RUNNER_TEMP/validation-plan.json" \
-            --github-output
+            --output "$RUNNER_TEMP/validation-plan.json"
 
-      - name: Install selected validation dependencies
-        id: dependencies
-        if: ${{ steps.validation-plan.outcome == 'success' }}
+      - name: Restore untrusted task index hint
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         continue-on-error: true
-        run: node scripts/ci/install-validation-dependencies.mjs --plan "$RUNNER_TEMP/validation-plan.json"
+        with:
+          path: ${{ runner.temp }}/validation-cache-index
+          key: validation-task-index-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            validation-task-index-v1-
 
-      - name: Run validation plan
-        id: validation
-        if: ${{ always() && steps.validation-plan.outcome == 'success' }}
+      - name: Ensure task index path exists
+        run: mkdir -p "$RUNNER_TEMP/validation-cache-index"
+
+      - name: Resolve verified hits and miss matrices
+        id: tasks
         env:
-          ARCHITECTURE_WORKERS: ${{ github.event_name == 'workflow_dispatch' && inputs.architecture_workers || '1' }}
           BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          GH_TOKEN: ${{ github.token }}
+          REUSE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_reuse || 'auto' }}
+          ARCHITECTURE_WORKERS: ${{ github.event_name == 'workflow_dispatch' && inputs.architecture_workers || 'auto' }}
         run: |
-          node scripts/ci/run-validation-plan.mjs \
+          node scripts/ci/resolve-validation-tasks.mjs \
             --plan "$RUNNER_TEMP/validation-plan.json" \
-            --report "$RUNNER_TEMP/validation-report.json" \
-            --event "$GITHUB_EVENT_NAME" \
-            --base-sha "${BASE_SHA:-none}" \
+            --output "$RUNNER_TEMP/resolution.json" \
+            --index "$RUNNER_TEMP/validation-cache-index/index.json" \
+            --boundary "$RUNNER_TEMP/validation-boundary.json" \
+            --mode "$REUSE_MODE" \
             --architecture-workers "$ARCHITECTURE_WORKERS" \
-            --dependency-install-outcome "${{ steps.dependencies.outcome }}" \
-            --before-fingerprint "$RUNNER_TEMP/validation-boundary.json" \
+            --repository-identity "$GITHUB_REPOSITORY" \
+            --event "$GITHUB_EVENT_NAME" \
+            --ref "$GITHUB_REF" \
+            --sha "$GITHUB_SHA" \
+            --base-sha "${BASE_SHA:-none}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --job-name "Resolve validation tasks" \
+            --job-id "${{ job.check_run_id }}" \
             --github-output
 
-      - name: Finalize validation diagnostic report
-        if: ${{ always() }}
-        env:
-          DIAGNOSTIC_REASON: validation plan=${{ steps.validation-plan.outcome }}, dependencies=${{ steps.dependencies.outcome }}, runner=${{ steps.validation.outcome }}
-        run: |
-          node scripts/ci/finalize-validation-diagnostic.mjs \
-            --boundary "$RUNNER_TEMP/validation-boundary.json" \
-            --manifest scripts/ci/validation-manifest.json \
-            --plan "$RUNNER_TEMP/validation-plan.json" \
-            --report "$RUNNER_TEMP/validation-report.json" \
-            --reason "$DIAGNOSTIC_REASON"
-
-      - name: Upload diagnostic validation report
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+      - name: Upload immutable resolution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: validation-report-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/validation-report.json
+          name: ${{ env.VALIDATION_RESOLUTION_ARTIFACT }}
+          path: |
+            ${{ runner.temp }}/resolution.json
+            ${{ runner.temp }}/validation-plan.json
+            ${{ runner.temp }}/validation-boundary.json
           if-no-files-found: error
-          retention-days: 14
+          include-hidden-files: true
+          overwrite: false
+          retention-days: 30
 
-      - name: Fail planning before validation runner
-        if: ${{ always() && steps.validation-plan.outcome != 'success' }}
+  skills-miss:
+    name: Gate / skills
+    needs: resolve
+    if: ${{ needs.resolve.outputs.has_skills_miss == 'true' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
+        with:
+          {
+            runtime: node@22.20.0,
+            cache: true,
+            cache-dependency-path: pnpm-lock.yaml,
+            install: false,
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - name: Install this task's dependencies
+        run: node scripts/ci/install-validation-dependencies.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id skills
+      - name: Create exact execution runtime
+        run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id skills --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/runtime.json"
+      - name: Execute task
+        id: execute
+        continue-on-error: true
+        run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id skills --repository "$GITHUB_WORKSPACE" --outcome "$RUNNER_TEMP/outcome.json" --runtime "$RUNNER_TEMP/runtime.json" --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json"
+      - name: Stage canonical task publication
+        id: record
+        if: ${{ always() }}
+        run: |
+          node scripts/ci/record-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id skills --outcome "$RUNNER_TEMP/outcome.json" \
+            --failure-reason "Task setup or execution failed before a canonical outcome was written." \
+            --publication-directory "$RUNNER_TEMP/task-publication" --transport-bundle "$RUNNER_TEMP/task-upload/validation-task-bundle-v1.json" --recorded-output "$RUNNER_TEMP/recorded.json" \
+            --repository-identity "$GITHUB_REPOSITORY" --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --job-name "Gate / skills" --job-id "${{ job.check_run_id }}" --github-output
+      - name: Upload provisional task artifact
+        id: upload
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "${{ steps.record.outputs.artifact_name }}",
+            path: "${{ steps.record.outputs.publication_file }}",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Upload prerequisite outcome
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "validation-outcome-v1-skills-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/outcome.json",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Propagate task failure
+        if: ${{ always() && steps.execute.outcome != 'success' }}
         run: exit 1
 
-      - name: Assert validated site output
-        id: site-digest
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        run: |
-          set -euo pipefail
-          test -n "$(find site/dist -type f -print -quit)"
-          digest=$(cd site/dist && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
-          echo "site_digest=$digest" >> "$GITHUB_OUTPUT"
-
-      - name: Configure Pages
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        uses: actions/configure-pages@v6
-
-      - name: Verify sealed site output
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        env:
-          EXPECTED_SITE_DIGEST: ${{ steps.site-digest.outputs.site_digest }}
-        run: |
-          set -euo pipefail
-          digest=$(cd site/dist && find . -type f -print0 | sort -z | while IFS= read -r -d '' file; do sha256sum "$file"; done | sha256sum | cut -d' ' -f1)
-          test "$digest" = "$EXPECTED_SITE_DIGEST"
-
-      - name: Upload validated Pages artifact
-        id: pages-artifact
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        uses: actions/upload-pages-artifact@v5
+  root-misses:
+    name: Gate / ${{ matrix.gateId }}
+    needs: resolve
+    if: ${{ needs.resolve.outputs.has_root_misses == 'true' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve.outputs.root_matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
+        if: ${{ matrix.needsRoot || matrix.needsSite }}
         with:
-          name: ${{ steps.artifact-names.outputs.pages_artifact_name }}
-          path: site/dist
-          include-hidden-files: true
-          retention-days: 30
-
-      - name: Write validation receipt schema v2
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
+          {
+            runtime: node@22.20.0,
+            cache: true,
+            cache-dependency-path: pnpm-lock.yaml,
+            install: false,
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - name: Install this task's dependencies
+        if: ${{ matrix.needsRoot || matrix.needsSite }}
+        run: node scripts/ci/install-validation-dependencies.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id "${{ matrix.gateId }}"
+      - name: Install verified actionlint binary
+        id: actionlint
+        if: ${{ matrix.gateId == 'actions' }}
+        run: node scripts/ci/actionlint-contract.mjs --destination "$RUNNER_TEMP/actionlint/actionlint" --github-output
+      - name: Create exact execution runtime
         env:
-          PAGES_ARTIFACT_ID: ${{ steps.pages-artifact.outputs.artifact_id }}
-          PAGES_ARTIFACT_NAME: ${{ steps.artifact-names.outputs.pages_artifact_name }}
-          SITE_DIGEST: ${{ steps.site-digest.outputs.site_digest }}
-          VALIDATION_ARTIFACT_NAME: ${{ steps.artifact-names.outputs.validation_artifact_name }}
+          ACTIONLINT: ${{ steps.actionlint.outputs.actionlint_path }}
+        run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id "${{ matrix.gateId }}" --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/runtime.json"
+      - name: Execute task
+        id: execute
+        continue-on-error: true
+        run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id "${{ matrix.gateId }}" --repository "$GITHUB_WORKSPACE" --outcome "$RUNNER_TEMP/outcome.json" --runtime "$RUNNER_TEMP/runtime.json" --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json"
+      - name: Stage canonical task publication
+        id: record
+        if: ${{ always() }}
+        run: |
+          node scripts/ci/record-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id "${{ matrix.gateId }}" --outcome "$RUNNER_TEMP/outcome.json" \
+            --failure-reason "Task setup or execution failed before a canonical outcome was written." \
+            --publication-directory "$RUNNER_TEMP/task-publication" --transport-bundle "$RUNNER_TEMP/task-upload/validation-task-bundle-v1.json" --recorded-output "$RUNNER_TEMP/recorded.json" \
+            --repository-identity "$GITHUB_REPOSITORY" --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --job-name "Gate / ${{ matrix.gateId }}" --job-id "${{ job.check_run_id }}" --github-output
+      - name: Upload provisional task artifact
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "${{ steps.record.outputs.artifact_name }}",
+            path: "${{ steps.record.outputs.publication_file }}",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Propagate task failure
+        if: ${{ always() && steps.execute.outcome != 'success' }}
+        run: exit 1
+
+  architecture-plan:
+    name: Architecture Compass / plan
+    needs: resolve
+    if: ${{ needs.resolve.outputs.has_architecture_miss == 'true' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - name: Attest Architecture plan runner identity
+        run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id architecture-compass --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/architecture-runtime.json"
+      - run: node scripts/ci/run-architecture-compass-gate.mjs plan --task-key "${{ needs.resolve.outputs.architecture_task_key }}" --plan-file "$RUNNER_TEMP/architecture-plan.json" --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --runtime "$RUNNER_TEMP/architecture-runtime.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "architecture-plan-v1-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/architecture-plan.json",
+            if-no-files-found: error,
+            overwrite: false,
+            retention-days: 30,
+          }
+
+  architecture-shards:
+    name: Architecture Compass / shard ${{ matrix.shardIndex }}
+    needs: [resolve, architecture-plan]
+    if: ${{ needs.resolve.outputs.has_architecture_miss == 'true' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "architecture-plan-v1-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/architecture-plan",
+          }
+      - name: Execute disjoint hosted shard
+        env:
+          WORKERS: ${{ github.event_name == 'workflow_dispatch' && inputs.architecture_workers || 'auto' }}
+        run: |
+          node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id architecture-compass --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/architecture-runtime.json"
+          node scripts/ci/run-architecture-compass-gate.mjs shard --plan-file "$RUNNER_TEMP/architecture-plan/architecture-plan.json" --shard-index "${{ matrix.shardIndex }}" --workers "$WORKERS" --report-file "$RUNNER_TEMP/shard-${{ matrix.shardIndex }}.json" --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --runtime "$RUNNER_TEMP/architecture-runtime.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "architecture-shard-v1-${{ matrix.shardIndex }}-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/shard-${{ matrix.shardIndex }}.json",
+            if-no-files-found: error,
+            overwrite: false,
+            retention-days: 30,
+          }
+
+  architecture-aggregate:
+    name: Gate / architecture-compass
+    needs: [resolve, architecture-plan, architecture-shards]
+    if: ${{ always() && needs.resolve.outputs.has_architecture_miss == 'true' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "architecture-plan-v1-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/architecture-plan",
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            pattern: "architecture-shard-v1-*-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/architecture-shards",
+            merge-multiple: true,
+          }
+      - name: Aggregate exact 325-case evidence
+        id: execute
+        continue-on-error: true
+        run: |
+          node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id architecture-compass --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/architecture-runtime.json"
+          started=$(date +%s%3N)
+          node scripts/ci/run-architecture-compass-gate.mjs aggregate \
+            --plan-file "$RUNNER_TEMP/architecture-plan/architecture-plan.json" \
+            --shard-report "$RUNNER_TEMP/architecture-shards/shard-0.json" \
+            --shard-report "$RUNNER_TEMP/architecture-shards/shard-1.json" \
+            --shard-report "$RUNNER_TEMP/architecture-shards/shard-2.json" \
+            --report-file "$RUNNER_TEMP/architecture-aggregate.json" \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" \
+            --runtime "$RUNNER_TEMP/architecture-runtime.json"
+          duration=$(( $(date +%s%3N) - started ))
+          node scripts/ci/run-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id architecture-compass \
+            --repository "$GITHUB_WORKSPACE" --outcome "$RUNNER_TEMP/outcome.json" \
+            --evidence-only "$RUNNER_TEMP/architecture-aggregate.json" --duration-ms "$duration" \
+            --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json"
+      - name: Stage canonical task publication
+        id: record
+        if: ${{ always() }}
+        run: |
+          node scripts/ci/record-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id architecture-compass --outcome "$RUNNER_TEMP/outcome.json" \
+            --failure-reason "Architecture setup or aggregation failed before a canonical outcome was written." \
+            --publication-directory "$RUNNER_TEMP/task-publication" --transport-bundle "$RUNNER_TEMP/task-upload/validation-task-bundle-v1.json" --recorded-output "$RUNNER_TEMP/recorded.json" \
+            --repository-identity "$GITHUB_REPOSITORY" --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --job-name "Gate / architecture-compass" --job-id "${{ job.check_run_id }}" --github-output
+      - name: Upload provisional task artifact
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "${{ steps.record.outputs.artifact_name }}",
+            path: "${{ steps.record.outputs.publication_file }}",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Propagate task failure
+        if: ${{ always() && steps.execute.outcome != 'success' }}
+        run: exit 1
+
+  smoke-miss:
+    name: Gate / smoke-install
+    needs: [resolve, skills-miss]
+    if: ${{ always() && needs.resolve.outputs.has_smoke_miss == 'true' && ((needs.resolve.outputs.has_skills_miss == 'true' && needs.skills-miss.result == 'success') || (needs.resolve.outputs.has_skills_miss == 'false' && needs.resolve.outputs.skills_status == 'reused' && needs.skills-miss.result == 'skipped')) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
+        with:
+          {
+            runtime: node@22.20.0,
+            cache: true,
+            cache-dependency-path: pnpm-lock.yaml,
+            install: false,
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        if: ${{ needs.resolve.outputs.has_skills_miss == 'true' }}
+        with:
+          {
+            name: "validation-outcome-v1-skills-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/skills-outcome",
+          }
+      - run: node scripts/ci/install-validation-dependencies.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id smoke-install
+      - run: node scripts/ci/run-validation-task.mjs --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id smoke-install --repository "$GITHUB_WORKSPACE" --write-runtime "$RUNNER_TEMP/runtime.json"
+      - name: Execute task
+        id: execute
+        continue-on-error: true
+        run: |
+          prerequisite=()
+          if [ -f "$RUNNER_TEMP/skills-outcome/outcome.json" ]; then
+            prerequisite=(--prerequisite-outcome "$RUNNER_TEMP/skills-outcome/outcome.json")
+          fi
+          node scripts/ci/run-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id smoke-install \
+            --repository "$GITHUB_WORKSPACE" --outcome "$RUNNER_TEMP/outcome.json" \
+            --runtime "$RUNNER_TEMP/runtime.json" \
+            --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json" \
+            "${prerequisite[@]}"
+      - name: Stage canonical task publication
+        id: record
+        if: ${{ always() }}
+        run: |
+          node scripts/ci/record-validation-task.mjs \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" --gate-id smoke-install --outcome "$RUNNER_TEMP/outcome.json" \
+            --failure-reason "Task setup or execution failed before a canonical outcome was written." \
+            --publication-directory "$RUNNER_TEMP/task-publication" --transport-bundle "$RUNNER_TEMP/task-upload/validation-task-bundle-v1.json" --recorded-output "$RUNNER_TEMP/recorded.json" \
+            --repository-identity "$GITHUB_REPOSITORY" --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --job-name "Gate / smoke-install" --job-id "${{ job.check_run_id }}" --github-output
+      - name: Upload provisional task artifact
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "${{ steps.record.outputs.artifact_name }}",
+            path: "${{ steps.record.outputs.publication_file }}",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Propagate task failure
+        if: ${{ always() && steps.execute.outcome != 'success' }}
+        run: exit 1
+
+  validate:
+    name: Validate
+    needs:
+      [
+        resolve,
+        skills-miss,
+        root-misses,
+        architecture-plan,
+        architecture-shards,
+        architecture-aggregate,
+        smoke-miss,
+      ]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    outputs:
+      trusted_main: ${{ steps.context.outputs.trusted_main }}
+      validation_scope: ${{ steps.assemble.outputs.validation_scope }}
+      pages_artifact_name: ${{ steps.names.outputs.pages_artifact_name }}
+      validation_artifact_name: ${{ steps.names.outputs.validation_artifact_name }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version: 22.20.0 }
+      - name: Validate resolved topology results
+        id: topology
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          EXPECT_SKILLS: ${{ needs.resolve.outputs.has_skills_miss }}
+          EXPECT_ROOT: ${{ needs.resolve.outputs.has_root_misses }}
+          EXPECT_ARCHITECTURE: ${{ needs.resolve.outputs.has_architecture_miss }}
+          EXPECT_SMOKE: ${{ needs.resolve.outputs.has_smoke_miss }}
+          SKILLS_RESULT: ${{ needs.skills-miss.result }}
+          ROOT_RESULT: ${{ needs.root-misses.result }}
+          ARCHITECTURE_PLAN_RESULT: ${{ needs.architecture-plan.result }}
+          ARCHITECTURE_SHARDS_RESULT: ${{ needs.architecture-shards.result }}
+          ARCHITECTURE_AGGREGATE_RESULT: ${{ needs.architecture-aggregate.result }}
+          SMOKE_RESULT: ${{ needs.smoke-miss.result }}
         run: |
           set -euo pipefail
-          proof_root="$RUNNER_TEMP/validation-proof"
-          mkdir -p "$proof_root"
-          cp "$RUNNER_TEMP/validation-report.json" "$proof_root/validation-report.json"
-          node scripts/ci/write-validation-receipt.mjs \
+          require_result() {
+            local expected="$1" actual="$2" label="$3"
+            if [ "$expected" = "true" ]; then
+              case "$actual" in success|failure) return 0 ;; esac
+              echo "$label was selected but concluded $actual" >&2
+              return 1
+            fi
+            if [ "$actual" != "skipped" ]; then
+              echo "$label was not selected but concluded $actual" >&2
+              return 1
+            fi
+          }
+          require_result "$EXPECT_SKILLS" "$SKILLS_RESULT" "skills"
+          require_result "$EXPECT_ROOT" "$ROOT_RESULT" "root matrix"
+          require_result "$EXPECT_ARCHITECTURE" "$ARCHITECTURE_PLAN_RESULT" "Architecture plan"
+          if [ "$EXPECT_ARCHITECTURE" = "true" ] && [ "$ARCHITECTURE_PLAN_RESULT" = "failure" ]; then
+            test "$ARCHITECTURE_SHARDS_RESULT" = "skipped"
+          else
+            require_result "$EXPECT_ARCHITECTURE" "$ARCHITECTURE_SHARDS_RESULT" "Architecture shards"
+          fi
+          require_result "$EXPECT_ARCHITECTURE" "$ARCHITECTURE_AGGREGATE_RESULT" "Architecture aggregate"
+          if [ "$EXPECT_SMOKE" = "true" ] && [ "$SKILLS_RESULT" = "failure" ]; then
+            test "$SMOKE_RESULT" = "skipped"
+          else
+            require_result "$EXPECT_SMOKE" "$SMOKE_RESULT" "smoke"
+          fi
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          {
+            name: "${{ env.VALIDATION_RESOLUTION_ARTIFACT }}",
+            path: "${{ runner.temp }}/validation-resolution",
+          }
+      - name: Download every current-run task publication
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        continue-on-error: true
+        with:
+          {
+            pattern: "validation-task-v1-*-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/task-artifacts",
+            merge-multiple: false,
+          }
+      - name: Restore untrusted task index hint
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        with:
+          {
+            path: "${{ runner.temp }}/validation-cache-index",
+            key: "validation-task-index-v1-${{ github.run_id }}-${{ github.run_attempt }}",
+            restore-keys: "validation-task-index-v1-",
+          }
+      - name: Assemble and verify complete task proof
+        id: assemble
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          ARCHITECTURE_WORKERS: ${{ github.event_name == 'workflow_dispatch' && inputs.architecture_workers || 'auto' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/validation-cache-index" "$RUNNER_TEMP/task-artifacts"
+          node scripts/ci/assemble-validation-tasks.mjs \
+            --plan "$RUNNER_TEMP/validation-resolution/validation-plan.json" \
+            --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" \
+            --task-artifacts-root "$RUNNER_TEMP/task-artifacts" --index "$RUNNER_TEMP/validation-cache-index/index.json" \
+            --boundary "$RUNNER_TEMP/validation-resolution/validation-boundary.json" --report "$RUNNER_TEMP/validation-report.json" \
+            --accepted-output "$RUNNER_TEMP/accepted-tasks.json" --repository-identity "$GITHUB_REPOSITORY" \
+            --event "$GITHUB_EVENT_NAME" --ref "$GITHUB_REF" --sha "$GITHUB_SHA" --base-sha "${BASE_SHA:-none}" \
+            --architecture-workers "$ARCHITECTURE_WORKERS" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" --github-output
+      - name: Finalize validation diagnostic report
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          DIAGNOSTIC_REASON: task topology=${{ steps.topology.outcome }}, assembly=${{ steps.assemble.outcome }}
+        run: |
+          node scripts/ci/finalize-validation-diagnostic.mjs \
+            --boundary "$RUNNER_TEMP/validation-resolution/validation-boundary.json" \
             --manifest scripts/ci/validation-manifest.json \
-            --report "$proof_root/validation-report.json" \
-            --output "$proof_root/validation-receipt.json"
-
-      - name: Upload validation proof
-        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.validation.outputs.validation_scope == 'full' }}
-        uses: actions/upload-artifact@v7
+            --plan "$RUNNER_TEMP/validation-resolution/validation-plan.json" \
+            --report "$RUNNER_TEMP/validation-report.json" \
+            --reason "$DIAGNOSTIC_REASON"
+      - id: context
+        run: echo "trusted_main=${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.ref_protected }}" >> "$GITHUB_OUTPUT"
+      - id: names
+        run: |
+          echo "pages_artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          echo "validation_artifact_name=validation-receipt-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - name: Upload diagnostic validation report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ steps.artifact-names.outputs.validation_artifact_name }}
-          path: ${{ runner.temp }}/validation-proof
-          if-no-files-found: error
-          retention-days: 30
+          {
+            name: "validation-report-${{ github.run_id }}-${{ github.run_attempt }}",
+            path: "${{ runner.temp }}/validation-report.json",
+            if-no-files-found: error,
+            overwrite: false,
+            retention-days: 14,
+          }
+      - name: Digest restored site output
+        id: site
+        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.assemble.outputs.validation_scope == 'full' }}
+        run: node --input-type=module -e 'import { digestOutput } from "./scripts/ci/validation-task-graph.mjs"; const value=digestOutput("site/dist","directory").digest; process.stdout.write("site_digest="+value+"\n")' >> "$GITHUB_OUTPUT"
+      - name: Configure Pages
+        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.assemble.outputs.validation_scope == 'full' }}
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+      - name: Upload current validated Pages artifact
+        id: pages
+        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.assemble.outputs.validation_scope == 'full' }}
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          {
+            name: "${{ steps.names.outputs.pages_artifact_name }}",
+            path: site/dist,
+            include-hidden-files: true,
+            retention-days: 30,
+          }
+      - name: Write trusted validation receipt v3
+        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.assemble.outputs.validation_scope == 'full' }}
+        env:
+          CURRENT_WORKFLOW_DIGEST: ${{ steps.assemble.outputs.current_workflow_digest }}
+          CURRENT_CONTROL_PLANE_DIGEST: ${{ steps.assemble.outputs.current_control_plane_digest }}
+          VALIDATION_JOB_ID: ${{ job.check_run_id }}
+          VALIDATION_JOB_NAME: Validate
+          SITE_DIGEST: ${{ steps.site.outputs.site_digest }}
+          PAGES_ARTIFACT_ID: ${{ steps.pages.outputs.artifact_id }}
+          PAGES_ARTIFACT_NAME: ${{ steps.names.outputs.pages_artifact_name }}
+          VALIDATION_ARTIFACT_NAME: ${{ steps.names.outputs.validation_artifact_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/validation-proof"
+          cp "$RUNNER_TEMP/validation-report.json" "$RUNNER_TEMP/validation-proof/validation-report.json"
+          cp "$RUNNER_TEMP/accepted-tasks.json" "$RUNNER_TEMP/validation-proof/accepted-tasks.json"
+          node scripts/ci/write-validation-receipt.mjs --manifest scripts/ci/validation-manifest.json --report "$RUNNER_TEMP/validation-proof/validation-report.json" --output "$RUNNER_TEMP/validation-proof/validation-receipt.json"
+      - name: Upload trusted validation proof
+        if: ${{ steps.context.outputs.trusted_main == 'true' && steps.assemble.outputs.validation_scope == 'full' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          {
+            name: "${{ steps.names.outputs.validation_artifact_name }}",
+            path: "${{ runner.temp }}/validation-proof",
+            if-no-files-found: error,
+            include-hidden-files: true,
+            overwrite: false,
+            retention-days: 30,
+          }
+      - name: Save refreshed untrusted task index
+        if: ${{ always() && steps.assemble.outcome == 'success' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        with:
+          {
+            path: "${{ runner.temp }}/validation-cache-index",
+            key: "validation-task-index-v1-${{ github.run_id }}-${{ github.run_attempt }}",
+          }
+      - name: Reject an invalid dynamic topology
+        if: ${{ always() && steps.topology.outcome != 'success' }}
+        run: exit 1
 
   deploy:
     needs: validate
     if: ${{ needs.validate.result == 'success' && needs.validate.outputs.trusted_main == 'true' && needs.validate.outputs.validation_scope == 'full' }}
-    runs-on: ubuntu-latest
-    concurrency:
-      group: github-pages-production
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    runs-on: ubuntu-24.04
+    concurrency: { group: github-pages-production, cancel-in-progress: false }
+    permissions: { contents: read, pages: write, id-token: write }
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Verify deployment is current main
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          main_sha=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
-          if [ "$main_sha" != "$EXPECTED_SHA" ]; then
-            echo "Skipping stale Pages deployment: main is $main_sha, but this run validates $EXPECTED_SHA." >&2
-            exit 1
-          fi
-
+        run: test "$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)" = "$GITHUB_SHA"
       - name: Deploy validated Pages artifact
         id: deployment
-        uses: actions/deploy-pages@v5
-        with:
-          artifact_name: ${{ needs.validate.outputs.pages_artifact_name }}
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
+        with: { artifact_name: "${{ needs.validate.outputs.pages_artifact_name }}" }

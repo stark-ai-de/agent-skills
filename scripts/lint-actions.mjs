@@ -32,16 +32,22 @@ if (lintArgs.length === 0) {
   process.exit(0);
 }
 
-const candidates = [
-  process.env.ACTIONLINT,
-  "actionlint",
-  fs.existsSync(localWrapper) ? localWrapper : null,
-  "github-actionlint",
-].filter(Boolean);
+const configuredActionlint = process.env.ACTIONLINT;
+const candidates = configuredActionlint
+  ? [configuredActionlint]
+  : ["actionlint", fs.existsSync(localWrapper) ? localWrapper : null, "github-actionlint"].filter(
+      Boolean,
+    );
 
 for (const command of candidates) {
   const result = run(command, lintArgs);
-  if (result.error?.code === "ENOENT") continue;
+  if (result.error?.code === "ENOENT") {
+    if (configuredActionlint) {
+      console.error(`Configured ACTIONLINT executable is unavailable: ${configuredActionlint}`);
+      process.exit(1);
+    }
+    continue;
+  }
   if (result.error) {
     console.error(`Failed to run ${command}: ${result.error.message}`);
     process.exit(1);

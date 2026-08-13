@@ -12,6 +12,48 @@ const scriptRoot = path.dirname(fileURLToPath(import.meta.url));
 const initializeScript = path.join(scriptRoot, "initialize-validation-diagnostic.mjs");
 const finalizeScript = path.join(scriptRoot, "finalize-validation-diagnostic.mjs");
 
+function assertExactDiagnosticReportV2(report) {
+  assert.deepEqual(Object.keys(report).sort(), [
+    "candidateFileCountAfter",
+    "candidateFileCountBefore",
+    "candidateFingerprintAfter",
+    "candidateFingerprintBefore",
+    "controlPlaneDigest",
+    "counts",
+    "fingerprintError",
+    "gates",
+    "manifestDigest",
+    "planDigest",
+    "proofLevel",
+    "reportDigest",
+    "schemaVersion",
+    "scope",
+    "selectedGates",
+    "taskResultSetDigest",
+  ]);
+  const { reportDigest, ...withoutDigest } = report;
+  assert.equal(reportDigest, digestJson(withoutDigest));
+  for (const gate of report.gates) {
+    assert.deepEqual(Object.keys(gate).sort(), [
+      "durationMs",
+      "evidenceDigest",
+      "id",
+      "lookupDurationMs",
+      "lookupMissCount",
+      "lookupRejectCount",
+      "lookupResult",
+      "outputs",
+      "producer",
+      "producerLocator",
+      "reason",
+      "receiptDigest",
+      "source",
+      "status",
+      "taskKey",
+    ]);
+  }
+}
+
 function execute(command, arguments_, options = {}) {
   const { expectedStatus = 0, ...spawnOptions } = options;
   const result = spawnSync(command, arguments_, {
@@ -112,26 +154,19 @@ function finalize(fixture_, spawnOptions = {}) {
 }
 
 function assertFailedReport(report, boundary, expectedGate) {
-  assert.equal(report.schemaVersion, 1);
+  assertExactDiagnosticReportV2(report);
+  assert.equal(report.schemaVersion, 2);
   assert.equal(report.scope, "full");
   assert.deepEqual(report.selectedGates, [expectedGate]);
   assert.equal(report.gates.length, 1);
-  assert.deepEqual(
-    {
-      id: report.gates[0].id,
-      status: report.gates[0].status,
-      exitCode: report.gates[0].exitCode,
-    },
-    { id: expectedGate, status: "failed", exitCode: 1 },
-  );
-  assert.match(report.diagnosticFailure, /validation runner did not complete/);
+  assert.equal(report.gates[0].id, expectedGate);
+  assert.equal(report.gates[0].status, "failed");
+  assert.match(report.gates[0].reason, /validation runner did not complete/);
   assert.equal(report.candidateFingerprintBefore, boundary.candidateFingerprint);
   assert.equal(report.candidateFingerprintAfter, boundary.candidateFingerprint);
   assert.equal(report.candidateFileCountBefore, boundary.candidateFileCount);
   assert.equal(report.candidateFileCountAfter, boundary.candidateFileCount);
   assert.equal(report.fingerprintError, null);
-  const { reportDigest, ...withoutDigest } = report;
-  assert.equal(reportDigest, digestJson(withoutDigest));
 }
 
 test("finalizer emits a failed report when the candidate manifest is malformed", (t) => {
@@ -142,9 +177,9 @@ test("finalizer emits a failed report when the candidate manifest is malformed",
   const report = finalize(fixture_);
 
   assertFailedReport(report, boundary, "diagnostic");
-  assert.match(report.diagnosticFailure, /manifest is unavailable/);
-  assert.match(report.diagnosticFailure, /plan cannot be verified/);
-  assert.match(report.diagnosticFailure, /report is missing/);
+  assert.match(report.gates[0].reason, /manifest is unavailable/);
+  assert.match(report.gates[0].reason, /plan cannot be verified/);
+  assert.match(report.gates[0].reason, /report is missing/);
 });
 
 test("finalizer emits a failed report when the candidate manifest is missing", (t) => {
@@ -154,7 +189,7 @@ test("finalizer emits a failed report when the candidate manifest is missing", (
   const report = finalize(fixture_);
 
   assertFailedReport(report, boundary, "diagnostic");
-  assert.match(report.diagnosticFailure, /manifest is unavailable/);
+  assert.match(report.gates[0].reason, /manifest is unavailable/);
 });
 
 test("finalizer emits a failed report when the candidate plan is malformed", (t) => {
@@ -166,7 +201,7 @@ test("finalizer emits a failed report when the candidate plan is malformed", (t)
   const report = finalize(fixture_);
 
   assertFailedReport(report, boundary, "fixture");
-  assert.match(report.diagnosticFailure, /plan is unavailable/);
+  assert.match(report.gates[0].reason, /plan is unavailable/);
 });
 
 test("finalizer replaces an unparsable runner report with a failed report", (t) => {
@@ -179,7 +214,7 @@ test("finalizer replaces an unparsable runner report with a failed report", (t) 
   const report = finalize(fixture_);
 
   assertFailedReport(report, boundary, "fixture");
-  assert.match(report.diagnosticFailure, /runner report is unusable/);
+  assert.match(report.gates[0].reason, /runner report is unusable/);
 });
 
 test("finalizer emits a failed report when the diagnostic boundary is missing", (t) => {
@@ -190,7 +225,7 @@ test("finalizer emits a failed report when the diagnostic boundary is missing", 
 
   const report = finalize(fixture_);
 
-  assert.equal(report.schemaVersion, 1);
+  assert.equal(report.schemaVersion, 2);
   assert.deepEqual(report.selectedGates, ["fixture"]);
   assert.equal(report.gates[0].status, "failed");
   assert.equal(report.candidateFingerprintBefore, null);
@@ -198,7 +233,7 @@ test("finalizer emits a failed report when the diagnostic boundary is missing", 
   assert.match(report.candidateFingerprintAfter, /^sha256:[a-f0-9]{64}$/);
   assert.ok(Number.isSafeInteger(report.candidateFileCountAfter));
   assert.match(report.fingerprintError, /boundary is unavailable/);
-  assert.match(report.diagnosticFailure, /boundary is unavailable/);
+  assert.match(report.gates[0].reason, /boundary is unavailable/);
   const { reportDigest, ...withoutDigest } = report;
   assert.equal(reportDigest, digestJson(withoutDigest));
 });
@@ -211,7 +246,7 @@ test("finalizer emits a failed report when the diagnostic boundary is malformed"
 
   const report = finalize(fixture_);
 
-  assert.equal(report.schemaVersion, 1);
+  assert.equal(report.schemaVersion, 2);
   assert.deepEqual(report.selectedGates, ["fixture"]);
   assert.equal(report.gates[0].status, "failed");
   assert.equal(report.candidateFingerprintBefore, null);
@@ -219,7 +254,7 @@ test("finalizer emits a failed report when the diagnostic boundary is malformed"
   assert.match(report.candidateFingerprintAfter, /^sha256:[a-f0-9]{64}$/);
   assert.ok(Number.isSafeInteger(report.candidateFileCountAfter));
   assert.match(report.fingerprintError, /boundary is unavailable/);
-  assert.match(report.diagnosticFailure, /boundary is unavailable/);
+  assert.match(report.gates[0].reason, /boundary is unavailable/);
   const { reportDigest, ...withoutDigest } = report;
   assert.equal(reportDigest, digestJson(withoutDigest));
 });
@@ -232,7 +267,7 @@ test("finalizer emits a failed report when the final candidate fingerprint fails
 
   const report = finalize(fixture_, { env: { ...process.env, PATH: "" } });
 
-  assert.equal(report.schemaVersion, 1);
+  assert.equal(report.schemaVersion, 2);
   assert.deepEqual(report.selectedGates, ["fixture"]);
   assert.equal(report.gates[0].status, "failed");
   assert.equal(report.candidateFingerprintBefore, boundary.candidateFingerprint);
@@ -240,7 +275,7 @@ test("finalizer emits a failed report when the final candidate fingerprint fails
   assert.equal(report.candidateFingerprintAfter, null);
   assert.equal(report.candidateFileCountAfter, null);
   assert.match(report.fingerprintError, /Final candidate fingerprint failed/);
-  assert.match(report.diagnosticFailure, /Final candidate fingerprint failed/);
+  assert.match(report.gates[0].reason, /Final candidate fingerprint failed/);
   const { reportDigest, ...withoutDigest } = report;
   assert.equal(reportDigest, digestJson(withoutDigest));
 });
@@ -269,5 +304,5 @@ test("initializer leaves a recovery boundary that the finalizer reports", (t) =>
   writeJsonAtomic(fixture_.manifestFile, fixture_.manifest);
   writeJsonAtomic(fixture_.planFile, fixture_.plan);
   const report = finalize(fixture_);
-  assert.match(report.diagnosticFailure, /Initial candidate fingerprint failed/);
+  assert.match(report.gates[0].reason, /Initial candidate fingerprint failed/);
 });

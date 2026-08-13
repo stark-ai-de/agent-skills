@@ -35,6 +35,7 @@ This guide is non-normative. [Long](0046-assemble-validation-proof-from-content-
 ## Verification
 
 - Prove key stability across commit SHA/run changes and invalidation for path, type, mode, bytes, command, dependency, prerequisite, environment, toolchain, and policy changes.
+- Treat the pinned hosted runner label and its system-tool compatibility contract as the platform key; observe the exact image revision and system executable bytes in every producer without requiring separate jobs in one image rollout to be byte-identical.
 - Test missing, expired, malformed, wrong-run, wrong-job, wrong-attempt, wrong-key, wrong-digest, traversal, symlink, hard-link, oversize, duplicate, timeout, and contradictory evidence.
 - Verify that a full hit starts no gate process, installs no gate dependencies, restores exact site bytes, and still produces a complete current report.
 - Verify that `off` always executes and `verify` detects semantic or output nondeterminism.

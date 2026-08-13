@@ -24,24 +24,34 @@ concurrency:
 
 jobs:
   release-readiness:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       release_sha: ${{ steps.version.outputs.release_sha }}
       validate_run_id: ${{ steps.validate-receipt.outputs.run_id }}
       validate_job_attempt: ${{ steps.validate-receipt.outputs.validate_job_attempt }}
+      validate_job_id: ${{ steps.validate-receipt.outputs.validate_job_id }}
       pages_artifact_name: ${{ steps.validate-receipt.outputs.pages_artifact_name }}
+      pages_artifact_id: ${{ steps.validate-receipt.outputs.pages_artifact_id }}
       validation_artifact_name: ${{ steps.validate-receipt.outputs.validation_artifact_name }}
+      validation_artifact_id: ${{ steps.validate-receipt.outputs.validation_artifact_id }}
+      workflow_digest: ${{ steps.control-plane.outputs.workflow_digest }}
+      control_plane_digest: ${{ steps.control-plane.outputs.control_plane_digest }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: main
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 22
+          node-version: 22.20.0
+
+      - name: Recompute protected-main control-plane identity
+        id: control-plane
+        run: |
+          node --input-type=module -e 'import { localControlPlaneIdentity } from "./scripts/ci/github-validation-task-store.mjs"; const value=localControlPlaneIdentity(process.cwd()); process.stdout.write("workflow_digest="+value.workflowDigest+"\ncontrol_plane_digest="+value.controlPlaneDigest+"\n")' >> "$GITHUB_OUTPUT"
 
       - id: version
         run: |
@@ -81,42 +91,76 @@ jobs:
           test "$(jq -er '.event' <<< "$run_metadata")" = "push"
           test "$(jq -er '.head_branch' <<< "$run_metadata")" = "main"
           test "$(jq -er '.head_sha' <<< "$run_metadata")" = "$RELEASE_SHA"
-          test "$(jq -er '.path' <<< "$run_metadata")" = ".github/workflows/validate.yml"
+          workflow_path=$(jq -er '.path' <<< "$run_metadata")
+          case "$workflow_path" in
+            .github/workflows/validate.yml) ;;
+            .github/workflows/validate.yml@*)
+              workflow_ref=${workflow_path#*@}
+              test -n "$workflow_ref"
+              case "$workflow_ref" in *@*) exit 1 ;; esac
+              ;;
+            *) exit 1 ;;
+          esac
 
-          validation_job_json=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?filter=all" --paginate --jq '.jobs[]' | jq -s 'map(select(.name == "validate" and .status == "completed" and .conclusion == "success" and (.run_attempt | numbers))) | sort_by(.run_attempt, .completed_at) | last // empty')
-          test -n "$validation_job_json"
-          validation_job_attempt=$(jq -er '.run_attempt | tostring' <<< "$validation_job_json")
-          validation_job_id=$(jq -er '.id | tostring' <<< "$validation_job_json")
+          validation_job_attempt=$(jq -er '.run_attempt | tostring' <<< "$run_metadata")
           test "$validation_job_attempt" -gt 0
+          validation_job_pages=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/attempts/$validation_job_attempt/jobs?filter=all&per_page=100" \
+            --paginate --slurp)
+          validation_job_json=$(jq -cer \
+            '[.[].jobs[] | select(.name == "Validate" and .status == "completed" and .conclusion == "success")] | if length == 1 then .[0] else empty end' \
+            <<< "$validation_job_pages")
+          test -n "$validation_job_json"
+          validation_job_id=$(jq -er '.check_run_url | capture("/check-runs/(?<id>[1-9][0-9]*)$").id' <<< "$validation_job_json")
           test "$validation_job_id" -gt 0
 
           pages_artifact_name="github-pages-${run_id}-${validation_job_attempt}"
           validation_artifact_name="validation-receipt-${run_id}-${validation_job_attempt}"
+          artifact_pages=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?per_page=100" \
+            --paginate --slurp)
+          select_artifact() {
+            jq -cer --arg name "$1" \
+              '[.[].artifacts[] | select(.name == $name and .expired == false)] | if length == 1 then .[0] else empty end' \
+              <<< "$artifact_pages"
+          }
+          pages_artifact_json=$(select_artifact "$pages_artifact_name")
+          validation_artifact_json=$(select_artifact "$validation_artifact_name")
+          pages_artifact_id=$(jq -er '.id | tostring' <<< "$pages_artifact_json")
+          validation_artifact_id=$(jq -er '.id | tostring' <<< "$validation_artifact_json")
+          test "$pages_artifact_id" -gt 0
+          test "$validation_artifact_id" -gt 0
+          for artifact_json in "$pages_artifact_json" "$validation_artifact_json"; do
+            test "$(jq -er '.workflow_run.id | tostring' <<< "$artifact_json")" = "$run_id"
+            test "$(jq -er '.workflow_run.head_sha' <<< "$artifact_json")" = "$RELEASE_SHA"
+            test "$(jq -er '.workflow_run.head_branch' <<< "$artifact_json")" = "main"
+          done
 
           {
             echo "run_id=$run_id"
             echo "validate_job_attempt=$validation_job_attempt"
+            echo "validate_job_id=$validation_job_id"
             echo "pages_artifact_name=$pages_artifact_name"
+            echo "pages_artifact_id=$pages_artifact_id"
             echo "validation_artifact_name=$validation_artifact_name"
+            echo "validation_artifact_id=$validation_artifact_id"
           } >> "$GITHUB_OUTPUT"
           echo "Reusing successful main-push Validate run $run_id validation job $validation_job_id attempt $validation_job_attempt for $RELEASE_SHA."
 
       - name: Download exact validation receipt artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ steps.validate-receipt.outputs.validation_artifact_name }}
+          artifact-ids: ${{ steps.validate-receipt.outputs.validation_artifact_id }}
           path: ${{ runner.temp }}/validation-receipt
-          merge-multiple: true
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ steps.validate-receipt.outputs.run_id }}
 
       - name: Download exact Pages artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ steps.validate-receipt.outputs.pages_artifact_name }}
+          artifact-ids: ${{ steps.validate-receipt.outputs.pages_artifact_id }}
           path: ${{ runner.temp }}/pages-artifact
-          merge-multiple: true
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ steps.validate-receipt.outputs.run_id }}
@@ -128,8 +172,12 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           VALIDATE_RUN_ID: ${{ steps.validate-receipt.outputs.run_id }}
           VALIDATE_JOB_ATTEMPT: ${{ steps.validate-receipt.outputs.validate_job_attempt }}
+          VALIDATE_JOB_ID: ${{ steps.validate-receipt.outputs.validate_job_id }}
           PAGES_ARTIFACT_NAME: ${{ steps.validate-receipt.outputs.pages_artifact_name }}
           VALIDATION_ARTIFACT_NAME: ${{ steps.validate-receipt.outputs.validation_artifact_name }}
+          VALIDATION_ARTIFACT_ID: ${{ steps.validate-receipt.outputs.validation_artifact_id }}
+          EXPECTED_WORKFLOW_DIGEST: ${{ steps.control-plane.outputs.workflow_digest }}
+          EXPECTED_CONTROL_PLANE_DIGEST: ${{ steps.control-plane.outputs.control_plane_digest }}
         run: |
           set -euo pipefail
           node scripts/ci/verify-release-proof.mjs \
@@ -139,13 +187,18 @@ jobs:
             --manifest scripts/ci/validation-manifest.json \
             --receipt "$RUNNER_TEMP/validation-receipt/validation-receipt.json" \
             --report "$RUNNER_TEMP/validation-receipt/validation-report.json" \
+            --accepted-tasks "$RUNNER_TEMP/validation-receipt/accepted-tasks.json" \
             --pages-archive "$RUNNER_TEMP/pages-artifact/artifact.tar" \
             --release-sha "$RELEASE_SHA" \
             --version "$VERSION" \
             --validate-run-id "$VALIDATE_RUN_ID" \
             --validate-job-attempt "$VALIDATE_JOB_ATTEMPT" \
+            --validate-job-id "$VALIDATE_JOB_ID" \
             --pages-artifact-name "$PAGES_ARTIFACT_NAME" \
-            --validation-artifact-name "$VALIDATION_ARTIFACT_NAME"
+            --validation-artifact-name "$VALIDATION_ARTIFACT_NAME" \
+            --validation-artifact-id "$VALIDATION_ARTIFACT_ID" \
+            --expected-workflow-digest "$EXPECTED_WORKFLOW_DIGEST" \
+            --expected-control-plane-digest "$EXPECTED_CONTROL_PLANE_DIGEST"
 
       - run: node scripts/validate-release-metadata.mjs
 
@@ -159,20 +212,20 @@ jobs:
   publish:
     needs: release-readiness
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       actions: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 22
+          node-version: 22.20.0
 
       - name: Verify tag and release do not exist
         env:
@@ -193,21 +246,19 @@ jobs:
           fi
 
       - name: Download exact proof for publication boundary
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ needs.release-readiness.outputs.validation_artifact_name }}
+          artifact-ids: ${{ needs.release-readiness.outputs.validation_artifact_id }}
           path: ${{ runner.temp }}/publication-validation-receipt
-          merge-multiple: true
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
 
       - name: Download exact Pages artifact for publication boundary
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ${{ needs.release-readiness.outputs.pages_artifact_name }}
+          artifact-ids: ${{ needs.release-readiness.outputs.pages_artifact_id }}
           path: ${{ runner.temp }}/publication-pages-artifact
-          merge-multiple: true
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
@@ -219,8 +270,12 @@ jobs:
           VERSION: ${{ needs.release-readiness.outputs.version }}
           VALIDATE_RUN_ID: ${{ needs.release-readiness.outputs.validate_run_id }}
           VALIDATE_JOB_ATTEMPT: ${{ needs.release-readiness.outputs.validate_job_attempt }}
+          VALIDATE_JOB_ID: ${{ needs.release-readiness.outputs.validate_job_id }}
           PAGES_ARTIFACT_NAME: ${{ needs.release-readiness.outputs.pages_artifact_name }}
           VALIDATION_ARTIFACT_NAME: ${{ needs.release-readiness.outputs.validation_artifact_name }}
+          VALIDATION_ARTIFACT_ID: ${{ needs.release-readiness.outputs.validation_artifact_id }}
+          EXPECTED_WORKFLOW_DIGEST: ${{ needs.release-readiness.outputs.workflow_digest }}
+          EXPECTED_CONTROL_PLANE_DIGEST: ${{ needs.release-readiness.outputs.control_plane_digest }}
         run: |
           set -euo pipefail
           node scripts/ci/verify-release-proof.mjs \
@@ -230,13 +285,18 @@ jobs:
             --manifest scripts/ci/validation-manifest.json \
             --receipt "$RUNNER_TEMP/publication-validation-receipt/validation-receipt.json" \
             --report "$RUNNER_TEMP/publication-validation-receipt/validation-report.json" \
+            --accepted-tasks "$RUNNER_TEMP/publication-validation-receipt/accepted-tasks.json" \
             --pages-archive "$RUNNER_TEMP/publication-pages-artifact/artifact.tar" \
             --release-sha "$RELEASE_SHA" \
             --version "$VERSION" \
             --validate-run-id "$VALIDATE_RUN_ID" \
             --validate-job-attempt "$VALIDATE_JOB_ATTEMPT" \
+            --validate-job-id "$VALIDATE_JOB_ID" \
             --pages-artifact-name "$PAGES_ARTIFACT_NAME" \
-            --validation-artifact-name "$VALIDATION_ARTIFACT_NAME"
+            --validation-artifact-name "$VALIDATION_ARTIFACT_NAME" \
+            --validation-artifact-id "$VALIDATION_ARTIFACT_ID" \
+            --expected-workflow-digest "$EXPECTED_WORKFLOW_DIGEST" \
+            --expected-control-plane-digest "$EXPECTED_CONTROL_PLANE_DIGEST"
 
       - name: Publish GitHub Release
         env:

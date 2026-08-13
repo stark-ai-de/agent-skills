@@ -7,7 +7,12 @@ import { TextDecoder } from "node:util";
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
 
-const root = process.cwd();
+const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+
+// Preserve the established validator body without a 3,500-line indentation-only rewrite.
+// prettier-ignore
+export function validateArchitecture(requestedRoot = moduleRoot) {
+const root = path.resolve(requestedRoot);
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const skillDir = path.join(root, "skills", "engineering-workflows", "architecture-compass");
 const referencesDir = path.join(skillDir, "references");
@@ -1950,16 +1955,7 @@ const legacyCaseLineage = validateLegacyCaseLineage({
 });
 errors.push(...legacyCaseLineage.errors);
 
-export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
-
-const isMain =
-  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
-if (isMain) {
-  if (validationErrors.length > 0) {
-    console.error("Architecture Compass validation failed:");
-    for (const error of validationErrors) console.error(`- ${error}`);
-    process.exit(1);
-  }
-  console.log(validationSummary);
+const validationErrors = [...new Set(errors)].sort();
+const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
+return { validationErrors, validationSummary };
 }

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { digestJson } from "./validation-contract.mjs";
 import { fingerprintGitCandidateRepository } from "../validation/smoke-install-contract.mjs";
+import { _releaseProofInternal } from "./verify-release-proof.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const verifier = path.join(scriptDirectory, "verify-release-proof.mjs");
@@ -406,4 +407,287 @@ test("release verifier rejects stale main", (context) => {
   git(fixture.repository, "checkout", "--detach", fixture.releaseSha);
 
   requireFailure(runVerifier(fixture), /origin main SHA mismatch/, "reject stale main");
+});
+
+function taskProducerFixture() {
+  const producer = {
+    repository: "example/repository",
+    workflowPath: ".github/workflows/validate.yml",
+    workflowDigest: `sha256:${"1".repeat(64)}`,
+    controlPlaneDigest: `sha256:${"2".repeat(64)}`,
+    runId: "101",
+    runAttempt: "1",
+    jobId: "201",
+    jobName: "skills-miss",
+    jobConclusion: "success",
+    artifactName: "validation-task-v1-skills-key-101-1",
+    event: "push",
+    ref: "refs/heads/main",
+    sha: "a".repeat(40),
+    createdAt: "2026-08-13T12:00:00.000Z",
+  };
+  const locator = { kind: "github-artifact", id: "701" };
+  const evidence = { exitCode: 0 };
+  const restoreOutputs = [];
+  const gateContract = {
+    id: "skills",
+    command: ["node", "--version"],
+    execution: { packageProfiles: [] },
+    evidence: { kind: "exit-code" },
+    restoreOutputs,
+    prerequisites: [],
+  };
+  const keyMaterial = {
+    repositoryIdentity: producer.repository,
+    gateId: gateContract.id,
+    enginePolicyDigest: producer.controlPlaneDigest,
+    gateContractDigest: digestJson(gateContract),
+    prerequisiteKeys: [],
+    evidenceOutputContractDigest: digestJson({
+      evidence: gateContract.evidence,
+      restoreOutputs,
+    }),
+  };
+  const manifestDigest = `sha256:${"7".repeat(64)}`;
+  const taskReceiptWithoutDigest = {
+    schemaVersion: 1,
+    proofLevel: "diagnostic",
+    kind: "result",
+    reusable: true,
+    gateId: "skills",
+    taskKey: digestJson(keyMaterial),
+    controlPlaneDigest: producer.controlPlaneDigest,
+    manifestDigest,
+    status: "passed",
+    capabilityComplete: true,
+    candidateFingerprintBefore: `sha256:${"8".repeat(64)}`,
+    candidateFileCountBefore: 1,
+    candidateFingerprintAfter: `sha256:${"8".repeat(64)}`,
+    candidateFileCountAfter: 1,
+    durationMs: 10,
+    reason: null,
+    evidence,
+    evidenceDigest: digestJson(evidence),
+    source: producer,
+    outputs: [],
+  };
+  const taskReceipt = {
+    ...taskReceiptWithoutDigest,
+    receiptDigest: digestJson(taskReceiptWithoutDigest),
+  };
+  const task = {
+    gate_id: taskReceipt.gateId,
+    task_key: taskReceipt.taskKey,
+    receipt_digest: taskReceipt.receiptDigest,
+    producer,
+    producer_locator: locator,
+    evidence_digest: taskReceipt.evidenceDigest,
+    outputs: [],
+  };
+  return {
+    options: {
+      githubRepository: producer.repository,
+      expectedWorkflowDigest: producer.workflowDigest,
+      expectedControlPlaneDigest: producer.controlPlaneDigest,
+    },
+    receipt: {
+      manifest_digest: manifestDigest,
+      task_result_set_digest: `sha256:${"6".repeat(64)}`,
+      tasks: [task],
+    },
+    accepted: {
+      schemaVersion: 1,
+      taskResultSetDigest: `sha256:${"6".repeat(64)}`,
+      tasks: [
+        {
+          gateId: "skills",
+          receipt: taskReceipt,
+          locator,
+          taskContract: {
+            gateId: "skills",
+            taskKey: taskReceipt.taskKey,
+            keyMaterial,
+            gateContract,
+            evidence: gateContract.evidence,
+            restoreOutputs,
+          },
+        },
+      ],
+    },
+  };
+}
+
+function resealTaskProducerFixture(fixture) {
+  const accepted = fixture.accepted.tasks[0];
+  const contract = accepted.taskContract;
+  contract.keyMaterial.gateContractDigest = digestJson(contract.gateContract);
+  contract.keyMaterial.evidenceOutputContractDigest = digestJson({
+    evidence: contract.evidence,
+    restoreOutputs: contract.restoreOutputs,
+  });
+  contract.taskKey = digestJson(contract.keyMaterial);
+  accepted.receipt.taskKey = contract.taskKey;
+  accepted.receipt.evidenceDigest = digestJson(accepted.receipt.evidence);
+  const { receiptDigest: ignored, ...receiptBody } = accepted.receipt;
+  void ignored;
+  accepted.receipt.receiptDigest = digestJson(receiptBody);
+  const trustedTask = fixture.receipt.tasks[0];
+  trustedTask.task_key = accepted.receipt.taskKey;
+  trustedTask.receipt_digest = accepted.receipt.receiptDigest;
+  trustedTask.evidence_digest = accepted.receipt.evidenceDigest;
+  trustedTask.producer = structuredClone(accepted.receipt.source);
+  trustedTask.outputs = structuredClone(accepted.receipt.outputs);
+}
+
+test("v3 release proof recursively reverifies every accepted task producer", async () => {
+  const fixture = taskProducerFixture();
+  const calls = [];
+  const count = await _releaseProofInternal.verifyTaskProducers(
+    fixture.options,
+    fixture.receipt,
+    fixture.accepted,
+    {
+      async verify(value) {
+        calls.push(value);
+        return { verified: true, artifact: { expired: false } };
+      },
+    },
+  );
+  assert.equal(count, 1);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].locator.id, "701");
+});
+
+test("v3 release proof rejects missing, duplicate, and contradictory task receipts", async () => {
+  const fixture = taskProducerFixture();
+  const store = {
+    async verify() {
+      assert.fail("malformed accepted sets must fail before producer lookup");
+    },
+  };
+  await assert.rejects(
+    _releaseProofInternal.verifyTaskProducers(
+      fixture.options,
+      fixture.receipt,
+      { ...fixture.accepted, tasks: [] },
+      store,
+    ),
+    /missing or contradicts/,
+  );
+  await assert.rejects(
+    _releaseProofInternal.verifyTaskProducers(
+      fixture.options,
+      { ...fixture.receipt, tasks: [...fixture.receipt.tasks, fixture.receipt.tasks[0]] },
+      {
+        ...fixture.accepted,
+        tasks: [...fixture.accepted.tasks, fixture.accepted.tasks[0]],
+      },
+      store,
+    ),
+    /duplicate identity/,
+  );
+  const contradictory = structuredClone(fixture.accepted);
+  contradictory.tasks[0].locator.id = "702";
+  await assert.rejects(
+    _releaseProofInternal.verifyTaskProducers(
+      fixture.options,
+      fixture.receipt,
+      contradictory,
+      store,
+    ),
+    /producer locator mismatch/,
+  );
+});
+
+test("v3 release proof rejects semantically invalid task receipts before producer lookup", async (context) => {
+  const cases = [
+    {
+      name: "malformed contract",
+      mutate(fixture) {
+        delete fixture.accepted.tasks[0].taskContract.evidence;
+      },
+      pattern: /task contract fields are invalid/,
+    },
+    {
+      name: "failed result",
+      mutate(fixture) {
+        fixture.accepted.tasks[0].receipt.status = "failed";
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /not a capability-complete unchanged success/,
+    },
+    {
+      name: "failure tombstone",
+      mutate(fixture) {
+        const receipt = fixture.accepted.tasks[0].receipt;
+        receipt.kind = "tombstone";
+        receipt.reusable = false;
+        receipt.status = "failed";
+        receipt.capabilityComplete = false;
+        receipt.evidence = { exitCode: null };
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /not a reusable successful result/,
+    },
+    {
+      name: "nonreusable result",
+      mutate(fixture) {
+        fixture.accepted.tasks[0].receipt.reusable = false;
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /not a reusable successful result/,
+    },
+    {
+      name: "unsupported receipt schema",
+      mutate(fixture) {
+        fixture.accepted.tasks[0].receipt.schemaVersion = 2;
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /Unsupported task receipt schema/,
+    },
+    {
+      name: "bad typed evidence",
+      mutate(fixture) {
+        fixture.accepted.tasks[0].receipt.evidence.exitCode = "0";
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /evidence exitCode must be 0/,
+    },
+    {
+      name: "missing prerequisite receipt",
+      mutate(fixture) {
+        const contract = fixture.accepted.tasks[0].taskContract;
+        contract.gateContract.prerequisites = ["root-prerequisite"];
+        contract.keyMaterial.prerequisiteKeys = [`sha256:${"9".repeat(64)}`];
+        resealTaskProducerFixture(fixture);
+      },
+      pattern: /prerequisite root-prerequisite has no accepted task receipt/,
+    },
+    {
+      name: "contradictory keyed contract",
+      mutate(fixture) {
+        fixture.accepted.tasks[0].taskContract.keyMaterial.gateId = "other";
+      },
+      pattern: /task key mismatch/,
+    },
+  ];
+  for (const testCase of cases) {
+    await context.test(testCase.name, async () => {
+      const fixture = taskProducerFixture();
+      testCase.mutate(fixture);
+      await assert.rejects(
+        _releaseProofInternal.verifyTaskProducers(
+          fixture.options,
+          fixture.receipt,
+          fixture.accepted,
+          {
+            async verify() {
+              assert.fail("semantic failures must fail before producer lookup");
+            },
+          },
+        ),
+        testCase.pattern,
+      );
+    });
+  }
 });

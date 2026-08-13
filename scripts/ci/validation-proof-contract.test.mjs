@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { digestJson, validateManifest } from "./validation-contract.mjs";
 import { validateReceipt } from "./validation-proof-contract.mjs";
+import { createTrustedValidationReceipt } from "./write-validation-receipt.mjs";
 
 function fixture() {
   const manifest = {
@@ -73,6 +74,236 @@ function fixture() {
 test("full receipt accepts exact complete proof", () => {
   const { manifest, report, receipt } = fixture();
   assert.equal(validateReceipt(receipt, report, manifest), receipt);
+});
+
+test("report v2 and trusted receipt v3 bind every task producer", () => {
+  const { manifest } = fixture();
+  const fingerprint = `sha256:${"1".repeat(64)}`;
+  const controlPlaneDigest = `sha256:${"2".repeat(64)}`;
+  const gates = manifest.gates.map(({ id }, index) => {
+    const runId = String(index + 1);
+    const artifactName = `validation-task-v1-${id}-${runId}-1`;
+    return {
+      id,
+      status: "passed",
+      source: index === 0 ? "reused" : "executed",
+      taskKey: digestJson({ id }),
+      receiptDigest: digestJson({ id, receipt: 1 }),
+      producer: {
+        repository: "stark-ai-de/agent-skills",
+        workflowPath: ".github/workflows/validate.yml",
+        workflowDigest: controlPlaneDigest,
+        controlPlaneDigest,
+        runId,
+        runAttempt: "1",
+        jobId: String(50 + index),
+        jobName: id,
+        jobConclusion: "success",
+        artifactName,
+        event: index === 0 ? "pull_request" : "push",
+        ref: index === 0 ? "refs/pull/52/merge" : "refs/heads/main",
+        sha: `producer-${index}`,
+        createdAt: `2026-08-13T12:0${index}:00.000Z`,
+      },
+      producerLocator: {
+        kind: "github-artifact",
+        id: String(100 + index),
+        name: artifactName,
+        digest: digestJson({ id, artifact: 1 }),
+        size: 100 + index,
+        repository: "stark-ai-de/agent-skills",
+        runId,
+        runAttempt: "1",
+        jobId: String(50 + index),
+        jobName: id,
+      },
+      lookupDurationMs: index,
+      lookupResult: index === 0 ? "hit" : "miss",
+      lookupMissCount: index === 0 ? 0 : 1,
+      lookupRejectCount: 0,
+      durationMs: index + 1,
+      evidenceDigest: digestJson({ id, evidence: 1 }),
+      outputs: [],
+      reason: null,
+    };
+  });
+  const taskResultSetDigest = digestJson(
+    gates.map(({ id, taskKey, receiptDigest, status }) => ({
+      id,
+      taskKey,
+      receiptDigest,
+      status,
+    })),
+  );
+  const reportWithoutDigest = {
+    schemaVersion: 2,
+    proofLevel: "diagnostic",
+    planDigest: digestJson({ plan: 2 }),
+    manifestDigest: digestJson(manifest),
+    controlPlaneDigest,
+    scope: "full",
+    selectedGates: manifest.gates.map(({ id }) => id),
+    gates,
+    counts: { executed: 2, reused: 1, passed: 3, failed: 0, misses: 2, rejects: 0 },
+    taskResultSetDigest,
+    candidateFingerprintBefore: fingerprint,
+    candidateFileCountBefore: 10,
+    candidateFingerprintAfter: fingerprint,
+    candidateFileCountAfter: 10,
+    fingerprintError: null,
+  };
+  const report = { ...reportWithoutDigest, reportDigest: digestJson(reportWithoutDigest) };
+  const context = {
+    repository: "stark-ai-de/agent-skills",
+    workflow: "Validate",
+    workflowPath: ".github/workflows/validate.yml",
+    workflowDigest: controlPlaneDigest,
+    controlPlaneDigest,
+    runId: "500",
+    runAttempt: "1",
+    validationJobId: "700",
+    validationJobName: "validate",
+    event: "push",
+    branch: "main",
+    ref: "refs/heads/main",
+    refProtected: "true",
+    sha: "candidate",
+    version: "1.0.0",
+    currentSource: {
+      repository: "stark-ai-de/agent-skills",
+      workflowPath: ".github/workflows/validate.yml",
+      workflowDigest: controlPlaneDigest,
+      controlPlaneDigest,
+      runId: "500",
+      runAttempt: "1",
+      jobId: "700",
+      jobName: "validate",
+      jobConclusion: "success",
+      artifactName: "validation-proof",
+      event: "push",
+      ref: "refs/heads/main",
+      sha: "candidate",
+      refProtected: "true",
+      proofLevel: "release",
+    },
+    siteDigest: digestJson({ site: 1 }),
+    pagesArtifactName: "github-pages-production",
+    pagesArtifactId: "900",
+    validationArtifactName: "validation-proof",
+  };
+  const receipt = createTrustedValidationReceipt(report, manifest, context);
+  assert.equal(receipt.proof_level, "release");
+  const expected = {
+    workflow: "Validate",
+    workflowPath: ".github/workflows/validate.yml",
+    runId: "500",
+    runAttempt: "1",
+    validationJobId: "700",
+    validationJobName: "validate",
+    event: "push",
+    branch: "main",
+    sha: "candidate",
+    version: "1.0.0",
+    siteDigest: digestJson({ site: 1 }),
+    pagesArtifactName: "github-pages-production",
+    pagesArtifactId: "900",
+    validationArtifactName: "validation-proof",
+    proofLevel: "release",
+    repository: "stark-ai-de/agent-skills",
+    ref: "refs/heads/main",
+    refProtected: "true",
+  };
+  assert.equal(validateReceipt(receipt, report, manifest, expected), receipt);
+  for (const missing of ["workflowDigest", "controlPlaneDigest"]) {
+    const selfAsserted = structuredClone(context);
+    delete selfAsserted[missing];
+    assert.throws(
+      () => createTrustedValidationReceipt(report, manifest, selfAsserted),
+      /independently supplied|digest/i,
+    );
+  }
+  const wrongCurrentControl = structuredClone(context);
+  wrongCurrentControl.controlPlaneDigest = fingerprint;
+  wrongCurrentControl.currentSource.controlPlaneDigest = fingerprint;
+  assert.throws(
+    () => createTrustedValidationReceipt(report, manifest, wrongCurrentControl),
+    /control.?plane/i,
+  );
+  for (const mutate of [
+    (copy) => (copy.tasks[0].producer.runId = "wrong"),
+    (copy) => (copy.tasks[0].producer_locator.id = "wrong"),
+    (copy) => (copy.tasks[0].outputs = [{ id: "injected" }]),
+    (copy) => (copy.validation_job_id = "wrong"),
+    (copy) => (copy.site_digest = digestJson({ site: "wrong" })),
+    (copy) => (copy.pages_artifact_id = "wrong"),
+  ]) {
+    const tampered = structuredClone(receipt);
+    mutate(tampered);
+    const { receipt_digest: ignored, ...withoutDigest } = tampered;
+    void ignored;
+    tampered.receipt_digest = digestJson(withoutDigest);
+    assert.throws(() => validateReceipt(tampered, report, manifest, expected), /mismatch/);
+  }
+
+  const pagesContext = structuredClone(context);
+  pagesContext.event = "workflow_dispatch";
+  pagesContext.currentSource.event = "workflow_dispatch";
+  pagesContext.currentSource.proofLevel = "pages";
+  assert.equal(createTrustedValidationReceipt(report, manifest, pagesContext).proof_level, "pages");
+  const copiedUpgrade = createTrustedValidationReceipt(report, manifest, pagesContext);
+  copiedUpgrade.proof_level = "release";
+  copiedUpgrade.current_source.proofLevel = "release";
+  const { receipt_digest: ignoredUpgradeDigest, ...upgradeMaterial } = copiedUpgrade;
+  void ignoredUpgradeDigest;
+  copiedUpgrade.receipt_digest = digestJson(upgradeMaterial);
+  assert.throws(
+    () => validateReceipt(copiedUpgrade, report, manifest, { ...expected, proofLevel: "release" }),
+    /event mismatch/,
+  );
+  for (const mutate of [
+    (copy) => (copy.event = "pull_request"),
+    (copy) => (copy.branch = "feature"),
+    (copy) => (copy.ref = "refs/heads/feature"),
+    (copy) => (copy.refProtected = "false"),
+    (copy) => (copy.currentSource.proofLevel = "pages"),
+    (copy) => (copy.currentSource.jobId = "wrong"),
+  ]) {
+    const unauthorized = structuredClone(context);
+    mutate(unauthorized);
+    assert.throws(
+      () => createTrustedValidationReceipt(report, manifest, unauthorized),
+      /protected.?main|proof level|provenance/i,
+    );
+  }
+
+  for (const mutate of [
+    (copy) => (copy.producer.unexpected = true),
+    (copy) => (copy.producerLocator.unexpected = true),
+    (copy) => (copy.outputs = [{ id: "site", kind: "directory", digest: fingerprint }]),
+  ]) {
+    const invalidReportWithoutDigest = structuredClone(report);
+    delete invalidReportWithoutDigest.reportDigest;
+    mutate(invalidReportWithoutDigest.gates[0]);
+    const invalidReport = {
+      ...invalidReportWithoutDigest,
+      reportDigest: digestJson(invalidReportWithoutDigest),
+    };
+    assert.throws(
+      () => createTrustedValidationReceipt(invalidReport, manifest, context),
+      /schema|fields|output contract/i,
+    );
+  }
+  const wrongProducerControlWithoutDigest = structuredClone(report);
+  delete wrongProducerControlWithoutDigest.reportDigest;
+  wrongProducerControlWithoutDigest.gates[0].producer.controlPlaneDigest = fingerprint;
+  const wrongProducerControl = {
+    ...wrongProducerControlWithoutDigest,
+    reportDigest: digestJson(wrongProducerControlWithoutDigest),
+  };
+  assert.throws(
+    () => createTrustedValidationReceipt(wrongProducerControl, manifest, context),
+    /producer control plane mismatch/,
+  );
 });
 
 test("affected, incomplete, and tampered proof fails closed", () => {

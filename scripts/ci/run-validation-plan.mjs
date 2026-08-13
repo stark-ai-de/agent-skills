@@ -18,6 +18,7 @@ import {
   validatePlan,
   writeJsonAtomic,
 } from "./validation-contract.mjs";
+import { sanitizeExecutionEnvironment } from "./validation-task-graph.mjs";
 
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultManifestPath = path.join(moduleDirectory, "validation-manifest.json");
@@ -517,13 +518,23 @@ export async function executeValidationPlan(options, control = { receivedSignal:
     console.log(`\n[validation:${gate.id}] ${command.join(" ")}`);
     const handler = gateHandlers.get(gate.id) ?? defaultGateHandler;
     handler.beforeSpawn();
-    const environment = {
-      ...process.env,
-      VALIDATION_EVENT: options.event,
-      VALIDATION_BASE_SHA: options.baseSha,
-      VALIDATION_PLAN_FILE: path.resolve(options.plan),
-      ...handler.environment(),
-    };
+    const environment = sanitizeExecutionEnvironment(
+      process.env,
+      gate.execution?.environment ?? [],
+      {
+        PATH: process.env.PATH ?? "",
+        HOME: path.join(path.dirname(path.resolve(options.report)), "task-home", gate.id),
+        TMPDIR: path.join(path.dirname(path.resolve(options.report)), "task-tmp", gate.id),
+        TEMP: path.join(path.dirname(path.resolve(options.report)), "task-tmp", gate.id),
+        TMP: path.join(path.dirname(path.resolve(options.report)), "task-tmp", gate.id),
+        VALIDATION_EVENT: options.event,
+        VALIDATION_BASE_SHA: options.baseSha,
+        VALIDATION_PLAN_FILE: path.resolve(options.plan),
+        ...handler.environment(),
+      },
+    );
+    fs.mkdirSync(environment.HOME, { recursive: true, mode: 0o700 });
+    fs.mkdirSync(environment.TMPDIR, { recursive: true, mode: 0o700 });
     const result = await runCommand({
       command,
       cwd: repository,

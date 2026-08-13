@@ -3,10 +3,14 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { TextDecoder } from "node:util";
 import { fileURLToPath } from "node:url";
+
+import { sanitizedGitCommandOutput } from "../validation/smoke-install-contract.mjs";
 
 import {
   digestJson,
+  gateInstallProfiles,
   manifestGateIds,
   planDigest,
   readJson,
@@ -18,6 +22,7 @@ import {
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultManifestPath = path.join(moduleDirectory, "validation-manifest.json");
 const defaultPlannerPath = path.join(moduleDirectory, "plan-validation.mjs");
+const STRICT_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 function parseArguments(argv) {
   const options = {
@@ -69,20 +74,41 @@ function parseArguments(argv) {
 }
 
 function git(repository, arguments_, options = {}) {
-  const result = spawnSync("git", arguments_, {
-    cwd: repository,
-    encoding: options.binary ? null : "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  if (result.status !== 0) {
+  let output;
+  try {
+    output = sanitizedGitCommandOutput(
+      repository,
+      arguments_,
+      `git ${arguments_.join(" ")} failed`,
+    );
+  } catch (error) {
     if (options.allowFailure) return null;
-    throw new Error(result.stderr?.toString().trim() || `git ${arguments_.join(" ")} failed.`);
+    throw error;
   }
-  return options.binary ? result.stdout : result.stdout.trimEnd();
+  if (options.binary) return output;
+  let decoded;
+  try {
+    decoded = STRICT_UTF8_DECODER.decode(output);
+  } catch {
+    throw new Error(`git ${arguments_.join(" ")} returned invalid UTF-8.`);
+  }
+  if (!Buffer.from(decoded, "utf8").equals(output)) {
+    throw new Error(`git ${arguments_.join(" ")} returned non-canonical UTF-8.`);
+  }
+  return decoded.trimEnd();
 }
 
 export function parseNameStatus(buffer) {
-  const fields = buffer.toString("utf8").split("\0");
+  let decoded;
+  try {
+    decoded = STRICT_UTF8_DECODER.decode(buffer);
+  } catch {
+    throw new Error("Git name-status output contains invalid UTF-8.");
+  }
+  if (!Buffer.from(decoded, "utf8").equals(buffer)) {
+    throw new Error("Git name-status output contains non-canonical UTF-8.");
+  }
+  const fields = decoded.split("\0");
   if (fields.at(-1) === "") fields.pop();
   const entries = [];
   for (let index = 0; index < fields.length; ) {
@@ -184,7 +210,7 @@ function fullPlan(manifest, values, reason) {
     candidateSha: values.candidateSha,
     changedPaths: values.changedPaths,
     selectedGates: manifestGateIds(manifest),
-    installProfiles: [...new Set(manifest.gates.flatMap((gate) => gate.installProfiles))].sort(),
+    installProfiles: [...new Set(manifest.gates.flatMap(gateInstallProfiles))].sort(),
     manifestDigest: digestJson(manifest),
     basePlanDigest: values.basePlanDigest,
     candidatePlanDigest: values.candidatePlanDigest,
@@ -378,9 +404,7 @@ export function resolveValidationPlan(options) {
         selectedGates,
         installProfiles: [
           ...new Set(
-            manifest.gates
-              .filter((gate) => selected.has(gate.id))
-              .flatMap((gate) => gate.installProfiles),
+            manifest.gates.filter((gate) => selected.has(gate.id)).flatMap(gateInstallProfiles),
           ),
         ].sort(),
         manifestDigest: digestJson(manifest),

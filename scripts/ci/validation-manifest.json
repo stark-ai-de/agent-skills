@@ -1,12 +1,20 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "taskKeySchemaVersion": 1,
+  "packageProfiles": {
+    "root": {
+      "inputs": ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"]
+    },
+    "site": {
+      "inputs": ["site/package.json", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"]
+    }
+  },
   "globalInvalidators": [
     ".github/**",
     "scripts/ci/**",
     "package.json",
     "site/package.json",
     "pnpm-lock.yaml",
-    "site/pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "oxfmt.json",
     ".oxfmtignore",
@@ -38,14 +46,36 @@
     {
       "id": "skills",
       "command": ["npm", "run", "validate:skills"],
-      "paths": [
-        "skills/**",
-        "incubator/**",
-        "skill-evals/**",
-        "README.md",
-        "scripts/validate-skills.mjs"
-      ],
-      "installProfiles": ["root"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/**",
+          "incubator/**",
+          "skill-evals/**",
+          "README.md",
+          "scripts/validate-skills.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-skills.mjs"],
+        "helpers": [],
+        "workspaceInputs": [
+          "skills/**",
+          "incubator/skills/**",
+          "skills/*/README.md",
+          "incubator/skills/*/README.md",
+          "skill-evals/*/README.md",
+          "README.md",
+          "docs/publishing.md"
+        ],
+        "packageProfiles": ["root"],
+        "tools": ["node", "npm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": { "kind": "exit-code" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -54,17 +84,50 @@
     {
       "id": "memory-curators",
       "command": ["npm", "run", "validate:memory-curators"],
-      "paths": [
-        "skills/codex-operations/codex-memory-curator/**",
-        "skills/cursor-operations/cursor-memory-curator/**",
-        "skills/claude-operations/claude-memory-curator/**",
-        "skill-evals/codex-memory-curator/**",
-        "skill-evals/cursor-memory-curator/**",
-        "skill-evals/claude-memory-curator/**",
-        "scripts/validate-memory-curators.mjs",
-        "scripts/validation/memory-curators/**"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/codex-operations/codex-memory-curator/**",
+          "skills/cursor-operations/cursor-memory-curator/**",
+          "skills/claude-operations/claude-memory-curator/**",
+          "skill-evals/codex-memory-curator/**",
+          "skill-evals/cursor-memory-curator/**",
+          "skill-evals/claude-memory-curator/**",
+          "scripts/validate-memory-curators.mjs",
+          "scripts/validation/memory-curators/**"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-memory-curators.mjs"],
+        "helpers": ["scripts/validation/memory-curators/**"],
+        "workspaceInputs": [
+          "skills/codex-operations/codex-memory-curator/**",
+          "skills/cursor-operations/cursor-memory-curator/**",
+          "skills/claude-operations/claude-memory-curator/**",
+          "skill-evals/codex-memory-curator/**",
+          "skill-evals/cursor-memory-curator/**",
+          "skill-evals/claude-memory-curator/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["git", "mkfifo", "node", "npm", "sh"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": [
+          "claude-memory-curator",
+          "codex-memory-curator",
+          "cursor-memory-curator"
+        ],
+        "outputMarkers": {
+          "claude-memory-curator": "Memory curators validated: 3 skills, 8 workflows",
+          "codex-memory-curator": "Memory curators validated: 3 skills, 8 workflows",
+          "cursor-memory-curator": "Memory curators validated: 3 skills, 8 workflows"
+        }
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": true,
@@ -73,13 +136,32 @@
     {
       "id": "adrs",
       "command": ["npm", "run", "validate:adrs"],
-      "paths": [
-        "**/*.md",
-        "scripts/validation/adrs/**",
-        "scripts/validate-adrs.mjs",
-        "scripts/new-adr.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "**/*.md",
+          "scripts/validation/adrs/**",
+          "scripts/validate-adrs.mjs",
+          "scripts/new-adr.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-adrs.mjs"],
+        "helpers": ["scripts/validation/adrs/**"],
+        "workspaceInputs": [
+          "**/*.md",
+          "docs/adrs/**",
+          "scripts/validation/adrs/decision-lock.tsv",
+          "AGENTS.md"
+        ],
+        "packageProfiles": [],
+        "tools": ["git", "node", "npm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": ["candidateTree"]
+      },
+      "evidence": { "kind": "exit-code" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": true,
@@ -88,16 +170,54 @@
     {
       "id": "architecture-compass",
       "command": ["node", "scripts/ci/run-architecture-compass-gate.mjs"],
-      "paths": [
-        "docs/adrs/**",
-        "skills/engineering-workflows/architecture-compass/**",
-        "skill-evals/architecture-compass/**",
-        "scripts/validate-architecture-compass.mjs",
-        "scripts/validation/architecture-compass/**",
-        "scripts/validation/lib/legacy-case-lineage.mjs",
-        "scripts/validation/lib/legacy-case-lineage-test-harness.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "docs/adrs/**",
+          "skills/engineering-workflows/architecture-compass/**",
+          "skill-evals/architecture-compass/**",
+          "scripts/validate-architecture-compass.mjs",
+          "scripts/validation/architecture-compass/**",
+          "scripts/validation/lib/legacy-case-lineage.mjs",
+          "scripts/validation/lib/legacy-case-lineage-test-harness.mjs",
+          "scripts/validation/smoke-install-contract.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/ci/run-architecture-compass-gate.mjs"],
+        "helpers": [
+          "scripts/validate-architecture-compass.mjs",
+          "scripts/validation/architecture-compass/**",
+          "scripts/validation/lib/legacy-case-lineage.mjs",
+          "scripts/validation/lib/legacy-case-lineage-test-harness.mjs",
+          "scripts/validation/lib/process-group.mjs",
+          "scripts/validation/smoke-install-contract.mjs"
+        ],
+        "workspaceInputs": [
+          "docs/adrs/**",
+          "skills/engineering-workflows/architecture-compass/**",
+          "skill-evals/architecture-compass/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["git", "mkfifo", "node", "sh"],
+        "environment": [
+          "CI",
+          "TZ",
+          "LANG",
+          "LC_ALL",
+          "ARCHITECTURE_FIXTURE_WORKERS",
+          "ARCHITECTURE_SHARD_COUNT",
+          "ARCHITECTURE_SHARD_INDEX"
+        ],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "architecture-compass-accounting-v1",
+        "expectedCaseCount": 325,
+        "expectedHostedShardCount": 3
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 2400000,
       "prerequisites": [],
       "aggregate": true,
@@ -106,8 +226,22 @@
     {
       "id": "actions",
       "command": ["npm", "run", "lint:actions"],
-      "paths": [".github/**", "scripts/lint-actions.mjs"],
-      "installProfiles": ["root"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [".github/**", "scripts/lint-actions.mjs"]
+      },
+      "execution": {
+        "entrypoints": ["scripts/lint-actions.mjs"],
+        "helpers": [],
+        "workspaceInputs": [".github/**"],
+        "packageProfiles": ["root"],
+        "tools": ["actionlint", "node", "npm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": { "kind": "pinned-actionlint-exit-code" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": true,
@@ -116,8 +250,41 @@
     {
       "id": "scripts",
       "command": ["npm", "run", "validate:scripts"],
-      "paths": ["scripts/**", "skills/**", "incubator/**"],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "scripts/**",
+          "skills/**",
+          "incubator/**",
+          "site/astro.config.mjs",
+          "site/scripts/**"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-scripts.mjs"],
+        "helpers": ["scripts/**/*.mjs", { "path": "scripts/**/*.sh", "allowEmpty": true }],
+        "workspaceInputs": [
+          "skills/**",
+          "incubator/**",
+          ".github/workflows/publish-release.yml",
+          "site/astro.config.mjs",
+          "site/scripts/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["bash", "env", "git", "mkfifo", "node", "npm", "sh", "sleep", "tar"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": ["fifo-race"],
+        "outputMarkers": {
+          "fifo-race": "POSIX FIFO race fixture executed."
+        },
+        "forbiddenOutputMarkers": ["POSIX FIFO race fixture skipped"]
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -126,15 +293,46 @@
     {
       "id": "codegraph",
       "command": ["npm", "run", "validate:codegraph-ast-grep"],
-      "paths": [
-        "skills/engineering-workflows/codegraph-ast-grep/**",
-        "skill-evals/codegraph-ast-grep/**",
-        "scripts/validate-codegraph-ast-grep-contract.mjs",
-        "scripts/validation/codegraph-ast-grep/**",
-        "scripts/validation/lib/legacy-case-lineage.mjs",
-        "scripts/validation/lib/legacy-case-lineage-test-harness.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/engineering-workflows/codegraph-ast-grep/**",
+          "skill-evals/codegraph-ast-grep/**",
+          "scripts/validate-codegraph-ast-grep-contract.mjs",
+          "scripts/validation/codegraph-ast-grep/**",
+          "scripts/validation/lib/legacy-case-lineage.mjs",
+          "scripts/validation/lib/legacy-case-lineage-test-harness.mjs",
+          "scripts/validation/smoke-install-contract.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-codegraph-ast-grep-contract.mjs"],
+        "helpers": [
+          "scripts/validation/codegraph-ast-grep/**",
+          "scripts/validation/lib/legacy-case-lineage.mjs",
+          "scripts/validation/lib/legacy-case-lineage-test-harness.mjs",
+          "scripts/validation/smoke-install-contract.mjs"
+        ],
+        "workspaceInputs": [
+          "skills/engineering-workflows/codegraph-ast-grep/**",
+          "skill-evals/codegraph-ast-grep/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["git", "mkfifo", "node", "npm", "sh"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": ["contract", "legacy-case-lineage"],
+        "outputMarkers": {
+          "contract": "Validated CodeGraph + ast-grep runtime contract",
+          "legacy-case-lineage": "All shared symlink and FIFO capability fixtures executed."
+        },
+        "forbiddenOutputMarkers": ["capability fixture(s) skipped"]
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -143,18 +341,55 @@
     {
       "id": "drawio",
       "command": ["npm", "run", "validate:drawio"],
-      "paths": [
-        "skills/engineering-workflows/drawio-diagrams/**",
-        "skill-evals/drawio-diagrams/**",
-        "scripts/validate-drawio-fixtures.mjs",
-        "scripts/validate-drawio-visual-evals.mjs",
-        "scripts/validation/drawio-diagrams/**",
-        "scripts/lib/visual-assertions.mjs",
-        "scripts/visual-assertion-regressions.mjs",
-        "scripts/validation/lib/visual-assertions.mjs",
-        "scripts/validation/lib/visual-assertion-regressions.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/engineering-workflows/drawio-diagrams/**",
+          "skill-evals/drawio-diagrams/**",
+          "scripts/validate-drawio-fixtures.mjs",
+          "scripts/validate-drawio-visual-evals.mjs",
+          "scripts/validation/drawio-diagrams/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": [
+          "scripts/validate-drawio-fixtures.mjs",
+          "scripts/validate-drawio-visual-evals.mjs"
+        ],
+        "helpers": [
+          "scripts/validation/drawio-diagrams/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs",
+          "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py",
+          "skills/engineering-workflows/drawio-diagrams/references/examples/architecture-icons.drawio",
+          "skills/engineering-workflows/drawio-diagrams/references/examples/animation-static-dependency.drawio"
+        ],
+        "workspaceInputs": [
+          "skills/engineering-workflows/drawio-diagrams/**",
+          "skill-evals/drawio-diagrams/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["env", "node", "npm", "python3", "sh"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": ["fixtures", "visual-assertions", "visual-evals"],
+        "outputMarkers": {
+          "fixtures": "Validated draw.io examples and validator regression fixtures.",
+          "visual-assertions": "visual assertion(s) across",
+          "visual-evals": "draw.io eval case schema(s)"
+        }
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -163,20 +398,62 @@
     {
       "id": "animated-logo",
       "command": ["npm", "run", "validate:animated-readme-logo"],
-      "paths": [
-        "skills/engineering-workflows/animated-readme-logo/**",
-        "incubator/skills/engineering-workflows/animated-readme-logo/**",
-        "skill-evals/animated-readme-logo/**",
-        "scripts/validate-animated-readme-logo.mjs",
-        "scripts/validate-animated-readme-logo-evals.mjs",
-        "scripts/lib/animated-image.mjs",
-        "scripts/validation/animated-readme-logo/**",
-        "scripts/lib/visual-assertions.mjs",
-        "scripts/visual-assertion-regressions.mjs",
-        "scripts/validation/lib/visual-assertions.mjs",
-        "scripts/validation/lib/visual-assertion-regressions.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/engineering-workflows/animated-readme-logo/**",
+          "incubator/skills/engineering-workflows/animated-readme-logo/**",
+          "skill-evals/animated-readme-logo/**",
+          "scripts/validate-animated-readme-logo.mjs",
+          "scripts/validate-animated-readme-logo-evals.mjs",
+          "scripts/lib/animated-image.mjs",
+          "scripts/validation/animated-readme-logo/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": [
+          "scripts/validate-animated-readme-logo.mjs",
+          "scripts/validate-animated-readme-logo-evals.mjs"
+        ],
+        "helpers": [
+          "scripts/lib/animated-image.mjs",
+          "scripts/validation/animated-readme-logo/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs",
+          "skills/engineering-workflows/drawio-diagrams/scripts/validate_drawio.py"
+        ],
+        "workspaceInputs": [
+          "skills/engineering-workflows/animated-readme-logo/**",
+          {
+            "path": "incubator/skills/engineering-workflows/animated-readme-logo/**",
+            "allowEmpty": true
+          },
+          "skill-evals/animated-readme-logo/**",
+          "skills/engineering-workflows/drawio-diagrams/references/examples/architecture-icons.drawio",
+          "skills/engineering-workflows/drawio-diagrams/references/examples/animation-static-dependency.drawio"
+        ],
+        "packageProfiles": [],
+        "tools": ["mkfifo", "node", "npm", "python3", "sh"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": ["contract", "evals", "visual-assertions"],
+        "outputMarkers": {
+          "contract": "animated-readme-logo validators:",
+          "evals": "animated README logo eval case(s).",
+          "visual-assertions": "visual assertion(s) across"
+        }
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -185,18 +462,52 @@
     {
       "id": "skillopt",
       "command": ["npm", "run", "validate:skillopt"],
-      "paths": [
-        "incubator/skills/skill-maintenance/skillopt-setup/**",
-        "skills/engineering-workflows/drawio-diagrams/**",
-        "skill-evals/skillopt-setup/**",
-        "scripts/validate-skillopt-setup.mjs",
-        "scripts/validation/skillopt-setup/**",
-        "scripts/lib/visual-assertions.mjs",
-        "scripts/visual-assertion-regressions.mjs",
-        "scripts/validation/lib/visual-assertions.mjs",
-        "scripts/validation/lib/visual-assertion-regressions.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "incubator/skills/skill-maintenance/skillopt-setup/**",
+          "skills/engineering-workflows/drawio-diagrams/**",
+          "skill-evals/skillopt-setup/**",
+          "scripts/validate-skillopt-setup.mjs",
+          "scripts/validation/skillopt-setup/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/validate-skillopt-setup.mjs"],
+        "helpers": [
+          "scripts/validation/skillopt-setup/**",
+          "scripts/lib/visual-assertions.mjs",
+          "scripts/visual-assertion-regressions.mjs",
+          "scripts/validation/lib/visual-assertions.mjs",
+          "scripts/validation/lib/visual-assertion-regressions.mjs",
+          "scripts/validate-drawio-fixtures.mjs",
+          "scripts/validation/drawio-diagrams/validate-fixtures.mjs"
+        ],
+        "workspaceInputs": [
+          "incubator/skills/skill-maintenance/skillopt-setup/**",
+          "skills/engineering-workflows/drawio-diagrams/**",
+          "skill-evals/skillopt-setup/**"
+        ],
+        "packageProfiles": [],
+        "tools": ["env", "git", "node", "npm", "python3", "sh"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": {
+        "kind": "capability-complete-exit-code",
+        "requiredCapabilities": ["setup-contract", "visual-capability"],
+        "outputMarkers": {
+          "setup-contract": "SkillOpt setup payload validated.",
+          "visual-capability": "SkillOpt setup payload validated."
+        },
+        "forbiddenOutputMarkers": ["python3 unavailable; skipping"]
+      },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -205,8 +516,29 @@
     {
       "id": "site",
       "command": ["npm", "run", "validate:site"],
-      "paths": ["site/**", "skills/**", "incubator/**", "skill-evals/**", "README.md"],
-      "installProfiles": ["site"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": ["site/**", "skills/**", "incubator/**", "skill-evals/**", "README.md"]
+      },
+      "execution": {
+        "entrypoints": ["site/package.json"],
+        "helpers": ["site/scripts/**", "site/astro.config.mjs", "site/tsconfig.json"],
+        "workspaceInputs": [
+          "site/src/**",
+          "site/public/**",
+          "skills/**",
+          "incubator/**",
+          "skill-evals/*/README.md",
+          "README.md"
+        ],
+        "packageProfiles": ["site"],
+        "tools": ["node", "npm", "pnpm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": { "kind": "output-tree" },
+      "restoreOutputs": [{ "id": "site-dist", "path": "site/dist", "kind": "directory" }],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": [],
       "aggregate": true,
@@ -225,20 +557,51 @@
         "--check",
         "--no-error-on-unmatched-pattern"
       ],
-      "paths": [
-        "docs/**",
-        "incubator/**",
-        "scripts/**",
-        "skill-evals/**",
-        "skills/**",
-        "site/**",
-        "CHANGELOG.md",
-        "CONTEXT.md",
-        "CONTRIBUTING.md",
-        "README.md",
-        "SECURITY.md"
-      ],
-      "installProfiles": ["root"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "docs/**",
+          "incubator/**",
+          "scripts/**",
+          "skill-evals/**",
+          "skills/**",
+          "site/**",
+          ".editorconfig",
+          ".vscode/**",
+          "skills.sh.json",
+          "CHANGELOG.md",
+          "CONTEXT.md",
+          "CONTRIBUTING.md",
+          "README.md",
+          "SECURITY.md"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["oxfmt.json"],
+        "helpers": [".oxfmtignore", ".editorconfig"],
+        "workspaceInputs": [
+          "docs/**",
+          "incubator/**",
+          "scripts/**",
+          "skill-evals/**",
+          "skills/**",
+          "site/**",
+          ".vscode/**",
+          "skills.sh.json",
+          "CHANGELOG.md",
+          "CONTEXT.md",
+          "CONTRIBUTING.md",
+          "README.md",
+          "SECURITY.md"
+        ],
+        "packageProfiles": ["root"],
+        "tools": ["node", "oxfmt", "pnpm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": { "kind": "exit-code" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": false,
@@ -248,8 +611,27 @@
     {
       "id": "script-lint",
       "command": ["pnpm", "lint"],
-      "paths": ["scripts/**"],
-      "installProfiles": ["root"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": ["scripts/**"]
+      },
+      "execution": {
+        "entrypoints": ["oxlint.json"],
+        "helpers": [],
+        "workspaceInputs": [
+          "scripts/**/*.mjs",
+          { "path": "scripts/**/*.js", "allowEmpty": true },
+          { "path": "scripts/**/*.cjs", "allowEmpty": true },
+          { "path": "scripts/**/*.ts", "allowEmpty": true }
+        ],
+        "packageProfiles": ["root"],
+        "tools": ["node", "oxlint", "pnpm"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL"],
+        "gitInputs": []
+      },
+      "evidence": { "kind": "exit-code" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": false,
@@ -265,15 +647,33 @@
         "--base-sha",
         "{{baseSha}}"
       ],
-      "paths": [
-        "package.json",
-        "CHANGELOG.md",
-        "skills/**",
-        "scripts/check-release-intent.mjs",
-        "scripts/validate-release.mjs",
-        "scripts/validate-release-metadata.mjs"
-      ],
-      "installProfiles": [],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "package.json",
+          "CHANGELOG.md",
+          "skills/**",
+          "scripts/check-release-intent.mjs",
+          "scripts/validate-release.mjs",
+          "scripts/validate-release-metadata.mjs"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/ci/run-release-metadata-gate.mjs"],
+        "helpers": [
+          "scripts/check-release-intent.mjs",
+          "scripts/validate-release.mjs",
+          "scripts/validate-release-metadata.mjs"
+        ],
+        "workspaceInputs": ["package.json", "CHANGELOG.md", "skills/**"],
+        "packageProfiles": [],
+        "tools": ["git", "node"],
+        "environment": ["CI", "TZ", "LANG", "LC_ALL", "VALIDATION_EVENT", "VALIDATION_BASE_SHA"],
+        "gitInputs": ["eventClass", "baseCommit", "baseTree", "baseDiff", "baseReleaseMetadata"]
+      },
+      "evidence": { "kind": "release-metadata" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 300000,
       "prerequisites": [],
       "aggregate": false,
@@ -282,19 +682,44 @@
     {
       "id": "smoke-install",
       "command": ["npm", "run", "smoke:install"],
-      "paths": [
-        "skills/**",
-        "incubator/**",
-        "scripts/smoke-install.mjs",
-        "scripts/fingerprint-smoke-candidate.mjs",
-        "scripts/validation/smoke-install-contract.mjs",
-        "scripts/validation/smoke-install-contract.test.mjs",
-        "scripts/validation/architecture-compass/legacy-reference-source-lock.json",
-        "scripts/validation/architecture-compass/legacy-reference-coverage.json",
-        "scripts/validation/architecture-compass/decision-lineage.json",
-        "skill-evals/architecture-compass/reference-baseline/**"
-      ],
-      "installProfiles": ["root"],
+      "selection": {
+        "deriveFromExecutionInputs": true,
+        "paths": [
+          "skills/**",
+          "incubator/**",
+          "scripts/smoke-install.mjs",
+          "scripts/fingerprint-smoke-candidate.mjs",
+          "scripts/validation/smoke-install-contract.mjs",
+          "scripts/validation/smoke-install-contract.test.mjs",
+          "scripts/validation/architecture-compass/legacy-reference-source-lock.json",
+          "scripts/validation/architecture-compass/legacy-reference-coverage.json",
+          "scripts/validation/architecture-compass/decision-lineage.json",
+          "skill-evals/architecture-compass/reference-baseline/**"
+        ]
+      },
+      "execution": {
+        "entrypoints": ["scripts/smoke-install.mjs"],
+        "helpers": [
+          "scripts/fingerprint-smoke-candidate.mjs",
+          "scripts/validation/smoke-install-contract.mjs",
+          "scripts/validation/smoke-install-contract.test.mjs"
+        ],
+        "workspaceInputs": ["**"],
+        "packageProfiles": ["root"],
+        "tools": ["git", "node", "npm", "pnpm", "script", "sh", "skills-cli"],
+        "environment": [
+          "CI",
+          "TZ",
+          "LANG",
+          "LC_ALL",
+          "SKILLS_SMOKE_FORCE_TTY",
+          "SKILLS_SMOKE_OVERRIDE_STATE"
+        ],
+        "gitInputs": ["candidateTree"]
+      },
+      "evidence": { "kind": "smoke-candidate-and-cli" },
+      "restoreOutputs": [],
+      "epoch": 1,
       "timeoutMs": 600000,
       "prerequisites": ["skills"],
       "aggregate": false,

@@ -76,11 +76,31 @@ function uniqueSorted(values) {
   return [...new Set(values)].sort();
 }
 
+function contractPath(input) {
+  return typeof input === "string" ? input : input.path;
+}
+
+function selectionPatterns(gate, manifest) {
+  const declared = gate.selection?.paths ?? gate.paths;
+  if (manifest.schemaVersion !== 2 || gate.selection.deriveFromExecutionInputs !== true) {
+    return declared;
+  }
+  return uniqueSorted([
+    ...declared,
+    ...gate.execution.entrypoints.map(contractPath),
+    ...gate.execution.helpers.map(contractPath),
+    ...gate.execution.workspaceInputs.map(contractPath),
+    ...gate.execution.packageProfiles.flatMap((profile) =>
+      manifest.packageProfiles[profile].inputs.map(contractPath),
+    ),
+  ]);
+}
+
 function main() {
   const options = parseArguments(process.argv.slice(2));
   const manifest = JSON.parse(fs.readFileSync(options.manifest, "utf8"));
   const changes = JSON.parse(fs.readFileSync(options.changes, "utf8"));
-  if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.gates)) {
+  if (!new Set([1, 2]).has(manifest.schemaVersion) || !Array.isArray(manifest.gates)) {
     throw new Error("Unsupported validation manifest.");
   }
   if (!Array.isArray(changes.entries)) throw new Error("Changed-path input must contain entries.");
@@ -114,7 +134,8 @@ function main() {
     for (const id of allGateIds) selected.add(id);
   } else {
     for (const gate of manifest.gates) {
-      if (changedPaths.some((file) => gate.paths.some((pattern) => matches(file, pattern)))) {
+      const selectionPaths = selectionPatterns(gate, manifest);
+      if (changedPaths.some((file) => selectionPaths.some((pattern) => matches(file, pattern)))) {
         selected.add(gate.id);
       }
     }
@@ -143,7 +164,9 @@ function main() {
 
   const selectedGates = allGateIds.filter((id) => selected.has(id));
   const installProfiles = uniqueSorted(
-    manifest.gates.filter((gate) => selected.has(gate.id)).flatMap((gate) => gate.installProfiles),
+    manifest.gates
+      .filter((gate) => selected.has(gate.id))
+      .flatMap((gate) => gate.execution?.packageProfiles ?? gate.installProfiles),
   );
   const plan = {
     schemaVersion: 1,
