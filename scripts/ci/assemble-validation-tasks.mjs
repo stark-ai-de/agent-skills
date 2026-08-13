@@ -331,33 +331,48 @@ export async function assembleValidationTasks(options, dependencies = {}) {
   }
   const records = {};
   const artifactsRoot = path.resolve(options.taskArtifactsRoot);
+  const pendingTasks = resolution.tasks.filter(({ status }) => status !== "reused");
   const expectedArtifactNames = new Set(
-    resolution.tasks
-      .filter(({ status }) => status !== "reused")
-      .map((task) =>
-        taskArtifactName(task.gateId, task.taskKey, options.runId, options.runAttempt),
-      ),
+    pendingTasks.map((task) =>
+      taskArtifactName(task.gateId, task.taskKey, options.runId, options.runAttempt),
+    ),
   );
+  const downloadedBundles = new Map();
   if (fs.existsSync(artifactsRoot)) {
-    for (const entry of fs.readdirSync(artifactsRoot, { withFileTypes: true })) {
-      if (!entry.isDirectory() || !expectedArtifactNames.has(entry.name)) {
-        throw new Error(`Unexpected current-run task artifact: ${entry.name}`);
+    const entries = fs.readdirSync(artifactsRoot, { withFileTypes: true });
+    const isSingleFlatDownload =
+      entries.length === 1 && entries[0].isFile() && entries[0].name === TASK_BUNDLE_FILE;
+    if (isSingleFlatDownload) {
+      if (pendingTasks.length !== 1) {
+        throw new Error(`Unexpected current-run task artifact: ${TASK_BUNDLE_FILE}`);
       }
-      const files = fs.readdirSync(path.join(artifactsRoot, entry.name));
-      if (files.length !== 1 || files[0] !== TASK_BUNDLE_FILE) {
-        throw new Error(`Current-run task artifact ${entry.name} has unexpected transport files.`);
+      const [artifactName] = expectedArtifactNames;
+      downloadedBundles.set(artifactName, path.join(artifactsRoot, TASK_BUNDLE_FILE));
+    } else {
+      for (const entry of entries) {
+        if (!entry.isDirectory() || !expectedArtifactNames.has(entry.name)) {
+          throw new Error(`Unexpected current-run task artifact: ${entry.name}`);
+        }
+        const directory = path.join(artifactsRoot, entry.name);
+        const files = fs.readdirSync(directory, { withFileTypes: true });
+        if (files.length !== 1 || !files[0].isFile() || files[0].name !== TASK_BUNDLE_FILE) {
+          throw new Error(
+            `Current-run task artifact ${entry.name} has unexpected transport files.`,
+          );
+        }
+        downloadedBundles.set(entry.name, path.join(directory, TASK_BUNDLE_FILE));
       }
     }
   }
-  for (const task of resolution.tasks.filter(({ status }) => status !== "reused")) {
+  for (const task of pendingTasks) {
     const artifactName = taskArtifactName(
       task.gateId,
       task.taskKey,
       options.runId,
       options.runAttempt,
     );
-    const downloaded = path.join(artifactsRoot, artifactName, TASK_BUNDLE_FILE);
-    if (!fs.existsSync(downloaded)) continue;
+    const downloaded = downloadedBundles.get(artifactName);
+    if (!downloaded) continue;
     const temporary = fs.mkdtempSync(
       path.join(path.dirname(path.resolve(options.report)), `.task-${task.gateId}-`),
     );

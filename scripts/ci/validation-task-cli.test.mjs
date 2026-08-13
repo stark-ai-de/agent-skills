@@ -331,11 +331,8 @@ test("record wrapper seals a canonical failed tombstone when setup produced no o
   assert.equal(JSON.parse(fs.readFileSync(outcomeFile)).outcome.status, "failed");
 });
 
-test("assemble wrapper finalizes completed miss artifacts before aggregate proof", async (context) => {
+test("assemble wrapper finalizes directory and single-artifact download layouts", async (context) => {
   const root = temporaryRoot(context);
-  const report = path.join(root, "report.json");
-  const acceptedOutput = path.join(root, "accepted.json");
-  const artifactsRoot = path.join(root, "artifacts");
   const artifactName = taskArtifactName("skills", DIGEST, "10", "2");
   const source = {
     runId: "10",
@@ -366,8 +363,6 @@ test("assemble wrapper finalizes completed miss artifacts before aggregate proof
     },
     0o600,
   );
-  const downloaded = path.join(artifactsRoot, artifactName, TASK_BUNDLE_FILE);
-  packCanonicalTaskBundle(raw, downloaded);
   const resolution = {
     repositoryRoot: root,
     repositoryIdentity: "example/repository",
@@ -386,13 +381,13 @@ test("assemble wrapper finalizes completed miss artifacts before aggregate proof
       return locator;
     },
   };
-  let finalized = false;
+  let finalized = 0;
   const core = {
     digestOutput() {
       return { digest: DIGEST };
     },
     async finalizePublication(value) {
-      finalized = true;
+      finalized += 1;
       return { receipt: value.recorded.receipt, locator, publication: { state: "published" } };
     },
     async assemble({ records }) {
@@ -409,30 +404,40 @@ test("assemble wrapper finalizes completed miss artifacts before aggregate proof
       };
     },
   };
-  const { outputs } = await assembleValidationTasks(
-    {
-      repository: root,
-      resolution: resolutionFile,
-      taskArtifactsRoot: artifactsRoot,
-      index: path.join(root, "index.json"),
-      boundary,
-      report,
-      acceptedOutput,
-      repositoryIdentity: "example/repository",
-      runId: "10",
-      runAttempt: "2",
-      githubOutput: false,
-    },
-    {
-      core,
-      store,
-      identity: { workflowDigest: DIGEST, controlPlaneDigest: DIGEST },
-      candidate: { algorithm: "sha256", digest: "a".repeat(64), fileCount: 1 },
-    },
-  );
-  assert.equal(finalized, true);
-  assert.equal(outputs.failed, "false");
-  assert.equal(JSON.parse(fs.readFileSync(acceptedOutput)).tasks.length, 1);
+  for (const layout of ["directory", "flat"]) {
+    const artifactsRoot = path.join(root, `artifacts-${layout}`);
+    const report = path.join(root, `report-${layout}.json`);
+    const acceptedOutput = path.join(root, `accepted-${layout}.json`);
+    const downloaded =
+      layout === "flat"
+        ? path.join(artifactsRoot, TASK_BUNDLE_FILE)
+        : path.join(artifactsRoot, artifactName, TASK_BUNDLE_FILE);
+    packCanonicalTaskBundle(raw, downloaded);
+    const { outputs } = await assembleValidationTasks(
+      {
+        repository: root,
+        resolution: resolutionFile,
+        taskArtifactsRoot: artifactsRoot,
+        index: path.join(root, "index.json"),
+        boundary,
+        report,
+        acceptedOutput,
+        repositoryIdentity: "example/repository",
+        runId: "10",
+        runAttempt: "2",
+        githubOutput: false,
+      },
+      {
+        core,
+        store,
+        identity: { workflowDigest: DIGEST, controlPlaneDigest: DIGEST },
+        candidate: { algorithm: "sha256", digest: "a".repeat(64), fileCount: 1 },
+      },
+    );
+    assert.equal(outputs.failed, "false");
+    assert.equal(JSON.parse(fs.readFileSync(acceptedOutput)).tasks.length, 1);
+  }
+  assert.equal(finalized, 2);
 });
 
 test("assemble wrapper invokes independent current-aggregator task-key attestation", async (context) => {
@@ -669,8 +674,6 @@ test("aggregator attestation derives plan, provenance, and worker mode from curr
 
 test("assemble wrapper rejects unexpected current-run task artifact directories", async (context) => {
   const root = temporaryRoot(context);
-  const artifactsRoot = path.join(root, "artifacts");
-  fs.mkdirSync(path.join(artifactsRoot, "validation-task-v1-surprise"), { recursive: true });
   const resolutionFile = path.join(root, "resolution.json");
   const boundary = path.join(root, "boundary.json");
   writeJson(resolutionFile, {
@@ -682,27 +685,45 @@ test("assemble wrapper rejects unexpected current-run task artifact directories"
     tasks: [],
   });
   writeJson(boundary, { candidateFingerprint: DIGEST, candidateFileCount: 1 });
-  await assert.rejects(
-    assembleValidationTasks(
-      {
-        repository: root,
-        resolution: resolutionFile,
-        taskArtifactsRoot: artifactsRoot,
-        index: path.join(root, "index.json"),
-        boundary,
-        report: path.join(root, "report.json"),
-        acceptedOutput: path.join(root, "accepted.json"),
-        repositoryIdentity: "example/repository",
-        runId: "10",
-        runAttempt: "2",
-      },
-      {
-        core: {},
-        store: {},
-        identity: { workflowDigest: DIGEST, controlPlaneDigest: DIGEST },
-        candidate: { algorithm: "sha256", digest: "a".repeat(64), fileCount: 1 },
-      },
-    ),
-    /Unexpected current-run task artifact/,
-  );
+  async function rejectsLayout(label, setup) {
+    const artifactsRoot = path.join(root, `artifacts-${label}`);
+    fs.mkdirSync(artifactsRoot, { recursive: true });
+    setup(artifactsRoot);
+    await assert.rejects(
+      assembleValidationTasks(
+        {
+          repository: root,
+          resolution: resolutionFile,
+          taskArtifactsRoot: artifactsRoot,
+          index: path.join(root, "index.json"),
+          boundary,
+          report: path.join(root, `report-${label}.json`),
+          acceptedOutput: path.join(root, `accepted-${label}.json`),
+          repositoryIdentity: "example/repository",
+          runId: "10",
+          runAttempt: "2",
+        },
+        {
+          core: {},
+          store: {},
+          identity: { workflowDigest: DIGEST, controlPlaneDigest: DIGEST },
+          candidate: { algorithm: "sha256", digest: "a".repeat(64), fileCount: 1 },
+        },
+      ),
+      /Unexpected current-run task artifact/,
+    );
+  }
+  await rejectsLayout("directory", (artifactsRoot) => {
+    fs.mkdirSync(path.join(artifactsRoot, "validation-task-v1-surprise"));
+  });
+  await rejectsLayout("flat-without-miss", (artifactsRoot) => {
+    fs.writeFileSync(path.join(artifactsRoot, TASK_BUNDLE_FILE), "unexpected");
+  });
+  await rejectsLayout("flat-with-extra", (artifactsRoot) => {
+    fs.writeFileSync(path.join(artifactsRoot, TASK_BUNDLE_FILE), "unexpected");
+    fs.writeFileSync(path.join(artifactsRoot, "extra"), "unexpected");
+  });
+  await rejectsLayout("symlink", (artifactsRoot) => {
+    fs.symlinkSync("missing", path.join(artifactsRoot, TASK_BUNDLE_FILE));
+  });
 });
