@@ -747,6 +747,34 @@ test("GitHub store enforces the absolute lookup deadline", async () => {
   );
 });
 
+test("GitHub store keeps the absolute deadline active while reading a response body", async () => {
+  const store = createGitHubValidationTaskStore({
+    repository: "example/repository",
+    token: "test-token",
+    fetchImpl: async (_url, { signal }) => ({
+      status: 200,
+      ok: true,
+      async json() {
+        await new Promise((_resolve, reject) => {
+          const rejectOnAbort = () => reject(signal.reason);
+          if (signal.aborted) rejectOnAbort();
+          else signal.addEventListener("abort", rejectOnAbort, { once: true });
+        });
+      },
+    }),
+    archive: { inspect: async () => assert.fail("deadline must stop before archive inspection") },
+  });
+  await assert.rejects(
+    store.lookup({
+      repositoryIdentity: "example/repository",
+      gateId: "skills",
+      taskKey: SHA,
+      deadline: new Date(Date.now() + 10).toISOString(),
+    }),
+    (error) => error?.code === "ERR_STORE_UNAVAILABLE",
+  );
+});
+
 test("publish writes only a locator index and lookup treats it as a candidate, not proof", async (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "github-task-store-"));
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));

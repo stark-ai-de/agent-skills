@@ -642,13 +642,22 @@ function readUntrustedIndex(file) {
   }
 }
 
-function withTimeoutSignal(deadline, timeoutMs = STORE_TIMEOUT_MS) {
+function createTimeoutController(deadline, timeoutMs = STORE_TIMEOUT_MS) {
   const remaining = deadline ? Date.parse(deadline) - Date.now() : timeoutMs;
   const bounded = Math.max(
     1,
     Math.min(timeoutMs, Number.isFinite(remaining) ? remaining : timeoutMs),
   );
-  return AbortSignal.timeout(bounded);
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort(new Error("GitHub artifact request exceeded its deadline."));
+  }, bounded);
+  return {
+    signal: controller.signal,
+    dispose() {
+      clearTimeout(timer);
+    },
+  };
 }
 
 function githubHeaders(token) {
@@ -779,37 +788,59 @@ export function createGitHubValidationTaskStore(options) {
   const temporaryRoot = path.resolve(options.temporaryRoot ?? os.tmpdir());
   fs.mkdirSync(temporaryRoot, { recursive: true });
 
-  const request = async (endpoint, { deadline, timeoutMs = STORE_TIMEOUT_MS } = {}) => {
-    let response;
+  const request = async (endpoint, { deadline, timeoutMs = STORE_TIMEOUT_MS } = {}, consume) => {
+    const timeout = createTimeoutController(deadline, timeoutMs);
     try {
-      response = await fetchImpl(`${apiUrl}/repos/${repository}/${endpoint}`, {
-        headers: githubHeaders(token),
-        redirect: "follow",
-        signal: withTimeoutSignal(deadline, timeoutMs),
-      });
-    } catch (error) {
-      throw storeError("ERR_STORE_UNAVAILABLE", `GitHub artifact request failed: ${error.message}`);
+      let response;
+      try {
+        response = await fetchImpl(`${apiUrl}/repos/${repository}/${endpoint}`, {
+          headers: githubHeaders(token),
+          redirect: "follow",
+          signal: timeout.signal,
+        });
+      } catch (error) {
+        throw storeError(
+          "ERR_STORE_UNAVAILABLE",
+          `GitHub artifact request failed: ${error.message}`,
+        );
+      }
+      if (response.status === 404)
+        throw storeError("ERR_STORE_ABSENT", "GitHub artifact is absent.");
+      if (!response.ok) {
+        throw storeError(
+          "ERR_STORE_UNAVAILABLE",
+          `GitHub artifact request failed with HTTP ${response.status}.`,
+        );
+      }
+      try {
+        const value = await consume(response);
+        if (timeout.signal.aborted) throw timeout.signal.reason;
+        return value;
+      } catch (error) {
+        if (timeout.signal.aborted) {
+          throw storeError(
+            "ERR_STORE_UNAVAILABLE",
+            `GitHub artifact request failed: ${timeout.signal.reason?.message ?? "deadline exceeded"}`,
+          );
+        }
+        throw error;
+      }
+    } finally {
+      timeout.dispose();
     }
-    if (response.status === 404) throw storeError("ERR_STORE_ABSENT", "GitHub artifact is absent.");
-    if (!response.ok) {
-      throw storeError(
-        "ERR_STORE_UNAVAILABLE",
-        `GitHub artifact request failed with HTTP ${response.status}.`,
-      );
-    }
-    return response;
   };
-  const requestJson = async (endpoint, requestOptions) => {
-    const response = await request(endpoint, requestOptions);
-    try {
-      return await response.json();
-    } catch (error) {
-      throw new Error(`GitHub returned malformed JSON for ${endpoint}: ${error.message}`);
-    }
-  };
+  const requestJson = async (endpoint, requestOptions) =>
+    await request(endpoint, requestOptions, async (response) => {
+      try {
+        return await response.json();
+      } catch (error) {
+        throw new Error(`GitHub returned malformed JSON for ${endpoint}: ${error.message}`);
+      }
+    });
   const requestBytes = async (endpoint, requestOptions) => {
-    const response = await request(endpoint, requestOptions);
-    const bytes = Buffer.from(await response.arrayBuffer());
+    const bytes = await request(endpoint, requestOptions, async (response) =>
+      Buffer.from(await response.arrayBuffer()),
+    );
     if (bytes.length === 0 || bytes.length > MAX_ARCHIVE_BYTES) {
       throw new Error("Downloaded GitHub artifact has an invalid size.");
     }
