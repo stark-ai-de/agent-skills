@@ -96,6 +96,41 @@ test("release metadata keys bind the base commit and exact release-relevant base
   assert.notEqual(inputs.baseReleaseMetadata, inputs.baseTree);
 });
 
+test("candidate-tree identity follows content across distinct commits", (context) => {
+  const repository = temporaryRoot(context);
+  fs.writeFileSync(path.join(repository, "tracked.txt"), "stable\n");
+  git(repository, ["init", "--quiet"]);
+  git(repository, ["config", "user.email", "validation@example.invalid"]);
+  git(repository, ["config", "user.name", "Validation Test"]);
+  git(repository, ["add", "tracked.txt"]);
+  git(repository, ["commit", "--quiet", "-m", "first tree"]);
+  const firstCommit = git(repository, ["rev-parse", "HEAD"]);
+  git(repository, ["commit", "--quiet", "--allow-empty", "-m", "same tree"]);
+  const secondCommit = git(repository, ["rev-parse", "HEAD"]);
+
+  const first = logicalGitInputs(repository, {
+    event: "workflow_dispatch",
+    baseSha: "",
+    sha: firstCommit,
+  });
+  const second = logicalGitInputs(repository, {
+    event: "workflow_dispatch",
+    baseSha: "",
+    sha: secondCommit,
+  });
+  fs.writeFileSync(path.join(repository, "tracked.txt"), "changed\n");
+  git(repository, ["add", "tracked.txt"]);
+  git(repository, ["commit", "--quiet", "-m", "changed tree"]);
+  const changed = logicalGitInputs(repository, {
+    event: "workflow_dispatch",
+    baseSha: "",
+    sha: git(repository, ["rev-parse", "HEAD"]),
+  });
+
+  assert.equal(first.candidateTree, second.candidateTree);
+  assert.notEqual(second.candidateTree, changed.candidateTree);
+});
+
 test("resolver emits empty-safe miss matrices and explicit prerequisite status", () => {
   const outputs = compactOutputs({
     plan: { scope: "full" },

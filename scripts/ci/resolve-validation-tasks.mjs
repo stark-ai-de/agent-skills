@@ -171,7 +171,7 @@ function gitDigest(repository, argv) {
     argv,
     `Could not capture logical Git input: git ${argv.join(" ")}`,
   );
-  return digestJson({ argv, outputBase64: output.toString("base64") });
+  return digestJson({ outputBase64: output.toString("base64") });
 }
 
 export function logicalGitInputs(repository, { event, baseSha, sha }) {
