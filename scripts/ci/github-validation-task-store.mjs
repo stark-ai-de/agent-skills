@@ -1003,7 +1003,6 @@ export function createGitHubValidationTaskStore(options) {
     options.verifyProducerControlPlane ?? defaultVerifyProducerControlPlane;
   const archive = options.archive ?? createDefaultArchive({ requestBytes, temporaryRoot });
   let inventoryPromise = null;
-  let lookupDeadline = null;
   const inventory = async ({ deadline, timeoutMs = STORE_TIMEOUT_MS } = {}) => {
     if (inventoryPromise) return await inventoryPromise;
     inventoryPromise = (async () => {
@@ -1237,9 +1236,11 @@ export function createGitHubValidationTaskStore(options) {
       if (limit === 0) {
         return { schemaVersion: 1, order: "newest-first", complete: true, observations: [] };
       }
-      lookupDeadline ??=
-        deadline ?? new Date(Date.now() + Math.min(timeoutMs, STORE_TIMEOUT_MS)).toISOString();
-      const requestOptions = { deadline: lookupDeadline, timeoutMs };
+      const requestOptions = {
+        deadline:
+          deadline ?? new Date(Date.now() + Math.min(timeoutMs, STORE_TIMEOUT_MS)).toISOString(),
+        timeoutMs,
+      };
       const prefix = artifactPrefix(gateId, taskKey);
       const indexed = readUntrustedIndex(indexFile).filter(
         (item) =>

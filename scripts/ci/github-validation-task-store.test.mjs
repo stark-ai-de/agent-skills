@@ -887,6 +887,65 @@ test("GitHub store keeps the absolute deadline active while reading a response b
   );
 });
 
+test("GitHub store honors each task lookup's own deadline", async () => {
+  const secondDocument = receipt({
+    gateId: "memory-curators",
+    source: {
+      ...receipt().source,
+      artifactName: taskArtifactName("memory-curators", SHA, "101", "2"),
+    },
+  });
+  const documents = [receipt(), secondDocument];
+  const artifacts = documents.map((document, index) => ({
+    id: 404 + index,
+    name: document.source.artifactName,
+    size_in_bytes: 123,
+    digest: SHA,
+    expired: false,
+    created_at: CREATED_AT,
+  }));
+  const observedDeadlines = [];
+  const store = createGitHubValidationTaskStore({
+    repository: "example/repository",
+    token: "test-token",
+    fetchImpl: async (url) => {
+      const parsed = new URL(url);
+      if (parsed.pathname.endsWith("/actions/artifacts") && parsed.search) {
+        return response({ total_count: artifacts.length, artifacts });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    },
+    archive: {
+      async inspect({ artifact, deadline }) {
+        observedDeadlines.push(deadline);
+        return {
+          digest: SHA,
+          size: 123,
+          receipt: documents[artifact.id - 404],
+          bundle: {},
+        };
+      },
+    },
+  });
+  const firstDeadline = "2026-08-13T12:00:20.000Z";
+  const secondDeadline = "2026-08-13T12:00:40.000Z";
+
+  await store.lookup({
+    repositoryIdentity: "example/repository",
+    gateId: "skills",
+    taskKey: SHA,
+    deadline: firstDeadline,
+  });
+  await store.lookup({
+    repositoryIdentity: "example/repository",
+    gateId: "memory-curators",
+    taskKey: SHA,
+    deadline: secondDeadline,
+  });
+
+  assert.deepEqual(observedDeadlines, [firstDeadline, secondDeadline]);
+});
+
 test("publish writes only a locator index and lookup treats it as a candidate, not proof", async (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "github-task-store-"));
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));
