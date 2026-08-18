@@ -564,7 +564,7 @@ function markdownLineRecords(markdown) {
 function scanHtmlTags(markup, excludedRanges = [], { failOnUnclosed = true } = {}) {
   const tags = [];
   const headPattern = /<(\/)?([a-z][a-z0-9:-]*)(?=[\s/>])/iy;
-  for (let cursor = 0; cursor < markup.length;) {
+  for (let cursor = 0; cursor < markup.length; ) {
     const start = markup.indexOf("<", cursor);
     if (start === -1) break;
     cursor = start + 1;
@@ -676,7 +676,7 @@ function markdownNonRenderedRanges(markdown) {
   const blockRanges = tentativeBlockRanges.filter(([start]) => !indexInRanges(start, tagRanges));
   const inlineDelimiterExclusions = mergeRanges([...blockRanges, ...tagRanges]);
   const runs = [];
-  for (let index = 0; index < markdown.length;) {
+  for (let index = 0; index < markdown.length; ) {
     if (markdown[index] !== "`") {
       index += 1;
       continue;
@@ -697,7 +697,7 @@ function markdownNonRenderedRanges(markdown) {
     nextSame[index] = nextByLength.get(runs[index].length);
     nextByLength.set(runs[index].length, index);
   }
-  for (let index = 0; index < runs.length;) {
+  for (let index = 0; index < runs.length; ) {
     const closingIndex = nextSame[index];
     if (closingIndex == null) {
       index += 1;
@@ -814,7 +814,7 @@ function extractImageBlocks(markdown) {
     });
   }
 
-  for (let cursor = 0; cursor < markdown.length;) {
+  for (let cursor = 0; cursor < markdown.length; ) {
     const start = markdown.indexOf("![", cursor);
     if (start === -1) break;
     cursor = start + 2;
