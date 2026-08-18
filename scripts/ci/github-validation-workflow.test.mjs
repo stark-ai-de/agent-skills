@@ -54,10 +54,7 @@ function actionReferences(...documents) {
 }
 
 function jobBody(jobId, nextJobId) {
-  const expression = new RegExp(
-    `^  ${jobId}:\\n([\\s\\S]*?)(?=^  ${nextJobId}:)`,
-    "m",
-  );
+  const expression = new RegExp(`^  ${jobId}:\\n([\\s\\S]*?)(?=^  ${nextJobId}:)`, "m");
   return expression.exec(validate)?.[1] ?? "";
 }
 
