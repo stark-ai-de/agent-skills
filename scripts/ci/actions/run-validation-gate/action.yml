@@ -1,0 +1,176 @@
+name: Run validation gate
+description: Execute, attest, and publish one resolved validation gate.
+
+inputs:
+  gate-id:
+    description: Gate ID from scripts/ci/validation-manifest.json.
+    required: true
+  job-name:
+    description: Exact hosted job name recorded in task provenance.
+    required: true
+  job-id:
+    description: Hosted check-run ID recorded in task provenance.
+    required: true
+  resolution-artifact-name:
+    description: Immutable resolution artifact created by the resolver job.
+    required: true
+  install-dependencies:
+    description: Whether this gate needs a declared pnpm dependency profile installed.
+    required: false
+    default: "false"
+  prerequisite-outcome-artifact-name:
+    description: Optional current-run prerequisite outcome artifact.
+    required: false
+    default: ""
+  outcome-artifact-name:
+    description: Optional artifact name used to expose this gate outcome to dependent gates.
+    required: false
+    default: ""
+  failure-reason:
+    description: Tombstone reason used when setup or execution cannot write an outcome.
+    required: false
+    default: Task setup or execution failed before a canonical outcome was written.
+
+outputs:
+  artifact-name:
+    description: Canonical task artifact name.
+    value: ${{ steps.record.outputs.artifact_name }}
+  outcome-status:
+    description: Canonical task outcome status.
+    value: ${{ steps.record.outputs.outcome_status }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up exact Node runtime
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      with:
+        node-version: 22.20.0
+
+    - name: Set up pnpm
+      if: ${{ inputs.install-dependencies == 'true' }}
+      uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2
+      with:
+        runtime: node@22.20.0
+        cache: true
+        cache-dependency-path: pnpm-lock.yaml
+        install: false
+
+    - name: Download immutable resolution
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.resolution-artifact-name }}
+        path: ${{ runner.temp }}/validation-resolution
+
+    - name: Download prerequisite outcome
+      if: ${{ inputs.prerequisite-outcome-artifact-name != '' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.prerequisite-outcome-artifact-name }}
+        path: ${{ runner.temp }}/validation-prerequisite
+
+    - name: Install this task's dependencies
+      if: ${{ inputs.install-dependencies == 'true' }}
+      shell: bash
+      env:
+        VALIDATION_GATE_ID: ${{ inputs.gate-id }}
+      run: >-
+        node scripts/ci/install-validation-dependencies.mjs
+        --resolution "$RUNNER_TEMP/validation-resolution/resolution.json"
+        --gate-id "$VALIDATION_GATE_ID"
+
+    - name: Install verified actionlint binary
+      id: actionlint
+      if: ${{ inputs.gate-id == 'actions' }}
+      shell: bash
+      run: >-
+        node scripts/ci/actionlint-contract.mjs
+        --destination "$RUNNER_TEMP/actionlint/actionlint"
+        --github-output
+
+    - name: Create exact execution runtime
+      shell: bash
+      env:
+        ACTIONLINT: ${{ steps.actionlint.outputs.actionlint_path }}
+        VALIDATION_GATE_ID: ${{ inputs.gate-id }}
+      run: >-
+        node scripts/ci/run-validation-task.mjs
+        --resolution "$RUNNER_TEMP/validation-resolution/resolution.json"
+        --gate-id "$VALIDATION_GATE_ID"
+        --repository "$GITHUB_WORKSPACE"
+        --write-runtime "$RUNNER_TEMP/runtime.json"
+
+    - name: Execute task
+      id: execute
+      continue-on-error: true
+      shell: bash
+      env:
+        VALIDATION_GATE_ID: ${{ inputs.gate-id }}
+      run: |
+        prerequisite=()
+        if [ -f "$RUNNER_TEMP/validation-prerequisite/outcome.json" ]; then
+          prerequisite=(--prerequisite-outcome "$RUNNER_TEMP/validation-prerequisite/outcome.json")
+        fi
+        node scripts/ci/run-validation-task.mjs \
+          --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" \
+          --gate-id "$VALIDATION_GATE_ID" \
+          --repository "$GITHUB_WORKSPACE" \
+          --outcome "$RUNNER_TEMP/outcome.json" \
+          --runtime "$RUNNER_TEMP/runtime.json" \
+          --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json" \
+          "${prerequisite[@]}"
+
+    - name: Stage canonical task publication
+      id: record
+      if: ${{ always() }}
+      shell: bash
+      env:
+        VALIDATION_FAILURE_REASON: ${{ inputs.failure-reason }}
+        VALIDATION_GATE_ID: ${{ inputs.gate-id }}
+        VALIDATION_JOB_ID: ${{ inputs.job-id }}
+        VALIDATION_JOB_NAME: ${{ inputs.job-name }}
+      run: |
+        node scripts/ci/record-validation-task.mjs \
+          --resolution "$RUNNER_TEMP/validation-resolution/resolution.json" \
+          --gate-id "$VALIDATION_GATE_ID" \
+          --outcome "$RUNNER_TEMP/outcome.json" \
+          --failure-reason "$VALIDATION_FAILURE_REASON" \
+          --publication-directory "$RUNNER_TEMP/task-publication" \
+          --transport-bundle "$RUNNER_TEMP/task-upload/validation-task-bundle-v1.json" \
+          --recorded-output "$RUNNER_TEMP/recorded.json" \
+          --repository-identity "$GITHUB_REPOSITORY" \
+          --event "$GITHUB_EVENT_NAME" \
+          --ref "$GITHUB_REF" \
+          --sha "$GITHUB_SHA" \
+          --run-id "$GITHUB_RUN_ID" \
+          --run-attempt "$GITHUB_RUN_ATTEMPT" \
+          --job-name "$VALIDATION_JOB_NAME" \
+          --job-id "$VALIDATION_JOB_ID" \
+          --github-output
+
+    - name: Upload provisional task artifact
+      if: ${{ always() && steps.record.outcome == 'success' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ steps.record.outputs.artifact_name }}
+        path: ${{ steps.record.outputs.publication_file }}
+        if-no-files-found: error
+        include-hidden-files: true
+        overwrite: false
+        retention-days: 30
+
+    - name: Upload prerequisite outcome
+      if: ${{ always() && steps.record.outcome == 'success' && inputs.outcome-artifact-name != '' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.outcome-artifact-name }}
+        path: ${{ runner.temp }}/outcome.json
+        if-no-files-found: error
+        include-hidden-files: true
+        overwrite: false
+        retention-days: 30
+
+    - name: Propagate task failure
+      if: ${{ always() && steps.execute.outcome != 'success' }}
+      shell: bash
+      run: exit 1
