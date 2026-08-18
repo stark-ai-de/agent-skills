@@ -1,11 +1,26 @@
 {
   "recommendations": [
+    // ⚡ Code quality & formatting
     "oxc.oxc-vscode",
-    "EditorConfig.EditorConfig",
+    // 📐 Consistent editor formatting rules
+    "editorconfig.editorconfig",
+    // 🔐 .env syntax highlighting & formatting
     "irongeek.vscode-env",
-    "timonwong.shellcheck",
-    "eamodio.gitlens",
+    // 🎨 Frontend
+    "bradlc.vscode-tailwindcss",
+    // 🥟 Runtime / package manager
+    "oven.bun-vscode",
+    // 🎭 Testing
+    "ms-playwright.playwright",
+    // 🔵 TypeScript DX
+    "yoavbls.pretty-ts-errors",
+    // 🤖 GitHub Actions validation
     "jimeh.actionlint",
-    "astro-build.astro-vscode"
+    // 🐚 Shell scripts
+    "timonwong.shellcheck",
+    // 🚀 Astro language support, IntelliSense, diagnostics & formatting
+    "astro-build.astro-vscode",
+    // 🧠 TypeScript 7 native language service
+    "typescriptteam.native-preview"
   ]
 }
