@@ -421,7 +421,7 @@ function parseInstallCommandOptions(words) {
   const knownHosts = new Set(["claude-code", "codex", "cursor"]);
   const parsed = { hosts: [], skills: [] };
 
-  for (let index = 4; index < words.length; ) {
+  for (let index = 4; index < words.length;) {
     const flag = words[index];
     if (booleanFlags.has(flag)) {
       index += 1;

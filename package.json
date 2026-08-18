@@ -83,12 +83,12 @@
   },
   "devDependencies": {
     "github-actionlint": "1.7.12",
-    "js-yaml": "4.1.1",
-    "oxfmt": "0.49.0",
-    "oxlint": "1.64.0"
+    "js-yaml": "5.3.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0"
   },
   "engines": {
     "node": ">=22.13.0"
   },
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@11.22.0"
 }
