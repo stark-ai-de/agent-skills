@@ -15,40 +15,12 @@ Canonical variant: Long
 Supersedes: None
 Superseded by: None
 Guide verified: 2026-08-18
-<<<<<<< Updated upstream
-Gist: Keep one portable Agent Plugins core and generate incompatible client package formats as separate adapters.
-=======
 Gist: Make Agent Plugins the canonical package projection and generate a separate client adapter only when a target surface cannot consume that projection or requires client-native files.
->>>>>>> Stashed changes
 
 Variants: [Short](0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) · [Long, canonical](0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · **Guide**
 
 This guide is non-normative. The Long variant is the canonical decision.
 
-<<<<<<< Updated upstream
-## How to apply
-
-1. Edit a skill only in its canonical `skills/<category>/<skill>/` directory.
-2. Add or remove plugin membership only through the versioned bundle manifest and the required review/evaluation changes.
-3. Generate `plugins/stark-ai-developer/` as the Agent Plugins projection. Its root manifest is `plugin.json`; skills are immediate children of `skills/`; portable fields stay within the Agent Plugins schema.
-4. Generate `adapters/openai/stark-ai-developer/` as the OpenAI package. Keep `.codex-plugin/plugin.json`, OpenAI listing assets, and any other OpenAI-only files inside that adapter root.
-5. Keep generated skill copies byte-identical to canonical sources and put provenance notices in package-level README or source-manifest files rather than modifying copied `SKILL.md` files.
-6. Keep the existing `npx skills` catalog and category layout supported independently of plugin packaging.
-
-## Verification
-
-- Validate `bundles/codex.json` before materialization.
-- Validate portable root `plugin.json` against Agent Plugins 1.0.0 and reject unknown core fields.
-- Confirm portable skills are immediate `skills/<name>/SKILL.md` children and conform to the Agent Skills specification.
-- Reject symlinks, special files, parent traversal, stale generated entries, duplicate names, and source paths outside public `skills/`.
-- Compare generated trees and deterministic source hashes with their canonical sources in CI.
-- Validate the OpenAI adapter using the current OpenAI package rules without weakening the portable validator.
-- Verify the README's Codex install command is derived from the same bundle membership.
-
-## Revisit
-
-Create a successor ADR when Agent Plugins publishes a materially incompatible specification version, OpenAI natively accepts the portable root format, a backend/MCP/authentication layer is introduced, or another client adapter requires a change to the canonical ownership model.
-=======
 ## Intended layout
 
 ```text
@@ -119,4 +91,3 @@ adapters/<client>/stark-ai-developer/      # Generated only when required
 ## Revisit
 
 Create a successor ADR when Agent Plugins publishes a materially incompatible specification version, all targeted OpenAI surfaces accept the portable root package and the OpenAI adapter becomes unnecessary, a target drops portable-package support, a backend/MCP/authentication layer changes package ownership, or another client adapter requires a change to the canonical source or membership model.
->>>>>>> Stashed changes
