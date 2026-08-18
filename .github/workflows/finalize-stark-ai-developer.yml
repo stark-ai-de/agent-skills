@@ -46,11 +46,11 @@ jobs:
           cp site/public/icon-192.png adapters/openai/stark-ai-developer/assets/composer-icon.png
           cp site/public/icon-512.png adapters/openai/stark-ai-developer/assets/logo.png
 
-      - name: Materialize generated plugin projections
-        run: npm run plugin:sync
-
       - name: Apply repository formatting
         run: pnpm format
+
+      - name: Materialize generated plugin projections
+        run: npm run plugin:sync
 
       - name: Validate repository and release contracts
         env:
