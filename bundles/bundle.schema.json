@@ -37,10 +37,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "source"
-        ],
+        "required": ["name", "source"],
         "properties": {
           "name": {
             "type": "string",
@@ -57,11 +54,7 @@
     "distributions": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "skillsCliAgent",
-        "portablePlugin",
-        "openaiPlugin"
-      ],
+      "required": ["skillsCliAgent", "portablePlugin", "openaiPlugin"],
       "properties": {
         "skillsCliAgent": {
           "type": "string",

@@ -146,14 +146,14 @@ Before the OpenAI adapter is submitted, audit every bundled canonical `agents/op
 
 Baseline routing:
 
-| Skill | Chat | Codex | Implicit invocation |
-| --- | --- | --- | --- |
-| `codex-memory-curator` | No | Yes | No |
-| `codex-spec-interviewer` | Yes | Yes | Yes |
-| `animated-readme-logo` | Yes | Yes | Narrow trigger |
-| `architecture-compass` | Yes | Yes | Yes |
-| `codegraph-ast-grep` | No | Yes | No |
-| `drawio-diagrams` | Yes | Yes | Narrow trigger |
+| Skill                    | Chat | Codex | Implicit invocation |
+| ------------------------ | ---- | ----- | ------------------- |
+| `codex-memory-curator`   | No   | Yes   | No                  |
+| `codex-spec-interviewer` | Yes  | Yes   | Yes                 |
+| `animated-readme-logo`   | Yes  | Yes   | Narrow trigger      |
+| `architecture-compass`   | Yes  | Yes   | Yes                 |
+| `codegraph-ast-grep`     | No   | Yes   | No                  |
+| `drawio-diagrams`        | Yes  | Yes   | Narrow trigger      |
 
 Chat-capable skills must determine whether files, repository context, command execution, and artifact creation are actually available. They must not claim inspection, command execution, rendering, or mutation without host evidence. Codex-capable skills must preserve the active sandbox and approval policy.
 
@@ -328,16 +328,16 @@ Later clean-host verification must cover portable package loading, OpenAI market
 
 ## 17. Risks
 
-| Risk | Mitigation |
-| --- | --- |
-| Canonical and generated trees drift | Deterministic staging, source hashes, committed projections, mandatory check mode. |
-| OpenAI package is mislabeled as portable | Separate adapter root and validators under ADR-0043. |
-| Future public skills enter automatically | Static allowlist and explicit version/evaluation/listing review. |
-| Chat claims unavailable local actions | Product routing, capability preflight, boundary tests, honest fallback. |
-| High-impact skills activate implicitly | Explicit-only memory and CodeGraph policies plus negative tests. |
-| Archive contains repository noise or private data | Explicit package roots, regular-file checks, secret/privacy scans. |
-| Publisher or legal metadata mismatches | Release-blocking identity and legal review before v1 freeze. |
-| Upstream schemas change | Re-verify before release and create a successor ADR for material changes. |
+| Risk                                              | Mitigation                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Canonical and generated trees drift               | Deterministic staging, source hashes, committed projections, mandatory check mode. |
+| OpenAI package is mislabeled as portable          | Separate adapter root and validators under ADR-0043.                               |
+| Future public skills enter automatically          | Static allowlist and explicit version/evaluation/listing review.                   |
+| Chat claims unavailable local actions             | Product routing, capability preflight, boundary tests, honest fallback.            |
+| High-impact skills activate implicitly            | Explicit-only memory and CodeGraph policies plus negative tests.                   |
+| Archive contains repository noise or private data | Explicit package roots, regular-file checks, secret/privacy scans.                 |
+| Publisher or legal metadata mismatches            | Release-blocking identity and legal review before v1 freeze.                       |
+| Upstream schemas change                           | Re-verify before release and create a successor ADR for material changes.          |
 
 ## 18. Source-challenge summary
 

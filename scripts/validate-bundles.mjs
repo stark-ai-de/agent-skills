@@ -144,7 +144,11 @@ for (const file of bundleFiles) {
       addError(`${location}: source must be a string`);
       continue;
     }
-    if (!entry.source.startsWith("skills/") || entry.source.includes("..") || path.isAbsolute(entry.source)) {
+    if (
+      !entry.source.startsWith("skills/") ||
+      entry.source.includes("..") ||
+      path.isAbsolute(entry.source)
+    ) {
       addError(`${location}: source must stay under public skills/`);
       continue;
     }
@@ -153,7 +157,9 @@ for (const file of bundleFiles) {
       entry.source.startsWith("skills/claude-operations/") ||
       entry.source.includes("/incubator/")
     ) {
-      addError(`${location}: Codex bundle source may not select Cursor, Claude, or incubator content`);
+      addError(
+        `${location}: Codex bundle source may not select Cursor, Claude, or incubator content`,
+      );
     }
     if (sources.has(entry.source)) {
       addError(`${location}: duplicate source ${entry.source}`);
@@ -224,4 +230,6 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Validated ${bundleFiles.length} bundle(s) and ${membershipCount} explicit skill entries.`);
+console.log(
+  `Validated ${bundleFiles.length} bundle(s) and ${membershipCount} explicit skill entries.`,
+);

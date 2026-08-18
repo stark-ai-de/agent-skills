@@ -43,12 +43,12 @@ adapters/<client>/stark-ai-developer/      # Generated only when required
    - Put optional client extension data and files only under conformant reverse-domain namespaces.
 4. Select the package by target capability, not merely by vendor name.
 
-| Target | Package to use |
-| --- | --- |
-| Agent Plugins-compatible client | `plugins/stark-ai-developer/` |
-| Codex CLI 0.147.0 or later, for direct local/repository installation | `plugins/stark-ai-developer/` |
-| OpenAI packaging or publication flow that explicitly requires `.codex-plugin/plugin.json` or OpenAI-only assets | `adapters/openai/stark-ai-developer/` |
-| Older or incompatible client | A validated client adapter, only when required |
+| Target                                                                                                          | Package to use                                 |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Agent Plugins-compatible client                                                                                 | `plugins/stark-ai-developer/`                  |
+| Codex CLI 0.147.0 or later, for direct local/repository installation                                            | `plugins/stark-ai-developer/`                  |
+| OpenAI packaging or publication flow that explicitly requires `.codex-plugin/plugin.json` or OpenAI-only assets | `adapters/openai/stark-ai-developer/`          |
+| Older or incompatible client                                                                                    | A validated client adapter, only when required |
 
 5. When an adapter is required, generate it from the same bundle and canonical skills. Keep all client-only manifests, listing assets, policies, hooks, application mappings, and compatibility files inside that adapter root.
 6. Do not place `.codex-plugin/` in the portable projection. The repository keeps native client layouts isolated even if a particular host would tolerate extra files.
