@@ -153,10 +153,7 @@ test("full-hit topology does not install dependencies or start gate jobs", () =>
   assert.match(validate, /has_architecture_miss:/);
   assert.match(validate, /has_smoke_miss:/);
   assert.match(validate, /gate-id: \$\{\{ matrix\.gateId \}\}/);
-  assert.match(
-    gateAction,
-    /--resolution "\$RUNNER_TEMP\/validation-resolution\/resolution\.json"/,
-  );
+  assert.match(gateAction, /--resolution "\$RUNNER_TEMP\/validation-resolution\/resolution\.json"/);
   assert.doesNotMatch(validate, /Install selected validation dependencies[\s\S]*jobs:\s*validate/);
   const resolverJob = /^  resolve:\n([\s\S]*?)(?=^  skills-miss:)/m.exec(validate)?.[1] ?? "";
   assert.doesNotMatch(resolverJob, /pnpm\/setup@/);
@@ -278,9 +275,7 @@ test("only protected main can authorize Pages and release publication", () => {
 });
 
 test("all hosted jobs pin the runner and exact Node floor", () => {
-  const runnerReferences = [...validate.matchAll(/runs-on:\s*([^\s]+)/g)].map(
-    (match) => match[1],
-  );
+  const runnerReferences = [...validate.matchAll(/runs-on:\s*([^\s]+)/g)].map((match) => match[1]);
   assert.ok(runnerReferences.length >= 8);
   assert.deepEqual(new Set(runnerReferences), new Set(["ubuntu-24.04"]));
   assert.doesNotMatch(validate, /ubuntu-latest/);
