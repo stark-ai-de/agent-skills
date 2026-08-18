@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import yaml from "js-yaml";
+import { load } from "js-yaml";
 
 const root = process.cwd();
 const publicSkillsDir = path.join(root, "skills");
@@ -85,7 +85,7 @@ function parseFrontmatter(file) {
 
   let data;
   try {
-    data = yaml.load(match[1]);
+    data = load(match[1]);
   } catch (error) {
     errors.push(`${path.relative(root, file)}: invalid YAML frontmatter: ${error.message}`);
     return { text, data: null };
@@ -235,7 +235,7 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
 
   let data;
   try {
-    data = yaml.load(fs.readFileSync(metadataFile, "utf8"));
+    data = load(fs.readFileSync(metadataFile, "utf8"));
   } catch (error) {
     errors.push(`${rel}: invalid YAML: ${error.message}`);
     return;

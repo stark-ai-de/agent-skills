@@ -82,13 +82,14 @@
     "lint:fix": "oxlint --config oxlint.json --fix scripts"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "github-actionlint": "1.7.12",
     "js-yaml": "5.3.0",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=24.19"
   },
   "packageManager": "pnpm@11.22.0"
 }
