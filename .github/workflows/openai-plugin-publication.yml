@@ -1,0 +1,179 @@
+name: Prepare stark AI Developer OpenAI publication
+run-name: Prepare stark AI Developer ${{ inputs.expected_plugin_version }} from ${{ inputs.ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Immutable release tag or exact commit to prepare
+        required: true
+        default: main
+        type: string
+      expected_plugin_version:
+        description: Expected stark-ai-developer plugin version
+        required: true
+        default: 1.0.0
+        type: string
+      publisher_identity:
+        description: Exact verified OpenAI Developer Identity label
+        required: true
+        type: string
+      publisher_identity_verified:
+        description: Publisher identity verification is complete
+        required: true
+        default: false
+        type: boolean
+      apps_management_write_confirmed:
+        description: Submitter has Apps Management Write permission
+        required: true
+        default: false
+        type: boolean
+      legal_approved:
+        description: Publisher, listing, privacy, terms, and support copy are approved
+        required: true
+        default: false
+        type: boolean
+      availability_approved:
+        description: Countries and regions are approved by the business/legal owner
+        required: true
+        default: false
+        type: boolean
+      countries_or_regions:
+        description: Approved countries or regions summary for the evidence record
+        required: true
+        type: string
+      support_owner:
+        description: Named support/security owner or durable team identifier
+        required: true
+        type: string
+      run_full_validation:
+        description: Run the complete repository validation aggregate
+        required: true
+        default: true
+        type: boolean
+      tracking_issue:
+        description: Optional issue number that receives the evidence summary
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: openai-plugin-publication-${{ inputs.ref }}-${{ inputs.expected_plugin_version }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare immutable publication evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: openai-plugin-publication-readiness
+
+    steps:
+      - name: Require external-gate attestations
+        env:
+          PUBLISHER_IDENTITY_VERIFIED: ${{ inputs.publisher_identity_verified }}
+          APPS_MANAGEMENT_WRITE_CONFIRMED: ${{ inputs.apps_management_write_confirmed }}
+          LEGAL_APPROVED: ${{ inputs.legal_approved }}
+          AVAILABILITY_APPROVED: ${{ inputs.availability_approved }}
+        run: |
+          test "$PUBLISHER_IDENTITY_VERIFIED" = "true" || {
+            echo "Publisher identity verification must be confirmed."
+            exit 1
+          }
+          test "$APPS_MANAGEMENT_WRITE_CONFIRMED" = "true" || {
+            echo "Apps Management: Write must be confirmed."
+            exit 1
+          }
+          test "$LEGAL_APPROVED" = "true" || {
+            echo "Legal and public-copy approval must be confirmed."
+            exit 1
+          }
+          test "$AVAILABILITY_APPROVED" = "true" || {
+            echo "Country/region availability approval must be confirmed."
+            exit 1
+          }
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@22
+          cache: true
+          install: false
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build, validate, and record the release candidate
+        id: prepare
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_plugin_version }}
+          PUBLISHER_IDENTITY: ${{ inputs.publisher_identity }}
+          COUNTRIES_OR_REGIONS: ${{ inputs.countries_or_regions }}
+          SUPPORT_OWNER: ${{ inputs.support_owner }}
+          SOURCE_REF: ${{ inputs.ref }}
+          PUBLISHER_IDENTITY_VERIFIED: ${{ inputs.publisher_identity_verified }}
+          APPS_MANAGEMENT_WRITE_CONFIRMED: ${{ inputs.apps_management_write_confirmed }}
+          LEGAL_APPROVED: ${{ inputs.legal_approved }}
+          AVAILABILITY_APPROVED: ${{ inputs.availability_approved }}
+          RUN_FULL_VALIDATION: ${{ inputs.run_full_validation }}
+        run: |
+          source_sha=$(git rev-parse HEAD)
+          node scripts/prepare-openai-plugin-publication.mjs \
+            --expected-version "$EXPECTED_VERSION" \
+            --publisher "$PUBLISHER_IDENTITY" \
+            --countries "$COUNTRIES_OR_REGIONS" \
+            --support-owner "$SUPPORT_OWNER" \
+            --source-sha "$source_sha" \
+            --source-ref "$SOURCE_REF" \
+            --output-dir publication-evidence \
+            --publisher-identity-verified "$PUBLISHER_IDENTITY_VERIFIED" \
+            --apps-management-write-confirmed "$APPS_MANAGEMENT_WRITE_CONFIRMED" \
+            --legal-approved "$LEGAL_APPROVED" \
+            --availability-approved "$AVAILABILITY_APPROVED" \
+            --run-full-validation "$RUN_FULL_VALIDATION"
+
+      - name: Upload immutable publication evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepare.outputs.artifact_name }}
+          path: publication-evidence/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Write workflow summary
+        run: cat publication-evidence/publication-evidence.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on the tracking issue
+        if: ${{ inputs.tracking_issue != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRACKING_ISSUE: ${{ inputs.tracking_issue }}
+          PLUGIN_VERSION: ${{ steps.prepare.outputs.plugin_version }}
+          ARCHIVE_NAME: ${{ steps.prepare.outputs.archive_name }}
+          ARCHIVE_SHA256: ${{ steps.prepare.outputs.archive_sha256 }}
+          SOURCE_SHA: ${{ steps.prepare.outputs.source_sha }}
+        run: |
+          [[ "$TRACKING_ISSUE" =~ ^[0-9]+$ ]] || {
+            echo "tracking_issue must be a numeric issue number"
+            exit 1
+          }
+          body=$(cat <<EOF_BODY
+          ## OpenAI publication evidence prepared
+
+          - Plugin version: \`$PLUGIN_VERSION\`
+          - Source commit: \`$SOURCE_SHA\`
+          - Archive: \`$ARCHIVE_NAME\`
+          - SHA-256: \`$ARCHIVE_SHA256\`
+          - Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+          This workflow prepared repository-controlled proof only. OpenAI upload, scans,
+          review, approval, Publish, and clean-account verification remain explicit human gates.
+          EOF_BODY
+          )
+          gh issue comment "$TRACKING_ISSUE" --repo "$GITHUB_REPOSITORY" --body "$body"

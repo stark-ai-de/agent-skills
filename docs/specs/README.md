@@ -21,3 +21,4 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 - [`github-pages-skill-catalog-spec.md`](github-pages-skill-catalog-spec.md) - generated GitHub Pages catalog.
 - [`native-typescript-tooling-architecture-compass-spec.md`](native-typescript-tooling-architecture-compass-spec.md) - native TypeScript tooling guidance for Architecture Compass.
 - [`stark-ai-developer-agent-plugin-spec.md`](stark-ai-developer-agent-plugin-spec.md) - phased portable Agent Plugins core and separate OpenAI adapter contract for **stark AI Developer**.
+- [`stark-ai-developer-openai-publication-runbook-spec.md`](stark-ai-developer-openai-publication-runbook-spec.md) - manual OpenAI publication boundary and immutable GitHub evidence workflow for **stark AI Developer**.

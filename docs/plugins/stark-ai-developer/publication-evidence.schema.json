@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stark AI Developer publication evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "plugin",
+    "source",
+    "publisher",
+    "availability",
+    "supportOwner",
+    "archive",
+    "bundleSkills",
+    "publicUrls",
+    "validations",
+    "workflow"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "displayName",
+        "version",
+        "manifestPath"
+      ],
+      "properties": {
+        "id": {
+          "const": "stark-ai-developer"
+        },
+        "displayName": {
+          "const": "stark AI Developer"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "sha",
+        "ref"
+      ],
+      "properties": {
+        "repository": {
+          "const": "stark-ai-de/agent-skills"
+        },
+        "sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "identityVerified",
+        "appsManagementWriteConfirmed",
+        "legalApproved"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "identityVerified": {
+          "const": true
+        },
+        "appsManagementWriteConfirmed": {
+          "const": true
+        },
+        "legalApproved": {
+          "const": true
+        }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approved",
+        "countriesOrRegions"
+      ],
+      "properties": {
+        "approved": {
+          "const": true
+        },
+        "countriesOrRegions": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "supportOwner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filename",
+        "sha256",
+        "size",
+        "firstBuildSha256",
+        "secondBuildSha256",
+        "reproducible"
+      ],
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^stark-ai-developer-\\d+\\.\\d+\\.\\d+\\.zip$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "firstBuildSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "secondBuildSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "reproducible": {
+          "const": true
+        }
+      }
+    },
+    "bundleSkills": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "const": "codex-memory-curator"
+        },
+        {
+          "const": "codex-spec-interviewer"
+        },
+        {
+          "const": "animated-readme-logo"
+        },
+        {
+          "const": "architecture-compass"
+        },
+        {
+          "const": "codegraph-ast-grep"
+        },
+        {
+          "const": "drawio-diagrams"
+        }
+      ],
+      "items": false
+    },
+    "publicUrls": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "url",
+          "status",
+          "finalUrl"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "website",
+              "support",
+              "privacy",
+              "terms"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 299
+          },
+          "finalUrl": {
+            "type": "string",
+            "pattern": "^https://"
+          }
+        }
+      }
+    },
+    "validations": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "passed"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "passed": {
+            "const": true
+          }
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "runAttempt",
+        "runUrl",
+        "actor"
+      ],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runAttempt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runUrl": {
+          "type": "string",
+          "pattern": "^https://github\\.com/"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
