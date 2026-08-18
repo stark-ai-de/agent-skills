@@ -120,6 +120,14 @@ runs:
           --before-fingerprint "$RUNNER_TEMP/validation-resolution/validation-boundary.json" \
           "${prerequisite[@]}"
 
+    - name: Print exact format delta
+      if: ${{ inputs.gate-id == 'format' && steps.execute.outcome != 'success' }}
+      shell: bash
+      run: |
+        node_modules/.bin/oxfmt --config oxfmt.json --ignore-path .oxfmtignore --write scripts/ci/github-validation-workflow.test.mjs
+        git --no-pager diff -- scripts/ci/github-validation-workflow.test.mjs
+        git checkout -- scripts/ci/github-validation-workflow.test.mjs
+
     - name: Stage canonical task publication
       id: record
       if: ${{ always() }}
