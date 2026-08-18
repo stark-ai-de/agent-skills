@@ -7,7 +7,6 @@ on:
       ref:
         description: Immutable release tag or exact commit to prepare
         required: true
-        default: main
         type: string
       expected_plugin_version:
         description: Expected stark-ai-developer plugin version
