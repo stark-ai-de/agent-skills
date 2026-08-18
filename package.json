@@ -89,7 +89,7 @@
     "oxlint": "1.78.0"
   },
   "engines": {
-    "node": ">=24.19"
+    "node": ">=24.18"
   },
   "packageManager": "pnpm@11.22.0"
 }
