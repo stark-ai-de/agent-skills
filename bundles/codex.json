@@ -1,0 +1,38 @@
+{
+  "$schema": "./bundle.schema.json",
+  "schemaVersion": 1,
+  "id": "codex",
+  "displayName": "Codex bundle",
+  "description": "Reviewed developer workflows for OpenAI Codex and compatible ChatGPT surfaces.",
+  "skills": [
+    {
+      "name": "codex-memory-curator",
+      "source": "skills/codex-operations/codex-memory-curator"
+    },
+    {
+      "name": "codex-spec-interviewer",
+      "source": "skills/codex-operations/codex-spec-interviewer"
+    },
+    {
+      "name": "animated-readme-logo",
+      "source": "skills/engineering-workflows/animated-readme-logo"
+    },
+    {
+      "name": "architecture-compass",
+      "source": "skills/engineering-workflows/architecture-compass"
+    },
+    {
+      "name": "codegraph-ast-grep",
+      "source": "skills/engineering-workflows/codegraph-ast-grep"
+    },
+    {
+      "name": "drawio-diagrams",
+      "source": "skills/engineering-workflows/drawio-diagrams"
+    }
+  ],
+  "distributions": {
+    "skillsCliAgent": "codex",
+    "portablePlugin": "stark-ai-developer",
+    "openaiPlugin": "stark-ai-developer"
+  }
+}

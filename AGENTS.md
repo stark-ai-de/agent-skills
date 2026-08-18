@@ -5,6 +5,8 @@ This repository contains public Agent Skills.
 ## Rules
 
 - Follow the Agent Skills specification: https://agentskills.io/specification.
+- Follow the Agent Plugins specification for repository-managed portable plugins: https://agent-plugins.org/specification.
+- Keep client-native plugin packages that cannot share the portable root contract in separate generated adapter projections, as required by [ADR-0043](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)).
 - Every skill must have `SKILL.md` with valid `name` and `description`.
 - Skill folder names must match frontmatter names.
 - Do not include secrets, tokens, customer data, private repo paths, or internal hostnames.

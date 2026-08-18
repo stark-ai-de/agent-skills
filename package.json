@@ -35,6 +35,7 @@
   },
   "files": [
     "skills",
+    "bundles",
     "incubator",
     "skill-evals",
     "site",
@@ -54,13 +55,14 @@
   "scripts": {
     "list": "node scripts/list-skills.mjs",
     "list:incubator": "node scripts/list-incubator-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:memory-curators && npm run validate:adrs && npm run validate:architecture-compass && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
+    "validate": "npm run validate:skills && npm run validate:memory-curators && npm run validate:adrs && npm run validate:bundles && npm run validate:architecture-compass && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
     "release:prepare": "node scripts/prepare-release.mjs",
     "release:validate": "node scripts/validate-release.mjs",
     "release:notes": "node scripts/print-release-notes.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:memory-curators": "node scripts/validate-memory-curators.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
+    "validate:bundles": "node scripts/validate-bundles.mjs",
     "validate:architecture-compass": "node scripts/validate-architecture-compass.mjs && node scripts/validation/architecture-compass/test-validator.mjs",
     "validate:codegraph-ast-grep": "node scripts/validate-codegraph-ast-grep-contract.mjs",
     "validate:drawio": "node scripts/validate-drawio-fixtures.mjs && node scripts/validate-drawio-visual-evals.mjs",
