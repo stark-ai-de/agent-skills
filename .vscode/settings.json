@@ -1,31 +1,41 @@
 {
+  // 💾 Save automatically when leaving the current editor.
   "files.autoSave": "onFocusChange",
-  "oxc.fmt.configPath": "oxfmt.json",
-  "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "file",
+
+  // ⚡ Code quality & formatting
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "oxc.useExecPath": true,
-  "oxc.path.oxfmt": "node_modules/oxfmt/dist/cli.js",
-  "oxc.path.oxlint": "node_modules/oxlint/dist/cli.js",
-  "actionlint.executable": "node_modules/.bin/github-actionlint",
-  "actionlint.runTrigger": "onType",
-  "json.schemaDownload.enable": true,
+  "editor.formatOnSave": true,
+  "oxc.fmt.configPath": "oxfmt.json",
+
+  // 🧠 TypeScript 7 native language service
+  "js/ts.experimental.useTsgo": true,
+
+  // 🛠️ Apply safe Oxc fixes automatically.
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "explicit",
+    "source.fixAll.oxc": "always",
     "source.organizeImports": "explicit"
   },
+
+  // 🤖 GitHub Actions validation
+  "actionlint.executable": "node_modules/.bin/github-actionlint",
+
+  // 🔐 .env syntax highlighting & formatting
   "files.associations": {
     ".env": "env",
     ".env.*": "env",
     "**/.env": "env",
     "**/.env.*": "env"
   },
+
+  // 🐚 Do not lint environment files as shell scripts.
   "shellcheck.ignorePatterns": {
     ".env": true,
     ".env.*": true,
     "**/.env": true,
     "**/.env.*": true
   },
+
+  // 🙈 Hide generated, cached & vendor directories.
   "files.exclude": {
     "**/dist": true,
     "**/.next": true,
@@ -36,18 +46,11 @@
     "**/coverage": true,
     "**/out": true
   },
-  "search.exclude": {
-    "**/dist": true,
-    "**/.next": true,
-    "**/.docusaurus": true,
-    "**/node_modules": true,
-    "**/.turbo/**": true,
-    "**/build": true,
-    "**/coverage": true,
-    "**/out": true
-  },
+
+  // 👀 Avoid watching expensive generated directories.
   "files.watcherExclude": {
-    "**/.git/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
     "**/.next/**": true,
     "**/.docusaurus/**": true,
     "**/node_modules/**": true,
@@ -57,28 +60,51 @@
     "**/coverage/**": true,
     "**/out/**": true
   },
+
+  // 🌿 Git
   "git.ignoreLimitWarning": true,
   "git.inputValidationSubjectLength": 100,
+
+  // 📏 Keep editor width aligned with Oxfmt.
   "editor.rulers": [100],
+
+  // 🟨 JavaScript
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // ⚛️ JavaScript + JSX
   "[javascriptreact]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // 🔷 TypeScript
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // ⚛️ TypeScript + JSX
   "[typescriptreact]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // 📦 JSON
   "[json]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // 🧩 JSON with comments
   "[jsonc]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+
+  // 📝 Markdown
   "[markdown]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+
+  // 🚀 Astro
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
   }
 }
