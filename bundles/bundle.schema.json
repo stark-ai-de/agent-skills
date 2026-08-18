@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Agent Skills bundle manifest",
+  "description": "Repository-specific distribution manifest. Generated Agent Plugins plugin.json files use the official Agent Plugins 1.0.0 schema separately.",
   "type": "object",
   "additionalProperties": false,
   "required": [

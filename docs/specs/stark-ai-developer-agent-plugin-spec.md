@@ -40,7 +40,7 @@ This specification consolidates both maintainer-provided implementation drafts. 
 - public legal/support URLs and verified publisher identity before submission;
 - manual external review and publication rather than GitHub-only publication claims.
 
-The drafts targeted OpenAI's `.codex-plugin` layout as the plugin package. The repository additionally requires portable packages to follow Agent Plugins. Because the two formats have different required roots and manifest schemas, [ADR-0043](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)) establishes separate generated projections.
+The source drafts target OpenAI's native package layout. The portable-package and client-adapter decision is defined by [ADR-0043](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)); this specification records the resulting implementation requirements and phased delivery.
 
 ## 3. Architecture
 
@@ -343,7 +343,7 @@ Later clean-host verification must cover portable package loading, OpenAI market
 
 The maintainer drafts support one canonical skill source, explicit six-skill composition, deterministic flattening, no symlinks, checked-in generated content, OpenAI metadata review, plugin-level evaluations, public legal/support URLs, deterministic packaging, and manual publication after review.
 
-Agent Plugins introduces a portable root manifest and fixed component discovery, while OpenAI uses a client-native package root and metadata. The dual-projection boundary is therefore a repository architecture decision required to satisfy both formats honestly; it is an implementation correction rather than a silent replacement of either source draft.
+The source drafts target OpenAI's native layout, while this repository also defines a portable Agent Plugins projection. [ADR-0043](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) governs the boundary between those package contracts; this specification records the resulting source and implementation constraints.
 
 ## 19. Done when
 

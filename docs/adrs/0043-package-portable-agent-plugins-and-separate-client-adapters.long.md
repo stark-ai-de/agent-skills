@@ -21,15 +21,7 @@ Variants: [Short](0043-package-portable-agent-plugins-and-separate-client-adapte
 
 ## Decision
 
-Repository-managed plugins will use Agent Plugins 1.0.0 as their canonical portable package contract.
-
-- Canonical skills remain author-maintained only under `skills/<category>/<skill>/`.
-- Plugin membership is defined only by the versioned bundle manifest at `bundles/codex.json`.
-- `plugins/stark-ai-developer/` is a generated, committed Agent Plugins projection with a root `plugin.json` and skills discovered only from immediate `skills/<name>/SKILL.md` children.
-- A target that can consume the Agent Plugins package directly must use that portable projection. Codex CLI 0.147.0 introduced direct installation of portable Agent Plugins, so Codex installation alone is not a reason to generate an OpenAI adapter.
-- A client adapter under `adapters/<client>/stark-ai-developer/` is generated only when a specific target surface requires client-native files, metadata, or capabilities that the portable contract cannot represent or that the target does not consume from the portable package. This includes an OpenAI-native package only when the selected OpenAI packaging or publication flow requires `.codex-plugin/plugin.json` or other OpenAI-only files.
-- Every adapter is derived from the same bundle and canonical skill sources. It cannot add, remove, rename, or redefine portable bundle membership.
-- The existing `npx skills` catalog and category layout remain supported independently of plugin packaging.
+Repository-managed plugins will use Agent Plugins 1.0.0 as the portable package contract: each portable projection has a root `plugin.json`, discovers skills only from immediate children of `skills/`, and keeps the portable manifest within the closed core schema. Canonical skills remain under `skills/`, plugin membership is explicit in a versioned bundle manifest, and generated portable projections are committed. Client formats that cannot coexist inside a conformant portable package, including OpenAI's required `.codex-plugin/plugin.json` layout, will be generated as separate adapter projections from the same bundle and canonical skills. Existing `npx skills` distribution remains supported.
 
 ## Decision invariants
 

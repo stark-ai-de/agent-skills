@@ -2,7 +2,7 @@
   "$schema": "./bundle.schema.json",
   "schemaVersion": 1,
   "id": "codex",
-  "displayName": "Codex bundle",
+  "displayName": "stark AI Developer",
   "description": "Reviewed developer workflows for OpenAI Codex and compatible ChatGPT surfaces.",
   "skills": [
     {

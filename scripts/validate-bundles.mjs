@@ -1,8 +1,10 @@
+import Ajv2020 from "ajv/dist/2020.js";
 import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
 const bundlesDir = path.join(root, "bundles");
+const schemaPath = path.join(bundlesDir, "bundle.schema.json");
 const readmePath = path.join(root, "README.md");
 const errors = [];
 const bundleFiles = fs.existsSync(bundlesDir)
@@ -18,29 +20,16 @@ function addError(message) {
 
 function readJson(file) {
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
+    return { ok: true, value: JSON.parse(fs.readFileSync(file, "utf8")) };
   } catch (error) {
     addError(`${path.relative(root, file)}: invalid JSON (${error.message})`);
-    return null;
+    return { ok: false, value: null };
   }
 }
 
-function assertPlainObject(value, location) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    addError(`${location}: expected an object`);
-    return false;
-  }
-  return true;
-}
-
-function assertOnlyKeys(value, keys, location) {
-  if (!assertPlainObject(value, location)) return;
-  const allowed = new Set(keys);
-  for (const key of Object.keys(value)) {
-    if (!allowed.has(key)) addError(`${location}: unexpected field ${JSON.stringify(key)}`);
-  }
-  for (const key of keys) {
-    if (!(key in value)) addError(`${location}: missing field ${JSON.stringify(key)}`);
+function reportSchemaErrors(relativeFile, validator) {
+  for (const error of validator.errors ?? []) {
+    addError(`${relativeFile}${error.instancePath || ""}: ${error.message}`);
   }
 }
 
@@ -48,12 +37,13 @@ function assertNoSymlinkPath(relativePath, location) {
   let current = root;
   for (const segment of relativePath.split("/")) {
     current = path.join(current, segment);
-    if (!fs.existsSync(current)) return;
+    if (!fs.existsSync(current)) return true;
     if (fs.lstatSync(current).isSymbolicLink()) {
       addError(`${location}: symlink path component is forbidden: ${path.relative(root, current)}`);
-      return;
+      return false;
     }
   }
+  return true;
 }
 
 function frontmatterName(skillFile, location) {
@@ -83,75 +73,71 @@ function frontmatterName(skillFile, location) {
   return value;
 }
 
+function parseCommandTokens(command) {
+  return command.trim() ? command.trim().split(/\s+/) : [];
+}
+
+function extractCodexCommand(readme) {
+  const summary = "<summary><strong>Install the Codex bundle</strong></summary>";
+  const summaryIndex = readme.indexOf(summary);
+  if (summaryIndex === -1) return null;
+
+  const fenceStart = readme.indexOf("```", summaryIndex + summary.length);
+  if (fenceStart === -1) return null;
+  const commandStart = readme.indexOf("\n", fenceStart);
+  if (commandStart === -1) return null;
+  const fenceEnd = readme.indexOf("```", commandStart + 1);
+  if (fenceEnd === -1) return null;
+  return readme.slice(commandStart + 1, fenceEnd).trim();
+}
+
 if (!fs.existsSync(bundlesDir)) addError("bundles/: directory is missing");
-if (!fs.existsSync(path.join(bundlesDir, "bundle.schema.json"))) {
+if (!fs.existsSync(schemaPath)) {
   addError("bundles/bundle.schema.json is missing");
-} else {
-  readJson(path.join(bundlesDir, "bundle.schema.json"));
 }
 if (bundleFiles.length === 0) addError("bundles/: no bundle manifests found");
+
+let validateBundle = null;
+if (fs.existsSync(schemaPath)) {
+  const schemaResult = readJson(schemaPath);
+  if (schemaResult.ok) {
+    try {
+      validateBundle = new Ajv2020({ allErrors: true, strict: true }).compile(schemaResult.value);
+    } catch (error) {
+      addError(`bundles/bundle.schema.json: invalid JSON Schema (${error.message})`);
+    }
+  }
+}
 
 let membershipCount = 0;
 const seenIds = new Set();
 for (const file of bundleFiles) {
   const relativeFile = `bundles/${file}`;
-  const bundle = readJson(path.join(bundlesDir, file));
-  if (!bundle) continue;
+  const bundleResult = readJson(path.join(bundlesDir, file));
+  if (!bundleResult.ok || !validateBundle) continue;
 
-  assertOnlyKeys(
-    bundle,
-    ["$schema", "schemaVersion", "id", "displayName", "description", "skills", "distributions"],
-    relativeFile,
-  );
-  if (bundle.$schema !== "./bundle.schema.json") {
-    addError(`${relativeFile}: $schema must be ./bundle.schema.json`);
+  const bundle = bundleResult.value;
+  if (!validateBundle(bundle)) {
+    reportSchemaErrors(relativeFile, validateBundle);
+    continue;
   }
-  if (bundle.schemaVersion !== 1) addError(`${relativeFile}: schemaVersion must be 1`);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(bundle.id ?? "")) {
-    addError(`${relativeFile}: id must be lower-kebab-case`);
-  } else if (seenIds.has(bundle.id)) {
+
+  if (seenIds.has(bundle.id)) {
     addError(`${relativeFile}: duplicate bundle id ${bundle.id}`);
   } else {
     seenIds.add(bundle.id);
-  }
-  if (typeof bundle.displayName !== "string" || !bundle.displayName.trim()) {
-    addError(`${relativeFile}: displayName must be a non-empty string`);
-  }
-  if (typeof bundle.description !== "string" || !bundle.description.trim()) {
-    addError(`${relativeFile}: description must be a non-empty string`);
-  }
-  if (!Array.isArray(bundle.skills) || bundle.skills.length === 0) {
-    addError(`${relativeFile}: skills must be a non-empty array`);
-    continue;
   }
 
   const names = new Set();
   const sources = new Set();
   for (const [index, entry] of bundle.skills.entries()) {
     const location = `${relativeFile}: skills[${index}]`;
-    assertOnlyKeys(entry, ["name", "source"], location);
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
-
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.name ?? "") || entry.name.length > 64) {
-      addError(`${location}: name must be a valid Agent Skill name no longer than 64 characters`);
-    } else if (names.has(entry.name)) {
+    if (names.has(entry.name)) {
       addError(`${location}: duplicate skill name ${entry.name}`);
     } else {
       names.add(entry.name);
     }
 
-    if (typeof entry.source !== "string") {
-      addError(`${location}: source must be a string`);
-      continue;
-    }
-    if (
-      !entry.source.startsWith("skills/") ||
-      entry.source.includes("..") ||
-      path.isAbsolute(entry.source)
-    ) {
-      addError(`${location}: source must stay under public skills/`);
-      continue;
-    }
     if (
       entry.source.startsWith("skills/cursor-operations/") ||
       entry.source.startsWith("skills/claude-operations/") ||
@@ -170,14 +156,14 @@ for (const file of bundleFiles) {
       addError(`${location}: source folder must match name ${entry.name}`);
     }
 
-    assertNoSymlinkPath(entry.source, location);
+    if (!assertNoSymlinkPath(entry.source, location)) continue;
     const sourcePath = path.join(root, ...entry.source.split("/"));
-    if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isDirectory()) {
+    if (!fs.existsSync(sourcePath) || !fs.lstatSync(sourcePath).isDirectory()) {
       addError(`${location}: source directory does not exist: ${entry.source}`);
       continue;
     }
     const skillFile = path.join(sourcePath, "SKILL.md");
-    if (!fs.existsSync(skillFile) || !fs.statSync(skillFile).isFile()) {
+    if (!fs.existsSync(skillFile) || !fs.lstatSync(skillFile).isFile()) {
       addError(`${location}: ${entry.source}/SKILL.md is missing`);
       continue;
     }
@@ -192,33 +178,30 @@ for (const file of bundleFiles) {
     membershipCount += 1;
   }
 
-  const distributions = bundle.distributions;
-  assertOnlyKeys(
-    distributions,
-    ["skillsCliAgent", "portablePlugin", "openaiPlugin"],
-    `${relativeFile}: distributions`,
-  );
-  if (distributions && typeof distributions === "object" && !Array.isArray(distributions)) {
-    if (distributions.skillsCliAgent !== bundle.id) {
-      addError(`${relativeFile}: distributions.skillsCliAgent must equal bundle id ${bundle.id}`);
-    }
-    for (const key of ["portablePlugin", "openaiPlugin"]) {
-      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(distributions[key] ?? "")) {
-        addError(`${relativeFile}: distributions.${key} must be lower-kebab-case`);
-      }
-    }
-  }
-
   if (bundle.id === "codex") {
     if (!fs.existsSync(readmePath)) {
       addError("README.md is missing");
     } else {
-      const command = `npx skills@latest add stark-ai-de/agent-skills --skill ${bundle.skills
-        .map((entry) => entry.name)
-        .join(" ")} -g -a ${bundle.distributions?.skillsCliAgent} -y`;
-      const readme = fs.readFileSync(readmePath, "utf8");
-      if (!readme.includes(command)) {
-        addError(`README.md: Codex bundle command must be exactly:\n${command}`);
+      const expectedTokens = [
+        "npx",
+        "skills@latest",
+        "add",
+        "stark-ai-de/agent-skills",
+        "--skill",
+        ...bundle.skills.map((entry) => entry.name),
+        "-g",
+        "-a",
+        bundle.distributions.skillsCliAgent,
+        "-y",
+      ];
+      const command = extractCodexCommand(fs.readFileSync(readmePath, "utf8"));
+      const actualTokens = command === null ? null : parseCommandTokens(command);
+      if (!actualTokens) {
+        addError("README.md: Codex bundle install command is missing");
+      } else if (JSON.stringify(actualTokens) !== JSON.stringify(expectedTokens)) {
+        addError(
+          `README.md: Codex bundle command tokens must be exactly ${JSON.stringify(expectedTokens)}; found ${JSON.stringify(actualTokens)}`,
+        );
       }
     }
   }

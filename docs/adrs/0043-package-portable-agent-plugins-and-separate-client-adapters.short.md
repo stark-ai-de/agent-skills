@@ -21,9 +21,7 @@ Variants: **Short** · [Long, canonical](0043-package-portable-agent-plugins-and
 
 ## Decision
 
-Repository-managed plugins will use Agent Plugins 1.0.0 as the canonical portable package contract. Canonical skills remain under `skills/<category>/<skill>/`; `bundles/codex.json` is the only membership source; and `plugins/stark-ai-developer/` is a deterministic, committed projection with root `plugin.json` and immediate `skills/<name>/SKILL.md` children.
-
-A client that consumes Agent Plugins directly must use the portable projection. Codex CLI 0.147.0 introduced direct portable-plugin installation, so Codex installation alone does not require an OpenAI adapter. Generate `adapters/<client>/stark-ai-developer/` only when a selected target surface requires client-native files or metadata, such as an OpenAI flow that specifically requires `.codex-plugin/plugin.json`. Adapters derive from the same bundle and canonical skills and cannot redefine membership. Existing `npx skills` distribution remains independent.
+Repository-managed plugins will use Agent Plugins 1.0.0 as the portable package contract: each portable projection has a root `plugin.json`, discovers skills only from immediate children of `skills/`, and keeps the portable manifest within the closed core schema. Canonical skills remain under `skills/`, plugin membership is explicit in a versioned bundle manifest, and generated portable projections are committed. Client formats that cannot coexist inside a conformant portable package, including OpenAI's required `.codex-plugin/plugin.json` layout, will be generated as separate adapter projections from the same bundle and canonical skills. Existing `npx skills` distribution remains supported.
 
 ## Context
 
