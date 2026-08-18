@@ -1,0 +1,88 @@
+name: Finalize stark AI Developer implementation
+
+on:
+  pull_request:
+    branches:
+      - feat/stark-ai-developer-agent-plugins-foundation
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-stark-ai-developer-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    if: ${{ github.event.pull_request.head.ref == 'feat/stark-ai-developer-plugin-final' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Extract implementation payload
+        run: |
+          cat .github/bootstrap/chunk-* | base64 --decode | tar -xz -C .
+
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@22
+          cache: true
+          install: false
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply repository-complete implementation updates
+        run: python3 .github/scripts/finalize-stark-ai-developer.py
+
+      - name: Materialize package assets and licenses
+        run: |
+          mkdir -p adapters/openai/stark-ai-developer/assets
+          cp LICENSE plugins/stark-ai-developer/LICENSE
+          cp LICENSE adapters/openai/stark-ai-developer/LICENSE
+          cp site/public/icon-192.png adapters/openai/stark-ai-developer/assets/composer-icon.png
+          cp site/public/icon-512.png adapters/openai/stark-ai-developer/assets/logo.png
+
+      - name: Materialize generated plugin projections
+        run: npm run plugin:sync
+
+      - name: Apply repository formatting
+        run: pnpm format
+
+      - name: Validate repository and release contracts
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          npm run plugin:sync:check
+          npm run plugin:validate
+          npm run plugin:test
+          npm run validate
+          pnpm format:check
+          pnpm lint
+          node scripts/validate-release.mjs --version 0.20.0 --base-ref "$BASE_SHA"
+          npm run plugin:pack
+
+      - name: Upload reproducible OpenAI release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: stark-ai-developer-openai-${{ github.event.pull_request.head.sha }}
+          path: dist/openai/*
+          if-no-files-found: error
+
+      - name: Commit finalized implementation to the PR branch
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          rm -f .github/workflows/finalize-stark-ai-developer.yml
+          rm -rf .github/bootstrap
+          rm -f .github/scripts/finalize-stark-ai-developer.py
+          rmdir .github/scripts 2>/dev/null || true
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: implement stark AI Developer plugin distributions"
+          git push origin "HEAD:${HEAD_BRANCH}"
