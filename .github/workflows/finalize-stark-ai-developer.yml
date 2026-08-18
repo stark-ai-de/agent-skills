@@ -38,6 +38,25 @@ jobs:
       - name: Apply repository-complete implementation updates
         run: python3 .github/scripts/finalize-stark-ai-developer.py
 
+      - name: Reconcile focused validator versions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          validator = Path("scripts/validation/memory-curators/validate.mjs")
+          text = validator.read_text(encoding="utf-8")
+          old = '''  if (version !== "0.2.0")
+              fail(`${skillRelative}: expected version 0.2.0; found ${version ?? "none"}`);'''
+          new = '''  const expectedVersion = curator.name === "codex-memory-curator" ? "0.2.1" : "0.2.0";
+            if (version !== expectedVersion)
+              fail(
+                `${skillRelative}: expected version ${expectedVersion}; found ${version ?? "none"}`,
+              );'''
+          if old not in text:
+              raise SystemExit("memory-curator version assertion was not found")
+          validator.write_text(text.replace(old, new), encoding="utf-8")
+          PY
+
       - name: Materialize package assets and licenses
         run: |
           mkdir -p adapters/openai/stark-ai-developer/assets
