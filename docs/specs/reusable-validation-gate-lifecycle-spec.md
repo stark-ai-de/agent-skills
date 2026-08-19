@@ -42,45 +42,45 @@ The companion [validation orchestration boundaries spec](validation-orchestratio
 
 A caller provides only validated differences:
 
-| Input | Meaning |
-| --- | --- |
-| Gate identity | Stable identifier of the selected task |
-| Resolution | Command, inputs, dependencies, tools, timeout, evidence, and outputs |
-| Workspace boundary | Candidate identity before and after execution |
-| Producer identity | Run, attempt, job, and source identity used by evidence |
-| Dependency mode | Whether the task's declared profiles must be installed |
-| Prerequisite outcomes | Exact earlier outcomes required by the task, when any |
-| Downstream outcome | Optional normalized outcome for a dependent task |
+| Input                 | Meaning                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| Gate identity         | Stable identifier of the selected task                               |
+| Resolution            | Command, inputs, dependencies, tools, timeout, evidence, and outputs |
+| Workspace boundary    | Candidate identity before and after execution                        |
+| Producer identity     | Run, attempt, job, and source identity used by evidence              |
+| Dependency mode       | Whether the task's declared profiles must be installed               |
+| Prerequisite outcomes | Exact earlier outcomes required by the task, when any                |
+| Downstream outcome    | Optional normalized outcome for a dependent task                     |
 
 Unknown inputs and security-sensitive implicit defaults must be rejected.
 
 ## Lifecycle
 
-| Phase | Required behavior |
-| --- | --- |
-| Validate | Confirm resolution, selection, workspace, candidate boundary, and producer identity before side effects |
-| Prepare | Install only declared dependency profiles; never rely on ambient packages |
-| Attest | Resolve exact executables, tool identities, platform policy, and a sanitized environment |
-| Verify prerequisites | Accept only exact successful outcomes named by the task contract |
-| Execute | Run the resolved command with bounded output, timeout, and process cleanup |
-| Normalize | Convert raw facts into one canonical passed or failed outcome |
-| Publish | Write a reusable result only for a complete unchanged success; otherwise write a tombstone |
-| Propagate | Publish required evidence before returning the final worker status |
+| Phase                | Required behavior                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| Validate             | Confirm resolution, selection, workspace, candidate boundary, and producer identity before side effects |
+| Prepare              | Install only declared dependency profiles; never rely on ambient packages                               |
+| Attest               | Resolve exact executables, tool identities, platform policy, and a sanitized environment                |
+| Verify prerequisites | Accept only exact successful outcomes named by the task contract                                        |
+| Execute              | Run the resolved command with bounded output, timeout, and process cleanup                              |
+| Normalize            | Convert raw facts into one canonical passed or failed outcome                                           |
+| Publish              | Write a reusable result only for a complete unchanged success; otherwise write a tombstone              |
+| Propagate            | Publish required evidence before returning the final worker status                                      |
 
 Gate-specific evidence extraction belongs behind a typed evidence contract, not caller-specific shell parsing.
 
 ## Invariants
 
-| Condition | Required result |
-| --- | --- |
-| Resolution or candidate identity is malformed | Stop before execution |
-| Dependency or runtime preparation fails | Record a tombstone when possible, then fail |
-| A prerequisite is missing, stale, duplicate, or contradictory | Fail closed |
-| The command fails or times out | Record failure evidence, then fail |
-| The candidate changes during execution | Reject the result |
-| Required evidence is incomplete | Reject apparent success |
-| Required publication cannot be verified | Fail the worker |
-| Execution and publication both satisfy the contract | Return success with stable metadata |
+| Condition                                                     | Required result                             |
+| ------------------------------------------------------------- | ------------------------------------------- |
+| Resolution or candidate identity is malformed                 | Stop before execution                       |
+| Dependency or runtime preparation fails                       | Record a tombstone when possible, then fail |
+| A prerequisite is missing, stale, duplicate, or contradictory | Fail closed                                 |
+| The command fails or times out                                | Record failure evidence, then fail          |
+| The candidate changes during execution                        | Reject the result                           |
+| Required evidence is incomplete                               | Reject apparent success                     |
+| Required publication cannot be verified                       | Fail the worker                             |
+| Execution and publication both satisfy the contract           | Return success with stable metadata         |
 
 ## Abstraction boundary
 
