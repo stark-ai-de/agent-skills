@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
+import { absoluteSiteUrl, withBase } from "../lib/site";
+
+const canonicalUrl = absoluteSiteUrl("/terms/");
+const description =
+  "Reviewable terms draft for the stark AI Developer skills-only package and repository-local distributions.";
+---
+
+<BaseLayout
+  title="Terms"
+  description={description}
+  canonicalPath="/terms/"
+  structuredData={[
+    webPageStructuredData({ canonicalUrl, description, title: "Terms" }),
+    breadcrumbStructuredData([{ name: "Terms", url: canonicalUrl }]),
+  ]}
+>
+  <section class="hero-section">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">Reviewable draft · last reviewed 2026-08-18</p>
+      <h1>Terms and use boundary</h1>
+      <p class="hero-copy__lead">
+        These draft terms describe how to interpret the repository, plugin projections,
+        standalone artifacts, and local marketplace entries while legal review is pending.
+      </p>
+    </div>
+    <aside class="hero-panel" aria-labelledby="terms-status">
+      <h2 id="terms-status">Draft status</h2>
+      <p>
+        Confirm the final contracting party, jurisdiction, warranty, liability, support,
+        and third-party terms before any public submission.
+      </p>
+    </aside>
+  </section>
+
+  <section class="catalog-band prose" aria-labelledby="license-title">
+    <h2 id="license-title">License and source</h2>
+    <p>
+      Repository material is provided under the license in
+      <a href="https://github.com/stark-ai-de/agent-skills/blob/main/LICENSE">LICENSE</a>.
+      Canonical skills remain maintained under the repository's
+      <code>skills/&lt;category&gt;/&lt;skill&gt;/</code> tree; generated plugin projections
+      and archives are distribution outputs, not alternate sources.
+    </p>
+    <h2>Permitted interpretation</h2>
+    <p>
+      Use the skills and generated packages only within the capabilities, permissions,
+      approvals, and policies of the installing client and host. Review outputs before
+      relying on them. The package does not promise correctness, availability, security,
+      public listing, or compatibility beyond the surfaces and evidence explicitly recorded
+      for a release.
+    </p>
+    <h2>Local and public distribution</h2>
+    <p>
+      The repository marketplace, personal marketplace, workspace publication, GitHub
+      release, and standalone installation are local or distribution mechanisms. None is
+      proof of approval or publication in the public Universal Plugins Directory. Public
+      submission, review, and publication require separate external authority.
+    </p>
+    <h2>Changes and termination</h2>
+    <p>
+      A maintainer may revise, suspend, replace, or remove a repository artifact. Published
+      plugin versions are immutable snapshots and require a new reviewed version for later
+      changes. Confirm the final update, rollback, suspension, and delisting process during
+      release review.
+    </p>
+    <p><a href={withBase("/support/")}>Read support guidance</a> or <a href={withBase("/privacy/")}>read the privacy draft</a>.</p>
+  </section>
+</BaseLayout>

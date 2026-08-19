@@ -1,0 +1,1711 @@
+{
+  "archiveProfile": "zip-store-v1",
+  "bundle": {
+    "displayName": "stark AI Developer",
+    "id": "codex",
+    "skills": [
+      {
+        "name": "codex-memory-curator",
+        "source": "skills/codex-operations/codex-memory-curator"
+      },
+      {
+        "name": "codex-spec-interviewer",
+        "source": "skills/codex-operations/codex-spec-interviewer"
+      },
+      {
+        "name": "animated-readme-logo",
+        "source": "skills/engineering-workflows/animated-readme-logo"
+      },
+      {
+        "name": "architecture-compass",
+        "source": "skills/engineering-workflows/architecture-compass"
+      },
+      {
+        "name": "codegraph-ast-grep",
+        "source": "skills/engineering-workflows/codegraph-ast-grep"
+      },
+      {
+        "name": "drawio-diagrams",
+        "source": "skills/engineering-workflows/drawio-diagrams"
+      }
+    ]
+  },
+  "bundleHash": "b2d496e49651069e45a85ce812f8289bcffb7a7e519a3f2f3894bbcccf84ec1d",
+  "files": [
+    {
+      "byteLength": 10271,
+      "mode": "0644",
+      "path": "LICENSE",
+      "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
+    },
+    {
+      "byteLength": 658,
+      "mode": "0644",
+      "path": "README.md",
+      "sha256": "7ca17c9bf8f56347a3e99317e358e074c391f082388e0115d87031ba688dbf39"
+    },
+    {
+      "byteLength": 907,
+      "mode": "0644",
+      "path": "plugin.json",
+      "sha256": "2d7399665b5f5218c770738f62160ed9067e2ea020f1f97f72546068cde6b4af"
+    },
+    {
+      "byteLength": 12772,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/SKILL.md",
+      "sha256": "b2502d7316ffde4a535cad6e68b2973eecb7049a1c57bbb2f0549487946623aa"
+    },
+    {
+      "byteLength": 510,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/agents/openai.yaml",
+      "sha256": "13f50f7c71996a40d0373481f205fa63dc7e9299ddf8e88202b61d42c8c1990e"
+    },
+    {
+      "byteLength": 2893,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/asset-pipeline.md",
+      "sha256": "1371482164ab0df0a9f49ab628f1e8ee9505266988c616635ca6d4f4b1dc262c"
+    },
+    {
+      "byteLength": 3381,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/asset-transformation.md",
+      "sha256": "0e45ad8883835970c3cf0a401bbd0f2d91a4b1010fc3e743c204820f4e320920"
+    },
+    {
+      "byteLength": 7081,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/export-recipe.md",
+      "sha256": "3a09a747d625ac446eb8af782501740195f05f4b7af34e464bcb72011e430627"
+    },
+    {
+      "byteLength": 3224,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/github-readme-compatibility.md",
+      "sha256": "a3e0521c8dc2b5dd4a311d10a2b807b0b350846ca4409a0d5b764d47e4ead394"
+    },
+    {
+      "byteLength": 3858,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/local-tooling.md",
+      "sha256": "65c3becc15497c6a31e41c9e2cd62c23820bb30384250ac7afd2c0463121872d"
+    },
+    {
+      "byteLength": 1906,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/motion-rubric.md",
+      "sha256": "5e91c7c8eedba2558eb6f26220845d0fd02949b183fff96f15eacc15f9ab2ab7"
+    },
+    {
+      "byteLength": 3209,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/output-contract.md",
+      "sha256": "ee2e5e7b1f6b7b7c093ddc2c8f4519219b36d25689e605468e9fe2d5594eae6c"
+    },
+    {
+      "byteLength": 3028,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/provider-routing.md",
+      "sha256": "728d278315ce876ed686df029e2d8bba643accf751f6c28ca60a760a90ed410b"
+    },
+    {
+      "byteLength": 3189,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/readme-audit-safety.md",
+      "sha256": "073ab06c831c03a52baf9dc1e185982916debed8561de924bfd984e7ccd50753"
+    },
+    {
+      "byteLength": 2375,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/references/readme-snippets.md",
+      "sha256": "df39ae857ee2dfd2a55fd7945f17dc828c81707699bbae2fdb4ee3cd4fd69914"
+    },
+    {
+      "byteLength": 46012,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/audit-readme-logo-assets.mjs",
+      "sha256": "7c010b9f3744d251a211a3c9a9991e479fff765305653cdbd70fc2a0c37b4362"
+    },
+    {
+      "byteLength": 55930,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/export-readme-logo-animation.mjs",
+      "sha256": "6d9a67c8fb5a2dd5cb2fa5006a87a045769a55fe933198765be4d96a724d9976"
+    },
+    {
+      "byteLength": 5994,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/generate-readme-logo-snippet.mjs",
+      "sha256": "a83fe4174cb11c83ca602394506ee556882efdc76fbdd1ae2279dc8afa85a0d4"
+    },
+    {
+      "byteLength": 4709,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/inspect-animated-image.mjs",
+      "sha256": "7c2fc6a9c57ca53147358e42a6601a37e1dc71f18c77a1d281f6d97b9e6bd575"
+    },
+    {
+      "byteLength": 29757,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/lib/animated-image.mjs",
+      "sha256": "6e0ed88a4cf068ec09038d6c0a8886f138d1c0ab8e12f1fdb87d74ecdf6832ef"
+    },
+    {
+      "byteLength": 16666,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/lib/transactional-output.mjs",
+      "sha256": "acfbdbcec11a4b4d29ae362575b39f96e7ae0ad1bad154eaf3f3ceaf8e33bb94"
+    },
+    {
+      "byteLength": 81730,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/scripts/validate_logo_svg.py",
+      "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
+    },
+    {
+      "byteLength": 19454,
+      "mode": "0644",
+      "path": "skills/architecture-compass/SKILL.md",
+      "sha256": "c655bbf99b94eadd1e340965f887756086dfe5b30801a976b16042c21636e08d"
+    },
+    {
+      "byteLength": 810,
+      "mode": "0644",
+      "path": "skills/architecture-compass/agents/openai.yaml",
+      "sha256": "9e4addedf37f8b8ba5c33734cf7ee759a9afd01a8ad15ad5b3fb3f09f88e2ece"
+    },
+    {
+      "byteLength": 1492,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-example.guide.md",
+      "sha256": "db39def10d1d0c80e84bb0169673a0dd6d4592893f2e29f4ff2e821b5b813f63"
+    },
+    {
+      "byteLength": 2306,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-example.long.md",
+      "sha256": "87ccb463e7af40d3977d381b4df8feb026f505c83a3e5b07a4af54bafa614f9c"
+    },
+    {
+      "byteLength": 1101,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-example.short.md",
+      "sha256": "6a66b9d8c915e69a35d2738a00a2689bb30d60ffcb33c3d5956856734183442b"
+    },
+    {
+      "byteLength": 1333,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-index-template.md",
+      "sha256": "21bc7a2935db4fb75c5c2a4aec6bd835d5ed6a884e4b72f9ff201d521181b1b8"
+    },
+    {
+      "byteLength": 1210,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-template.guide.md",
+      "sha256": "958f32c01c0bd4dd4a8f6bdbe1f1bb5b7254f5a0bb45cbe815393a4e97516904"
+    },
+    {
+      "byteLength": 1336,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-template.long.md",
+      "sha256": "fba59c34790dcee03584a4fcc1765fcba1c862efd196f6f64d72502bcd213a94"
+    },
+    {
+      "byteLength": 1092,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/adr-template.short.md",
+      "sha256": "7d401a614d8261e7203da3c2334e6986125263d147627843b339a0f581a89c7e"
+    },
+    {
+      "byteLength": 6072,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/agent-instructions-template.md",
+      "sha256": "a95674e6e52c1e4286d81d58d2c0d4d38bf515bb2b9425ad8b664f6bd7db6ae3"
+    },
+    {
+      "byteLength": 6897,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/new-repo-adoption-plan-template.md",
+      "sha256": "b045aca266e58e1a29fece118f9d91b713eecfb66f180cc41c7610217565c921"
+    },
+    {
+      "byteLength": 7196,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/refactor-report-template.md",
+      "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
+    },
+    {
+      "byteLength": 11279,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/setup-report-template.md",
+      "sha256": "188ac297dc6a5f49020057e17de3fdcd70c6d904072d542c077e44060e22c4b1"
+    },
+    {
+      "byteLength": 3796,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.guide.md",
+      "sha256": "bf4a3b45de90fe0be11864196508d99c3b14db34b7198e4de1f14e9ae3db4e4a"
+    },
+    {
+      "byteLength": 4877,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.long.md",
+      "sha256": "9e583668e0a73419b54c9b6a43c548090cd79781bc6cd1f6b9cf4bad49383993"
+    },
+    {
+      "byteLength": 1808,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.short.md",
+      "sha256": "a3c912160c88d4ace816b453f0ab2f3e5afc9c239d95c7f1489585f7ff2bd768"
+    },
+    {
+      "byteLength": 4109,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-002-select-actions-resolve-authority-and-record-guardrail-adoption.guide.md",
+      "sha256": "11a994314419ac5ed0701efca064a9ba67e14a46b15574c3a85b03bde154d138"
+    },
+    {
+      "byteLength": 6513,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-002-select-actions-resolve-authority-and-record-guardrail-adoption.long.md",
+      "sha256": "b4766b4d4d8fb1cd0898e1653534a7ca0c7bcda6191c5cff206c0e6b76e119de"
+    },
+    {
+      "byteLength": 2073,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-002-select-actions-resolve-authority-and-record-guardrail-adoption.short.md",
+      "sha256": "20c01ca5868879f0b63d7605142195cbe21c685e254f0e7bed7c3aaed3438a2a"
+    },
+    {
+      "byteLength": 5370,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md",
+      "sha256": "1351e8a7d2b0afbb5f218731c3bf6bf286364406348c2f206bc564a51833d265"
+    },
+    {
+      "byteLength": 6580,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
+      "sha256": "0c8e41b10e4aea398b97629f9c509e0b54484142049041dee2f35c1d3cb1540d"
+    },
+    {
+      "byteLength": 1982,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.short.md",
+      "sha256": "0e0c0b3f179f45c1814d849fe894571bfca50465ff2b42e94d6d70799de0a3cf"
+    },
+    {
+      "byteLength": 4794,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md",
+      "sha256": "2734379979842499069567b7ca2e9481e17f253c149d401736d5266fbef5619a"
+    },
+    {
+      "byteLength": 6004,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.long.md",
+      "sha256": "7768680e8eb6dfd7066768b70b4abdfdebbcbe2e9c1d6938419ab4f1fd381231"
+    },
+    {
+      "byteLength": 1838,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.short.md",
+      "sha256": "bd835eeb5d728f61a5491c3a54d26ab1ac94dfcd61dc96fbba29d8c06d561760"
+    },
+    {
+      "byteLength": 5261,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-005-make-repository-adrs-binding-agent-guardrails.guide.md",
+      "sha256": "9dafde86607804b44059929c33c81cf1557a15e7e8c5eaef49b46d99b577d229"
+    },
+    {
+      "byteLength": 5582,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-005-make-repository-adrs-binding-agent-guardrails.long.md",
+      "sha256": "f5a4d33f9691f3df375afcf46466d19f25295d5b688fea027548531045ed3cbe"
+    },
+    {
+      "byteLength": 1682,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-005-make-repository-adrs-binding-agent-guardrails.short.md",
+      "sha256": "74f7e0fb4be9347b1edd6d461ab3534345dcf7a5cdbb02e1f2a52f0034c7c8d3"
+    },
+    {
+      "byteLength": 4640,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md",
+      "sha256": "904416fa99387ca7b655836c0e072ea46deeb7e31e10b3c4b643eeef1ad54af4"
+    },
+    {
+      "byteLength": 5881,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.long.md",
+      "sha256": "cdf128afde225d895cb6743485b1616476374656543bc439a3c3ce0bbc82c523"
+    },
+    {
+      "byteLength": 1737,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.short.md",
+      "sha256": "5a4099c373b953331654463aa4f5c24316219d8f9153e4a515c050db9bcc6234"
+    },
+    {
+      "byteLength": 4419,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.guide.md",
+      "sha256": "086310b32f651ee5766cffa669a161fe02c061dd0c9bb7f969030bb092124c5e"
+    },
+    {
+      "byteLength": 5810,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.long.md",
+      "sha256": "fa233ab164f70e9b03ad022e496f640b6f9d4be0402cac25db75d8acf07fbd74"
+    },
+    {
+      "byteLength": 1807,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-007-enforce-runtime-safe-module-and-public-package-boundaries.short.md",
+      "sha256": "5b3bf34b18be458cb7fe66c4a7a5da58f021640da79846e46ad73e910997173d"
+    },
+    {
+      "byteLength": 6658,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.guide.md",
+      "sha256": "83050f37b961c5288334a1ab3402146fb1d4af37f19598cffa5efad09ea342e7"
+    },
+    {
+      "byteLength": 6729,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.long.md",
+      "sha256": "f421b8f11ed8dfa2426273aa6c2a02590507dbee5687d61c9110087afd713204"
+    },
+    {
+      "byteLength": 1881,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-008-compose-nextjs-routes-rendering-and-component-responsibilities.short.md",
+      "sha256": "5bab14177840f09b1f32801b4597f14a399142c1b3dec347a9c66465b19d8b47"
+    },
+    {
+      "byteLength": 14433,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-009-choose-read-query-caching-and-freshness-boundaries.guide.md",
+      "sha256": "fc40d772a8f72462ac0e1ae43326c38dd216ca685287239b9f714dffbe87888c"
+    },
+    {
+      "byteLength": 5436,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-009-choose-read-query-caching-and-freshness-boundaries.long.md",
+      "sha256": "d2ff5e94e7729b3beae82b5f50204137b46284fa9fcc5d572635991cb7d3c253"
+    },
+    {
+      "byteLength": 2532,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-009-choose-read-query-caching-and-freshness-boundaries.short.md",
+      "sha256": "d2f4bd391d66620e1bd58f58365f8787d5d8371d39178a1e88f6d1e2d0b6278a"
+    },
+    {
+      "byteLength": 6326,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-010-protect-writes-behind-validated-command-boundaries.guide.md",
+      "sha256": "490c40286717e6bd514f8f92868deea07b81d7e63246620b9df97f7c1a5ade86"
+    },
+    {
+      "byteLength": 4695,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-010-protect-writes-behind-validated-command-boundaries.long.md",
+      "sha256": "7e11fcf2df3c22d1a424537631f148e3c89d93dc496cb563296808eff4080a08"
+    },
+    {
+      "byteLength": 2628,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-010-protect-writes-behind-validated-command-boundaries.short.md",
+      "sha256": "b3c74aec5dd2ce73975b92a1383f3121c658616808a73a36e7fc4ba8c5be8fec"
+    },
+    {
+      "byteLength": 28071,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles-explicitly.guide.md",
+      "sha256": "d7c89f36c4ba8b20881601a5fd7b731f73b759a21ec9b6be62c87468bf246bcf"
+    },
+    {
+      "byteLength": 5171,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles-explicitly.long.md",
+      "sha256": "582c86903d780e1dfd992f52c27f5cc1a76785888d1bb286675e6cb59eea0f4a"
+    },
+    {
+      "byteLength": 2724,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-011-compose-long-running-backend-runtimes-and-lifecycles-explicitly.short.md",
+      "sha256": "e01591bd958663fa9f39ef00baf70fe5786662f7ffbda0eb1390cb7ec5e2522a"
+    },
+    {
+      "byteLength": 4674,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.guide.md",
+      "sha256": "0213879110c00ee9cae324e1959990c2be1951de86080b652a522017b4fd17bc"
+    },
+    {
+      "byteLength": 4864,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.long.md",
+      "sha256": "a9c5ce4be68d323b2c55370d214e5c55dbbc9b9258c7e3db88cfb6f3e78bc76b"
+    },
+    {
+      "byteLength": 2203,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-012-resolve-environment-and-configuration-at-deployable-boundaries.short.md",
+      "sha256": "b0684259b0e8543b7aae4869ef5f65a0e5bbb2103110648f54aa5c6551dbb164"
+    },
+    {
+      "byteLength": 6881,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.guide.md",
+      "sha256": "bd17397ac82c48ba9d474f919bc3b23816efc7aac8ffe4fbd03016dc336eebb5"
+    },
+    {
+      "byteLength": 5995,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.long.md",
+      "sha256": "762b06b5ab4b62dc9f575ce4a07d048e3ed6f6eee8c3d993a9c50d4b6f3cd265"
+    },
+    {
+      "byteLength": 2319,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-013-own-language-package-build-lint-and-supply-chain-tooling-explicitly.short.md",
+      "sha256": "6659c17d2973b41251da292887bbedfc9563c91ac32c1548cc24cf62c356019b"
+    },
+    {
+      "byteLength": 5429,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md",
+      "sha256": "310a63278ebbf6faac52f126999e98f94ce1eb64fa47e8efcd2bfc9ef941d606"
+    },
+    {
+      "byteLength": 5571,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.long.md",
+      "sha256": "398dc343e23e5f0f8845ec86044a07148ec17b212d5ef63892b1a38fb1066acd"
+    },
+    {
+      "byteLength": 2201,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.short.md",
+      "sha256": "019ff300d626c68c41c53bb2e19f07c81e1110b8d1595112d694c930e7a60dce"
+    },
+    {
+      "byteLength": 4742,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-015-select-frontend-capability-libraries-by-product-need.guide.md",
+      "sha256": "1e0917c42d9aab6bf766217611e4bba9711a5e4c4eb327f1085651426fe389fa"
+    },
+    {
+      "byteLength": 5659,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-015-select-frontend-capability-libraries-by-product-need.long.md",
+      "sha256": "e5dbf5d31ba73be47767981758092190aa327dbc9b4e76442451b4b25e292813"
+    },
+    {
+      "byteLength": 2732,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-015-select-frontend-capability-libraries-by-product-need.short.md",
+      "sha256": "19312c5d78e73b4b6035a4760f347d981d4c7b48bc395a801a23dc59e03104ef"
+    },
+    {
+      "byteLength": 5035,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.guide.md",
+      "sha256": "c8054959df5af1866216e10f032e836ceddd0ba1eb079716b887f1a792931dc3"
+    },
+    {
+      "byteLength": 6191,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.long.md",
+      "sha256": "f0bc8ff6b380f6c38a458982a3eaba0ccb768ad28e5a0ee455aaa9ac90287b9d"
+    },
+    {
+      "byteLength": 2772,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-016-select-ai-model-streaming-ui-and-agent-capabilities-deliberately.short.md",
+      "sha256": "42609657c82bddbbeb2495cabadfd6d4b0bcf4cecf4efb355f42da3084e85e8a"
+    },
+    {
+      "byteLength": 6814,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-017-select-relational-cache-queue-and-realtime-capabilities-by-data-requirements.guide.md",
+      "sha256": "0d944cbc9274c254112b64b831199813c60778d5b95104222d0f856abf854ee2"
+    },
+    {
+      "byteLength": 5759,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-017-select-relational-cache-queue-and-realtime-capabilities-by-data-requirements.long.md",
+      "sha256": "beaa20b589e30d86478c99a826d1e302cf2e0cd3d53834c0a5170c2c9552b7e4"
+    },
+    {
+      "byteLength": 2817,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-017-select-relational-cache-queue-and-realtime-capabilities-by-data-requirements.short.md",
+      "sha256": "493fb24197ec3e7dc3174bb58361cdc09472e535b79861a9845dd33021dfbbe7"
+    },
+    {
+      "byteLength": 3538,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.guide.md",
+      "sha256": "81b03a55685612fe916fae003995ab495d0aa0cf547619969e0ecaa24d99b2a3"
+    },
+    {
+      "byteLength": 6042,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.long.md",
+      "sha256": "99a53c6955e55a8a88574dbbf79881a60f973537e603f8d7eb719551b45f78c4"
+    },
+    {
+      "byteLength": 2148,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.short.md",
+      "sha256": "83b831f00a0a1c16816c0c12d84cb437b2418d7613c417f33d853bb72bc69730"
+    },
+    {
+      "byteLength": 3629,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-019-apply-security-and-privacy-controls-at-every-trust-boundary.guide.md",
+      "sha256": "28dcc119e236bbf7962e2933f598457a67d70f0687c43dcd4c9b79876a350454"
+    },
+    {
+      "byteLength": 6217,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-019-apply-security-and-privacy-controls-at-every-trust-boundary.long.md",
+      "sha256": "806919cb1fea39ef25f7df705167294884b10c77b297c21f8a8c810fa596b3ce"
+    },
+    {
+      "byteLength": 2010,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-019-apply-security-and-privacy-controls-at-every-trust-boundary.short.md",
+      "sha256": "90607b8f8752d1c9a97efb61000f9c0f8aa321346218e20916dd55c3d4f95937"
+    },
+    {
+      "byteLength": 3829,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-020-define-data-ownership-tenancy-retention-and-deletion-before-access-paths.guide.md",
+      "sha256": "94dfbe962c19ab95ebe309fca6819faa2d2667418256e0e595ad1e926c18ca9c"
+    },
+    {
+      "byteLength": 5083,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-020-define-data-ownership-tenancy-retention-and-deletion-before-access-paths.long.md",
+      "sha256": "d53242ef0b5c8d6a12040604a95f0da373df8cd8506d4171e81f89fa765d81e6"
+    },
+    {
+      "byteLength": 1989,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-020-define-data-ownership-tenancy-retention-and-deletion-before-access-paths.short.md",
+      "sha256": "2cc4256e78d23a18a22a7058a5783226202078ecf9b35581d06a9ff8e70599b4"
+    },
+    {
+      "byteLength": 3928,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-021-preserve-compatibility-through-explicit-migrations-and-deprecation-windows.guide.md",
+      "sha256": "cc286fe9d7a6c4586bb9cf58ac4a552730faa83c5595b5c9476d60cb3636bb9d"
+    },
+    {
+      "byteLength": 5737,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-021-preserve-compatibility-through-explicit-migrations-and-deprecation-windows.long.md",
+      "sha256": "5f41e30ea0c4c28ad3466f2723310fd4ec810ce625e84ccd9ad4097f9f70c34e"
+    },
+    {
+      "byteLength": 2063,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-021-preserve-compatibility-through-explicit-migrations-and-deprecation-windows.short.md",
+      "sha256": "f19fabda828111d7f3a0f43c514f54ec554f9b8fb81d73e4aa27807840e7b3a1"
+    },
+    {
+      "byteLength": 3491,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-022-deliver-reversible-slices-with-explicit-rollback-and-promotion-gates.guide.md",
+      "sha256": "9a2758f47f5b9dbcbaa19b0a8a1bd75a4a8b5e7d5e6c75d98dbe7e824e8769a6"
+    },
+    {
+      "byteLength": 5086,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-022-deliver-reversible-slices-with-explicit-rollback-and-promotion-gates.long.md",
+      "sha256": "a4852b99fcde2acb38a395dc5086e6f27e5b5a5142010ce4e4865614fd643d93"
+    },
+    {
+      "byteLength": 1915,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-022-deliver-reversible-slices-with-explicit-rollback-and-promotion-gates.short.md",
+      "sha256": "93372f49519e9d2f56ec3c9cf54f60fd44c07e9fa3ce4d252d1d8365a2b2be0b"
+    },
+    {
+      "byteLength": 3501,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-023-operate-services-with-observable-health-readiness-failure-and-cleanup.guide.md",
+      "sha256": "c4ff7b8c282e56d6c9de7300f44ae32554db94a764f74013786a6f83ab68deb7"
+    },
+    {
+      "byteLength": 5842,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-023-operate-services-with-observable-health-readiness-failure-and-cleanup.long.md",
+      "sha256": "7a0a7fccd3e76c5a7ec6711dbde40c6601f091386228024f31c2e3cd31e16e84"
+    },
+    {
+      "byteLength": 1968,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-023-operate-services-with-observable-health-readiness-failure-and-cleanup.short.md",
+      "sha256": "49f2948c95e18df2250f81c33c4664e778a8aa98d8e4d892766536e7dab0e7e6"
+    },
+    {
+      "byteLength": 3743,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-024-meet-an-explicit-accessibility-baseline-with-automated-and-manual-proof.guide.md",
+      "sha256": "3e6db309411c2690640b25015835bb20430fc3ad0767c3f5771936c85c39a2d4"
+    },
+    {
+      "byteLength": 5823,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-024-meet-an-explicit-accessibility-baseline-with-automated-and-manual-proof.long.md",
+      "sha256": "aadc55557f7a535782b0be14f60647e84ce4d5a037e9abe18c1212e105706954"
+    },
+    {
+      "byteLength": 2071,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-024-meet-an-explicit-accessibility-baseline-with-automated-and-manual-proof.short.md",
+      "sha256": "c4f8e1286ac7cf24036f08ccf0a07598b195eda55e9b2ed91d4d6cbc17bebc30"
+    },
+    {
+      "byteLength": 3512,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-025-set-measurable-performance-budgets-and-optimize-from-evidence.guide.md",
+      "sha256": "7c21f3100a98c6f6fa8c4b955a2a347c3d806f6be366695136a46e10e7baff49"
+    },
+    {
+      "byteLength": 5812,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-025-set-measurable-performance-budgets-and-optimize-from-evidence.long.md",
+      "sha256": "09a7e0611a0d32f70e6a2e57e6326191faac19dbd72414ed5d1c60c7eb3029ba"
+    },
+    {
+      "byteLength": 2085,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-025-set-measurable-performance-budgets-and-optimize-from-evidence.short.md",
+      "sha256": "665473897e909ee162f4743d457572172d8555342f1373082b308a2b2f451ee0"
+    },
+    {
+      "byteLength": 6146,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-026-route-architecture-compass-through-explicit-setup-and-apply-pipelines.guide.md",
+      "sha256": "fc05c743d81f51f6caec51b191ec5ec67a0c6e229c7a6b02b7d619a1e9d06c99"
+    },
+    {
+      "byteLength": 10289,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-026-route-architecture-compass-through-explicit-setup-and-apply-pipelines.long.md",
+      "sha256": "82af9069d399c0d61070b35e3eb54fb8f282e19ef2cac492d888892a458bd613"
+    },
+    {
+      "byteLength": 2568,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-026-route-architecture-compass-through-explicit-setup-and-apply-pipelines.short.md",
+      "sha256": "c757292c29169551cb501aea756715d735c9d0def8b5c0df6df71b8dd7ce91f7"
+    },
+    {
+      "byteLength": 2086,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-027-use-the-open-agent-skills-specification.guide.md",
+      "sha256": "9eae2375f7cecd2718e26556b4857330d72e367f6ae377ad07c4f61b1c999c7c"
+    },
+    {
+      "byteLength": 3297,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-027-use-the-open-agent-skills-specification.long.md",
+      "sha256": "e76647695fe6face28ebdbf2568c03482b03a7c83b8099e7e115472673659b65"
+    },
+    {
+      "byteLength": 1673,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-027-use-the-open-agent-skills-specification.short.md",
+      "sha256": "e4e20986990b221ce5e94480fe12686b1636b9740befd225d233f2294df78324"
+    },
+    {
+      "byteLength": 2693,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-028-keep-candidates-outside-the-promoted-public-catalog.guide.md",
+      "sha256": "3b8aa52ee5c1e917cc1e88bdea3713339d19885a8ab90cdc33b38ccbcf0d38f0"
+    },
+    {
+      "byteLength": 3312,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-028-keep-candidates-outside-the-promoted-public-catalog.long.md",
+      "sha256": "26ae31d0baca63b9d8db0fdbc0fa47d37ef285f9a3ad2f3adc30899a7611e6ab"
+    },
+    {
+      "byteLength": 1669,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-028-keep-candidates-outside-the-promoted-public-catalog.short.md",
+      "sha256": "48431da50ff58addef989e7ad3c70b01e94c2bdcca84ad833ae4c3b61afd9593"
+    },
+    {
+      "byteLength": 2429,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-029-promote-skills-through-an-evidence-and-maintenance-gate.guide.md",
+      "sha256": "98e53ad8a5df0cce26dfda987cb4a874e7211b6b92ffec7d06f0f32dfc52814c"
+    },
+    {
+      "byteLength": 3598,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-029-promote-skills-through-an-evidence-and-maintenance-gate.long.md",
+      "sha256": "d34c994f470ec2396f8f26f5d2a01ed7385a73db6529ff365124909dd8c9418b"
+    },
+    {
+      "byteLength": 1676,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-029-promote-skills-through-an-evidence-and-maintenance-gate.short.md",
+      "sha256": "8737d8833b04bd457e87a96afb5629a5868842e0f616989b20c58875650552e3"
+    },
+    {
+      "byteLength": 2286,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-030-license-public-skill-repositories-under-apache-2-0.guide.md",
+      "sha256": "1383fc2acf397e343b24ab5e6be04cc0fd6039ae67c4583595c7351252a37e80"
+    },
+    {
+      "byteLength": 3621,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-030-license-public-skill-repositories-under-apache-2-0.long.md",
+      "sha256": "5088257705b21c2fc8af8537b64e29a51281aedcb56856b46a08d83d9393df02"
+    },
+    {
+      "byteLength": 1797,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-030-license-public-skill-repositories-under-apache-2-0.short.md",
+      "sha256": "6954979a23005763a661f23d46e7ff2ca733c193d2b0e21f3833331262b74d77"
+    },
+    {
+      "byteLength": 2179,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-031-keep-skill-evaluation-evidence-outside-the-runtime-payload.guide.md",
+      "sha256": "424863c2ea8fbde2698e079083145a181f9783fcacc3d5d9c5761621f3ee40d8"
+    },
+    {
+      "byteLength": 3667,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-031-keep-skill-evaluation-evidence-outside-the-runtime-payload.long.md",
+      "sha256": "430316a79d6074b855a488629742cc8d074e612226c999bbed270ba3ea0fa74e"
+    },
+    {
+      "byteLength": 1804,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-031-keep-skill-evaluation-evidence-outside-the-runtime-payload.short.md",
+      "sha256": "a0ad536989db3044c2b84b87cfb1a038ed211344e76ebcdb386472c4ae6b688a"
+    },
+    {
+      "byteLength": 2384,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-032-keep-maintainer-local-helper-state-out-of-public-repositories.guide.md",
+      "sha256": "fcb51bfb0447c1e6bfd07ce9142ebdacc35dee6aa06b7b2f7b4955c7f4ddb999"
+    },
+    {
+      "byteLength": 3790,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-032-keep-maintainer-local-helper-state-out-of-public-repositories.long.md",
+      "sha256": "eddb1d9c2db18d1299df32e704982bb9a851b1ea81a61bfb71621f0888b5bf15"
+    },
+    {
+      "byteLength": 1918,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-032-keep-maintainer-local-helper-state-out-of-public-repositories.short.md",
+      "sha256": "f8101aeb4e779a36beb430f85de622b066f9666117fac4ead69a862b73f381d5"
+    },
+    {
+      "byteLength": 2695,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-033-choose-portable-dependency-light-skill-helpers.guide.md",
+      "sha256": "52a9f837c811ef5351414a3dbb7197ad32646c930310a6564a00dd5291bde75a"
+    },
+    {
+      "byteLength": 4035,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-033-choose-portable-dependency-light-skill-helpers.long.md",
+      "sha256": "ddb039f5711f12e4a5bb2e814b2e86930521bb5966a8709b57eeeb3005324839"
+    },
+    {
+      "byteLength": 1803,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-033-choose-portable-dependency-light-skill-helpers.short.md",
+      "sha256": "4702208c066dcf64678bf1d5a9445c266c72cf17267f49f64f40f7baa27bb3ab"
+    },
+    {
+      "byteLength": 2366,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.guide.md",
+      "sha256": "814824922f75c66f38e74ea2e0ab04830f54823c0d627a6f8d71381017d75b58"
+    },
+    {
+      "byteLength": 3847,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.long.md",
+      "sha256": "1a9cfb8f126d59cd104222218d71c350fef0d5f950b763a017ac2b23e98980a0"
+    },
+    {
+      "byteLength": 1809,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.short.md",
+      "sha256": "8e2caeb370312c2fe2f03237ebb2c0946654729962c80cdeea079506d264db3d"
+    },
+    {
+      "byteLength": 2939,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-035-classify-skill-portability-before-choosing-host-variants.guide.md",
+      "sha256": "fb7227370507ab2f44636d1e97be78789f1b62e75eff9d96c16f73d358e1dc78"
+    },
+    {
+      "byteLength": 4667,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-035-classify-skill-portability-before-choosing-host-variants.long.md",
+      "sha256": "2c1350908122c9bfea97b8d97db385e02ff86306517d377029f437377c41247e"
+    },
+    {
+      "byteLength": 1929,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-035-classify-skill-portability-before-choosing-host-variants.short.md",
+      "sha256": "22037f24e84ccedd190e0520b0889a262af8f109cb70a7d5286d8a300eaccd8e"
+    },
+    {
+      "byteLength": 7486,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
+      "sha256": "2046b7240f9a3d5210e87a72a0c1fabb1dadc686f477618495eef9594b387b61"
+    },
+    {
+      "byteLength": 4323,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.long.md",
+      "sha256": "10cd0cad97a9b92d91db0fddb5d4cdc325bd2a4fb7e43691dac0de9aa1097282"
+    },
+    {
+      "byteLength": 1901,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.short.md",
+      "sha256": "c48df6e69de1fd3a9a925ee187aa8d57905c78524775254ff9d9e33ff6b5dd5b"
+    },
+    {
+      "byteLength": 2881,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-037-preserve-target-contracts-and-gate-gateway-extraction.guide.md",
+      "sha256": "6bce82a190936afef67de947aba4ace468cbe31da97440c1cdf20aa743684c3c"
+    },
+    {
+      "byteLength": 4377,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-037-preserve-target-contracts-and-gate-gateway-extraction.long.md",
+      "sha256": "e7f27db3bfbcf8e582c0245153c3999d43314e46e552c9b16564492f647bd4bd"
+    },
+    {
+      "byteLength": 1875,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-037-preserve-target-contracts-and-gate-gateway-extraction.short.md",
+      "sha256": "da08406187289490c108bffb72e70655005b7ec2552e62fd44425d2700fa3dd3"
+    },
+    {
+      "byteLength": 2316,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-038-gate-optional-capabilities-and-tool-side-effects.guide.md",
+      "sha256": "ba03c2251a6234ad40924318b18211d96e213d20fa2da07785c7c75763d07222"
+    },
+    {
+      "byteLength": 4097,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-038-gate-optional-capabilities-and-tool-side-effects.long.md",
+      "sha256": "62f7744c140f34936b8c07acc841701cdbb60df385f9f6dc01dc537a55a6101e"
+    },
+    {
+      "byteLength": 1810,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-038-gate-optional-capabilities-and-tool-side-effects.short.md",
+      "sha256": "703df5dae4335d46fbc065c097430d79cf8f24757cc47b1cd9178776b72f27a3"
+    },
+    {
+      "byteLength": 2429,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.guide.md",
+      "sha256": "a27be7c58f3d8d82a5ec08c09d3116b3b66208593dd8e9fc8016ad87b74c39c9"
+    },
+    {
+      "byteLength": 4371,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.long.md",
+      "sha256": "dc9d2b9f803af0ad1bde8a55c1befe509bb53fe6f94de38e4d330b1ae528b20b"
+    },
+    {
+      "byteLength": 1862,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.short.md",
+      "sha256": "3d1c258c041a9b972577acd7e34178645673ae5b299aa5285c0cb3c31be2c5c6"
+    },
+    {
+      "byteLength": 5554,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.guide.md",
+      "sha256": "b48529bda430c85f124039986ca2c785db341864ba990bd962f4a5ecd8adf250"
+    },
+    {
+      "byteLength": 5604,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.long.md",
+      "sha256": "9c6582e34b9a23842f3d1ee44d764784032a26b709a1c3802318c3c91476d3ec"
+    },
+    {
+      "byteLength": 2170,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-040-offer-an-opinionated-stack-profile-for-new-public-skill-repositories.short.md",
+      "sha256": "5ab154a271f5799987977b02f27a82103ebe7e447ac8fedc3edf3c2b0119cea0"
+    },
+    {
+      "byteLength": 2789,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-041-publish-public-skills-through-github-and-the-open-skills-cli.guide.md",
+      "sha256": "09b0d485ea94c0b890af65afe1fbe5407658b63e2c22d11811f20c444f64a5ac"
+    },
+    {
+      "byteLength": 4304,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-041-publish-public-skills-through-github-and-the-open-skills-cli.long.md",
+      "sha256": "26413bced72b272cf45bd2df7f300449eed5c42bef57789980d4c1ece652ddf6"
+    },
+    {
+      "byteLength": 1937,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-041-publish-public-skills-through-github-and-the-open-skills-cli.short.md",
+      "sha256": "0be8518ba0c34a3cd5bf47c28a16a4c40fe183fe0aa42b0d78b225a98617f749"
+    },
+    {
+      "byteLength": 8121,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-042-calibrate-validation-to-change-risk-and-reuse-fresh-evidence.guide.md",
+      "sha256": "bee7f887646025ef4629a1bab4b07caa0a56997074fea9c1d17f6a7da2cb3af5"
+    },
+    {
+      "byteLength": 14209,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-042-calibrate-validation-to-change-risk-and-reuse-fresh-evidence.long.md",
+      "sha256": "a519d0828a927603e7ab513af4510eec44933cacf5b052449c831993e4a85276"
+    },
+    {
+      "byteLength": 3270,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-042-calibrate-validation-to-change-risk-and-reuse-fresh-evidence.short.md",
+      "sha256": "512afb7d65d98e74cc3d158154c3c19fa0753dab0eaa563bd7712646c21e01a4"
+    },
+    {
+      "byteLength": 6295,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-043-route-architecture-compass-through-explicit-setup-and-apply-pipelines-with-risk-based-validation.guide.md",
+      "sha256": "ace292cc0ccdecd7b872399c1c77cb107a652dca2205a5a37e973cad9d94c1da"
+    },
+    {
+      "byteLength": 12534,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-043-route-architecture-compass-through-explicit-setup-and-apply-pipelines-with-risk-based-validation.long.md",
+      "sha256": "bc34afefd04103b959651f8202fb1058253da846eccb0e7798c8ac777973d861"
+    },
+    {
+      "byteLength": 3074,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-043-route-architecture-compass-through-explicit-setup-and-apply-pipelines-with-risk-based-validation.short.md",
+      "sha256": "f4e9af40325d3378dc438e5f25a9890ab267d82fc4c776e44e204bed23840302"
+    },
+    {
+      "byteLength": 3713,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-044-record-material-decision-lineage-in-non-normative-guides.guide.md",
+      "sha256": "36fa6e59ab57d6ee5cbdaaafd430c870b91e3daee5f5f278539155274de9a7fe"
+    },
+    {
+      "byteLength": 6502,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-044-record-material-decision-lineage-in-non-normative-guides.long.md",
+      "sha256": "cfcdb3fc30e4f2d3b8d5383f650fa8aa89bc291980c47272e3b7484120818524"
+    },
+    {
+      "byteLength": 2445,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-044-record-material-decision-lineage-in-non-normative-guides.short.md",
+      "sha256": "e25c3906314e7e8dc0b39de8988cd1a5d6d04669896664ed99f210367fc0bd4d"
+    },
+    {
+      "byteLength": 10772,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-045-route-architecture-compass-through-setup-audit-and-refactor-with-intent-bound-agent-selection.guide.md",
+      "sha256": "a5fefb047230de8af48bc247c1c83169207a2174ac528c06d11624fb8fa1fcf3"
+    },
+    {
+      "byteLength": 6557,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-045-route-architecture-compass-through-setup-audit-and-refactor-with-intent-bound-agent-selection.long.md",
+      "sha256": "7a1ee0b80ef24aab2d35e12dfe9effbbc3b32bdbabdff47b20990074c1d4248f"
+    },
+    {
+      "byteLength": 3213,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-045-route-architecture-compass-through-setup-audit-and-refactor-with-intent-bound-agent-selection.short.md",
+      "sha256": "89d3177f24c96319c47420148ae63d0af0a721f2788fa1841838be7f8827f77a"
+    },
+    {
+      "byteLength": 3441,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md",
+      "sha256": "aba166fa82f90dd7a5bf491b212a47d126e6d6a4aa489e2975d2e88efac28ca6"
+    },
+    {
+      "byteLength": 5974,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.long.md",
+      "sha256": "70792bfe1b7e334e9109b7b77ce881931ae7838b5b3151ec73716f6275c952d9"
+    },
+    {
+      "byteLength": 2081,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.short.md",
+      "sha256": "6cf09ceddbbda4e1f0edb31b299c42afcc8f21b94c57f384a6e867d99e34117c"
+    },
+    {
+      "byteLength": 7995,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-047-separate-low-and-moderate-validation-risk-with-explicit-triggers.guide.md",
+      "sha256": "a49332ed39b9df752c28cc3526ccad26f45782212ba58eb6514578219649ca1f"
+    },
+    {
+      "byteLength": 14038,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-047-separate-low-and-moderate-validation-risk-with-explicit-triggers.long.md",
+      "sha256": "e8845f430a81fdb4e9f6a04fef4d22a3c9cff691bd0604d960cd2496dacd8ad0"
+    },
+    {
+      "byteLength": 3470,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-047-separate-low-and-moderate-validation-risk-with-explicit-triggers.short.md",
+      "sha256": "8ac4eaf5cc3d8beb65e2cc4bf8d57360a245eb54bd298f7a3a8fdef5ffe4360f"
+    },
+    {
+      "byteLength": 10723,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+      "sha256": "6a56783e52c257a407f464c3c4bf88532b3814297b40adf5e3bd248229a61946"
+    },
+    {
+      "byteLength": 8930,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+      "sha256": "843cdf03a16d096676736027d04a0983c886f88f564523d8038c2ebe7b581f84"
+    },
+    {
+      "byteLength": 3210,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md",
+      "sha256": "f5cf28c193cb8c634743b51b069baaeac7c9719aa795c2349e7639695757764b"
+    },
+    {
+      "byteLength": 10142,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md",
+      "sha256": "c4a279ee13fb6881774e5df5a4c63f498fa1802fb0261867226b903cd314df9d"
+    },
+    {
+      "byteLength": 16741,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.long.md",
+      "sha256": "c06c218234f95734d86ba5be56a7a2adf4ecd86a1447e5a4ba83a3323418047a"
+    },
+    {
+      "byteLength": 4153,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.short.md",
+      "sha256": "6dcd279f15b4579444691bfdf9120c6f491e702ffa56d006f623a1c36054b4cb"
+    },
+    {
+      "byteLength": 3350,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md",
+      "sha256": "27163e13caefb5a81f4a620b4d3832d52af5d4ec8f4956a18352760d8d7a9b8b"
+    },
+    {
+      "byteLength": 4924,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.long.md",
+      "sha256": "c5a8b415dde92326e17c61951d4034bba16ec6a8e1cc91d8f0d971e27b47abab"
+    },
+    {
+      "byteLength": 1858,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md",
+      "sha256": "a9567ca53a1c44bdd167daab2736c1e2ad4d4df494e95daaadee5686e1dbd996"
+    },
+    {
+      "byteLength": 3981,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.guide.md",
+      "sha256": "6e5f2dbbb641e26752fdde8136577ed93053dd4ee9e73d10f9dcb8544de76e0e"
+    },
+    {
+      "byteLength": 7548,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.long.md",
+      "sha256": "def6fd93335e46a29bc17f23eeb1594362120ce365b7ec50256301000a5292f1"
+    },
+    {
+      "byteLength": 2376,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces.short.md",
+      "sha256": "932d1c91ff319336c29afe44724837d882335f810ef0c711ea110167443df38b"
+    },
+    {
+      "byteLength": 4553,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.guide.md",
+      "sha256": "735a913046b5b2e57167adf2c5f1df666f25f0c65162e43b858e06eedc1be3b5"
+    },
+    {
+      "byteLength": 7154,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.long.md",
+      "sha256": "b1d9ce433218e71193d77f55dc50db67d8b1c7fcd0793e14d687aa726b4c1797"
+    },
+    {
+      "byteLength": 2158,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.short.md",
+      "sha256": "2f30f56b568e9c658b3767cb2ec6314f96e4d8473ce5bc2eaa84cbc97ed20c75"
+    },
+    {
+      "byteLength": 5085,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.guide.md",
+      "sha256": "0b97084a9f984db2877c349591fcdc5b33fc9cbca1641b70b063fb190fdf8315"
+    },
+    {
+      "byteLength": 8751,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.long.md",
+      "sha256": "5154971c31ebf3dc033e4e259b7e1f6469ae0b577c5f3e953a59a829adfe5272"
+    },
+    {
+      "byteLength": 2238,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts.short.md",
+      "sha256": "1483a0e7f95239868f44d023f1e4b12f371b01331ef0dd773eeaa9d2d50cf5a2"
+    },
+    {
+      "byteLength": 45405,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/adr-catalog.md",
+      "sha256": "55edc5f6caed71affe85adb139c9d3e9f1b92257cf74e97f94feeed40611e1b7"
+    },
+    {
+      "byteLength": 6996,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-001-resolve-persistence-surfaces-before-writes.guide.md",
+      "sha256": "fa5da7b99f421ac0f67ebd728be7b87b7f4cfa08ea72a6efc8f1d2028de7014c"
+    },
+    {
+      "byteLength": 11439,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-001-resolve-persistence-surfaces-before-writes.long.md",
+      "sha256": "82e17004a8eaeec682238d0b4c6236ef577ff7759757155e54373cb1e358f4e0"
+    },
+    {
+      "byteLength": 2486,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-001-resolve-persistence-surfaces-before-writes.short.md",
+      "sha256": "5a35a830353d0f18f4e9b18a23a77b9d945abad730e106234925441b63fd0893"
+    },
+    {
+      "byteLength": 6450,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-002-select-capability-aware-receipt-renderers.guide.md",
+      "sha256": "9cccc7bdffea8259187bf4c9d2b9ff515157f5d45111623a085cf7cd1a9876a4"
+    },
+    {
+      "byteLength": 11006,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-002-select-capability-aware-receipt-renderers.long.md",
+      "sha256": "6bd6002eca20a178a7bf66e510def22b42ed6e925941e694da62f6830295bd31"
+    },
+    {
+      "byteLength": 2295,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-002-select-capability-aware-receipt-renderers.short.md",
+      "sha256": "ea0db8a05d1136d3774a9d0bd4bfd087c14a4b7763b0abd0cb34ff45214bf599"
+    },
+    {
+      "byteLength": 7418,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/internal/internal-adr-index.md",
+      "sha256": "718e72e5cbb40948a6b9352f233beaf39847a6b63e13af6e2c0a0226a3e7ef10"
+    },
+    {
+      "byteLength": 12319,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/SKILL.md",
+      "sha256": "620c6810dca45fca138e7770e3acde4c29c390652f0540fa9051f3edd1b0bba6"
+    },
+    {
+      "byteLength": 622,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/agents/openai.yaml",
+      "sha256": "21207a0261c4b07428334d193da6ccb6f4314baed0057f9d3ee9dab29decc976"
+    },
+    {
+      "byteLength": 7526,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/ast-grep-rule-recipes.md",
+      "sha256": "192302b65ef59eb93c21aa3ca7cad3743e562e24b04dcfef4e6553298d3f7613"
+    },
+    {
+      "byteLength": 10607,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/codegraph-capability-guide.md",
+      "sha256": "65c889d7f66821aee5d2256a3a264df0261f21e808911f37c8b3ea56342acb96"
+    },
+    {
+      "byteLength": 9088,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/extensions-and-escalation.md",
+      "sha256": "52441808dbe2589a25ba4b29f55717e44b86d4071839b698fffe34acc393b473"
+    },
+    {
+      "byteLength": 27661,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/setup-and-mcp-config.md",
+      "sha256": "9bdb994a83ba80bbacc6e2062a97b87752561df5b1537419d1800dd9808724c7"
+    },
+    {
+      "byteLength": 10024,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/troubleshooting.md",
+      "sha256": "6bac8d229809cd9855a781660f8a1b9306c3101870f37b456db0b35bceeda116"
+    },
+    {
+      "byteLength": 18298,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/update-and-provenance.md",
+      "sha256": "d21fca956d522c865cbcd9c797381c086302fe000352b929eb2e2fc736291b32"
+    },
+    {
+      "byteLength": 8141,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/references/usage-playbook.md",
+      "sha256": "483247453e62c19a6e602e8425d7a35984f6cdd610b033c8f47849a8ddbd86b2"
+    },
+    {
+      "byteLength": 16300,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/SKILL.md",
+      "sha256": "84fa548d4d15336c00e46f5b8358adad6595a1387514acedf8eed4d0e2b68314"
+    },
+    {
+      "byteLength": 444,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/agents/openai.yaml",
+      "sha256": "c1258e1e19bfe02fd9fc963a859bb0ea42ae46e060a117eb79b0c8e73224db67"
+    },
+    {
+      "byteLength": 1962,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/assets/cleanup-plan-template.md",
+      "sha256": "105459491a4261e0539629f11422a1bb88b960c4d7cb6f54be067adeafb8d73a"
+    },
+    {
+      "byteLength": 2159,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/assets/review-report-template.md",
+      "sha256": "cd52f1806d21a30af83df99106a4d7d2404c9a67ea1c3d15dc607394e6a8fd62"
+    },
+    {
+      "byteLength": 8141,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/classification-rubric.md",
+      "sha256": "4c02b82b17b99e4133a3d34b9916b4e924f347093d449a3ffefdd0a2c77b3cd0"
+    },
+    {
+      "byteLength": 6199,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/config-modes.md",
+      "sha256": "e1cf07aafd7d7ffe8fb7511bf0270859e695006a6d078ee5d410d5b3622eaef5"
+    },
+    {
+      "byteLength": 1628,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/conflict-resolution.md",
+      "sha256": "4b20b564e33dc67443c3df352fdbd2fe9dd4fd2052de792e3914e64707fbf500"
+    },
+    {
+      "byteLength": 4043,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/example-review-report.md",
+      "sha256": "3d1042ba3302b69d3abe193e57956134b46dfff15d285263985d752149728835"
+    },
+    {
+      "byteLength": 2253,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/memory-store-anatomy.md",
+      "sha256": "4551aecfcc80d700e9fdaeb1f0a09eb582b3b1aca6666c7b227b1f026634cbf5"
+    },
+    {
+      "byteLength": 5262,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/safe-editing-procedure.md",
+      "sha256": "a79ca849ab82c434ea35b8ab093b0a0eee83a84522d5d6aa8a511245bebd313c"
+    },
+    {
+      "byteLength": 40317,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/scripts/backup-memories.mjs",
+      "sha256": "8bd850aa2033b2b8c4eb188bf23f818253144fd0ea13c249043bf79d523c39e8"
+    },
+    {
+      "byteLength": 4660,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/scripts/inventory-memories.mjs",
+      "sha256": "6133c7cf8df3ff3f058fa8973dac02447222d8e0b0fc1603eb485363c68bd01a"
+    },
+    {
+      "byteLength": 8800,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/scripts/scan-memory-risks.mjs",
+      "sha256": "7751f4fe095618cd1ffed693325b4a04095fc7e18346e6699ff108c0d4cefcd3"
+    },
+    {
+      "byteLength": 11099,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/SKILL.md",
+      "sha256": "e5a964a9798969cf96b4f007c8ba7cfb0764c536280911438ea7642435279cc3"
+    },
+    {
+      "byteLength": 473,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/agents/openai.yaml",
+      "sha256": "9e1814a603e49a1c32b87204eb7c02e4ad49d1877efcf528fdb57ce5355dfc1b"
+    },
+    {
+      "byteLength": 1711,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/codex-execution-prompt.md",
+      "sha256": "fb1f52c45d57b74767bddaa4e66dd37b135ae7edd009a147e15096bff2273dfa"
+    },
+    {
+      "byteLength": 10616,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/example-repo-refactor.spec.md",
+      "sha256": "f5af9a08262f5d307478aac52f381b3ba1e60bb6222c2a97362c1ab5dd31a615"
+    },
+    {
+      "byteLength": 3568,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/example-small-task.spec.md",
+      "sha256": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029"
+    },
+    {
+      "byteLength": 1506,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/spec-template.compact.md",
+      "sha256": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300"
+    },
+    {
+      "byteLength": 4238,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/spec-template.deep.md",
+      "sha256": "d18cc6072f59e6f110f1621efbab938129820b8c9f9d2fa2bf66166d49baa835"
+    },
+    {
+      "byteLength": 3546,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/spec-template.standard.md",
+      "sha256": "9fd35e680b573df083ee17e8d227530f44a95fd7b8731286d6556e27c4c6a952"
+    },
+    {
+      "byteLength": 2559,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/adr-gate.md",
+      "sha256": "0c9fc69d12a1c3edba7de4de581078b329519bdf39728606d1b4ed80eac88c69"
+    },
+    {
+      "byteLength": 4679,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/artifact-destinations.md",
+      "sha256": "7399f9284ca9ce9c14cbfd3fe476947f193ba795da6331ecf8a83876e1016cbd"
+    },
+    {
+      "byteLength": 4438,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/question-bank.md",
+      "sha256": "fef64c73333ad6d207f5793f6e25f5856bb1aefae297822fda5706d542bc5243"
+    },
+    {
+      "byteLength": 2752,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/rollout-checklist.md",
+      "sha256": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b"
+    },
+    {
+      "byteLength": 2600,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/source-challenge.md",
+      "sha256": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b"
+    },
+    {
+      "byteLength": 5573,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/spec-rubric.md",
+      "sha256": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99"
+    },
+    {
+      "byteLength": 13232,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/workflow-details.md",
+      "sha256": "9cfdf18a0b35f9be68f3e6879e48b291c795dedc1f2c3faadc8ef9f2eebee546"
+    },
+    {
+      "byteLength": 13663,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/SKILL.md",
+      "sha256": "655f427e87d99c254737ec92169e3d5453f07b3aed469e089797901489a2bb0f"
+    },
+    {
+      "byteLength": 1226,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/agents/openai.yaml",
+      "sha256": "e07d35e4fbbaa58527091e6cd206b34b4c4fd8824e916161fb0946349190c7b6"
+    },
+    {
+      "byteLength": 11766,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/delivery.md",
+      "sha256": "9191d66acb47dee139a913aaeb7107a489ae7a16da6b9dc57a2f465f7b99b2da"
+    },
+    {
+      "byteLength": 13936,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/design-profiles.md",
+      "sha256": "0fe7038ff480ccf25ee074d4c6743c9cc927d3eb0122903982cdc7b4fdce1caf"
+    },
+    {
+      "byteLength": 12348,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/diagram-type-playbook.md",
+      "sha256": "c98368ed850b56a619c53ace2e24f42c480517d62b0df96a1cd792188fbda102"
+    },
+    {
+      "byteLength": 1331,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/animation-invalid.drawio",
+      "sha256": "76195bd1669e607aeb5c38ec291f323d16a9ed6e7605b479922e3180c47071fe"
+    },
+    {
+      "byteLength": 1341,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/animation-off.drawio",
+      "sha256": "fad9eb054722b0fc6913eec6b78055c96b889b42d66d83a1774d17dc0fb846b4"
+    },
+    {
+      "byteLength": 1431,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/animation-on.drawio",
+      "sha256": "9be245c7d8c95fc6d47cc91037dad79bc8822cbbea0f40387408d538cc2fcd1b"
+    },
+    {
+      "byteLength": 1360,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/animation-static-dependency.drawio",
+      "sha256": "a389415b1ee3cf4893cf12e52da7f09d38d9a9057b56d675beb1aa78fbe05e1b"
+    },
+    {
+      "byteLength": 6822,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/architecture-icons.drawio",
+      "sha256": "7fe01ec3d248071abeb8618382eb2da5f7d75bcee71e7f888f1b2e9bdbab1fc3"
+    },
+    {
+      "byteLength": 1076,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/compressed-page-before.drawio",
+      "sha256": "b0cc86ad996c75e0301f1b2bba70ca90eb2d8673b96c2212004cba1470041377"
+    },
+    {
+      "byteLength": 6477,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/crowded-routing-before.drawio",
+      "sha256": "957a2576f1ad35be116ad4af2ccb2cc10d21bfc2f3f63ef943cb5d51f0968d1a"
+    },
+    {
+      "byteLength": 861,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-broken.drawio",
+      "sha256": "ca9a0f9b1fe570bdcaaf5b9e0abe48f645b6ba911770ab873564d2c80999bf28"
+    },
+    {
+      "byteLength": 2051,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-clean.drawio",
+      "sha256": "749547f5abe0e0879fe543d90d9096fccca2860d985a166e25bc88d8f4d67723"
+    },
+    {
+      "byteLength": 311,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-comment-broken.drawio",
+      "sha256": "31c5e4b578fdee1a9e3807613be60b7ed15c9faa5651cd338eb846dde51e8c40"
+    },
+    {
+      "byteLength": 1333,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-contrast-broken.drawio",
+      "sha256": "b89594f6818d2503db2db2e1dd68939c5830487fb8a01ae2bb5260e3d41d77b3"
+    },
+    {
+      "byteLength": 301,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-doctype-broken.drawio",
+      "sha256": "f92931e8e7003efdd5919be3e56e071c5f2fad03be5587806cffbd7e938f2ffc"
+    },
+    {
+      "byteLength": 308,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/example-processing-instruction-broken.drawio",
+      "sha256": "917e51ad73deea3fbe05c7049429e66a95290c5195ab229456b4cc8c0a214ec5"
+    },
+    {
+      "byteLength": 2707,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/existing-edit-after.drawio",
+      "sha256": "6b39b21f0575141ea5c6edc1164082e337ef44e594b9846648ff5bd035667fb9"
+    },
+    {
+      "byteLength": 1976,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/existing-edit-before.drawio",
+      "sha256": "67534dcfb739cecb668d65699635ae5266df7300f73933fe3c8d5d1209823366"
+    },
+    {
+      "byteLength": 4350,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/icon-catalog-smoke.drawio",
+      "sha256": "f137354529950f9c68086a23b75a6b61122563ac89fe93db9fdfac1eb52531c9"
+    },
+    {
+      "byteLength": 3434,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/examples/multi-page.drawio",
+      "sha256": "fc8ab855390f14e179bf12a20ad0bcb8b2f3c391b3d4fb22342c707eaf02b324"
+    },
+    {
+      "byteLength": 26629,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/icon-catalog.md",
+      "sha256": "19ec31c6fc268b31a6ba1be925da61d1f62b8b3a2d37333b6f8fe4babb3e4167"
+    },
+    {
+      "byteLength": 6804,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/layout-readability.md",
+      "sha256": "5fdbac8f7a1b39f1edac639d305c812d466b73a602067801b4859a95dda31ed3"
+    },
+    {
+      "byteLength": 7021,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/routing-and-simplification.md",
+      "sha256": "6d8ee08e7d72b7cce27d288990b54427ecabfd16d3cdd9ff137ea5685e122fe2"
+    },
+    {
+      "byteLength": 7148,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/theming-dark-mode.md",
+      "sha256": "37b75961dc74d05675a9528a646c933dee7115520fc70f4eceac45cc185f6f62"
+    },
+    {
+      "byteLength": 10585,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/toolset-setup.md",
+      "sha256": "d93dd9b37c5a05c4dba541b79a23ce75fe142ef69997d02055f52304a5da4f8a"
+    },
+    {
+      "byteLength": 10365,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/verification-checklist.md",
+      "sha256": "e99c88d028e7b7b984ec33bb1f198b04975ec0883264bf6eab146c189378ca5b"
+    },
+    {
+      "byteLength": 14837,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/workflow-details.md",
+      "sha256": "d5a0ab88d8fad28271130ab45d04523999806e94b06a5549f690b1fd2957a692"
+    },
+    {
+      "byteLength": 9553,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/references/xml-authoring.md",
+      "sha256": "6aaafdec0b1dd9b1d4f76a66e04c317d9d86761af8d31bff38f9873dc2db9d93"
+    },
+    {
+      "byteLength": 20646,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/scripts/lib/transactional-render-output.mjs",
+      "sha256": "4fda2d3a28574db141a48bde9e614bf4af4a5ad878abe604912b6e6c3c97cca7"
+    },
+    {
+      "byteLength": 3075,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/scripts/open-drawio-url.mjs",
+      "sha256": "af66325b1f3d3f3c7696a5adc15c4fda4f2d50743a42878fc98e55aacfc74054"
+    },
+    {
+      "byteLength": 2189,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/scripts/preflight-drawio-xml.mjs",
+      "sha256": "0adcd073a61c4d7142ba5c286f8104d2634ca05513d22d50de0b082700ff87c0"
+    },
+    {
+      "byteLength": 25262,
+      "mode": "0755",
+      "path": "skills/drawio-diagrams/scripts/probe-drawio-toolset.mjs",
+      "sha256": "dd6e08c98a27c86fd214abc6d5abc555def0c48c39c90c46e7d2fe6cb46b64cc"
+    },
+    {
+      "byteLength": 20807,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/scripts/rasterize-themed-svg.mjs",
+      "sha256": "9167e9655fcda2fafec4152d270041288e8478b0f47e340431a71b95b6875aa8"
+    },
+    {
+      "byteLength": 48776,
+      "mode": "0755",
+      "path": "skills/drawio-diagrams/scripts/render-drawio.mjs",
+      "sha256": "9572ce889184daeeaa132dcc3242de18fbbb0ad04486eb40590319826e4c0c0f"
+    },
+    {
+      "byteLength": 7162,
+      "mode": "0755",
+      "path": "skills/drawio-diagrams/scripts/search-shapes.mjs",
+      "sha256": "b9033769854424b8a6efca08fae592f7a7e80ceed3ed020013cdcb08588601ed"
+    },
+    {
+      "byteLength": 36661,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/scripts/validate-drawio-diagram-rules.mjs",
+      "sha256": "a83f2e5b4abead47db96cceb14f7d5c64fececab64bf859e7f2d71bfd9c52b70"
+    },
+    {
+      "byteLength": 82242,
+      "mode": "0755",
+      "path": "skills/drawio-diagrams/scripts/validate_drawio.py",
+      "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
+    }
+  ],
+  "plugin": {
+    "id": "stark-ai-developer",
+    "version": "1.0.0"
+  },
+  "projection": "portable",
+  "schemaVersion": 1,
+  "treeHash": "52107770e1249be01e03b9c08db0a456e0c203d5d6ea6340095f37c160f58e93"
+}

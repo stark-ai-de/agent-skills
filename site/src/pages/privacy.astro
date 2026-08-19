@@ -1,0 +1,131 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
+import { absoluteSiteUrl, withBase } from "../lib/site";
+
+const canonicalUrl = absoluteSiteUrl("/privacy/");
+const description =
+  "Reviewable privacy draft for the stark AI Developer skills-only package and its repository site.";
+---
+
+<BaseLayout
+  title="Privacy"
+  description={description}
+  canonicalPath="/privacy/"
+  structuredData={[
+    webPageStructuredData({ canonicalUrl, description, title: "Privacy" }),
+    breadcrumbStructuredData([{ name: "Privacy", url: canonicalUrl }]),
+  ]}
+>
+  <section class="hero-section">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">Reviewable draft · last reviewed 2026-08-18</p>
+      <h1>Privacy boundary</h1>
+      <p class="hero-copy__lead">
+        stark AI Developer is a skills-only package. This page describes the intended
+        package boundary and remains subject to legal and publisher review before public
+        submission.
+      </p>
+    </div>
+    <aside class="hero-panel" aria-labelledby="privacy-status">
+      <h2 id="privacy-status">Draft status</h2>
+      <p>
+        This repository-local page is not legal advice, a completed privacy notice, or
+        evidence of a verified public deployment.
+      </p>
+    </aside>
+  </section>
+
+  <section class="catalog-band prose" aria-labelledby="package-data-title">
+    <h2 id="package-data-title">What the package does</h2>
+    <p>
+      The package provides Markdown skill instructions, OpenAI skill metadata, references,
+      scripts, templates, and static assets. It does not operate a backend, MCP server,
+      connector, account system, authentication flow, telemetry, analytics pipeline,
+      hidden network call, or runtime download.
+    </p>
+    <h2>Data the package may encounter</h2>
+    <p>
+      When a host client uses a skill, the client or model may receive the prompt,
+      repository files, workspace metadata, command output, diagrams, memories, or other
+      artifacts that the user deliberately makes available. The package does not
+      independently collect, retain, sell, profile, or transmit those categories.
+    </p>
+    <h2>What the package does not control</h2>
+    <p>
+      The host client, workspace, repository, installed tools, shell, browser, model
+      provider, and any external service may process user content under their own policies.
+      A skill cannot turn those host capabilities on and must not claim that it inspected,
+      executed, rendered, uploaded, or mutated anything without evidence from the host.
+    </p>
+    <h2>Repository and site processing</h2>
+    <p>
+      The catalog site is built from repository files. GitHub Pages, GitHub, the skills
+      installer, and the selected client may process requests or installation metadata
+      independently of the package. Confirm the final hosting provider notice, analytics
+      settings, contact, retention, controller, and cross-border terms during legal review.
+    </p>
+    <h2>v1 package privacy answers</h2>
+    <p>
+      These answers apply to the skills-only package. They are not a completed
+      legal notice and do not describe processing by ChatGPT, Codex, GitHub,
+      GitHub Pages, a selected host, workspace, repository, or third-party tool.
+    </p>
+    <ul>
+      <li>
+        <strong>Categories of personal data collected by stark AI through the package:</strong>
+        none. The package does not send prompts, repositories, files, outputs, or
+        credentials to stark AI.
+      </li>
+      <li>
+        <strong>Purposes of processing by the package:</strong> none. The package
+        does not independently collect, retain, sell, profile, or transmit user data.
+      </li>
+      <li>
+        <strong>Categories of recipients from the package:</strong> none.
+      </li>
+      <li>
+        <strong>Retention periods for the package:</strong> none. The package does
+        not store personal data.
+      </li>
+      <li>
+        <strong>User controls and contact:</strong> use the
+        <a href={withBase("/support/")}>support draft</a> for repository questions
+        and the <a href={withBase("/security/")}>security-report draft</a> for
+        suspected vulnerabilities. Final privacy contact, jurisdiction, and
+        data-subject process remain legal-review items.
+      </li>
+      <li>
+        <strong>Host and product processing:</strong> ChatGPT, Codex, the user's
+        selected host, workspace, repository, installer, and tools may process
+        content under their own policies. This package cannot guarantee those
+        processors.
+      </li>
+      <li>
+        <strong>Accounts, backend, telemetry:</strong> v1 has no stark AI account,
+        backend, telemetry, analytics, or hidden network calls.
+      </li>
+      <li>
+        <strong>Support and security reports:</strong> handled through the support
+        and security-report drafts above. Those routes are not a live public
+        intake until legal and publication review complete.
+      </li>
+    </ul>
+    <h2>Site requests and retention</h2>
+    <p>
+      This catalog is a static site built from public repository files. The hosting provider,
+      GitHub, browsers, client installers, and model providers may process HTTP requests,
+      security logs, installation metadata, or content under their own notices. The
+      repository does not set the provider's retention period, analytics configuration,
+      controller, subprocessors, jurisdiction, or cross-border transfer terms; confirm
+      those details during legal review.
+    </p>
+    <h2>External publication gates</h2>
+    <p>
+      A repository build cannot prove that these pages are live over HTTPS, that a publisher
+      identity is verified, that Apps Management access is configured, or that a supported
+      client completed add, enable, update, disable, and remove operations. Those are
+      external review gates and remain pending until separately evidenced.
+    </p>
+  </section>
+</BaseLayout>

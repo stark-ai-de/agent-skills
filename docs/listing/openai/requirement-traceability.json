@@ -1,0 +1,92 @@
+{
+  "requirements": [
+    {
+      "commands": [
+        "validate:release-descriptor",
+        "validate:contract-snapshots"
+      ],
+      "contract": "Normative authorities, approved decisions, release descriptor",
+      "id": "FOUND-001"
+    },
+    {
+      "commands": [
+        "validate:bundles"
+      ],
+      "contract": "Explicit ordered bundle and canonical source resolution",
+      "id": "BND-001"
+    },
+    {
+      "commands": [
+        "validate:agent-plugin",
+        "validate:projections"
+      ],
+      "contract": "Portable Agent Plugins projection",
+      "id": "PORT-001"
+    },
+    {
+      "commands": [
+        "validate:openai-plugin",
+        "validate:openai-submission"
+      ],
+      "contract": "OpenAI adapter and skills-only manifest",
+      "id": "OAI-001"
+    },
+    {
+      "commands": [
+        "validate:openai-plugin",
+        "validate:openai-listing"
+      ],
+      "contract": "Canonical agents/openai.yaml and routing",
+      "id": "META-001"
+    },
+    {
+      "commands": [
+        "validate:openai-marketplace",
+        "generate:openai-marketplace-fixture"
+      ],
+      "contract": "Portable repository marketplace and isolated adapter fixture",
+      "id": "MKT-001"
+    },
+    {
+      "commands": [
+        "validate:release-descriptor",
+        "generate:release-evidence"
+      ],
+      "contract": "Version, archive name, toolchain, and evidence derivation",
+      "id": "REL-001"
+    },
+    {
+      "commands": [
+        "verify:release-reproducibility",
+        "validate:archives"
+      ],
+      "contract": "zip-store-v1 deterministic build",
+      "id": "REP-001"
+    },
+    {
+      "commands": [
+        "validate:plugin-evals"
+      ],
+      "contract": "Activation, non-activation, capability, and mutation thresholds",
+      "id": "EVAL-001"
+    },
+    {
+      "commands": [
+        "verify:supply-chain",
+        "validate:network-endpoints"
+      ],
+      "contract": "Secret, path, endpoint, dependency, license, and provenance gates",
+      "id": "SEC-001"
+    },
+    {
+      "commands": [
+        "generate:openai-worksheet",
+        "validate:openai-worksheet"
+      ],
+      "contract": "Legal, publisher, portal review, explicit publication",
+      "id": "PUB-001"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "docs/specs/stark-ai-developer-agent-plugin-spec.md"
+}

@@ -1,0 +1,20 @@
+{
+  "interface": {
+    "displayName": "stark AI Developer (local portable plugin)"
+  },
+  "name": "stark-ai-developer-local",
+  "plugins": [
+    {
+      "category": "Developer Tools",
+      "name": "stark-ai-developer",
+      "policy": {
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
+      },
+      "source": {
+        "path": "./plugins/stark-ai-developer",
+        "source": "local"
+      }
+    }
+  ]
+}

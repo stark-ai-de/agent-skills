@@ -7,7 +7,7 @@ Skills are executable context. Some skills may include scripts.
 Report security issues through GitHub private vulnerability reporting or contact:
 
 ```text
-security@stark.ai
+security@stark-ai.de
 ```
 
 ## Contributor Rules

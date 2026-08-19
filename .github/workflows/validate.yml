@@ -17,35 +17,124 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v6
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - uses: pnpm/setup@v2
+      - name: 📥 Fetch pull-request base
+        if: ${{ github.event_name == 'pull_request' }}
+        run: git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
         with:
-          runtime: node@22
+          runtime: node@24.18.0
           cache: true
           install: false
 
-      - run: pnpm install --frozen-lockfile
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - run: npm run validate
+      - name: ✅ Validate repository contracts
+        run: npm run validate
 
-      - run: pnpm format:check
+      - name: 📦 Validate release archives
+        run: npm run validate:archives
 
-      - run: pnpm lint
+      - name: 🔁 Verify release reproducibility
+        run: npm run verify:release-reproducibility
 
-      - name: Check release intent
+      - name: 🎨 Check formatting
+        run: pnpm format:check
+
+      - name: 🧹 Lint scripts
+        run: pnpm lint
+
+      - name: 🏷️ Check release intent
         id: release-intent
         if: ${{ github.event_name == 'pull_request' }}
         run: node scripts/check-release-intent.mjs --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
 
-      - name: Validate planned release
+      - name: 🚀 Validate planned release
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
         run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
 
-      - run: npx skills@latest add ./skills --list
+      - name: 📋 List public skills
+        run: npx skills@latest add ./skills --list
 
-      - run: npm run smoke:install
+      - name: 🧪 Smoke-install public skills
+        run: npm run smoke:install
+
+  archive-identity:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      TZ: UTC
+      LC_ALL: C
+      SOURCE_DATE_EPOCH: "315532800"
+    steps:
+      - name: 📌 Pin Git to LF checkouts
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: true
+          install: false
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: 📦 Package zip-store-v1 archives
+        run: npm run package:agent-plugin && npm run package:openai-plugin
+
+      - name: 🧾 Report archive identity
+        run: node scripts/report-archive-identity.mjs
+
+      - name: 📤 Upload archive identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-identity-${{ matrix.os }}
+          path: dist/archive-identity.json
+
+  archive-identity-compare:
+    needs: archive-identity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: true
+          install: false
+
+      - name: 📥 Download identity reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: archive-identity-*
+          path: dist/archive-identities
+
+      - name: ⚖️ Compare zip-store-v1 identity
+        run: node scripts/compare-archive-identity.mjs dist/archive-identities

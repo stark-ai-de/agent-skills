@@ -173,13 +173,11 @@ export function groupByCategory(skills: CatalogSkill[]) {
   }
 
   return [...groups.entries()]
-    .map(
-      ([category, groupedSkills]): CategoryGroup => ({
-        category,
-        label: toTitleCase(category),
-        skills: groupedSkills.sort(compareSkillNames),
-      }),
-    )
+    .map(([category, groupedSkills]): CategoryGroup => ({
+      category,
+      label: toTitleCase(category),
+      skills: groupedSkills.sort(compareSkillNames),
+    }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 

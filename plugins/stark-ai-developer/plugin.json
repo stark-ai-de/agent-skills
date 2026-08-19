@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "servrox solutions UG",
+    "url": "https://stark-ai.de"
+  },
+  "description": "A skills-only developer workflow toolkit that turns software ideas and code context into implementation-ready specifications, architecture decisions, structural code findings, editable diagrams, project documentation assets, and safely curated Codex memory. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
+  "homepage": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
+  "keywords": [
+    "developer-tools",
+    "agent-skills",
+    "codex",
+    "documentation"
+  ],
+  "license": "Apache-2.0",
+  "name": "stark-ai-developer",
+  "repository": "https://github.com/stark-ai-de/agent-skills",
+  "version": "1.0.0"
+}

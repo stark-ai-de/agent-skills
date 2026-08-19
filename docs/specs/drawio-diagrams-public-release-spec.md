@@ -172,6 +172,7 @@ skills/engineering-workflows/drawio-diagrams/
     theming-dark-mode.md
     toolset-setup.md
     verification-checklist.md
+    workflow-details.md
     xml-authoring.md
     examples/*.drawio
   scripts/

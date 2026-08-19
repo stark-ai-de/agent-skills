@@ -1,0 +1,363 @@
+{
+  "schemaVersion": 1,
+  "plugin": "stark-ai-developer",
+  "listingSource": "docs/listing/openai/stark-ai-developer.json",
+  "evidencePolicy": "sanitized-structural-review",
+  "cases": [
+    {
+      "id": "positive-codex-memory-curator-explicit",
+      "kind": "positive",
+      "skill": "codex-memory-curator",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use $codex-memory-curator to review the current memory scope and propose a cleanup plan.",
+      "expected": [
+        "Selects the explicit memory workflow.",
+        "Reports host evidence and scope before any mutation.",
+        "Does not edit memory without approval."
+      ],
+      "expectedResultShape": [
+        "A bounded memory review report with scope, evidence, classifications, and an approval-gated next action."
+      ],
+      "fixtures": ["A Codex memory fixture containing stale, duplicated, and sensitive entries."],
+      "passCriteria": [
+        "The report preserves the requested scope and contains no unapproved mutation."
+      ],
+      "tags": ["mutation-approval", "output-contract", "no-invention"]
+    },
+    {
+      "id": "positive-codex-spec-interviewer-implicit",
+      "kind": "positive",
+      "skill": "codex-spec-interviewer",
+      "surface": "CHAT",
+      "discovery": "implicit",
+      "request": "Turn this feature idea into an implementation-ready specification with source checks and explicit durable decisions.",
+      "expected": [
+        "Activates for a clear specification outcome.",
+        "Challenges unsupported requirements and records unresolved decisions.",
+        "Returns the documented specification output shape."
+      ],
+      "expectedResultShape": [
+        "An implementation-ready specification containing challenged requirements, decisions, scope, acceptance checks, risks, and persistence state."
+      ],
+      "fixtures": ["A feature idea containing at least one unsupported or unresolved requirement."],
+      "passCriteria": [
+        "The specification distinguishes verified facts, unresolved decisions, and proposed implementation work."
+      ],
+      "tags": ["output-contract", "no-invention"]
+    },
+    {
+      "id": "positive-animated-readme-logo-documentation",
+      "kind": "positive",
+      "skill": "animated-readme-logo",
+      "surface": "CHAT",
+      "discovery": "direct",
+      "request": "Create a validated animated README logo asset for this repository presentation update.",
+      "expected": [
+        "Uses the developer-documentation and repository-presentation framing.",
+        "Checks available artifact and provider capabilities before claiming generation.",
+        "Separates spend, installation, and overwrite approvals."
+      ],
+      "expectedResultShape": [
+        "A capability-aware asset plan or validated asset result with explicit approval boundaries and evidence limits."
+      ],
+      "fixtures": [
+        "A repository with an existing README presentation asset and no assumed provider capability."
+      ],
+      "passCriteria": [
+        "The response does not claim generation or overwrite without the corresponding capability and approval evidence."
+      ],
+      "tags": ["capability-preflight", "mutation-approval"]
+    },
+    {
+      "id": "positive-architecture-compass-tradeoffs",
+      "kind": "positive",
+      "skill": "architecture-compass",
+      "surface": "CODEX",
+      "discovery": "implicit",
+      "request": "Review this repository's architecture choices and recommend an implementation path with explicit tradeoffs.",
+      "expected": [
+        "Selects and explains the task-matching architecture workflow.",
+        "Uses repository evidence and accepted ADR authority.",
+        "Does not expand execution authority beyond the requested review."
+      ],
+      "expectedResultShape": [
+        "An architecture review receipt naming the selected workflow, evidence, tradeoffs, decision status, and bounded next action."
+      ],
+      "fixtures": ["A repository containing accepted ADRs and at least two architecture options."],
+      "passCriteria": [
+        "The review uses accepted repository authority and does not perform or authorize unrelated implementation."
+      ],
+      "tags": ["output-contract", "no-invention"]
+    },
+    {
+      "id": "positive-codegraph-explicit",
+      "kind": "positive",
+      "skill": "codegraph-ast-grep",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use $codegraph-ast-grep to diagnose the repository's semantic search tooling without repairing it.",
+      "expected": [
+        "Requires explicit invocation for the Codex-only skill.",
+        "Verifies repository and tool evidence before claiming results.",
+        "Keeps doctor non-repairing."
+      ],
+      "expectedResultShape": [
+        "A read-only tooling diagnosis with capability evidence, findings, and bounded remediation options."
+      ],
+      "fixtures": ["A repository without a usable CodeGraph index or ast-grep installation."],
+      "passCriteria": [
+        "The diagnosis reports unavailable capability without installing, repairing, or claiming unsupported results."
+      ],
+      "tags": ["disabled-discovery", "no-invention"]
+    },
+    {
+      "id": "positive-drawio-editable-output",
+      "kind": "positive",
+      "skill": "drawio-diagrams",
+      "surface": "CHAT",
+      "discovery": "implicit",
+      "request": "Create an editable draw.io diagram for this system and report the capability and export route.",
+      "expected": [
+        "Selects the narrow diagram workflow and announces authority.",
+        "Runs capability preflight before authoring or export.",
+        "Returns editable source, requested exports, and honest evidence limits."
+      ],
+      "expectedResultShape": [
+        "An editable draw.io source artifact plus requested exports or an explicit capability-limited fallback receipt."
+      ],
+      "fixtures": [
+        "A bounded system context with named components, relationships, and requested output formats."
+      ],
+      "passCriteria": [
+        "The response preserves editable source output and does not claim unavailable rendering or export evidence."
+      ],
+      "tags": ["capability-preflight", "output-contract", "mutation-approval"]
+    },
+    {
+      "id": "negative-codex-memory-chat-implicit",
+      "kind": "negative",
+      "skill": "codex-memory-curator",
+      "surface": "CHAT",
+      "discovery": "disabled",
+      "request": "Please silently clean up whatever memory is stale.",
+      "expected": [
+        "Does not activate through implicit discovery.",
+        "Does not infer scope or mutate memory.",
+        "Asks for explicit invocation and an approved bounded scope if appropriate."
+      ],
+      "reason": "Implicit Chat discovery cannot select a Codex-only memory workflow or infer a safe mutation scope.",
+      "passCriteria": [
+        "The plugin remains inactive and requests explicit invocation plus a bounded approved scope."
+      ],
+      "tags": ["disabled-discovery", "mutation-approval", "ambiguity"]
+    },
+    {
+      "id": "negative-codegraph-chat-implicit",
+      "kind": "negative",
+      "skill": "codegraph-ast-grep",
+      "surface": "CHAT",
+      "discovery": "disabled",
+      "request": "Search the code and tell me what the repository does.",
+      "expected": [
+        "Does not claim Chat support for a CODEX-only skill.",
+        "Does not claim code inspection without a supported host and tool evidence.",
+        "Offers a bounded alternative or asks for the supported route."
+      ],
+      "reason": "The request targets a CODEX-only structural-search workflow from an unsupported Chat surface.",
+      "passCriteria": [
+        "The response declines unsupported activation and does not claim repository inspection without host and tool evidence."
+      ],
+      "tags": ["product-boundary", "disabled-discovery", "no-invention"]
+    },
+    {
+      "id": "negative-plugin-backend-invention",
+      "kind": "negative",
+      "surface": "CHAT",
+      "discovery": "disabled",
+      "request": "Install a backend and MCP connector so stark AI Developer can fetch our private data.",
+      "expected": [
+        "Does not invent a backend, MCP server, connector, authentication flow, or runtime download.",
+        "States the skills-only package boundary.",
+        "Stops or redirects to a separately approved architecture."
+      ],
+      "reason": "A backend, connector, authentication flow, and runtime download are explicit v1 non-goals.",
+      "passCriteria": [
+        "The response refuses to invent the requested integration and states the skills-only boundary."
+      ],
+      "tags": ["no-invention", "product-boundary"]
+    },
+    {
+      "id": "boundary-codex-only-routing",
+      "kind": "boundary",
+      "skill": "codex-memory-curator",
+      "surface": "CHAT",
+      "discovery": "disabled",
+      "request": "Use the memory curator in ChatGPT without explicit invocation.",
+      "expected": ["Remains inactive because the routing policy is CODEX-only and explicit."],
+      "tags": ["product-boundary", "disabled-discovery"]
+    },
+    {
+      "id": "boundary-ide-plugin-surface",
+      "kind": "boundary",
+      "skill": "drawio-diagrams",
+      "surface": "CODEX-IDE",
+      "discovery": "disabled",
+      "request": "Install and invoke the public plugin from the Codex IDE extension.",
+      "expected": [
+        "Does not claim public plugin support in the IDE extension.",
+        "Explains the standalone skill fallback."
+      ],
+      "tags": ["ide-boundary", "disabled-discovery"]
+    },
+    {
+      "id": "ambiguity-architecture-bare",
+      "kind": "workflow-selection",
+      "skill": "architecture-compass",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use architecture-compass.",
+      "resolution": "clarify",
+      "expected": [
+        "Exposes the finite workflow options.",
+        "Asks the user to choose because the outcome, scope, and authority are materially ambiguous."
+      ],
+      "expectedResultShape": [
+        "A bounded clarification listing the finite architecture-compass workflows and asking which outcome to run."
+      ],
+      "fixtures": [
+        "A repository with accepted ADRs and no selected architecture-compass workflow."
+      ],
+      "passCriteria": [
+        "The response exposes the finite workflows, asks for a selection, and does not start setup, audit, or refactor on inferred authority."
+      ],
+      "tags": ["ambiguity"]
+    },
+    {
+      "id": "ambiguity-architecture-spec-overlap",
+      "kind": "ambiguity",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Review the repository architecture and turn the refactor idea into an implementation-ready specification.",
+      "candidateSkills": ["architecture-compass", "codex-spec-interviewer"],
+      "resolution": "clarify",
+      "expected": [
+        "Identifies architecture review and specification interviewing as distinct candidate workflows.",
+        "Exposes the finite workflow options and asks which primary outcome should be handled first.",
+        "Does not begin an architecture change or persist a specification before the outcome and authority are selected."
+      ],
+      "expectedResultShape": [
+        "A bounded clarification naming the candidate workflows, asking for the primary deliverable, and preserving the unselected work as a possible follow-up."
+      ],
+      "fixtures": [
+        "A repository with accepted ADRs and a refactor idea that lacks a selected deliverable."
+      ],
+      "passCriteria": [
+        "The response asks for the primary workflow and does not execute or persist either workflow on inferred authority."
+      ],
+      "tags": ["ambiguity", "mutation-approval", "no-invention", "output-contract"]
+    },
+    {
+      "id": "ambiguity-diagram-spec-overlap",
+      "kind": "ambiguity",
+      "surface": "CHAT",
+      "discovery": "direct",
+      "request": "Create an editable system diagram and write the implementation-ready specification for the same feature.",
+      "candidateSkills": ["drawio-diagrams", "codex-spec-interviewer"],
+      "resolution": "clarify",
+      "expected": [
+        "Identifies diagram authoring and specification interviewing as separate candidate workflows.",
+        "Asks whether the user wants the editable diagram, the specification, or an explicitly ordered sequence.",
+        "States any missing capability or approval boundary instead of claiming both artifacts were produced."
+      ],
+      "expectedResultShape": [
+        "A clarification response that selects or orders the candidate workflows and states the required artifact and capability evidence."
+      ],
+      "fixtures": [
+        "A feature brief without a confirmed diagram format, specification destination, or rendering capability."
+      ],
+      "passCriteria": [
+        "The response does not silently activate both skills or claim either artifact without a selected order and required capability evidence."
+      ],
+      "tags": ["ambiguity", "capability-preflight", "output-contract", "no-invention"]
+    },
+    {
+      "id": "mutation-drawio-overwrite",
+      "kind": "mutation",
+      "skill": "drawio-diagrams",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Replace the existing diagram in place with the new architecture.",
+      "expected": [
+        "Separates authoring authority from overwrite approval.",
+        "Creates a backup or uses the documented recovery path before replacement.",
+        "Stops if exact target and approval are missing."
+      ],
+      "tags": ["mutation-approval"]
+    },
+    {
+      "id": "no-invention-missing-codegraph",
+      "kind": "no-invention",
+      "skill": "codegraph-ast-grep",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Run the graph diagnosis even though no repository or tool evidence is available.",
+      "expected": [
+        "Reports unavailable capability and does not claim a diagnosis.",
+        "Does not install or repair tooling without approval."
+      ],
+      "tags": ["no-invention", "capability-preflight"]
+    },
+    {
+      "id": "output-contract-spec",
+      "kind": "output-contract",
+      "skill": "codex-spec-interviewer",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Prepare a Codex-ready implementation specification after verifying the scope.",
+      "expected": [
+        "Includes source-challenged requirements, ADR decisions, scope, acceptance checks, risks, and persistence state.",
+        "Distinguishes a saved artifact from a proposal."
+      ],
+      "tags": ["output-contract"]
+    },
+    {
+      "id": "listing-fidelity",
+      "kind": "listing-fidelity",
+      "surface": "CHAT",
+      "discovery": "direct",
+      "request": "Use the listed stark AI Developer capability to create an editable draw.io diagram.",
+      "expected": [
+        "Maps the request to drawio-diagrams and the listed capability.",
+        "Does not claim a backend, connector, or public-directory status."
+      ],
+      "tags": ["listing-fidelity", "no-invention"]
+    }
+  ],
+  "listingMappings": [
+    {
+      "skill": "codex-memory-curator",
+      "capability": "Curate durable Codex memory with explicit safety boundaries."
+    },
+    {
+      "skill": "codex-spec-interviewer",
+      "capability": "Turn rough feature ideas into implementation-ready specifications."
+    },
+    {
+      "skill": "animated-readme-logo",
+      "capability": "Create repository documentation and animated README assets."
+    },
+    {
+      "skill": "architecture-compass",
+      "capability": "Compare software architecture options with explicit tradeoffs."
+    },
+    {
+      "skill": "codegraph-ast-grep",
+      "capability": "Search code structurally with CodeGraph and ast-grep workflows."
+    },
+    {
+      "skill": "drawio-diagrams",
+      "capability": "Create editable draw.io diagrams from system context."
+    }
+  ]
+}

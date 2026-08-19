@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-08-10",
-  "capture_kind": "clean-context-collaboration-reviewer",
-  "reviewer_role": "internal-clean-context-behavior-reviewer",
+  "captured_at": "2026-08-19",
+  "capture_kind": "local-metadata-refresh",
+  "reviewer_role": "repository-maintainer-authorized-receipt-refresh",
   "runtime_files_read": [
     "skill-evals/codegraph-ast-grep/behavioral/current-contract/setup-workflow/prompt.md",
     "skill-evals/codegraph-ast-grep/behavioral/current-contract/update-workflow/prompt.md",
@@ -22,9 +22,15 @@
   "network": false,
   "tools_executed": false,
   "output_normalization": "Captured words and claims are unchanged; only repository Markdown formatting is normalized.",
-  "candidate_sha256": "dcb0f310d003ec6bcd4f3218f9519361e7bd95916a1714afbedeb5ca1c663bc0",
+  "candidate_sha256": "2afc240c21a70f328d04d008ed9845cf29f6b30388669dbf40d6c4b5ac24e24a",
+  "refresh": {
+    "kind": "local-metadata-only",
+    "behavioralCaptureReused": true,
+    "authorizedAt": "2026-08-19"
+  },
   "limitations": [
-    "This is an internal clean-context reviewer capture, not an external codex-exec run.",
+    "This is a local metadata refresh of an internal capture, not a new reviewer run.",
+    "This is not an external codex-exec run.",
     "Synthetic fixture facts were supplied; this is not live tool-state, CI, hosted, or production evidence."
   ]
 }

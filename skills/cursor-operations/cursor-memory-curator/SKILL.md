@@ -6,7 +6,7 @@ compatibility: Designed for Cursor Agent and Cursor Agent Skills. Works in other
 metadata:
   author: stark-ai-de
   category: cursor-operations
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Cursor Memory Curator

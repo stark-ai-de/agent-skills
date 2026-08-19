@@ -1,18 +1,23 @@
 {
   "schema_version": 2,
-  "suite_id": "codegraph-ast-grep-v0.3.1-current-contract-2026-08-10",
-  "reviewed_at": "2026-08-10",
+  "suite_id": "codegraph-ast-grep-v0.3.2-current-contract-2026-08-19",
+  "reviewed_at": "2026-08-19",
   "evidence_mode": "hash-bound-internal-reviewer-capture",
+  "refresh": {
+    "kind": "local-metadata-only",
+    "behavioralCaptureReused": true,
+    "authorizedAt": "2026-08-19"
+  },
   "candidate": {
     "skill_path": "skills/engineering-workflows/codegraph-ast-grep",
-    "skill_version": "0.3.1",
-    "sha256": "dcb0f310d003ec6bcd4f3218f9519361e7bd95916a1714afbedeb5ca1c663bc0",
-    "hash_recipe": "For each runtime file in bytewise lexicographic path order: relative path, NUL, file bytes, NUL; then SHA-256."
+    "skill_version": "0.3.2",
+    "sha256": "2afc240c21a70f328d04d008ed9845cf29f6b30388669dbf40d6c4b5ac24e24a",
+    "hash_recipe": "For each behavioral runtime file in bytewise lexicographic path order, excluding host routing metadata: relative path, NUL, file bytes, NUL; then SHA-256."
   },
   "capture": {
-    "mode": "clean-context-collaboration-reviewer",
+    "mode": "local-metadata-refresh",
     "provenance_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/capture-provenance.json",
-    "sha256": "e30fb41b4b798c500112326e42ab034d61a9cdb93fe7a3a619eb241224b63df9"
+    "sha256": "f6ff0de0f0b541e340d40a0f13658d1d46b1116e3d91ee8dc054405b3ff82423"
   },
   "grading": {
     "mode": "independent-collaboration-reviewer",
@@ -164,9 +169,9 @@
   },
   "limitations": [
     "The fixtures are synthetic and public-safe; they are not live tool-state evidence.",
-    "The outputs are clean-context internal collaboration-reviewer captures, not external codex-exec runs.",
+    "The outputs are reused clean-context internal collaboration-reviewer captures, not external codex-exec runs.",
     "The independent internal grader found 35 of 35 assertions passing; this is not a no-skill baseline or statistical reliability study.",
     "The exact runtime hash and artifact hashes bind this result to one candidate; they do not prove live CodeGraph, ast-grep, CI, hosted, or production behavior.",
-    "The historical v0.2 captures remain separate evidence and are not reused as v0.3.1 proof."
+    "The historical v0.2 captures remain separate evidence and are not reused as v0.3.2 proof."
   ]
 }

@@ -5,6 +5,11 @@ This repository contains public Agent Skills.
 ## Rules
 
 - Follow the Agent Skills specification: https://agentskills.io/specification.
+- Follow the Agent Plugins specification for repository-managed portable plugins: https://agent-plugins.org/specification.
+- Keep client-native plugin packages that cannot share the portable root contract in separate generated adapter projections, as required by [ADR-0043](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)).
+- Do not commit `adapters/`. Generate OpenAI-native packages into disposable staging and archive them under `dist/openai/` with `npm run package:openai-plugin`; `npm run sync:openai-plugin` is a refuse-redirect.
+- Bundled `agents/openai.yaml` is canonical skill-local metadata. Copy it unchanged into projections; do not adapter-overlay, rewrite, or generate it.
+- Edit bundled skills only under `skills/<category>/<skill>/`. Do not edit `plugins/stark-ai-developer/` by hand, including copies under `plugins/stark-ai-developer/skills/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `npm run sync:agent-plugin`. Confirm with `npm run validate:projections` when the portable contract changed.
 - Every skill must have `SKILL.md` with valid `name` and `description`.
 - Skill folder names must match frontmatter names.
 - Do not include secrets, tokens, customer data, private repo paths, or internal hostnames.

@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Broken">
+    <mxGraphModel grid="1">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="dup" value="Overlaps" style="whiteSpace=wrap;html=1;fontSize=8;fillColor=#ffffff;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="dup" value="Duplicate ID" style="whiteSpace=wrap;html=1;fillColor=#ffffff;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="50" y="45" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="dangling" value="" style="endArrow=block;html=1;" edge="1" parent="1" source="dup" target="missing">
+          <mxGeometry as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0011
 Superseded by: None
-Guide verified: 2026-07-28
+Guide verified: 2026-08-19
 Gist: Release metadata should travel with the public catalog change it releases.
 
 Variants: **Short** · [Long, canonical](0015-prepare-releases-in-change-prs.long.md) · [Guide](0015-prepare-releases-in-change-prs.guide.md)

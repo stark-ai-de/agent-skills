@@ -69,6 +69,8 @@ npm run smoke:install
 
 Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it; hosted Validate remains mandatory for every pull request. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
 
+Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `npm run sync:agent-plugin`, then `npm run validate:projections` when the portable contract changed.
+
 The `npx` command requires network access the first time the CLI is fetched.
 
 Optional Oxc checks:
@@ -91,6 +93,7 @@ pnpm lint
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
+- [ ] Bundled skill or `plugins/stark-ai-developer.source.json` changes were synced with `npm run sync:agent-plugin`; `plugins/stark-ai-developer/` was not hand-edited.
 - [ ] Checks required by ADR-0041 and the changed contracts pass; release-intent work includes the local aggregate, and hosted Validate is green.
 - [ ] `npx skills@latest add ./skills --list` works when local catalog discovery changed.
 - [ ] `npm run smoke:install` passes when install smoke behavior changed.

@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Contrast Broken">
+    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="plain-low-contrast" value="Plain low contrast" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;fontColor=#eeeeee;strokeColor=light-dark(#64748b,#cbd5e1);" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="pair-low-contrast" value="Pair low contrast" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ffffff,#111111);fontColor=light-dark(#eeeeee,#222222);strokeColor=light-dark(#64748b,#cbd5e1);" vertex="1" parent="1">
+          <mxGeometry x="260" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="contrast-edge" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);" edge="1" parent="1" source="plain-low-contrast" target="pair-low-contrast">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

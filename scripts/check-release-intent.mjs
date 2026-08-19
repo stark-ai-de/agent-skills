@@ -84,13 +84,30 @@ function compareSemver(a, b) {
   return 0;
 }
 
-function changelogReleaseVersions(text) {
-  if (!text) return new Set();
-  const versions = new Set();
-  for (const match of text.matchAll(/^##\s+v(\d+\.\d+\.\d+)(?:\s|$)/gm)) {
-    versions.add(match[1]);
+function normalizeChangelogSection(text) {
+  return `${text.replace(/[ \t]+$/gm, "").trim()}\n`;
+}
+
+function splitChangelogSections(text) {
+  const sections = new Map();
+  if (!text) return sections;
+  for (const chunk of text.split(/^(?=## )/m)) {
+    const heading = chunk.match(/^##\s+(\S.*)$/m)?.[1]?.trim();
+    if (!heading) continue;
+    const normalized = normalizeChangelogSection(chunk);
+    const version = heading.match(/^v(\d+\.\d+\.\d+)(?:\s|$)/);
+    if (version) sections.set(version[1], normalized);
+    else if (/^Unreleased\b/i.test(heading)) sections.set("Unreleased", normalized);
   }
-  return versions;
+  return sections;
+}
+
+function changelogReleaseVersions(text) {
+  return new Set([...splitChangelogSections(text).keys()].filter((key) => key !== "Unreleased"));
+}
+
+function changelogSectionHasListItems(section) {
+  return /^- /m.test(section ?? "");
 }
 
 function skillFileFor(changedFile) {
@@ -146,13 +163,33 @@ if (errors.length === 0) {
     }
   }
 
-  const baseChangelogVersions = changelogReleaseVersions(readGitFile(args.baseRef, "CHANGELOG.md"));
-  const currentChangelogVersions = changelogReleaseVersions(
-    readTargetFile("CHANGELOG.md", args.headRef),
-  );
+  const baseChangelog = readGitFile(args.baseRef, "CHANGELOG.md") ?? "";
+  const currentChangelog = readTargetFile("CHANGELOG.md", args.headRef) ?? "";
+  const baseChangelogSections = splitChangelogSections(baseChangelog);
+  const currentChangelogSections = splitChangelogSections(currentChangelog);
+  const baseChangelogVersions = changelogReleaseVersions(baseChangelog);
+  const currentChangelogVersions = changelogReleaseVersions(currentChangelog);
   const addedChangelogVersions = [...currentChangelogVersions].filter(
     (version) => !baseChangelogVersions.has(version),
   );
+
+  for (const version of baseChangelogVersions) {
+    const baseSection = baseChangelogSections.get(version);
+    const currentSection = currentChangelogSections.get(version);
+    if (!currentSection) {
+      errors.push(`CHANGELOG.md removed historical release v${version}`);
+    } else if (currentSection !== baseSection) {
+      errors.push(
+        `CHANGELOG.md rewrote historical v${version}; pull requests may only change Unreleased or add the planned v${currentPackageVersion ?? "<package-version>"} section comparing that release with the previous one`,
+      );
+    }
+  }
+
+  if (packageChanged && changelogSectionHasListItems(currentChangelogSections.get("Unreleased"))) {
+    errors.push(
+      `CHANGELOG.md Unreleased still has list items; fold them into the planned v${currentPackageVersion} section so the GitHub Release describes this release versus the previous one`,
+    );
+  }
 
   if (addedChangelogVersions.length > 0) {
     if (!packageChanged) {
