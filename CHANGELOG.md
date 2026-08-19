@@ -12,6 +12,37 @@
 
 ### Removed
 
+## v0.19.1 - 2026-08-19
+
+### Added
+
+- Added the committed portable Agent Plugins projection at `plugins/stark-ai-developer/`, with Codex membership and plugin identity in sibling `plugins/stark-ai-developer.source.json`.
+- Pinned the official Agent Plugins 1.0.0 schema and dated contract snapshots under `scripts/vendor/`.
+- Added `zip-store-v1` STORE-only packaging, requirement traceability, a supply-chain inventory command, and a Linux/macOS/Windows archive-identity CI matrix.
+- Added OpenAI listing paperwork under `docs/listing/openai/`.
+- Added linked `references/workflow-details.md` resources for `codex-spec-interviewer` and `drawio-diagrams`.
+
+### Changed
+
+- Updated the Claude, Codex, and Cursor `memory-curator` skills to 0.2.1 so their linked workflow contract stays version-aligned across hosts.
+- Updated `codex-spec-interviewer` to 0.3.2, `cursor-spec-interviewer` to 0.2.4, `drawio-diagrams` to 0.7.2, `architecture-compass` to 0.6.3, `codegraph-ast-grep` to 0.3.2, and `animated-readme-logo` to 0.5.1.
+- Hardened bundled OpenAI routing: Codex-only explicit routing for memory and structural-search workflows, Chat/Codex routing for the other four bundled skills, no empty dependency blocks, and implicit invocation off for the Codex-only skills.
+- Documented the one-folder portable-plugin workflow: edit canonical `skills/`, then run `npm run sync:agent-plugin`; do not hand-edit `plugins/stark-ai-developer/`.
+- Aligned README, validation, publishing, site, support, listing, spec, and ADR-0043 documentation with ephemeral OpenAI adapter packaging under `dist/openai/`.
+- Spec and ADR-0043 docs now include release-identity, skill-local OpenAI metadata, and evidence gates. Live-eval, signed provenance, and external publication remain pending.
+- Speed up hosted Validate and Pages: shallow checkout, pull-request base fetch only when needed, skip a duplicate network-endpoint scan after `npm run validate`, prefer the offline pnpm store, and add readable emoji step names. Publish Release waits for the hosted Validate run on the merged `main` SHA so a release prepared in the change PR can be published after merge.
+
+### Fixed
+
+- Stopped OpenAI adapter packaging, validation, and reproducibility checks from materializing the retired `adapters/openai/` tree, including leftover sibling stage directories, and pointed remaining docs and the repository map at ephemeral `dist/openai/*.zip` staging.
+- Pin Git to LF on the Linux/macOS/Windows `archive-identity` matrix and in `.gitattributes` so Windows checkouts do not convert text files to CRLF and break `zip-store-v1` SHA-256 comparison.
+
+### Deprecated
+
+### Removed
+
+- Removed Cursor-only `agents/openai.yaml` from `cursor-memory-curator` and `cursor-spec-interviewer`; those skills are not OpenAI-routed.
+
 ## v0.19.0 - 2026-08-10
 
 ### Added

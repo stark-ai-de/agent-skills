@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
+import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+
+const canonicalUrl = absoluteSiteUrl("/security/");
+const description =
+  "Security-report draft for the stark AI Developer skills-only package and repository distributions.";
+---
+
+<BaseLayout
+  title="Security"
+  description={description}
+  canonicalPath="/security/"
+  structuredData={[
+    webPageStructuredData({ canonicalUrl, description, title: "Security" }),
+    breadcrumbStructuredData([{ name: "Security", url: canonicalUrl }]),
+  ]}
+>
+  <section class="hero-section">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">Reviewable security-report draft</p>
+      <h1>Report a security concern</h1>
+      <p class="hero-copy__lead">
+        Use a private channel for suspected vulnerabilities, credential exposure, or
+        harmful package behavior. Do not disclose sensitive details in a public issue.
+      </p>
+      <div class="hero-actions">
+        <a class="button button--primary button--signal" href="https://github.com/stark-ai-de/agent-skills/security/policy" target="_blank" rel="noreferrer">
+          Read repository security policy
+        </a>
+        <a class="button button--secondary" href={withBase("/support/")}>General support</a>
+      </div>
+    </div>
+    <aside class="hero-panel" aria-labelledby="security-status">
+      <h2 id="security-status">Contact review required</h2>
+      <p>
+        Confirm the final security contact, encryption requirements, triage owner, response
+        target, disclosure process, and scope before public launch.
+      </p>
+    </aside>
+  </section>
+
+  <section class="catalog-band prose" aria-labelledby="security-scope">
+    <h2 id="security-scope">Package security scope</h2>
+    <p>
+      The v1 package is skills-only and intentionally excludes MCP servers, apps,
+      connectors, authentication declarations, lifecycle hooks required for core work,
+      telemetry, analytics, hidden network calls, and runtime downloads. Generated
+      projections reject symlinks and special files, preserve canonical bytes, scan
+      archive roots, and validate private-path and token-like content.
+    </p>
+    <h2>Report details</h2>
+    <p>
+      Include the affected version or commit, projection type, skill or archive path,
+      impact, reproducible steps, and a sanitized proof. If a public URL, legal page,
+      marketplace entry, or portal artifact is involved, label it as local, draft,
+      external, or verified rather than implying a stronger status.
+    </p>
+    <h2>Repository policy</h2>
+    <p>
+      Follow the repository's
+      <a href="https://github.com/stark-ai-de/agent-skills/security/policy" target="_blank" rel="noreferrer">
+        SECURITY.md policy
+      </a>
+      and use the repository's private reporting mechanism where available. General
+      documentation and source changes can be discussed through
+      <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">GitHub</a>.
+    </p>
+  </section>
+</BaseLayout>

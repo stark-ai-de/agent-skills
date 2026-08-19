@@ -84,9 +84,44 @@ npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator cla
 
 </details>
 
-Each bundle contains the skills from its matching `*-operations` category plus every public skill outside the operations categories. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
+Bundles use explicit, version-controlled manifests. The Codex bundle is the ordered six-skill allowlist in [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json), and its install command below is checked against that manifest. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
 
 The `-a` option selects the host where a skill is installed; it does not change that skill's target contract. An intentionally cross-host install preserves target-specific evidence and output while adapting collaboration controls to the selected host.
+
+## stark AI Developer plugin distributions
+
+The repository's six-skill **stark AI Developer** bundle is explicit and
+generated from [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json):
+
+- [`plugins/stark-ai-developer/`](plugins/stark-ai-developer/) is the portable
+  Agent Plugins projection for compatible clients and direct local testing.
+- `dist/openai/*.zip` is the OpenAI-native skills-only submission archive,
+  generated from ephemeral adapter staging at package time.
+- `dist/skills/*.zip` contains optional one-skill standalone archives.
+
+Listing copy lives in [`docs/listing/openai/`](docs/listing/openai/) and is not bundle
+membership or part of the adapter archive tree.
+[`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json)
+holds membership and plugin identity. Catalog version stays in `package.json`.
+
+The repository marketplace and any personal or workspace marketplace are local
+testing/distribution catalogs. They do not prove submission, approval,
+publication, searchability, or availability in the public Universal Plugins
+Directory. The package has no backend, MCP server, connectors, authentication,
+telemetry, analytics, hidden network calls, or runtime downloads.
+
+These are separate installation routes:
+
+- **Public plugin:** the future Universal Plugins Directory listing and install
+  flow; publication and account eligibility remain external gates.
+- **Repository/local plugin:** the portable projection through a compatible
+  local or repository marketplace.
+- **Standalone ChatGPT skill:** upload, share, or workspace-install an
+  individual skill where the account and client support that route.
+- **Standalone Codex or IDE skill:** install an individual skill through the
+  supported Codex/IDE skill path or the standalone archive.
+- **`npx skills`:** the existing canonical repository catalog and CLI
+  installation path.
 
 ## Choose a skill
 
@@ -118,23 +153,30 @@ Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skill
 pnpm install
 ```
 
-Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `npm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request.
+Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `npm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request. OpenAI-native adapter packaging is proven with `npm run validate:openai-plugin` or hosted `validate:release-proof`, not by writing `adapters/`.
 
 <details>
 <summary><strong>Common maintainer commands</strong></summary>
 
-| Command                                 | Purpose                                                  |
-| --------------------------------------- | -------------------------------------------------------- |
-| `npm run list`                          | List promoted public skills                              |
-| `npm run list:incubator`                | List incubator skills                                    |
-| `npm run validate`                      | Validate skills, ADRs, scripts, and repository contracts |
-| `npm run smoke:fingerprint`             | Fingerprint the exact clean-copy candidate set read-only |
-| `npm run smoke:install`                 | Test clean-copy discovery and exact host destinations    |
-| `npx skills@latest add ./skills --list` | Check local public skill discovery                       |
-| `pnpm --filter ./site build`            | Build the generated catalog                              |
-| `pnpm format:check`                     | Check formatting                                         |
-| `pnpm lint`                             | Lint repository scripts                                  |
-| `node scripts/validate-release.mjs`     | Validate release readiness                               |
+| Command                                  | Purpose                                                        |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `npm run list`                           | List promoted public skills                                    |
+| `npm run list:incubator`                 | List incubator skills                                          |
+| `npm run validate`                       | Validate skills, ADRs, scripts, and repository contracts       |
+| `npm run sync:agent-plugin`              | Regenerate `plugins/stark-ai-developer/` from canonical skills |
+| `npm run validate:projections`           | Check the committed portable Agent Plugin projection           |
+| `npm run validate:openai-plugin`         | Stage, validate, and discard the OpenAI-native adapter         |
+| `npm run package:openai-plugin`          | Write `dist/openai/*.zip` from ephemeral adapter staging       |
+| `npm run validate:archives`              | Build and inspect release archives                             |
+| `npm run verify:release-reproducibility` | Compare two isolated deterministic builds                      |
+| `npm run validate:release-proof`         | Archive, reproducibility, and endpoint release proof           |
+| `npm run smoke:fingerprint`              | Fingerprint the exact clean-copy candidate set read-only       |
+| `npm run smoke:install`                  | Test clean-copy discovery and exact host destinations          |
+| `npx skills@latest add ./skills --list`  | Check local public skill discovery                             |
+| `pnpm --filter ./site build`             | Build the generated catalog                                    |
+| `pnpm format:check`                      | Check formatting                                               |
+| `pnpm lint`                              | Lint repository scripts                                        |
+| `node scripts/validate-release.mjs`      | Validate release readiness                                     |
 
 Scaffold a skill only when its destination is clear:
 

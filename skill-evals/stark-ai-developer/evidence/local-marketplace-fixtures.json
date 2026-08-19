@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "marketplace": ".agents/plugins/marketplace.json",
+  "projection": "plugins/stark-ai-developer",
+  "structuralFixtures": {
+    "cleanClone": "passed",
+    "personalMarketplacePath": "passed",
+    "missingProjection": "rejected",
+    "openAiAdapterPath": "rejected"
+  },
+  "clientLifecycle": {
+    "status": "not-run",
+    "reason": "No account, workspace, or client-state mutation was authorized; add/list/install/enable/disable/update/remove requires a separately approved clean-client run."
+  },
+  "externalGates": {
+    "liveHttps": "manual-review-required",
+    "publisherIdentity": "manual-review-required",
+    "appsManagement": "manual-review-required"
+  },
+  "publicStatus": "not-public-directory-evidence"
+}

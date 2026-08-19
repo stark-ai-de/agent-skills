@@ -1,0 +1,41 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Icon Catalog Smoke">
+    <mxGraphModel adaptiveColors="auto" iconMode="icon-first" dx="1000" dy="700" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="user" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;aspect=fixed;fontColor=light-dark(#0f172a,#f8fafc);dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="40" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="client" value="Web Client" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.client;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="200" y="80" width="60" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lambda" value="Lambda" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="400" y="80" width="60" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="RDS" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="600" y="40" width="60" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="doc" value="SQS" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;aspect=fixed;fontSize=12;fontColor=light-dark(#0f172a,#f8fafc);fillColor=none;strokeColor=light-dark(#334155,#cbd5e1);dataRole=component;" vertex="1" parent="1">
+          <mxGeometry x="600" y="200" width="60" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);dataRole=request;flowAnimation=1;" edge="1" parent="1" source="user" target="client">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);dataRole=request;flowAnimation=1;" edge="1" parent="1" source="client" target="lambda">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;exitX=1;exitY=0.35;entryX=0;entryY=0.5;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);dataRole=data-flow;flowAnimation=1;" edge="1" parent="1" source="lambda" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="enqueue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;exitX=0.5;exitY=1;entryX=0;entryY=0.5;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);labelBackgroundColor=light-dark(#ffffff,#0f172a);dataRole=data-flow;flowAnimation=1;" edge="1" parent="1" source="lambda" target="doc">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="235"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

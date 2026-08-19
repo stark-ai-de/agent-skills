@@ -28,7 +28,7 @@ For implementation spec persistence and ADR linkage, see [`docs/specs.md`](specs
 
 Public skills must be inspectable and safe by default. Avoid destructive scripts, private data, hidden network actions, copied proprietary text, and broad automation that mutates live systems without explicit approval.
 
-Do not vendor already-published third-party skills into this repository's public `skills/` catalog or `incubator/skills/`. Install those as project-local helper skills with `npx skills`; keep `.agents/` and any local `skills-lock.json` ignored. Only copy third-party material into this repo when redistribution is intentional and the license terms are clear.
+Do not vendor already-published third-party skills into this repository's public `skills/` catalog or `incubator/skills/`. Install those as project-local helper skills with `npx skills`; keep `.agents/skills/` and any local `skills-lock.json` ignored. The committed `.agents/plugins/marketplace.json` is repository plugin discovery, not a helper install. Only copy third-party material into this repo when redistribution is intentional and the license terms are clear.
 
 ## Promotion Boundary
 

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "contractId": "openai-plugin-packaging-2026-08-18",
+  "source": {
+    "url": "https://developers.openai.com/plugins/build/plugins",
+    "title": "OpenAI Developers — Package your plugin",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "663304a27daaa79d92c444d6ea647525e4cfab13cd59f30d73614eb5b8deda09"
+    }
+  },
+  "verifiedOn": "2026-08-18",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "packaging-submission",
+  "facts": {
+    "nativeManifestPath": ".codex-plugin/plugin.json",
+    "displayNameMax": 30,
+    "shortDescriptionMax": 30,
+    "longDescriptionMax": 4000,
+    "developerNameMax": 80,
+    "capabilitiesMax": 20,
+    "capabilityLengthMax": 120,
+    "starterPromptsMax": 3,
+    "starterPromptLengthMax": 128,
+    "packageNameMax": 64,
+    "assetMaxBytes": 5242880,
+    "skillsOnlyOmits": ["mcpServers", "apps", "interface.screenshots", "authentication"]
+  },
+  "requirementIds": ["OAI-001", "META-001"],
+  "validators": ["validate:openai-plugin", "validate:openai-listing", "validate:openai-submission"],
+  "unresolvedConflicts": []
+}

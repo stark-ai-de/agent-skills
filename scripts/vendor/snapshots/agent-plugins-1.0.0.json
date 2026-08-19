@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "contractId": "agent-plugins-1.0.0",
+  "source": {
+    "url": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    "title": "Agent Plugins 1.0.0 manifest schema",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "0a4aad95ce337878ad38802ebf0daa3fde76abe3f65400c86bcbb1ec0b3ab883"
+    }
+  },
+  "verifiedOn": "2026-08-18",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "machine-schema",
+  "facts": {
+    "schemaPath": "scripts/vendor/agent-plugins/1.0.0/plugin.schema.json",
+    "schemaId": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    "closedManifest": true,
+    "skillDiscovery": "immediate skills/<name>/SKILL.md children"
+  },
+  "requirementIds": ["PORT-001", "FOUND-001"],
+  "validators": ["validate:agent-plugin", "validate:contract-snapshots"],
+  "unresolvedConflicts": []
+}

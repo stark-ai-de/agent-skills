@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
+import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+
+const canonicalUrl = absoluteSiteUrl("/support/");
+const description =
+  "Support draft for installing, validating, and reporting issues with the stark AI Developer skills-only package.";
+---
+
+<BaseLayout
+  title="Support"
+  description={description}
+  canonicalPath="/support/"
+  structuredData={[
+    webPageStructuredData({ canonicalUrl, description, title: "Support" }),
+    breadcrumbStructuredData([{ name: "Support", url: canonicalUrl }]),
+  ]}
+>
+  <section class="hero-section">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">Repository and package support</p>
+      <h1>Support stark AI Developer</h1>
+      <p class="hero-copy__lead">
+        Start with the repository documentation and validators. Include the projection,
+        client surface, version, and a sanitized reproduction when asking for help.
+      </p>
+      <div class="hero-actions">
+        <a class="button button--primary button--signal" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
+          Open repository issues
+        </a>
+        <a class="button button--secondary" href={withBase("/security/")}>Report a security issue</a>
+      </div>
+    </div>
+    <aside class="hero-panel" aria-labelledby="support-boundary">
+      <h2 id="support-boundary">Before reporting</h2>
+      <p>
+        Do not include secrets, tokens, cookies, customer data, private repository paths,
+        internal hostnames, or private reviewer communication.
+      </p>
+    </aside>
+  </section>
+
+  <section class="catalog-band prose" aria-labelledby="install-title">
+    <h2 id="install-title">Installation paths</h2>
+    <ul>
+      <li>Use <code>npx skills@latest</code> for standalone repository skills.</li>
+      <li>Use <code>plugins/stark-ai-developer/</code> for portable Agent Plugins clients.</li>
+      <li>Use the repository-local marketplace only for the portable plugin and local testing.</li>
+      <li>Use <code>dist/openai/*.zip</code> from <code>npm run package:openai-plugin</code> for OpenAI-native submission packaging. That archive is not a local install tree.</li>
+    </ul>
+    <h2>Useful checks</h2>
+    <pre><code>npm run validate:bundles
+npm run validate:openai
+npm run validate:projections
+npm run validate:openai-plugin</code></pre>
+    <h2>What to include</h2>
+    <p>
+      State the package version, skill name, client and version, host capability or
+      permission involved, expected output contract, actual sanitized output, and the
+      smallest reproducible command. Distinguish a generated projection problem from a
+      canonical skill behavior problem.
+    </p>
+    <h2>Availability</h2>
+    <p>
+      Support cannot grant OpenAI account access, Apps Management permission, workspace
+      publication, regional availability, or public-directory review status. Those remain
+      external gates.
+    </p>
+  </section>
+</BaseLayout>

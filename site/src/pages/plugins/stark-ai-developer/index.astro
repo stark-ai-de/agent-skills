@@ -1,0 +1,108 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../../../lib/seo";
+import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../../../lib/site";
+
+const canonicalUrl = absoluteSiteUrl("/plugins/stark-ai-developer/");
+const description =
+  "stark AI Developer is a skills-only developer workflow toolkit for implementation-ready specifications, architecture, code findings, diagrams, documentation assets, and safely curated Codex memory.";
+const structuredData = [
+  webPageStructuredData({
+    canonicalUrl,
+    description,
+    title: "stark AI Developer",
+  }),
+  breadcrumbStructuredData([
+    { name: "Catalog", url: absoluteSiteUrl("/") },
+    { name: "stark AI Developer", url: canonicalUrl },
+  ]),
+];
+---
+
+<BaseLayout
+  title="stark AI Developer"
+  description={description}
+  canonicalPath="/plugins/stark-ai-developer/"
+  structuredData={structuredData}
+>
+  <section class="hero-section">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">Skills-only developer workflow toolkit</p>
+      <h1>stark AI Developer</h1>
+      <p class="hero-copy__lead">
+        Turn software ideas and code context into implementation-ready specifications,
+        architecture decisions, structural findings, editable diagrams, repository
+        documentation assets, and safely curated Codex memory.
+      </p>
+      <div class="hero-actions">
+        <a class="button button--primary button--signal" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
+          Review the source
+        </a>
+        <a class="button button--secondary" href={withBase("/support/")}>Get support</a>
+      </div>
+    </div>
+    <aside class="hero-panel" aria-labelledby="plugin-boundary-title" data-reveal>
+      <h2 id="plugin-boundary-title">Package boundary</h2>
+      <p>
+        This package contains reusable skill instructions and resources. It has no backend,
+        MCP server, connectors, authentication, telemetry, analytics, hidden network calls,
+        or runtime downloads.
+      </p>
+      <p class="section-note">
+        Host, workspace, repository, and tool processing remain subject to the installing
+        client's policies and capabilities.
+      </p>
+    </aside>
+  </section>
+
+  <section class="catalog-band" aria-labelledby="capabilities-title">
+    <header class="section-heading">
+      <p>One explicit six-skill bundle</p>
+      <h2 id="capabilities-title">Built for the full developer workflow</h2>
+    </header>
+    <div class="skill-grid">
+      <article class="skill-card">
+        <h3>Shape the work</h3>
+        <p>Interview a rough request into a verified, ADR-gated implementation specification.</p>
+      </article>
+      <article class="skill-card">
+        <h3>Make tradeoffs visible</h3>
+        <p>Review architecture choices with bounded authority, evidence, and explicit stop conditions.</p>
+      </article>
+      <article class="skill-card">
+        <h3>Search code structurally</h3>
+        <p>Set up or diagnose CodeGraph and ast-grep workflows before claiming code findings.</p>
+      </article>
+      <article class="skill-card">
+        <h3>Create editable artifacts</h3>
+        <p>Produce draw.io diagrams and repository presentation assets through capability-aware workflows.</p>
+      </article>
+      <article class="skill-card">
+        <h3>Curate context safely</h3>
+        <p>Review and clean Codex memory only with explicit scope, host evidence, and approval.</p>
+      </article>
+      <article class="skill-card">
+        <h3>Keep installation flexible</h3>
+        <p>Use the portable plugin, the OpenAI-native <code>dist/openai/*.zip</code> archive, standalone archives, or the existing npx skills path.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="source-band" aria-labelledby="distribution-title">
+    <div>
+      <p class="eyebrow">Distribution boundaries</p>
+      <h2 id="distribution-title">Local catalogs are not public publication</h2>
+      <p>
+        The repository-local marketplace is a portable Agent Plugins testing catalog. The
+        OpenAI-native archive is generated from ephemeral adapter staging at package time and is
+        not a committed repository tree. A successful local install,
+        GitHub release, or workspace marketplace entry does not mean that the plugin is
+        approved, searchable, or published in the Universal Plugins Directory.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <a class="button button--secondary" href={withBase("/privacy/")}>Privacy draft</a>
+      <a class="button button--secondary" href={withBase("/terms/")}>Terms draft</a>
+    </div>
+  </section>
+</BaseLayout>

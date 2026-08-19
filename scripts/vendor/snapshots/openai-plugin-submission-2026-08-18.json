@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contractId": "openai-plugin-submission-2026-08-18",
+  "source": {
+    "url": "https://developers.openai.com/plugins/deploy/submission-errors",
+    "title": "OpenAI Developers — Plugin submission errors",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "aa0a273d4fdf89b64dcd3ecf3c454bc4cf1ecd3492c453842b3abadf1a2ba1f9"
+    }
+  },
+  "verifiedOn": "2026-08-18",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "packaging-submission",
+  "facts": {
+    "archiveMaxCompressedBytes": 104857600,
+    "archiveMaxUncompressedBytes": 536870912,
+    "archiveMaxEntries": 5000,
+    "entryMaxBytes": 104857600,
+    "pathSegmentMax": 20,
+    "combinedSkillIdentityMax": 64,
+    "positiveTestsMin": 5,
+    "negativeTestsMin": 3
+  },
+  "requirementIds": ["OAI-001", "REP-001", "EVAL-001"],
+  "validators": ["validate:openai-submission", "validate:archives", "validate:plugin-evals"],
+  "unresolvedConflicts": []
+}

@@ -19,6 +19,7 @@ const EXCLUDED_DIRECTORY_SEGMENTS = new Set([
   "build",
   "coverage",
   "dist",
+  "adapters",
   "node_modules",
   "temp",
   "tmp",

@@ -246,10 +246,30 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
     return;
   }
 
+  const supportedInterfaceKeys = new Set([
+    "display_name",
+    "short_description",
+    "icon_small",
+    "icon_large",
+    "brand_color",
+    "default_prompt",
+  ]);
+  const supportedPolicyKeys = new Set(["products", "allow_implicit_invocation"]);
+  for (const key of Object.keys(data)) {
+    if (!["interface", "policy", "dependencies"].includes(key)) {
+      errors.push(`${rel}: unsupported top-level key "${key}"`);
+    }
+  }
+
   const interfaceBlock = data.interface;
   if (!isMapping(interfaceBlock)) {
     errors.push(`${rel}: interface must be a mapping`);
   } else {
+    for (const key of Object.keys(interfaceBlock)) {
+      if (!supportedInterfaceKeys.has(key)) {
+        errors.push(`${rel}: unsupported interface key "${key}"`);
+      }
+    }
     const displayName = interfaceBlock.display_name;
     const shortDescription = interfaceBlock.short_description;
     const defaultPrompt = interfaceBlock.default_prompt;
@@ -280,15 +300,45 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
   const policy = data.policy;
   if (!isMapping(policy)) {
     errors.push(`${rel}: policy must be a mapping`);
-  } else if (typeof policy.allow_implicit_invocation !== "boolean") {
-    errors.push(`${rel}: policy.allow_implicit_invocation must be a boolean`);
+  } else {
+    for (const key of Object.keys(policy)) {
+      if (!supportedPolicyKeys.has(key)) {
+        errors.push(`${rel}: unsupported policy key "${key}"`);
+      }
+    }
+    if (typeof policy.allow_implicit_invocation !== "boolean") {
+      errors.push(`${rel}: policy.allow_implicit_invocation must be a boolean`);
+    }
+    if (policy.products !== undefined) {
+      if (
+        !Array.isArray(policy.products) ||
+        policy.products.length === 0 ||
+        policy.products.some((product) => !["CHAT", "CODEX"].includes(product)) ||
+        new Set(policy.products).size !== policy.products.length
+      ) {
+        errors.push(`${rel}: policy.products must contain unique CHAT/CODEX values`);
+      }
+    }
   }
 
   const dependencies = data.dependencies;
-  if (!isMapping(dependencies)) {
-    errors.push(`${rel}: dependencies must be a mapping`);
-  } else if (!Array.isArray(dependencies.tools)) {
-    errors.push(`${rel}: dependencies.tools must be an array, use [] when empty`);
+  if (dependencies !== undefined) {
+    if (!isMapping(dependencies)) {
+      errors.push(`${rel}: dependencies must be a mapping`);
+    } else {
+      if (!Array.isArray(dependencies.tools)) {
+        errors.push(`${rel}: dependencies.tools must be an array`);
+      }
+      for (const key of Object.keys(dependencies)) {
+        if (key !== "tools") {
+          errors.push(`${rel}: unsupported dependency key "${key}"`);
+        }
+      }
+    }
+  }
+
+  if (JSON.stringify(data).includes("Narrow trigger")) {
+    errors.push(`${rel}: "Narrow trigger" is not a supported policy value`);
   }
 }
 

@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="After Edit">
+    <mxGraphModel adaptiveColors="auto" dx="800" dy="600" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#ecfeff,#164e63);strokeColor=light-dark(#0891b2,#67e8f9);fontColor=light-dark(#083344,#ecfeff);" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#dbeafe,#1e3a8a);strokeColor=light-dark(#2563eb,#93c5fd);fontColor=light-dark(#172554,#eff6ff);" vertex="1" parent="1">
+          <mxGeometry x="260" y="80" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="database" value="Database" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#dcfce7,#14532d);strokeColor=light-dark(#16a34a,#86efac);fontColor=light-dark(#052e16,#f0fdf4);" vertex="1" parent="1">
+          <mxGeometry x="560" y="75" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis" value="Redis cache" style="shape=cylinder3d;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=light-dark(#fee2e2,#7f1d1d);strokeColor=light-dark(#ef4444,#fca5a5);fontColor=light-dark(#450a0a,#fef2f2);" vertex="1" parent="1">
+          <mxGeometry x="440" y="180" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-client-api" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);" edge="1" parent="1" source="client" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-api-database" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);" edge="1" parent="1" source="api" target="database">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-api-redis" value="cache read/write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=light-dark(#334155,#cbd5e1);fontColor=light-dark(#0f172a,#f8fafc);" edge="1" parent="1" source="api" target="redis">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

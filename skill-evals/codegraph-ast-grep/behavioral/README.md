@@ -8,10 +8,11 @@ capture case contains:
 - `captured-output.md`: the final assistant message from the recorded run;
 - `grading.json`: deterministic assertions over that final message.
 
-[`current-contract/`](current-contract/README.md) is the separate current v0.3.1
-suite. It binds five prompts, internal clean-context reviewer outputs,
-independent gradings, and provenance to the exact current runtime hash. All 35
-reviewed assertions pass.
+[`current-contract/`](current-contract/README.md) is the separate current v0.3.2
+local metadata-refresh suite. It binds five prompts, reused internal
+clean-context reviewer outputs, historical independent gradings, and provenance
+to the exact current runtime hash. All 35 reviewed assertions pass; no new
+reviewer or client run is implied.
 
 The fixtures are synthetic and public-safe. They do not claim that the named
 tool versions, paths, or repository state were observed on the capture host. The
@@ -63,7 +64,8 @@ and summary totals are review records, not trusted inputs.
 ## Limits
 
 The historical captures prove only that one named v0.2 candidate/model run
-satisfied the committed assertions for four fixed prompts. The current v0.3.1
-suite is an internal collaboration-reviewer capture over synthetic fixture facts
-with independent internal grading. Neither suite provides a no-skill baseline,
-statistical reliability, live tool execution, CI, hosted, or production proof.
+satisfied the committed assertions for four fixed prompts. The current v0.3.2
+suite is an authorized local metadata refresh over synthetic fixture facts,
+reusing an internal collaboration-reviewer capture and independent grading.
+Neither suite provides a no-skill baseline, statistical reliability, live tool
+execution, CI, hosted, or production proof.

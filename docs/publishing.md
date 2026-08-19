@@ -54,7 +54,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor
 ```
 
-Each runtime bundle contains that runtime's matching `*-operations` skills plus every public skill outside the operations categories.
+The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai-developer.source.json`](../plugins/stark-ai-developer.source.json); category membership and directory discovery do not add skills implicitly. The standalone commands above remain individually scoped so runtime-specific skills are never selected by inference.
 
 Install Claude Code public skills project-locally or globally with the skills CLI:
 
@@ -157,6 +157,14 @@ node scripts/prepare-release.mjs --version "$NEXT_VERSION"
 
 The helper updates only `package.json` and `CHANGELOG.md`. Bump changed public skill `metadata.version` values directly in the same PR.
 
+The changelog section a pull request adds is the currently planned catalog release compared with the previous release, not a diary of intermediate PR states:
+
+- Keep historical `## vX.Y.Z` sections unchanged.
+- Describe the current tree versus the previous release (the base branch's package version).
+- Do not record paths or layouts that were added and then removed inside the same PR.
+- Keep in-progress notes in `## Unreleased` until the package version is bumped; then fold those notes into `## v<package-version>` so GitHub Release notes match the planned tag.
+- After that fold, `## Unreleased` stays as empty headings. It is the next release, not this one.
+
 Validate the release contract locally:
 
 ```bash
@@ -168,7 +176,7 @@ node scripts/validate-release.mjs --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, requires a successful hosted `Validate` run for that SHA, runs release-specific invariants, and prints the version it would release. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite.
+The workflow reads the release version from `package.json`, records the exact `main` commit, waits for a successful hosted `Validate` run for that SHA (or reuses one that already completed), runs release-specific invariants, and prints the version it would release. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
@@ -183,7 +191,51 @@ node scripts/print-release-notes.mjs
 
 ## Release Artifacts
 
-Do not generate custom per-skill zip files in v1. GitHub Releases provide source archives for each tag, and normal installation uses the skills CLI:
+The repository keeps canonical skills and the existing `npx skills` installation
+path. Plugin projections and optional standalone archives are generated from the
+explicit bundle with the following focused commands:
+
+```bash
+npm run validate:projections
+npm run validate:openai-plugin
+npm run validate:release-descriptor
+npm run package:openai-plugin
+npm run validate:archives
+npm run verify:release-reproducibility
+npm run verify:supply-chain
+npm run generate:release-evidence
+```
+
+`plugins/stark-ai-developer/` is the portable Agent Plugins projection.
+`npm run sync:openai-plugin` does not write a repository adapter tree.
+`dist/openai/stark-ai-developer-1.0.0.zip` is the OpenAI-native skills-only
+submission archive, generated from ephemeral adapter staging at package time.
+Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
+that archive; the adapter does not generate or overlay skill-local metadata.
+`dist/skills/*.zip` contains one skill root per optional standalone archive.
+These artifacts do not replace canonical sources or prove public-directory
+publication. GitHub Releases also provide source archives for each tag, and
+normal standalone installation uses the skills CLI:
+
+`npm run generate:release-evidence` is the explicit release-preparation command.
+It refreshes
+[`docs/listing/openai/stark-ai-developer-release-evidence.json`](listing/openai/stark-ai-developer-release-evidence.json)
+with the source commit/tag, projection and manifest hashes, complete archive
+inventories, the clean/dirty source state, and a deterministic release-input
+tree digest. Portal-normalized manifests, draft
+IDs, approval, publication, and client lifecycle observations remain separate
+external evidence and are never inferred from this file.
+
+The committed repository-local catalog is
+[`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json),
+generated from `plugins/stark-ai-developer.source.json` by `npm run sync:agent-plugin`.
+Its source path is resolved from the repository root and points to the portable
+projection. The skills-only entry uses
+`policy.installation: "AVAILABLE"` and omits `policy.authentication`: current
+marketplace clients support `ON_INSTALL` and `ON_USE` authentication triggers,
+and omission is the compatible no-auth representation. Do not copy this file
+into a personal marketplace without separately testing the client and path
+root.
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
@@ -207,7 +259,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a claude
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a claude-code --copy -y
 ```
 
-For Claude Code release artifacts, verify the source archive includes `skills/claude-operations/claude-spec-interviewer`, `skills/claude-operations/claude-memory-curator`, and every public skill under `skills/engineering-workflows/`, then verify installation with the `-a claude-code` commands above.
+For Claude Code release artifacts, verify the source archive includes the two named Claude-operation skills and the explicitly named engineering-workflow skills used by the commands above; do not infer membership from a directory listing. Then verify installation with the `-a claude-code` commands above.
 
 ## Release Update Process
 
@@ -218,7 +270,7 @@ For Claude Code release artifacts, verify the source archive includes `skills/cl
 5. Run `npx skills@latest add ./skills --list` locally.
 6. Run `npm run smoke:install` and require its emitted digest to match the initial fingerprint.
 7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest to remain unchanged.
-8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR.
+8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR. That section is the planned release compared with the previous one; do not rewrite historical changelog entries.
 9. Add an ADR only if a decision changed.
 10. Confirm the release-intent PR gate passed.
 11. Merge changes through a PR.

@@ -6,7 +6,7 @@ compatibility: Designed for Claude Code and Claude Code skills. Works in other a
 metadata:
   author: stark-ai-de
   category: claude-operations
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Claude Memory Curator

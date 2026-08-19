@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "plugin": {
+    "name": "stark-ai-developer",
+    "version": "1.0.0",
+    "displayName": "stark AI Developer",
+    "shortDescription": "Developer workflow toolkit",
+    "longDescription": "A skills-only developer workflow toolkit that turns software ideas and code context into implementation-ready specifications, architecture decisions, structural code findings, editable diagrams, project documentation assets, and safely curated Codex memory. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
+    "developerName": "servrox solutions UG",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Turn rough feature ideas into implementation-ready specifications.",
+      "Compare software architecture options with explicit tradeoffs.",
+      "Search code structurally with CodeGraph and ast-grep workflows.",
+      "Create editable draw.io diagrams from system context.",
+      "Create repository documentation and animated README assets.",
+      "Curate durable Codex memory with explicit safety boundaries."
+    ],
+    "starterPrompts": [
+      "Turn this feature idea into an implementation-ready specification.",
+      "Review the available code context and recommend an architecture with explicit tradeoffs.",
+      "Create an editable draw.io diagram for this system."
+    ],
+    "urls": {
+      "website": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
+      "privacyPolicy": "https://stark-ai-de.github.io/agent-skills/privacy/",
+      "termsOfService": "https://stark-ai-de.github.io/agent-skills/terms/",
+      "support": "https://stark-ai-de.github.io/agent-skills/support/",
+      "security": "https://stark-ai-de.github.io/agent-skills/security/"
+    },
+    "brandColors": {
+      "light": "#0021C7",
+      "dark": "#7FA0FF"
+    },
+    "assets": {
+      "logo": "site/public/icon-512.png",
+      "composerIcon": "site/public/icon-512.png"
+    }
+  },
+  "publisher": {
+    "legalName": "servrox solutions UG",
+    "identitySource": "package.json author declaration",
+    "openaiOrganizationId": null,
+    "verifiedIdentity": false,
+    "manualReviewRequired": [
+      "OpenAI publisher organization or verified individual identity",
+      "Apps Management permission",
+      "Final publisher display name and contact details",
+      "Live HTTPS verification for every listed URL",
+      "Supported-client add, enable, update, disable, and remove lifecycle evidence"
+    ]
+  },
+  "availability": {
+    "regions": ["DE"],
+    "selectionRationale": "Conservative initial availability pending legal and publisher review; do not claim universal availability."
+  },
+  "releaseNotes": "Initial skills-only stark AI Developer package with six explicit developer workflows and no backend or network runtime.",
+  "skills": [
+    {
+      "name": "codex-memory-curator",
+      "intent": "Safely inspect and curate durable Codex memory with explicit scope and host evidence.",
+      "cohesion": "Provides the memory-safety workflow needed to preserve implementation context without silently rewriting user state.",
+      "products": ["CODEX"],
+      "allowImplicitInvocation": false
+    },
+    {
+      "name": "codex-spec-interviewer",
+      "intent": "Turn an ambiguous software request into a verified, ADR-gated implementation specification.",
+      "cohesion": "Provides the requirements and decision boundary that makes the toolkit's other developer workflows actionable.",
+      "products": ["CHAT", "CODEX"],
+      "allowImplicitInvocation": true
+    },
+    {
+      "name": "animated-readme-logo",
+      "intent": "Create or validate repository presentation assets for developer documentation.",
+      "cohesion": "Keeps repository presentation and documentation assets within the developer workflow promise rather than presenting them as a general art tool.",
+      "products": ["CHAT", "CODEX"],
+      "allowImplicitInvocation": true
+    },
+    {
+      "name": "architecture-compass",
+      "intent": "Review or plan ADR-guided architecture changes with bounded execution authority.",
+      "cohesion": "Adds architecture tradeoffs and governance evidence between a feature idea and implementation work.",
+      "products": ["CHAT", "CODEX"],
+      "allowImplicitInvocation": true
+    },
+    {
+      "name": "codegraph-ast-grep",
+      "intent": "Set up, update, or diagnose semantic and structural code-search tooling.",
+      "cohesion": "Supplies repeatable code-context discovery for implementation-ready specifications and structural findings.",
+      "products": ["CODEX"],
+      "allowImplicitInvocation": false
+    },
+    {
+      "name": "drawio-diagrams",
+      "intent": "Create, repair, review, and export editable draw.io diagrams from system context.",
+      "cohesion": "Turns approved architecture and code context into a concrete, editable developer artifact.",
+      "products": ["CHAT", "CODEX"],
+      "allowImplicitInvocation": true
+    }
+  ]
+}

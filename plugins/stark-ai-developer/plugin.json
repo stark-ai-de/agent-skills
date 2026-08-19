@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "servrox solutions UG",
+    "url": "https://stark-ai.de"
+  },
+  "description": "A developer workflow toolkit for implementation-ready specifications, architecture decisions, code findings, diagrams, documentation assets, and safely curated Codex memory.",
+  "homepage": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
+  "keywords": [
+    "developer-tools",
+    "agent-skills",
+    "codex",
+    "documentation"
+  ],
+  "license": "Apache-2.0",
+  "name": "stark-ai-developer",
+  "repository": "https://github.com/stark-ai-de/agent-skills",
+  "version": "1.0.0"
+}

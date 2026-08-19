@@ -29,54 +29,88 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       release_sha: ${{ steps.version.outputs.release_sha }}
 
+    timeout-minutes: 45
+
     steps:
-      - uses: actions/checkout@v6
+      - name: ⬇️ Checkout main
+        uses: actions/checkout@v6
         with:
           ref: main
-          fetch-depth: 0
+          fetch-depth: 1
+          persist-credentials: false
 
-      - uses: pnpm/setup@v2
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
         with:
-          runtime: node@22
+          runtime: node@24.18.0
           cache: true
           install: false
 
-      - run: pnpm install --frozen-lockfile
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - id: version
+      - name: 🏷️ Read release identity
+        id: version
         run: |
           version=$(node -p "require('./package.json').version")
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Require successful hosted Validate run
+      - name: 🔗 Require successful hosted Validate run
         id: validate-receipt
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
         run: |
-          run_id=$(gh run list \
-            --repo "$GITHUB_REPOSITORY" \
-            --workflow validate.yml \
-            --commit "$RELEASE_SHA" \
-            --status completed \
-            --limit 50 \
-            --json databaseId,status,conclusion \
-            --jq 'map(select(.status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
+          deadline=$((SECONDS + 1500))
+          run_id=""
 
-          if [ -z "$run_id" ]; then
-            echo "No successful Validate run exists for ${RELEASE_SHA}; wait for main validation and retry."
-            exit 1
-          fi
+          while true; do
+            runs=$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow validate.yml \
+              --commit "$RELEASE_SHA" \
+              --limit 50 \
+              --json databaseId,status,conclusion)
+
+            run_id=$(printf '%s' "$runs" | jq -r \
+              'map(select(.status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
+            if [ -n "$run_id" ]; then
+              break
+            fi
+
+            pending=$(printf '%s' "$runs" | jq -r \
+              '[.[] | select(.status == "queued" or .status == "waiting" or .status == "requested" or .status == "pending" or .status == "in_progress")] | length')
+            failed=$(printf '%s' "$runs" | jq -r \
+              '[.[] | select(.status == "completed" and .conclusion != "success")] | length')
+
+            if [ "$failed" != "0" ] && [ "$pending" = "0" ]; then
+              echo "Validate completed without success for ${RELEASE_SHA}."
+              exit 1
+            fi
+
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "No successful Validate run exists for ${RELEASE_SHA}; wait for main validation and retry."
+              exit 1
+            fi
+
+            echo "Waiting for Validate on ${RELEASE_SHA} (pending=${pending})."
+            sleep 20
+          done
 
           echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
           echo "Reusing successful Validate run ${run_id} for ${RELEASE_SHA}."
 
-      - run: node scripts/validate-release.mjs
+      - name: 🚀 Validate release contract
+        run: node scripts/validate-release.mjs
 
-      - run: node scripts/print-release-notes.mjs > release-notes.md
+      - name: 📦 Prove release archives
+        run: npm run validate:release-proof
 
-      - name: Print release readiness
+      - name: 📝 Build release notes
+        run: node scripts/print-release-notes.mjs > release-notes.md
+
+      - name: 📣 Print release readiness
         run: |
           echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
           echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
@@ -85,21 +119,24 @@ jobs:
     needs: release-readiness
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - name: ⬇️ Checkout validated SHA
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
-          fetch-depth: 0
+          fetch-depth: 1
 
       # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
-      - uses: actions/setup-node@v6
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24.18.0
 
-      - name: Verify validated release identity
+      - name: 🔍 Verify validated release identity
         env:
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
@@ -113,7 +150,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify tag and release do not exist
+      - name: 🔒 Verify tag and release do not exist
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
@@ -130,10 +167,10 @@ jobs:
             exit 1
           fi
 
-      - name: Build release notes
+      - name: 📝 Build release notes
         run: node scripts/print-release-notes.mjs > release-notes.md
 
-      - name: Publish GitHub Release
+      - name: 🚀 Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
@@ -157,7 +194,7 @@ jobs:
             --notes-file release-notes.md \
             "${latest_flag[@]}"
 
-      - name: Print post-release verification
+      - name: 📣 Print post-release verification
         run: |
           echo "After publishing, verify:"
           echo "npx skills@latest add stark-ai-de/agent-skills --list"

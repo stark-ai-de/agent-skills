@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -35,7 +35,7 @@
   },
   "files": [
     "skills",
-    "bundles",
+    "plugins",
     "incubator",
     "skill-evals",
     "site",
@@ -55,14 +55,42 @@
   "scripts": {
     "list": "node scripts/list-skills.mjs",
     "list:incubator": "node scripts/list-incubator-skills.mjs",
-    "validate": "npm run validate:skills && npm run validate:memory-curators && npm run validate:adrs && npm run validate:bundles && npm run validate:architecture-compass && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
+    "validate": "npm run validate:skills && npm run validate:memory-curators && npm run validate:adrs && npm run validate:bundles && npm run validate:release-descriptor && npm run validate:contract-snapshots && npm run validate:traceability && npm run validate:openai && npm run validate:projections && npm run validate:plugin-evals && npm run validate:network-endpoints && npm run verify:supply-chain && npm run validate:architecture-compass && npm run lint:actions && npm run validate:scripts && npm run validate:codegraph-ast-grep && npm run validate:drawio && npm run validate:animated-readme-logo && npm run validate:skillopt && npm run validate:site",
     "release:prepare": "node scripts/prepare-release.mjs",
     "release:validate": "node scripts/validate-release.mjs",
     "release:notes": "node scripts/print-release-notes.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "validate:memory-curators": "node scripts/validate-memory-curators.mjs",
     "validate:adrs": "node scripts/validate-adrs.mjs",
-    "validate:bundles": "node scripts/validate-bundles.mjs",
+    "validate:bundles": "node scripts/validate-bundles.mjs && node scripts/validation/test-bundle-contract.mjs",
+    "validate:openai": "node scripts/validate-openai-listing.mjs && node scripts/validate-openai-marketplace.mjs && node scripts/validation/test-openai-contract.mjs",
+    "generate:openai-worksheet": "node scripts/generate-openai-submission-worksheet.mjs",
+    "validate:openai-worksheet": "node scripts/generate-openai-submission-worksheet.mjs --check",
+    "validate:projections": "node scripts/sync-agent-plugin.mjs --check && node scripts/validate-agent-plugin.mjs && node scripts/validation/test-plugin-projections.mjs",
+    "validate:archives": "node scripts/validate-archives.mjs",
+    "validate:network-endpoints": "node scripts/validate-network-endpoints.mjs",
+    "validate:release-proof": "npm run validate:archives && npm run verify:release-reproducibility && npm run validate:network-endpoints && npm run validate:release-descriptor && npm run validate:contract-snapshots && npm run verify:supply-chain",
+    "sync:agent-plugin": "node scripts/sync-agent-plugin.mjs",
+    "sync:openai-plugin": "node scripts/sync-openai-plugin.mjs",
+    "sync:standalone-skills": "node scripts/sync-standalone-skills.mjs",
+    "validate:agent-plugin": "node scripts/validate-agent-plugin.mjs",
+    "validate:openai-plugin": "node scripts/validate-openai-plugin.mjs",
+    "validate:openai-listing": "node scripts/validate-openai-listing.mjs",
+    "validate:openai-marketplace": "node scripts/validate-openai-marketplace.mjs",
+    "validate:openai-submission": "node scripts/validate-openai-submission.mjs",
+    "validate:standalone-skills": "node scripts/validate-standalone-skills.mjs",
+    "validate:plugin-evals": "node scripts/validate-plugin-evals.mjs && node scripts/validation/test-plugin-evals.mjs",
+    "validate:release-descriptor": "node scripts/validate-release-descriptor.mjs && node scripts/validation/test-release-descriptor.mjs",
+    "validate:contract-snapshots": "node scripts/validate-contract-snapshots.mjs",
+    "generate:openai-marketplace-fixture": "node scripts/generate-openai-marketplace-fixture.mjs",
+    "generate:traceability": "node scripts/generate-traceability.mjs",
+    "validate:traceability": "node scripts/generate-traceability.mjs --check",
+    "verify:supply-chain": "node scripts/verify-supply-chain.mjs",
+    "package:agent-plugin": "node scripts/package-agent-plugin.mjs",
+    "package:openai-plugin": "node scripts/package-openai-plugin.mjs",
+    "package:standalone-skills": "node scripts/package-standalone-skills.mjs",
+    "verify:release-reproducibility": "node scripts/verify-release-reproducibility.mjs",
+    "generate:release-evidence": "node scripts/verify-release-reproducibility.mjs --evidence docs/listing/openai/stark-ai-developer-release-evidence.json",
     "validate:architecture-compass": "node scripts/validate-architecture-compass.mjs && node scripts/validation/architecture-compass/test-validator.mjs",
     "validate:codegraph-ast-grep": "node scripts/validate-codegraph-ast-grep-contract.mjs",
     "validate:drawio": "node scripts/validate-drawio-fixtures.mjs && node scripts/validate-drawio-visual-evals.mjs",
@@ -83,13 +111,14 @@
   },
   "devDependencies": {
     "ajv": "^8.20.0",
+    "fflate": "^0.8.3",
     "github-actionlint": "1.7.12",
     "js-yaml": "5.3.0",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"
   },
   "engines": {
-    "node": ">=24.18"
+    "node": ">=24.18.0"
   },
   "packageManager": "pnpm@11.22.0"
 }

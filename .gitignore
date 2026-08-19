@@ -1,8 +1,15 @@
 node_modules
 __pycache__/
-.agents/
+.agents/*
+!.agents/plugins/
+.agents/plugins/*
+!.agents/plugins/marketplace.json
 /.worktrees/
+/adapters/
+/plugins/.*.stage-*
+/plugins/.*.previous-*
 .claude/
+.cursor/
 .codegraph/
 skills-lock.json
 .astro

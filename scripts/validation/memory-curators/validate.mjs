@@ -68,7 +68,7 @@ const curators = [
     runtime: "cursor",
     dir: path.join("skills", "cursor-operations", "cursor-memory-curator"),
     backup: "backup-cursor-context.mjs",
-    openAi: true,
+    openAi: false,
     backupArgs(
       fixture,
       include,
@@ -2015,8 +2015,8 @@ for (const curator of curators) {
     fail(`${skillRelative}: runtime contract must link the report asset without embedding it`);
   }
   const version = skill.match(/\n  version: "([^"]+)"/)?.[1];
-  if (version !== "0.2.0")
-    fail(`${skillRelative}: expected version 0.2.0; found ${version ?? "none"}`);
+  if (version !== "0.2.1")
+    fail(`${skillRelative}: expected version 0.2.1; found ${version ?? "none"}`);
 
   const report = read(path.join(curator.dir, "assets", "review-report-template.md"));
   for (const heading of [

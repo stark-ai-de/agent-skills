@@ -23,10 +23,12 @@ This guide is non-normative. [Long](0042-optimize-github-actions-with-owned-gate
 
 ## How to apply
 
-- Use `pnpm/setup@v2` after checkout with `runtime: node@22`, `cache: true`, and `install: false`; run `pnpm install --frozen-lockfile` explicitly.
+- Use `pnpm/setup@v2` after checkout with `runtime: node@24.18.0`, `cache: true`, and `install: false`; run `pnpm install --frozen-lockfile --prefer-offline` explicitly.
+- Keep checkout shallow. On pull requests, fetch only `pull_request.base.sha` so release-intent scripts can diff without cloning full history.
+- After `npm run validate` (which already includes `validate:network-endpoints`), run `validate:archives` and `verify:release-reproducibility` in Validate. Keep the full `validate:release-proof` chain on `Publish Release`, which does not run the local aggregate.
 - Keep the required `Validate` workflow unfiltered for pull requests, add per-event concurrency cancellation for pull requests and pushes, and leave manual dispatches independent.
 - Let the Pages workflow run on relevant `main` changes and explicit dispatches. Site output inputs are `site/**`, `skills/**`, `incubator/**`, `skill-evals/**`, package-manager manifests, and the Pages workflow itself.
-- In `Publish Release`, require a successful hosted `Validate` run for the checked-out `main` SHA, run release-specific checks, and capture that immutable SHA; the publish job must verify that SHA and current `main` before tagging and must not repeat the aggregate suite.
+- In `Publish Release`, wait for a successful hosted `Validate` run for the checked-out `main` SHA when that run is still queued or in progress, fail closed if it completed unsuccessfully, run release-specific checks, and capture that immutable SHA; the publish job must verify that SHA and current `main` before tagging and must not repeat the aggregate suite.
 
 ## Verification
 

@@ -41,7 +41,7 @@ Prepare a release with clear versioning, changelog coverage, validation status, 
 ## Process
 
 1. Identify the last release and changes since then.
-2. Classify changes as added, changed, fixed, deprecated, removed, or security.
+2. Classify changes as added, changed, fixed, deprecated, removed, or security. Write the planned catalog release compared with the previous release; do not record intra-PR history or rewrite older changelog sections.
 3. Recommend a semver bump with reasoning.
 4. Check changelog, docs, CI, package metadata, and release workflow.
 5. Draft release notes and a preflight checklist.
