@@ -1,0 +1,23 @@
+---
+import { STARK_AI_HAIR_SPACE, STARK_AI_MARK } from "../lib/site";
+
+interface Props {
+  text?: string;
+}
+
+const { text = STARK_AI_MARK } = Astro.props;
+const parts = text.split(STARK_AI_MARK);
+---
+
+{
+  parts.map((part, index) => (
+    <>
+      {index > 0 && (
+        <>
+          stark{STARK_AI_HAIR_SPACE}<span class="brand-ai">AI</span>
+        </>
+      )}
+      {part}
+    </>
+  ))
+}

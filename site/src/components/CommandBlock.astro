@@ -2,17 +2,18 @@
 interface Props {
   command: string;
   iconOnly?: boolean;
+  kind?: "command" | "prompt";
   label: string;
 }
 
-const { command, iconOnly = false, label } = Astro.props;
+const { command, iconOnly = false, kind = "command", label } = Astro.props;
 const copyLabel = `Copy ${label}`;
 ---
 
-<div class="command-copy" data-command-block>
+<div class:list={["command-copy", { "command-copy--prompt": kind === "prompt" }]} data-command-block>
   <div class="command-copy__toolbar">
     <span class="command-copy__label">
-      <span class="command-copy__prompt" aria-hidden="true">$</span>
+      {kind === "command" && <span class="command-copy__prompt" aria-hidden="true">$</span>}
       <span class="command-copy__label-text">{label}</span>
     </span>
     <button

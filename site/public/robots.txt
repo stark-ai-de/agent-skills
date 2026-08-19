@@ -3,3 +3,4 @@ Allow: /
 
 Host: stark-ai-de.github.io
 Sitemap: https://stark-ai-de.github.io/agent-skills/sitemap-index.xml
+# Curated AI index: https://stark-ai-de.github.io/agent-skills/llms.txt

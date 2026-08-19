@@ -3,6 +3,7 @@ import SkillPage from "../../components/SkillPage.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   breadcrumbStructuredData,
+  skillPageTitle,
   skillStructuredData,
   webPageStructuredData
 } from "../../lib/seo";
@@ -30,10 +31,12 @@ export async function getStaticPaths() {
 const { skill } = Astro.props;
 const canonicalPath = `/skills/${skill.name}/`;
 const canonicalUrl = absoluteSiteUrl(canonicalPath);
-const pageTitle = `${skill.title} Agent Skill`;
+const pageTitle = skillPageTitle(skill);
 const structuredData = [
   webPageStructuredData({
     canonicalUrl,
+    dateModified: skill.modifiedAt,
+    datePublished: skill.publishedAt,
     description: skill.description,
     mainEntityId: `${canonicalUrl}#article`,
     title: pageTitle
@@ -53,6 +56,10 @@ const structuredData = [
   canonicalPath={canonicalPath}
   imageAlt={`${skill.title} Agent Skill catalog preview`}
   ogType="article"
+  publishedTime={skill.publishedAt}
+  modifiedTime={skill.modifiedAt}
+  section={skill.categoryLabel}
+  tags={[skill.name, skill.categoryLabel, "Agent Skills"]}
   structuredData={structuredData}
 >
   <SkillPage skill={skill} />

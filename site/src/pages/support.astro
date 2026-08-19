@@ -1,71 +1,148 @@
 ---
+import CommandBlock from "../components/CommandBlock.astro";
+import PolicyPage from "../components/PolicyPage.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
-import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+import {
+  getStarkAiDeveloperListing,
+  pluginAddCommand,
+  pluginMarketplaceAddCommand,
+  standaloneSkillsInstallCommand,
+} from "../lib/plugin-listing";
+import { breadcrumbStructuredData, faqStructuredData, webPageStructuredData } from "../lib/seo";
+import {
+  absoluteSiteUrl,
+  GITHUB_ISSUES_URL,
+  GITHUB_REPO_URL,
+  PLUGIN_PATH,
+  SUPPORT_EMAIL,
+  withBase,
+} from "../lib/site";
 
-const canonicalUrl = absoluteSiteUrl("/support/");
+const listing = getStarkAiDeveloperListing();
+const marketplaceAddCommand = pluginMarketplaceAddCommand();
+const pluginInstallCommand = pluginAddCommand(listing);
+const skillsCliCommand = standaloneSkillsInstallCommand(listing);
+const canonicalPath = "/support/";
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const title = "Support";
 const description =
-  "Support draft for installing, validating, and reporting issues with the stark AI Developer skills-only package.";
+  "Install help and issue reporting for the OpenAI plugin and this catalog. Do not include secrets in reports.";
 ---
 
 <BaseLayout
-  title="Support"
+  title={title}
   description={description}
-  canonicalPath="/support/"
+  canonicalPath={canonicalPath}
   structuredData={[
-    webPageStructuredData({ canonicalUrl, description, title: "Support" }),
-    breadcrumbStructuredData([{ name: "Support", url: canonicalUrl }]),
+    webPageStructuredData({
+      canonicalUrl,
+      description,
+      mainEntityId: `${canonicalUrl}#faq`,
+      title,
+    }),
+    breadcrumbStructuredData([
+      { name: "Catalog", url: absoluteSiteUrl("/") },
+      { name: title, url: canonicalUrl },
+    ]),
+    faqStructuredData({
+      canonicalUrl,
+      items: [
+        {
+          question: "How do I install the OpenAI plugin?",
+          answer: `Codex 0.147.0 or later: run ${marketplaceAddCommand}, then ${pluginInstallCommand}. ChatGPT installs from the Plugins tab after directory publication.`,
+        },
+        {
+          question: "How do I install the six skills without the plugin?",
+          answer: `Use the skills CLI only when you want the catalog skills in a host, not the plugin. Run ${skillsCliCommand}.`,
+        },
+        {
+          question: "What should a support report include?",
+          answer:
+            "Name the package version, skill, client and version, any host permission involved, what you expected, what actually happened (sanitized), and the smallest command that reproduces it. Do not include secrets, tokens, cookies, customer data, private repository paths, or internal hostnames.",
+        },
+        {
+          question: "What can support not do?",
+          answer:
+            "Support cannot grant OpenAI account access, Apps Management permission, workspace publication, regional availability, or public-directory review status.",
+        },
+      ],
+    }),
   ]}
 >
-  <section class="hero-section">
-    <div class="hero-copy" data-reveal>
-      <p class="eyebrow">Repository and package support</p>
-      <h1>Support stark AI Developer</h1>
-      <p class="hero-copy__lead">
-        Start with the repository documentation and validators. Include the projection,
-        client surface, version, and a sanitized reproduction when asking for help.
-      </p>
-      <div class="hero-actions">
-        <a class="button button--primary button--signal" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
-          Open repository issues
-        </a>
-        <a class="button button--secondary" href={withBase("/security/")}>Report a security issue</a>
-      </div>
-    </div>
-    <aside class="hero-panel" aria-labelledby="support-boundary">
-      <h2 id="support-boundary">Before reporting</h2>
+  <PolicyPage
+    currentPath={canonicalPath}
+    eyebrow="Plugin and catalog"
+    lead="Start with the plugin install commands. When you ask for help, include the client, version, and a sanitized reproduction. Do not send secrets."
+    pills={["GitHub issues", SUPPORT_EMAIL]}
+    title={title}
+  >
+    <a
+      slot="actions"
+      class="button button--primary button--signal"
+      href={GITHUB_ISSUES_URL}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span>Open a GitHub issue</span>
+    </a>
+    <a slot="actions" class="button button--secondary" href={`mailto:${SUPPORT_EMAIL}`}>
+      Email {SUPPORT_EMAIL}
+    </a>
+    <a slot="actions" class="button button--secondary" href={withBase("/security/")}>
+      Report a security issue
+    </a>
+
+    <section slot="sidebar">
+      <h2>Before reporting</h2>
       <p>
         Do not include secrets, tokens, cookies, customer data, private repository paths,
         internal hostnames, or private reviewer communication.
       </p>
-    </aside>
-  </section>
+    </section>
 
-  <section class="catalog-band prose" aria-labelledby="install-title">
-    <h2 id="install-title">Installation paths</h2>
-    <ul>
-      <li>Use <code>npx skills@latest</code> for standalone repository skills.</li>
-      <li>Use <code>plugins/stark-ai-developer/</code> for portable Agent Plugins clients.</li>
-      <li>Use the repository-local marketplace only for the portable plugin and local testing.</li>
-      <li>Use <code>dist/openai/*.zip</code> from <code>npm run package:openai-plugin</code> for OpenAI-native submission packaging. That archive is not a local install tree.</li>
-    </ul>
-    <h2>Useful checks</h2>
-    <pre><code>npm run validate:bundles
-npm run validate:openai
-npm run validate:projections
-npm run validate:openai-plugin</code></pre>
+    <h2>Install the plugin</h2>
+    <p>
+      Codex and ChatGPT install the OpenAI plugin. That is not the skills CLI. Add this
+      repository as a Codex marketplace, then install the plugin by name. After directory
+      publication, ChatGPT can install it from the{" "}
+      <a href="https://chatgpt.com/plugins" rel="noreferrer" target="_blank">Plugins</a> tab.
+      The <a href={withBase(PLUGIN_PATH)}>plugin page</a> has the full walkthrough.
+    </p>
+    <CommandBlock command={marketplaceAddCommand} label="Add the plugin marketplace" />
+    <CommandBlock command={pluginInstallCommand} label="Install the plugin" />
+
+    <h2>Standalone skills</h2>
+    <p>
+      Use <code>npx skills</code> only when you want the six catalog skills in a host, not the
+      plugin. The portable <code>plugins/stark-ai-developer/</code> tree is for clients that
+      support that contract and for local testing. A <code>dist/openai</code> zip from{" "}
+      <code>npm run package:openai-plugin</code> is a submission archive, not an install tree.
+    </p>
+    <CommandBlock command={skillsCliCommand} label="Install the six skills without the plugin" />
+
     <h2>What to include</h2>
     <p>
-      State the package version, skill name, client and version, host capability or
-      permission involved, expected output contract, actual sanitized output, and the
-      smallest reproducible command. Distinguish a generated projection problem from a
-      canonical skill behavior problem.
+      Name the package version, skill, client and version, any host permission involved, what
+      you expected, what actually happened (sanitized), and the smallest command that reproduces
+      it. Say whether the problem is in a generated plugin copy or in the canonical skill.
     </p>
-    <h2>Availability</h2>
+
+    <h2>For maintainers</h2>
+    <p>
+      Many packaging issues reproduce with the repository validators. Run the smallest relevant
+      check before opening an issue.
+    </p>
+    <CommandBlock
+      command="npm run validate:bundles && npm run validate:openai && npm run validate:projections && npm run validate:openai-plugin"
+      label="Package validation commands"
+    />
+
+    <h2>What support cannot do</h2>
     <p>
       Support cannot grant OpenAI account access, Apps Management permission, workspace
       publication, regional availability, or public-directory review status. Those remain
-      external gates.
+      external gates. Source and documentation changes can be discussed in{" "}
+      <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">the repository</a>.
     </p>
-  </section>
+  </PolicyPage>
 </BaseLayout>

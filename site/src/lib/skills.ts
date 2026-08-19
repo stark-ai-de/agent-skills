@@ -1,4 +1,5 @@
-import { existsSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -105,9 +106,11 @@ export interface CatalogSkill {
   kind: SkillKind;
   license: string;
   metadata: SkillMetadata;
+  modifiedAt: string;
   name: string;
   openAiMetadataPath?: string;
   openAiMetadataUrl?: string;
+  publishedAt: string;
   sourcePath: string;
   sourceUrl: string;
   summary: string;
@@ -261,6 +264,7 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
   const html = sanitizeSkillHtml(
     await marked.parse(normalizeSkillMarkdown(parsed.content, skillDir)),
   );
+  const { modifiedAt, publishedAt } = sourceDates(sourcePath);
 
   return {
     body: parsed.content,
@@ -278,9 +282,11 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     kind,
     license: asString(data.license) ?? "Unspecified",
     metadata,
+    modifiedAt,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
     openAiMetadataUrl: hasOpenAiMetadata ? repoUrl(openAiMetadataPath) : undefined,
+    publishedAt,
     sourcePath,
     sourceUrl: repoUrl(sourcePath),
     summary: summarizeDescription(description),
@@ -289,6 +295,34 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     title: firstMarkdownHeading(parsed.content) ?? toTitleCase(name),
     version: metadata.version,
   } satisfies CatalogSkill;
+}
+
+function sourceDates(sourcePath: string) {
+  const fallback = statSync(path.join(repoRoot, sourcePath)).mtime.toISOString();
+
+  try {
+    const log = execFileSync("git", ["log", "--format=%cI", "--", sourcePath], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+
+    if (!log) {
+      return { modifiedAt: fallback, publishedAt: fallback };
+    }
+
+    const dates = log
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    return {
+      modifiedAt: dates[0] ?? fallback,
+      publishedAt: dates[dates.length - 1] ?? fallback,
+    };
+  } catch {
+    return { modifiedAt: fallback, publishedAt: fallback };
+  }
 }
 
 function buildSkillTree(relativeDir: string): SkillTreeNode {

@@ -1,71 +1,103 @@
 ---
+import PolicyPage from "../components/PolicyPage.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
-import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+import {
+  absoluteSiteUrl,
+  GITHUB_REPO_URL,
+  GITHUB_SECURITY_ADVISORIES_URL,
+  GITHUB_SECURITY_POLICY_URL,
+  SECURITY_EMAIL,
+  withBase,
+} from "../lib/site";
 
-const canonicalUrl = absoluteSiteUrl("/security/");
+const canonicalPath = "/security/";
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const title = "Security";
 const description =
-  "Security-report draft for the stark AI Developer skills-only package and repository distributions.";
+  "Report suspected vulnerabilities privately by GitHub advisory or email. Do not file public issues for security problems.";
 ---
 
 <BaseLayout
-  title="Security"
+  title={title}
   description={description}
-  canonicalPath="/security/"
+  canonicalPath={canonicalPath}
   structuredData={[
-    webPageStructuredData({ canonicalUrl, description, title: "Security" }),
-    breadcrumbStructuredData([{ name: "Security", url: canonicalUrl }]),
+    webPageStructuredData({ canonicalUrl, description, title }),
+    breadcrumbStructuredData([
+      { name: "Catalog", url: absoluteSiteUrl("/") },
+      { name: title, url: canonicalUrl },
+    ]),
   ]}
 >
-  <section class="hero-section">
-    <div class="hero-copy" data-reveal>
-      <p class="eyebrow">Reviewable security-report draft</p>
-      <h1>Report a security concern</h1>
-      <p class="hero-copy__lead">
-        Use a private channel for suspected vulnerabilities, credential exposure, or
-        harmful package behavior. Do not disclose sensitive details in a public issue.
-      </p>
-      <div class="hero-actions">
-        <a class="button button--primary button--signal" href="https://github.com/stark-ai-de/agent-skills/security/policy" target="_blank" rel="noreferrer">
-          Read repository security policy
-        </a>
-        <a class="button button--secondary" href={withBase("/support/")}>General support</a>
-      </div>
-    </div>
-    <aside class="hero-panel" aria-labelledby="security-status">
-      <h2 id="security-status">Contact review required</h2>
-      <p>
-        Confirm the final security contact, encryption requirements, triage owner, response
-        target, disclosure process, and scope before public launch.
-      </p>
-    </aside>
-  </section>
+  <PolicyPage
+    currentPath={canonicalPath}
+    eyebrow="Private vulnerability reporting"
+    lead="Use a private channel for suspected vulnerabilities, credential exposure, or harmful package behavior. Do not disclose sensitive details in a public issue."
+    pills={["Private reports", SECURITY_EMAIL]}
+    title={title}
+  >
+    <a
+      slot="actions"
+      class="button button--primary button--signal"
+      href={GITHUB_SECURITY_POLICY_URL}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span>Read the security policy</span>
+    </a>
+    <a slot="actions" class="button button--secondary" href={`mailto:${SECURITY_EMAIL}`}>
+      Email {SECURITY_EMAIL}
+    </a>
+    <a slot="actions" class="button button--secondary" href={withBase("/support/")}>
+      Support
+    </a>
 
-  <section class="catalog-band prose" aria-labelledby="security-scope">
-    <h2 id="security-scope">Package security scope</h2>
+    <section slot="sidebar">
+      <h2>Report privately</h2>
+      <p>GitHub private vulnerability reporting is preferred when you have a GitHub account.</p>
+      <nav class="policy-links" aria-label="Security reporting routes">
+        <a href={GITHUB_SECURITY_ADVISORIES_URL} rel="noreferrer" target="_blank">
+          Open a private advisory
+        </a>
+        <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>
+      </nav>
+    </section>
+
+    <h2>What this covers</h2>
     <p>
-      The v1 package is skills-only and intentionally excludes MCP servers, apps,
-      connectors, authentication declarations, lifecycle hooks required for core work,
-      telemetry, analytics, hidden network calls, and runtime downloads. Generated
-      projections reject symlinks and special files, preserve canonical bytes, scan
-      archive roots, and validate private-path and token-like content.
+      Report issues in the skills-only package or this catalog: suspected vulnerabilities,
+      credential exposure, unsafe scripts, or harmful package behavior. The package is Markdown
+      skills and static assets. It has no backend, MCP server, connectors, authentication,
+      telemetry, analytics, hidden network calls, or runtime downloads.
     </p>
-    <h2>Report details</h2>
+
+    <h2>How to report</h2>
     <p>
-      Include the affected version or commit, projection type, skill or archive path,
-      impact, reproducible steps, and a sanitized proof. If a public URL, legal page,
-      marketplace entry, or portal artifact is involved, label it as local, draft,
-      external, or verified rather than implying a stronger status.
+      Follow the repository{" "}
+      <a href={GITHUB_SECURITY_POLICY_URL} rel="noreferrer" target="_blank">security policy</a>
+      {" "}and use GitHub private vulnerability reporting when you can. Email{" "}
+      <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a> if you cannot use GitHub.
     </p>
-    <h2>Repository policy</h2>
     <p>
-      Follow the repository's
-      <a href="https://github.com/stark-ai-de/agent-skills/security/policy" target="_blank" rel="noreferrer">
-        SECURITY.md policy
-      </a>
-      and use the repository's private reporting mechanism where available. General
-      documentation and source changes can be discussed through
-      <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">GitHub</a>.
+      Include the affected version or commit, whether a plugin copy or archive is involved, the
+      skill or path, the impact, steps to reproduce, and a sanitized proof. If a public URL,
+      marketplace entry, or portal artifact is involved, say whether it is local, draft,
+      external, or verified. Do not imply a stronger status.
     </p>
-  </section>
+
+    <h2>What not to include</h2>
+    <p>
+      Do not send secrets, live credentials, customer data, private repository paths, or exploit
+      payloads that are unnecessary to understand the issue. Do not open a public issue for a
+      suspected vulnerability.
+    </p>
+
+    <h2>Ordinary bugs</h2>
+    <p>
+      Install, documentation, and source questions that are not security issues belong on{" "}
+      <a href={withBase("/support/")}>Support</a> or{" "}
+      <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">GitHub</a>.
+    </p>
+  </PolicyPage>
 </BaseLayout>
