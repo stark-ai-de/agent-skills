@@ -6,7 +6,11 @@ import process from "node:process";
 import { unzipSync } from "fflate";
 
 import { hashBytes, loadValidatedBundle } from "./lib/bundle-contract.mjs";
-import { comparePosixPaths, enumerateTree, STANDALONE_TARGET } from "./lib/plugin-projections.mjs";
+import {
+  comparePosixPaths,
+  listTrackedSourceFiles,
+  STANDALONE_TARGET,
+} from "./lib/plugin-projections.mjs";
 
 function parseArgs(argv) {
   const rootIndex = argv.indexOf("--root");
@@ -35,10 +39,9 @@ function validateArchive(archivePath, entry, root) {
 
   const sourceRoot = path.join(root, entry.source);
   const expected = new Map(
-    enumerateTree(sourceRoot, "", { excludeGeneratedCaches: true }).map((file) => [
-      `${entry.name}/${file.relative}`,
-      fs.readFileSync(file.absolute),
-    ]),
+    listTrackedSourceFiles(root, sourceRoot, entry.source)
+      .filter((file) => !file.relative.includes("__pycache__") && !/\.py[cod]$/.test(file.relative))
+      .map((file) => [`${entry.name}/${file.relative}`, fs.readFileSync(file.absolute)]),
   );
   assert.equal(
     names.length,

@@ -31,6 +31,7 @@ function hashFile(filePath) {
 
 function copyMarketplaceRoot(root) {
   fs.mkdirSync(path.join(root, "plugins"), { recursive: true, mode: 0o755 });
+  fs.mkdirSync(path.join(root, ".agents", "plugins"), { recursive: true, mode: 0o755 });
   fs.copyFileSync(
     path.join(repositoryRoot, PLUGIN_SOURCE_PATH),
     path.join(root, PLUGIN_SOURCE_PATH),
@@ -38,6 +39,11 @@ function copyMarketplaceRoot(root) {
   fs.copyFileSync(
     path.join(repositoryRoot, PLUGIN_SOURCE_SCHEMA_PATH),
     path.join(root, PLUGIN_SOURCE_SCHEMA_PATH),
+  );
+  fs.cpSync(
+    path.join(repositoryRoot, "scripts/vendor/snapshots"),
+    path.join(root, "scripts/vendor/snapshots"),
+    { recursive: true },
   );
   fs.cpSync(committedMarketplacePath, path.join(root, ".agents", "plugins", "marketplace.json"), {
     recursive: false,
@@ -70,23 +76,21 @@ try {
 
   const committedBefore = hashFile(committedMarketplacePath);
   const identity = pluginIdentity(repositoryRoot);
+  copyMarketplaceRoot(personalRoot);
   fs.cpSync(path.join(repositoryRoot, PORTABLE_TARGET), path.join(personalRoot, "plugin"), {
     recursive: true,
   });
   const personalName = "stark-ai-developer-personal";
   const personalDisplayName = "stark AI Developer (personal portable plugin)";
   const personalMarketplacePath = path.join(personalRoot, "marketplace.json");
-  fs.writeFileSync(
-    personalMarketplacePath,
-    canonicalJson(
-      renderMarketplace({
-        name: personalName,
-        displayName: personalDisplayName,
-        pluginName: identity.name,
-        sourcePath: "./plugin",
-      }),
-    ),
-  );
+  const personalDocument = renderMarketplace({
+    name: personalName,
+    displayName: personalDisplayName,
+    pluginName: identity.name,
+    sourcePath: "./plugin",
+  });
+  assert.equal(personalDocument.plugins[0].policy.authentication, "ON_INSTALL");
+  fs.writeFileSync(personalMarketplacePath, canonicalJson(personalDocument));
   const personalResult = validateMarketplaceDocument({
     root: personalRoot,
     file: personalMarketplacePath,
@@ -101,6 +105,40 @@ try {
     committedBefore,
     "personal marketplace fixture must not mutate the committed marketplace",
   );
+
+  const omittedAuth = structuredClone(personalDocument);
+  delete omittedAuth.plugins[0].policy.authentication;
+  fs.writeFileSync(personalMarketplacePath, canonicalJson(omittedAuth));
+  const omittedAuthResult = validateMarketplaceDocument({
+    root: personalRoot,
+    file: personalMarketplacePath,
+    expectedSource: "plugin",
+    expectedName: personalName,
+    expectedDisplayName: personalDisplayName,
+    pluginName: identity.name,
+  });
+  assert.ok(
+    omittedAuthResult.errors.some((error) => /authentication must be ON_INSTALL/.test(error)),
+    omittedAuthResult.errors.join("\n"),
+  );
+
+  const noneAuth = structuredClone(personalDocument);
+  noneAuth.plugins[0].policy.authentication = "NONE";
+  fs.writeFileSync(personalMarketplacePath, canonicalJson(noneAuth));
+  const noneAuthResult = validateMarketplaceDocument({
+    root: personalRoot,
+    file: personalMarketplacePath,
+    expectedSource: "plugin",
+    expectedName: personalName,
+    expectedDisplayName: personalDisplayName,
+    pluginName: identity.name,
+  });
+  assert.ok(
+    noneAuthResult.errors.some((error) => /authentication must be ON_INSTALL/.test(error)),
+    noneAuthResult.errors.join("\n"),
+  );
+
+  fs.writeFileSync(personalMarketplacePath, canonicalJson(personalDocument));
 
   fs.rmSync(path.join(drifted, "plugins", "stark-ai-developer"), { recursive: true, force: true });
   const driftResult = runValidator(drifted);

@@ -3,9 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { hashBytes } from "./bundle-contract.mjs";
-import { normalizedGitFileMode } from "./git-index.mjs";
+import {
+  assertNoUntrackedReleaseInputs,
+  listTrackedBlobs,
+  normalizedGitFileMode,
+} from "./git-index.mjs";
 import { LISTING_PATH } from "./openai-projection.mjs";
-import { comparePosixPaths, enumerateTree } from "./plugin-projections.mjs";
+import { comparePosixPaths } from "./plugin-projections.mjs";
 import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "./release-descriptor.mjs";
 
 export const SOURCE_TREE_INPUTS = [
@@ -18,42 +22,26 @@ export const SOURCE_TREE_INPUTS = [
   "site/public/icon-512.png",
 ];
 
-export const SOURCE_TREE_HASH_RECIPE = `For each file under ${PLUGIN_SOURCE_PATH}, ${PLUGIN_SOURCE_SCHEMA_PATH}, skills/, scripts/vendor/, ${LISTING_PATH}, LICENSE, and site/public/icon-512.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256.`;
+export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${PLUGIN_SOURCE_PATH}, ${PLUGIN_SOURCE_SCHEMA_PATH}, skills/, scripts/vendor/, ${LISTING_PATH}, LICENSE, and site/public/icon-512.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;
 
 function fileSha256(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
-function normalizedModeString(gitRoot, relativePosix, stat) {
-  return normalizedGitFileMode(gitRoot, relativePosix, stat) === 0o755 ? "0755" : "0644";
-}
-
 export function sourceTreeEntries(root, { gitRoot = root } = {}) {
   const resolvedRoot = path.resolve(root);
   const resolvedGitRoot = path.resolve(gitRoot);
-  return SOURCE_TREE_INPUTS.flatMap((relativeRoot) => {
-    const absoluteRoot = path.join(resolvedRoot, relativeRoot);
-    const stat = fs.lstatSync(absoluteRoot);
-    if (stat.isFile()) {
-      return [
-        {
-          path: relativeRoot,
-          mode: normalizedModeString(resolvedGitRoot, relativeRoot, stat),
-          sha256: fileSha256(absoluteRoot),
-        },
-      ];
-    }
-    return enumerateTree(absoluteRoot, "", { excludeGeneratedCaches: true }).map(
-      ({ relative, absolute, stat: fileStat }) => {
-        const posixPath = `${relativeRoot}/${relative}`;
-        return {
-          path: posixPath,
-          mode: normalizedModeString(resolvedGitRoot, posixPath, fileStat),
-          sha256: fileSha256(absolute),
-        };
-      },
-    );
-  }).sort((left, right) => comparePosixPaths(left.path, right.path));
+  assertNoUntrackedReleaseInputs(resolvedGitRoot, SOURCE_TREE_INPUTS);
+  return SOURCE_TREE_INPUTS.flatMap((relativeRoot) =>
+    listTrackedBlobs(resolvedGitRoot, relativeRoot).map((blob) => {
+      const absolute = path.join(resolvedRoot, blob.path.split("/").join(path.sep));
+      return {
+        path: blob.path,
+        mode: normalizedGitFileMode(resolvedGitRoot, blob.path) === 0o755 ? "0755" : "0644",
+        sha256: fileSha256(absolute),
+      };
+    }),
+  ).sort((left, right) => comparePosixPaths(left.path, right.path));
 }
 
 export function hashReleaseInputRecords(entries) {

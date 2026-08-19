@@ -504,7 +504,8 @@ A missing or invalid canonical `agents/openai.yaml` is release-blocking for an i
 - `interface.privacyPolicyURL`;
 - `interface.termsOfServiceURL`;
 - `interface.supportURL`;
-- approved brand colors when used.
+- `interface.brandColor` from the reviewed listing light brand color;
+- `interface.brandColorDark` from the reviewed listing dark brand color.
 
 Technical limits to encode in validation:
 
@@ -589,7 +590,7 @@ It must contain the exact public and portal values for:
 - display name;
 - short and long descriptions;
 - developer name;
-- category;
+- category, taken from the active dated OpenAI submission snapshot enum;
 - capability statements;
 - starter prompts;
 - brand colors;
@@ -745,11 +746,11 @@ The marketplace entry must have:
 - one plugin entry for `stark-ai-developer`;
 - a safe `./`-prefixed relative source path;
 - a human-readable marketplace display name;
-- `policy.installation` and a supported `category` value as required by the current marketplace contract;
+- `policy.installation`, `policy.authentication`, and a supported `category` value as required by the current marketplace contract;
 - deterministic ordering;
 - no absolute paths, credentials, tokens, machine-specific state, or public-directory claims.
 
-`source.path` is resolved relative to the marketplace root, not relative to the `.agents/plugins/` directory. A skills-only plugin with no authentication flow omits `policy.authentication`; unsupported sentinel values such as `NONE` must not be used. Current marketplace clients support `ON_INSTALL` and `ON_USE` authentication triggers, and omission is the compatible no-auth representation.
+`source.path` is resolved relative to the marketplace root, not relative to the `.agents/plugins/` directory. A skills-only plugin with no authentication flow still emits `policy.authentication: "ON_INSTALL"`. That is the conservative contract-compatible representation until OpenAI documents a distinct no-auth value. Unsupported sentinel values such as `NONE` must not be used. Current marketplace clients support `ON_INSTALL` and `ON_USE` authentication triggers. Marketplace `category` values must come from the active dated OpenAI submission snapshot.
 
 ### OpenAI adapter test marketplace
 
@@ -812,7 +813,7 @@ All projection generators must:
 
 1. load and validate the bundle, listing source, the release descriptor, and active contract snapshots before resolving any skill;
 2. resolve only canonical public sources listed by the bundle;
-3. reject Git symlinks (`120000`), submodules (`160000`), filesystem symlinks, special files, untracked release inputs, and unsafe or colliding paths throughout every selected tree;
+3. enumerate bundled and release-input files from `git ls-files --stage -z` only, reject Git symlinks (`120000`), submodules (`160000`), filesystem symlinks, special files, untracked or ignored files under those roots, and unsafe or colliding paths throughout every selected tree;
 4. require and validate canonical `agents/openai.yaml` for every included skill;
 5. copy complete skill trees into a clean temporary staging directory without overlays or byte rewriting;
 6. preserve file bytes and canonical executable intent;
@@ -834,7 +835,7 @@ Safe permission normalization is:
 - regular non-executable files: `0644`;
 - regular files executable in the canonical source: `0755`.
 
-When Git-index modes are used as the executable-intent source, accept only blob modes `100644` and `100755`. Filesystem executable bits are not authoritative on Windows checkouts. Projection and packaging use Git-index modes for tracked blobs and fall back to filesystem modes only for untracked fixture files.
+When Git-index modes are used as the executable-intent source, accept only blob modes `100644` and `100755`. Filesystem executable bits are not authoritative on Windows checkouts. Projection, packaging, the release-input digest, and isolated reproducibility copies use Git-index modes for tracked blobs and fail closed when a source file has no regular Git blob entry or when untracked or ignored files exist under a selected source root. Tests that need Git must use a real index.
 
 ### Source manifest contract
 

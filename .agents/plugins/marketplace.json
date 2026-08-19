@@ -8,6 +8,7 @@
       "category": "Developer Tools",
       "name": "stark-ai-developer",
       "policy": {
+        "authentication": "ON_INSTALL",
         "installation": "AVAILABLE"
       },
       "source": {

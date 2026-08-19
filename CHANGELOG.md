@@ -36,6 +36,8 @@
 
 - Stopped OpenAI adapter packaging, validation, and reproducibility checks from materializing the retired `adapters/openai/` tree, including leftover sibling stage directories, and pointed remaining docs and the repository map at ephemeral `dist/openai/*.zip` staging.
 - Pin Git to LF on the Linux/macOS/Windows `archive-identity` matrix and in `.gitattributes` so Windows checkouts do not convert text files to CRLF and break `zip-store-v1` SHA-256 comparison.
+- Reject untracked and ignored files under bundled skill and release-input roots so local `.env`, `.codegraph/`, `coverage/`, and scratch files cannot enter projections, archives, or release-input digests.
+- Emit and validate marketplace `policy.authentication: "ON_INSTALL"`, derive OpenAI categories from the dated submission snapshot, and project listing `brandColorDark` into `.codex-plugin/plugin.json`.
 
 ### Deprecated
 

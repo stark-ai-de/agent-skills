@@ -86,4 +86,37 @@ try {
   fs.rmSync(missingAssetFixture, { recursive: true, force: true });
 }
 
+for (const category of ["Education & Research", "Security"]) {
+  const fixture = createFixture();
+  try {
+    const { listing, listingPath } = readListing(fixture);
+    listing.plugin.category = category;
+    writeListingAndWorksheet(fixture, listing, listingPath);
+    const result = validateOpenAiListing(fixture);
+    assert.equal(
+      result.errors.filter((error) => /category is unsupported/.test(error)).length,
+      0,
+      `${category} must be accepted:\n${result.errors.join("\n")}`,
+    );
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+for (const category of ["Research", "Education", "Lifestyle"]) {
+  const fixture = createFixture();
+  try {
+    const { listing, listingPath } = readListing(fixture);
+    listing.plugin.category = category;
+    writeListingAndWorksheet(fixture, listing, listingPath);
+    const result = validateOpenAiListing(fixture);
+    assert.ok(
+      result.errors.some((error) => /category is unsupported/.test(error)),
+      `${category} must be rejected:\n${result.errors.join("\n")}`,
+    );
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
 console.log("OpenAI listing contract fixtures passed.");

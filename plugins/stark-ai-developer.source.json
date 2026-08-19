@@ -47,8 +47,8 @@
   },
   "contractSnapshots": {
     "agentPlugins": "agent-plugins-1.0.0",
-    "openaiPackaging": "openai-plugin-packaging-2026-08-18",
-    "openaiSubmission": "openai-plugin-submission-2026-08-18"
+    "openaiPackaging": "openai-plugin-packaging-2026-08-19",
+    "openaiSubmission": "openai-plugin-submission-2026-08-19"
   },
   "build": {
     "nodeVersion": "24.18.0",

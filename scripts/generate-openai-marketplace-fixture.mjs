@@ -48,6 +48,7 @@ try {
   fs.writeFileSync(marketplacePath, canonicalJson(marketplace));
   const { errors } = validateMarketplaceDocument({
     root: output,
+    contractRoot: root,
     file: marketplacePath,
     expectedSource: "plugin",
     expectedName: "stark-ai-developer-openai-adapter-test",

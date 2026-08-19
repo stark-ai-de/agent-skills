@@ -231,9 +231,10 @@ The committed repository-local catalog is
 generated from `plugins/stark-ai-developer.source.json` by `npm run sync:agent-plugin`.
 Its source path is resolved from the repository root and points to the portable
 projection. The skills-only entry uses
-`policy.installation: "AVAILABLE"` and omits `policy.authentication`: current
-marketplace clients support `ON_INSTALL` and `ON_USE` authentication triggers,
-and omission is the compatible no-auth representation. Do not copy this file
+`policy.installation: "AVAILABLE"` and `policy.authentication: "ON_INSTALL"`:
+current marketplace clients support `ON_INSTALL` and `ON_USE` authentication
+triggers, and explicit `ON_INSTALL` is the conservative no-auth representation
+until OpenAI documents a distinct no-auth value. Do not copy this file
 into a personal marketplace without separately testing the client and path
 root.
 

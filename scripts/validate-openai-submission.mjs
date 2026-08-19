@@ -6,7 +6,11 @@ import { unzipSync } from "fflate";
 
 import { canonicalJson, hashBytes, loadValidatedBundle } from "./lib/bundle-contract.mjs";
 import { validateOpenAiListing } from "./lib/openai-contract.mjs";
-import { comparePosixPaths, enumerateTree } from "./lib/plugin-projections.mjs";
+import {
+  comparePosixPaths,
+  isGeneratedCachePath,
+  listTrackedSourceFiles,
+} from "./lib/plugin-projections.mjs";
 import { openAiManifestFromListing, readOpenAiListing } from "./lib/openai-projection.mjs";
 import { pluginIdentity } from "./lib/release-descriptor.mjs";
 import {
@@ -201,9 +205,12 @@ try {
   }
   const expectedFiles = new Set(expectedRoots);
   for (const entry of bundle.skills) {
-    for (const sourceFile of enumerateTree(path.join(root, entry.source), "", {
-      excludeGeneratedCaches: true,
-    })) {
+    for (const sourceFile of listTrackedSourceFiles(
+      root,
+      path.join(root, entry.source),
+      entry.source,
+    )) {
+      if (isGeneratedCachePath(sourceFile.relative)) continue;
       expectedFiles.add(`skills/${entry.name}/${sourceFile.relative}`);
     }
   }
@@ -261,9 +268,8 @@ try {
 
   for (const entry of bundle.skills) {
     const sourceRoot = path.join(root, entry.source);
-    for (const sourceFile of enumerateTree(sourceRoot, "", {
-      excludeGeneratedCaches: true,
-    })) {
+    for (const sourceFile of listTrackedSourceFiles(root, sourceRoot, entry.source)) {
+      if (isGeneratedCachePath(sourceFile.relative)) continue;
       const archiveName = `skills/${entry.name}/${sourceFile.relative}`;
       if (!files[archiveName]) {
         errors.push(`submission archive is missing ${archiveName}`);

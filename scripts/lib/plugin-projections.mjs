@@ -6,7 +6,11 @@ import process from "node:process";
 
 import Ajv2020 from "ajv/dist/2020.js";
 import { canonicalJson, hashBytes, loadValidatedBundle } from "./bundle-contract.mjs";
-import { normalizedGitFileMode } from "./git-index.mjs";
+import {
+  assertNoUntrackedReleaseInputs,
+  listTrackedSourceFiles,
+  normalizedGitFileMode,
+} from "./git-index.mjs";
 import { readOpenAiListing } from "./openai-listing.mjs";
 import { PINNED_AGENT_PLUGINS_SCHEMA_PATH, pluginIdentity } from "./release-descriptor.mjs";
 import { writeZipStoreV1 } from "./reproducible-archive.mjs";
@@ -79,7 +83,7 @@ function assertSafeNode(filePath, relativePath) {
 function normalizedMode(stat, { gitRoot, gitRelative } = {}) {
   if (stat.isDirectory()) return 0o755;
   if (gitRoot && gitRelative) {
-    return normalizedGitFileMode(gitRoot, gitRelative, stat);
+    return normalizedGitFileMode(gitRoot, gitRelative);
   }
   return stat.mode & 0o111 ? 0o755 : 0o644;
 }
@@ -152,12 +156,18 @@ function copyTree(
   manifestPrefix = "",
   { gitRoot, gitPrefix = "" } = {},
 ) {
-  for (const entry of enumerateTree(sourceRoot, "", { excludeGeneratedCaches: true })) {
+  if (!gitRoot || !gitPrefix) {
+    throw new Error("[REP-001] source copies require a git root and tracked prefix");
+  }
+  for (const entry of listTrackedSourceFiles(gitRoot, sourceRoot, gitPrefix)) {
+    if (isGeneratedCachePath(entry.relative)) continue;
+    const stat = assertSafeNode(entry.absolute, entry.relative);
+    if (!stat.isFile()) {
+      throw new Error(`expected regular file: ${entry.gitPath}`);
+    }
     const target = path.join(targetRoot, fromPosix(entry.relative));
-    const targetParent = path.dirname(target);
-    ensureDirectory(targetParent);
-    const gitRelative = gitPrefix ? `${gitPrefix}/${entry.relative}` : entry.relative;
-    const mode = normalizedMode(entry.stat, { gitRoot, gitRelative });
+    ensureDirectory(path.dirname(target));
+    const mode = normalizedGitFileMode(gitRoot, entry.gitPath);
     const bytes = fs.readFileSync(entry.absolute);
     fs.writeFileSync(target, bytes, { mode });
     fs.chmodSync(target, mode);
@@ -270,6 +280,10 @@ function buildSourceManifest({ root, bundle, kind, manifestFiles }) {
 }
 
 function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
+  assertNoUntrackedReleaseInputs(
+    gitRoot,
+    bundle.skills.map((entry) => entry.source),
+  );
   const manifestFiles = [];
   const manifest = portableManifest(root);
   writeGeneratedFile(
@@ -517,6 +531,7 @@ export function syncPortableProjection({
 }
 
 export function writeSkillProjection({ root, stage, entry, manifestFiles, gitRoot = root }) {
+  assertNoUntrackedReleaseInputs(gitRoot, [entry.source]);
   const yamlPath = path.join(root, entry.source, "agents", "openai.yaml");
   const yamlStat = lstatOrNull(yamlPath);
   if (!yamlStat?.isFile() || yamlStat.isSymbolicLink()) {
@@ -543,6 +558,10 @@ export function writeSharedPackageFiles({
   assetFiles = [],
   gitRoot = root,
 }) {
+  assertNoUntrackedReleaseInputs(
+    gitRoot,
+    bundle.skills.map((entry) => entry.source),
+  );
   if (includePluginManifest) {
     writeGeneratedFile(
       path.join(stage, ".codex-plugin", "plugin.json"),
@@ -603,14 +622,12 @@ export function createStandaloneArchive({
 
   const files = {};
   const sourceRoot = path.join(resolvedRoot, selected.source);
-  for (const sourceFile of enumerateTree(sourceRoot, "", {
-    excludeGeneratedCaches: true,
-  })) {
-    const gitRelative = `${selected.source}/${sourceFile.relative}`;
-    const mode = normalizedMode(sourceFile.stat, { gitRoot: indexRoot, gitRelative });
+  assertNoUntrackedReleaseInputs(indexRoot, [selected.source]);
+  for (const sourceFile of listTrackedSourceFiles(indexRoot, sourceRoot, selected.source)) {
+    if (isGeneratedCachePath(sourceFile.relative)) continue;
     files[`${selected.name}/${sourceFile.relative}`] = {
       data: fs.readFileSync(sourceFile.absolute),
-      mode,
+      mode: normalizedGitFileMode(indexRoot, sourceFile.gitPath),
     };
   }
   const outputAbsolute = path.isAbsolute(output)
@@ -744,6 +761,7 @@ export {
   enumerateTree,
   fromPosix,
   isGeneratedCachePath,
+  listTrackedSourceFiles,
   normalizedMode,
   toPosix,
   assertInside,

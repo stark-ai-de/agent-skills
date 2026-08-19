@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { canonicalJson } from "./bundle-contract.mjs";
-import { ALLOWED_CATEGORIES } from "./openai-contract.mjs";
+import { allowedCategories } from "./openai-contract.mjs";
 import { assertInside } from "./plugin-projections.mjs";
 import { pluginIdentity } from "./release-descriptor.mjs";
 
@@ -12,6 +12,7 @@ export const COMMITTED_MARKETPLACE_DISPLAY_NAME = "stark AI Developer (local por
 
 export function validateMarketplaceDocument({
   root,
+  contractRoot = root,
   file,
   expectedSource,
   expectedName = COMMITTED_MARKETPLACE_NAME,
@@ -67,13 +68,15 @@ export function validateMarketplaceDocument({
     if (entry.policy?.installation !== "AVAILABLE") {
       errors.push("[MKT-001] marketplace policy.installation must be AVAILABLE");
     }
-    if (Object.prototype.hasOwnProperty.call(entry.policy ?? {}, "authentication")) {
-      errors.push(
-        "[MKT-001] skills-only marketplace entries omit authentication to express no-auth behavior",
-      );
+    if (entry.policy?.authentication !== "ON_INSTALL") {
+      errors.push("[MKT-001] marketplace policy.authentication must be ON_INSTALL");
     }
-    if (!ALLOWED_CATEGORIES.has(entry.category)) {
-      errors.push(`[MKT-001] marketplace category is unsupported: ${entry.category}`);
+    try {
+      if (!allowedCategories(contractRoot).has(entry.category)) {
+        errors.push(`[MKT-001] marketplace category is unsupported: ${entry.category}`);
+      }
+    } catch (error) {
+      errors.push(error.message);
     }
   }
   const serialized = JSON.stringify(marketplace);
@@ -97,7 +100,7 @@ export function renderMarketplace({
       {
         name: pluginName,
         source: { source: "local", path: sourcePath },
-        policy: { installation: "AVAILABLE" },
+        policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
         category,
       },
     ],

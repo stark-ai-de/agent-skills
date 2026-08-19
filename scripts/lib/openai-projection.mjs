@@ -73,6 +73,7 @@ export function openAiManifestFromListing(listing) {
       termsOfServiceURL: plugin.urls.termsOfService,
       supportURL: plugin.urls.support,
       brandColor: plugin.brandColors.light,
+      brandColorDark: plugin.brandColors.dark,
     },
   };
 }

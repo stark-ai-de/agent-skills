@@ -5,6 +5,7 @@ import path from "node:path";
 import { load as parseYaml } from "js-yaml";
 
 import { loadValidatedBundle } from "./bundle-contract.mjs";
+import { loadActiveSnapshotFacts } from "./contract-snapshots.mjs";
 import { pluginIdentity } from "./release-descriptor.mjs";
 import { assertInside } from "./plugin-projections.mjs";
 import { readOpenAiListing } from "./openai-projection.mjs";
@@ -12,15 +13,6 @@ import { OPENAI_WORKSHEET_PATH, renderOpenAiSubmissionWorksheet } from "./openai
 
 const SAFE_HEX = /^#[0-9A-Fa-f]{6}$/;
 const SAFE_RELATIVE_PATH = /^(?!\/)(?!.*\\)(?!.*(?:^|\/)\.{1,2}(?:\/|$)).+$/;
-export const ALLOWED_CATEGORIES = new Set([
-  "Developer Tools",
-  "Productivity",
-  "Research",
-  "Education",
-  "Lifestyle",
-  "Finance",
-  "Other",
-]);
 const ALLOWED_INTERFACE_KEYS = new Set([
   "display_name",
   "short_description",
@@ -37,6 +29,14 @@ function isMapping(value) {
 
 function relativePathIsSafe(value) {
   return typeof value === "string" && SAFE_RELATIVE_PATH.test(value);
+}
+
+export function allowedCategories(root) {
+  const facts = loadActiveSnapshotFacts(root, "openaiSubmission");
+  if (!Array.isArray(facts.allowedCategories) || facts.allowedCategories.length === 0) {
+    throw new Error("[FOUND-001] submission snapshot is missing allowedCategories");
+  }
+  return new Set(facts.allowedCategories);
 }
 
 function parseHex(value) {
@@ -294,8 +294,12 @@ export function validateOpenAiListing(root) {
   if (typeof plugin.developerName !== "string" || plugin.developerName.length > 80) {
     errors.push("listing.plugin.developerName must be at most 80 characters");
   }
-  if (!ALLOWED_CATEGORIES.has(plugin.category)) {
-    errors.push(`listing.plugin.category is unsupported: ${plugin.category}`);
+  try {
+    if (!allowedCategories(root).has(plugin.category)) {
+      errors.push(`listing.plugin.category is unsupported: ${plugin.category}`);
+    }
+  } catch (error) {
+    errors.push(error.message);
   }
   if (
     !Array.isArray(plugin.capabilities) ||

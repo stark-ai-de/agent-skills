@@ -7,7 +7,7 @@ import process from "node:process";
 import { load as parseYaml } from "js-yaml";
 
 import { loadValidatedBundle } from "./lib/bundle-contract.mjs";
-import { enumerateTree } from "./lib/plugin-projections.mjs";
+import { isGeneratedCachePath, listTrackedSourceFiles } from "./lib/plugin-projections.mjs";
 import { pluginIdentity } from "./lib/release-descriptor.mjs";
 
 const DANGEROUS =
@@ -47,9 +47,8 @@ try {
 
   const inventory = [];
   for (const entry of bundle.skills) {
-    for (const file of enumerateTree(path.join(root, entry.source), "", {
-      excludeGeneratedCaches: true,
-    })) {
+    for (const file of listTrackedSourceFiles(root, path.join(root, entry.source), entry.source)) {
+      if (isGeneratedCachePath(file.relative)) continue;
       inventory.push({
         path: `${entry.source}/${file.relative}`,
         license: "Apache-2.0",

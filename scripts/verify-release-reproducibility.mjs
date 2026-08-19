@@ -25,8 +25,13 @@ import {
   withOpenAiStage,
 } from "./lib/openai-projection.mjs";
 import { OPENAI_WORKSHEET_PATH } from "./lib/openai-worksheet.mjs";
-import { SOURCE_TREE_HASH_RECIPE, sourceTreeSha256 } from "./lib/release-input-digest.mjs";
-import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "./lib/release-descriptor.mjs";
+import {
+  SOURCE_TREE_HASH_RECIPE,
+  SOURCE_TREE_INPUTS,
+  sourceTreeSha256,
+} from "./lib/release-input-digest.mjs";
+import { PLUGIN_SOURCE_PATH } from "./lib/release-descriptor.mjs";
+import { copyTrackedPrefixes } from "./lib/git-index.mjs";
 
 const repositoryRoot = process.cwd();
 const SHA256_HEX = /^[a-f0-9]{64}$/;
@@ -131,32 +136,12 @@ function writeEvidence(filePath, evidence) {
 }
 
 function copyInputs(targetRoot) {
-  fs.mkdirSync(path.join(targetRoot, "plugins"), { recursive: true, mode: 0o755 });
-  fs.copyFileSync(
-    path.join(repositoryRoot, PLUGIN_SOURCE_PATH),
-    path.join(targetRoot, PLUGIN_SOURCE_PATH),
-  );
-  fs.copyFileSync(
-    path.join(repositoryRoot, PLUGIN_SOURCE_SCHEMA_PATH),
-    path.join(targetRoot, PLUGIN_SOURCE_SCHEMA_PATH),
-  );
-  for (const directory of ["skills", "scripts/vendor"]) {
-    fs.cpSync(path.join(repositoryRoot, directory), path.join(targetRoot, directory), {
-      recursive: true,
-    });
-  }
-  const listingDir = path.posix.dirname(LISTING_PATH);
-  const listingDest = path.join(targetRoot, listingDir);
-  fs.mkdirSync(path.dirname(listingDest), { recursive: true, mode: 0o755 });
-  fs.cpSync(path.join(repositoryRoot, listingDir), listingDest, {
-    recursive: true,
+  copyTrackedPrefixes({
+    gitRoot: repositoryRoot,
+    sourceRoot: repositoryRoot,
+    targetRoot,
+    prefixes: [...SOURCE_TREE_INPUTS, path.posix.dirname(LISTING_PATH)],
   });
-  fs.mkdirSync(path.join(targetRoot, "site", "public"), { recursive: true, mode: 0o755 });
-  fs.copyFileSync(
-    path.join(repositoryRoot, "site", "public", "icon-512.png"),
-    path.join(targetRoot, "site", "public", "icon-512.png"),
-  );
-  fs.copyFileSync(path.join(repositoryRoot, "LICENSE"), path.join(targetRoot, "LICENSE"));
 }
 
 function buildIsolated(root) {

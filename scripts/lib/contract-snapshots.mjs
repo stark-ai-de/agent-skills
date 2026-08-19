@@ -27,6 +27,29 @@ export function snapshotPath(contractId) {
   return `${SNAPSHOT_DIR}/${contractId}.json`;
 }
 
+export function loadSnapshot(root, contractId) {
+  const relative = snapshotPath(contractId);
+  const absolute = path.join(resolveRoot(root), relative);
+  return JSON.parse(fs.readFileSync(absolute, "utf8"));
+}
+
+export function loadSnapshotFacts(root, contractId) {
+  const snapshot = loadSnapshot(root, contractId);
+  if (!snapshot.facts || typeof snapshot.facts !== "object") {
+    throw new Error(`[FOUND-001] ${snapshotPath(contractId)} is missing facts`);
+  }
+  return snapshot.facts;
+}
+
+export function loadActiveSnapshotFacts(root, snapshotKey) {
+  const release = loadValidatedRelease(root);
+  const contractId = release.contractSnapshots?.[snapshotKey];
+  if (typeof contractId !== "string" || !contractId) {
+    throw new Error(`[FOUND-001] release descriptor is missing contractSnapshots.${snapshotKey}`);
+  }
+  return loadSnapshotFacts(root, contractId);
+}
+
 export function validateContractSnapshots(root = moduleRoot) {
   const resolvedRoot = resolveRoot(root);
   const errors = [];
