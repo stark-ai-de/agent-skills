@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { webPageStructuredData } from "../lib/seo";
-import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../lib/site";
+import { absoluteSiteUrl, GITHUB_REPO_URL, PLUGIN_PATH, withBase } from "../lib/site";
 
 const canonicalPath = "/404.html";
 const canonicalUrl = absoluteSiteUrl(canonicalPath);
@@ -45,6 +45,8 @@ const description = "The requested Agent Skills catalog page could not be found.
       </div>
       <nav class="not-found__links" aria-label="Recovery links">
         <a href={withBase("/incubator/")}>Open the incubator</a>
+        <span aria-hidden="true">·</span>
+        <a href={withBase(PLUGIN_PATH)}>View the plugin</a>
         <span aria-hidden="true">·</span>
         <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">Inspect repository source</a>
       </nav>

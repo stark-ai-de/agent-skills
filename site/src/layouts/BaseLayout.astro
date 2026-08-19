@@ -8,14 +8,20 @@ import {
   DEFAULT_OG_IMAGE_WIDTH,
   GITHUB_ORG_URL,
   GITHUB_REPO_URL,
+  LOOPLATCH_LOGO_PATH,
   LOOPLATCH_URL,
+  PLUGIN_PATH,
+  PUBLIC_POLICY_PAGES,
+  robotsDirective,
   SEO_KEYWORDS,
   SITE_DESCRIPTION,
   SITE_TITLE,
+  STARK_AI_NAME,
   STARK_AI_URL,
   toSeoDescription,
   toSeoTitle,
-  withBase
+  withBase,
+  withStarkAi
 } from "../lib/site";
 import { baseStructuredData, type JsonLdNode } from "../lib/seo";
 
@@ -24,9 +30,13 @@ interface Props {
   description?: string;
   imageAlt?: string;
   imagePath?: string;
+  modifiedTime?: string;
   noindex?: boolean;
   ogType?: string;
+  publishedTime?: string;
+  section?: string;
   structuredData?: JsonLdNode[];
+  tags?: string[];
   title?: string;
 }
 
@@ -35,21 +45,27 @@ const {
   description = SITE_DESCRIPTION,
   imageAlt = `${SITE_TITLE} catalog preview`,
   imagePath = DEFAULT_OG_IMAGE_PATH,
+  modifiedTime,
   noindex = false,
   ogType = "website",
+  publishedTime,
+  section,
   structuredData = [],
+  tags = [],
   title
 } = Astro.props;
 
-const pageTitle = title ? toSeoTitle(title) : SITE_TITLE;
+const pageTitle = title ? toSeoTitle(title) : withStarkAi(SITE_TITLE);
 const canonicalUrl = absoluteSiteUrl(canonicalPath);
 const metaDescription = toSeoDescription(description);
 const ogImage = absoluteSiteUrl(imagePath);
 const manifestUrl = withBase("/site.webmanifest");
-const robotsContent = noindex ? "noindex, nofollow" : "index, follow";
-const googlebotContent = noindex
-  ? robotsContent
-  : "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1";
+const sitemapUrl = absoluteSiteUrl("/sitemap-index.xml");
+const robotsContent = robotsDirective(canonicalPath, noindex);
+const googlebotContent =
+  robotsContent === "index, follow"
+    ? "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1"
+    : robotsContent;
 const schema = {
   "@context": "https://schema.org",
   "@graph": [...baseStructuredData(), ...structuredData]
@@ -58,10 +74,12 @@ const isCatalogHome = canonicalPath === "/";
 const isPublicRoute = canonicalPath === "/skills/" || canonicalPath.startsWith("/skills/");
 const isIncubatorRoute =
   canonicalPath === "/incubator/" || canonicalPath.startsWith("/incubator/");
+const isPluginRoute = canonicalPath === PLUGIN_PATH || canonicalPath.startsWith("/plugins/");
+const isPolicyRoute = PUBLIC_POLICY_PAGES.some((page) => page.path === canonicalPath);
 const tracingMode =
   canonicalPath === "/skills/" || canonicalPath === "/incubator/"
     ? "listing"
-    : isPublicRoute || isIncubatorRoute
+    : isPublicRoute || isIncubatorRoute || isPolicyRoute
       ? "detail"
       : undefined;
 ---
@@ -96,10 +114,10 @@ const tracingMode =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={metaDescription} />
-    <meta name="application-name" content={SITE_TITLE} />
-    <meta name="author" content="stark AI" />
-    <meta name="creator" content="stark AI" />
-    <meta name="publisher" content="stark AI" />
+    <meta name="application-name" content={withStarkAi(SITE_TITLE)} />
+    <meta name="author" content={STARK_AI_NAME} />
+    <meta name="creator" content={STARK_AI_NAME} />
+    <meta name="publisher" content={STARK_AI_NAME} />
     <meta name="keywords" content={SEO_KEYWORDS.join(", ")} />
     <meta name="robots" content={robotsContent} />
     <meta name="googlebot" content={googlebotContent} />
@@ -111,6 +129,7 @@ const tracingMode =
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" hreflang="en" href={canonicalUrl} />
     <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href={sitemapUrl} />
     <link rel="manifest" href={manifestUrl} />
     <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" sizes="any" />
     <link rel="alternate icon" href={withBase("/favicon.ico")} type="image/x-icon" sizes="16x16" />
@@ -123,7 +142,7 @@ const tracingMode =
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:site_name" content={withStarkAi(SITE_TITLE)} />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content={ogType} />
     <meta property="og:image" content={ogImage} />
@@ -132,7 +151,17 @@ const tracingMode =
     <meta property="og:image:width" content={String(DEFAULT_OG_IMAGE_WIDTH)} />
     <meta property="og:image:height" content={String(DEFAULT_OG_IMAGE_HEIGHT)} />
     <meta property="og:image:alt" content={imageAlt} />
-    {ogType === "article" && <meta property="article:author" content="https://stark-ai.de/" />}
+    {
+      ogType === "article" && (
+        <>
+          <meta property="article:author" content="https://stark-ai.de/" />
+          {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+          {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+          {section && <meta property="article:section" content={section} />}
+          {tags.map((tag) => <meta property="article:tag" content={tag} />)}
+        </>
+      )
+    }
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={metaDescription} />
@@ -172,7 +201,7 @@ const tracingMode =
         <a class="brand-link" href={withBase("/")} aria-current={isCatalogHome ? "page" : undefined}>
           <img
             src={withBase("/stark-ai-de-agent-skills-logo.svg")}
-            alt="Agent Skills by stark AI"
+            alt={withStarkAi("Agent Skills by stark AI")}
             width="217"
             height="72"
             fetchpriority="high"
@@ -185,6 +214,9 @@ const tracingMode =
             </a>
             <a href={withBase("/incubator/")} aria-current={isIncubatorRoute ? "page" : undefined}>
               Incubator
+            </a>
+            <a href={withBase(PLUGIN_PATH)} aria-current={isPluginRoute ? "page" : undefined}>
+              Plugin
             </a>
           </div>
           <a
@@ -217,6 +249,9 @@ const tracingMode =
               <a href={withBase("/incubator/")} aria-current={isIncubatorRoute ? "page" : undefined}>
                 Incubator
               </a>
+              <a href={withBase(PLUGIN_PATH)} aria-current={isPluginRoute ? "page" : undefined}>
+                Plugin
+              </a>
             </div>
           </details>
         </div>
@@ -227,37 +262,54 @@ const tracingMode =
     </main>
     <footer class="site-footer">
       <div class="site-footer__identity">
-        <a
-          class="site-footer__mark"
-          href={STARK_AI_URL}
-          rel="noreferrer"
-          target="_blank"
-          aria-label="Open stark AI website"
-        >
-          <img src={withBase("/logo-alternative.svg")} alt="" width="56" height="56" loading="lazy" />
-        </a>
         <p>
           agent-skills by
-          <a class="site-footer__brand" href={STARK_AI_URL} rel="noreferrer" target="_blank">
-            <strong>stark AI</strong>
+          <a
+            class="site-footer__brand"
+            href={STARK_AI_URL}
+            rel="noreferrer"
+            target="_blank"
+            aria-label={withStarkAi("Open stark AI website")}
+            title={withStarkAi("Open stark AI website")}
+          >
+            <img
+              src={withBase("/logo-auto.svg")}
+              alt=""
+              width="56"
+              height="56"
+              loading="lazy"
+            />
+          </a>
+          <a
+            class="site-footer__github"
+            href={GITHUB_ORG_URL}
+            rel="noreferrer"
+            target="_blank"
+            aria-label={withStarkAi("Open stark AI on GitHub")}
+            title={withStarkAi("Open stark AI on GitHub")}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
+            </svg>
           </a>
         </p>
       </div>
+      <nav class="site-footer__policies" aria-label="Legal and support">
+        {
+          PUBLIC_POLICY_PAGES.map((page) => (
+            <a
+              href={withBase(page.path)}
+              aria-current={canonicalPath === page.path ? "page" : undefined}
+            >
+              {page.label}
+            </a>
+          ))
+        }
+      </nav>
       <div class="site-footer__links">
-        <a class="site-footer__product" href={LOOPLATCH_URL}>
-          LoopLatch for bounded Codex loops
-        </a>
-        <a
-          class="site-footer__github"
-          href={GITHUB_ORG_URL}
-          rel="noreferrer"
-          target="_blank"
-          aria-label="Open stark AI on GitHub"
-          title="Open stark AI on GitHub"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
-          </svg>
+        <a class="site-footer__product" href={LOOPLATCH_URL} rel="noreferrer" target="_blank">
+          <img src={withBase(LOOPLATCH_LOGO_PATH)} alt="" width="24" height="24" />
+          <span>LoopLatch for bounded Codex loops</span>
         </a>
       </div>
     </footer>
@@ -394,7 +446,7 @@ const tracingMode =
             await copyWithFallback(command);
             button.dataset.copied = "true";
             if (status) {
-              status.textContent = "Command copied to clipboard.";
+              status.textContent = "Copied to clipboard.";
             }
             if (buttonLabel) {
               buttonLabel.textContent = "Copied";
@@ -403,7 +455,7 @@ const tracingMode =
             delete button.dataset.copied;
             button.dataset.copyFailed = "true";
             if (status) {
-              status.textContent = "Copy failed. Select the command and copy it manually.";
+              status.textContent = "Copy failed. Select the text and copy it manually.";
             }
             if (buttonLabel) {
               buttonLabel.textContent = "Retry";

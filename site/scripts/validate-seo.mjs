@@ -265,10 +265,21 @@ function validateHtmlPage(filePath) {
     `${relativePath}: missing SVG favicon link`,
   );
   assert(
+    getLinkHref(linkTags, "sitemap") === `${SITE_URL_PREFIX}sitemap-index.xml`,
+    `${relativePath}: missing sitemap link`,
+  );
+  assert(
     getLinkHref(linkTags, "manifest") === "/agent-skills/site.webmanifest",
     `${relativePath}: missing manifest link`,
   );
-  assert(getMetaContent(metaTags, "name", "robots"), `${relativePath}: missing robots metadata`);
+  const robots = getMetaContent(metaTags, "name", "robots");
+  const expectedRobots =
+    relativePath === "404.html"
+      ? "noindex, nofollow"
+      : relativePath === "incubator/index.html" || relativePath.startsWith("incubator/")
+        ? "noindex, follow"
+        : "index, follow";
+  assert(robots === expectedRobots, `${relativePath}: expected robots ${expectedRobots}`);
   assert(
     getMetaContent(metaTags, "name", "googlebot"),
     `${relativePath}: missing googlebot metadata`,
@@ -321,6 +332,10 @@ function validateHtmlPage(filePath) {
   );
   assert(jsonLdBlocks.length > 0, `${relativePath}: missing JSON-LD`);
 
+  const graph = jsonLdBlocks.flatMap((block) =>
+    Array.isArray(block["@graph"]) ? block["@graph"] : [],
+  );
+
   for (const block of jsonLdBlocks) {
     assert(block["@context"] === "https://schema.org", `${relativePath}: invalid JSON-LD context`);
     assert(Array.isArray(block["@graph"]), `${relativePath}: JSON-LD graph must be an array`);
@@ -338,6 +353,36 @@ function validateHtmlPage(filePath) {
       ),
       `${relativePath}: missing page schema`,
     );
+  }
+
+  const organization = graph.find((node) => node["@type"] === "Organization");
+  assert(
+    organization?.logo?.url?.startsWith(SITE_URL_PREFIX),
+    `${relativePath}: Organization logo must be hosted on this catalog`,
+  );
+
+  if (relativePath === "plugins/stark-ai-developer/index.html") {
+    assert(
+      graph.some((node) => node["@type"] === "SoftwareApplication"),
+      `${relativePath}: missing SoftwareApplication schema`,
+    );
+    assert(
+      graph.some((node) => node["@type"] === "HowTo"),
+      `${relativePath}: missing HowTo schema`,
+    );
+  }
+
+  if (relativePath === "support/index.html") {
+    assert(
+      graph.some((node) => node["@type"] === "FAQPage"),
+      `${relativePath}: missing FAQPage schema`,
+    );
+  }
+
+  if (/^skills\/[^/]+\/index\.html$/.test(relativePath)) {
+    const article = graph.find((node) => node["@type"] === "TechArticle");
+    assert(article?.datePublished, `${relativePath}: missing TechArticle datePublished`);
+    assert(article?.dateModified, `${relativePath}: missing TechArticle dateModified`);
   }
 
   validateRenderedMarkdown(html, relativePath);
@@ -406,9 +451,10 @@ function sitemapLocations(xml) {
   return Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g), (match) => match[1]);
 }
 
-function validateSitemaps(sitemapPath) {
+function collectSitemapPageUrls(sitemapPath) {
   const sitemapIndex = readFileSync(sitemapPath, "utf8");
   const childSitemaps = sitemapLocations(sitemapIndex);
+  const pageUrls = [];
 
   assert(childSitemaps.length > 0, "sitemap-index.xml does not list any sitemap files.");
 
@@ -421,14 +467,67 @@ function validateSitemaps(sitemapPath) {
     assert(urls.length > 0, `${normalizeRelativePath(sitemapFilePath)} does not list any URLs.`);
 
     for (const pageUrl of urls) {
+      assert(!pageUrl.includes("/incubator/"), `sitemap includes incubator URL ${pageUrl}`);
+      assert(!/\/404(?:\.html)?(?:$|[?#])/.test(pageUrl), `sitemap includes 404 URL ${pageUrl}`);
       const pageFilePath = filePathForSiteUrl(new URL(pageUrl));
       assert(pageFilePath, `${normalizeRelativePath(sitemapFilePath)}: missing page ${pageUrl}`);
       assert(
         path.basename(pageFilePath) === "index.html",
         `${normalizeRelativePath(sitemapFilePath)}: sitemap URL is not an HTML page ${pageUrl}`,
       );
+      pageUrls.push(pageUrl);
     }
   }
+
+  return pageUrls;
+}
+
+function validateSitemapCoverage(htmlFiles, sitemapUrls) {
+  const listed = new Set(sitemapUrls);
+
+  for (const htmlFile of htmlFiles) {
+    const html = readCached(htmlFile);
+    const relativePath = normalizeRelativePath(htmlFile);
+    const robots = getMetaContent(getTags(html, "meta"), "name", "robots");
+    const canonicalUrl = getLinkHref(getTags(html, "link"), "canonical");
+
+    if (robots === "index, follow") {
+      assert(
+        listed.has(canonicalUrl),
+        `${relativePath}: indexable canonical missing from sitemap: ${canonicalUrl}`,
+      );
+    } else {
+      assert(
+        !listed.has(canonicalUrl),
+        `${relativePath}: noindex canonical listed in sitemap: ${canonicalUrl}`,
+      );
+    }
+  }
+}
+
+function validateLlmsTxt() {
+  const llmsPath = path.join(distRoot, "llms.txt");
+  assert(existsSync(llmsPath), "llms.txt was not generated.");
+
+  const content = readFileSync(llmsPath, "utf8");
+  assert(content.startsWith("# "), "llms.txt must start with an H1.");
+  assert(!content.includes("/incubator/"), "llms.txt must not list incubator pages.");
+  assert(
+    content.includes(`${SITE_URL_PREFIX}plugins/stark-ai-developer/`),
+    "llms.txt missing plugin URL",
+  );
+
+  for (const skillFile of walkSkillFiles(path.join(repoRoot, "skills"))) {
+    const skillName = path.basename(path.dirname(skillFile));
+    assert(
+      content.includes(`${SITE_URL_PREFIX}skills/${skillName}/`),
+      `llms.txt missing public skill ${skillName}`,
+    );
+  }
+}
+
+function validateSitemaps(sitemapPath) {
+  return collectSitemapPageUrls(sitemapPath);
 }
 
 assert(existsSync(distRoot), "site/dist does not exist. Run astro build before SEO validation.");
@@ -451,6 +550,8 @@ assert(
 validateManifest();
 validateCatalogCoverage();
 validateLoopLatchBacklinks(htmlFiles);
-validateSitemaps(sitemapPath);
+const sitemapUrls = validateSitemaps(sitemapPath);
+validateSitemapCoverage(htmlFiles, sitemapUrls);
+validateLlmsTxt();
 
 console.log(`SEO validated for ${htmlFiles.length} HTML page(s).`);

@@ -1,4 +1,5 @@
 ---
+import Breadcrumbs from "./Breadcrumbs.astro";
 import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
@@ -36,13 +37,13 @@ const installContext = !targetRuntime
 ---
 
 <section class="skill-hero" data-reveal data-tracing-hero>
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
-    <ol>
-      <li><a href={withBase("/")}>Catalog</a></li>
-      <li><a href={withBase(indexHref)}>{collectionLabel(skill.kind)}</a></li>
-      <li aria-current="page">{skill.title}</li>
-    </ol>
-  </nav>
+  <Breadcrumbs
+    items={[
+      { name: "Catalog", href: "/" },
+      { name: collectionLabel(skill.kind), href: indexHref },
+      { name: skill.title },
+    ]}
+  />
   <p class="eyebrow">{skill.kind === "public" ? "Promoted public skill" : "Incubator candidate"}</p>
   <h1>{skill.title}</h1>
   <p>{skill.description}</p>

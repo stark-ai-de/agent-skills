@@ -8,12 +8,11 @@ import {
   webPageStructuredData
 } from "../../lib/seo";
 import { getIncubatorSkills, groupByCategory } from "../../lib/skills";
-import { absoluteSiteUrl } from "../../lib/site";
+import { absoluteSiteUrl, INCUBATOR_SKILLS_DESCRIPTION } from "../../lib/site";
 
 const skills = await getIncubatorSkills();
 const groups = groupByCategory(skills);
-const description =
-  "Candidate/internal Agent Skills from stark-ai-de, generated from incubator/skills/**/SKILL.md.";
+const description = INCUBATOR_SKILLS_DESCRIPTION;
 const canonicalUrl = absoluteSiteUrl("/incubator/");
 const structuredData = [
   webPageStructuredData({

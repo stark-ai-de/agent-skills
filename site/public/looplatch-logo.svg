@@ -1,0 +1,7 @@
+<svg aria-labelledby="logo-title" height="1024" role="img" viewBox="0 0 1024 1024" width="1024" xmlns="http://www.w3.org/2000/svg">
+  <title id="logo-title">LoopLatch logo</title>
+  <path d="M182 895V380L459 176H616V463H810V662L594 895Z" fill="#F4F7FB" stroke="#F4F7FB" stroke-linejoin="bevel" stroke-width="32" />
+  <path d="M182 895V380L459 176H616V463H810V662L594 895Z" fill="#171D25" />
+  <path d="M352 740V388L496 277V598H738L616 740Z" fill="#E7EAF0" />
+  <path d="M640 162L753 88V310H908L802 442H640Z" fill="#2563EB" />
+</svg>

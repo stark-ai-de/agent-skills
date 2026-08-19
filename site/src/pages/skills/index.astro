@@ -8,11 +8,11 @@ import {
   webPageStructuredData
 } from "../../lib/seo";
 import { getPublicSkills, groupByCategory } from "../../lib/skills";
-import { absoluteSiteUrl } from "../../lib/site";
+import { absoluteSiteUrl, PUBLIC_SKILLS_DESCRIPTION } from "../../lib/site";
 
 const skills = await getPublicSkills();
 const groups = groupByCategory(skills);
-const description = "Promoted public Agent Skills from stark-ai-de, generated from skills/**/SKILL.md.";
+const description = PUBLIC_SKILLS_DESCRIPTION;
 const canonicalUrl = absoluteSiteUrl("/skills/");
 const structuredData = [
   webPageStructuredData({
@@ -30,7 +30,7 @@ const structuredData = [
 ---
 
 <BaseLayout
-  title="Public Skills"
+  title="Public Agent Skills"
   description={description}
   canonicalPath="/skills/"
   structuredData={structuredData}

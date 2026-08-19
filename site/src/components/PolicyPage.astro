@@ -1,0 +1,78 @@
+---
+import StarkAi from "./StarkAi.astro";
+import {
+  POLICY_EFFECTIVE_DATE,
+  PUBLIC_POLICY_PAGES,
+  PUBLISHER_LEGAL_NAME,
+  STARK_AI_URL,
+  SUPPORT_EMAIL,
+  withBase,
+} from "../lib/site";
+
+interface Props {
+  currentPath: string;
+  dated?: boolean;
+  eyebrow: string;
+  lead?: string;
+  pills?: string[];
+  title: string;
+}
+
+const { currentPath, dated = true, eyebrow, lead, pills = [], title } = Astro.props;
+const hasActions = Astro.slots.has("actions");
+const hasLead = Astro.slots.has("lead");
+const hasSidebar = Astro.slots.has("sidebar");
+---
+
+<section class="skill-hero" data-reveal data-tracing-hero>
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{title}</h1>
+  {hasLead ? <slot name="lead" /> : lead ? <p>{lead}</p> : null}
+  <ul class="meta-pills" aria-label={`${title} metadata`}>
+    {dated ? <li>Effective {POLICY_EFFECTIVE_DATE}</li> : null}
+    <li>{PUBLISHER_LEGAL_NAME}</li>
+    {pills.map((pill) => <li>{pill}</li>)}
+  </ul>
+  {
+    hasActions && (
+      <div class="hero-actions">
+        <slot name="actions" />
+      </div>
+    )
+  }
+</section>
+
+<div class="detail-layout" data-tracing-detail>
+  <aside class="detail-panel" aria-label={`${title} details`} data-tracing-sidebar>
+    <section>
+      <h2>Related pages</h2>
+      <p>Legal and support pages for this catalog and the skills-only package.</p>
+      <nav class="policy-links" aria-label="Related catalog pages">
+        {
+          PUBLIC_POLICY_PAGES.map((page) => (
+            <a
+              href={withBase(page.path)}
+              aria-current={page.path === currentPath ? "page" : undefined}
+            >
+              {page.label}
+            </a>
+          ))
+        }
+      </nav>
+    </section>
+    <section>
+      <h2>Publisher</h2>
+      <p>
+        {PUBLISHER_LEGAL_NAME} publishes this catalog and the skills-only package under the{" "}
+        <a href={STARK_AI_URL} rel="noreferrer" target="_blank"><StarkAi /></a> brand.
+      </p>
+      <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+    </section>
+    {hasSidebar && <slot name="sidebar" />}
+  </aside>
+  <article class="skill-content" data-tracing-content>
+    <div class="markdown">
+      <slot />
+    </div>
+  </article>
+</div>

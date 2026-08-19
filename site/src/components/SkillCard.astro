@@ -37,7 +37,7 @@ const contractLabel = targetRuntime ? `Target contract: ${targetRuntime}` : "Por
     />
   </div>
   <h3>
-    <a href={withBase(href)}>{skill.name}</a>
+    <a href={withBase(href)}>{skill.title}</a>
   </h3>
   {compact ? (
     <>
@@ -53,6 +53,7 @@ const contractLabel = targetRuntime ? `Target contract: ${targetRuntime}` : "Por
     <p>{skill.description}</p>
   )}
   <ul class="skill-card__meta" aria-label={`${skill.name} metadata`}>
+    <li><code>{skill.name}</code></li>
     {skill.version && <li class="skill-card__version">v{skill.version}</li>}
     <li>{contractLabel}</li>
     <li>Install into: {defaultInstallHost}</li>

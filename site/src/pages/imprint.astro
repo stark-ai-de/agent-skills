@@ -1,0 +1,85 @@
+---
+import PolicyPage from "../components/PolicyPage.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
+import {
+  absoluteSiteUrl,
+  PUBLISHER_CITY,
+  PUBLISHER_CONSUMER_ARBITRATION,
+  PUBLISHER_COUNTRY,
+  PUBLISHER_LEGAL_NAME_FULL,
+  PUBLISHER_REGISTER_COURT,
+  PUBLISHER_REGISTER_NUMBER,
+  PUBLISHER_REPRESENTATIVES,
+  PUBLISHER_STREET,
+  PUBLISHER_VAT_ID,
+  PUBLISHER_WEBSITE,
+  STARK_AI_URL,
+  SUPPORT_EMAIL,
+} from "../lib/site";
+
+const canonicalPath = "/imprint/";
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const title = "Imprint";
+const description =
+  "Provider identification for this catalog and the skills-only package: company, address, register, and contact.";
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalPath={canonicalPath}
+  structuredData={[
+    webPageStructuredData({ canonicalUrl, description, title }),
+    breadcrumbStructuredData([
+      { name: "Catalog", url: absoluteSiteUrl("/") },
+      { name: title, url: canonicalUrl },
+    ]),
+  ]}
+>
+  <PolicyPage
+    currentPath={canonicalPath}
+    dated={false}
+    eyebrow="Provider identification"
+    lead="Information under Section 5 TMG and consumer information on online dispute resolution."
+    title={title}
+  >
+    <h2>Provider</h2>
+    <p>
+      {PUBLISHER_LEGAL_NAME_FULL}
+      <br />
+      {PUBLISHER_STREET}
+      <br />
+      {PUBLISHER_CITY}
+      <br />
+      {PUBLISHER_COUNTRY}
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Email: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+      <br />
+      Website:{" "}
+      <a href={STARK_AI_URL} rel="noreferrer" target="_blank">{PUBLISHER_WEBSITE}</a>
+    </p>
+
+    <h2>Represented by</h2>
+    <p>
+      {PUBLISHER_REPRESENTATIVES[0]}
+      <br />
+      {PUBLISHER_REPRESENTATIVES[1]}
+    </p>
+
+    <h2>Commercial register entry</h2>
+    <p>
+      {PUBLISHER_REGISTER_COURT}
+      <br />
+      {PUBLISHER_REGISTER_NUMBER}
+      <br />
+      VAT identification number: {PUBLISHER_VAT_ID}
+    </p>
+
+    <h2>Consumer information under the German Consumer Dispute Resolution Act</h2>
+    <p>{PUBLISHER_CONSUMER_ARBITRATION}</p>
+  </PolicyPage>
+</BaseLayout>

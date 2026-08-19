@@ -1,71 +1,127 @@
 ---
+import PolicyPage from "../components/PolicyPage.astro";
+import StarkAi from "../components/StarkAi.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { breadcrumbStructuredData, webPageStructuredData } from "../lib/seo";
-import { absoluteSiteUrl, withBase } from "../lib/site";
+import {
+  absoluteSiteUrl,
+  LICENSE_URL,
+  PUBLISHER_CONSUMER_ARBITRATION,
+  PUBLISHER_LEGAL_NAME,
+  SUPPORT_EMAIL,
+  withBase,
+} from "../lib/site";
 
-const canonicalUrl = absoluteSiteUrl("/terms/");
+const canonicalPath = "/terms/";
+const canonicalUrl = absoluteSiteUrl(canonicalPath);
+const title = "Terms of use";
 const description =
-  "Reviewable terms draft for the stark AI Developer skills-only package and repository-local distributions.";
+  "How you may use the skills-only package, generated plugin artifacts, and this catalog. Software licensing stays Apache 2.0.";
 ---
 
 <BaseLayout
-  title="Terms"
+  title={title}
   description={description}
-  canonicalPath="/terms/"
+  canonicalPath={canonicalPath}
   structuredData={[
-    webPageStructuredData({ canonicalUrl, description, title: "Terms" }),
-    breadcrumbStructuredData([{ name: "Terms", url: canonicalUrl }]),
+    webPageStructuredData({ canonicalUrl, description, title }),
+    breadcrumbStructuredData([
+      { name: "Catalog", url: absoluteSiteUrl("/") },
+      { name: title, url: canonicalUrl },
+    ]),
   ]}
 >
-  <section class="hero-section">
-    <div class="hero-copy" data-reveal>
-      <p class="eyebrow">Reviewable draft · last reviewed 2026-08-18</p>
-      <h1>Terms and use boundary</h1>
-      <p class="hero-copy__lead">
-        These draft terms describe how to interpret the repository, plugin projections,
-        standalone artifacts, and local marketplace entries while legal review is pending.
-      </p>
-    </div>
-    <aside class="hero-panel" aria-labelledby="terms-status">
-      <h2 id="terms-status">Draft status</h2>
-      <p>
-        Confirm the final contracting party, jurisdiction, warranty, liability, support,
-        and third-party terms before any public submission.
-      </p>
-    </aside>
-  </section>
+  <PolicyPage
+    currentPath={canonicalPath}
+    eyebrow="Apache License 2.0"
+    pills={["Apache-2.0", "Skills-only"]}
+    title={title}
+  >
+    <p slot="lead">
+      These terms cover the <StarkAi text="stark AI Developer" /> package, generated plugin
+      artifacts, and this catalog. The software license is Apache 2.0 in the repository.
+    </p>
+    <a
+      slot="actions"
+      class="button button--primary button--signal"
+      href={LICENSE_URL}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span>Read the Apache 2.0 license</span>
+    </a>
+    <a slot="actions" class="button button--secondary" href={withBase("/privacy/")}>
+      Privacy
+    </a>
 
-  <section class="catalog-band prose" aria-labelledby="license-title">
-    <h2 id="license-title">License and source</h2>
+    <h2>Agreement</h2>
     <p>
-      Repository material is provided under the license in
-      <a href="https://github.com/stark-ai-de/agent-skills/blob/main/LICENSE">LICENSE</a>.
-      Canonical skills remain maintained under the repository's
-      <code>skills/&lt;category&gt;/&lt;skill&gt;/</code> tree; generated plugin projections
-      and archives are distribution outputs, not alternate sources.
+      {PUBLISHER_LEGAL_NAME} provides this catalog and the{" "}
+      <StarkAi text="stark AI Developer" /> package under the <StarkAi /> brand. By using the
+      package, generated archives, or this site, you agree to these terms and to the{" "}
+      <a href={LICENSE_URL} rel="noreferrer" target="_blank">Apache License 2.0</a> in the
+      repository.
     </p>
-    <h2>Permitted interpretation</h2>
+
+    <h2>License and source</h2>
     <p>
-      Use the skills and generated packages only within the capabilities, permissions,
-      approvals, and policies of the installing client and host. Review outputs before
-      relying on them. The package does not promise correctness, availability, security,
-      public listing, or compatibility beyond the surfaces and evidence explicitly recorded
-      for a release.
+      Repository material is licensed under Apache License 2.0. Canonical skills live under{" "}
+      <code>skills/&lt;category&gt;/&lt;skill&gt;/</code>. Generated plugin projections and
+      archives are distribution outputs, not a second source tree. Do not edit generated plugin
+      copies as if they were canonical.
     </p>
-    <h2>Local and public distribution</h2>
+
+    <h2>Skills-only package</h2>
     <p>
-      The repository marketplace, personal marketplace, workspace publication, GitHub
-      release, and standalone installation are local or distribution mechanisms. None is
-      proof of approval or publication in the public Universal Plugins Directory. Public
-      submission, review, and publication require separate external authority.
+      The package is reusable skill instructions and resources. It has no backend, MCP server,
+      connectors, authentication, telemetry, analytics, hidden network calls, or runtime
+      downloads. Use it only within the capabilities, permissions, approvals, and policies of
+      the installing client and host.
     </p>
-    <h2>Changes and termination</h2>
+
+    <h2>Your responsibility</h2>
     <p>
-      A maintainer may revise, suspend, replace, or remove a repository artifact. Published
-      plugin versions are immutable snapshots and require a new reviewed version for later
-      changes. Confirm the final update, rollback, suspension, and delisting process during
-      release review.
+      Review outputs before you rely on them. The package does not promise correctness,
+      availability, security, public listing, or compatibility beyond the surfaces and evidence
+      recorded for a release. You remain responsible for how you apply skill output in your
+      repositories and systems.
     </p>
-    <p><a href={withBase("/support/")}>Read support guidance</a> or <a href={withBase("/privacy/")}>read the privacy draft</a>.</p>
-  </section>
+
+    <h2>Distribution</h2>
+    <p>
+      Installing from this repository, a personal marketplace, a workspace, a GitHub release, or
+      standalone <code>npx skills</code> is a local or distribution path. None of those is
+      approval or publication in OpenAI's public plugin directory. Directory submission, review,
+      and publication require separate external authority.
+    </p>
+
+    <h2>This catalog site</h2>
+    <p>
+      These pages are a static GitHub Pages catalog of public repository files. GitHub's terms
+      apply to hosting, cloning, and issue tracking. We may revise, suspend, replace, or remove
+      a repository artifact. Published plugin versions are immutable snapshots; later changes
+      require a new reviewed version.
+    </p>
+
+    <h2>No warranty</h2>
+    <p>
+      Unless required by applicable law or agreed in writing, the package and this site are
+      provided on an "as is" basis without warranties or conditions of any kind, as described in
+      Apache License 2.0. See the license for the limitation of liability.
+    </p>
+
+    <h2>Contact and governing law</h2>
+    <p>
+      Questions about these terms go to{" "}
+      <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> or{" "}
+      <a href={withBase("/support/")}>Support</a>.
+    </p>
+    <p>
+      The law of the Federal Republic of Germany applies, excluding the UN Convention on
+      Contracts for the International Sale of Goods. The exclusive place of jurisdiction for all
+      disputes arising from or in connection with the contractual relationship is Stuttgart,
+      where legally permissible. {PUBLISHER_CONSUMER_ARBITRATION} See the{" "}
+      <a href={withBase("/imprint/")}>Imprint</a> for provider identification.
+    </p>
+  </PolicyPage>
 </BaseLayout>

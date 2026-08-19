@@ -1,66 +1,166 @@
 ---
+import CommandBlock from "../../../components/CommandBlock.astro";
+import ContextTooltip from "../../../components/ContextTooltip.astro";
+import HeroLogo from "../../../components/HeroLogo.astro";
+import SkillCard from "../../../components/SkillCard.astro";
+import StarkAi from "../../../components/StarkAi.astro";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import { getStarkAiDeveloperListing } from "../../../lib/plugin-listing";
-import { breadcrumbStructuredData, webPageStructuredData } from "../../../lib/seo";
-import { absoluteSiteUrl, GITHUB_REPO_URL, withBase } from "../../../lib/site";
+import {
+  getStarkAiDeveloperListing,
+  pluginAddCommand,
+  pluginMarketplaceAddCommand,
+  resolvePluginCatalogSkills,
+  standaloneSkillsInstallCommand,
+} from "../../../lib/plugin-listing";
+import {
+  breadcrumbStructuredData,
+  howToStructuredData,
+  pluginSoftwareStructuredData,
+  skillListStructuredData,
+  webPageStructuredData,
+} from "../../../lib/seo";
+import { getPublicSkills } from "../../../lib/skills";
+import {
+  absoluteSiteUrl,
+  GITHUB_REPO_URL,
+  PLUGIN_PATH,
+  PLUGIN_SEO_DESCRIPTION,
+  withBase,
+  withStarkAi,
+} from "../../../lib/site";
 
 const listing = getStarkAiDeveloperListing();
-const { displayName, shortDescription, longDescription, capabilities } = listing.plugin;
-const canonicalUrl = absoluteSiteUrl("/plugins/stark-ai-developer/");
+const {
+  displayName,
+  longDescription,
+  capabilities,
+  starterPrompts,
+  version,
+} = listing.plugin;
+const bundledSkills = resolvePluginCatalogSkills(listing, await getPublicSkills());
+const marketplaceAddCommand = pluginMarketplaceAddCommand();
+const pluginInstallCommand = pluginAddCommand(listing);
+const skillsCliCommand = standaloneSkillsInstallCommand(listing);
+const canonicalUrl = absoluteSiteUrl(PLUGIN_PATH);
+const pluginName = withStarkAi(displayName);
+const description = PLUGIN_SEO_DESCRIPTION;
 const structuredData = [
   webPageStructuredData({
     canonicalUrl,
-    description: longDescription,
-    title: displayName,
+    description,
+    mainEntityId: `${canonicalUrl}#software`,
+    title: `${pluginName} plugin`,
+    type: "CollectionPage",
   }),
   breadcrumbStructuredData([
     { name: "Catalog", url: absoluteSiteUrl("/") },
-    { name: displayName, url: canonicalUrl },
+    { name: pluginName, url: canonicalUrl },
   ]),
+  pluginSoftwareStructuredData({
+    canonicalUrl,
+    description,
+    name: pluginName,
+    version,
+  }),
+  howToStructuredData({
+    canonicalUrl,
+    description: "Add this repository as a Codex marketplace, then install the plugin by name.",
+    name: `Install ${pluginName}`,
+    steps: [
+      { name: "Add the Codex marketplace", text: marketplaceAddCommand },
+      { name: "Install the plugin", text: pluginInstallCommand },
+    ],
+  }),
+  skillListStructuredData(bundledSkills, canonicalUrl),
 ];
 ---
 
 <BaseLayout
-  title={displayName}
-  description={longDescription}
-  canonicalPath="/plugins/stark-ai-developer/"
+  title={`${displayName} plugin`}
+  description={description}
+  canonicalPath={PLUGIN_PATH}
   structuredData={structuredData}
 >
   <section class="hero-section">
     <div class="hero-copy" data-reveal>
-      <p class="eyebrow">{shortDescription}</p>
-      <h1>{displayName}</h1>
+      <p class="eyebrow">OpenAI skills-only plugin</p>
+      <h1><StarkAi text={displayName} /></h1>
       <p class="hero-copy__lead">{longDescription}</p>
       <div class="hero-actions">
-        <a class="button button--primary button--signal" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
+        <a class="button button--primary button--signal" href="#install">
+          <span>Install the plugin</span>
+        </a>
+        <a class="button button--secondary" href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">
           Review the source
         </a>
-        <a class="button button--secondary" href={withBase("/support/")}>Get support</a>
       </div>
     </div>
-    <aside class="hero-panel" aria-labelledby="plugin-boundary-title" data-reveal>
-      <h2 id="plugin-boundary-title">Package boundary</h2>
-      <p>
-        This package contains reusable skill instructions and resources. It has no backend,
-        MCP server, connectors, authentication, telemetry, analytics, hidden network calls,
-        or runtime downloads.
-      </p>
-      <p class="section-note">
-        Host, workspace, repository, and tool processing remain subject to the installing
-        client's policies and capabilities.
-      </p>
+    <div class="hero-brand" data-reveal aria-hidden="true">
+      <HeroLogo />
+    </div>
+    <aside class="hero-panel" aria-labelledby="plugin-summary-title" data-reveal>
+      <h2 class="sr-only" id="plugin-summary-title">Package summary and plugin install command</h2>
+      <dl>
+        <div>
+          <dt>
+            Skills
+            <ContextTooltip
+              align="start"
+              id="plugin-skills-tip"
+              label="Bundled skills"
+              text="This plugin ships exactly six public catalog skills as one explicit developer toolkit."
+            />
+          </dt>
+          <dd>{bundledSkills.length}</dd>
+        </div>
+        <div>
+          <dt>
+            Surface
+            <ContextTooltip
+              id="plugin-surface-tip"
+              label="Skills-only"
+              text="The plugin has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads."
+            />
+          </dt>
+          <dd>Skills-only</dd>
+        </div>
+        <div>
+          <dt>
+            Version
+            <ContextTooltip
+              align="end"
+              id="plugin-version-tip"
+              label="Plugin version"
+              text="Plugin identity is independent of the catalog repository version."
+            />
+          </dt>
+          <dd>v{version}</dd>
+        </div>
+      </dl>
+      <CommandBlock command={marketplaceAddCommand} label="Add the plugin marketplace" />
     </aside>
   </section>
 
-  <section class="catalog-band" aria-labelledby="capabilities-title">
+  <section class="catalog-band" aria-labelledby="plugin-skills-title">
     <header class="section-heading">
-      <p>One explicit six-skill bundle</p>
-      <h2 id="capabilities-title">Built for the full developer workflow</h2>
+      <p>Bundled in the plugin</p>
+      <h2 id="plugin-skills-title">Six developer workflows</h2>
+      <a href={withBase("/skills/")}>View all public skills</a>
+    </header>
+    <div class="skill-grid">
+      {bundledSkills.map((skill) => <SkillCard skill={skill} compact />)}
+    </div>
+  </section>
+
+  <section class="catalog-band catalog-band--muted" aria-labelledby="capabilities-title">
+    <header class="section-heading">
+      <p>What the plugin is for</p>
+      <h2 id="capabilities-title">What you can ask it to do</h2>
     </header>
     <div class="skill-grid">
       {
         capabilities.map((capability) => (
-          <article class="skill-card">
+          <article class="skill-card skill-card--compact skill-card--text" data-reveal>
             <p>{capability}</p>
           </article>
         ))
@@ -68,21 +168,69 @@ const structuredData = [
     </div>
   </section>
 
-  <section class="source-band" aria-labelledby="distribution-title">
-    <div>
-      <p class="eyebrow">Distribution boundaries</p>
-      <h2 id="distribution-title">Local catalogs are not public publication</h2>
-      <p>
-        The repository-local marketplace is a portable Agent Plugins testing catalog. The
-        OpenAI-native archive is generated from ephemeral adapter staging at package time and is
-        not a committed repository tree. A successful local install,
-        GitHub release, or workspace marketplace entry does not mean that the plugin is
-        approved, searchable, or published in the Universal Plugins Directory.
-      </p>
+  <section class="catalog-band catalog-band--flush" aria-labelledby="starter-prompts-title">
+    <header class="section-heading">
+      <p>Try these first</p>
+      <h2 id="starter-prompts-title">Starter prompts</h2>
+    </header>
+    <div class="skill-grid">
+      {
+        starterPrompts.map((prompt, index) => (
+          <div data-reveal>
+            <CommandBlock
+              command={prompt}
+              kind="prompt"
+              label={`Starter prompt ${index + 1}`}
+            />
+          </div>
+        ))
+      }
     </div>
-    <div class="hero-actions">
-      <a class="button button--secondary" href={withBase("/privacy/")}>Privacy draft</a>
-      <a class="button button--secondary" href={withBase("/terms/")}>Terms draft</a>
+  </section>
+
+  <section class="catalog-band" aria-labelledby="install-heading" id="install">
+    <header class="section-heading">
+      <p>ChatGPT and Codex</p>
+      <h2 id="install-heading">Install the plugin</h2>
+    </header>
+    <p class="section-note">
+      ChatGPT and Codex will share one public plugin listing after publication. Until then, add
+      this repository as a Codex marketplace and install the plugin by name. A local install or
+      GitHub release is not that listing. Copying skills with the skills CLI does not install
+      the plugin. The installing client still applies its own policies to your workspace and
+      tools.
+    </p>
+    <div class="install-stack">
+      <div>
+        <h3>Codex CLI</h3>
+        <p>
+          Codex 0.147.0 or later. Add the repository marketplace, then install{" "}
+          <code>{listing.plugin.name}</code>. If more than one marketplace uses that name, pass{" "}
+          <code>--marketplace</code> with the name from{" "}
+          <code>codex plugin marketplace list</code>. In an interactive Codex session you can
+          also run <code>/plugins</code>.
+        </p>
+        <CommandBlock command={marketplaceAddCommand} label="Add the plugin marketplace" />
+        <CommandBlock command={pluginInstallCommand} label="Install the plugin" />
+      </div>
+      <div>
+        <h3>ChatGPT</h3>
+        <p>
+          Open the{" "}
+          <a href="https://chatgpt.com/plugins" rel="noreferrer" target="_blank">Plugins</a>{" "}
+          tab, search for <StarkAi text={displayName} />, and install. After directory
+          publication, that listing is shared with Codex.
+        </p>
+      </div>
+      <div class="install-stack--secondary">
+        <h3>Standalone skills CLI</h3>
+        <p>
+          Use this only when you want the six workflows as separate catalog skills, not as the
+          plugin. <code>npx skills</code> copies <code>SKILL.md</code> trees into a host. It
+          does not add a ChatGPT or Codex plugin.
+        </p>
+        <CommandBlock command={skillsCliCommand} label="Install the six skills without the plugin" />
+      </div>
     </div>
   </section>
 </BaseLayout>

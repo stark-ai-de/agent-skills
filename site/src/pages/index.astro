@@ -3,26 +3,37 @@ import CategoryNav from "../components/CategoryNav.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import ContextTooltip from "../components/ContextTooltip.astro";
 import HeroLogo from "../components/HeroLogo.astro";
+import BorderBeam from "../components/BorderBeam.astro";
 import SkillCard from "../components/SkillCard.astro";
+import StarkAi from "../components/StarkAi.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { getStarkAiDeveloperListing } from "../lib/plugin-listing";
 import {
   breadcrumbStructuredData,
   skillListStructuredData,
-  webPageStructuredData
+  webPageStructuredData,
 } from "../lib/seo";
-import { getIncubatorSkills, getPublicSkills, groupByCategory } from "../lib/skills";
 import {
   absoluteSiteUrl,
   GITHUB_REPO_URL,
+  LIST_PUBLIC_SKILLS_COMMAND,
+  LOOPLATCH_LOGO_PATH,
   LOOPLATCH_URL,
+  PLUGIN_PATH,
   SITE_DESCRIPTION,
-  withBase
+  withBase,
 } from "../lib/site";
+import {
+  getIncubatorSkills,
+  getPublicSkills,
+  groupByCategory,
+} from "../lib/skills";
 
 const [publicSkills, incubatorSkills] = await Promise.all([
   getPublicSkills(),
-  getIncubatorSkills()
+  getIncubatorSkills(),
 ]);
+const pluginListing = getStarkAiDeveloperListing();
 const publicGroups = groupByCategory(publicSkills);
 const incubatorGroups = groupByCategory(incubatorSkills);
 const canonicalUrl = absoluteSiteUrl("/");
@@ -30,10 +41,10 @@ const structuredData = [
   webPageStructuredData({
     canonicalUrl,
     description: SITE_DESCRIPTION,
-    title: "Agent Skills Catalog"
+    title: "Agent Skills Catalog",
   }),
   breadcrumbStructuredData([{ name: "Catalog", url: canonicalUrl }]),
-  skillListStructuredData(publicSkills, canonicalUrl)
+  skillListStructuredData(publicSkills, canonicalUrl),
 ];
 ---
 
@@ -48,21 +59,35 @@ const structuredData = [
       <p class="eyebrow">stark-ai-de/agent-skills</p>
       <h1>Agent Skills Catalog</h1>
       <p class="hero-copy__lead">
-        Discover and install source-backed runtime-targeted and portable skills for Codex,
-        Claude Code, Cursor, diagrams, and repository workflows.
+        Discover and install source-backed runtime-targeted and portable skills
+        for Codex, Claude Code, Cursor, diagrams, and repository workflows.
       </p>
       <div class="hero-actions">
-        <a class="button button--primary button--signal" href={withBase("/skills/")}>
+        <a
+          class="button button--primary button--signal"
+          href={withBase("/skills/")}
+        >
           <span>Browse public skills</span>
         </a>
-        <a class="button button--secondary" href={withBase("/incubator/")}>Review incubator</a>
+        <a class="button button--secondary" href={withBase("/incubator/")}
+          >Review incubator</a
+        >
+        <a class="button button--secondary" href={withBase(PLUGIN_PATH)}
+          >View the plugin</a
+        >
       </div>
     </div>
     <div class="hero-brand" data-reveal aria-hidden="true">
       <HeroLogo />
     </div>
-    <aside class="hero-panel" aria-labelledby="catalog-summary-title" data-reveal>
-      <h2 class="sr-only" id="catalog-summary-title">Catalog summary and install command</h2>
+    <aside
+      class="hero-panel"
+      aria-labelledby="catalog-summary-title"
+      data-reveal
+    >
+      <h2 class="sr-only" id="catalog-summary-title">
+        Catalog summary and install command
+      </h2>
       <dl>
         <div>
           <dt>
@@ -101,7 +126,7 @@ const structuredData = [
         </div>
       </dl>
       <CommandBlock
-        command="npx skills@latest add stark-ai-de/agent-skills --list"
+        command={LIST_PUBLIC_SKILLS_COMMAND}
         label="List public skills command"
       />
     </aside>
@@ -113,13 +138,24 @@ const structuredData = [
       <h2>Public skills</h2>
       <a href={withBase("/skills/")}>View all public skills</a>
     </header>
-    <CategoryNav basePath="/skills/" groups={publicGroups} label="Public skill categories" />
+    <CategoryNav
+      basePath="/skills/"
+      groups={publicGroups}
+      label="Public skill categories"
+    />
     <div class="skill-grid">
       {publicSkills.map((skill) => <SkillCard skill={skill} compact />)}
     </div>
   </section>
 
-  <section class="catalog-band catalog-band--muted">
+  <section class="source-band source-band--compact" aria-label="Source of truth">
+    <p>
+      Catalog pages are built from repository files.
+      <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">Open repository</a>
+    </p>
+  </section>
+
+  <section class="catalog-band catalog-band--muted catalog-band--candidate">
     <header class="section-heading">
       <p>Candidate catalog</p>
       <h2>Incubator skills</h2>
@@ -136,33 +172,45 @@ const structuredData = [
     </p>
   </section>
 
-  <section class="companion-band" aria-labelledby="looplatch-heading">
-    <div class="companion-band__copy">
-      <p class="eyebrow">Companion workflow</p>
-      <h2 id="looplatch-heading">Pair reusable skills with a bounded local loop.</h2>
-      <p>
-        Agent Skills shape how an agent approaches a repository task. LoopLatch complements them by
-        turning a task, verifier, and stop conditions into an auditable local Codex CLI loop prompt.
-        The catalog remains the source for skills; LoopLatch does not install them or change their
-        files.
-      </p>
-    </div>
-    <a class="button button--primary" href={LOOPLATCH_URL}>
-      Build a bounded Codex loop with LoopLatch
-    </a>
+  <section class="catalog-band" aria-labelledby="plugin-heading">
+    <header class="section-heading">
+      <p>OpenAI skills-only plugin</p>
+      <h2 id="plugin-heading"><StarkAi text={pluginListing.plugin.displayName} /></h2>
+      <a href={withBase(PLUGIN_PATH)}>View the plugin</a>
+    </header>
+    <p class="section-note">
+      The ChatGPT and Codex plugin for six developer workflows: specifications,
+      architecture, structural code search, editable diagrams, documentation
+      assets, and Codex memory. Install it with Codex plugin commands, not the
+      skills CLI. The package has no backend, MCP server, or telemetry.
+    </p>
   </section>
 
-  <section class="source-band">
-    <div>
-      <p class="eyebrow">Source of truth</p>
-      <h2>Repository files drive every page.</h2>
-      <p>
-        Skill names, descriptions, categories, metadata, source links, and proof
-        links are read at build time from the repo tree.
-      </p>
+  <section class="companion-band companion-band--card" aria-labelledby="looplatch-heading">
+    <BorderBeam />
+    <div class="companion-band__main">
+      <div class="companion-band__copy">
+        <p class="eyebrow">Companion workflow</p>
+        <h2 id="looplatch-heading">
+          Pair reusable skills with a bounded local loop.
+        </h2>
+        <p>
+          Agent Skills shape how an agent approaches a repository task. LoopLatch
+          complements them by turning a task, verifier, and stop conditions into
+          an auditable local Codex CLI loop prompt. The catalog remains the source
+          for skills; LoopLatch does not install them or change their files.
+        </p>
+      </div>
+      <img
+        class="companion-band__logo"
+        src={withBase(LOOPLATCH_LOGO_PATH)}
+        alt="LoopLatch"
+        width="72"
+        height="72"
+      />
     </div>
-    <a class="button button--secondary" href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">
-      Open repository
+    <a class="button button--primary" href={LOOPLATCH_URL} rel="noreferrer" target="_blank">
+      Build a bounded Codex loop with LoopLatch
     </a>
   </section>
 </BaseLayout>
