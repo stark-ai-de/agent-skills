@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,10 +7,27 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "../lib/release-descriptor.mjs";
+import { canonicalJson } from "../lib/bundle-contract.mjs";
+import { PORTABLE_TARGET } from "../lib/plugin-projections.mjs";
+import { renderMarketplace, validateMarketplaceDocument } from "../lib/openai-marketplace.mjs";
+import {
+  PLUGIN_SOURCE_PATH,
+  PLUGIN_SOURCE_SCHEMA_PATH,
+  pluginIdentity,
+} from "../lib/release-descriptor.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const marketplaceValidator = path.join(repositoryRoot, "scripts/validate-openai-marketplace.mjs");
+const committedMarketplacePath = path.join(
+  repositoryRoot,
+  ".agents",
+  "plugins",
+  "marketplace.json",
+);
+
+function hashFile(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
 
 function copyMarketplaceRoot(root) {
   fs.mkdirSync(path.join(root, "plugins"), { recursive: true, mode: 0o755 });
@@ -21,16 +39,12 @@ function copyMarketplaceRoot(root) {
     path.join(repositoryRoot, PLUGIN_SOURCE_SCHEMA_PATH),
     path.join(root, PLUGIN_SOURCE_SCHEMA_PATH),
   );
-  fs.cpSync(
-    path.join(repositoryRoot, ".agents", "plugins", "marketplace.json"),
-    path.join(root, ".agents", "plugins", "marketplace.json"),
-    { recursive: false },
-  );
-  fs.cpSync(
-    path.join(repositoryRoot, "plugins", "stark-ai-developer"),
-    path.join(root, "plugins", "stark-ai-developer"),
-    { recursive: true },
-  );
+  fs.cpSync(committedMarketplacePath, path.join(root, ".agents", "plugins", "marketplace.json"), {
+    recursive: false,
+  });
+  fs.cpSync(path.join(repositoryRoot, PORTABLE_TARGET), path.join(root, PORTABLE_TARGET), {
+    recursive: true,
+  });
   fs.copyFileSync(path.join(repositoryRoot, "package.json"), path.join(root, "package.json"));
   fs.copyFileSync(path.join(repositoryRoot, ".node-version"), path.join(root, ".node-version"));
 }
@@ -47,20 +61,46 @@ const drifted = fs.mkdtempSync(path.join(os.tmpdir(), "stark-ai-marketplace-drif
 const fixtureOut = fs.mkdtempSync(path.join(os.tmpdir(), "openai-adapter-marketplace-"));
 try {
   fs.mkdirSync(path.join(cleanClone, ".agents", "plugins"), { recursive: true });
-  fs.mkdirSync(path.join(personalRoot, ".agents", "plugins"), { recursive: true });
   fs.mkdirSync(path.join(drifted, ".agents", "plugins"), { recursive: true });
   copyMarketplaceRoot(cleanClone);
-  copyMarketplaceRoot(personalRoot);
   copyMarketplaceRoot(drifted);
 
   const cleanResult = runValidator(cleanClone);
   assert.equal(cleanResult.status, 0, cleanResult.stderr || cleanResult.stdout);
 
-  const personalResult = runValidator(
-    personalRoot,
-    path.join(personalRoot, ".agents", "plugins", "marketplace.json"),
+  const committedBefore = hashFile(committedMarketplacePath);
+  const identity = pluginIdentity(repositoryRoot);
+  fs.cpSync(path.join(repositoryRoot, PORTABLE_TARGET), path.join(personalRoot, "plugin"), {
+    recursive: true,
+  });
+  const personalName = "stark-ai-developer-personal";
+  const personalDisplayName = "stark AI Developer (personal portable plugin)";
+  const personalMarketplacePath = path.join(personalRoot, "marketplace.json");
+  fs.writeFileSync(
+    personalMarketplacePath,
+    canonicalJson(
+      renderMarketplace({
+        name: personalName,
+        displayName: personalDisplayName,
+        pluginName: identity.name,
+        sourcePath: "./plugin",
+      }),
+    ),
   );
-  assert.equal(personalResult.status, 0, personalResult.stderr || personalResult.stdout);
+  const personalResult = validateMarketplaceDocument({
+    root: personalRoot,
+    file: personalMarketplacePath,
+    expectedSource: "plugin",
+    expectedName: personalName,
+    expectedDisplayName: personalDisplayName,
+    pluginName: identity.name,
+  });
+  assert.equal(personalResult.errors.length, 0, personalResult.errors.join("\n"));
+  assert.equal(
+    hashFile(committedMarketplacePath),
+    committedBefore,
+    "personal marketplace fixture must not mutate the committed marketplace",
+  );
 
   fs.rmSync(path.join(drifted, "plugins", "stark-ai-developer"), { recursive: true, force: true });
   const driftResult = runValidator(drifted);

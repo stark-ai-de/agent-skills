@@ -45,10 +45,10 @@
       "sha256": "7ca17c9bf8f56347a3e99317e358e074c391f082388e0115d87031ba688dbf39"
     },
     {
-      "byteLength": 689,
+      "byteLength": 907,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "c1c1b16789d4316de6bde8c3bd59971f021a8e436969ed77d4733f70c7d97096"
+      "sha256": "2d7399665b5f5218c770738f62160ed9067e2ea020f1f97f72546068cde6b4af"
     },
     {
       "byteLength": 12772,
@@ -1707,5 +1707,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8ec9991f8bbed99f525d414730c027162e6a804806f14a30b76dfec583ec1b96"
+  "treeHash": "52107770e1249be01e03b9c08db0a456e0c203d5d6ea6340095f37c160f58e93"
 }

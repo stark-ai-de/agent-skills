@@ -7,6 +7,7 @@ import process from "node:process";
 import Ajv2020 from "ajv/dist/2020.js";
 import { canonicalJson, hashBytes, loadValidatedBundle } from "./bundle-contract.mjs";
 import { normalizedGitFileMode } from "./git-index.mjs";
+import { readOpenAiListing } from "./openai-listing.mjs";
 import { PINNED_AGENT_PLUGINS_SCHEMA_PATH, pluginIdentity } from "./release-descriptor.mjs";
 import { writeZipStoreV1 } from "./reproducible-archive.mjs";
 
@@ -204,12 +205,15 @@ function readRootFile(root, fileName) {
 
 function portableManifest(root) {
   const identity = pluginIdentity(root);
+  const description = readOpenAiListing(root).plugin?.longDescription;
+  if (typeof description !== "string" || !description.trim()) {
+    throw new Error("listing source plugin.longDescription is required for the portable manifest");
+  }
   return {
     $schema: PORTABLE_PLUGIN_SCHEMA,
     name: identity.name,
     version: identity.version,
-    description:
-      "A developer workflow toolkit for implementation-ready specifications, architecture decisions, code findings, diagrams, documentation assets, and safely curated Codex memory.",
+    description,
     author: {
       name: "servrox solutions UG",
       url: "https://stark-ai.de",

@@ -3,7 +3,7 @@ import path from "node:path";
 import process from "node:process";
 
 import { canonicalJson, hashBytes, loadValidatedBundle } from "./bundle-contract.mjs";
-import { pluginIdentity } from "./release-descriptor.mjs";
+import { LISTING_PATH, readOpenAiListing } from "./openai-listing.mjs";
 import {
   RETIRED_OPENAI_ADAPTER_TARGET,
   assertInside,
@@ -13,7 +13,6 @@ import {
   writeSharedPackageFiles,
 } from "./plugin-projections.mjs";
 
-const LISTING_PATH = "docs/listing/openai/stark-ai-developer.json";
 export const OPENAI_EPHEMERAL_PROJECTION_PATH = "ephemeral";
 const EXPECTED_ROOTS = new Set([
   ".codex-plugin",
@@ -32,15 +31,6 @@ const FORBIDDEN_MANIFEST_FIELDS = [
   "connectors",
   "customUi",
 ];
-
-export function readOpenAiListing(root) {
-  const listing = JSON.parse(fs.readFileSync(path.join(root, LISTING_PATH), "utf8"));
-  const identity = pluginIdentity(root);
-  if (listing.plugin?.name !== identity.name || listing.plugin?.version !== identity.version) {
-    throw new Error("listing source plugin identity does not match the release descriptor");
-  }
-  return listing;
-}
 
 function resolveAsset(root, relativeAsset) {
   if (
@@ -293,4 +283,4 @@ export function syncOpenAiProjection({ root = process.cwd(), target, check = fal
   return { ...result, listing, pluginManifest };
 }
 
-export { LISTING_PATH };
+export { LISTING_PATH, readOpenAiListing };
