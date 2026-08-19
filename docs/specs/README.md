@@ -20,3 +20,5 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 - [`drawio-diagrams-public-release-spec.md`](drawio-diagrams-public-release-spec.md) - public release contract for `drawio-diagrams`.
 - [`github-pages-skill-catalog-spec.md`](github-pages-skill-catalog-spec.md) - generated GitHub Pages catalog.
 - [`native-typescript-tooling-architecture-compass-spec.md`](native-typescript-tooling-architecture-compass-spec.md) - native TypeScript tooling guidance for Architecture Compass.
+- [`reusable-validation-gate-lifecycle-spec.md`](reusable-validation-gate-lifecycle-spec.md) - portable standard-gate lifecycle for preparation, execution, canonical evidence publication, and failure propagation.
+- [`validation-orchestration-boundaries-spec.md`](validation-orchestration-boundaries-spec.md) - separation of declarative orchestration, reusable gate mechanics, specialized fan-out/fan-in topologies, and privileged boundaries.
