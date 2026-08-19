@@ -39,21 +39,21 @@ The companion [reusable validation gate lifecycle spec](reusable-validation-gate
 
 ## Layered model
 
-| Layer | Owns | Does not own |
-| --- | --- | --- |
-| Orchestrator | Selection, job dependencies, conditions, matrices, concurrency, final aggregation, privileged transitions | Repeated gate mechanics or domain rules |
-| Task descriptor | Commands, declared inputs, tools, environment, timeouts, prerequisites, evidence, outputs | CI transport or imperative topology |
-| Reusable lifecycle | Prepare, attest, verify prerequisites, execute, normalize, publish, propagate | Selection, fan-out, deployment authority |
-| Gate implementation | Domain validation and structured evidence | Scheduling, artifact authority, or release policy |
+| Layer               | Owns                                                                                                      | Does not own                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Orchestrator        | Selection, job dependencies, conditions, matrices, concurrency, final aggregation, privileged transitions | Repeated gate mechanics or domain rules           |
+| Task descriptor     | Commands, declared inputs, tools, environment, timeouts, prerequisites, evidence, outputs                 | CI transport or imperative topology               |
+| Reusable lifecycle  | Prepare, attest, verify prerequisites, execute, normalize, publish, propagate                             | Selection, fan-out, deployment authority          |
+| Gate implementation | Domain validation and structured evidence                                                                 | Scheduling, artifact authority, or release policy |
 
 ## Job classes
 
-| Class | Treatment |
-| --- | --- |
-| Standard gate | Run one resolved task through the reusable lifecycle |
-| Prerequisite-dependent gate | Keep the dependency edge visible; let the lifecycle verify exact outcomes |
-| Fan-out/fan-in gate | Keep plan, parallel workers, and aggregation explicit until the complete topology becomes independently reusable |
-| Promotion or deployment boundary | Keep separate because authorization, freshness, and proof verification differ from validation |
+| Class                            | Treatment                                                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Standard gate                    | Run one resolved task through the reusable lifecycle                                                             |
+| Prerequisite-dependent gate      | Keep the dependency edge visible; let the lifecycle verify exact outcomes                                        |
+| Fan-out/fan-in gate              | Keep plan, parallel workers, and aggregation explicit until the complete topology becomes independently reusable |
+| Promotion or deployment boundary | Keep separate because authorization, freshness, and proof verification differ from validation                    |
 
 Parallel workers are partial execution details. Only the verified aggregate may represent the complete logical gate.
 
