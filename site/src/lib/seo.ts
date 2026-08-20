@@ -304,7 +304,7 @@ export function renderLlmsTxt({
     "",
     `- [Catalog home](${absoluteSiteUrl("/")}): Public skills, plugin, and incubator overview.`,
     `- [Public skills](${absoluteSiteUrl("/skills/")}): Promoted, installable Agent Skills.`,
-    `- [${pluginName}](${absoluteSiteUrl(PLUGIN_PATH)}): Skills-only Codex and ChatGPT plugin.`,
+    `- [${pluginName}](${absoluteSiteUrl(PLUGIN_PATH)}): OpenAI harness-first Codex and ChatGPT plugin.`,
     `- [ChatGPT plugin](${listing.plugin.urls.chatgptPlugin}): Install ${pluginName} in ChatGPT.`,
     `- [Support](${absoluteSiteUrl("/support/")}): Install help and issue reporting.`,
     "",

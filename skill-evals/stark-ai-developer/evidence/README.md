@@ -15,3 +15,6 @@ Current evidence is structural and fixture-based:
   identifiers remain explicit external gates. First-publication directory
   observations live in
   [`docs/listing/openai/stark-ai-developer-first-publication.md`](../../docs/listing/openai/stark-ai-developer-first-publication.md).
+  The 2026-08-20 EVAL-001 attempt is
+  [`live-repeated-trials.md`](live-repeated-trials.md): no live product session
+  was observed, so `reliability-thresholds.json` stays `not_run`.

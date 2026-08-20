@@ -41,6 +41,11 @@ function createFixture() {
     recursive: true,
   });
   fs.copyFileSync(path.join(repositoryRoot, "README.md"), path.join(fixture, "README.md"));
+  fs.mkdirSync(path.join(fixture, "docs/assets"), { recursive: true, mode: 0o755 });
+  fs.copyFileSync(
+    path.join(repositoryRoot, "docs/assets/chatgpt-plugin-badge.svg"),
+    path.join(fixture, "docs/assets/chatgpt-plugin-badge.svg"),
+  );
   return fixture;
 }
 
@@ -100,6 +105,36 @@ try {
   fs.rmSync(leftoverAvailabilityFixture, { recursive: true, force: true });
 }
 
+const invalidOrganizationIdFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(invalidOrganizationIdFixture);
+  listing.publisher.openaiOrganizationId = "not-an-org-id";
+  writeListingAndWorksheet(invalidOrganizationIdFixture, listing, listingPath);
+  const result = validateOpenAiListing(invalidOrganizationIdFixture);
+  assert.ok(
+    result.errors.some((error) => /openaiOrganizationId must be a public org- identifier/.test(error)),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(invalidOrganizationIdFixture, { recursive: true, force: true });
+}
+
+const missingVerifiedNameFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(missingVerifiedNameFixture);
+  listing.publisher.verifiedIdentity = true;
+  listing.publisher.verifiedIdentityKind = "individual";
+  delete listing.publisher.verifiedIdentityName;
+  writeListingAndWorksheet(missingVerifiedNameFixture, listing, listingPath);
+  const result = validateOpenAiListing(missingVerifiedNameFixture);
+  assert.ok(
+    result.errors.some((error) => /verifiedIdentityName is required when verified/.test(error)),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(missingVerifiedNameFixture, { recursive: true, force: true });
+}
+
 for (const category of ["Education & Research", "Security"]) {
   const fixture = createFixture();
   try {
@@ -131,6 +166,26 @@ for (const category of ["Research", "Education", "Lifestyle"]) {
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
+}
+
+const staleBadgeFixture = createFixture();
+try {
+  const badgePath = path.join(staleBadgeFixture, "docs/assets/chatgpt-plugin-badge.svg");
+  const { listing } = readListing(staleBadgeFixture);
+  const staleVersion = listing.plugin.version === "0.0.0" ? "9.9.9" : "0.0.0";
+  fs.writeFileSync(
+    badgePath,
+    fs.readFileSync(badgePath, "utf8").replaceAll(listing.plugin.version, staleVersion),
+  );
+  const result = validateOpenAiListing(staleBadgeFixture);
+  assert.ok(
+    result.errors.some((error) =>
+      error.includes("docs/assets/chatgpt-plugin-badge.svg must show ChatGPT"),
+    ),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(staleBadgeFixture, { recursive: true, force: true });
 }
 
 console.log("OpenAI listing contract fixtures passed.");

@@ -2,7 +2,7 @@
 
 - **Status:** Phase 6 complete (listing observed); remaining launch evidence pending
 - **Contract revision:** 4
-- **Implementation readiness:** Repository-local phases 1–4 machinery is complete, including release identity, `zip-store-v1`, contract snapshots, and supply-chain inventory. Phase 5 can generate sanitized evidence that records explicit clean/dirty source state; a dirty tree is not a release freeze. Phase 6 listing is recorded: a public ChatGPT plugin card exists and Codex in the ChatGPT Windows app showed the same directory. Remaining launch evidence still includes freeze evidence after post-tag listing/logo changes, live-eval, signed provenance, verified publisher identity, and clean-account lifecycle
+- **Implementation readiness:** Repository-local phases 1–4 machinery is complete, including release identity, `zip-store-v1`, contract snapshots, and supply-chain inventory. Phase 5 can generate sanitized evidence that records explicit clean/dirty source state; a dirty tree is not a release freeze. Phase 6 listing is recorded: a public ChatGPT plugin card exists and Codex in the ChatGPT Windows app showed the same directory. Remaining launch evidence still includes freeze evidence after post-tag listing/logo/publisher-identity changes, live-eval, signed provenance, Apps Management permission, and clean-account lifecycle
 - **Specification date:** 2026-08-19
 - **External contracts last verified:** 2026-08-18; live portal observations from 2026-08-19 in `docs/listing/openai/stark-ai-developer-first-publication.md` outrank stale country-picker and separate-Codex-directory procedure. The listing source omits publisher region fields.
 - **Repository:** `stark-ai-de/agent-skills`
@@ -28,9 +28,9 @@ fixtures, requirement traceability, and the supply-chain inventory command are
 present. Internal repeated-trial product evidence and signed release-tag
 provenance remain follow-ups. A public ChatGPT plugin page was observed on 2026-08-19, and Codex in the
 ChatGPT Windows app showed the same directory. That observation exits Phase 6.
-Live Codex add/list/enable/disable/update/remove client tests, verified publisher
-identity, portal identifiers, freeze evidence after post-tag listing and logo
-changes, and clean-account product tests remain remaining launch evidence.
+Live Codex add/list/enable/disable/update/remove client tests, Apps Management
+permission, portal identifiers, freeze evidence after post-tag listing, logo,
+and publisher-identity changes, and clean-account product tests remain remaining launch evidence.
 Record those observations in
 `docs/listing/openai/stark-ai-developer-first-publication.md` rather than treating
 committed freeze hashes or the generated worksheet as publication proof.
@@ -613,7 +613,7 @@ The generator must use this source for `.codex-plugin/plugin.json`, release docu
 ```yaml
 name: stark-ai-developer
 display_name: stark AI Developer
-short_description: Developer workflow toolkit
+short_description: Harness-first toolkit
 category: Developer Tools
 ```
 
@@ -1236,7 +1236,7 @@ Deliver:
 Repository-local generators can write sanitized evidence before freeze, including
 explicit clean/dirty source state. An immutable release candidate still requires
 a clean source identity, recorded tag, and two-build evidence from that identity.
-Internal approval, verified publisher identity, Apps Management permission,
+Internal approval, Apps Management permission,
 live URL/legal review, signed provenance, live-eval thresholds, and external
 product evidence remain release-blocking manual or follow-up gates.
 
@@ -1254,8 +1254,8 @@ slug parsed from the ChatGPT plugin URL, in
 `docs/listing/openai/stark-ai-developer-first-publication.md`.
 
 Phase 6 is complete when that live page and shared-directory observation are
-recorded. Portal identifiers, freeze evidence after post-tag listing and logo
-changes, verified publisher identity, Apps Management permission, and
+recorded. Portal identifiers, freeze evidence after post-tag listing, logo,
+and publisher-identity changes, Apps Management permission, and
 clean-account smoke tests are remaining launch evidence, not Phase 6 exit
 criteria.
 
@@ -1268,8 +1268,8 @@ Record in `docs/listing/openai/stark-ai-developer-first-publication.md`. Do not
 treat freeze JSON or the generated worksheet as this proof:
 
 - sanitized portal identifiers, portal-normalized manifest, and accepted diff;
-- freeze evidence after post-tag listing and logo changes;
-- verified publisher identity and Apps Management permission;
+- freeze evidence after post-tag listing, logo, and publisher-identity changes;
+- Apps Management permission;
 - clean-account smoke tests on every supported v1 surface;
 - signed provenance and live repeated-trial product evidence;
 - supported-client add, enable, update, disable, and remove lifecycle evidence.
@@ -1352,11 +1352,11 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 
 ### Remaining launch evidence
 
-- [ ] The publishing organization and verified identity are selected and consistent with public metadata.
+- [x] The publishing organization and verified identity are selected and consistent with public metadata. OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`; verified individual Marcel Michael Mayer; public developer name `servrox solutions UG`.
 - [ ] Submitters have Apps Management write permission.
 - [ ] Portal normalization is reviewed and recorded.
 - [ ] OpenAI review identifiers are recorded in sanitized evidence.
-- [ ] A clean tagged freeze matches the bytes submitted after post-tag listing and logo changes.
+- [ ] A clean tagged freeze matches the bytes submitted after post-tag listing, logo, and publisher-identity changes.
 - [ ] A clean account can install, start a new chat or session, invoke every allowed bundled skill, and uninstall the plugin.
 
 ### Definition of “my skills are listed”
@@ -1496,7 +1496,7 @@ Repository implementation is done when one explicit bundle deterministically pro
 
 Canonical ownership, exact bundle membership, release identity, authoritative schema validation, product routing, capability boundaries, marketplace target, reproducible archive profile, traceability, public documentation, legal pages, supply-chain review, role approvals, and security scans must all remain enforced.
 
-Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Public launch is complete only when remaining launch evidence is recorded: the verified publisher has submitted the exact reviewed skill snapshot, OpenAI review identifiers are recorded, freeze evidence matches the post-tag listing and logo bytes, and clean-account smoke tests pass. A live ChatGPT plugin page exits Phase 6; it is not remaining-launch completion.
+Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Public launch is complete only when remaining launch evidence is recorded: the verified publisher has submitted the exact reviewed skill snapshot, OpenAI review identifiers are recorded, freeze evidence matches the post-tag listing, logo, and publisher-identity bytes, and clean-account smoke tests pass. A live ChatGPT plugin page exits Phase 6; it is not remaining-launch completion.
 
 Version 1 does not require six independent public skill cards. Those require separately approved one-skill plugin submissions.
 

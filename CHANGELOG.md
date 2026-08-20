@@ -6,11 +6,21 @@
 
 - Recorded first OpenAI plugin publication observations under `docs/listing/openai/stark-ai-developer-first-publication.md`.
 - Added official ChatGPT Blossom marks to catalog and README plugin link-outs, with unmodified light and dark variants from the OpenAI brand kit.
+- Added a ChatGPT-styled README listing shield that links to the public Plugins Directory page and shows the current plugin version.
+- Recorded the OpenAI publisher organization ID and verified individual identity in the listing source and worksheet.
+- Recorded a sanitized EVAL-001 live-trial attempt with no observed ChatGPT or Codex product session; reliability thresholds stay `not_run`.
+- Added a publication-owned Sigstore workflow that attests `zip-store-v1` plugin archives from a Git tag.
 
 ### Changed
 
+- Rewrote stark AI Developer listing and catalog SEO copy as harness-first: daily-work origin, open source, and the existing no-backend package boundary. Catalog eyebrows now say OpenAI harness-first plugin. Listing release notes match that copy.
 - Recorded Phase 6 listing as complete from the live ChatGPT plugin page; remaining launch evidence stays in `docs/listing/openai/stark-ai-developer-first-publication.md`.
 - Dropped unused OpenAI listing `availability`/`regions` now that the portal does not collect a publisher country list.
+- README ChatGPT listing shield now crops the official Blossom to fill the icon slot and shows the current plugin version instead of a "plugin" label.
+- Catalog homepage plugin actions now stack the version and ChatGPT badges under the plugin link.
+- README shields are grouped as listings, then repository status, with a green release badge.
+- README intro links no longer include an inline ChatGPT Blossom; the listing shield still carries the mark.
+- Remaining-launch freeze wording now includes publisher-identity changes, matching the listing source.
 
 ### Fixed
 

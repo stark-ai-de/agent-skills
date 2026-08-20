@@ -208,7 +208,7 @@ npm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `npm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.0.0.zip` is the OpenAI-native skills-only
+`dist/openai/stark-ai-developer-1.0.0.zip` is the OpenAI-native harness-first
 submission archive, generated from ephemeral adapter staging at package time.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
 that archive; the adapter does not generate or overlay skill-local metadata.
@@ -233,6 +233,23 @@ publication, sanitized portal observations belong in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
 The committed evidence recipe may lag listing-asset changes until a maintainer
 regenerates it from a clean tagged identity.
+
+Signed provenance is not a GPG tag on this repository today. Annotated GitHub
+Release tags are unsigned. Add Sigstore artifact attestations with
+`.github/workflows/attest-release.yml`: it packages `zip-store-v1` plugin
+archives from a tag and attests `dist/openai/*.zip` and
+`dist/agent-plugins/*.zip`. It runs on `release: published` and can be
+dispatched against an existing tag. Verify with
+`gh attestation verify dist/openai/stark-ai-developer-1.0.0.zip --repo stark-ai-de/agent-skills`.
+Do not treat an unsigned annotated tag as this gate. Do not regenerate freeze
+JSON except from a clean exact-tag identity.
+
+Post-release client lifecycle (add, enable, update, disable, remove) is not a
+pull-request or `Validate` concern. After a GitHub Release, Codex CLI can
+script `codex plugin list`, `codex plugin add`, `codex plugin marketplace upgrade`,
+and `codex plugin remove` against a disposable marketplace. ChatGPT web/desktop
+enable/disable remains a product-UI check; do not store session cookies in CI.
+A maintainer manual pass is not a sanitized per-surface matrix.
 
 The committed repository-local catalog is
 [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json),

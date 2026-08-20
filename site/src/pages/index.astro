@@ -175,20 +175,26 @@ const structuredData = [
 
   <section class="catalog-band" aria-labelledby="plugin-heading">
     <header class="section-heading">
-      <p>OpenAI skills-only plugin</p>
+      <p>OpenAI harness-first plugin</p>
       <h2 id="plugin-heading"><StarkAi text={pluginListing.plugin.displayName} /></h2>
       <div class="section-heading__links">
         <a href={withBase(PLUGIN_PATH)}>View the plugin</a>
-        <span aria-hidden="true">·</span>
-        <ChatGptLink href={pluginListing.plugin.urls.chatgptPlugin} />
+        <div class="section-heading__badges">
+          <span class="plugin-version">
+            <span class="sr-only">Plugin version </span>v{pluginListing.plugin.version}
+          </span>
+          <ChatGptLink href={pluginListing.plugin.urls.chatgptPlugin} />
+        </div>
       </div>
     </header>
     <p class="section-note">
-      The ChatGPT and Codex plugin for six developer workflows: specifications,
-      architecture, structural code search, editable diagrams, documentation
-      assets, and Codex memory. Open it in ChatGPT from the plugin page, or
-      install it with Codex plugin commands. Do not use the skills CLI for the
-      plugin. The package has no backend, MCP server, or telemetry.
+      A harness-first ChatGPT and Codex toolkit for developers and coding
+      agents: from a feature idea and existing code to specs, architecture,
+      structural findings, editable diagrams, repository docs, and agent
+      memory. The skills come from daily work, not a store catalog. Open it in
+      ChatGPT from the plugin page, or install it with Codex plugin commands.
+      Do not use the skills CLI for the plugin. The package has no backend, MCP
+      server, or telemetry.
     </p>
   </section>
 
