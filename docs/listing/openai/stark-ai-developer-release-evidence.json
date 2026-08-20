@@ -4,38 +4,38 @@
     "name": "stark-ai-developer",
     "version": "1.0.0"
   },
-  "sourceCommit": "f3f503166fd0157a447cc3d676a27cbd5fc46f25",
-  "releaseTag": "manual-review-required",
-  "sourceState": "dirty",
-  "sourceTreeSha256": "17265b3da60d89695489c3e4e74ce47015681e82b4df603b56728fa61815a343",
-  "sourceTreeHashRecipe": "For each file under plugins/stark-ai-developer.source.json, plugins/stark-ai-developer.source.schema.json, skills/, scripts/vendor/, docs/listing/openai/stark-ai-developer.json, LICENSE, and site/public/icon-512.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256.",
+  "sourceCommit": "35101f206b2416b2ac5a5fb7205fdd65c3f843b1",
+  "releaseTag": "v0.19.1",
+  "sourceState": "clean",
+  "sourceTreeSha256": "30d2fb81b2465f0fc428f71febb7864ffd30b7bdd700205d6887144e42bdd547",
+  "sourceTreeHashRecipe": "For each Git-tracked blob under plugins/stark-ai-developer.source.json, plugins/stark-ai-developer.source.schema.json, skills/, scripts/vendor/, docs/listing/openai/stark-ai-developer.json, LICENSE, and site/public/icon-512.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.",
   "source": {
-    "bundleSha256": "cdc0b48134f8b4ace1dd983eb42f38ca30049a8fee9be55021184a10d6f14c55",
+    "bundleSha256": "b2d496e49651069e45a85ce812f8289bcffb7a7e519a3f2f3894bbcccf84ec1d",
     "bundlePath": "plugins/stark-ai-developer.source.json"
   },
   "projections": {
     "portable": {
       "path": "plugins/stark-ai-developer",
-      "projectionSha256": "01eeb98be4aedef53169c393e8fbc69718e21d7bf2ffda0cf23706f6c608ded3",
-      "sourceManifestSha256": "7ab9268503584a0122d0739dbe5fe0fb2234a8519a8a6f72d1a9f8c5b37863d2",
-      "pluginManifestSha256": "c1c1b16789d4316de6bde8c3bd59971f021a8e436969ed77d4733f70c7d97096"
+      "projectionSha256": "8807567043e11e7d452bc1dd58353d568b772a9b483bd7181249703b688b3934",
+      "sourceManifestSha256": "1392523d0afbd28777006e16e4078c92a66bc09df419d1898272b61c472dc852",
+      "pluginManifestSha256": "2d7399665b5f5218c770738f62160ed9067e2ea020f1f97f72546068cde6b4af"
     },
     "openai": {
       "path": "ephemeral",
-      "projectionSha256": "3afbf5515091838f956acf51dbc00af8ecc02413b019d4dc0b06024166e2fbb7",
-      "sourceManifestSha256": "ff7802fba4b994347e33391ee808d0122bc97ed5db5e22573eae30e3700b4413",
-      "pluginManifestSha256": "074355a79a1de6f63e37ff9d1ec23ce7d4d74d7c79a0b1a034b9490bf724f30c"
+      "projectionSha256": "d00936ca8c24b80085ab75b96d349f4ca461fa50c92651bd3ba4220cc1c39567",
+      "sourceManifestSha256": "7c9a908ff127234fbf1dcb24418c43bdbff75dce914a3397f638e16a65d0e634",
+      "pluginManifestSha256": "a1d13a0f47f1788fd69b71696153e67d7f4651fbbb0d0967afc1b7b1b687f01d"
     }
   },
   "manifests": {
     "generated": {
-      "portableManifest": "c1c1b16789d4316de6bde8c3bd59971f021a8e436969ed77d4733f70c7d97096",
-      "portableSourceManifest": "7ab9268503584a0122d0739dbe5fe0fb2234a8519a8a6f72d1a9f8c5b37863d2",
-      "openAiManifest": "074355a79a1de6f63e37ff9d1ec23ce7d4d74d7c79a0b1a034b9490bf724f30c",
-      "openAiSourceManifest": "ff7802fba4b994347e33391ee808d0122bc97ed5db5e22573eae30e3700b4413"
+      "portableManifest": "2d7399665b5f5218c770738f62160ed9067e2ea020f1f97f72546068cde6b4af",
+      "portableSourceManifest": "1392523d0afbd28777006e16e4078c92a66bc09df419d1898272b61c472dc852",
+      "openAiManifest": "a1d13a0f47f1788fd69b71696153e67d7f4651fbbb0d0967afc1b7b1b687f01d",
+      "openAiSourceManifest": "7c9a908ff127234fbf1dcb24418c43bdbff75dce914a3397f638e16a65d0e634"
     },
     "submitted": {
-      "openAiPluginManifestSha256": "074355a79a1de6f63e37ff9d1ec23ce7d4d74d7c79a0b1a034b9490bf724f30c"
+      "openAiPluginManifestSha256": "a1d13a0f47f1788fd69b71696153e67d7f4651fbbb0d0967afc1b7b1b687f01d"
     },
     "portalNormalized": {
       "status": "manual-review-required"
@@ -49,8 +49,8 @@
   },
   "archives": {
     "openai.zip": {
-      "bytes": 2077585,
-      "sha256": "013a47762b1a7a06b22edfdec7ab075986e0c05955a905aed28f56b7484e34b0",
+      "bytes": 2077638,
+      "sha256": "eeaa4252ec09541cce068c96ab0ae5f027d3884c27b6636b640814d7d49a3615",
       "entries": [
         ".codex-plugin/plugin.json",
         "LICENSE",
@@ -336,8 +336,8 @@
       ]
     },
     "portable.zip": {
-      "bytes": 2036319,
-      "sha256": "f528cff2bd953591c16565881add4034b09eb3bbc3e012e46eeead4f7c2613e4",
+      "bytes": 2036557,
+      "sha256": "52ac36ff4896f635aecc2665a1356bee647d3eba62b03ff93526b12ef0323bf7",
       "entries": [
         "LICENSE",
         "README.md",
@@ -937,8 +937,8 @@
     "byteIdentical": true,
     "archiveProfile": "zip-store-v1",
     "sha256": {
-      "openai.zip": "013a47762b1a7a06b22edfdec7ab075986e0c05955a905aed28f56b7484e34b0",
-      "portable.zip": "f528cff2bd953591c16565881add4034b09eb3bbc3e012e46eeead4f7c2613e4",
+      "openai.zip": "eeaa4252ec09541cce068c96ab0ae5f027d3884c27b6636b640814d7d49a3615",
+      "portable.zip": "52ac36ff4896f635aecc2665a1356bee647d3eba62b03ff93526b12ef0323bf7",
       "skills/animated-readme-logo.zip": "3e821855003525525d444b6260cae992d46e5e9b644710ed9d1db117490b0a87",
       "skills/architecture-compass.zip": "38642f05a192189eb69156ed5b0cc4600e880847e728b08c6ee70f60232ec5a8",
       "skills/codegraph-ast-grep.zip": "a9d5240f7eff73979829f28c087616455a32a90b7593e52c77ad340ef32ab1b1",

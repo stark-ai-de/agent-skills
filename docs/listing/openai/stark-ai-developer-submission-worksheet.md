@@ -1,8 +1,9 @@
 # OpenAI submission worksheet: stark AI Developer
 
 Generated from `docs/listing/openai/stark-ai-developer.json`. This worksheet is
-repository-local preparation material, not evidence of submission, approval,
-publication, or universal-directory visibility.
+portal field copy only. First-publication observations live in
+`docs/listing/openai/stark-ai-developer-first-publication.md`. This file is not
+freeze evidence, a portal draft identifier, or clean-account proof.
 
 ## Listing
 
@@ -17,7 +18,7 @@ publication, or universal-directory visibility.
 - Terms: https://stark-ai-de.github.io/agent-skills/terms/
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
-- Regions: DE
+- ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
 - Release notes: Initial skills-only stark AI Developer package with six explicit developer workflows and no backend or network runtime.
 
 ## Capabilities
@@ -42,7 +43,6 @@ publication, or universal-directory visibility.
 - Verified identity: manual review required
 - OpenAI organization ID: manual review required
 - Apps Management permission: manual review required
-- Listed URL live HTTPS status: manual review required
 - Supported-client lifecycle status (add, enable, update, disable, remove): manual review required
 
 ## Bundled skill routing
@@ -61,8 +61,9 @@ publication, or universal-directory visibility.
 - Clean/dirty source state and deterministic release-input tree digest.
 - Generated and portal-normalized manifests.
 - Accepted normalization diff, if the portal changes the manifest.
-- Positive/negative evaluations and submitted countries.
-- Portal draft ID, review result, approval, and explicit publication status.
+- Positive/negative evaluations.
+- Portal draft ID, review result, and remaining sanitized publication evidence.
+- First-publication observations from `docs/listing/openai/stark-ai-developer-first-publication.md`.
 
 Do not add credentials, cookies, private reviewer messages, customer data,
 or machine-specific paths to this worksheet.

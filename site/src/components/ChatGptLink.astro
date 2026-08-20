@@ -1,0 +1,46 @@
+---
+import { withBase } from "../lib/site";
+
+interface Props {
+  class?: string;
+  href: string;
+  label?: string;
+  on?: "surface" | "cta";
+}
+
+const { class: className, href, label = "Open in ChatGPT", on = "surface" } = Astro.props;
+const blackUrl = withBase("/brands/chatgpt-blossom-black.svg");
+const whiteUrl = withBase("/brands/chatgpt-blossom-white.svg");
+---
+
+<a
+  class:list={["chatgpt-link", className]}
+  href={href}
+  rel="noreferrer"
+  target="_blank"
+>
+  <span
+    class:list={["chatgpt-mark", `chatgpt-mark--${on}`]}
+    aria-hidden="true"
+  >
+    <img
+      class="chatgpt-mark__black"
+      src={blackUrl}
+      alt=""
+      width="20"
+      height="20"
+      decoding="async"
+    />
+    <img
+      class="chatgpt-mark__white"
+      src={whiteUrl}
+      alt=""
+      width="20"
+      height="20"
+      decoding="async"
+    />
+  </span>
+  <slot>
+    <span>{label}</span>
+  </slot>
+</a>

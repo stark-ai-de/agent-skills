@@ -4,7 +4,13 @@
 
 ### Added
 
+- Recorded first OpenAI plugin publication observations under `docs/listing/openai/stark-ai-developer-first-publication.md`.
+- Added official ChatGPT Blossom marks to catalog and README plugin link-outs, with unmodified light and dark variants from the OpenAI brand kit.
+
 ### Changed
+
+- Recorded Phase 6 listing as complete from the live ChatGPT plugin page; remaining launch evidence stays in `docs/listing/openai/stark-ai-developer-first-publication.md`.
+- Dropped unused OpenAI listing `availability`/`regions` now that the portal does not collect a publisher country list.
 
 ### Fixed
 

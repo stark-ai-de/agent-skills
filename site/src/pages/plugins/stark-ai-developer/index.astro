@@ -1,4 +1,5 @@
 ---
+import ChatGptLink from "../../../components/ChatGptLink.astro";
 import CommandBlock from "../../../components/CommandBlock.astro";
 import ContextTooltip from "../../../components/ContextTooltip.astro";
 import HeroLogo from "../../../components/HeroLogo.astro";
@@ -36,7 +37,9 @@ const {
   capabilities,
   starterPrompts,
   version,
+  urls,
 } = listing.plugin;
+const chatgptPluginUrl = urls.chatgptPlugin;
 const bundledSkills = resolvePluginCatalogSkills(listing, await getPublicSkills());
 const marketplaceAddCommand = pluginMarketplaceAddCommand();
 const pluginInstallCommand = pluginAddCommand(listing);
@@ -58,6 +61,7 @@ const structuredData = [
   ]),
   pluginSoftwareStructuredData({
     canonicalUrl,
+    chatgptPluginUrl,
     description,
     name: pluginName,
     version,
@@ -87,9 +91,12 @@ const structuredData = [
       <h1><StarkAi text={displayName} /></h1>
       <p class="hero-copy__lead">{longDescription}</p>
       <div class="hero-actions">
-        <a class="button button--primary button--signal" href="#install">
-          <span>Install the plugin</span>
-        </a>
+        <ChatGptLink
+          class="button button--primary button--signal"
+          href={chatgptPluginUrl}
+          on="cta"
+        />
+        <a class="button button--secondary" href="#install">Codex install</a>
         <a class="button button--secondary" href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">
           Review the source
         </a>
@@ -194,11 +201,11 @@ const structuredData = [
       <h2 id="install-heading">Install the plugin</h2>
     </header>
     <p class="section-note">
-      ChatGPT and Codex will share one public plugin listing after publication. Until then, add
-      this repository as a Codex marketplace and install the plugin by name. A local install or
-      GitHub release is not that listing. Copying skills with the skills CLI does not install
-      the plugin. The installing client still applies its own policies to your workspace and
-      tools.
+      ChatGPT installs from the plugin page. Codex CLI still installs from this repository
+      marketplace. ChatGPT and Codex share one Plugins Directory; there is no separate Codex
+      website listing. A local install, GitHub release, or{" "}
+      <code>npx skills</code> copy is not the ChatGPT plugin. The installing client still
+      applies its own policies to your workspace and tools.
     </p>
     <div class="install-stack">
       <div>
@@ -217,9 +224,11 @@ const structuredData = [
         <h3>ChatGPT</h3>
         <p>
           Open the{" "}
-          <a href="https://chatgpt.com/plugins" rel="noreferrer" target="_blank">Plugins</a>{" "}
-          tab, search for <StarkAi text={displayName} />, and install. After directory
-          publication, that listing is shared with Codex.
+          <ChatGptLink href={chatgptPluginUrl}>
+            <StarkAi text={displayName} />
+          </ChatGptLink>{" "}
+          plugin page in ChatGPT and install. Availability can still depend on account,
+          workspace, and plan.
         </p>
       </div>
       <div class="install-stack--secondary">

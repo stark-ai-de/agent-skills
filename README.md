@@ -24,6 +24,24 @@
   <br />
   <a href="https://stark-ai-de.github.io/agent-skills/">Browse the catalog</a>
   ·
+  <a href="https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e">
+    <img
+      src="site/public/brands/chatgpt-blossom-black.svg#gh-light-mode-only"
+      alt=""
+      width="16"
+      height="16"
+      style="vertical-align: text-bottom"
+    />
+    <img
+      src="site/public/brands/chatgpt-blossom-white.svg#gh-dark-mode-only"
+      alt=""
+      width="16"
+      height="16"
+      style="vertical-align: text-bottom"
+    />
+    Open the ChatGPT plugin
+  </a>
+  ·
   <a href="skills/README.md">Explore public skills</a>
   ·
   <a href="CONTRIBUTING.md">Contribute</a>
@@ -101,19 +119,22 @@ generated from [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-devel
 
 Listing copy lives in [`docs/listing/openai/`](docs/listing/openai/) and is not bundle
 membership or part of the adapter archive tree.
+First-publication portal observations live in
+[`docs/listing/openai/stark-ai-developer-first-publication.md`](docs/listing/openai/stark-ai-developer-first-publication.md).
+
 [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json)
 holds membership and plugin identity. Catalog version stays in `package.json`.
 
 The repository marketplace and any personal or workspace marketplace are local
-testing/distribution catalogs. They do not prove submission, approval,
-publication, searchability, or availability in the public Universal Plugins
-Directory. The package has no backend, MCP server, connectors, authentication,
-telemetry, analytics, hidden network calls, or runtime downloads.
+testing/distribution catalogs. They do not, by themselves, prove submission,
+approval, or public-directory publication. The public ChatGPT plugin page is
+the shared ChatGPT/Codex catalog card. The package has no backend, MCP server,
+connectors, authentication, telemetry, analytics, hidden network calls, or
+runtime downloads.
 
 These are separate installation routes:
 
-- **Public plugin:** the future Universal Plugins Directory listing and install
-  flow; publication and account eligibility remain external gates.
+- **ChatGPT plugin:** [chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). Account, workspace, and plan eligibility still apply.
 - **Repository/local plugin:** the portable projection through a compatible
   local or repository marketplace.
 - **Standalone ChatGPT skill:** upload, share, or workspace-install an

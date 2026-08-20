@@ -1,4 +1,5 @@
 ---
+import ChatGptLink from "../components/ChatGptLink.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import PolicyPage from "../components/PolicyPage.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -49,7 +50,7 @@ const description =
       items: [
         {
           question: "How do I install the OpenAI plugin?",
-          answer: `Codex 0.147.0 or later: run ${marketplaceAddCommand}, then ${pluginInstallCommand}. ChatGPT installs from the Plugins tab after directory publication.`,
+          answer: `ChatGPT: open ${listing.plugin.urls.chatgptPlugin} and install. Codex 0.147.0 or later: run ${marketplaceAddCommand}, then ${pluginInstallCommand}.`,
         },
         {
           question: "How do I install the six skills without the plugin?",
@@ -63,7 +64,7 @@ const description =
         {
           question: "What can support not do?",
           answer:
-            "Support cannot grant OpenAI account access, Apps Management permission, workspace publication, regional availability, or public-directory review status.",
+            "Support cannot grant OpenAI account access, Apps Management permission, workspace publication, account availability, or public-directory review status.",
         },
       ],
     }),
@@ -102,11 +103,11 @@ const description =
 
     <h2>Install the plugin</h2>
     <p>
-      Codex and ChatGPT install the OpenAI plugin. That is not the skills CLI. Add this
-      repository as a Codex marketplace, then install the plugin by name. After directory
-      publication, ChatGPT can install it from the{" "}
-      <a href="https://chatgpt.com/plugins" rel="noreferrer" target="_blank">Plugins</a> tab.
-      The <a href={withBase(PLUGIN_PATH)}>plugin page</a> has the full walkthrough.
+      Codex and ChatGPT install the OpenAI plugin. That is not the skills CLI. ChatGPT installs
+      from the{" "}
+      <ChatGptLink href={listing.plugin.urls.chatgptPlugin} label="plugin page" />
+      . Codex still uses this repository as a marketplace, then installs the plugin by name. The{" "}
+      <a href={withBase(PLUGIN_PATH)}>catalog plugin page</a> has the full walkthrough.
     </p>
     <CommandBlock command={marketplaceAddCommand} label="Add the plugin marketplace" />
     <CommandBlock command={pluginInstallCommand} label="Install the plugin" />
@@ -140,7 +141,7 @@ const description =
     <h2>What support cannot do</h2>
     <p>
       Support cannot grant OpenAI account access, Apps Management permission, workspace
-      publication, regional availability, or public-directory review status. Those remain
+      publication, account availability, or public-directory review status. Those remain
       external gates. Source and documentation changes can be discussed in{" "}
       <a href={GITHUB_REPO_URL} rel="noreferrer" target="_blank">the repository</a>.
     </p>
