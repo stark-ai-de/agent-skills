@@ -118,7 +118,10 @@ documented by the draw.io skill; new executable endpoints fail the gate.
 
 The OpenAI submission worksheet is generated from the listing contract and is
 checked for drift by `npm run validate:openai` (or directly with
-`npm run validate:openai-worksheet`).
+`npm run validate:openai-worksheet`). Portal and product-surface observations
+after first publication live in
+[`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md)
+and are not inferred from freeze evidence or the worksheet.
 
 Validate the routed Architecture Compass ADR library and its eval contract:
 

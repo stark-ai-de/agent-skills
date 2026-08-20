@@ -15,6 +15,9 @@ export interface StarkAiDeveloperListing {
     developerName: string;
     capabilities: string[];
     starterPrompts: string[];
+    urls: {
+      chatgptPlugin: string;
+    };
   };
   skills: Array<{
     name: string;
@@ -34,6 +37,8 @@ export function getStarkAiDeveloperListing(): StarkAiDeveloperListing {
     typeof listing.plugin.developerName !== "string" ||
     !Array.isArray(listing.plugin.capabilities) ||
     !Array.isArray(listing.plugin.starterPrompts) ||
+    typeof listing.plugin.urls?.chatgptPlugin !== "string" ||
+    !listing.plugin.urls.chatgptPlugin.startsWith("https://chatgpt.com/plugins/") ||
     !Array.isArray(listing.skills) ||
     listing.skills.some(
       (skill) => typeof skill?.name !== "string" || typeof skill.intent !== "string",

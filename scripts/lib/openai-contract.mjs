@@ -335,7 +335,14 @@ export function validateOpenAiListing(root) {
   for (const [key, value] of Object.entries(plugin.urls ?? {})) {
     validateUrl(value, `listing.plugin.urls.${key}`, errors);
   }
-  for (const requiredUrl of ["website", "privacyPolicy", "termsOfService", "support", "security"]) {
+  for (const requiredUrl of [
+    "website",
+    "privacyPolicy",
+    "termsOfService",
+    "support",
+    "security",
+    "chatgptPlugin",
+  ]) {
     if (!plugin.urls?.[requiredUrl]) errors.push(`listing.plugin.urls.${requiredUrl} is required`);
   }
   if (
@@ -365,8 +372,8 @@ export function validateOpenAiListing(root) {
   if (!isMapping(listing.publisher) || listing.publisher.legalName !== "servrox solutions UG") {
     errors.push("listing.publisher.legalName must match the reviewed developer identity");
   }
-  if (!Array.isArray(listing.availability?.regions) || listing.availability.regions.length === 0) {
-    errors.push("listing.availability.regions must contain an explicit region selection");
+  if ("availability" in listing) {
+    errors.push("listing.availability is not a portal field; omit it");
   }
 
   const expectedNames = bundle.skills.map((entry) => entry.name);

@@ -202,11 +202,13 @@ export function skillStructuredData(skill: CatalogSkill, canonicalUrl: string): 
 
 export function pluginSoftwareStructuredData({
   canonicalUrl,
+  chatgptPluginUrl,
   description,
   name,
   version,
 }: {
   canonicalUrl: string;
+  chatgptPluginUrl: string;
   description: string;
   name: string;
   version: string;
@@ -217,6 +219,7 @@ export function pluginSoftwareStructuredData({
     name,
     description: toSeoDescription(description),
     url: canonicalUrl,
+    sameAs: [chatgptPluginUrl],
     image: absoluteSiteUrl(DEFAULT_OG_IMAGE_PATH),
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Cross-platform",
@@ -302,6 +305,7 @@ export function renderLlmsTxt({
     `- [Catalog home](${absoluteSiteUrl("/")}): Public skills, plugin, and incubator overview.`,
     `- [Public skills](${absoluteSiteUrl("/skills/")}): Promoted, installable Agent Skills.`,
     `- [${pluginName}](${absoluteSiteUrl(PLUGIN_PATH)}): Skills-only Codex and ChatGPT plugin.`,
+    `- [ChatGPT plugin](${listing.plugin.urls.chatgptPlugin}): Install ${pluginName} in ChatGPT.`,
     `- [Support](${absoluteSiteUrl("/support/")}): Install help and issue reporting.`,
     "",
     "## Public skills",

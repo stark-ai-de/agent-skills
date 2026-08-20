@@ -31,8 +31,9 @@ The same validated membership produces three distinct outputs: the portable
 projection under `plugins/stark-ai-developer/`, the OpenAI-native skills-only
 archive under `dist/openai/` from ephemeral adapter staging, and optional
 one-skill standalone archives under `dist/skills/`. Listing copy lives in
-`docs/listing/openai/`. Catalog version stays in `package.json`; plugin version
-stays in this sibling source file.
+`docs/listing/openai/`. First-publication portal observations live in
+`docs/listing/openai/stark-ai-developer-first-publication.md`. Catalog version
+stays in `package.json`; plugin version stays in this sibling source file.
 
 ## Update membership or identity
 

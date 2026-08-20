@@ -919,6 +919,76 @@ main {
   transform: translateX(110%);
 }
 
+.chatgpt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.chatgpt-mark {
+  position: relative;
+  display: inline-grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 1.15rem;
+  place-items: center;
+}
+
+.chatgpt-mark img {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.chatgpt-mark__white {
+  display: none;
+}
+
+:root[data-theme="dark"] .chatgpt-mark--surface .chatgpt-mark__black {
+  display: none;
+}
+
+:root[data-theme="dark"] .chatgpt-mark--surface .chatgpt-mark__white {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chatgpt-mark--surface .chatgpt-mark__black {
+    display: none;
+  }
+
+  :root:not([data-theme="light"]) .chatgpt-mark--surface .chatgpt-mark__white {
+    display: block;
+  }
+}
+
+.chatgpt-mark--cta .chatgpt-mark__black {
+  display: none;
+}
+
+.chatgpt-mark--cta .chatgpt-mark__white {
+  display: block;
+}
+
+:root[data-theme="dark"] .chatgpt-mark--cta .chatgpt-mark__black {
+  display: block;
+}
+
+:root[data-theme="dark"] .chatgpt-mark--cta .chatgpt-mark__white {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chatgpt-mark--cta .chatgpt-mark__black {
+    display: block;
+  }
+
+  :root:not([data-theme="light"]) .chatgpt-mark--cta .chatgpt-mark__white {
+    display: none;
+  }
+}
+
 .button--secondary {
   border: 1px solid var(--glass-border);
   background: var(--glass-background-soft);
@@ -1800,6 +1870,12 @@ main {
   border-bottom: 2px solid var(--link-underline);
   color: var(--primary);
   font-weight: 650;
+}
+
+.section-heading__links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .section-note {

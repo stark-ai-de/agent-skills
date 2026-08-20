@@ -1,9 +1,10 @@
 ---
+import BorderBeam from "../components/BorderBeam.astro";
 import CategoryNav from "../components/CategoryNav.astro";
+import ChatGptLink from "../components/ChatGptLink.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import ContextTooltip from "../components/ContextTooltip.astro";
 import HeroLogo from "../components/HeroLogo.astro";
-import BorderBeam from "../components/BorderBeam.astro";
 import SkillCard from "../components/SkillCard.astro";
 import StarkAi from "../components/StarkAi.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -176,13 +177,18 @@ const structuredData = [
     <header class="section-heading">
       <p>OpenAI skills-only plugin</p>
       <h2 id="plugin-heading"><StarkAi text={pluginListing.plugin.displayName} /></h2>
-      <a href={withBase(PLUGIN_PATH)}>View the plugin</a>
+      <div class="section-heading__links">
+        <a href={withBase(PLUGIN_PATH)}>View the plugin</a>
+        <span aria-hidden="true">·</span>
+        <ChatGptLink href={pluginListing.plugin.urls.chatgptPlugin} />
+      </div>
     </header>
     <p class="section-note">
       The ChatGPT and Codex plugin for six developer workflows: specifications,
       architecture, structural code search, editable diagrams, documentation
-      assets, and Codex memory. Install it with Codex plugin commands, not the
-      skills CLI. The package has no backend, MCP server, or telemetry.
+      assets, and Codex memory. Open it in ChatGPT from the plugin page, or
+      install it with Codex plugin commands. Do not use the skills CLI for the
+      plugin. The package has no backend, MCP server, or telemetry.
     </p>
   </section>
 

@@ -26,15 +26,16 @@
       "privacyPolicy": "https://stark-ai-de.github.io/agent-skills/privacy/",
       "termsOfService": "https://stark-ai-de.github.io/agent-skills/terms/",
       "support": "https://stark-ai-de.github.io/agent-skills/support/",
-      "security": "https://stark-ai-de.github.io/agent-skills/security/"
+      "security": "https://stark-ai-de.github.io/agent-skills/security/",
+      "chatgptPlugin": "https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e"
     },
     "brandColors": {
       "light": "#0021C7",
       "dark": "#7FA0FF"
     },
     "assets": {
-      "logo": "site/public/icon-512.png",
-      "composerIcon": "site/public/icon-512.png"
+      "logo": "site/public/logo.png",
+      "composerIcon": "site/public/logo-dark.png"
     }
   },
   "publisher": {
@@ -46,13 +47,11 @@
       "OpenAI publisher organization or verified individual identity",
       "Apps Management permission",
       "Final publisher display name and contact details",
-      "Live HTTPS verification for every listed URL",
-      "Supported-client add, enable, update, disable, and remove lifecycle evidence"
+      "Portal-normalized manifest, accepted diff, and draft identifiers",
+      "Clean tagged freeze after post-tag listing and logo changes",
+      "Supported-client add, enable, update, disable, and remove lifecycle evidence",
+      "Clean-account install, invoke, and uninstall on supported v1 surfaces"
     ]
-  },
-  "availability": {
-    "regions": ["DE"],
-    "selectionRationale": "Conservative initial availability pending legal and publisher review; do not claim universal availability."
   },
   "releaseNotes": "Initial skills-only stark AI Developer package with six explicit developer workflows and no backend or network runtime.",
   "skills": [

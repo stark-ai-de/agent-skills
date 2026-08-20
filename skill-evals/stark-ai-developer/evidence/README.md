@@ -11,5 +11,7 @@ Current evidence is structural and fixture-based:
 - portable, OpenAI, and standalone projection bytes are compared;
 - local marketplace paths are tested in disposable temporary clones;
 - live ChatGPT/Codex product behavior, account availability, workspace policy,
-  public URLs, portal normalization, review, approval, and publication remain
-  explicit external gates.
+  clean-account lifecycle, portal normalization, and remaining launch
+  identifiers remain explicit external gates. First-publication directory
+  observations live in
+  [`docs/listing/openai/stark-ai-developer-first-publication.md`](../../docs/listing/openai/stark-ai-developer-first-publication.md).

@@ -28,6 +28,7 @@ skills/<category>/<skill>/                 # Canonical skill, including agents/o
 plugins/stark-ai-developer.source.json     # Membership and plugin identity
 plugins/stark-ai-developer.source.schema.json
 docs/listing/openai/stark-ai-developer.json # Public listing and portal copy
+docs/listing/openai/stark-ai-developer-first-publication.md # Portal observations after first listing
 plugins/stark-ai-developer/                # Generated committed portable Agent Plugin
 scripts/vendor/agent-plugins/1.0.0/        # Official schema pin
 scripts/vendor/snapshots/                  # Dated contract snapshots
@@ -66,6 +67,7 @@ Identity fields in `plugins/stark-ai-developer.source.json` are the sole source 
 8. Do not generate, overlay, or rewrite canonical skill-local files in an adapter. Put provenance and generation notices in package-level README or source-manifest files rather than modifying copied `SKILL.md` or `agents/openai.yaml` files.
 9. Keep the existing `npx skills` catalog and category layout supported independently of plugin packaging.
 10. Treat one public **stark AI Developer** listing with six bundled skills as the version 1 product strategy. Create independent public cards only through separately named and reviewed one-skill plugin submissions.
+11. After OpenAI publication, follow [`docs/listing/openai/stark-ai-developer-first-publication.md`](../listing/openai/stark-ai-developer-first-publication.md) for sanitized portal observations and the live upload rules.
 
 ## Verification
 

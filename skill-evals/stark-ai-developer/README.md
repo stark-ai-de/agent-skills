@@ -3,8 +3,9 @@
 This inventory is maintainer evidence for the one **stark AI Developer**
 listing. It is not bundled into the portable or OpenAI runtime projections.
 Cases are sanitized, deterministic review prompts and expected boundaries; they
-do not claim a live ChatGPT, Codex, IDE, account, workspace, or public-directory
-result.
+do not claim a live ChatGPT, Codex, IDE, account, workspace, or clean-account
+result. A public ChatGPT plugin page exists; directory observations live in
+[`docs/listing/openai/stark-ai-developer-first-publication.md`](../../docs/listing/openai/stark-ai-developer-first-publication.md).
 
 Run the structural inventory check with:
 

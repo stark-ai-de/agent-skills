@@ -10,6 +10,9 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(dirname, "..");
 const repoRoot = path.resolve(siteRoot, "..");
 const distRoot = path.join(siteRoot, "dist");
+const listingSource = JSON.parse(
+  readFileSync(path.join(repoRoot, "docs/listing/openai/stark-ai-developer.json"), "utf8"),
+);
 const htmlCache = new Map();
 const titleOwners = new Map();
 
@@ -510,12 +513,18 @@ function validateLlmsTxt() {
   assert(existsSync(llmsPath), "llms.txt was not generated.");
 
   const content = readFileSync(llmsPath, "utf8");
+  const chatgptPluginUrl = listingSource.plugin?.urls?.chatgptPlugin;
   assert(content.startsWith("# "), "llms.txt must start with an H1.");
   assert(!content.includes("/incubator/"), "llms.txt must not list incubator pages.");
   assert(
     content.includes(`${SITE_URL_PREFIX}plugins/stark-ai-developer/`),
     "llms.txt missing plugin URL",
   );
+  assert(
+    typeof chatgptPluginUrl === "string" && chatgptPluginUrl.length > 0,
+    "listing source missing ChatGPT plugin URL",
+  );
+  assert(content.includes(chatgptPluginUrl), "llms.txt missing ChatGPT plugin URL");
 
   for (const skillFile of walkSkillFiles(path.join(repoRoot, "skills"))) {
     const skillName = path.basename(path.dirname(skillFile));

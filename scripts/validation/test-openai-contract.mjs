@@ -86,6 +86,20 @@ try {
   fs.rmSync(missingAssetFixture, { recursive: true, force: true });
 }
 
+const leftoverAvailabilityFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(leftoverAvailabilityFixture);
+  listing.availability = { regions: [], selectionRationale: "stale" };
+  writeListingAndWorksheet(leftoverAvailabilityFixture, listing, listingPath);
+  const result = validateOpenAiListing(leftoverAvailabilityFixture);
+  assert.ok(
+    result.errors.some((error) => /listing\.availability is not a portal field/.test(error)),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(leftoverAvailabilityFixture, { recursive: true, force: true });
+}
+
 for (const category of ["Education & Research", "Security"]) {
   const fixture = createFixture();
   try {

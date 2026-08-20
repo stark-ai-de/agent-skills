@@ -19,10 +19,11 @@ export const SOURCE_TREE_INPUTS = [
   "scripts/vendor",
   LISTING_PATH,
   "LICENSE",
-  "site/public/icon-512.png",
+  "site/public/logo.png",
+  "site/public/logo-dark.png",
 ];
 
-export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${PLUGIN_SOURCE_PATH}, ${PLUGIN_SOURCE_SCHEMA_PATH}, skills/, scripts/vendor/, ${LISTING_PATH}, LICENSE, and site/public/icon-512.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;
+export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${PLUGIN_SOURCE_PATH}, ${PLUGIN_SOURCE_SCHEMA_PATH}, skills/, scripts/vendor/, ${LISTING_PATH}, LICENSE, site/public/logo.png, and site/public/logo-dark.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;
 
 function fileSha256(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");

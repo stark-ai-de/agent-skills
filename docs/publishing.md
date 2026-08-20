@@ -213,8 +213,12 @@ submission archive, generated from ephemeral adapter staging at package time.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
 that archive; the adapter does not generate or overlay skill-local metadata.
 `dist/skills/*.zip` contains one skill root per optional standalone archive.
-These artifacts do not replace canonical sources or prove public-directory
-publication. GitHub Releases also provide source archives for each tag, and
+These artifacts do not replace canonical sources. A generated archive is not
+by itself proof of public-directory publication. First-publication observations
+for the OpenAI plugin live in
+[`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
+Upload `dist/openai/*.zip` to the OpenAI portal, not the portable Agent Plugins
+zip. GitHub Releases also provide source archives for each tag, and
 normal standalone installation uses the skills CLI:
 
 `npm run generate:release-evidence` is the explicit release-preparation command.
@@ -224,7 +228,11 @@ with the source commit/tag, projection and manifest hashes, complete archive
 inventories, the clean/dirty source state, and a deterministic release-input
 tree digest. Portal-normalized manifests, draft
 IDs, approval, publication, and client lifecycle observations remain separate
-external evidence and are never inferred from this file.
+external evidence and are never inferred from this file. After first
+publication, sanitized portal observations belong in
+[`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
+The committed evidence recipe may lag listing-asset changes until a maintainer
+regenerates it from a clean tagged identity.
 
 The committed repository-local catalog is
 [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json),
