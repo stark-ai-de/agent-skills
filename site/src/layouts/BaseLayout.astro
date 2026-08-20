@@ -170,7 +170,7 @@ const tracingMode =
     <meta name="twitter:image:alt" content={imageAlt} />
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>
-  <body>
+  <body id="top">
     <div class="grainient-layer" aria-hidden="true"></div>
     {
       tracingMode && (
@@ -310,6 +310,12 @@ const tracingMode =
         <a class="site-footer__product" href={LOOPLATCH_URL} rel="noreferrer" target="_blank">
           <img src={withBase(LOOPLATCH_LOGO_PATH)} alt="" width="24" height="24" />
           <span>LoopLatch for bounded Codex loops</span>
+        </a>
+        <a class="scroll-top" href="#top" aria-label="Back to top" data-scroll-top>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m5 12 7-7 7 7" />
+            <path d="M12 19V5" />
+          </svg>
         </a>
       </div>
     </footer>
@@ -905,9 +911,30 @@ const tracingMode =
           });
         };
 
+        const setupScrollTop = () => {
+          const button = document.querySelector("[data-scroll-top]");
+          if (!(button instanceof HTMLAnchorElement)) {
+            return;
+          }
+
+          const update = () => {
+            const maxScroll = Math.max(
+              document.documentElement.scrollHeight - window.innerHeight,
+              0
+            );
+            const atBottom = maxScroll > 64 && window.scrollY >= maxScroll - 24;
+            button.toggleAttribute("data-at-bottom", atBottom);
+          };
+
+          window.addEventListener("scroll", update, { passive: true });
+          window.addEventListener("resize", update, { passive: true });
+          update();
+        };
+
         setupTracingBeam();
         setupReveals();
         setupDescriptionDisclosures();
+        setupScrollTop();
       })();
     </script>
   </body>

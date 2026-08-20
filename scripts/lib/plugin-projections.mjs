@@ -231,7 +231,7 @@ function portableManifest(root) {
     homepage: "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
     repository: "https://github.com/stark-ai-de/agent-skills",
     license: "Apache-2.0",
-    keywords: ["developer-tools", "agent-skills", "codex", "documentation"],
+    keywords: ["developer-tools", "agent-skills", "codex", "documentation", "harness-first"],
   };
 }
 
@@ -245,7 +245,7 @@ function generatedReadme({ kind }) {
 
 ${projectionName} generated from the explicit \`plugins/stark-ai-developer.source.json\` allowlist.
 
-This skills-only package contains six developer workflows and has no backend, MCP
+This harness-first package contains six developer workflows and has no backend, MCP
 server, connectors, authentication, telemetry, analytics, hidden network calls,
 or runtime downloads. Canonical skill content remains maintained under
 \`skills/<category>/<skill>/\`; this ${kind} copy is generated and must not be edited

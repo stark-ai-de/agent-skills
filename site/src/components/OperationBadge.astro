@@ -26,8 +26,7 @@ const operations = {
   },
   codex: {
     agent: "codex",
-    icon:
-      "https://images.ctfassets.net/kftzwdyauwt9/77tJ5U1tgxHMZflZ5m4Z24/ace4d8b6ad200d87ebcb69c466344343/Blossom_4k_Icon_1.png",
+    icon: withBase("/brands/codex-color.svg"),
     text: "Codex Operation"
   },
   cursor: {
@@ -85,7 +84,6 @@ const badgeLabel = multiAgent ? "Operations" : operation?.text;
                 height="18"
                 loading="lazy"
                 decoding="async"
-                referrerpolicy={item.agent === "codex" ? "no-referrer" : undefined}
               />
               {item.iconDark && (
                 <img

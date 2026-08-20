@@ -27,20 +27,22 @@ const whiteUrl = withBase("/brands/chatgpt-blossom-white.svg");
       class="chatgpt-mark__black"
       src={blackUrl}
       alt=""
-      width="20"
-      height="20"
+      width="24"
+      height="24"
       decoding="async"
     />
     <img
       class="chatgpt-mark__white"
       src={whiteUrl}
       alt=""
-      width="20"
-      height="20"
+      width="24"
+      height="24"
       decoding="async"
     />
   </span>
-  <slot>
-    <span>{label}</span>
-  </slot>
+  <span class="chatgpt-link__label">
+    <slot>
+      {label}
+    </slot>
+  </span>
 </a>

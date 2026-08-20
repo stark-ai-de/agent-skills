@@ -25,20 +25,6 @@
   <a href="https://stark-ai-de.github.io/agent-skills/">Browse the catalog</a>
   ·
   <a href="https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e">
-    <img
-      src="site/public/brands/chatgpt-blossom-black.svg#gh-light-mode-only"
-      alt=""
-      width="16"
-      height="16"
-      style="vertical-align: text-bottom"
-    />
-    <img
-      src="site/public/brands/chatgpt-blossom-white.svg#gh-dark-mode-only"
-      alt=""
-      width="16"
-      height="16"
-      style="vertical-align: text-bottom"
-    />
     Open the ChatGPT plugin
   </a>
   ·
@@ -47,11 +33,29 @@
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
-[![skills.sh](https://skills.sh/b/stark-ai-de/agent-skills)](https://www.skills.sh/stark-ai-de/agent-skills)
-[![Release](https://img.shields.io/github/v/release/stark-ai-de/agent-skills)](https://github.com/stark-ai-de/agent-skills/releases)
-[![Validate](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml)
-[![GitHub Pages](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg)](https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml)
-[![License](https://img.shields.io/github/license/stark-ai-de/agent-skills)](LICENSE)
+<p align="center">
+  <a href="https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e">
+    <img src="docs/assets/chatgpt-plugin-badge.svg" alt="ChatGPT plugin" />
+  </a>
+  <a href="https://www.skills.sh/stark-ai-de/agent-skills">
+    <img src="https://skills.sh/b/stark-ai-de/agent-skills" alt="skills.sh" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/stark-ai-de/agent-skills/releases">
+    <img src="https://img.shields.io/github/v/release/stark-ai-de/agent-skills?color=brightgreen" alt="Release" />
+  </a>
+  <a href="https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml">
+    <img src="https://github.com/stark-ai-de/agent-skills/actions/workflows/validate.yml/badge.svg" alt="Validate" />
+  </a>
+  <a href="https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml">
+    <img src="https://github.com/stark-ai-de/agent-skills/actions/workflows/pages.yml/badge.svg" alt="GitHub Pages" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/stark-ai-de/agent-skills" alt="License" />
+  </a>
+</p>
 
 Public skills are reviewed before promotion. Draft and experimental workflows stay in the incubator until they have enough evaluation proof and a clear maintenance path.
 
@@ -113,7 +117,7 @@ generated from [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-devel
 
 - [`plugins/stark-ai-developer/`](plugins/stark-ai-developer/) is the portable
   Agent Plugins projection for compatible clients and direct local testing.
-- `dist/openai/*.zip` is the OpenAI-native skills-only submission archive,
+- `dist/openai/*.zip` is the OpenAI-native harness-first submission archive,
   generated from ephemeral adapter staging at package time.
 - `dist/skills/*.zip` contains optional one-skill standalone archives.
 

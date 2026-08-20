@@ -1,6 +1,23 @@
 export const OPENAI_WORKSHEET_PATH =
   "docs/listing/openai/stark-ai-developer-submission-worksheet.md";
 
+function publisherReviewValue(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : "manual review required";
+}
+
+function verifiedIdentityLabel(publisher) {
+  if (
+    publisher?.verifiedIdentity === true &&
+    typeof publisher.verifiedIdentityKind === "string" &&
+    typeof publisher.verifiedIdentityName === "string" &&
+    publisher.verifiedIdentityKind.trim() &&
+    publisher.verifiedIdentityName.trim()
+  ) {
+    return `${publisher.verifiedIdentityKind.trim()}, ${publisher.verifiedIdentityName.trim()}`;
+  }
+  return "manual review required";
+}
+
 export function renderOpenAiSubmissionWorksheet(listing) {
   const { plugin, publisher, releaseNotes, skills } = listing;
   const lines = [
@@ -39,8 +56,8 @@ export function renderOpenAiSubmissionWorksheet(listing) {
     "",
     `- Legal identity: ${publisher.legalName}`,
     `- Identity source: ${publisher.identitySource}`,
-    "- Verified identity: manual review required",
-    "- OpenAI organization ID: manual review required",
+    `- Verified identity: ${verifiedIdentityLabel(publisher)}`,
+    `- OpenAI organization ID: ${publisherReviewValue(publisher.openaiOrganizationId)}`,
     "- Apps Management permission: manual review required",
     "- Supported-client lifecycle status (add, enable, update, disable, remove): manual review required",
     "",

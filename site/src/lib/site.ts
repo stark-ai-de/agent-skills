@@ -5,13 +5,13 @@ export const STARK_AI_HAIR_SPACE = "\u200A";
 export const STARK_AI_NAME = `stark${STARK_AI_HAIR_SPACE}AI`;
 export const SITE_TITLE = "Agent Skills by stark AI";
 export const SITE_DESCRIPTION =
-  "Browse and install source-backed Agent Skills and the stark AI Developer plugin for Codex, Claude Code, Cursor, diagrams, and repository workflows.";
+  "Browse and install Agent Skills and the harness-first stark AI Developer toolkit for Codex, Claude Code, Cursor, diagrams, and repository workflows.";
 export const PUBLIC_SKILLS_DESCRIPTION =
   "Browse and install promoted Agent Skills for Codex, Claude Code, Cursor, diagrams, and repository workflows. Each page includes source, version, and install commands.";
 export const INCUBATOR_SKILLS_DESCRIPTION =
   "Candidate Agent Skills kept outside the public catalog for maintainer review and local testing. They are not promoted install entries.";
 export const PLUGIN_SEO_DESCRIPTION =
-  "Install the skills-only stark AI Developer plugin for Codex and ChatGPT: specifications, architecture, code search, diagrams, docs, and Codex memory.";
+  "Install the harness-first stark AI Developer for Codex and ChatGPT: from a feature idea and code to specs, architecture, diagrams, docs, and agent memory.";
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
 export const GITHUB_REPO_URL = "https://github.com/stark-ai-de/agent-skills";
 export const GITHUB_ORG_URL = "https://github.com/stark-ai-de";
@@ -61,6 +61,7 @@ export const SEO_KEYWORDS = [
   "Cursor",
   "AI agents",
   "developer tools",
+  "harness-first",
   "draw.io diagrams",
   "repository maintenance",
   "skill catalog",

@@ -28,7 +28,7 @@ install target; `displayName` identifies the public distribution.
 Portable Agent Plugins packages and client-native adapters follow
 [ADR-0043](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)).
 The same validated membership produces three distinct outputs: the portable
-projection under `plugins/stark-ai-developer/`, the OpenAI-native skills-only
+projection under `plugins/stark-ai-developer/`, the OpenAI-native harness-first
 archive under `dist/openai/` from ephemeral adapter staging, and optional
 one-skill standalone archives under `dist/skills/`. Listing copy lives in
 `docs/listing/openai/`. First-publication portal observations live in

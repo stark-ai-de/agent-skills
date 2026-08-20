@@ -12,6 +12,7 @@ import { readOpenAiListing } from "./openai-projection.mjs";
 import { OPENAI_WORKSHEET_PATH, renderOpenAiSubmissionWorksheet } from "./openai-worksheet.mjs";
 
 const SAFE_HEX = /^#[0-9A-Fa-f]{6}$/;
+const CHATGPT_PLUGIN_BADGE_PATH = "docs/assets/chatgpt-plugin-badge.svg";
 const SAFE_RELATIVE_PATH = /^(?!\/)(?!.*\\)(?!.*(?:^|\/)\.{1,2}(?:\/|$)).+$/;
 const ALLOWED_INTERFACE_KEYS = new Set([
   "display_name",
@@ -56,6 +57,29 @@ function contrastRatio(first, second) {
   const lighter = Math.max(luminance(first), luminance(second));
   const darker = Math.min(luminance(first), luminance(second));
   return (lighter + 0.05) / (darker + 0.05);
+}
+
+function validateReadmeListingShield(root, version, errors) {
+  const badgePath = path.join(root, CHATGPT_PLUGIN_BADGE_PATH);
+  let badge;
+  try {
+    badge = fs.readFileSync(badgePath, "utf8");
+  } catch {
+    errors.push(`${CHATGPT_PLUGIN_BADGE_PATH} is missing`);
+    return;
+  }
+  const labels = [...badge.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((match) => match[1]);
+  const accessibleName = `ChatGPT plugin ${version}`;
+  if (
+    !labels.includes("ChatGPT") ||
+    !labels.includes(version) ||
+    !badge.includes(`aria-label="${accessibleName}"`) ||
+    !badge.includes(`<title>${accessibleName}</title>`)
+  ) {
+    errors.push(
+      `${CHATGPT_PLUGIN_BADGE_PATH} must show ChatGPT and listing.plugin.version ${version}`,
+    );
+  }
 }
 
 function isPrivateAddress(hostname) {
@@ -272,6 +296,9 @@ export function validateOpenAiListing(root) {
     if (plugin.version !== identity.version) {
       errors.push("[REL-001] listing.plugin.version must match the release descriptor");
     }
+    if (typeof plugin.version === "string") {
+      validateReadmeListingShield(root, plugin.version, errors);
+    }
     if (plugin.name !== identity.listingId) {
       errors.push("[REL-001] listing.plugin.name must match the release listingId");
     }
@@ -371,6 +398,28 @@ export function validateOpenAiListing(root) {
 
   if (!isMapping(listing.publisher) || listing.publisher.legalName !== "servrox solutions UG") {
     errors.push("listing.publisher.legalName must match the reviewed developer identity");
+  } else {
+    const organizationId = listing.publisher.openaiOrganizationId;
+    if (organizationId != null) {
+      if (typeof organizationId !== "string" || !/^org-[A-Za-z0-9]+$/.test(organizationId)) {
+        errors.push(
+          "listing.publisher.openaiOrganizationId must be a public org- identifier or null",
+        );
+      }
+    }
+    if (listing.publisher.verifiedIdentity === true) {
+      if (!["individual", "business"].includes(listing.publisher.verifiedIdentityKind)) {
+        errors.push(
+          "listing.publisher.verifiedIdentityKind must be individual or business when verified",
+        );
+      }
+      if (
+        typeof listing.publisher.verifiedIdentityName !== "string" ||
+        !listing.publisher.verifiedIdentityName.trim()
+      ) {
+        errors.push("listing.publisher.verifiedIdentityName is required when verified");
+      }
+    }
   }
   if ("availability" in listing) {
     errors.push("listing.availability is not a portal field; omit it");

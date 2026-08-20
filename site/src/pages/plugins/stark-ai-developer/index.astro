@@ -40,6 +40,12 @@ const {
   urls,
 } = listing.plugin;
 const chatgptPluginUrl = urls.chatgptPlugin;
+const descriptionParagraphs = longDescription
+  .split(/\n\n/)
+  .map((paragraph) => paragraph.trim())
+  .filter(Boolean);
+const heroLead = descriptionParagraphs[0] ?? longDescription;
+const supportingCopy = descriptionParagraphs.slice(1);
 const bundledSkills = resolvePluginCatalogSkills(listing, await getPublicSkills());
 const marketplaceAddCommand = pluginMarketplaceAddCommand();
 const pluginInstallCommand = pluginAddCommand(listing);
@@ -87,9 +93,9 @@ const structuredData = [
 >
   <section class="hero-section">
     <div class="hero-copy" data-reveal>
-      <p class="eyebrow">OpenAI skills-only plugin</p>
+      <p class="eyebrow">OpenAI harness-first plugin</p>
       <h1><StarkAi text={displayName} /></h1>
-      <p class="hero-copy__lead">{longDescription}</p>
+      <p class="hero-copy__lead">{heroLead}</p>
       <div class="hero-actions">
         <ChatGptLink
           class="button button--primary button--signal"
@@ -125,11 +131,11 @@ const structuredData = [
             Surface
             <ContextTooltip
               id="plugin-surface-tip"
-              label="Skills-only"
-              text="The plugin has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads."
+              label="Harness-first"
+              text="Workflows run in ChatGPT and Codex, not on a stark AI backend. The plugin has no MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads."
             />
           </dt>
-          <dd>Skills-only</dd>
+          <dd>Harness-first</dd>
         </div>
         <div>
           <dt>
@@ -147,6 +153,20 @@ const structuredData = [
       <CommandBlock command={marketplaceAddCommand} label="Add the plugin marketplace" />
     </aside>
   </section>
+
+  {
+    supportingCopy.length > 0 && (
+      <section class="catalog-band catalog-band--muted" aria-labelledby="plugin-practice-title">
+        <header class="section-heading">
+          <p>From daily work</p>
+          <h2 id="plugin-practice-title">Daily work, open source</h2>
+        </header>
+        {supportingCopy.map((paragraph) => (
+          <p class="section-note">{paragraph}</p>
+        ))}
+      </section>
+    )
+  }
 
   <section class="catalog-band" aria-labelledby="plugin-skills-title">
     <header class="section-heading">

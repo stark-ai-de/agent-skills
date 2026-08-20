@@ -17,9 +17,9 @@ observations after the first listing live in
 | Public display name    | `stark AI Developer`                                                   | Matches the existing bundle display name and product brand.                                                                                                                                                                                                      |
 | Package/plugin name    | `stark-ai-developer`                                                   | Matches the repository distribution IDs and safe kebab-case naming.                                                                                                                                                                                              |
 | Initial plugin version | `1.0.0`                                                                | This is the first public plugin package; it is independent of the repository package version.                                                                                                                                                                    |
-| Developer identity     | `servrox solutions UG`                                                 | Matches the declared legal author in `package.json`; no OpenAI organization identity is invented.                                                                                                                                                                |
+| Developer identity     | `servrox solutions UG`                                                 | Matches the declared legal author in `package.json`. Listing source records the real Apps Management organization ID and verified individual; those values are not invented. Public developer name stays the company.                                            |
 | Product brand          | `stark AI`                                                             | Matches existing site and repository branding while keeping the legal developer name separate.                                                                                                                                                                   |
-| Short description      | `Developer workflow toolkit`                                           | Fits the final directory limit and accurately covers all six workflows.                                                                                                                                                                                          |
+| Short description      | `Harness-first toolkit`                                                | Fits the final directory limit and names the harness-first developer workflow toolkit without the skills-only packaging label.                                                                                                                                   |
 | Category               | `Developer Tools`                                                      | Best fit for specifications, architecture, code-search, diagrams, documentation assets, and Codex memory.                                                                                                                                                        |
 | Light brand color      | `#0021C7`                                                              | Existing site token with strong contrast on white.                                                                                                                                                                                                               |
 | Dark brand color       | `#7FA0FF`                                                              | Existing site token with readable contrast on a dark surface.                                                                                                                                                                                                    |
@@ -65,16 +65,20 @@ security-report address, and domain ownership before any later update.
 
 ## Remaining launch evidence
 
+OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7` and verified individual
+identity (Marcel Michael Mayer) are recorded in the listing source. Public
+developer name remains `servrox solutions UG`.
+
 The following values remain intentionally unresolved after Phase 6 listing:
 
-- verified OpenAI organization or individual identity;
-- OpenAI organization ID and Apps Management permission;
+- Apps Management permission;
 - final public publisher display name and contact details;
 - legal approval recorded in-repo for privacy, terms, support, and security routes;
 - account, workspace, plan, and client availability matrix;
 - portal-normalized manifest and accepted normalization diff;
 - sanitized portal draft ID and review identifiers;
-- clean tagged freeze after the logo swap and listing URL changes;
+- clean tagged freeze after the logo swap, listing URL, and publisher-identity changes;
+- signed release-tag provenance;
 - supported-client add, enable, update, disable, and remove lifecycle evidence;
 - clean-account install, invoke, and uninstall on every supported v1 surface.
 

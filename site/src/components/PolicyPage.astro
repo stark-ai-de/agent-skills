@@ -46,7 +46,7 @@ const hasSidebar = Astro.slots.has("sidebar");
   <aside class="detail-panel" aria-label={`${title} details`} data-tracing-sidebar>
     <section>
       <h2>Related pages</h2>
-      <p>Legal and support pages for this catalog and the skills-only package.</p>
+      <p>Legal and support pages for this catalog and the harness-first plugin.</p>
       <nav class="policy-links" aria-label="Related catalog pages">
         {
           PUBLIC_POLICY_PAGES.map((page) => (
@@ -63,7 +63,7 @@ const hasSidebar = Astro.slots.has("sidebar");
     <section>
       <h2>Publisher</h2>
       <p>
-        {PUBLISHER_LEGAL_NAME} publishes this catalog and the skills-only package under the{" "}
+        {PUBLISHER_LEGAL_NAME} publishes this catalog and the harness-first plugin under the{" "}
         <a href={STARK_AI_URL} rel="noreferrer" target="_blank"><StarkAi /></a> brand.
       </p>
       <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>

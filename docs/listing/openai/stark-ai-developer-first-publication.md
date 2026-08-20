@@ -41,6 +41,13 @@ ChatGPT and Codex share one Plugins Directory. Observed surfaces:
 
 There is no documented separate Codex web directory URL. Do not invent one.
 
+OpenAI does not publish a README embed, "Add to ChatGPT" button, or Plugins
+Directory badge. The in-product OpenAI Verified mark is granted on the
+directory card and must not be copied. The repository README uses a
+ChatGPT-styled shield at `docs/assets/chatgpt-plugin-badge.svg` that links to
+`plugin.urls.chatgptPlugin` and shows the current `plugin.version`. Do not add
+a second Codex directory badge.
+
 GitHub Pages plugin, privacy, terms, support, and security URLs returned HTTP
 200 when checked during first publication. Publisher legal name remains
 `servrox solutions UG`. Publisher legal seat remains Germany.
@@ -154,19 +161,37 @@ The catalog PWA `site/public/icon-512.png` was not replaced.
 
 ## Remaining launch evidence
 
-- verified OpenAI organization or individual identity, including organization ID
+Recorded 2026-08-20 from Apps Management:
+
+- OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`
+- verified identity: individual, Marcel Michael Mayer
+- public developer name remains `servrox solutions UG`
+
+Still remaining:
+
 - Apps Management permission recorded in sanitized evidence
 - portal-normalized manifest, accepted diff, and portal draft/submission IDs
-- clean tagged freeze after the logo swap and listing URL changes
-- signed release-tag provenance
-- live ChatGPT/Codex repeated-trial evaluations against recorded thresholds
-- supported-client add, enable, update, disable, and remove lifecycle evidence
+- clean tagged freeze after the logo swap, listing URL, and publisher-identity changes
+- signed release-tag provenance (annotated `v0.19.1` has no GPG signature and no artifact attestation; add Sigstore attestations with `.github/workflows/attest-release.yml` on the next GitHub Release or by dispatching that workflow against a tag)
+- live ChatGPT/Codex repeated-trial evaluations against recorded thresholds (2026-08-20 attempt recorded in [`skill-evals/stark-ai-developer/evidence/live-repeated-trials.md`](../../../skill-evals/stark-ai-developer/evidence/live-repeated-trials.md); ChatGPT web tab vanished before login, Codex desktop was not running, Codex CLI lacked the public plugin; `reliability-thresholds.json` stays `not_run`; 0 of 18 manifest cases and 0 threshold trials observed)
+- sanitized supported-client add, enable, update, disable, and remove matrix
 - clean-account install, invoke, and uninstall on every supported v1 surface
+
+Maintainer reported a post-release manual client lifecycle test on 2026-08-20.
+That report does not replace a sanitized per-surface matrix. Do not infer
+ChatGPT desktop, mobile, or clean-account results from it.
+
+Do not regenerate
+[`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
+except from a clean working tree whose `HEAD` has an exact Git tag. `plugin-released`
+/`main` at `19c0829`/`a5232ae` is not tagged; the latest GitHub tag remains `v0.19.1`
+on `35101f2`. A dirty or untagged evidence write is not a freeze.
 
 ## Do not
 
 - add `listing.availability` or claim a Germany-only directory geo-fence or worldwide availability
-- invent a second Codex public directory URL
+- invent a second Codex public directory URL or README badge
+- copy the in-product OpenAI Verified mark onto the README or site
 - map `chatgptPlugin` into OpenAI `websiteURL`
 - write portal glyph names into `agents/openai.yaml`
 - insert U+200A into OpenAI `displayName` unless explicitly requested

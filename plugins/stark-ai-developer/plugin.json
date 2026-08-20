@@ -4,13 +4,14 @@
     "name": "servrox solutions UG",
     "url": "https://stark-ai.de"
   },
-  "description": "A skills-only developer workflow toolkit that turns software ideas and code context into implementation-ready specifications, architecture decisions, structural code findings, editable diagrams, project documentation assets, and safely curated Codex memory. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
+  "description": "stark AI Developer is a harness-first developer workflow toolkit for developers and coding agents: from a rough feature idea and existing code to an implementation-ready specification, architecture with transparent trade-offs, structural code findings, editable architecture diagrams, consistent repository documentation, and safely curated agent memory.\n\nThe included skills are not a theoretical catalog for the store. They come from our daily work, are used multiple times a day, and are continuously improved. The plugin reflects the standard we apply to our own work and to every tool that analyzes or changes production code.\n\nWe chose open source deliberately: transparency about how it works and what it contains, room for your own adaptations, and a way to contribute feedback, ideas, and improvements. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
   "homepage": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
   "keywords": [
     "developer-tools",
     "agent-skills",
     "codex",
-    "documentation"
+    "documentation",
+    "harness-first"
   ],
   "license": "Apache-2.0",
   "name": "stark-ai-developer",

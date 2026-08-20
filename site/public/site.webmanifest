@@ -1,7 +1,7 @@
 {
   "name": "Agent Skills by stark\u200AAI",
   "short_name": "Agent Skills",
-  "description": "Browse and install source-backed Agent Skills and the stark AI Developer plugin for Codex, Claude Code, Cursor, diagrams, and repository workflows.",
+  "description": "Browse and install Agent Skills and the harness-first stark AI Developer toolkit for Codex, Claude Code, Cursor, diagrams, and repository workflows.",
   "start_url": "/agent-skills/",
   "scope": "/agent-skills/",
   "display": "standalone",

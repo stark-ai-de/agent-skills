@@ -10,7 +10,7 @@ freeze evidence, a portal draft identifier, or clean-account proof.
 - Package name: `stark-ai-developer`
 - Version: `1.0.0`
 - Display name: stark AI Developer
-- Short description: Developer workflow toolkit
+- Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
 - Category: Developer Tools
 - Website: https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/
@@ -19,7 +19,7 @@ freeze evidence, a portal draft identifier, or clean-account proof.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Initial skills-only stark AI Developer package with six explicit developer workflows and no backend or network runtime.
+- Release notes: Initial harness-first stark AI Developer package with six explicit developer workflows and no backend or network runtime.
 
 ## Capabilities
 
@@ -40,8 +40,8 @@ freeze evidence, a portal draft identifier, or clean-account proof.
 
 - Legal identity: servrox solutions UG
 - Identity source: package.json author declaration
-- Verified identity: manual review required
-- OpenAI organization ID: manual review required
+- Verified identity: individual, Marcel Michael Mayer
+- OpenAI organization ID: org-dz0kZIfZpiaMc7YFjxGcsrk7
 - Apps Management permission: manual review required
 - Supported-client lifecycle status (add, enable, update, disable, remove): manual review required
 
