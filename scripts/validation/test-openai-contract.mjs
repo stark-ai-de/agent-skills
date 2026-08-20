@@ -112,7 +112,9 @@ try {
   writeListingAndWorksheet(invalidOrganizationIdFixture, listing, listingPath);
   const result = validateOpenAiListing(invalidOrganizationIdFixture);
   assert.ok(
-    result.errors.some((error) => /openaiOrganizationId must be a public org- identifier/.test(error)),
+    result.errors.some((error) =>
+      /openaiOrganizationId must be a public org- identifier/.test(error),
+    ),
     result.errors.join("\n"),
   );
 } finally {

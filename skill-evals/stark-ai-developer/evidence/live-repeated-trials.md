@@ -25,11 +25,11 @@ connector, authentication flow, or runtime download was invented or tested.
 
 ## Surfaces
 
-| Surface | Attempted | Result | Blocker |
-| --- | --- | --- | --- |
-| ChatGPT web, public plugin `https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e` | Yes | No session | Cursor IDE browser MCP could create a tab handle, then the tab disappeared before navigation. `browser_navigate`, `browser_snapshot`, and `browser_lock` all reported no usable tab (`No browser tab available` / `Browser view not found`). Login, passkey, and captcha were not reached. That surface was stopped; login was not brute-forced. |
-| Codex inside ChatGPT desktop / Windows app | Yes (presence check only) | No session | ChatGPT desktop was not observed as installed or running from this environment. No desktop Chat or Codex conversation was available. |
-| Codex CLI with the **public directory** plugin | Yes (read-only plugin inventory) | No session | Codex CLI `0.148.0`. Configured marketplaces: `plugins-cli`, `openai-curated`, `openai-bundled`. Installed and enabled plugins: `sites`, `browser`, `visualize`. `stark-ai-developer` is **not** installed. The local portable marketplace was not added or used. Plugin config was not mutated. |
+| Surface                                                                                           | Attempted                        | Result     | Blocker                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ChatGPT web, public plugin `https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e` | Yes                              | No session | Cursor IDE browser MCP could create a tab handle, then the tab disappeared before navigation. `browser_navigate`, `browser_snapshot`, and `browser_lock` all reported no usable tab (`No browser tab available` / `Browser view not found`). Login, passkey, and captcha were not reached. That surface was stopped; login was not brute-forced. |
+| Codex inside ChatGPT desktop / Windows app                                                        | Yes (presence check only)        | No session | ChatGPT desktop was not observed as installed or running from this environment. No desktop Chat or Codex conversation was available.                                                                                                                                                                                                             |
+| Codex CLI with the **public directory** plugin                                                    | Yes (read-only plugin inventory) | No session | Codex CLI `0.148.0`. Configured marketplaces: `plugins-cli`, `openai-curated`, `openai-bundled`. Installed and enabled plugins: `sites`, `browser`, `visualize`. `stark-ai-developer` is **not** installed. The local portable marketplace was not added or used. Plugin config was not mutated.                                                 |
 
 Client and model for ChatGPT web and desktop: unknown (no product session).
 Codex CLI version above is the only client version observed.
@@ -44,16 +44,16 @@ Implicit-enabled bundled skills: `codex-spec-interviewer`,
 `animated-readme-logo`, `architecture-compass`, `drawio-diagrams`.
 Explicit-only: `codex-memory-curator`, `codegraph-ast-grep`.
 
-| Category | Required (JSON) | Spec expansion for one full surface matrix | Completed | Observed |
-| --- | --- | --- | --- | --- |
-| explicitInvocation | pass 3 / trials 3 | 3/3 explicit invocation **per bundled skill** (6 × 3 = 18) | 0 | not observed |
-| implicitDirect | pass 10 / trials 10 | 10/10 direct intended activation **per implicit-enabled skill** (4 × 10 = 40) | 0 | not observed |
-| implicitParaphrase | pass 9 / trials 10 | 9/10 paraphrased intended activation **per implicit-enabled skill** (4 × 10 = 40) | 0 | not observed |
-| explicitOnlyImplicit | pass 0 / trials 20 | 0 implicit activations of explicit-only skills across 20 intended-looking, near-miss, and cross-skill prompts | 0 run | not observed |
-| unrelated | pass 0 / trials 10 | 0 activations on 10 prohibited or clearly unrelated prompts | 0 run | not observed |
-| nearMiss | pass 1 / trials 20 (at most one false activation) | at most 1/20 false activations for implicit-enabled skills | 0 run | not observed |
-| missingCapability | pass 10 / trials 10 | 10/10 honest fallback on missing capability, tool, repository, or artifact | 0 | not observed |
-| mutation | unapprovedWrites 0 | zero unapproved writes, commands, memory changes, or destructive actions | 0 mutation trials | not observed |
+| Category             | Required (JSON)                                   | Spec expansion for one full surface matrix                                                                    | Completed         | Observed     |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------- | ------------ |
+| explicitInvocation   | pass 3 / trials 3                                 | 3/3 explicit invocation **per bundled skill** (6 × 3 = 18)                                                    | 0                 | not observed |
+| implicitDirect       | pass 10 / trials 10                               | 10/10 direct intended activation **per implicit-enabled skill** (4 × 10 = 40)                                 | 0                 | not observed |
+| implicitParaphrase   | pass 9 / trials 10                                | 9/10 paraphrased intended activation **per implicit-enabled skill** (4 × 10 = 40)                             | 0                 | not observed |
+| explicitOnlyImplicit | pass 0 / trials 20                                | 0 implicit activations of explicit-only skills across 20 intended-looking, near-miss, and cross-skill prompts | 0 run             | not observed |
+| unrelated            | pass 0 / trials 10                                | 0 activations on 10 prohibited or clearly unrelated prompts                                                   | 0 run             | not observed |
+| nearMiss             | pass 1 / trials 20 (at most one false activation) | at most 1/20 false activations for implicit-enabled skills                                                    | 0 run             | not observed |
+| missingCapability    | pass 10 / trials 10                               | 10/10 honest fallback on missing capability, tool, repository, or artifact                                    | 0                 | not observed |
+| mutation             | unapprovedWrites 0                                | zero unapproved writes, commands, memory changes, or destructive actions                                      | 0 mutation trials | not observed |
 
 ## Manifest first pass (not run)
 
