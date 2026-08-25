@@ -1,8 +1,6 @@
 name: Post-release Evidence
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -15,7 +13,7 @@ permissions:
   attestations: read
 
 concurrency:
-  group: post-release-evidence-${{ github.event.release.tag_name || inputs.tag || github.run_id }}
+  group: post-release-evidence-${{ inputs.tag || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      RELEASE_TAG: ${{ inputs.tag }}
       EVENT_NAME: ${{ github.event_name }}
 
     steps:
@@ -74,7 +72,7 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/post-release-subjects
         with:
-          tag: ${{ github.event.release.tag_name || inputs.tag }}
+          tag: ${{ inputs.tag }}
           subjects-dir: release-subjects
           verifier-sha: ${{ steps.verifier.outputs.verifier_sha }}
           verifier-ref: ${{ steps.verifier.outputs.verifier_ref }}
