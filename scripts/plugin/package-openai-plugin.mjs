@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
@@ -5,6 +6,10 @@ import { createDirectoryArchive } from "../lib/plugin-projections.mjs";
 import { validateOpenAiListing } from "../lib/openai-contract.mjs";
 import { validateOpenAiProjection, withOpenAiStage } from "../lib/openai-projection.mjs";
 import { pluginIdentity } from "../lib/release-descriptor.mjs";
+
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
 
 function parseArgs(argv) {
   const rootIndex = argv.indexOf("--root");
@@ -45,6 +50,6 @@ try {
   console.log(`SHA-256: ${result.sha256}`);
   console.log(`Bytes: ${result.bytes}`);
 } catch (error) {
-  console.error(`OpenAI plugin packaging failed: ${error.message}`);
+  writeStderr([`OpenAI plugin packaging failed: ${error.message}`]);
   process.exitCode = 1;
 }

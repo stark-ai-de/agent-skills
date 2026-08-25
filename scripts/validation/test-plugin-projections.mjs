@@ -158,9 +158,11 @@ function treeContains(root, relativePosix) {
 
 const mutationClone = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-ignored-inputs-"));
 try {
-  const clone = spawnSync("git", ["clone", "--local", "--quiet", repositoryRoot, mutationClone], {
-    encoding: "utf8",
-  });
+  const clone = spawnSync(
+    "git",
+    ["clone", "--local", "--no-hardlinks", "--quiet", repositoryRoot, mutationClone],
+    { encoding: "utf8" },
+  );
   assert.equal(clone.status, 0, clone.stderr);
   fs.copyFileSync(
     path.join(repositoryRoot, PLUGIN_SOURCE_PATH),

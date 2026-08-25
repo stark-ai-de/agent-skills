@@ -11,6 +11,10 @@ import {
 } from "../lib/plugin-projections.mjs";
 import { loadValidatedBundle } from "../lib/bundle-contract.mjs";
 
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
+
 function parseArgs(argv) {
   const rootIndex = argv.indexOf("--root");
   const outputIndex = argv.indexOf("--output");
@@ -146,8 +150,7 @@ try {
   }
 
   if (drift.length > 0) {
-    console.error("Standalone projection drift:");
-    for (const item of drift) console.error(`- ${item}`);
+    writeStderr(["Standalone projection drift:", ...drift.map((item) => `- ${item}`)]);
     process.exitCode = 1;
   } else {
     console.log(
@@ -155,6 +158,6 @@ try {
     );
   }
 } catch (error) {
-  console.error(`Standalone skill sync failed: ${error.message}`);
+  writeStderr([`Standalone skill sync failed: ${error.message}`]);
   process.exitCode = 1;
 }

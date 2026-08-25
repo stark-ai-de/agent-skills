@@ -5,6 +5,9 @@ export const RELEASE_SUBJECT_FILE = "release-subject.json";
 export const RELEASE_SUBJECT_SCHEMA_PATH =
   "skill-evals/stark-ai-developer/evidence/release-subject.schema.json";
 export const RELEASE_SUBJECT_NAMES = Object.freeze(["openai.zip", "portable.zip"]);
+export const HISTORICAL_RELEASES = Object.freeze({
+  "v0.19.1": "35101f206b2416b2ac5a5fb7205fdd65c3f843b1",
+});
 
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const GIT_COMMIT_HEX = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;

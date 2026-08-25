@@ -176,20 +176,29 @@ npm run release:validate -- --base-ref origin/main
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, waits for a successful hosted `Validate` push run for that SHA (or reuses one that already completed), downloads that run's `release-subjects` artifact, verifies its identity and digests, and prints the version it would release. With `dry_run: false`, the publish job reuses those GitHub-produced bytes, checks out and tags the exact commit, creates short-lived artifact attestations, and fails closed if `main` advanced after readiness or an attestation check fails. It then creates the annotated tag and GitHub Release with the exact `openai.zip` and `portable.zip` subjects without rebuilding them locally or rerunning the aggregate validation suite.
+The workflow reads the release version from `package.json`, binds the dispatch ref, workflow ref/SHA, `GITHUB_SHA`, checked-out `HEAD`, and current `main` head to one release SHA, waits for a successful hosted `Validate` push run for that SHA (or reuses one that already completed), and downloads that run's `release-subjects` artifact. It verifies subject identity and digests, then runs the read-only GitHub Release reconciliation plan. With `dry_run: false`, the publish job rechecks remote state, reuses those GitHub-produced bytes, creates missing Publish Release attestations only before publication, and applies the planned annotated-tag/draft/asset transitions. The draft is published last, after both ZIPs and their signer/source bindings are reverified; the workflow does not rebuild subjects locally or rerun the aggregate validation suite.
 
 ### Post-release evidence and lifecycle lanes
 
-`dry_run: true` downloads and verifies the already-hosted release subjects for
-a non-publishing rehearsal. It does not create a new subject artifact, create
-attestations, tags, GitHub Releases, or release attachments. A real publish
-attests the exact downloaded subjects with `actions/attest@v4`, validates and
-uploads a pre-publication receipt, and attaches those same bytes to the GitHub
-Release.
+`dry_run: true` downloads and verifies the already-hosted release subjects and
+computes a strictly read-only reconciliation plan. It does not create a new
+subject artifact, attestation, tag, GitHub Release, or release attachment. A
+real publish may resume a matching tag or draft, uploads only missing exact
+subjects, never replaces an existing named asset, validates and uploads a
+pre-publication receipt only while the release is still unpublished, and
+publishes the completed draft last. A published release with both exact ZIPs
+and valid Publish Release attestations is an idempotent success. A mutable
+published release may receive a missing ZIP only when that exact ZIP already
+has a valid Publish Release attestation; immutable, ambiguous, mismatched, or
+unknown states fail closed. Unrelated assets remain untouched and
+`gh release upload --clobber` is prohibited.
 
 The [`Post-release Evidence`](../.github/workflows/post-release-evidence.yml)
 workflow runs for `release.published` and can be dispatched again with an exact
-tag. The tracked [`prepare-release-subjects.mjs`](../scripts/release/prepare-release-subjects.mjs)
+tag. Before checkout it resolves the current default branch through the GitHub
+API, requires protected `main`, and binds `github.workflow_ref` and
+`github.workflow_sha` to that branch head. The tracked
+[`prepare-release-subjects.mjs`](../scripts/release/prepare-release-subjects.mjs)
 wrapper runs the tag-local [`verify-release-reproducibility.mjs`](../scripts/release/verify-release-reproducibility.mjs)
 script and translates the legacy evidence format used by historical tags.
 Hosted `Validate` uses the repository-owned script to build and upload the
@@ -201,7 +210,10 @@ backup if the hosted artifact is unavailable. Post-release jobs rebuild from
 the exact release tag. The workflow downloads the published `openai.zip` and
 `portable.zip`, compares their bytes
 with the tag-bound subjects, verifies attestations against those downloaded
-files and the source commit, and uploads a sanitized receipt.
+files, the release commit, `refs/heads/main`, and the unique
+`publish-release.yml` signer workflow, and uploads a sanitized receipt carrying
+the protected verifier identity. Attestations made by `attest-release.yml` do
+not satisfy this publication-pass contract.
 Historical `v0.19.1` is explicitly retrospective and not
 pre-publication-attested; no current branch output may be used to upgrade that
 historical status.
@@ -214,7 +226,7 @@ archive receipts use `not_a_client_lifecycle_receipt`.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
-Use `dry_run: true` to rerun the same readiness check. Use `dry_run: false` only after maintainer approval. GitHub Actions job summaries name the next operator follow-up after each run.
+Use `dry_run: true` to rerun the same readiness and remote-state plan. Use `dry_run: false` only after maintainer approval. If reconciliation repairs an already-published mutable release, explicitly dispatch `Post-release Evidence` for the exact tag before treating the repair as verified. GitHub Actions job summaries name the next operator follow-up after each run.
 
 Equivalent local release validation:
 
@@ -345,6 +357,9 @@ Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence
 ### After Publish Release or Post-release Evidence
 
 1. Download the pre-publication and post-release receipt artifacts.
+   A recovery run against an already-published release intentionally creates no
+   new pre-publication receipt; dispatch `Post-release Evidence` after the
+   repair and use that new post-release receipt.
 2. Search for **stark AI Developer** in the public Plugins Directory and check
    name, developer, copy, category, capabilities, assets, prompts, and legal links.
 3. Verify public CLI install with the commands in Release Artifacts above.

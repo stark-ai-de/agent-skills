@@ -4,6 +4,18 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+## v0.20.0 - 2026-08-25
+
+### Added
+
 - Added `DIR-002` public category-catalog membership to `npm run verify:openai-directory` (same hosted action): plugin id in `developer-tools`, `ENABLED`, listing display name, and `installation_policy: AVAILABLE`.
 - Recorded first OpenAI plugin publication observations, Platform plugin ID, portal submission ID, publisher organization ID, and verified individual identity.
 - Added official ChatGPT Blossom marks to catalog and README plugin link-outs, with unmodified light and dark variants from the OpenAI brand kit.

@@ -1,8 +1,13 @@
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
 import { RETIRED_OPENAI_ADAPTER_TARGET } from "../lib/plugin-projections.mjs";
 import { syncOpenAiProjection } from "../lib/openai-projection.mjs";
+
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
 
 function parseArgs(argv) {
   const rootIndex = argv.indexOf("--root");
@@ -17,17 +22,19 @@ function parseArgs(argv) {
 try {
   const options = parseArgs(process.argv.slice(2));
   if (!options.target) {
-    console.error(
+    writeStderr([
       `The OpenAI adapter is not a committed tree (${RETIRED_OPENAI_ADAPTER_TARGET} is retired). Use:`,
-    );
-    console.error("  npm run validate:openai-plugin");
-    console.error("  npm run package:openai-plugin");
+      "  npm run validate:openai-plugin",
+      "  npm run package:openai-plugin",
+    ]);
     process.exitCode = 1;
   } else {
     const result = syncOpenAiProjection(options);
     if (result.drift.length > 0) {
-      console.error("OpenAI adapter projection drift:");
-      for (const drift of result.drift) console.error(`- ${drift}`);
+      writeStderr([
+        "OpenAI adapter projection drift:",
+        ...result.drift.map((drift) => `- ${drift}`),
+      ]);
       process.exitCode = 1;
     } else {
       console.log(
@@ -36,6 +43,6 @@ try {
     }
   }
 } catch (error) {
-  console.error(`OpenAI adapter sync failed: ${error.message}`);
+  writeStderr([`OpenAI adapter sync failed: ${error.message}`]);
   process.exitCode = 1;
 }

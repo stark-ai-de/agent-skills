@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   actions: read
+  attestations: read
 
 concurrency:
   group: publish-release
@@ -53,11 +54,26 @@ jobs:
 
       - name: 🏷️ Read release identity
         id: version
+        env:
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
+          set -euo pipefail
           version=$(node -p "require('./package.json').version")
+          release_sha=$(git rev-parse HEAD)
+          expected_ref="refs/heads/main"
+          expected_workflow_ref="${GITHUB_REPOSITORY}/.github/workflows/publish-release.yml@${expected_ref}"
+
           test -z "$(git status --porcelain --untracked-files=all)"
+          test "${GITHUB_REF}" = "${expected_ref}"
+          test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
+          test "${WORKFLOW_SHA}" = "${release_sha}"
+          test "${GITHUB_SHA}" = "${release_sha}"
+
+          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+          test "${main_sha}" = "${release_sha}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "release_sha=${release_sha}" >> "$GITHUB_OUTPUT"
 
       - name: 🔗 Require successful hosted Validate run
         id: validate-receipt
@@ -139,10 +155,29 @@ jobs:
       - name: 📝 Build release notes
         run: npm run release:notes > release-notes.md
 
+      - name: 🧭 Plan GitHub Release reconciliation
+        id: reconciliation-plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MARK_LATEST: ${{ inputs.mark_latest }}
+        run: |
+          set -euo pipefail
+          node scripts/release/reconcile-github-release.mjs plan \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "v${VERSION}" \
+            --release-sha "${RELEASE_SHA}" \
+            --subjects-dir release-subjects \
+            --notes-file release-notes.md \
+            --mark-latest "${MARK_LATEST}" \
+            --github-output "$GITHUB_OUTPUT"
+
       - name: 📣 Print release readiness
         run: |
           echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
-          echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
+          echo "Release reconciliation plan: ${{ steps.reconciliation-plan.outputs.status }} (${{ steps.reconciliation-plan.outputs.reason }})."
+          echo "Remote mutation only runs from manual dispatch with dry_run=false."
 
       - name: 🧭 Summarize readiness
         if: ${{ always() }}
@@ -185,10 +220,18 @@ jobs:
         env:
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
+          set -euo pipefail
+          expected_ref="refs/heads/main"
+          expected_workflow_ref="${GITHUB_REPOSITORY}/.github/workflows/publish-release.yml@${expected_ref}"
           test "$(git rev-parse HEAD)" = "${RELEASE_SHA}"
           test "$(node -p "require('./package.json').version")" = "${VERSION}"
           test "${GITHUB_SHA}" = "${RELEASE_SHA}"
+          test "${GITHUB_REF}" = "${expected_ref}"
+          test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
+          test "${WORKFLOW_SHA}" = "${RELEASE_SHA}"
           test -z "$(git status --porcelain --untracked-files=all)"
 
           main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
@@ -225,24 +268,29 @@ jobs:
             --status pass
           echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
 
-      - name: 🔒 Verify tag and release do not exist
+      - name: 📝 Build release notes
+        run: npm run release:notes > release-notes.md
+
+      - name: 🧭 Recheck GitHub Release reconciliation
+        id: reconciliation
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
+          MARK_LATEST: ${{ inputs.mark_latest }}
         run: |
-          tag="v${VERSION}"
-
-          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
-            echo "Tag ${tag} already exists."
-            exit 1
-          fi
-
-          if gh release view "${tag}" >/dev/null 2>&1; then
-            echo "GitHub Release ${tag} already exists."
-            exit 1
-          fi
+          set -euo pipefail
+          node scripts/release/reconcile-github-release.mjs plan \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "v${VERSION}" \
+            --release-sha "${RELEASE_SHA}" \
+            --subjects-dir release-subjects \
+            --notes-file release-notes.md \
+            --mark-latest "${MARK_LATEST}" \
+            --github-output "$GITHUB_OUTPUT"
 
       - name: 🔏 Attest release subjects
+        if: ${{ steps.reconciliation.outputs.requires_attestation == 'true' && steps.reconciliation.outputs.release_published != 'true' }}
         uses: actions/attest@v4
         with:
           subject-path: |
@@ -254,18 +302,26 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
         run: |
+          set -euo pipefail
           for archive in release-subjects/openai.zip release-subjects/portable.zip; do
             gh attestation verify "$archive" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
+              --signer-digest "$RELEASE_SHA" \
               --repo "$GITHUB_REPOSITORY" \
               --source-digest "$RELEASE_SHA" \
+              --source-ref refs/heads/main \
               --format json \
               > "${archive%.zip}.attestation.json"
           done
 
       - name: 🧾 Write pre-publication receipt
+        if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
         env:
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/publish-release.yml
+          SIGNER_DIGEST: ${{ needs.release-readiness.outputs.release_sha }}
+          SOURCE_REF: refs/heads/main
         run: |
           set -euo pipefail
           tag="v${VERSION}"
@@ -286,9 +342,11 @@ jobs:
               --file pre-release-receipt.json
 
       - name: 🔍 Validate pre-publication receipt
+        if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
         run: node scripts/release/validate-post-release-receipt.mjs --file pre-release-receipt.json
 
       - name: ⬆️ Upload pre-publication evidence
+        if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: pre-release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
@@ -296,38 +354,30 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: 📝 Build release notes
-        run: npm run release:notes > release-notes.md
-
-      - name: 🚀 Publish GitHub Release
+      - name: 🚀 Apply GitHub Release reconciliation
+        id: reconciliation-apply
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          RELEASE_DRY_RUN: ${{ inputs.dry_run }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
+          MARK_LATEST: ${{ inputs.mark_latest }}
         run: |
-          tag="v${VERSION}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${tag}" "${RELEASE_SHA}" -m "${tag}"
-          git push origin "${tag}"
-
-          latest_flag=("--latest=false")
-          if [ "${{ inputs.mark_latest }}" = "true" ]; then
-            latest_flag=("--latest")
-          fi
-
-          gh release create "${tag}" \
-            --verify-tag \
-            --title "${tag}" \
+          set -euo pipefail
+          node scripts/release/reconcile-github-release.mjs apply \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "v${VERSION}" \
+            --release-sha "${RELEASE_SHA}" \
+            --subjects-dir release-subjects \
             --notes-file release-notes.md \
-            release-subjects/openai.zip \
-            release-subjects/portable.zip \
-            "${latest_flag[@]}"
+            --mark-latest "${MARK_LATEST}" \
+            --github-output "$GITHUB_OUTPUT"
 
       - name: 📣 Print post-release verification
         run: |
           echo "Complete operator follow-up in docs/publishing.md#operator-follow-up."
+          echo "Post-release dispatch required: ${{ steps.reconciliation-apply.outputs.post_release_dispatch_required }}"
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
 
       - name: 🧭 Summarize publication

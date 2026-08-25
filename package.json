@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -60,6 +60,7 @@
     "release:intent": "node scripts/release/check-release-intent.mjs",
     "release:validate": "node scripts/release/validate-release.mjs",
     "release:notes": "node scripts/release/print-release-notes.mjs",
+    "release:reconcile": "node scripts/release/reconcile-github-release.mjs",
     "validate:skills": "node scripts/catalog/validate-skills.mjs",
     "validate:memory-curators": "node scripts/validation/memory-curators/validate.mjs",
     "validate:adrs": "node scripts/validation/adrs/validate.mjs",
@@ -91,7 +92,7 @@
     "validate:post-release-receipt": "node scripts/release/validate-post-release-receipt.mjs",
     "validate:release-subject": "node scripts/validation/test-release-subject.mjs",
     "validate:release-subject-file": "node scripts/release/validate-release-subject.mjs",
-    "test:post-release-receipt": "node scripts/validation/test-post-release-receipt.mjs",
+    "test:post-release-receipt": "node scripts/validation/test-post-release-receipt.mjs && node scripts/validation/test-release-reconciler.mjs",
     "package:agent-plugin": "node scripts/plugin/package-agent-plugin.mjs",
     "package:openai-plugin": "node scripts/plugin/package-openai-plugin.mjs",
     "package:standalone-skills": "node scripts/plugin/package-standalone-skills.mjs",

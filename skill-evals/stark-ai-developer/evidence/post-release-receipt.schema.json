@@ -89,6 +89,17 @@
           "type": "string",
           "pattern": "^[0-9a-f]{40}$"
         },
+        "sourceRef": {
+          "const": "refs/heads/main"
+        },
+        "signerWorkflow": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\\.github/workflows/publish-release\\.yml$"
+        },
+        "signerDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
         "predicateType": {
           "const": "https://slsa.dev/provenance/v1"
         },
@@ -108,6 +119,24 @@
               }
             }
           }
+        }
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workflowRef", "workflowSha", "protectedDefaultBranch"],
+      "properties": {
+        "workflowRef": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\\.github/workflows/post-release-evidence\\.yml@refs/heads/main$"
+        },
+        "workflowSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "protectedDefaultBranch": {
+          "const": true
         }
       }
     },
@@ -269,13 +298,30 @@
         "properties": {
           "attestation": {
             "type": "object",
-            "required": ["repository", "sourceDigest"],
+            "required": [
+              "repository",
+              "sourceDigest",
+              "sourceRef",
+              "signerWorkflow",
+              "signerDigest"
+            ],
             "properties": {
               "repository": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
               },
               "sourceDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "sourceRef": {
+                "const": "refs/heads/main"
+              },
+              "signerWorkflow": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\\.github/workflows/publish-release\\.yml$"
+              },
+              "signerDigest": {
                 "type": "string",
                 "pattern": "^[0-9a-f]{40}$"
               },
@@ -348,7 +394,16 @@
           },
           "attestation": {
             "type": "object",
-            "required": ["status", "repository", "sourceDigest", "predicateType", "subjects"],
+            "required": [
+              "status",
+              "repository",
+              "sourceDigest",
+              "sourceRef",
+              "signerWorkflow",
+              "signerDigest",
+              "predicateType",
+              "subjects"
+            ],
             "properties": {
               "status": {
                 "const": "verified"
@@ -358,6 +413,17 @@
                 "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
               },
               "sourceDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "sourceRef": {
+                "const": "refs/heads/main"
+              },
+              "signerWorkflow": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\\.github/workflows/publish-release\\.yml$"
+              },
+              "signerDigest": {
                 "type": "string",
                 "pattern": "^[0-9a-f]{40}$"
               },
@@ -503,7 +569,25 @@
         }
       },
       "then": {
+        "required": ["verifier"],
         "properties": {
+          "verifier": {
+            "type": "object",
+            "required": ["workflowRef", "workflowSha", "protectedDefaultBranch"],
+            "properties": {
+              "workflowRef": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\\.github/workflows/post-release-evidence\\.yml@refs/heads/main$"
+              },
+              "workflowSha": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "protectedDefaultBranch": {
+                "const": true
+              }
+            }
+          },
           "artifacts": {
             "type": "array",
             "items": {

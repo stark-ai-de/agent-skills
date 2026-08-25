@@ -42,6 +42,10 @@ import { copyTrackedPrefixes } from "../lib/git-index.mjs";
 const repositoryRoot = process.cwd();
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
+
 function parseArgs(argv) {
   const value = (name) => {
     const index = argv.indexOf(name);
@@ -405,8 +409,10 @@ try {
     writeSubjectOutputs(githubOutput, subjectReport, pluginIdentity(firstBuild.root).openaiArchive);
     writeSubjectReport(reportFile, subjectReport);
     if (differences.length > 0) {
-      console.error("Release reproducibility failed:");
-      for (const difference of differences) console.error(`- ${difference}`);
+      writeStderr([
+        "Release reproducibility failed:",
+        ...differences.map((difference) => `- ${difference}`),
+      ]);
       process.exitCode = 1;
     } else {
       console.log("Release reproducibility passed for two isolated builds.");
@@ -419,6 +425,6 @@ try {
     fs.rmSync(secondRoot, { recursive: true, force: true });
   }
 } catch (error) {
-  console.error(`Release reproducibility failed: ${error.message}`);
+  writeStderr([`Release reproducibility failed: ${error.message}`]);
   process.exitCode = 1;
 }

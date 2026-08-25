@@ -27,10 +27,45 @@ jobs:
       EVENT_NAME: ${{ github.event_name }}
 
     steps:
+      - name: 🛡️ Resolve trusted verifier source
+        id: verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          repository=$(gh api "repos/${GITHUB_REPOSITORY}")
+          default_branch=$(printf '%s' "${repository}" | jq -r '.default_branch')
+          if [ "${default_branch}" != "main" ]; then
+            echo "The release trust contract requires main as the protected default branch."
+            exit 1
+          fi
+
+          branch=$(gh api "repos/${GITHUB_REPOSITORY}/branches/${default_branch}")
+          verifier_sha=$(printf '%s' "${branch}" | jq -r '.commit.sha')
+          protected=$(printf '%s' "${branch}" | jq -r '.protected')
+          verifier_ref="${GITHUB_REPOSITORY}/.github/workflows/post-release-evidence.yml@refs/heads/${default_branch}"
+
+          if [ "${protected}" != "true" ] || [[ ! "${verifier_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Default branch must be protected and resolve to a full commit SHA."
+            exit 1
+          fi
+          if [ "${WORKFLOW_SHA}" != "${verifier_sha}" ] || [ "${WORKFLOW_REF}" != "${verifier_ref}" ]; then
+            echo "Running workflow source does not match the protected default-branch verifier."
+            exit 1
+          fi
+
+          {
+            echo "verifier_sha=${verifier_sha}"
+            echo "verifier_ref=${verifier_ref}"
+            echo "protected_default_branch=true"
+          } >> "$GITHUB_OUTPUT"
+
       - name: ⬇️ Checkout workflow sources
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ steps.verifier.outputs.verifier_sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -41,6 +76,8 @@ jobs:
         with:
           tag: ${{ github.event.release.tag_name || inputs.tag }}
           subjects-dir: release-subjects
+          verifier-sha: ${{ steps.verifier.outputs.verifier_sha }}
+          verifier-ref: ${{ steps.verifier.outputs.verifier_ref }}
 
       - name: 📥 Compare published release subjects
         id: assets
@@ -48,6 +85,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
         run: |
           set -euo pipefail
           rm -rf published-assets
@@ -65,6 +103,7 @@ jobs:
           fi
           node scripts/release/compare-release-subjects.mjs \
             --tag "${RELEASE_TAG}" \
+            --release-sha "${RELEASE_SHA}" \
             --package-status "${PACKAGE_STATUS}" \
             --subjects-dir "$PWD/release-subjects" \
             --published-dir "$PWD/published-assets" \
@@ -79,7 +118,7 @@ jobs:
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
           ASSET_STATUS: ${{ steps.assets.outputs.status }}
         run: |
-          set +e
+          set -euo pipefail
           attestation_status=blocked
 
           if [ "${RELEASE_TAG}" = "v0.19.1" ] && \
@@ -90,8 +129,11 @@ jobs:
             attestation_status=verified
             for archive in published-assets/openai.zip published-assets/portable.zip; do
               gh attestation verify "$archive" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
+                --signer-digest "$RELEASE_SHA" \
                 --repo "$GITHUB_REPOSITORY" \
                 --source-digest "$RELEASE_SHA" \
+                --source-ref refs/heads/main \
                 --format json \
                 > "${archive%.zip}.attestation.json" \
                 || attestation_status=blocked
@@ -114,6 +156,12 @@ jobs:
           PUBLISHED_OPENAI_SHA: ${{ steps.assets.outputs.published_openai_sha }}
           PUBLISHED_PORTABLE_SHA: ${{ steps.assets.outputs.published_portable_sha }}
           ATTESTATION_STATUS: ${{ steps.attestation.outputs.status }}
+          VERIFIER_SHA: ${{ steps.verifier.outputs.verifier_sha }}
+          VERIFIER_REF: ${{ steps.verifier.outputs.verifier_ref }}
+          PROTECTED_DEFAULT_BRANCH: ${{ steps.verifier.outputs.protected_default_branch }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/publish-release.yml
+          SIGNER_DIGEST: ${{ steps.release.outputs.release_sha }}
+          SOURCE_REF: refs/heads/main
         run: |
           set -euo pipefail
           RECEIPT_TAG="${RELEASE_TAG}" \

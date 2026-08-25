@@ -4,9 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-const HISTORICAL_RELEASES = {
-  "v0.19.1": "35101f206b2416b2ac5a5fb7205fdd65c3f843b1",
-};
+import { HISTORICAL_RELEASES } from "../lib/release-subject.mjs";
 
 function argument(argv, name) {
   const index = argv.indexOf(name);

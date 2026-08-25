@@ -30,10 +30,44 @@ jobs:
       artifact-metadata: write
 
     steps:
+      - name: 🛡️ Resolve trusted verifier source
+        id: verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          repository=$(gh api "repos/${GITHUB_REPOSITORY}")
+          default_branch=$(printf '%s' "${repository}" | jq -r '.default_branch')
+          if [ "${default_branch}" != "main" ]; then
+            echo "The release trust contract requires main as the protected default branch."
+            exit 1
+          fi
+
+          branch=$(gh api "repos/${GITHUB_REPOSITORY}/branches/${default_branch}")
+          verifier_sha=$(printf '%s' "${branch}" | jq -r '.commit.sha')
+          protected=$(printf '%s' "${branch}" | jq -r '.protected')
+          verifier_ref="${GITHUB_REPOSITORY}/.github/workflows/attest-release.yml@refs/heads/${default_branch}"
+
+          if [ "${protected}" != "true" ] || [[ ! "${verifier_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Default branch must be protected and resolve to a full commit SHA."
+            exit 1
+          fi
+          if [ "${WORKFLOW_SHA}" != "${verifier_sha}" ] || [ "${WORKFLOW_REF}" != "${verifier_ref}" ]; then
+            echo "Running workflow source does not match the protected default-branch verifier."
+            exit 1
+          fi
+
+          {
+            echo "verifier_sha=${verifier_sha}"
+            echo "verifier_ref=${verifier_ref}"
+          } >> "$GITHUB_OUTPUT"
+
       - name: ⬇️ Checkout workflow sources
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ steps.verifier.outputs.verifier_sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -43,6 +77,8 @@ jobs:
         with:
           tag: ${{ env.RELEASE_TAG }}
           subjects-dir: release-subjects
+          verifier-sha: ${{ steps.verifier.outputs.verifier_sha }}
+          verifier-ref: ${{ steps.verifier.outputs.verifier_ref }}
 
       - name: 🚫 Require prepared release subjects
         if: ${{ always() }}
@@ -50,7 +86,7 @@ jobs:
           PREPARATION_OUTCOME: ${{ steps.release.outcome }}
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
-          WORKFLOW_SHA: ${{ github.sha }}
+          WORKFLOW_SHA: ${{ steps.verifier.outputs.verifier_sha }}
         run: |
           set -euo pipefail
           if [ "${PREPARATION_OUTCOME}" != "success" ]; then

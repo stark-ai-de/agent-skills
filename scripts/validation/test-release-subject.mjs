@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -44,6 +45,7 @@ try {
       subjectDirectory: fixtureRoot,
       expected: {
         sourceRevision: "a".repeat(40),
+        sourceTag: "v0.20.0",
         sourceState: "clean",
         releaseVersion: "0.20.0",
         pluginVersion: "1.0.0",
@@ -52,6 +54,31 @@ try {
       },
     }).errors,
     [],
+  );
+  assert.doesNotThrow(() =>
+    execFileSync(
+      process.execPath,
+      [
+        path.join(repositoryRoot, "scripts/release/validate-release-subject.mjs"),
+        "--directory",
+        fixtureRoot,
+        "--source-revision",
+        "a".repeat(40),
+        "--source-tag",
+        "v0.20.0",
+        "--source-state",
+        "clean",
+        "--release-version",
+        "0.20.0",
+        "--plugin-version",
+        "1.0.0",
+        "--archive-profile",
+        "zip-store-v1",
+        "--status",
+        "pass",
+      ],
+      { cwd: repositoryRoot, stdio: ["ignore", "pipe", "pipe"] },
+    ),
   );
 
   for (const sourceState of ["dirty", "unknown"]) {
@@ -67,6 +94,18 @@ try {
       /sourceRevision\.state must equal expected source state clean/,
     );
   }
+
+  const wrongSourceTag = structuredClone(document);
+  wrongSourceTag.sourceRevision.tag = "v0.21.0";
+  writeDocument(wrongSourceTag);
+  assert.match(
+    validateReleaseSubjectFile(subjectPath, {
+      schemaPath,
+      subjectDirectory: fixtureRoot,
+      expected: { sourceTag: "v0.20.0" },
+    }).errors.join("\n"),
+    /sourceRevision\.tag must equal expected source tag v0\.20\.0/,
+  );
 
   const swappedSubjects = structuredClone(document);
   [swappedSubjects.subjects.openai, swappedSubjects.subjects.portable] = [

@@ -82,6 +82,10 @@ function readJson(filePath) {
   }
 }
 
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
+
 function validateReceiptInvariants(receipt) {
   const findings = [];
   const counts = receipt?.tests?.counts;
@@ -165,9 +169,15 @@ function validateReceiptInvariants(receipt) {
     if (!Array.isArray(receipt.attestation.subjects) || receipt.attestation.subjects.length === 0) {
       findings.push("$.attestation.subjects must contain evidence when attestation is verified");
     }
-    if (!receipt.attestation.repository || !receipt.attestation.sourceDigest) {
+    if (
+      !receipt.attestation.repository ||
+      !receipt.attestation.sourceDigest ||
+      !receipt.attestation.sourceRef ||
+      !receipt.attestation.signerWorkflow ||
+      !receipt.attestation.signerDigest
+    ) {
       findings.push(
-        "$.attestation.repository and sourceDigest are required when attestation is verified",
+        "verified attestations require repository, sourceDigest, sourceRef, signerWorkflow, and signerDigest",
       );
     }
   }
@@ -218,8 +228,33 @@ function validateReceiptInvariants(receipt) {
   if (receipt.attestation?.sourceDigest !== receipt.release?.sourceCommit) {
     findings.push("attestation sourceDigest must equal release sourceCommit");
   }
+  if (receipt.attestation?.signerDigest !== receipt.release?.sourceCommit) {
+    findings.push("attestation signerDigest must equal release sourceCommit");
+  }
+  if (receipt.attestation?.sourceRef !== "refs/heads/main") {
+    findings.push("passing archive receipts require attestation sourceRef refs/heads/main");
+  }
+  const expectedSignerWorkflow = `${receipt.attestation?.repository}/.github/workflows/publish-release.yml`;
+  if (receipt.attestation?.signerWorkflow !== expectedSignerWorkflow) {
+    findings.push(`passing archive receipts require signerWorkflow ${expectedSignerWorkflow}`);
+  }
   if (receipt.attestation?.predicateType !== "https://slsa.dev/provenance/v1") {
     findings.push("passing archive receipts require the SLSA provenance predicate");
+  }
+
+  if (receipt.receiptType === "post_release_archive") {
+    const expectedVerifierRef = `${receipt.attestation?.repository}/.github/workflows/post-release-evidence.yml@refs/heads/main`;
+    if (receipt.verifier?.workflowRef !== expectedVerifierRef) {
+      findings.push(
+        `post-release pass receipts require verifier workflowRef ${expectedVerifierRef}`,
+      );
+    }
+    if (!/^[0-9a-f]{40}$/.test(receipt.verifier?.workflowSha ?? "")) {
+      findings.push("post-release pass receipts require a full verifier workflowSha");
+    }
+    if (receipt.verifier?.protectedDefaultBranch !== true) {
+      findings.push("post-release pass receipts require a protected default branch verifier");
+    }
   }
 
   for (const name of expectedNames) {
@@ -241,9 +276,9 @@ function validateReceiptInvariants(receipt) {
 
 const { file, schema: schemaPath } = parseArgs(process.argv.slice(2));
 if (!file) {
-  console.error(
+  writeStderr([
     "Usage: node scripts/release/validate-post-release-receipt.mjs --file <receipt.json> [--schema <schema.json>]",
-  );
+  ]);
   process.exitCode = 1;
 } else {
   try {
@@ -259,14 +294,16 @@ if (!file) {
     errors.push(...validateReceiptInvariants(receipt));
 
     if (errors.length > 0) {
-      console.error("Post-release receipt validation errors:");
-      for (const error of [...new Set(errors)]) console.error(`- ${error}`);
+      writeStderr([
+        "Post-release receipt validation errors:",
+        ...[...new Set(errors)].map((error) => `- ${error}`),
+      ]);
       process.exitCode = 1;
     } else {
       console.log(`Post-release receipt is valid: ${file}`);
     }
   } catch (error) {
-    console.error(`Post-release receipt validation failed: ${error.message}`);
+    writeStderr([`Post-release receipt validation failed: ${error.message}`]);
     process.exitCode = 1;
   }
 }

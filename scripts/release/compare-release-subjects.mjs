@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-import { RELEASE_SUBJECT_FILE, sha256File } from "../lib/release-subject.mjs";
+import { HISTORICAL_RELEASES, RELEASE_SUBJECT_FILE, sha256File } from "../lib/release-subject.mjs";
 import { validateReleaseSubjectFile } from "../lib/release-subject-validation.mjs";
 
 const repositoryRoot = process.cwd();
@@ -21,17 +21,25 @@ function argument(argv, name) {
 function parseArgs(argv) {
   const tag = argument(argv, "--tag") ?? process.env.RELEASE_TAG;
   const packageStatus = argument(argv, "--package-status") ?? process.env.PACKAGE_STATUS;
+  const releaseSha = argument(argv, "--release-sha") ?? process.env.RELEASE_SHA;
   const subjectsDir = argument(argv, "--subjects-dir");
   const publishedDir = argument(argv, "--published-dir");
   const githubOutput = argument(argv, "--github-output");
-  if (!tag || !packageStatus || !subjectsDir || !publishedDir || !githubOutput) {
+  if (!tag || !packageStatus || !releaseSha || !subjectsDir || !publishedDir || !githubOutput) {
     throw new Error(
-      "Usage: compare-release-subjects.mjs --tag <tag> --package-status <status> --subjects-dir <directory> --published-dir <directory> --github-output <path>",
+      "Usage: compare-release-subjects.mjs --tag <tag> --release-sha <sha> --package-status <status> --subjects-dir <directory> --published-dir <directory> --github-output <path>",
     );
+  }
+  const versionMatch = /^v([0-9]+\.[0-9]+\.[0-9]+)$/.exec(tag);
+  if (!versionMatch) throw new Error(`Refusing non-release tag: ${tag}`);
+  if (!/^[0-9a-f]{40}$/.test(releaseSha)) {
+    throw new Error(`Release SHA must be a full 40-hex commit: ${releaseSha}`);
   }
   return {
     tag,
     packageStatus,
+    releaseSha,
+    releaseVersion: versionMatch[1],
     subjectsDir: path.resolve(subjectsDir),
     publishedDir: path.resolve(publishedDir),
     githubOutput: path.resolve(githubOutput),
@@ -53,18 +61,27 @@ function appendOutput(filePath, values) {
 }
 
 try {
-  const { tag, packageStatus, subjectsDir, publishedDir, githubOutput } = parseArgs(
-    process.argv.slice(2),
-  );
+  const {
+    tag,
+    packageStatus,
+    releaseSha,
+    releaseVersion,
+    subjectsDir,
+    publishedDir,
+    githubOutput,
+  } = parseArgs(process.argv.slice(2));
   const output = {
     status: "blocked",
     published_openai_sha: "",
     published_portable_sha: "",
   };
 
-  if (tag === "v0.19.1") {
-    output.status = "not_applicable";
-  } else if (packageStatus === "pass") {
+  const historical = tag === "v0.19.1";
+  const expectedStatus = historical ? "not_applicable" : "pass";
+  const pinnedHistoricalSha = HISTORICAL_RELEASES[tag];
+  if (historical && releaseSha !== pinnedHistoricalSha) {
+    console.error(`- ${tag} must resolve to pinned historical commit ${pinnedHistoricalSha}`);
+  } else if (packageStatus === expectedStatus) {
     const subjectFile = path.join(subjectsDir, RELEASE_SUBJECT_FILE);
     const validation = validateReleaseSubjectFile(subjectFile, {
       schemaPath: path.join(
@@ -72,10 +89,18 @@ try {
         "skill-evals/stark-ai-developer/evidence/release-subject.schema.json",
       ),
       subjectDirectory: subjectsDir,
-      expected: { status: "pass" },
+      expected: {
+        sourceRevision: releaseSha,
+        sourceTag: tag,
+        ...(!historical ? { sourceState: "clean" } : {}),
+        releaseVersion,
+        status: expectedStatus,
+      },
     });
     if (validation.errors.length > 0) {
       for (const error of validation.errors) console.error(`- ${error}`);
+    } else if (historical) {
+      output.status = "not_applicable";
     } else {
       const mismatches = [];
       for (const [key, outputName] of SUBJECT_KEYS) {

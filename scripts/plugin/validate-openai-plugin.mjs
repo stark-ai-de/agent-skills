@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
@@ -9,6 +10,10 @@ import {
   validateOpenAiProjection,
   withOpenAiStage,
 } from "../lib/openai-projection.mjs";
+
+function writeStderr(lines) {
+  fs.writeSync(process.stderr.fd, `${lines.join("\n")}\n`);
+}
 
 function parseArgs(argv) {
   const rootIndex = argv.indexOf("--root");
@@ -44,8 +49,10 @@ try {
   });
 
   if (errors.length > 0) {
-    console.error("OpenAI adapter validation errors:");
-    for (const error of [...new Set(errors)]) console.error(`- ${error}`);
+    writeStderr([
+      "OpenAI adapter validation errors:",
+      ...[...new Set(errors)].map((error) => `- ${error}`),
+    ]);
     process.exitCode = 1;
   } else {
     console.log(
@@ -55,6 +62,6 @@ try {
     );
   }
 } catch (error) {
-  console.error(`OpenAI adapter validation failed: ${error.message}`);
+  writeStderr([`OpenAI adapter validation failed: ${error.message}`]);
   process.exitCode = 1;
 }

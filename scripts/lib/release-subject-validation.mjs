@@ -21,6 +21,9 @@ function validateExpected(document, expected) {
       `sourceRevision.commit must equal expected source revision ${expected.sourceRevision}`,
     );
   }
+  if (expected.sourceTag && document.sourceRevision.tag !== expected.sourceTag) {
+    errors.push(`sourceRevision.tag must equal expected source tag ${expected.sourceTag}`);
+  }
   if (expected.sourceState && document.sourceRevision.state !== expected.sourceState) {
     errors.push(`sourceRevision.state must equal expected source state ${expected.sourceState}`);
   }

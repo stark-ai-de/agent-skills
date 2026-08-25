@@ -27,6 +27,7 @@ function parseArgs(argv) {
     ),
     expected: {
       sourceRevision: argument(argv, "--source-revision") ?? process.env.RELEASE_SHA,
+      sourceTag: argument(argv, "--source-tag"),
       sourceState: argument(argv, "--source-state"),
       releaseVersion: argument(argv, "--release-version") ?? process.env.VERSION,
       pluginVersion: argument(argv, "--plugin-version") ?? process.env.PLUGIN_VERSION,

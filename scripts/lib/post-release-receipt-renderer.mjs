@@ -86,6 +86,9 @@ function archiveAttestation(status, artifacts) {
     Object.assign(attestation, {
       repository: envValue("REPOSITORY"),
       sourceDigest: envValue("SOURCE_COMMIT"),
+      sourceRef: envValue("SOURCE_REF"),
+      signerWorkflow: envValue("SIGNER_WORKFLOW"),
+      signerDigest: envValue("SIGNER_DIGEST"),
       predicateType: "https://slsa.dev/provenance/v1",
     });
   }
@@ -106,6 +109,7 @@ function archiveReceipt({
   reason,
   artifactRole = "generated",
   event,
+  verifier,
 }) {
   const artifacts = archiveArtifacts(packageStatus, artifactRole);
   return {
@@ -116,6 +120,7 @@ function archiveReceipt({
     },
     artifacts,
     attestation: archiveAttestation(attestationStatus, artifacts),
+    ...(verifier ? { verifier } : {}),
     client,
     tests,
     lifecycle: lifecycleValue,
@@ -199,6 +204,11 @@ function renderPostRelease() {
     packageStatus,
     archiveSubjectsStatus: assetStatus,
     attestationStatus,
+    verifier: {
+      workflowRef: envValue("VERIFIER_REF"),
+      workflowSha: envValue("VERIFIER_SHA"),
+      protectedDefaultBranch: envValue("PROTECTED_DEFAULT_BRANCH") === "true",
+    },
     artifactRole: "verification-subject",
     client: { name: "GitHub Actions", surface: "post-release-verifier" },
     tests: {

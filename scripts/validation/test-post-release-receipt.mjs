@@ -57,11 +57,20 @@ const archiveReceipt = () => {
       status: "verified",
       repository: "stark-ai-de/agent-skills",
       sourceDigest: sourceCommit,
+      sourceRef: "refs/heads/main",
+      signerWorkflow: "stark-ai-de/agent-skills/.github/workflows/publish-release.yml",
+      signerDigest: sourceCommit,
       predicateType: "https://slsa.dev/provenance/v1",
       subjects: [
         { name: "openai.zip", sha256: openaiSha },
         { name: "portable.zip", sha256: portableSha },
       ],
+    },
+    verifier: {
+      workflowRef:
+        "stark-ai-de/agent-skills/.github/workflows/post-release-evidence.yml@refs/heads/main",
+      workflowSha: "d".repeat(40),
+      protectedDefaultBranch: true,
     },
     client: { name: "GitHub Actions", surface: "post-release-verifier" },
     tests: {
@@ -203,6 +212,13 @@ const renderArchiveEnvironment = {
   SOURCE_COMMIT: renderSourceCommit,
   EVENT_NAME: "release.published",
   REPOSITORY: "stark-ai-de/agent-skills",
+  SOURCE_REF: "refs/heads/main",
+  SIGNER_WORKFLOW: "stark-ai-de/agent-skills/.github/workflows/publish-release.yml",
+  SIGNER_DIGEST: renderSourceCommit,
+  VERIFIER_REF:
+    "stark-ai-de/agent-skills/.github/workflows/post-release-evidence.yml@refs/heads/main",
+  VERIFIER_SHA: "1".repeat(40),
+  PROTECTED_DEFAULT_BRANCH: "true",
   OPENAI_SHA: renderOpenaiSha,
   PORTABLE_SHA: renderPortableSha,
   OPENAI_BYTES: "128",
@@ -408,36 +424,35 @@ try {
     fs.writeFileSync(path.join(subjectsRoot, name), `${name}:verified\n`);
     fs.copyFileSync(path.join(subjectsRoot, name), path.join(publishedRoot, name));
   }
-  fs.writeFileSync(
-    path.join(subjectsRoot, "release-subject.json"),
-    `${JSON.stringify(
-      createReleaseSubject({
-        status: "pass",
-        sourceRevision: {
-          commit: "d".repeat(40),
-          tag: "v0.20.0",
-          state: "clean",
-        },
-        releaseVersion: "0.20.0",
-        pluginVersion: "0.20.0",
-        archiveProfile: "zip-store-v1",
-        openai: {
-          sha256: sha256File(path.join(subjectsRoot, "openai.zip")),
-          bytes: fs.statSync(path.join(subjectsRoot, "openai.zip")).size,
-        },
-        portable: {
-          sha256: sha256File(path.join(subjectsRoot, "portable.zip")),
-          bytes: fs.statSync(path.join(subjectsRoot, "portable.zip")).size,
-        },
-      }),
-      null,
-      2,
-    )}\n`,
-  );
+  const subjectPath = path.join(subjectsRoot, "release-subject.json");
+  const currentSubject = createReleaseSubject({
+    status: "pass",
+    sourceRevision: {
+      commit: "d".repeat(40),
+      tag: "v0.20.0",
+      state: "clean",
+    },
+    releaseVersion: "0.20.0",
+    pluginVersion: "0.20.0",
+    archiveProfile: "zip-store-v1",
+    openai: {
+      sha256: sha256File(path.join(subjectsRoot, "openai.zip")),
+      bytes: fs.statSync(path.join(subjectsRoot, "openai.zip")).size,
+    },
+    portable: {
+      sha256: sha256File(path.join(subjectsRoot, "portable.zip")),
+      bytes: fs.statSync(path.join(subjectsRoot, "portable.zip")).size,
+    },
+  });
+  const writeSubject = (subject) =>
+    fs.writeFileSync(subjectPath, `${JSON.stringify(subject, null, 2)}\n`);
+  writeSubject(currentSubject);
   const compareArgs = [
     path.join(repositoryRoot, "scripts/release/compare-release-subjects.mjs"),
     "--tag",
     "v0.20.0",
+    "--release-sha",
+    "d".repeat(40),
     "--package-status",
     "pass",
     "--subjects-dir",
@@ -455,10 +470,79 @@ try {
   fs.rmSync(path.join(publishedRoot, "portable.zip"));
   run(process.execPath, compareArgs);
   assert.equal(outputValue(outputPath, "status"), "blocked");
+  for (const name of ["openai.zip", "portable.zip"]) {
+    fs.copyFileSync(path.join(subjectsRoot, name), path.join(publishedRoot, name));
+  }
+
+  for (const mutate of [
+    (subject) => {
+      subject.sourceRevision.commit = "c".repeat(40);
+    },
+    (subject) => {
+      subject.sourceRevision.tag = "v0.21.0";
+    },
+    (subject) => {
+      subject.releaseVersion = "0.21.0";
+    },
+    (subject) => {
+      subject.sourceRevision.state = "dirty";
+    },
+    (subject) => {
+      subject.status = "blocked";
+    },
+  ]) {
+    const invalid = structuredClone(currentSubject);
+    mutate(invalid);
+    writeSubject(invalid);
+    run(process.execPath, compareArgs);
+    assert.equal(outputValue(outputPath, "status"), "blocked");
+  }
+
+  const historicalSubject = structuredClone(currentSubject);
+  historicalSubject.status = "not_applicable";
+  historicalSubject.sourceRevision.commit = "35101f206b2416b2ac5a5fb7205fdd65c3f843b1";
+  historicalSubject.sourceRevision.tag = "v0.19.1";
+  historicalSubject.sourceRevision.state = "unknown";
+  historicalSubject.releaseVersion = "0.19.1";
+  writeSubject(historicalSubject);
   const historicalCompareArgs = [...compareArgs];
-  historicalCompareArgs[2] = "v0.19.1";
+  historicalCompareArgs[historicalCompareArgs.indexOf("--tag") + 1] = "v0.19.1";
+  historicalCompareArgs[historicalCompareArgs.indexOf("--release-sha") + 1] =
+    "35101f206b2416b2ac5a5fb7205fdd65c3f843b1";
+  historicalCompareArgs[historicalCompareArgs.indexOf("--package-status") + 1] = "not_applicable";
+  for (const historicalState of ["dirty", "unknown"]) {
+    historicalSubject.sourceRevision.state = historicalState;
+    writeSubject(historicalSubject);
+    run(process.execPath, historicalCompareArgs);
+    assert.equal(outputValue(outputPath, "status"), "not_applicable");
+  }
+
+  historicalCompareArgs[historicalCompareArgs.indexOf("--release-sha") + 1] = "e".repeat(40);
   run(process.execPath, historicalCompareArgs);
-  assert.equal(outputValue(outputPath, "status"), "not_applicable");
+  assert.equal(outputValue(outputPath, "status"), "blocked");
+
+  historicalCompareArgs[historicalCompareArgs.indexOf("--release-sha") + 1] =
+    "35101f206b2416b2ac5a5fb7205fdd65c3f843b1";
+  for (const mutate of [
+    (subject) => {
+      subject.sourceRevision.commit = "e".repeat(40);
+    },
+    (subject) => {
+      subject.sourceRevision.tag = "v0.20.0";
+    },
+    (subject) => {
+      subject.releaseVersion = "0.20.0";
+    },
+    (subject) => {
+      subject.status = "blocked";
+    },
+  ]) {
+    const invalidHistorical = structuredClone(historicalSubject);
+    mutate(invalidHistorical);
+    writeSubject(invalidHistorical);
+    run(process.execPath, historicalCompareArgs);
+    assert.equal(outputValue(outputPath, "status"), "blocked");
+  }
 } finally {
   fs.rmSync(subjectFixtureRoot, { recursive: true, force: true });
 }
@@ -597,6 +681,57 @@ const wrongSourceDigest = archiveReceipt();
 wrongSourceDigest.attestation.sourceDigest = "d".repeat(40);
 assert.equal(validateFixture(wrongSourceDigest).ok, false);
 
+for (const mutate of [
+  (receipt) => {
+    delete receipt.attestation.sourceDigest;
+  },
+  (receipt) => {
+    delete receipt.attestation.signerWorkflow;
+  },
+  (receipt) => {
+    receipt.attestation.signerWorkflow =
+      "stark-ai-de/agent-skills/.github/workflows/attest-release.yml";
+  },
+  (receipt) => {
+    delete receipt.attestation.signerDigest;
+  },
+  (receipt) => {
+    receipt.attestation.signerDigest = "d".repeat(40);
+  },
+  (receipt) => {
+    delete receipt.attestation.sourceRef;
+  },
+  (receipt) => {
+    receipt.attestation.sourceRef = "refs/tags/v0.20.0";
+  },
+  (receipt) => {
+    delete receipt.verifier;
+  },
+  (receipt) => {
+    delete receipt.verifier.workflowSha;
+  },
+  (receipt) => {
+    receipt.verifier.workflowSha = "short";
+  },
+  (receipt) => {
+    delete receipt.verifier.workflowRef;
+  },
+  (receipt) => {
+    receipt.verifier.workflowRef =
+      "stark-ai-de/agent-skills/.github/workflows/attest-release.yml@refs/heads/main";
+  },
+  (receipt) => {
+    delete receipt.verifier.protectedDefaultBranch;
+  },
+  (receipt) => {
+    receipt.verifier.protectedDefaultBranch = false;
+  },
+]) {
+  const invalidBinding = archiveReceipt();
+  mutate(invalidBinding);
+  assert.equal(validateFixture(invalidBinding).ok, false);
+}
+
 const wrongTag = manualReceiptFixture();
 wrongTag.release.tag = "main";
 assert.equal(validateFixture(wrongTag).ok, false);
@@ -636,10 +771,11 @@ const rendererImplementationSource = fs.readFileSync(
   "utf8",
 );
 assert.ok(
-  publishWorkflow.indexOf("Verify tag and release do not exist") <
+  publishWorkflow.indexOf("Recheck GitHub Release reconciliation") <
     publishWorkflow.indexOf("Attest release subjects"),
-  "publication existence checks must precede attestation",
+  "read-only reconciliation must precede any new attestation",
 );
+assert.doesNotMatch(publishWorkflow, /Verify tag and release do not exist/);
 assert.ok(
   !publishWorkflow.includes("node scripts/release/prepare-release-subjects.mjs"),
   "publication proof must not package release subjects twice",
@@ -648,11 +784,43 @@ assert.doesNotMatch(publishWorkflow, /npm run validate:release-proof/);
 assert.doesNotMatch(publishWorkflow, /verify-release-reproducibility/);
 assert.match(publishWorkflow, /test -z "\$\(git status --porcelain --untracked-files=all\)"/);
 assert.match(publishWorkflow, /test "\$\{GITHUB_SHA\}" = "\$\{RELEASE_SHA\}"/);
+assert.match(publishWorkflow, /test "\$\{GITHUB_REF\}" = "\$\{expected_ref\}"/);
+assert.match(publishWorkflow, /test "\$\{WORKFLOW_REF\}" = "\$\{expected_workflow_ref\}"/);
+assert.match(publishWorkflow, /test "\$\{WORKFLOW_SHA\}" = "\$\{RELEASE_SHA\}"/);
+assert.match(publishWorkflow, /git ls-remote origin refs\/heads\/main/);
 assert.equal(
   publishWorkflow.match(/--source-state clean/g)?.length,
   2,
   "both publication subject validations must require clean source state",
 );
+for (const constraint of [
+  /--signer-workflow "\$GITHUB_REPOSITORY\/\.github\/workflows\/publish-release\.yml"/,
+  /--signer-digest "\$RELEASE_SHA"/,
+  /--source-digest "\$RELEASE_SHA"/,
+  /--source-ref refs\/heads\/main/,
+  /--repo "\$GITHUB_REPOSITORY"/,
+]) {
+  assert.match(publishWorkflow, constraint);
+  assert.match(postReleaseWorkflow, constraint);
+}
+assert.doesNotMatch(publishWorkflow, /gh release upload[\s\S]*--clobber/);
+
+for (const [workflow, pathName] of [
+  [postReleaseWorkflow, "post-release-evidence.yml"],
+  [attestWorkflow, "attest-release.yml"],
+]) {
+  const verifierBlock = workflowStepBlock(workflow, "Resolve trusted verifier source");
+  assert.match(verifierBlock, /github\.workflow_ref/);
+  assert.match(verifierBlock, /github\.workflow_sha/);
+  assert.match(verifierBlock, /\.default_branch/);
+  assert.match(verifierBlock, /branches\/\$\{default_branch\}/);
+  assert.match(verifierBlock, /\$\{protected\}" != "true"/);
+  assert.match(verifierBlock, new RegExp(`${pathName.replaceAll(".", "\\.")}@refs/heads/`));
+  assert.doesNotMatch(workflow, /ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /ref: \$\{\{ steps\.verifier\.outputs\.verifier_sha \}\}/);
+  assert.match(workflow, /verifier-sha: \$\{\{ steps\.verifier\.outputs\.verifier_sha \}\}/);
+  assert.match(workflow, /verifier-ref: \$\{\{ steps\.verifier\.outputs\.verifier_ref \}\}/);
+}
 assert.doesNotMatch(
   postReleaseWorkflow,
   /RUNNER_TEMP\/write-run-summary\/action\.yml/,
@@ -665,6 +833,7 @@ assert.doesNotMatch(
 );
 assert.match(postReleaseWorkflow, /uses: \.\/\.github\/actions\/post-release-subjects/);
 assert.match(attestWorkflow, /uses: \.\/\.github\/actions\/post-release-subjects/);
+assert.match(postReleaseWorkflow, /--release-sha "\$\{RELEASE_SHA\}"/);
 assert.match(
   postReleaseWorkflow,
   /Prepare tag-bound release subjects[\s\S]*?continue-on-error: true[\s\S]*?uses: \.\/\.github\/actions\/post-release-subjects/,
@@ -695,6 +864,11 @@ assert.match(
 );
 assert.match(postReleaseAction, /RELEASE_TAG: \$\{\{ inputs\.tag \}\}/);
 assert.match(postReleaseAction, /--tag "\$RELEASE_TAG"/);
+assert.match(postReleaseAction, /verifier-sha:[\s\S]*required: true/);
+assert.match(postReleaseAction, /verifier-ref:[\s\S]*required: true/);
+assert.match(postReleaseAction, /WORKFLOW_SHA: \$\{\{ github\.workflow_sha \}\}/);
+assert.match(postReleaseAction, /WORKFLOW_REF: \$\{\{ github\.workflow_ref \}\}/);
+assert.match(postReleaseAction, /checkout_sha=\$\(git rev-parse HEAD\)/);
 assert.doesNotMatch(
   postReleaseAction,
   /--tag "\$\{\{ inputs\.tag \}\}"/,
@@ -711,6 +885,24 @@ assert.doesNotMatch(
   /continue-on-error/,
   "the fail-fast composite action must not suppress preparation failures",
 );
+assert.ok(
+  postReleaseAction.indexOf("Capture the current receipt contract") <
+    postReleaseAction.indexOf("Resolve and check out the exact release tag"),
+);
+assert.ok(
+  postReleaseAction.indexOf("Install dependencies") <
+    postReleaseAction.indexOf("Prepare tag-bound release subjects"),
+);
+assert.ok(
+  postReleaseAction.indexOf("Prepare tag-bound release subjects") <
+    postReleaseAction.indexOf("Restore the current receipt contract"),
+  "current helpers must be restored only after the clean exact-tag preparation",
+);
+assert.match(
+  postReleaseAction,
+  /node "\$RUNNER_TEMP\/post-release-contract\/scripts\/release\/prepare-release-subjects\.mjs"/,
+);
+assert.doesNotMatch(postReleaseAction, /mkdir -p -- "\$\{subjects_path\}"/);
 assert.doesNotMatch(
   attestWorkflow,
   /continue-on-error/,
@@ -719,7 +911,7 @@ assert.doesNotMatch(
 assert.match(attestWorkflow, /PREPARATION_OUTCOME: \$\{\{ steps\.release\.outcome \}\}/);
 assert.match(attestWorkflow, /PACKAGE_STATUS: \$\{\{ steps\.release\.outputs\.package_status \}\}/);
 assert.match(attestWorkflow, /RELEASE_SHA: \$\{\{ steps\.release\.outputs\.release_sha \}\}/);
-assert.match(attestWorkflow, /WORKFLOW_SHA: \$\{\{ github\.sha \}\}/);
+assert.match(attestWorkflow, /WORKFLOW_SHA: \$\{\{ steps\.verifier\.outputs\.verifier_sha \}\}/);
 assert.match(
   attestWorkflow,
   /WORKFLOW_SHA}" != "\$\{RELEASE_SHA}/,
@@ -731,6 +923,14 @@ assert.match(
   "attestation must enforce v0.19.1/not_applicable and current/pass pairings",
 );
 assert.doesNotMatch(publishWorkflow, /SHA256SUMS|IDENTITY/);
+assert.match(
+  postReleaseWorkflow,
+  /VERIFIER_SHA: \$\{\{ steps\.verifier\.outputs\.verifier_sha \}\}/,
+);
+assert.match(postReleaseWorkflow, /PROTECTED_DEFAULT_BRANCH:/);
+assert.match(postReleaseWorkflow, /SIGNER_WORKFLOW:/);
+assert.match(postReleaseWorkflow, /SIGNER_DIGEST:/);
+assert.match(postReleaseWorkflow, /SOURCE_REF: refs\/heads\/main/);
 assert.ok(
   postReleaseWorkflow.includes("uses: ./.github/actions/write-run-summary"),
   "post-release summary must resolve from the restored helper",
