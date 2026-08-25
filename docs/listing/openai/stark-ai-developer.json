@@ -46,7 +46,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Hardens release provenance and exact-tag verification, adds idempotent GitHub release recovery, and updates Architecture Compass to 0.6.4 with external worktree isolation.",
+  "releaseNotes": "Hardens release provenance and exact-tag verification, adds idempotent GitHub release recovery, and updates Architecture Compass to 0.6.5 with external worktree isolation and lean reference-first routing.",
   "skills": [
     {
       "name": "codex-memory-curator",

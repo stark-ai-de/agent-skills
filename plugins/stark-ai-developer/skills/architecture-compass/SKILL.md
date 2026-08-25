@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills h
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.4"
+  version: "0.6.5"
 ---
 
 # Architecture Compass
@@ -65,17 +65,16 @@ Start with [the ADR catalog](references/adr-catalog.md). Select entries by `Scop
 
 Route skill behavior through:
 
-- **Workflows:** [AC-ADR-048 Short](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md) · [Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) — finite routing, setup coverage, Plan persistence, and refactor boundaries.
-- **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md) — risk, cadence, receipt identity/reuse, representative observation, and final-gate recovery.
-- **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md) — capability states, index-safe evidence, and fallbacks.
-- **Execution:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) — delegation, checkpoints, mutation, and re-entry.
-- **Claims:** [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md) — evidence stages and public safety.
-- **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md) — accessible semantic markers for concise user-facing receipts.
-- **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md) — evidence ranking and conflict stops without extra authority.
+- **Workflows:** [AC-ADR-048 Short](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md) · [Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md).
+- **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md).
+- **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md).
+- **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
+- **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md).
+- **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md).
 
-When Architecture Compass needs provider implementation mechanics, resolve the applicable exposed AC-ADR from the public catalog and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only the matching internal Short/Long/Guide triplet: `internal-adr-001-resolve-persistence-surfaces-before-writes` for persistence-surface resolution or `internal-adr-002-select-capability-aware-receipt-renderers` for capability-aware receipt adapters. Internal ADRs are implementation policy, are not entries in the public catalog or target-repository adoption flow, and cannot relax an applicable accepted public Long decision.
+For provider mechanics, resolve the applicable public AC-ADR and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only `AC-INTERNAL-001` for persistence resolution or `AC-INTERNAL-002` for receipt rendering. Internal ADRs are implementation policy, do not enter target-repository adoption, and cannot relax an accepted public Long decision.
 
-Use the catalog for AC-ADR-051 public/internal namespace authority, AC-ADR-044 lineage, every canonical Long variant, and task-specific target decisions. AC-ADR-001 remains available as superseded historical context only.
+Use the catalog for namespace authority, lineage, canonical Long variants, and task-specific decisions. AC-ADR-001 is superseded historical context only.
 
 ## Inputs to inspect
 
@@ -105,36 +104,27 @@ If evidence changes the route materially, announce the reclassification and reso
 
 ## Workflow
 
-Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) for the selected route's detailed procedure and the matching report asset before producing its artifact. Keep these entry gates visible:
+Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) and the matching report asset after selection and before producing an artifact or executing a mutation. Keep these entry gates visible:
 
 ### `setup`
 
-- Announce `recommended` or `complete` coverage. Use target evidence for `recommended`; evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation.
-- Preserve repository-native identity and accepted history; record each candidate as `adopt`, `adapt`, `defer`, or `reject`, stable provider-to-local mappings, instruction bindings, and the receipt location.
-- Apply the conditional selector only when proven applicable and validate only the authorized governance slice. Setup never authorizes application refactoring, deployment, publication, or production probes.
+- Use target evidence for `recommended` or evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation. Setup never authorizes application refactoring, deployment, publication, or production probes.
 
 ### `audit`
 
-- Preserve enforceable no-write behavior and perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment.
-- Report prioritized conflicts, missing coverage, implementation/boundary risk, proof gaps, receipt validity, selector classification, and evidence limits.
-- Create no artifact, repair, backup, patch, index change, install, environment mutation, deployment, publication, or production probe; recommend a separate authorized workflow when needed.
+- Preserve enforceable no-write behavior and perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment. Create no artifact or mutation.
 
 ### `refactor`
 
-- Verify accepted local ADRs govern the whole bounded change and the request authorizes its exact paths and behavior.
-- Use AC-ADR-049 for risk, proof owners, receipt reuse, rollback, stop conditions, owning-boundary checks, and one final aggregate gate for the frozen candidate.
-- Stop and reclassify on missing governance, decision conflict, unresolved durable choice, scope expansion, or material drift. Direct refactor never invents a durable decision or silently repairs governance.
+- Verify accepted local ADRs govern and the request authorizes the whole bounded change. Stop on missing governance, conflict, unresolved durable choice, scope expansion, or material drift. Direct refactor never invents a durable decision or silently repairs governance.
 
 ### `plan-refactor`
 
-- Resolve and approve the bounded specification in the Plan lifecycle while keeping repository/workspace artifacts read-only.
-- After Plan-mode exit, persist only the authorized approved specification and required governance artifacts, validate and report them, emit a bounded copy-ready execution handoff, and stop before source implementation. Without persistence authority, return the same bounded copy-ready handoff and stop without writing.
+- Resolve and approve the bounded specification in the Plan lifecycle; after exit, persist only authorized governance artifacts and stop before source implementation.
 
 ### `plan-run-refactor`
 
-- Follow `plan-refactor` through approval and bounded governance persistence, then recheck repository, dependencies, permissions, protected paths, and external state.
-- Execute only the unchanged approved plan in reversible slices; stop on material drift, new decisions, failed proof, or scope expansion.
-- Reconcile AC-ADR-049 receipts against the integrated candidate and report stage-accurate evidence without implying deployment, publication, production, or third-party success.
+- Follow `plan-refactor`, then recheck state and execute only the unchanged approved plan in reversible slices. Stop on material drift, new decisions, failed proof, or scope expansion.
 
 ## Plan lifecycle
 
@@ -163,13 +153,7 @@ For concise user-facing outcome lists, route status semantics through [AC-ADR-05
 
 ## Assets
 
-Assets are derived and non-normative; applicable canonical Long ADRs prevail:
-
-- [`assets/setup-report-template.md`](assets/setup-report-template.md): setup coverage, adoption, mapping, instruction, and validation receipt.
-- [`assets/refactor-report-template.md`](assets/refactor-report-template.md): audit, direct refactor, planning, execution, and evidence receipt.
-- [`assets/new-repo-adoption-plan-template.md`](assets/new-repo-adoption-plan-template.md): separately approved first implementation after setup.
-- [`assets/agent-instructions-template.md`](assets/agent-instructions-template.md): binding target ADR instructions and the conditional selector rule.
-- ADR templates/examples and `assets/adr-index-template.md`: only for authorized governance setup.
+Assets are derived and non-normative. Use [`assets/setup-report-template.md`](assets/setup-report-template.md) for setup and [`assets/refactor-report-template.md`](assets/refactor-report-template.md) for the other routes; use the remaining assets only for authorized governance work. Applicable canonical Long ADRs prevail.
 
 ## Scripts
 
@@ -195,14 +179,8 @@ For `audit`, provide findings in severity order without patches or repository wr
 
 ## Completion criteria
 
-- Exactly one of the five exposed workflows follows clear intent/authority or resolved ambiguity.
-- Setup uses valid coverage and foundation eligibility; audit remains artifact-free; direct refactor remains governed, bounded, and reversible.
-- Plan routes use the native lifecycle when supported, exit before writes, persist only their authorized governance slice, and recheck before execution.
-- ADR mapping/history, selector handling, protected state, AC-ADR-049 receipts, evidence stages, and limitations reconcile with the final candidate.
+Apply the selected procedure's criteria in the AC-ADR-048 Guide and reconcile its AC-ADR-049 receipt. Completion covers only the authorized workflow and evidence stages.
 
 ## Failure modes
 
-- Ambiguous intent, governance, scope, persistence, or authority exposes all workflows and asks.
-- An accepted-ADR conflict blocks the affected scope; unavailable read-only enforcement blocks potentially mutating audit checks.
-- Planning capability `Available but inactive` or `Indeterminate` waits for confirmation; only `Unavailable` may use the documented fallback without weakening write gates.
-- Material drift, failed validation, or contradictory evidence stops the affected slice, preserves safe disjoint work, and requires a new checkpoint rather than a completion claim.
+Apply the route and Plan stops in the AC-ADR-048 Guide and validation recovery in the AC-ADR-049 Guide. Never turn a blocked or indeterminate state into a completion claim.
