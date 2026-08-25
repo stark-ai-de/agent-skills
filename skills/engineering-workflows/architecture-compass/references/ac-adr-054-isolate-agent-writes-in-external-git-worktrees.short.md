@@ -22,7 +22,7 @@ Variants: **Short** · [Long, canonical](ac-adr-054-isolate-agent-writes-in-exte
 ## Context and Problem Statement
 
 - Manual agents, delegated agents, and orchestrators may write concurrently.
-- The same isolation model should work for lead-agent, peer-agent, and ticket-driven setups such as OpenAI Symphony.
+- Lead-agent, peer-agent, and ticket-driven setups such as OpenAI Symphony need the same isolation model.
 - The canonical checkout and parallel worktrees need clear write ownership.
 
 ## Considered Options
@@ -46,3 +46,7 @@ Chosen option: **isolated external Git worktrees under a repository-specific wor
 - Sub-tickets use separate sibling worktrees, never nested worktrees. A coordination-only parent ticket needs no worktree.
 - Direct writes to the canonical checkout require an explicit override.
 - The setup SHOULD enforce these rules through host configuration where possible and record the enforced state in the repository's agent instructions. If an agent cannot apply required settings, it MUST provide concrete setup guidance through the available user or orchestration surface.
+
+## Decision summary
+
+Use one external, repository-scoped worktree per writing work unit; keep the canonical checkout and sibling worktrees read-only to that writer by default.
