@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.20.1 - 2026-08-25
+
+### Added
+
+### Changed
+
+- Advanced the independently versioned `stark-ai-developer` plugin and its OpenAI listing surfaces to 1.0.1 while preserving historical 1.0.0 publication evidence.
+- Updated `architecture-compass` to 0.6.5 with lean reference-first workflow routing while preserving its five public workflows and safety gates.
+
+### Fixed
+
+- Kept projection validation aligned with uncommitted plugin-version bump candidates.
+
+### Deprecated
+
+### Removed
+
 ## v0.20.0 - 2026-08-25
 
 ### Added
@@ -24,7 +41,7 @@
 
 ### Changed
 
-- Updated `architecture-compass` to 0.6.5 with AC-ADR-054 for exclusive external agent worktrees, canonical-checkout isolation, and lean reference-first workflow routing.
+- Updated `architecture-compass` to 0.6.4 with AC-ADR-054 for exclusive external agent worktrees and canonical-checkout isolation.
 - Grouped repository CLIs into `scripts/catalog/`, `scripts/plugin/`, `scripts/release/`, and `scripts/repo/`. Prefer `npm run` names, including `release:intent`; `scripts/vendor/` and `scripts/lib/` stay put. Post-release capture keeps that tree so restored imports still resolve.
 - Dropped Architecture Compass and CodeGraph validator-mutation suites and unused visual-assertion CLI; SkillOpt stays a focused incubator gate outside `npm run validate`.
 - Expanded `DIR-001` to compare category, skill interface, SKILL.md descriptions, portal glyphs, and skills-only invariants, and pinned `portalGlyph` in listing JSON.
