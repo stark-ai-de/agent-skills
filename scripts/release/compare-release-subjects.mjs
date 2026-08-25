@@ -89,6 +89,7 @@ try {
         "skill-evals/stark-ai-developer/evidence/release-subject.schema.json",
       ),
       subjectDirectory: subjectsDir,
+      validateSubjectFiles: !historical,
       expected: {
         sourceRevision: releaseSha,
         sourceTag: tag,
