@@ -254,7 +254,7 @@ npm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `npm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.0.0.zip` is the local OpenAI-native
+`dist/openai/stark-ai-developer-1.0.1.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
 package time. The normal publication source is `openai.zip` downloaded from
 the `release-subjects` artifact of the successful hosted `Validate` run for the
@@ -384,7 +384,7 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.0.0`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
+   `1.0.1`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
 3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
    generated copies.

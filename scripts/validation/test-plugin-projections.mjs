@@ -182,6 +182,10 @@ try {
     recursive: true,
   });
   fs.copyFileSync(
+    path.join(repositoryRoot, "docs/assets/chatgpt-plugin-badge.svg"),
+    path.join(mutationClone, "docs/assets/chatgpt-plugin-badge.svg"),
+  );
+  fs.copyFileSync(
     path.join(repositoryRoot, "package.json"),
     path.join(mutationClone, "package.json"),
   );
