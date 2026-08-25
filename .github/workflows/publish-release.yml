@@ -194,7 +194,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
-      actions: read
+      actions: write
       id-token: write
       attestations: write
 
@@ -374,10 +374,22 @@ jobs:
             --mark-latest "${MARK_LATEST}" \
             --github-output "$GITHUB_OUTPUT"
 
+      - name: 🧾 Dispatch post-release evidence
+        if: ${{ steps.reconciliation-apply.outputs.release_published == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh workflow run post-release-evidence.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f "tag=v${VERSION}"
+
       - name: 📣 Print post-release verification
         run: |
           echo "Complete operator follow-up in docs/publishing.md#operator-follow-up."
-          echo "Post-release dispatch required: ${{ steps.reconciliation-apply.outputs.post_release_dispatch_required }}"
+          echo "Post-release evidence dispatch state: ${{ steps.reconciliation-apply.outputs.release_published }}"
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
 
       - name: 🧭 Summarize publication
@@ -385,5 +397,5 @@ jobs:
         uses: ./.github/actions/write-run-summary
         with:
           title: GitHub Release publication
-          success: Inspect Post-release Evidence for this tag, then complete docs/publishing.md#operator-follow-up.
+          success: Inspect the dispatched Post-release Evidence run, then complete docs/publishing.md#operator-follow-up.
           failure: No release hand-off is complete; inspect the failed gate and rerun after correction.
