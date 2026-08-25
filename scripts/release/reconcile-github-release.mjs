@@ -140,6 +140,16 @@ function digestBuffer(buffer) {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
+function normalizedReleaseBody(value) {
+  return (typeof value === "string" ? value : "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n+$/, "");
+}
+
+function releaseBodySha256(value) {
+  return digestBuffer(Buffer.from(normalizedReleaseBody(value), "utf8"));
+}
+
 function downloadAsset(repository, assetId) {
   const result = commandResult(
     "gh",
@@ -239,6 +249,7 @@ function readLocalSubjects(options) {
   if (!fs.existsSync(options.notesFile) || !fs.statSync(options.notesFile).isFile()) {
     throw new Error(`Release notes file is missing: ${options.notesFile}`);
   }
+  const releaseBody = fs.readFileSync(options.notesFile, "utf8");
   const subjectFile = path.join(options.subjectsDir, RELEASE_SUBJECT_FILE);
   const validation = validateReleaseSubjectFile(subjectFile, {
     schemaPath,
@@ -260,7 +271,16 @@ function readLocalSubjects(options) {
     expectedSubjects[subject.name] = { sha256: subject.sha256, bytes: subject.bytes };
     subjectPaths[subject.name] = path.join(options.subjectsDir, subject.name);
   }
-  return { expectedSubjects, subjectPaths };
+  return {
+    expectedSubjects,
+    subjectPaths,
+    expectedRelease: {
+      title: options.tag,
+      body: releaseBody,
+      bodySha256: releaseBodySha256(releaseBody),
+      prerelease: false,
+    },
+  };
 }
 
 function observe(options, localSubjects) {
@@ -272,6 +292,12 @@ function observe(options, localSubjects) {
     release = {
       id: remote.id,
       tagName: remote.tag_name,
+      title: typeof remote.name === "string" ? remote.name : null,
+      bodySha256:
+        typeof remote.body === "string" || remote.body === null
+          ? releaseBodySha256(remote.body ?? "")
+          : null,
+      prerelease: typeof remote.prerelease === "boolean" ? remote.prerelease : null,
       draft: typeof remote.draft === "boolean" ? remote.draft : null,
       immutable: typeof remote.immutable === "boolean" ? remote.immutable : null,
       assets: inspectAssets({
@@ -293,10 +319,11 @@ function observe(options, localSubjects) {
   };
 }
 
-function plan(options, observation) {
+function plan(options, observation, localSubjects) {
   return planReleaseReconciliation({
     tag: options.tag,
     releaseSha: options.releaseSha,
+    expectedRelease: localSubjects.expectedRelease,
     ...observation,
   });
 }
@@ -342,9 +369,26 @@ function executeOperation(operation, observation, options, localSubjects) {
         "--verify-tag",
         "--draft",
         "--title",
-        options.tag,
+        localSubjects.expectedRelease.title,
         "--notes-file",
         options.notesFile,
+      ]);
+      return;
+    case "update_draft_metadata":
+      if (!observation.release?.id || observation.release.draft !== true) {
+        throw new Error("Cannot repair metadata without the currently observed draft release");
+      }
+      commandResult("gh", [
+        "api",
+        "--method",
+        "PATCH",
+        `repos/${options.repository}/releases/${observation.release.id}`,
+        "-f",
+        `name=${localSubjects.expectedRelease.title}`,
+        "-f",
+        `body=${localSubjects.expectedRelease.body}`,
+        "-F",
+        "prerelease=false",
       ]);
       return;
     case "upload_asset":
@@ -388,6 +432,7 @@ function apply(options, localSubjects) {
   return applyReleaseReconciliation({
     tag: options.tag,
     releaseSha: options.releaseSha,
+    expectedRelease: localSubjects.expectedRelease,
     observe: () => observe(options, localSubjects),
     execute: (operation, observation) =>
       executeOperation(operation, observation, options, localSubjects),
@@ -414,7 +459,7 @@ export function runCli(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   const localSubjects = readLocalSubjects(options);
   if (options.mode === "plan") {
-    const result = plan(options, observe(options, localSubjects));
+    const result = plan(options, observe(options, localSubjects), localSubjects);
     appendGithubOutput(options.githubOutput, result);
     console.log(JSON.stringify(result, null, 2));
     if (result.status === "blocked") process.exitCode = 1;
