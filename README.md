@@ -194,6 +194,7 @@ Select checks from changed contracts and owning boundaries under [ADR-0041](docs
 | `npm run package:openai-plugin`          | Write `dist/openai/*.zip` from ephemeral adapter staging       |
 | `npm run validate:archives`              | Build and inspect release archives                             |
 | `npm run verify:release-reproducibility` | Compare two isolated deterministic builds                      |
+| `npm run build:release-subjects`         | Local fallback for the hosted final release subject artifact   |
 | `npm run validate:release-proof`         | Archive, reproducibility, and endpoint release proof           |
 | `npm run smoke:fingerprint`              | Fingerprint the exact clean-copy candidate set read-only       |
 | `npm run smoke:install`                  | Test clean-copy discovery and exact host destinations          |
@@ -201,7 +202,7 @@ Select checks from changed contracts and owning boundaries under [ADR-0041](docs
 | `pnpm --filter ./site build`             | Build the generated catalog                                    |
 | `pnpm format:check`                      | Check formatting                                               |
 | `pnpm lint`                              | Lint repository scripts                                        |
-| `node scripts/validate-release.mjs`      | Validate release readiness                                     |
+| `npm run release:validate`               | Validate release readiness                                     |
 
 Scaffold a skill only when its destination is clear:
 

@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Verify ChatGPT directory identity
+description: Compare listing JSON and skill identity to the live ChatGPT directory document and public category catalog.
+
+runs:
+  using: composite
+  steps:
+    - name: Compare listing to ChatGPT directory and category catalog
+      shell: bash
+      run: node scripts/plugin/verify-openai-directory.mjs

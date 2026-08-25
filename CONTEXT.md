@@ -42,4 +42,4 @@ This repository publishes public Agent Skills for repo maintenance, Codex operat
 - A repository setup convention belongs in `agent-context-bootstrap` unless it is only a one-time handoff.
 - Claude-specific metadata is not a supported publishing surface until an ADR says otherwise.
 - A repository or personal marketplace entry does not mean the package is listed in OpenAI's public directory.
-- The public ChatGPT plugin page is the shared ChatGPT/Codex catalog card. There is no separate Codex public directory URL. Glyph names and remaining launch evidence live in [`docs/listing/openai/stark-ai-developer-first-publication.md`](docs/listing/openai/stark-ai-developer-first-publication.md).
+- The public ChatGPT plugin page is the shared ChatGPT/Codex catalog card. There is no separate Codex public directory URL. Glyph names and portal identifiers live in [`docs/listing/openai/stark-ai-developer-first-publication.md`](docs/listing/openai/stark-ai-developer-first-publication.md).

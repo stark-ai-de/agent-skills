@@ -166,7 +166,7 @@ Do not create a new `cursor-*` skill when the only difference is the filesystem 
 
 ## Source challenge
 
-- Repo evidence checked: `AGENTS.md`, `README.md`, `docs/specs.md`, `docs/specs/README.md`, `skills/README.md`, `skills/codex-operations/README.md`, representative Codex operation `SKILL.md` files, `skill-evals/README.md`, `scripts/validate-skills.mjs`, and `package.json`.
+- Repo evidence checked: `AGENTS.md`, `README.md`, `docs/specs.md`, `docs/specs/README.md`, `skills/README.md`, `skills/codex-operations/README.md`, representative Codex operation `SKILL.md` files, `skill-evals/README.md`, `scripts/catalog/validate-skills.mjs`, and `package.json`.
 - External docs checked: Cursor Agent Skills docs, Cursor Rules docs, Vercel skills CLI README, Agent Skills specification, and Agent Skills client implementation guide.
 - Requirement revised: making these workflows available for Cursor should not only document `-a cursor`; at least `codex-spec-interviewer` deserves a Cursor-native counterpart because the runtime name and final execution prompt are user-visible.
 - Requirement revised: Cursor rules are useful repo evidence but are not the right publishing format for these workflows.

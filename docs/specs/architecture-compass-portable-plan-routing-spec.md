@@ -243,9 +243,9 @@ git diff --check
 npm run list
 npx skills@latest add ./skills --list
 npm run smoke:install
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --version 0.8.0 --base-ref origin/main
-node scripts/print-release-notes.mjs
+node scripts/release/check-release-intent.mjs --base-ref origin/main
+node scripts/release/validate-release.mjs --version 0.8.0 --base-ref origin/main
+node scripts/release/print-release-notes.mjs
 ```
 
 ### Manual verification

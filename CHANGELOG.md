@@ -4,29 +4,34 @@
 
 ### Added
 
-- Recorded first OpenAI plugin publication observations under `docs/listing/openai/stark-ai-developer-first-publication.md`.
+- Added `DIR-002` public category-catalog membership to `npm run verify:openai-directory` (same hosted action): plugin id in `developer-tools`, `ENABLED`, listing display name, and `installation_policy: AVAILABLE`.
+- Recorded first OpenAI plugin publication observations, Platform plugin ID, portal submission ID, publisher organization ID, and verified individual identity.
 - Added official ChatGPT Blossom marks to catalog and README plugin link-outs, with unmodified light and dark variants from the OpenAI brand kit.
 - Added a ChatGPT-styled README listing shield that links to the public Plugins Directory page and shows the current plugin version.
-- Recorded the OpenAI publisher organization ID and verified individual identity in the listing source and worksheet.
-- Recorded a sanitized EVAL-001 live-trial attempt with no observed ChatGPT or Codex product session; reliability thresholds stay `not_run`.
-- Added a publication-owned Sigstore workflow that attests `zip-store-v1` plugin archives from a Git tag.
+- Added hosted `Publish Release` and `Post-release Evidence` provenance for `zip-store-v1` archives, plus a publication-owned Sigstore workflow that attests archives from a Git tag.
 
 ### Changed
 
+- Grouped repository CLIs into `scripts/catalog/`, `scripts/plugin/`, `scripts/release/`, and `scripts/repo/`. Prefer `npm run` names, including `release:intent`; `scripts/vendor/` and `scripts/lib/` stay put. Post-release capture keeps that tree so restored imports still resolve.
+- Dropped Architecture Compass and CodeGraph validator-mutation suites and unused visual-assertion CLI; SkillOpt stays a focused incubator gate outside `npm run validate`.
+- Expanded `DIR-001` to compare category, skill interface, SKILL.md descriptions, portal glyphs, and skills-only invariants, and pinned `portalGlyph` in listing JSON.
+- Dropped unsigned `v0.19.1` provenance from launch checkboxes. Later GitHub Release attestation stays `Publish Release` plus `Post-release Evidence`, with local `build:release-subjects`.
+- Operator follow-up (listing updates, clean-account install, ChatGPT web/desktop lifecycle, Pages smoke) lives in `docs/publishing.md` and in GitHub Actions job summaries.
 - Rewrote stark AI Developer listing and catalog SEO copy as harness-first: daily-work origin, open source, and the existing no-backend package boundary. Catalog eyebrows now say OpenAI harness-first plugin. Listing release notes match that copy.
-- Recorded Phase 6 listing as complete from the live ChatGPT plugin page; remaining launch evidence stays in `docs/listing/openai/stark-ai-developer-first-publication.md`.
+- Recorded Phase 6 listing as complete from the live ChatGPT plugin page.
 - Dropped unused OpenAI listing `availability`/`regions` now that the portal does not collect a publisher country list.
 - README ChatGPT listing shield now crops the official Blossom to fill the icon slot and shows the current plugin version instead of a "plugin" label.
 - Catalog homepage plugin actions now stack the version and ChatGPT badges under the plugin link.
 - README shields are grouped as listings, then repository status, with a green release badge.
 - README intro links no longer include an inline ChatGPT Blossom; the listing shield still carries the mark.
-- Remaining-launch freeze wording now includes publisher-identity changes, matching the listing source.
 
 ### Fixed
 
 ### Deprecated
 
 ### Removed
+
+- Removed the live repeated-trial product matrix from the v1 launch contract.
 
 ## v0.19.1 - 2026-08-19
 

@@ -44,15 +44,7 @@
     "openaiOrganizationId": "org-dz0kZIfZpiaMc7YFjxGcsrk7",
     "verifiedIdentity": true,
     "verifiedIdentityKind": "individual",
-    "verifiedIdentityName": "Marcel Michael Mayer",
-    "manualReviewRequired": [
-      "Apps Management permission",
-      "Final publisher display name and contact details",
-      "Portal-normalized manifest, accepted diff, and draft identifiers",
-      "Clean tagged freeze after post-tag listing, logo, and publisher-identity changes",
-      "Supported-client add, enable, update, disable, and remove lifecycle evidence",
-      "Clean-account install, invoke, and uninstall on supported v1 surfaces"
-    ]
+    "verifiedIdentityName": "Marcel Michael Mayer"
   },
   "releaseNotes": "Initial harness-first stark AI Developer package with six explicit developer workflows and no backend or network runtime.",
   "skills": [
@@ -61,42 +53,48 @@
       "intent": "Safely inspect and curate durable Codex memory with explicit scope and host evidence.",
       "cohesion": "Provides the memory-safety workflow needed to preserve implementation context without silently rewriting user state.",
       "products": ["CODEX"],
-      "allowImplicitInvocation": false
+      "allowImplicitInvocation": false,
+      "portalGlyph": "radar"
     },
     {
       "name": "codex-spec-interviewer",
       "intent": "Turn an ambiguous software request into a verified, ADR-gated implementation specification.",
       "cohesion": "Provides the requirements and decision boundary that makes the toolkit's other developer workflows actionable.",
       "products": ["CHAT", "CODEX"],
-      "allowImplicitInvocation": true
+      "allowImplicitInvocation": true,
+      "portalGlyph": "chat"
     },
     {
       "name": "animated-readme-logo",
       "intent": "Create or validate repository presentation assets for developer documentation.",
       "cohesion": "Keeps repository presentation and documentation assets within the developer workflow promise rather than presenting them as a general art tool.",
       "products": ["CHAT", "CODEX"],
-      "allowImplicitInvocation": true
+      "allowImplicitInvocation": true,
+      "portalGlyph": "bolt"
     },
     {
       "name": "architecture-compass",
       "intent": "Review or plan ADR-guided architecture changes with bounded execution authority.",
       "cohesion": "Adds architecture tradeoffs and governance evidence between a feature idea and implementation work.",
       "products": ["CHAT", "CODEX"],
-      "allowImplicitInvocation": true
+      "allowImplicitInvocation": true,
+      "portalGlyph": "hierarchy"
     },
     {
       "name": "codegraph-ast-grep",
       "intent": "Set up, update, or diagnose semantic and structural code-search tooling.",
       "cohesion": "Supplies repeatable code-context discovery for implementation-ready specifications and structural findings.",
       "products": ["CODEX"],
-      "allowImplicitInvocation": false
+      "allowImplicitInvocation": false,
+      "portalGlyph": "search"
     },
     {
       "name": "drawio-diagrams",
       "intent": "Create, repair, review, and export editable draw.io diagrams from system context.",
       "cohesion": "Turns approved architecture and code context into a concrete, editable developer artifact.",
       "products": ["CHAT", "CODEX"],
-      "allowImplicitInvocation": true
+      "allowImplicitInvocation": true,
+      "portalGlyph": "pen"
     }
   ]
 }

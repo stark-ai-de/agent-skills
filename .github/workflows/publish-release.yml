@@ -28,6 +28,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       release_sha: ${{ steps.version.outputs.release_sha }}
+      validate_run_id: ${{ steps.validate-receipt.outputs.run_id }}
+      plugin_version: ${{ steps.subject-identity.outputs.plugin_version }}
 
     timeout-minutes: 45
 
@@ -53,6 +55,7 @@ jobs:
         id: version
         run: |
           version=$(node -p "require('./package.json').version")
+          test -z "$(git status --porcelain --untracked-files=all)"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -70,19 +73,20 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --workflow validate.yml \
               --commit "$RELEASE_SHA" \
+              --branch main \
               --limit 50 \
-              --json databaseId,status,conclusion)
+              --json databaseId,status,conclusion,event,headBranch)
 
             run_id=$(printf '%s' "$runs" | jq -r \
-              'map(select(.status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
+              'map(select(.event == "push" and .headBranch == "main" and .status == "completed" and .conclusion == "success")) | .[0].databaseId // empty')
             if [ -n "$run_id" ]; then
               break
             fi
 
             pending=$(printf '%s' "$runs" | jq -r \
-              '[.[] | select(.status == "queued" or .status == "waiting" or .status == "requested" or .status == "pending" or .status == "in_progress")] | length')
+              '[.[] | select(.event == "push" and .headBranch == "main" and (.status == "queued" or .status == "waiting" or .status == "requested" or .status == "pending" or .status == "in_progress"))] | length')
             failed=$(printf '%s' "$runs" | jq -r \
-              '[.[] | select(.status == "completed" and .conclusion != "success")] | length')
+              '[.[] | select(.event == "push" and .headBranch == "main" and .status == "completed" and .conclusion != "success")] | length')
 
             if [ "$failed" != "0" ] && [ "$pending" = "0" ]; then
               echo "Validate completed without success for ${RELEASE_SHA}."
@@ -102,26 +106,62 @@ jobs:
           echo "Reusing successful Validate run ${run_id} for ${RELEASE_SHA}."
 
       - name: 🚀 Validate release contract
-        run: node scripts/validate-release.mjs
+        run: npm run release:validate
 
-      - name: 📦 Prove release archives
-        run: npm run validate:release-proof
+      - name: ⬇️ Download final release subjects from hosted Validate
+        uses: actions/download-artifact@v4
+        with:
+          name: release-subjects
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.validate-receipt.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+
+      - name: 🔐 Verify hosted release subjects
+        id: subject-identity
+        env:
+          RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          plugin_version=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
+          archive_profile=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
+          node scripts/release/validate-release-subject.mjs \
+            --directory release-subjects \
+            --source-revision "${RELEASE_SHA}" \
+            --release-version "${VERSION}" \
+            --plugin-version "${plugin_version}" \
+            --archive-profile "${archive_profile}" \
+            --source-state clean \
+            --status pass
+          echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
 
       - name: 📝 Build release notes
-        run: node scripts/print-release-notes.mjs > release-notes.md
+        run: npm run release:notes > release-notes.md
 
       - name: 📣 Print release readiness
         run: |
           echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
           echo "Actual tag and GitHub Release creation only run from manual dispatch with dry_run=false."
 
+      - name: 🧭 Summarize readiness
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Release readiness
+          success: Hosted subjects verified. After maintainer approval, dispatch Publish Release with dry_run=false. Operator follow-up is docs/publishing.md#operator-follow-up.
+          failure: Fix the failed readiness gate; do not create a tag or GitHub Release.
+
   publish:
     needs: release-readiness
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: write
+      actions: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: ⬇️ Checkout validated SHA
@@ -131,10 +171,15 @@ jobs:
           fetch-depth: 1
 
       # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
-      - name: 🟢 Setup Node
-        uses: actions/setup-node@v6
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
         with:
-          node-version: 24.18.0
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: 📦 Install receipt validation dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: 🔍 Verify validated release identity
         env:
@@ -143,12 +188,42 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "${RELEASE_SHA}"
           test "$(node -p "require('./package.json').version")" = "${VERSION}"
+          test "${GITHUB_SHA}" = "${RELEASE_SHA}"
+          test -z "$(git status --porcelain --untracked-files=all)"
 
           main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
           if [ "${main_sha}" != "${RELEASE_SHA}" ]; then
             echo "main advanced after release readiness; rerun the workflow."
             exit 1
           fi
+
+      - name: ⬇️ Download final release subjects from hosted Validate
+        uses: actions/download-artifact@v4
+        with:
+          name: release-subjects
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+
+      - name: 🔐 Verify release subjects before publication
+        id: subject-identity
+        env:
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          plugin_version=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
+          archive_profile=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
+          node scripts/release/validate-release-subject.mjs \
+            --directory release-subjects \
+            --source-revision "${RELEASE_SHA}" \
+            --release-version "${VERSION}" \
+            --plugin-version "${plugin_version}" \
+            --archive-profile "${archive_profile}" \
+            --source-state clean \
+            --status pass
+          echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
 
       - name: 🔒 Verify tag and release do not exist
         env:
@@ -167,8 +242,62 @@ jobs:
             exit 1
           fi
 
+      - name: 🔏 Attest release subjects
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-subjects/openai.zip
+            release-subjects/portable.zip
+
+      - name: 🔎 Verify release attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+        run: |
+          for archive in release-subjects/openai.zip release-subjects/portable.zip; do
+            gh attestation verify "$archive" \
+              --repo "$GITHUB_REPOSITORY" \
+              --source-digest "$RELEASE_SHA" \
+              --format json \
+              > "${archive%.zip}.attestation.json"
+          done
+
+      - name: 🧾 Write pre-publication receipt
+        env:
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v${VERSION}"
+          openai_sha=$(sha256sum release-subjects/openai.zip | awk '{print $1}')
+          portable_sha=$(sha256sum release-subjects/portable.zip | awk '{print $1}')
+          openai_bytes=$(stat -c '%s' release-subjects/openai.zip)
+          portable_bytes=$(stat -c '%s' release-subjects/portable.zip)
+
+          RECEIPT_TAG="${tag}" \
+            SOURCE_COMMIT="${RELEASE_SHA}" \
+            REPOSITORY="${GITHUB_REPOSITORY}" \
+            OPENAI_SHA="${openai_sha}" \
+            PORTABLE_SHA="${portable_sha}" \
+            OPENAI_BYTES="${openai_bytes}" \
+            PORTABLE_BYTES="${portable_bytes}" \
+            node scripts/release/render-post-release-receipt.mjs \
+              --render pre_release_archive \
+              --file pre-release-receipt.json
+
+      - name: 🔍 Validate pre-publication receipt
+        run: node scripts/release/validate-post-release-receipt.mjs --file pre-release-receipt.json
+
+      - name: ⬆️ Upload pre-publication evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: pre-release-receipt.json
+          if-no-files-found: error
+          retention-days: 90
+
       - name: 📝 Build release notes
-        run: node scripts/print-release-notes.mjs > release-notes.md
+        run: npm run release:notes > release-notes.md
 
       - name: 🚀 Publish GitHub Release
         env:
@@ -192,13 +321,19 @@ jobs:
             --verify-tag \
             --title "${tag}" \
             --notes-file release-notes.md \
+            release-subjects/openai.zip \
+            release-subjects/portable.zip \
             "${latest_flag[@]}"
 
       - name: 📣 Print post-release verification
         run: |
-          echo "After publishing, verify:"
-          echo "npx skills@latest add stark-ai-de/agent-skills --list"
-          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep codex-spec-interviewer codex-memory-curator architecture-compass drawio-diagrams animated-readme-logo -a codex --copy -y"
-          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer cursor-memory-curator codegraph-ast-grep architecture-compass drawio-diagrams animated-readme-logo -a cursor --copy -y"
-          echo "env -u DISABLE_TELEMETRY -u DO_NOT_TRACK npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer claude-memory-curator codegraph-ast-grep architecture-compass drawio-diagrams animated-readme-logo -a claude-code --copy -y"
+          echo "Complete operator follow-up in docs/publishing.md#operator-follow-up."
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
+
+      - name: 🧭 Summarize publication
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: GitHub Release publication
+          success: Inspect Post-release Evidence for this tag, then complete docs/publishing.md#operator-follow-up.
+          failure: No release hand-off is complete; inspect the failed gate and rerun after correction.

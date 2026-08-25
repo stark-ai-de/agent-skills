@@ -41,3 +41,6 @@ ADR-0039	0039-separate-internal-skill-implementation-policy-from-exposed-contrac
 ADR-0040	0040-route-drawio-exports-through-capability-aware-fallbacks	674629c039f9040e447126f2dd16b78f285c91c3bff501e03c2d66a068489797
 ADR-0041	0041-select-validation-from-changed-contracts-and-owning-boundaries	d68dadcd288da04cd971409e788a84ffaed3e34c9f3a06099d965d1f26f192a2
 ADR-0043	0043-package-portable-agent-plugins-and-separate-client-adapters	9df6ad364c2048ae221e690265821062c5380e3ed76a85259c0b80fde97a0deb
+ADR-0044	0044-centralize-listing-identity-and-catalog-derivations	f691c3ccf19db0208d7416eae278d6e65020307a0311b741bb63084c1eef7f41
+ADR-0045	0045-own-historical-release-verification-in-one-action-context	cd87f13c0b1c3d97c12be1755929851d9f8aa08307934cd788ade58c78bca138
+ADR-0046	0046-define-versioned-json-release-subject-contract	a5567a134f95283da0f1cd645711ed3b66c04de9d710b05a761599ef27e2c09d

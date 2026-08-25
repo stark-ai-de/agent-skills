@@ -150,7 +150,7 @@ npm run format:check
 npm run lint
 git diff --check
 npm run smoke:install
-node scripts/validate-release.mjs --version 0.15.0 --base-ref origin/main
+node scripts/release/validate-release.mjs --version 0.15.0 --base-ref origin/main
 ```
 
 If the aggregate fails, repeat only the smallest owning gate until a new candidate is stable, then run the aggregate once more.

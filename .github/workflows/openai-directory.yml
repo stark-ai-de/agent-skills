@@ -1,0 +1,46 @@
+name: ChatGPT Directory Identity
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openai-directory-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'schedule' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: true
+          install: false
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: 🔎 Compare listing and skill identity to ChatGPT directory
+        uses: ./.github/actions/verify-openai-directory
+
+      - name: 🧭 Summarize directory identity
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: ChatGPT directory identity
+          success: Directory identity matched. Operator follow-up is docs/publishing.md#operator-follow-up.
+          failure: Fix listing JSON or wait for ChatGPT directory propagation, then rerun ChatGPT Directory Identity.

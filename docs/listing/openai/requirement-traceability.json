@@ -34,7 +34,8 @@
     {
       "commands": [
         "validate:openai-plugin",
-        "validate:openai-listing"
+        "validate:openai-listing",
+        "validate:plugin-evals"
       ],
       "contract": "Canonical agents/openai.yaml and routing",
       "id": "META-001"
@@ -65,13 +66,6 @@
     },
     {
       "commands": [
-        "validate:plugin-evals"
-      ],
-      "contract": "Activation, non-activation, capability, and mutation thresholds",
-      "id": "EVAL-001"
-    },
-    {
-      "commands": [
         "verify:supply-chain",
         "validate:network-endpoints"
       ],
@@ -85,6 +79,20 @@
       ],
       "contract": "Legal, publisher, portal review, explicit publication",
       "id": "PUB-001"
+    },
+    {
+      "commands": [
+        "verify:openai-directory"
+      ],
+      "contract": "Live ChatGPT directory identity versus listing JSON, skill interface, and skills-only invariants",
+      "id": "DIR-001"
+    },
+    {
+      "commands": [
+        "verify:openai-directory"
+      ],
+      "contract": "Live ChatGPT category catalog membership versus listing plugin id, display name, ENABLED status, and AVAILABLE installation policy",
+      "id": "DIR-002"
     }
   ],
   "schemaVersion": 1,

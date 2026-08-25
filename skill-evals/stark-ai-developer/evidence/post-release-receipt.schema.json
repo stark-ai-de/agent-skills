@@ -1,0 +1,650 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/stark-ai-de/agent-skills/blob/main/skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json",
+  "title": "stark AI Developer post-release evidence receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "receiptType",
+    "status",
+    "evidenceClass",
+    "generatedAt",
+    "release",
+    "artifacts",
+    "attestation",
+    "client",
+    "tests",
+    "lifecycle",
+    "blockers",
+    "reason"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "receiptType": {
+      "enum": ["post_release_archive", "pre_release_archive", "manual_client_lifecycle"]
+    },
+    "status": {
+      "enum": ["pass", "blocked", "not_run", "retrospective", "not_applicable"]
+    },
+    "evidenceClass": {
+      "enum": ["repo-verified", "historical", "live-observed", "user-provided"]
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "sourceCommit", "sourceState", "event", "archiveSubjectsStatus"],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "sourceState": {
+          "enum": ["clean", "unknown"]
+        },
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "archiveSubjectsStatus": {
+          "enum": ["pass", "blocked", "not_run", "not_applicable"]
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "subjects"],
+      "properties": {
+        "status": {
+          "enum": [
+            "verified",
+            "not-pre-publication-attested",
+            "blocked",
+            "not_run",
+            "not_applicable"
+          ]
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "predicateType": {
+          "const": "https://slsa.dev/provenance/v1"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sha256"],
+            "properties": {
+              "name": {
+                "enum": ["openai.zip", "portable.zip"]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "surface"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_./:-]*$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_./:-]*$"
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ids", "commandFamily", "counts"],
+      "properties": {
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "commandFamily": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?:[;=:][A-Za-z0-9][A-Za-z0-9_-]*)*$"
+        },
+        "counts": {
+          "$ref": "#/$defs/counts"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operations"],
+      "properties": {
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["add", "enable", "disable", "update", "remove"],
+          "properties": {
+            "add": {
+              "$ref": "#/$defs/lifecycleOperation"
+            },
+            "enable": {
+              "$ref": "#/$defs/lifecycleOperation"
+            },
+            "disable": {
+              "$ref": "#/$defs/lifecycleOperation"
+            },
+            "update": {
+              "$ref": "#/$defs/lifecycleOperation"
+            },
+            "remove": {
+              "$ref": "#/$defs/lifecycleOperation"
+            }
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?:[;=:][A-Za-z0-9][A-Za-z0-9_-]*)*$"
+      }
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?:[;=:][A-Za-z0-9][A-Za-z0-9_-]*)*$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "blockers": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "tests": {
+            "type": "object",
+            "properties": {
+              "counts": {
+                "type": "object",
+                "properties": {
+                  "passed": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "blocked": {
+                    "type": "integer",
+                    "const": 0
+                  },
+                  "notRun": {
+                    "type": "integer",
+                    "const": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "attestation": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "verified"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "attestation": {
+            "type": "object",
+            "required": ["repository", "sourceDigest"],
+            "properties": {
+              "repository": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+              },
+              "sourceDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "subjects": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["receiptType", "status"],
+        "properties": {
+          "receiptType": {
+            "type": "string",
+            "enum": ["pre_release_archive", "post_release_archive"]
+          },
+          "status": {
+            "type": "string",
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "release": {
+            "type": "object",
+            "properties": {
+              "archiveSubjectsStatus": {
+                "const": "pass"
+              }
+            }
+          },
+          "artifacts": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "allOf": [
+              {
+                "contains": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "const": "openai.zip"
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              },
+              {
+                "contains": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "const": "portable.zip"
+                    }
+                  }
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            ]
+          },
+          "attestation": {
+            "type": "object",
+            "required": ["status", "repository", "sourceDigest", "predicateType", "subjects"],
+            "properties": {
+              "status": {
+                "const": "verified"
+              },
+              "repository": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+              },
+              "sourceDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "predicateType": {
+                "const": "https://slsa.dev/provenance/v1"
+              },
+              "subjects": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "required": ["name"],
+                      "properties": {
+                        "name": {
+                          "const": "openai.zip"
+                        }
+                      }
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "required": ["name"],
+                      "properties": {
+                        "name": {
+                          "const": "portable.zip"
+                        }
+                      }
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["receiptType"],
+        "properties": {
+          "receiptType": {
+            "const": "manual_client_lifecycle"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "attestation": {
+            "type": "object",
+            "properties": {
+              "subjects": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["receiptType", "status"],
+        "properties": {
+          "receiptType": {
+            "const": "manual_client_lifecycle"
+          },
+          "status": {
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "release": {
+            "type": "object",
+            "properties": {
+              "archiveSubjectsStatus": {
+                "const": "not_applicable"
+              }
+            }
+          },
+          "attestation": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "not_applicable"
+              }
+            }
+          },
+          "lifecycle": {
+            "type": "object",
+            "properties": {
+              "operations": {
+                "type": "object",
+                "properties": {
+                  "add": {
+                    "$ref": "#/$defs/passOrNotApplicableLifecycleOperation"
+                  },
+                  "enable": {
+                    "$ref": "#/$defs/passOrNotApplicableLifecycleOperation"
+                  },
+                  "disable": {
+                    "$ref": "#/$defs/passOrNotApplicableLifecycleOperation"
+                  },
+                  "update": {
+                    "$ref": "#/$defs/passOrNotApplicableLifecycleOperation"
+                  },
+                  "remove": {
+                    "$ref": "#/$defs/passOrNotApplicableLifecycleOperation"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["receiptType", "status"],
+        "properties": {
+          "receiptType": {
+            "const": "post_release_archive"
+          },
+          "status": {
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["publishedSha256"],
+              "properties": {
+                "publishedSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["receiptType"],
+        "properties": {
+          "receiptType": {
+            "enum": ["pre_release_archive", "post_release_archive"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "lifecycle": {
+            "type": "object",
+            "properties": {
+              "operations": {
+                "type": "object",
+                "properties": {
+                  "add": {
+                    "$ref": "#/$defs/notApplicableLifecycleOperation"
+                  },
+                  "enable": {
+                    "$ref": "#/$defs/notApplicableLifecycleOperation"
+                  },
+                  "disable": {
+                    "$ref": "#/$defs/notApplicableLifecycleOperation"
+                  },
+                  "update": {
+                    "$ref": "#/$defs/notApplicableLifecycleOperation"
+                  },
+                  "remove": {
+                    "$ref": "#/$defs/notApplicableLifecycleOperation"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role", "sha256", "bytes"],
+      "properties": {
+        "name": {
+          "enum": ["openai.zip", "portable.zip"]
+        },
+        "role": {
+          "enum": ["verification-subject", "publication-subject", "generated"]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publishedSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "blocked", "notRun", "notApplicable"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notRun": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "lifecycleOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {
+          "enum": ["pass", "blocked", "not_run", "not_applicable"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?:[;=:][A-Za-z0-9][A-Za-z0-9_-]*)*$"
+        }
+      }
+    },
+    "passOrNotApplicableLifecycleOperation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": ["pass", "not_applicable"]
+        }
+      }
+    },
+    "notApplicableLifecycleOperation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "not_applicable"
+        }
+      }
+    }
+  }
+}

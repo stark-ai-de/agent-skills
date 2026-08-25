@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "gates": [
+    {
+      "id": "repository-aggregate",
+      "command": "npm run validate",
+      "owner": ".github/workflows/validate.yml#validate",
+      "proof": "Hosted repository aggregate",
+      "cadence": "pull_request;push:main;workflow_dispatch"
+    },
+    {
+      "id": "adrs",
+      "command": "npm run validate:adrs",
+      "owner": "scripts/validation/adrs/validate.mjs",
+      "proof": "ADR triplets, accepted decision locks, and index",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "listing-identity",
+      "command": "npm run validate:openai",
+      "owner": "scripts/validation/test-listing-identity.mjs",
+      "proof": "Shared listing identity and catalog derivations",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "site-seo",
+      "command": "npm run validate:site",
+      "owner": "site/scripts/validate-seo.mjs",
+      "proof": "Astro build and generated SEO contract",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "historical-release-context",
+      "command": "npm run test:post-release-receipt",
+      "owner": "scripts/validation/test-post-release-receipt.mjs",
+      "proof": "Contract capture, exact-tag, clean/dirty, legacy, and receipt sequencing fixtures",
+      "cadence": "hosted Validate preflight"
+    },
+    {
+      "id": "release-subject-schema",
+      "command": "npm run validate:release-subject",
+      "owner": "scripts/validation/test-release-subject.mjs",
+      "proof": "Version, source revision, archive profile, digest, size, and legacy-file rejection",
+      "cadence": "every aggregate run and publication"
+    },
+    {
+      "id": "release-reproducibility",
+      "command": "npm run verify:release-reproducibility",
+      "owner": "scripts/release/verify-release-reproducibility.mjs",
+      "proof": "Two isolated archive builds and release-subject materialization",
+      "cadence": "release preparation"
+    },
+    {
+      "id": "archives",
+      "command": "npm run validate:archives",
+      "owner": "scripts/release/validate-archives.mjs",
+      "proof": "Portable, OpenAI-native, and standalone archive boundaries",
+      "cadence": "hosted Validate release gate"
+    },
+    {
+      "id": "projections",
+      "command": "npm run validate:projections",
+      "owner": "scripts/validation/test-plugin-projections.mjs",
+      "proof": "Portable projection manifests, byte identity, and safety fixtures",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "openai-plugin",
+      "command": "npm run validate:openai-plugin",
+      "owner": "scripts/plugin/validate-openai-plugin.mjs",
+      "proof": "Ephemeral OpenAI-native adapter contract",
+      "cadence": "release-focused validation"
+    },
+    {
+      "id": "actions",
+      "command": "npm run lint:actions",
+      "owner": "scripts/repo/lint-actions.mjs",
+      "proof": "GitHub Actions syntax and action contract",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "scripts",
+      "command": "npm run validate:scripts",
+      "owner": "scripts/repo/validate-scripts.mjs",
+      "proof": "Repository script syntax and focused script fixtures",
+      "cadence": "every aggregate run"
+    },
+    {
+      "id": "hosted-directory",
+      "command": "npm run verify:openai-directory",
+      "owner": ".github/actions/verify-openai-directory/action.yml",
+      "proof": "Hosted directory identity and catalog membership",
+      "cadence": "scheduled/manual post-publication"
+    }
+  ]
+}

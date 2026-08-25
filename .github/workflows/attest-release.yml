@@ -21,6 +21,8 @@ jobs:
   attest:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
     permissions:
       contents: read
       id-token: write
@@ -28,29 +30,61 @@ jobs:
       artifact-metadata: write
 
     steps:
-      - name: ⬇️ Checkout tagged identity
+      - name: ⬇️ Checkout workflow sources
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
-          fetch-depth: 1
+          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+      - name: 📦 Prepare tag-bound release subjects
+        id: release
+        uses: ./.github/actions/post-release-subjects
         with:
-          runtime: node@24.18.0
-          cache: true
-          install: false
+          tag: ${{ env.RELEASE_TAG }}
+          subjects-dir: release-subjects
 
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: 📦 Package zip-store-v1 plugin archives
-        run: npm run package:agent-plugin && npm run package:openai-plugin
+      - name: 🚫 Require prepared release subjects
+        if: ${{ always() }}
+        env:
+          PREPARATION_OUTCOME: ${{ steps.release.outcome }}
+          PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "${PREPARATION_OUTCOME}" != "success" ]; then
+            echo "Release-subject preparation failed; refusing to report a successful attestation run."
+            exit 1
+          fi
+          if [ "${RELEASE_TAG}" = "v0.19.1" ]; then
+            if [ "${PACKAGE_STATUS}" != "not_applicable" ]; then
+              echo "Historical v0.19.1 subjects must be not_applicable, got ${PACKAGE_STATUS:-empty}."
+              exit 1
+            fi
+          else
+            if [ "${PACKAGE_STATUS}" != "pass" ]; then
+              echo "Release subjects must pass before attestation, got ${PACKAGE_STATUS:-empty}."
+              exit 1
+            fi
+            if [ -z "${RELEASE_SHA}" ] || [ "${WORKFLOW_SHA}" != "${RELEASE_SHA}" ]; then
+              echo "Workflow source ${WORKFLOW_SHA} does not match release source ${RELEASE_SHA:-empty}; refusing to attest."
+              exit 1
+            fi
+          fi
 
       - name: 🔏 Attest plugin archives
+        if: ${{ steps.release.outcome == 'success' && steps.release.outputs.package_status == 'pass' && steps.release.outputs.release_sha != '' && env.RELEASE_TAG != 'v0.19.1' }}
         uses: actions/attest@v4
         with:
           subject-path: |
-            dist/openai/*.zip
-            dist/agent-plugins/*.zip
+            release-subjects/openai.zip
+            release-subjects/portable.zip
+
+      - name: 🧭 Summarize run
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Attest release subjects
+          success: This attestation does not replace Publish Release plus Post-release Evidence. Continue from docs/publishing.md.
+          failure: Fix the archive or permission failure, then rerun this workflow for the exact tag.

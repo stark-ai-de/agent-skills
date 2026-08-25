@@ -39,10 +39,10 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 660,
+      "byteLength": 658,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "169529364358a031180f79ee39092d9901e00f5e37273d65aba9e89153435c9e"
+      "sha256": "5692cd2079d09874a4926eecc437ea7c29a9f63736b19c07614f3a73bf5fd8d0"
     },
     {
       "byteLength": 1486,
@@ -1707,5 +1707,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8a90403b8bbdc7ae9730558c7c4e98f97bd3937b329feba9b6b4faa75f8a1d34"
+  "treeHash": "0b2510015a96c739584a744eff0680fd8baebb049d32b22c0486cd24e9e03068"
 }

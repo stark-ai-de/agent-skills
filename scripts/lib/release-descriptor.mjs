@@ -5,12 +5,17 @@ import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 
+import {
+  githubRepositorySlug as deriveGithubRepositorySlug,
+  listingArtifactPaths,
+  listingIdentityFromSource,
+  publicRepositoryUrl as derivePublicRepositoryUrl,
+} from "./listing-identity.mjs";
+
 const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 export const PLUGIN_SOURCE_PATH = "plugins/stark-ai-developer.source.json";
 export const PLUGIN_SOURCE_SCHEMA_PATH = "plugins/stark-ai-developer.source.schema.json";
-export const RELEASE_DESCRIPTOR_PATH = PLUGIN_SOURCE_PATH;
-export const RELEASE_SCHEMA_PATH = PLUGIN_SOURCE_SCHEMA_PATH;
 export const PINNED_AGENT_PLUGINS_SCHEMA_PATH =
   "scripts/vendor/agent-plugins/1.0.0/plugin.schema.json";
 
@@ -28,14 +33,10 @@ function readJson(filePath) {
 
 export function identityFromSource(source) {
   return {
+    ...listingIdentityFromSource(source),
     schemaVersion: source.schemaVersion,
-    pluginId: source.pluginId,
-    version: source.version,
-    bundleId: source.id,
-    listingId: source.listingId,
     submissionType: source.submissionType,
     publicListingStrategy: source.publicListingStrategy,
-    outputs: source.outputs,
     contractSnapshots: source.contractSnapshots,
     build: source.build,
   };
@@ -99,7 +100,7 @@ export function loadPluginSourceFile(root = moduleRoot) {
     errors.push("[BND-001] distribution plugin ids must match pluginId");
   }
 
-  return { source: errors.length === 0 ? source : source, errors };
+  return { source, errors };
 }
 
 export function loadReleaseDescriptorFile(root = moduleRoot) {
@@ -118,10 +119,19 @@ export function loadValidatedRelease(root = moduleRoot) {
   return result.release;
 }
 
+export function loadValidatedPluginSource(root = moduleRoot) {
+  const result = loadPluginSourceFile(root);
+  if (result.errors.length > 0 || !result.source) {
+    throw new Error(result.errors.join("\n"));
+  }
+  return result.source;
+}
+
 export function pluginIdentity(root = moduleRoot) {
-  const release = loadValidatedRelease(root);
+  const release = identityFromSource(loadValidatedPluginSource(root));
   return {
     name: release.pluginId,
+    displayName: release.displayName,
     version: release.version,
     bundleId: release.bundleId,
     listingId: release.listingId,
@@ -133,6 +143,43 @@ export function pluginIdentity(root = moduleRoot) {
     nodeVersion: release.build.nodeVersion,
     pnpmVersion: release.build.pnpmVersion,
     contractSnapshots: release.contractSnapshots,
+  };
+}
+
+export function readRepoPackage(root = moduleRoot) {
+  return readJson(path.join(resolveRoot(root), "package.json"));
+}
+
+export function packageAuthorName(packageJson) {
+  const author = packageJson?.author;
+  if (typeof author === "string" && author.trim()) return author.trim();
+  if (author && typeof author.name === "string" && author.name.trim()) {
+    return author.name.trim();
+  }
+  return undefined;
+}
+
+export function publicRepositoryUrl(packageJson) {
+  return derivePublicRepositoryUrl(packageJson?.repository);
+}
+
+export function githubRepositorySlug(packageJson) {
+  return deriveGithubRepositorySlug(packageJson?.repository);
+}
+
+export function pluginArtifactPaths(root = moduleRoot) {
+  const identity = pluginIdentity(root);
+  const evalRoot = `skill-evals/${identity.name}`;
+  return {
+    ...listingArtifactPaths({
+      pluginId: identity.name,
+      displayName: identity.displayName,
+      listingId: identity.listingId,
+      outputs: { portableProjection: identity.portableProjection },
+    }),
+    evalRoot,
+    postReleaseReceiptSchema: `${evalRoot}/evidence/post-release-receipt.schema.json`,
+    manualClientLifecycleTemplate: `${evalRoot}/evidence/manual-client-lifecycle-receipt.template.json`,
   };
 }
 

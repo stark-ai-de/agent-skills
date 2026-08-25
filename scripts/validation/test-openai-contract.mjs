@@ -41,6 +41,7 @@ function createFixture() {
     recursive: true,
   });
   fs.copyFileSync(path.join(repositoryRoot, "README.md"), path.join(fixture, "README.md"));
+  fs.copyFileSync(path.join(repositoryRoot, "package.json"), path.join(fixture, "package.json"));
   fs.mkdirSync(path.join(fixture, "docs/assets"), { recursive: true, mode: 0o755 });
   fs.copyFileSync(
     path.join(repositoryRoot, "docs/assets/chatgpt-plugin-badge.svg"),
@@ -188,6 +189,37 @@ try {
   );
 } finally {
   fs.rmSync(staleBadgeFixture, { recursive: true, force: true });
+}
+
+const cursorGlyphFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(cursorGlyphFixture);
+  listing.skills[0].portalGlyph = "cursor";
+  writeListingAndWorksheet(cursorGlyphFixture, listing, listingPath);
+  const result = validateOpenAiListing(cursorGlyphFixture);
+  assert.ok(
+    result.errors.some((error) =>
+      /portalGlyph must be a reviewed Apps Management glyph/.test(error),
+    ),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(cursorGlyphFixture, { recursive: true, force: true });
+}
+
+const duplicateGlyphFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(duplicateGlyphFixture);
+  listing.skills[0].portalGlyph = "bolt";
+  listing.skills[1].portalGlyph = "bolt";
+  writeListingAndWorksheet(duplicateGlyphFixture, listing, listingPath);
+  const result = validateOpenAiListing(duplicateGlyphFixture);
+  assert.ok(
+    result.errors.some((error) => /portalGlyph values must be unique/.test(error)),
+    result.errors.join("\n"),
+  );
+} finally {
+  fs.rmSync(duplicateGlyphFixture, { recursive: true, force: true });
 }
 
 console.log("OpenAI listing contract fixtures passed.");

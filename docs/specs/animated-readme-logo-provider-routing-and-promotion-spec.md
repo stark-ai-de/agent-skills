@@ -156,8 +156,8 @@ git diff --check
 npm run list
 npx skills@latest add ./skills --list
 npm run smoke:install
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --version 0.9.0 --base-ref origin/main
+node scripts/release/check-release-intent.mjs --base-ref origin/main
+node scripts/release/validate-release.mjs --version 0.9.0 --base-ref origin/main
 ```
 
 ### Manual and live proof

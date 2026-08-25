@@ -2913,7 +2913,7 @@ const packageText = requireFile(packagePath);
 requirePattern(
   packagePath,
   packageText,
-  /"validate:codegraph-ast-grep":\s*"node scripts\/validate-codegraph-ast-grep-contract\.mjs"/,
+  /"validate:codegraph-ast-grep":\s*"node scripts\/validation\/codegraph-ast-grep\/validate-contract\.mjs"/,
   "missing dedicated contract-validation script",
 );
 requirePattern(
@@ -2927,9 +2927,7 @@ export const validationErrors = [...new Set(errors)].sort();
 export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3.2 local metadata refresh captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
-const isMain =
-  entrypoint === path.resolve(fileURLToPath(import.meta.url)) ||
-  entrypoint === path.resolve(root, "scripts", "validate-codegraph-ast-grep-contract.mjs");
+const isMain = entrypoint === path.resolve(fileURLToPath(import.meta.url));
 if (isMain) {
   if (validationErrors.length > 0) {
     console.error("CodeGraph + ast-grep contract validation failed:");

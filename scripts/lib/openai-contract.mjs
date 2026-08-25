@@ -6,10 +6,16 @@ import { load as parseYaml } from "js-yaml";
 
 import { loadValidatedBundle } from "./bundle-contract.mjs";
 import { loadActiveSnapshotFacts } from "./contract-snapshots.mjs";
-import { pluginIdentity } from "./release-descriptor.mjs";
+import {
+  packageAuthorName,
+  pluginArtifactPaths,
+  pluginIdentity,
+  readRepoPackage,
+} from "./release-descriptor.mjs";
 import { assertInside } from "./plugin-projections.mjs";
 import { readOpenAiListing } from "./openai-projection.mjs";
-import { OPENAI_WORKSHEET_PATH, renderOpenAiSubmissionWorksheet } from "./openai-worksheet.mjs";
+import { PORTAL_GLYPHS } from "./openai-directory.mjs";
+import { renderOpenAiSubmissionWorksheet } from "./openai-worksheet.mjs";
 
 const SAFE_HEX = /^#[0-9A-Fa-f]{6}$/;
 const CHATGPT_PLUGIN_BADGE_PATH = "docs/assets/chatgpt-plugin-badge.svg";
@@ -396,9 +402,16 @@ export function validateOpenAiListing(root) {
     validatePngAsset(root, asset, `listing.plugin.assets.${label}`, errors);
   }
 
-  if (!isMapping(listing.publisher) || listing.publisher.legalName !== "servrox solutions UG") {
-    errors.push("listing.publisher.legalName must match the reviewed developer identity");
+  if (!isMapping(listing.publisher) || typeof listing.publisher.legalName !== "string") {
+    errors.push("listing.publisher.legalName is required");
   } else {
+    const authorName = packageAuthorName(readRepoPackage(root));
+    if (!authorName || listing.publisher.legalName !== authorName) {
+      errors.push("listing.publisher.legalName must match package.json author.name");
+    }
+    if (listing.plugin.developerName !== listing.publisher.legalName) {
+      errors.push("listing.plugin.developerName must match listing.publisher.legalName");
+    }
     const organizationId = listing.publisher.openaiOrganizationId;
     if (organizationId != null) {
       if (typeof organizationId !== "string" || !/^org-[A-Za-z0-9]+$/.test(organizationId)) {
@@ -442,6 +455,11 @@ export function validateOpenAiListing(root) {
     ) {
       errors.push(`listing.skills.${entry.name} has invalid routing`);
     }
+    if (!PORTAL_GLYPHS.includes(listed.portalGlyph) || listed.portalGlyph === "cursor") {
+      errors.push(
+        `listing.skills.${entry.name} portalGlyph must be a reviewed Apps Management glyph other than cursor`,
+      );
+    }
     errors.push(...validateOpenAiYaml(root, entry));
     try {
       const metadata = parseYaml(
@@ -460,6 +478,12 @@ export function validateOpenAiListing(root) {
     if (identity.length > 64)
       errors.push(`combined OpenAI identity exceeds 64 characters: ${identity}`);
   }
+  const portalGlyphs = Array.isArray(listing.skills)
+    ? listing.skills.map((skill) => skill.portalGlyph).filter(Boolean)
+    : [];
+  if (new Set(portalGlyphs).size !== portalGlyphs.length) {
+    errors.push("listing.skills portalGlyph values must be unique");
+  }
 
   const serialized = JSON.stringify(listing);
   if (
@@ -469,15 +493,16 @@ export function validateOpenAiListing(root) {
   ) {
     errors.push("listing contains a private path, credential, or token-like value");
   }
-  const worksheetPath = path.join(root, OPENAI_WORKSHEET_PATH);
+  const paths = pluginArtifactPaths(root);
+  const worksheetPath = path.join(root, paths.worksheet);
   try {
     const actualWorksheet = fs.readFileSync(worksheetPath, "utf8");
-    const expectedWorksheet = renderOpenAiSubmissionWorksheet(listing);
+    const expectedWorksheet = renderOpenAiSubmissionWorksheet(listing, paths);
     if (actualWorksheet !== expectedWorksheet) {
-      errors.push(`${OPENAI_WORKSHEET_PATH} is out of date with the listing source`);
+      errors.push(`${paths.worksheet} is out of date with the listing source`);
     }
   } catch (error) {
-    errors.push(`${OPENAI_WORKSHEET_PATH}: ${error.message}`);
+    errors.push(`${paths.worksheet}: ${error.message}`);
   }
   return { bundle, listing, errors: [...new Set(errors)] };
 }

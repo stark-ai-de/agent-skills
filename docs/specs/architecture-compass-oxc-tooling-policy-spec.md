@@ -72,8 +72,8 @@ Persist an accepted ADR and implementation contract that make Oxc the formatting
 npm run validate
 pnpm format:check
 pnpm lint
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --version 0.4.3 --base-ref origin/main
+node scripts/release/check-release-intent.mjs --base-ref origin/main
+node scripts/release/validate-release.mjs --version 0.4.3 --base-ref origin/main
 npx skills@latest add ./skills --list
 npm run smoke:install
 ```

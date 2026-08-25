@@ -1,3 +1,5 @@
+import { pluginMarketplaceSource } from "./plugin-listing";
+
 export const SITE_ORIGIN = "https://stark-ai-de.github.io";
 export const SITE_BASE_PATH = "/agent-skills";
 export const STARK_AI_MARK = "stark AI";
@@ -13,8 +15,9 @@ export const INCUBATOR_SKILLS_DESCRIPTION =
 export const PLUGIN_SEO_DESCRIPTION =
   "Install the harness-first stark AI Developer for Codex and ChatGPT: from a feature idea and code to specs, architecture, diagrams, docs, and agent memory.";
 export type RobotsDirective = "index, follow" | "noindex, follow" | "noindex, nofollow";
-export const GITHUB_REPO_URL = "https://github.com/stark-ai-de/agent-skills";
-export const GITHUB_ORG_URL = "https://github.com/stark-ai-de";
+const GITHUB_REPO_SLUG = pluginMarketplaceSource();
+export const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO_SLUG}`;
+export const GITHUB_ORG_URL = `https://github.com/${GITHUB_REPO_SLUG.split("/")[0]}`;
 export const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues`;
 export const GITHUB_SECURITY_POLICY_URL = `${GITHUB_REPO_URL}/security/policy`;
 export const GITHUB_SECURITY_ADVISORIES_URL = `${GITHUB_REPO_URL}/security/advisories/new`;

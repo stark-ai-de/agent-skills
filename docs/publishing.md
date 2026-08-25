@@ -151,8 +151,8 @@ Use the local helper when preparing the package and changelog release files:
 
 ```bash
 NEXT_VERSION=0.2.1
-node scripts/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
-node scripts/prepare-release.mjs --version "$NEXT_VERSION"
+node scripts/release/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
+node scripts/release/prepare-release.mjs --version "$NEXT_VERSION"
 ```
 
 The helper updates only `package.json` and `CHANGELOG.md`. Bump changed public skill `metadata.version` values directly in the same PR.
@@ -168,25 +168,59 @@ The changelog section a pull request adds is the currently planned catalog relea
 Validate the release contract locally:
 
 ```bash
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --base-ref origin/main
+npm run release:intent -- --base-ref origin/main
+npm run release:validate -- --base-ref origin/main
 ```
 
 ### Publish Release
 
 After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
 
-The workflow reads the release version from `package.json`, records the exact `main` commit, waits for a successful hosted `Validate` run for that SHA (or reuses one that already completed), runs release-specific invariants, and prints the version it would release. With `dry_run: false`, the publish job reuses that readiness proof, checks out and tags the exact commit, and fails closed if `main` advanced after readiness. It then creates the annotated tag and GitHub Release without rerunning the aggregate validation suite.
+The workflow reads the release version from `package.json`, records the exact `main` commit, waits for a successful hosted `Validate` push run for that SHA (or reuses one that already completed), downloads that run's `release-subjects` artifact, verifies its identity and digests, and prints the version it would release. With `dry_run: false`, the publish job reuses those GitHub-produced bytes, checks out and tags the exact commit, creates short-lived artifact attestations, and fails closed if `main` advanced after readiness or an attestation check fails. It then creates the annotated tag and GitHub Release with the exact `openai.zip` and `portable.zip` subjects without rebuilding them locally or rerunning the aggregate validation suite.
+
+### Post-release evidence and lifecycle lanes
+
+`dry_run: true` downloads and verifies the already-hosted release subjects for
+a non-publishing rehearsal. It does not create a new subject artifact, create
+attestations, tags, GitHub Releases, or release attachments. A real publish
+attests the exact downloaded subjects with `actions/attest@v4`, validates and
+uploads a pre-publication receipt, and attaches those same bytes to the GitHub
+Release.
+
+The [`Post-release Evidence`](../.github/workflows/post-release-evidence.yml)
+workflow runs for `release.published` and can be dispatched again with an exact
+tag. The tracked [`prepare-release-subjects.mjs`](../scripts/release/prepare-release-subjects.mjs)
+wrapper runs the tag-local [`verify-release-reproducibility.mjs`](../scripts/release/verify-release-reproducibility.mjs)
+script and translates the legacy evidence format used by historical tags.
+Hosted `Validate` uses the repository-owned script to build and upload the
+`release-subjects` artifact on `main`. `Publish Release` downloads that artifact
+and uses those exact bytes for attestation and publication; it does not require
+a local packaging workflow. The local `npm run build:release-subjects` command
+writes to `dist/release-subjects/` using the same script and is only a manual
+backup if the hosted artifact is unavailable. Post-release jobs rebuild from
+the exact release tag. The workflow downloads the published `openai.zip` and
+`portable.zip`, compares their bytes
+with the tag-bound subjects, verifies attestations against those downloaded
+files and the source commit, and uploads a sanitized receipt.
+Historical `v0.19.1` is explicitly retrospective and not
+pre-publication-attested; no current branch output may be used to upgrade that
+historical status.
+
+Use the [post-release receipt schema](../skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json)
+and `npm run validate:post-release-receipt -- --file <receipt.json>` when
+reviewing a receipt. Receipts remain workflow artifacts and are not committed.
+Schema v1 keeps a common client/lifecycle envelope for sanitized validation;
+archive receipts use `not_a_client_lifecycle_receipt`.
 
 Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
-Use manual dispatch with `dry_run: true` if you want to rerun the same readiness check. Use `dry_run: false` only after maintainer approval.
+Use `dry_run: true` to rerun the same readiness check. Use `dry_run: false` only after maintainer approval. GitHub Actions job summaries name the next operator follow-up after each run.
 
 Equivalent local release validation:
 
 ```bash
-node scripts/validate-release.mjs
-node scripts/print-release-notes.mjs
+node scripts/release/validate-release.mjs
+node scripts/release/print-release-notes.mjs
 ```
 
 ## Release Artifacts
@@ -208,8 +242,11 @@ npm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `npm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.0.0.zip` is the OpenAI-native harness-first
-submission archive, generated from ephemeral adapter staging at package time.
+`dist/openai/stark-ai-developer-1.0.0.zip` is the local OpenAI-native
+harness-first submission fallback, generated from ephemeral adapter staging at
+package time. The normal publication source is `openai.zip` downloaded from
+the `release-subjects` artifact of the successful hosted `Validate` run for the
+exact release commit.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
 that archive; the adapter does not generate or overlay skill-local metadata.
 `dist/skills/*.zip` contains one skill root per optional standalone archive.
@@ -217,39 +254,42 @@ These artifacts do not replace canonical sources. A generated archive is not
 by itself proof of public-directory publication. First-publication observations
 for the OpenAI plugin live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
-Upload `dist/openai/*.zip` to the OpenAI portal, not the portable Agent Plugins
-zip. GitHub Releases also provide source archives for each tag, and
-normal standalone installation uses the skills CLI:
+Upload the hosted `release-subjects/openai.zip` to the OpenAI portal, not the
+portable Agent Plugins zip or a locally rebuilt archive.
+
+GitHub Releases also provide source archives for each tag, and normal
+standalone installation uses the skills CLI:
+
+`npm run build:release-subjects` writes the same final `openai.zip`,
+`portable.zip`, and versioned `release-subject.json` subject set to
+`dist/release-subjects/`; it is the local fallback, not the normal publication
+path. The JSON subject is the release contract; standalone skill archives may
+retain their own independent checksum files.
 
 `npm run generate:release-evidence` is the explicit release-preparation command.
 It refreshes
 [`docs/listing/openai/stark-ai-developer-release-evidence.json`](listing/openai/stark-ai-developer-release-evidence.json)
 with the source commit/tag, projection and manifest hashes, complete archive
 inventories, the clean/dirty source state, and a deterministic release-input
-tree digest. Portal-normalized manifests, draft
-IDs, approval, publication, and client lifecycle observations remain separate
-external evidence and are never inferred from this file. After first
-publication, sanitized portal observations belong in
+tree digest. Portal draft IDs, approval, publication, and client lifecycle
+observations remain separate external evidence and are never inferred from this
+file. After first publication, sanitized portal observations belong in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
 The committed evidence recipe may lag listing-asset changes until a maintainer
 regenerates it from a clean tagged identity.
 
-Signed provenance is not a GPG tag on this repository today. Annotated GitHub
-Release tags are unsigned. Add Sigstore artifact attestations with
-`.github/workflows/attest-release.yml`: it packages `zip-store-v1` plugin
-archives from a tag and attests `dist/openai/*.zip` and
-`dist/agent-plugins/*.zip`. It runs on `release: published` and can be
-dispatched against an existing tag. Verify with
-`gh attestation verify dist/openai/stark-ai-developer-1.0.0.zip --repo stark-ai-de/agent-skills`.
-Do not treat an unsigned annotated tag as this gate. Do not regenerate freeze
-JSON except from a clean exact-tag identity.
-
-Post-release client lifecycle (add, enable, update, disable, remove) is not a
-pull-request or `Validate` concern. After a GitHub Release, Codex CLI can
-script `codex plugin list`, `codex plugin add`, `codex plugin marketplace upgrade`,
-and `codex plugin remove` against a disposable marketplace. ChatGPT web/desktop
-enable/disable remains a product-UI check; do not store session cookies in CI.
-A maintainer manual pass is not a sanitized per-surface matrix.
+Directory identity is `npm run verify:openai-directory` locally. The dedicated
+`ChatGPT Directory Identity` workflow runs the same strict script through
+`.github/actions/verify-openai-directory` on a schedule or manual dispatch after
+publication; deterministic hosted `Validate` does not fetch the live directory.
+That gate covers the directory document (`DIR-001`) and public category-catalog
+membership (`DIR-002`). Provenance for later
+GitHub Releases is `Publish Release` plus `Post-release Evidence`; the local
+fallback is `npm run build:release-subjects`. Annotated GitHub Release tags on this
+repository are unsigned today. The existing
+`.github/workflows/attest-release.yml` attests archives from an existing tag;
+it does not replace that two-stage proof. Do not regenerate freeze JSON except
+from a clean exact-tag identity.
 
 The committed repository-local catalog is
 [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json),
@@ -287,6 +327,84 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a c
 
 For Claude Code release artifacts, verify the source archive includes the two named Claude-operation skills and the explicitly named engineering-workflow skills used by the commands above; do not infer membership from a directory listing. Then verify installation with the `-a claude-code` commands above.
 
+## Operator follow-up
+
+GitHub Actions job summaries point here after a run. These checks are product
+and portal work. Directory identity is the `verify:openai-directory` gate.
+Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence`.
+
+### Before a listing update
+
+- Re-read the official plugin documents listed in the plugin spec Appendix C.
+- Confirm legal publisher name, support contact, privacy controller, terms
+  jurisdiction, security-report address, and domain ownership.
+- Submit listing updates from Platform organization `org-dz0kZIfZpiaMc7YFjxGcsrk7`
+  with Apps Management: Write.
+- Review new validation warnings before publishing.
+
+### After Publish Release or Post-release Evidence
+
+1. Download the pre-publication and post-release receipt artifacts.
+2. Search for **stark AI Developer** in the public Plugins Directory and check
+   name, developer, copy, category, capabilities, assets, prompts, and legal links.
+3. Verify public CLI install with the commands in Release Artifacts above.
+4. On a clean eligible account (no prior plugin, publisher privileges, or local
+   marketplace), complete ChatGPT web/desktop add, enable, invoke allowed
+   bundled skills, disable, and remove. Do not store session cookies. For
+   `v0.19.1`, record `update` as `not_applicable` with reason
+   `first_public_version`. Later public releases record an observed update.
+5. Copy
+   [`skill-evals/stark-ai-developer/evidence/manual-client-lifecycle-receipt.template.json`](../skill-evals/stark-ai-developer/evidence/manual-client-lifecycle-receipt.template.json)
+   to a local release-specific file, fill operation status and a short reason,
+   and validate with
+   `npm run validate:post-release-receipt -- --file <receipt.json>`. Do not copy
+   cookies, session identifiers, prompts, transcripts, private endpoints, or
+   personal account details into the receipt.
+
+### After GitHub Pages deploy
+
+Open the published Pages URL and confirm plugin, privacy, terms, support, and
+security routes return HTTP 200.
+
+### Before opening a production portal submission
+
+1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
+   `1.0.0`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
+2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
+3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
+   generated copies.
+4. Run focused and aggregate validation, inspect the ZIP listing, and confirm
+   two-build checksum equality.
+5. Install from the repository marketplace on a clean clone and test direct and
+   implicit invocation on each supported surface.
+6. Test standalone skills in the Codex IDE extension.
+7. Open every public URL and confirm publisher organization, verified identity,
+   prompts, tests, and release notes.
+8. Verify `.agents/plugins/marketplace.json` still points to
+   `./plugins/stark-ai-developer` after OpenAI-adapter tests.
+
+### OpenAI portal submission
+
+1. Open the OpenAI Platform plugin submission portal from the selected
+   publishing organization.
+2. Create a plugin draft and choose **Skills only**.
+3. Enter the public listing and verified developer identity.
+4. Upload the exact final `openai.zip` from the hosted `release-subjects`
+   artifact for that commit.
+5. Review automated scans and every portal warning, including
+   `manifest_normalized` if shown.
+6. Add no more than three realistic starter prompts.
+7. Add at least six positive and three negative tests for v1.
+8. Add release notes and complete policy attestations only after listing,
+   skills, prompts, tests, and privacy claims are confirmed.
+9. Submit for review. Treat non-blocking `skill_metadata_ignored` warnings as
+   expected when `SKILL.md` carries `metadata:`.
+10. Track requested changes as release-blocking issues; update source artifacts
+    first, regenerate, retest, and resubmit.
+11. After approval, explicitly publish from the portal.
+12. Confirm the listing appears in the universal Plugins Directory shared by
+    ChatGPT and Codex. There is no separate Codex public directory URL.
+
 ## Release Update Process
 
 1. Update public or incubator skills.
@@ -302,4 +420,6 @@ For Claude Code release artifacts, verify the source archive includes the two na
 11. Merge changes through a PR.
 12. Run `Publish Release` manually with `dry_run: true`.
 13. Run `Publish Release` manually with `dry_run: false`.
-14. Verify public install.
+14. Inspect the pre-publication receipt and the automatic `Post-release Evidence`
+    receipt, or dispatch the latter with the exact tag when a repeat is needed.
+15. Complete [Operator follow-up](#operator-follow-up).

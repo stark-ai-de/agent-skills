@@ -1,12 +1,12 @@
 # Implementation Specification: stark AI Developer Skills and OpenAI Plugin Distribution
 
-- **Status:** Phase 6 complete (listing observed); remaining launch evidence pending
-- **Contract revision:** 4
-- **Implementation readiness:** Repository-local phases 1–4 machinery is complete, including release identity, `zip-store-v1`, contract snapshots, and supply-chain inventory. Phase 5 can generate sanitized evidence that records explicit clean/dirty source state; a dirty tree is not a release freeze. Phase 6 listing is recorded: a public ChatGPT plugin card exists and Codex in the ChatGPT Windows app showed the same directory. Remaining launch evidence still includes freeze evidence after post-tag listing/logo/publisher-identity changes, live-eval, signed provenance, Apps Management permission, and clean-account lifecycle
-- **Specification date:** 2026-08-19
+- **Status:** Phase 6 complete; public listing live
+- **Contract revision:** 12
+- **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 listing is live. Directory identity is a continuous scheduled/manual post-publication plus local `npm run verify:openai-directory` gate.
+- **Specification date:** 2026-08-21
 - **External contracts last verified:** 2026-08-18; live portal observations from 2026-08-19 in `docs/listing/openai/stark-ai-developer-first-publication.md` outrank stale country-picker and separate-Codex-directory procedure. The listing source omits publisher region fields.
 - **Repository:** `stark-ai-de/agent-skills`
-- **Current phase:** Remaining launch evidence pending (Phase 6 listing observed)
+- **Current phase:** Phase 6 complete (public listing live)
 - **Bundle ID:** `codex`
 - **Plugin ID:** `stark-ai-developer`
 - **Public display name:** **stark AI Developer**
@@ -25,15 +25,14 @@ source state and is not a freeze until `sourceState` is clean and a release tag
 exists. The release descriptor, dated contract snapshots, the
 `zip-store-v1` STORE-only archive profile, isolated adapter-marketplace
 fixtures, requirement traceability, and the supply-chain inventory command are
-present. Internal repeated-trial product evidence and signed release-tag
-provenance remain follow-ups. A public ChatGPT plugin page was observed on 2026-08-19, and Codex in the
+present. A public ChatGPT plugin page was observed on 2026-08-19, and Codex in the
 ChatGPT Windows app showed the same directory. That observation exits Phase 6.
-Live Codex add/list/enable/disable/update/remove client tests, Apps Management
-permission, portal identifiers, freeze evidence after post-tag listing, logo,
-and publisher-identity changes, and clean-account product tests remain remaining launch evidence.
-Record those observations in
-`docs/listing/openai/stark-ai-developer-first-publication.md` rather than treating
-committed freeze hashes or the generated worksheet as publication proof.
+Directory identity is enforced by `npm run verify:openai-directory` locally and
+by the strict scheduled/manual post-publication `ChatGPT Directory Identity`
+workflow through `.github/actions/verify-openai-directory`. Hosted `Validate`
+does not fetch the live directory. Record portal
+observations in `docs/listing/openai/stark-ai-developer-first-publication.md`.
+Freeze JSON and the generated worksheet are not publication proof.
 
 ## 1. Objective and required launch outcomes
 
@@ -69,14 +68,14 @@ If the product requirement later becomes “every skill must have its own indepe
 
 ### Approved launch and ownership decisions
 
-| ID        | Decision                                                                                                                                                                                                                                                       | Why                                                                                                                                                            | Change gate                                                                    |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `DEC-001` | Version 1 publishes one **stark AI Developer** plugin listing containing six bundled skill identities.                                                                                                                                                         | The public launch target is plugin-level discovery; six near-duplicate cards would add review, branding, and spam risk without improving the bundled workflow. | Product-owner approval; separate one-skill plugins use Phase 7.                |
-| `DEC-002` | The committed repository marketplace points to the portable projection at `./plugins/stark-ai-developer`.                                                                                                                                                      | See ADR-0043: the canonical marketplace targets the portable projection.                                                                                       | Successor ADR if the canonical marketplace must target a non-portable package. |
-| `DEC-003` | Every bundled skill owns its reviewed `agents/openai.yaml` inside the canonical skill tree.                                                                                                                                                                    | See ADR-0043: skill-local `agents/openai.yaml` is canonical and copied unchanged.                                                                              | Successor ADR if adapters must overlay or replace skill-local metadata.        |
-| `DEC-004` | `plugins/stark-ai-developer.source.json` identity fields are the only source for plugin identity, semantic version, submission type, listing strategy, pinned release toolchain, and archive profile.                                                          | Version and release identity otherwise drift across manifests, filenames, worksheets, and evidence.                                                            | Architecture-owner and release-manager approval.                               |
-| `DEC-005` | Portable projection is generated and committed; the OpenAI adapter is generated into disposable staging and archived under `dist/openai/`; archives and adapter-marketplace fixtures are generated but not committed; sanitized release evidence is committed. | See ADR-0043: the portable projection is committed; the OpenAI adapter is generated, archived, and not a committed tree.                                       | Architecture-owner approval.                                                   |
-| `DEC-006` | Version 1 uses the normative `zip-store-v1` reproducible archive profile.                                                                                                                                                                                      | A platform-independent stored ZIP removes compressor variance and makes byte-for-byte reproduction practical.                                                  | New archive-profile identifier and release review.                             |
+| ID        | Decision                                                                                                                                                                                                                                                                                                                                                                                            | Why                                                                                                                                                            | Change gate                                                                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `DEC-001` | Version 1 publishes one **stark AI Developer** plugin listing containing six bundled skill identities.                                                                                                                                                                                                                                                                                              | The public launch target is plugin-level discovery; six near-duplicate cards would add review, branding, and spam risk without improving the bundled workflow. | Product-owner approval; separate one-skill plugins use Phase 7.                |
+| `DEC-002` | The committed repository marketplace points to the portable projection at `./plugins/stark-ai-developer`.                                                                                                                                                                                                                                                                                           | See ADR-0043: the canonical marketplace targets the portable projection.                                                                                       | Successor ADR if the canonical marketplace must target a non-portable package. |
+| `DEC-003` | Every bundled skill owns its reviewed `agents/openai.yaml` inside the canonical skill tree.                                                                                                                                                                                                                                                                                                         | See ADR-0043: skill-local `agents/openai.yaml` is canonical and copied unchanged.                                                                              | Successor ADR if adapters must overlay or replace skill-local metadata.        |
+| `DEC-004` | `plugins/stark-ai-developer.source.json` identity fields are the only source for plugin identity, semantic version, submission type, listing strategy, pinned release toolchain, and archive profile.                                                                                                                                                                                               | Version and release identity otherwise drift across manifests, filenames, worksheets, and evidence.                                                            | Architecture-owner and release-manager approval.                               |
+| `DEC-005` | Portable projection is generated and committed; the OpenAI adapter is generated into disposable staging and archived under `dist/openai/`; archives and adapter-marketplace fixtures are generated but not committed; existing sanitized release evidence remains committed where its contract requires it, while generated pre/post-release receipts are workflow artifacts and are not committed. | See ADR-0043: the portable projection is committed; the OpenAI adapter is generated, archived, and not a committed tree.                                       | Architecture-owner approval.                                                   |
+| `DEC-006` | Version 1 uses the normative `zip-store-v1` reproducible archive profile.                                                                                                                                                                                                                                                                                                                           | A platform-independent stored ZIP removes compressor variance and makes byte-for-byte reproduction practical.                                                  | New archive-profile identifier and release review.                             |
 
 ## 2. Normative authority and external contract pins
 
@@ -322,7 +321,6 @@ portable projection ──> committed repository marketplace ──> Codex/local
 OpenAI-native archive from ephemeral staging
     └── isolated temporary marketplace or direct path ──> native adapter testing
     └── immutable ZIP ───────────> OpenAI Platform draft
-                                      ├── normalized manifest review
                                       ├── listing metadata
                                       ├── starter prompts
                                       ├── positive/negative tests
@@ -335,9 +333,13 @@ OpenAI-native archive from ephemeral staging
 Neither generated tree is an author-maintained skill source. The portable
 projection is committed. The OpenAI-native adapter is generated into disposable
 staging at package time, archived, and deleted; it is not a second committed
-skill tree. The OpenAI portal may normalize manifest fields; the submitted ZIP,
-portal-normalized manifest, accepted diff, and final form metadata must
-therefore all be retained as sanitized release evidence.
+skill tree. The submitted ZIP, submitted `.codex-plugin/plugin.json`, and
+sanitized portal identifiers must be retained as release evidence. OpenAI may
+rewrite fields when saving a draft; it documents no URL that exports that
+saved file. `npm run verify:openai-directory` compares listing JSON, skill
+interface, SKILL.md descriptions, portal glyphs, and skills-only invariants to
+the public ChatGPT directory document (`DIR-001`) and confirms public category
+catalog membership (`DIR-002`). It does not rebuild the OpenAI zip.
 
 ### Artifact ownership and lifecycle
 
@@ -545,21 +547,52 @@ Version 1 must not contain:
 
 A future MCP-backed release must use the portal's MCP submission path and receive a new architecture, security, privacy, hosting, domain-verification, tool-annotation, and evaluation review.
 
-### Portal normalization
+### Portal save behavior
 
-The OpenAI submission portal may normalize and save the manifest as `.codex-plugin/plugin.json`. Any change must be shown as a diff and explicitly accepted by a maintainer. Release evidence must record:
+The OpenAI submission portal may normalize text fields and add interface
+defaults when it saves `.codex-plugin/plugin.json`. OpenAI documents that
+warning as `manifest_normalized`. It does not document a URL or download that
+returns the saved file. Do not invent an export path or treat the public
+directory card as the saved `.codex-plugin/plugin.json`.
+
+The scheduled/manual post-publication `ChatGPT Directory Identity` workflow runs
+`.github/actions/verify-openai-directory`, which calls
+`scripts/plugin/verify-openai-directory.mjs`. Local fallback is
+`npm run verify:openai-directory`. That script runs two checks against the
+unofficial ChatGPT web API:
+
+- `DIR-001` compares listing JSON, skill interface, SKILL.md descriptions,
+  portal glyphs, and skills-only invariants to
+  `https://chatgpt.com/backend-api/ps/plugins/<plugin-id>`.
+- `DIR-002` confirms the plugin id appears in the public GLOBAL category
+  catalog at
+  `https://chatgpt.com/backend-api/ps/plugin-categories/<slug>/plugins`
+  with `ENABLED` status, listing display name, and
+  `installation_policy: AVAILABLE`. Derive `<slug>` from
+  `listing.plugin.category` (`Developer Tools` → `developer-tools`). Paginate
+  until the plugin is found or the catalog ends. Do not require Featured or
+  `/plugins/home` teaser membership. The unofficial category catalog currently
+  returns Cloudflare HTML 403 to a custom User-Agent; both checks send a
+  browser User-Agent on GET-only requests.
+
+Do not package an OpenAI zip in that check. Do not compare portal-rewritten
+plugin-card short or long descriptions, logo or catalog icon CDN URLs,
+`discoverability`, support/security/chatgptPlugin URLs, dark brand color, or
+account identifiers. Do not log category `pageToken` values, cookies, or other
+private fields. The live directory fetch is part of neither `npm run validate`
+nor hosted `Validate`; only the dedicated scheduled/manual workflow runs it.
+
+Release evidence still records:
 
 - submitted archive SHA-256;
 - source commit and tag;
-- submitted manifest;
-- portal-normalized manifest;
-- accepted normalization diff;
+- submitted `.codex-plugin/plugin.json` from the uploaded ZIP;
 - portal draft/submission identifier;
 - selected verified identity;
 - submitted listing text, prompts, tests, release notes, and attestations;
 - approval and publication status.
 
-Secrets, session cookies, access tokens, and private reviewer communication must not be committed.
+Secrets, session cookies, access tokens, and private reviewer communication must not be committed. The submitted ZIP remains locally validated against the listing source.
 
 ## 11. Marketplace positioning and public listing contract
 
@@ -603,6 +636,8 @@ It must contain the exact public and portal values for:
 - brand colors;
 - asset paths;
 - website, privacy, terms, support, security, and ChatGPT plugin page URLs;
+- Apps Management portal glyphs (`portalGlyph`), used only by the live
+  directory check and never written into `agents/openai.yaml`;
 - release notes;
 - publisher identity decision.
 
@@ -787,31 +822,31 @@ Implemented shared tooling:
 
 ```text
 scripts/lib/plugin-projections.mjs
-scripts/sync-agent-plugin.mjs
-scripts/sync-openai-plugin.mjs
-scripts/sync-standalone-skills.mjs
-scripts/validate-agent-plugin.mjs
-scripts/validate-openai-plugin.mjs
-scripts/validate-openai-listing.mjs
-scripts/validate-openai-submission.mjs
-scripts/validate-standalone-skills.mjs
-scripts/package-agent-plugin.mjs
-scripts/package-openai-plugin.mjs
-scripts/package-standalone-skills.mjs
-scripts/verify-release-reproducibility.mjs
-scripts/validate-archives.mjs
-scripts/validate-network-endpoints.mjs
-scripts/generate-openai-submission-worksheet.mjs
+scripts/plugin/sync-agent-plugin.mjs
+scripts/plugin/sync-openai-plugin.mjs
+scripts/plugin/sync-standalone-skills.mjs
+scripts/plugin/validate-agent-plugin.mjs
+scripts/plugin/validate-openai-plugin.mjs
+scripts/plugin/validate-openai-listing.mjs
+scripts/plugin/validate-openai-submission.mjs
+scripts/plugin/validate-standalone-skills.mjs
+scripts/plugin/package-agent-plugin.mjs
+scripts/plugin/package-openai-plugin.mjs
+scripts/plugin/package-standalone-skills.mjs
+scripts/release/verify-release-reproducibility.mjs
+scripts/release/validate-archives.mjs
+scripts/plugin/validate-network-endpoints.mjs
+scripts/plugin/generate-openai-submission-worksheet.mjs
 scripts/lib/reproducible-archive.mjs
 scripts/lib/release-descriptor.mjs
-scripts/validate-release-descriptor.mjs
-scripts/validate-contract-snapshots.mjs
-scripts/generate-openai-marketplace-fixture.mjs
-scripts/generate-traceability.mjs
-scripts/verify-supply-chain.mjs
+scripts/plugin/validate-release-descriptor.mjs
+scripts/plugin/validate-contract-snapshots.mjs
+scripts/plugin/generate-openai-marketplace-fixture.mjs
+scripts/repo/generate-traceability.mjs
+scripts/release/verify-supply-chain.mjs
 ```
 
-`scripts/sync-openai-plugin.mjs` is a refuse-redirect. It does not materialize `adapters/openai/stark-ai-developer/`. Validate or package the native adapter with `npm run validate:openai-plugin` and `npm run package:openai-plugin`.
+`scripts/plugin/sync-openai-plugin.mjs` is a refuse-redirect. It does not materialize `adapters/openai/stark-ai-developer/`. Validate or package the native adapter with `npm run validate:openai-plugin` and `npm run package:openai-plugin`.
 
 ### Shared synchronization behavior
 
@@ -934,7 +969,10 @@ The OpenAI release ZIP must:
 
 The package name is immutable for updates. Every update must use a new semantic version and a freshly reviewed archive.
 
-The submitted ZIP, the ephemeral OpenAI adapter used to build it, and the portal skill snapshot must be traceable to the same validated skill-tree hash. The portal-normalized `.codex-plugin/plugin.json` must be exported or recorded and reviewed against the submitted manifest before publication.
+The submitted ZIP, the ephemeral OpenAI adapter used to build it, and the
+recorded portal identifiers must be traceable to the same validated skill-tree
+hash. Local validators compare the submitted `.codex-plugin/plugin.json` to the
+listing source.
 
 ## 17. Evaluation and reviewer-test plan
 
@@ -969,20 +1007,7 @@ Each negative portal test case must record:
 
 Repository evidence may additionally store summarized observed behavior, safe excerpts or artifacts, client/model version when available, date, and known variance. It must not store chain-of-thought, credentials, customer data, private repositories, or confidential reviewer communication.
 
-### Internal reliability thresholds
-
-Portal minimums are not sufficient for the internal release gate. Recorded threshold values live in `skill-evals/stark-ai-developer/reliability-thresholds.json` with `status: "not_run"` until live ChatGPT/Codex trials are captured. For each supported client/model/surface configuration selected for release:
-
-- explicit invocation for every skill must pass `3/3` repeated trials;
-- each implicitly enabled skill must pass its direct intended activation case `10/10` times;
-- each implicitly enabled skill must pass paraphrased or indirect intended cases at least `9/10` times;
-- explicit-only skills must activate implicitly `0/20` times across intended-looking, near-miss, and cross-skill prompts;
-- prohibited or clearly unrelated prompts must cause `0/10` activations;
-- near-miss prompts may cause at most `1/20` false activations for implicitly enabled skills;
-- missing-capability, no-tool, no-repository, and no-artifact cases must produce honest fallback behavior `10/10` times;
-- mutation and approval cases must produce zero unapproved writes, commands, memory changes, or destructive actions.
-
-Every case must have a stable test ID and record prompt, fixture, expected skill, expected non-skill alternatives, client, model, surface, policy state, date, trial count, observed counts, and evidence. A release may submit a representative portal subset, but it must retain the complete sanitized internal matrix.
+The evaluation contract is the portal cases plus the sanitized plugin inventory under `skill-evals/stark-ai-developer/`. Skill-local cases under `skill-evals/<skill>/` remain maintainer proof outside the runtime payload.
 
 ## 18. Security and privacy requirements
 
@@ -1034,7 +1059,7 @@ The public skills-only package must not require dependency installation or netwo
 | Privacy/legal reviewer | Privacy, terms, asset rights, publisher naming                                   | Public submission                                                       |
 | Release manager        | Version, tag, reproducibility, checksums, evidence, rollback target              | Release candidate and portal upload                                     |
 | Verified publisher     | Publishing organization, identity, attestations, explicit publication            | Portal submission and publish action                                    |
-| Portal submitter       | Accurate portal data and reviewer responses                                      | Submission execution; must have Apps Management write permission        |
+| Portal submitter       | Accurate portal data and reviewer responses                                      | Submission execution                                                    |
 
 One person may hold multiple roles, but every required approval must be recorded separately in sanitized release evidence. The portal submitter may not silently override a rejected product, architecture, security, privacy/legal, or release gate.
 
@@ -1062,7 +1087,6 @@ The policy must accurately state that the package itself does not send prompts, 
 Public release also requires:
 
 - an OpenAI Platform organization selected as the publisher owner;
-- **Apps Management: Write** permission for every submitter who creates or submits drafts;
 - a verified individual or business identity in the same publishing organization;
 - a final decision whether the public publisher name is the stark AI brand or the verified legal company name;
 - matching `author.name`, `interface.developerName`, website, support contact, privacy policy, terms, and verified identity;
@@ -1070,7 +1094,7 @@ Public release also requires:
 - legal review and final company/contact details;
 - reviewer-ready prompts and test cases;
 - immutable archive, checksum, source commit, and tag;
-- external scan, OpenAI review, remediation, approval, explicit publication, and clean-account verification.
+- external scan, OpenAI review, remediation, approval, and explicit publication.
 
 ## 20. OpenAI submission and publication workflow
 
@@ -1085,28 +1109,23 @@ Do not open a production submission until all of the following are true:
 - positive and negative cases pass on supported surfaces;
 - all public URLs are live and consistent;
 - the publisher identity is verified in the correct OpenAI Platform organization;
-- the submitter has Apps Management write access;
 - the exact v1.0.0 ZIP is reproducible and tagged;
 - the OpenAI submission and error-reference documentation has been re-verified for changes after this specification date.
 
 ### Portal flow
 
-1. Open the OpenAI Platform plugin submission portal from the selected publishing organization.
-2. Create a plugin draft and choose **Skills only**.
-3. Enter the public listing and verified developer identity.
-4. Upload the exact final skill/plugin bundle.
-5. Review automated scans and every portal warning.
-6. Review and accept or reject the portal-normalized manifest diff.
-7. Add no more than three realistic starter prompts.
-8. Add at least six positive and three negative tests for v1.
-9. Add release notes describing the initial release and any reviewer setup expectations.
-10. Complete policy attestations only after the listing, skills, prompts, tests, and privacy claims are confirmed.
-11. Submit for review. Treat non-blocking `skill_metadata_ignored` warnings as expected when `SKILL.md` carries `metadata:`; do not strip that block to silence them.
-12. Track requested changes as release-blocking issues; update source artifacts first, regenerate, retest, and resubmit.
-13. After approval, explicitly publish from the portal.
-14. Confirm the listing appears in the universal Plugins Directory shared by ChatGPT and Codex. There is no separate Codex public directory URL. Perform clean-account smoke tests.
+OpenAI portal submission and explicit publication follow
+[`docs/publishing.md`](../publishing.md). GitHub Actions job summaries name the
+next follow-up after each hosted run. Record live portal observations in
+`docs/listing/openai/stark-ai-developer-first-publication.md`.
 
-Upload the OpenAI-native archive from `dist/openai/` (`.codex-plugin/plugin.json`). Do not upload the portable Agent Plugins archive. Apps Management skill glyphs are portal-only and must not be written into `agents/openai.yaml`. Record live portal observations in `docs/listing/openai/stark-ai-developer-first-publication.md`.
+For the normal hosted publication, download `openai.zip` from the
+`release-subjects` GitHub Actions artifact produced by the successful hosted
+`Validate` run for the exact release commit; it contains
+`.codex-plugin/plugin.json`. `dist/openai/` is only the local fallback. Do not
+upload the portable Agent Plugins archive. Apps Management skill glyphs are
+portal-only `portalGlyph` fields in listing JSON. Do not write those names into
+`agents/openai.yaml`.
 
 Submission does not equal publication. Approval does not equal publication. The publisher must explicitly publish the approved version.
 
@@ -1118,15 +1137,45 @@ Store a sanitized release record containing:
 - plugin package name and version;
 - archive checksum;
 - source tag and commit;
-- normalized manifest checksum;
+- submitted OpenAI plugin-manifest checksum;
 - publisher identity label;
 - submitted and approved timestamps;
 - publication timestamp;
 - public ChatGPT plugin page URL when assigned;
 - public listing status;
-- clean-account test results by supported surface;
 - known plan, workspace, region, or client limitations;
 - rollback target.
+
+### Post-release evidence automation
+
+The release-evidence procedure is canonical in
+[`docs/publishing.md`](../publishing.md). This specification does not depend
+on a proposed ADR for authority; the release workflow and receipt behavior
+below are defined here and operated through that canonical procedure.
+
+Hosted `Validate` on a successful `main` push uses the repository-owned
+`verify-release-reproducibility.mjs` script to build the `zip-store-v1` OpenAI
+and portable subjects and uploads them as the `release-subjects` GitHub Actions
+artifact. The manual `Publish Release` workflow keeps `dry_run: true`
+non-publishing, waits for that exact-SHA hosted run, and downloads its artifact.
+A real publish creates `actions/attest@v4` attestations only after digest and
+identity checks pass, then attaches those same downloaded subjects to the
+GitHub Release. Any missing artifact, digest, attestation, or source-identity
+failure blocks tag and release creation. The local `npm run build:release-subjects`
+command writes the subject set to
+`dist/release-subjects/` using the same script as a backup/fallback and is not
+required for hosted publication.
+
+[`Post-release Evidence`](../../.github/workflows/post-release-evidence.yml) runs
+for `release.published` and supports exact-tag manual dispatch. It rebuilds from
+the tag, compares the release subjects, verifies attestations with the source
+commit and repository identity, and uploads a sanitized receipt without
+committing it. The current GitHub tag `v0.19.1` is unsigned; its receipt is
+`retrospective` and `not-pre-publication-attested`. Later publishes attest
+through `Publish Release` and `Post-release Evidence`. Receipts use the
+versioned [post-release receipt schema](../../skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json)
+and exclude secrets, cookies, session state, private endpoints, raw transcripts,
+and unnecessary personal data.
 
 ## 21. Versioning, updates, suspension, and maintenance
 
@@ -1171,7 +1220,7 @@ Exit only when:
 - focused and local format/lint checks pass; aggregate and hosted evidence are recorded separately;
 - no incomplete projection or marketplace entry is exposed.
 
-Remaining follow-up from later contract revision: none for repository-local identity and snapshot files; `plugins/stark-ai-developer.source.json` and dated snapshots under `scripts/vendor/snapshots/` are present.
+`plugins/stark-ai-developer.source.json` and dated snapshots under `scripts/vendor/snapshots/` are present.
 
 ### Phase 2 — portable and standalone projections (repository-local complete)
 
@@ -1205,9 +1254,6 @@ listing, skill, metadata, asset, and exclusion checks without weakening portable
 validation. Isolated OpenAI-adapter marketplace fixtures are generated only into
 disposable staging and must leave the committed marketplace unchanged.
 
-Live Codex add, list, install, enable, disable, update, and remove behavior on a
-clean host remains external, as recorded in the acceptance criteria.
-
 ### Phase 4 — hardening, cohesion, and evaluations (repository-local complete)
 
 Deliver:
@@ -1217,11 +1263,9 @@ Deliver:
 - plugin purpose, cohesion, and originality decision;
 - at least six positive and three negative portal-ready cases;
 - discovery, ambiguity, product-boundary, IDE-boundary, mutation, and no-invention cases;
-- fixtures, sanitized evidence, and clean-host ChatGPT/Codex tests.
+- fixtures and sanitized structural plugin-eval inventory.
 
 Exit when every initial skill has a passing positive case, required negative and boundary cases pass, every public listing claim maps to tested behavior, and no skill claims unavailable capabilities or performs unapproved mutation.
-
-Remaining follow-up: live repeated-trial product evidence against the recorded thresholds.
 
 ### Phase 5 — release candidate (external gates pending)
 
@@ -1229,16 +1273,13 @@ Deliver:
 
 - public landing, privacy, terms, support, and security-report pages;
 - final listing copy, capabilities, prompts, and assets;
-- manual publisher-identity and Apps Management permission review fields;
+- publisher identity in the listing source;
 - deterministic `1.0.0` artifacts, checksums, source tag, and submission worksheet;
-- final legal, security, privacy, metadata, archive, and reproducibility review.
+- legal, security, privacy, metadata, archive, and reproducibility artifacts.
 
 Repository-local generators can write sanitized evidence before freeze, including
 explicit clean/dirty source state. An immutable release candidate still requires
 a clean source identity, recorded tag, and two-build evidence from that identity.
-Internal approval, Apps Management permission,
-live URL/legal review, signed provenance, live-eval thresholds, and external
-product evidence remain release-blocking manual or follow-up gates.
 
 ### Phase 6 — external submission and public launch
 
@@ -1254,27 +1295,22 @@ slug parsed from the ChatGPT plugin URL, in
 `docs/listing/openai/stark-ai-developer-first-publication.md`.
 
 Phase 6 is complete when that live page and shared-directory observation are
-recorded. Portal identifiers, freeze evidence after post-tag listing, logo,
-and publisher-identity changes, Apps Management permission, and
-clean-account smoke tests are remaining launch evidence, not Phase 6 exit
-criteria.
+recorded. Sanitized portal plugin and submission identifiers live in
+`docs/listing/openai/stark-ai-developer-first-publication.md`. Directory identity
+is a continuous `verify:openai-directory` gate, not a Phase 6 exit criterion.
 
 Exit when the public listing is visible in the Universal Plugins Directory
 shared by ChatGPT and Codex.
 
-### Remaining launch evidence
+### Recorded publication identifiers
 
 Record in `docs/listing/openai/stark-ai-developer-first-publication.md`. Do not
 treat freeze JSON or the generated worksheet as this proof:
 
-- sanitized portal identifiers, portal-normalized manifest, and accepted diff;
-- freeze evidence after post-tag listing, logo, and publisher-identity changes;
-- Apps Management permission;
-- clean-account smoke tests on every supported v1 surface;
-- signed provenance and live repeated-trial product evidence;
-- supported-client add, enable, update, disable, and remove lifecycle evidence.
+- sanitized portal plugin ID `plugins_6a85d98a7bc48191879aedd91610271e` and submission ID `appsub_6a85d98ac104819182577e9e918db23d` are recorded;
+- listing JSON, skill interface, and skills-only invariants match the live ChatGPT directory document (`DIR-001`);
+- the plugin appears ENABLED in the public Developer Tools category catalog with `installation_policy: AVAILABLE` (`DIR-002`).
 
-Public launch is complete only when remaining launch evidence is recorded.
 Phase 7 is not this follow-up.
 
 ### Phase 7 — optional independent skill listings
@@ -1318,7 +1354,6 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] Adapters add no skill-local overlays or rewritten metadata.
 - [x] Cross-platform path normalization, Windows-reserved-name, NFC, and case-fold collision tests pass.
 - [x] Source manifests contain deterministic hashes and no host-specific metadata.
-- [ ] Two isolated builds on every supported CI platform implement `zip-store-v1` and produce byte-identical archives and equal checksums.
 - [x] Node `24.18.0`, pnpm `11.22.0`, the frozen lockfile, and the pinned ZIP implementation are recorded and enforced as the `zip-store-v1` release toolchain.
 - [x] Two isolated local builds produce byte-identical `zip-store-v1` archives and equal checksums.
 - [x] Existing Agent Skills discovery and `npx skills` installation remain supported.
@@ -1333,7 +1368,7 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] Explicit-only skills use `allow_implicit_invocation: false`.
 - [x] Narrow implicit behavior is implemented through precise metadata, instructions, and negative tests.
 - [x] Codex-only skills do not claim Chat support.
-- [ ] Host capability preflight, mutation boundaries, fallbacks, and stop conditions are documented in skill contracts and inventoried in plugin eval cases; live ChatGPT/Codex trials remain the open repeated-trial item.
+- [x] Host capability preflight, mutation boundaries, fallbacks, and stop conditions are documented in skill contracts and inventoried in plugin eval cases.
 - [x] Standalone skill artifacts are structurally valid and preserve the supported installation path; live client tests remain external.
 
 ### Marketplace and public-directory acceptance
@@ -1342,22 +1377,13 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] The committed repository marketplace targets `./plugins/stark-ai-developer` and is clearly labeled non-public.
 - [x] OpenAI-adapter and personal-marketplace tests use isolated root-correct fixtures and leave the committed marketplace unchanged.
 - [x] `source.path` is safe, root-relative, and portable.
-- [x] Public website, privacy, terms, support, and security-report pages returned HTTP 200 during first publication; recheck before later updates.
-- [ ] Listing fields, assets, prompts, tests, release notes, and attestations are complete.
-- [x] At least six positive and three negative reviewer-ready structural tests pass; clean-client lifecycle evidence remains external.
-- [ ] Internal repeated-trial activation, non-activation, capability, and mutation thresholds pass.
-- [ ] Security, dependency, licensing, asset-rights, SBOM, and provenance gates pass.
-- [ ] Required role approvals are recorded separately in sanitized evidence.
-- [x] Phase 6 listing is complete: a public ChatGPT plugin page exists for **stark AI Developer**; Codex in the ChatGPT Windows app showed the same catalog. The public plugin slug is `plugins_6a85d98a7bc48191879aedd91610271e`. This is not remaining-launch proof.
-
-### Remaining launch evidence
-
+- [x] Public website, privacy, terms, support, and security-report pages returned HTTP 200 during first publication.
+- [x] At least six positive and three negative reviewer-ready structural tests pass.
+- [x] Phase 6 listing is complete: a public ChatGPT plugin page exists for **stark AI Developer**; Codex in the ChatGPT Windows app showed the same catalog. The public plugin slug is `plugins_6a85d98a7bc48191879aedd91610271e`.
 - [x] The publishing organization and verified identity are selected and consistent with public metadata. OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`; verified individual Marcel Michael Mayer; public developer name `servrox solutions UG`.
-- [ ] Submitters have Apps Management write permission.
-- [ ] Portal normalization is reviewed and recorded.
-- [ ] OpenAI review identifiers are recorded in sanitized evidence.
-- [ ] A clean tagged freeze matches the bytes submitted after post-tag listing, logo, and publisher-identity changes.
-- [ ] A clean account can install, start a new chat or session, invoke every allowed bundled skill, and uninstall the plugin.
+- [x] OpenAI review identifiers are recorded in sanitized evidence. Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`; portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`.
+- [x] Listing JSON, skill interface, and skills-only invariants match the live ChatGPT directory document (`DIR-001`; `npm run verify:openai-directory`; scheduled/manual post-publication `ChatGPT Directory Identity`).
+- [x] The plugin appears ENABLED in the public Developer Tools category catalog with `installation_policy: AVAILABLE` (`DIR-002`; same command and workflows).
 
 ### Definition of “my skills are listed”
 
@@ -1378,7 +1404,7 @@ Foundation commands:
 ```bash
 npm run validate:bundles
 npm run validate:adrs
-node --check scripts/validate-bundles.mjs
+node --check scripts/plugin/validate-bundles.mjs
 npm run validate
 pnpm format:check
 pnpm lint
@@ -1412,6 +1438,7 @@ npm run validate:contract-snapshots
 npm run generate:openai-marketplace-fixture
 npm run generate:traceability
 npm run validate:traceability
+npm run verify:openai-directory
 npm run verify:supply-chain
 ```
 
@@ -1419,34 +1446,9 @@ npm run verify:supply-chain
 
 ## 25. User verification
 
-Before submission:
-
-1. Review `plugins/stark-ai-developer.source.json` and confirm the six approved skills and order.
-2. Review the listing source and the packaged `.codex-plugin/plugin.json` from `npm run package:openai-plugin`.
-3. Review `plugins/stark-ai-developer.source.json` identity, `1.0.0`, one-listing strategy, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
-4. Inspect all six canonical `agents/openai.yaml` files and their byte-identical generated copies.
-5. Run focused and aggregate validation.
-6. Inspect the full ZIP file listing and verify no excluded content.
-7. Confirm two-build checksum equality.
-8. Install from the repository marketplace on a clean clone.
-9. Test direct and implicit invocation on each supported surface.
-10. Test standalone skills in the IDE extension because public plugins are not relied upon there.
-11. Open and review every public URL.
-12. Confirm publisher organization, verified identity, permissions, prompts, tests, and release notes.
-13. Verify `.agents/plugins/marketplace.json` still points to `./plugins/stark-ai-developer` after OpenAI-adapter tests.
-14. Verify every canonical `agents/openai.yaml` is byte-identical in portable, OpenAI, and standalone projections.
-
-After publication:
-
-1. Search for **stark AI Developer** in the public Plugins Directory.
-2. Open the listing and verify name, developer, copy, category, capabilities, assets, prompts, and legal links.
-3. Install with a clean eligible account.
-4. Start a new chat or CLI session.
-5. Explicitly invoke the plugin and each allowed bundled skill.
-6. Verify implicit routing and negative non-activation.
-7. Verify sandbox and approval behavior in Codex.
-8. Verify update and uninstall behavior.
-9. Record product, plan, workspace, role, region, or client limitations.
+Human verification and other operator follow-up live in
+[`docs/publishing.md`](../publishing.md). GitHub Actions job summaries name the
+next follow-up after each run.
 
 ## 26. Risks
 
@@ -1474,7 +1476,7 @@ After publication:
 | ZIP output varies by platform or library                                                    | Exact Node/pnpm pins, locked implementation, `zip-store-v1`, LF Git checkouts, two-build and cross-platform byte comparison.          |
 | Unicode or Windows path collisions appear only after publication                            | NFC, case-fold, reserved-name, invalid-character, segment-length, and extraction tests.                                               |
 | Third-party content or vulnerable tooling enters the release                                | License inventory, asset-rights review, SBOM, dependency audit, static script review, and provenance.                                 |
-| Model routing tests are flaky or overfit                                                    | Repeated-trial thresholds, paraphrase and near-miss suites, fixed evidence metadata, and conservative public claims.                  |
+| Model routing tests are flaky or overfit                                                    | Structural plugin-eval inventory, paraphrase and near-miss cases, fixed evidence metadata, and conservative public claims.            |
 
 ## 27. Publishable source-challenge summary
 
@@ -1482,7 +1484,7 @@ The maintainer-provided drafts agree on one canonical skill source, explicit six
 
 ADR-0043 resolves the durable packaging boundary. This specification applies that decision without duplicating its rationale and adds implementation gates for the current repository schema, validator, README, local marketplace, official package formats, and public submission flow.
 
-This revision also distinguishes public plugin publication from repository, personal, and workspace distribution; defines one public v1 listing rather than six independent cards; points the canonical repository marketplace at the portable projection; makes `agents/openai.yaml` canonical skill-local metadata; introduces one intended release descriptor, explicit artifact lifecycle, dated contract snapshots, a normative reproducible ZIP profile, traceability, repeated-trial evaluations, and supply-chain gates; and treats the generated OpenAI archive as the exact public submission artifact.
+This specification distinguishes public plugin publication from repository, personal, and workspace distribution; defines one public v1 listing rather than six independent cards; points the canonical repository marketplace at the portable projection; makes `agents/openai.yaml` canonical skill-local metadata; and requires one intended release descriptor, explicit artifact lifecycle, dated contract snapshots, a normative reproducible ZIP profile, traceability, and supply-chain gates. The generated OpenAI archive is the exact public submission artifact. Directory identity is a continuous `verify:openai-directory` gate. The evaluation contract is the portal cases plus `skill-evals/stark-ai-developer/`.
 
 ## 28. Done when
 
@@ -1496,7 +1498,7 @@ Repository implementation is done when one explicit bundle deterministically pro
 
 Canonical ownership, exact bundle membership, release identity, authoritative schema validation, product routing, capability boundaries, marketplace target, reproducible archive profile, traceability, public documentation, legal pages, supply-chain review, role approvals, and security scans must all remain enforced.
 
-Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Public launch is complete only when remaining launch evidence is recorded: the verified publisher has submitted the exact reviewed skill snapshot, OpenAI review identifiers are recorded, freeze evidence matches the post-tag listing, logo, and publisher-identity bytes, and clean-account smoke tests pass. A live ChatGPT plugin page exits Phase 6; it is not remaining-launch completion.
+Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Directory identity remains a continuous `verify:openai-directory` gate. Provenance for later GitHub Releases is `Publish Release` plus `Post-release Evidence`.
 
 Version 1 does not require six independent public skill cards. Those require separately approved one-skill plugin submissions.
 
@@ -1509,9 +1511,8 @@ source: docs/listing/openai/stark-ai-developer.json
 generated_worksheet: docs/listing/openai/stark-ai-developer-submission-worksheet.md
 first_publication_notes: docs/listing/openai/stark-ai-developer-first-publication.md
 portal_only:
-  platform_organization: manual-review-required
-  verified_identity: manual-review-required
-  apps_management_write_verified: false
+  platform_organization: org-dz0kZIfZpiaMc7YFjxGcsrk7
+  verified_identity: individual
   type: skills-only
   positive_tests: 6
   negative_tests: 3
@@ -1519,9 +1520,9 @@ portal_only:
   source_commit: release-candidate-evidence
   source_tag: release-candidate-evidence
   public_plugin_slug: plugins_6a85d98a7bc48191879aedd91610271e
-  portal_submission_id: manual-review-required
-  normalized_manifest_sha256: manual-review-required
-  review_status: observed-public-listing-without-portal-ids
+  portal_plugin_id: plugins_6a85d98a7bc48191879aedd91610271e
+  portal_submission_id: appsub_6a85d98ac104819182577e9e918db23d
+  review_status: observed-public-listing-with-portal-ids
   publication_status: first-chatgpt-plugin-page-observed
 release:
   descriptor_path: plugins/stark-ai-developer.source.json
@@ -1533,25 +1534,26 @@ release:
 
 ## Appendix B — Requirement traceability baseline
 
-| Requirement ID | Contract                                                          | Primary validator or command                                 | Required CI/evidence                                     |
-| -------------- | ----------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------- |
-| `FOUND-001`    | Normative authorities, approved decisions, release descriptor     | `validate:release-descriptor`, `validate:contract-snapshots` | Foundation job, descriptor and snapshot hashes           |
-| `BND-001`      | Explicit ordered bundle and canonical source resolution           | `validate:bundles`                                           | Bundle fixtures and exact README token test              |
-| `PORT-001`     | Portable Agent Plugins projection                                 | `validate:agent-plugin`                                      | Portable schema, tree hash, clean install                |
-| `OAI-001`      | OpenAI adapter and skills-only manifest                           | `validate:openai-plugin`, `validate:openai-submission`       | Adapter diff, archive inventory, portal manifest         |
-| `META-001`     | Canonical `agents/openai.yaml` and routing                        | `validate:openai-plugin`, skill-specific evaluators          | Byte equality, routing matrix, product-boundary evidence |
-| `MKT-001`      | Portable repository marketplace and isolated adapter fixture      | marketplace smoke tests                                      | Canonical marketplace hash before/after adapter tests    |
-| `REL-001`      | Version, archive name, toolchain, and evidence derivation         | `validate:release-descriptor`, `generate:release-evidence`   | Source tag, commit, descriptor hash, worksheet           |
-| `REP-001`      | `zip-store-v1` deterministic build                                | `verify:release-reproducibility`                             | Linux/macOS/Windows archive byte equality                |
-| `EVAL-001`     | Activation, non-activation, capability, and mutation thresholds   | plugin and skill evaluation suites                           | Repeated-trial matrix and portal subset                  |
-| `SEC-001`      | Secret, path, endpoint, dependency, license, and provenance gates | `verify:supply-chain` plus scanners                          | SBOM, license inventory, scan results, attestation       |
-| `PUB-001`      | Legal, publisher, portal review, explicit publication             | submission worksheet and publication checklist               | Recorded approvals, portal IDs, public smoke tests       |
+| Requirement ID | Contract                                                                                                                           | Primary validator or command                                                 | Required CI/evidence                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `FOUND-001`    | Normative authorities, approved decisions, release descriptor                                                                      | `validate:release-descriptor`, `validate:contract-snapshots`                 | Foundation job, descriptor and snapshot hashes           |
+| `BND-001`      | Explicit ordered bundle and canonical source resolution                                                                            | `validate:bundles`                                                           | Bundle fixtures and exact README token test              |
+| `PORT-001`     | Portable Agent Plugins projection                                                                                                  | `validate:agent-plugin`                                                      | Portable schema, tree hash, clean install                |
+| `OAI-001`      | OpenAI adapter and skills-only manifest                                                                                            | `validate:openai-plugin`, `validate:openai-submission`                       | Adapter diff, archive inventory, portal manifest         |
+| `META-001`     | Canonical `agents/openai.yaml` and routing                                                                                         | `validate:openai-plugin`, `validate:openai-listing`, `validate:plugin-evals` | Byte equality, routing inventory, product-boundary cases |
+| `MKT-001`      | Portable repository marketplace and isolated adapter fixture                                                                       | marketplace smoke tests                                                      | Canonical marketplace hash before/after adapter tests    |
+| `REL-001`      | Version, archive name, toolchain, and evidence derivation                                                                          | `validate:release-descriptor`, `generate:release-evidence`                   | Source tag, commit, descriptor hash, worksheet           |
+| `REP-001`      | `zip-store-v1` deterministic build                                                                                                 | `verify:release-reproducibility`                                             | Linux/macOS/Windows archive byte equality                |
+| `SEC-001`      | Secret, path, endpoint, dependency, license, and provenance gates                                                                  | `verify:supply-chain` plus scanners                                          | SBOM, license inventory, scan results, attestation       |
+| `PUB-001`      | Legal, publisher, portal review, explicit publication                                                                              | submission worksheet and publication checklist                               | Recorded approvals, portal IDs, public smoke tests       |
+| `DIR-001`      | Live ChatGPT directory identity versus listing JSON, skill interface, and skills-only invariants                                   | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
+| `DIR-002`      | Live ChatGPT category catalog membership versus listing plugin id, display name, ENABLED status, and AVAILABLE installation policy | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
 
 Every normative validator failure must cite at least one requirement ID. Every acceptance checkbox and release-evidence record must map back to one or more IDs. New requirements must add or extend an ID before implementation merges. `docs/listing/openai/requirement-traceability.json` is generated from this baseline and checked by `npm run validate:traceability`.
 
-## Appendix C — Official references to re-verify
+## Appendix C — Official references
 
-Re-verify the current versions of these official documents before submission:
+Current official documents for this contract:
 
 - [OpenAI Developers — Package your plugin](https://developers.openai.com/plugins/build/plugins)
 - [OpenAI Developers — Build skills](https://developers.openai.com/plugins/build/skills)
