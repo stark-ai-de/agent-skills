@@ -1,25 +1,38 @@
-# ADR-0029: Isolate Agent Writes in External Git Worktrees
+# AC-ADR-054: Isolate Agent Writes in External Git Worktrees
 
-ID: ADR-0029
+ID: AC-ADR-054
 Title: Isolate Agent Writes in External Git Worktrees
 Status: Accepted
 Date: 2026-08-25
 Owner: stark-ai-de
-Scope: repository
+Scope: target-repository
 Category: repository-architecture
 Tags: agents, git, multi-agent, worktree, workspace
 Applies when: An agent may modify repository state, whether manually, through delegation, or through an orchestrator.
-Adoptable: false
+Adoptable: true
 Variant: Short
 Canonical variant: Long
-Supersedes: None
-Superseded by: None
+Supersedes: none
+Superseded by: none
 Guide verified: 2026-08-25
 Gist: Give every writing agent one exclusive external worktree while keeping the canonical checkout read-only.
 
-Variants: **Short** · [Long, canonical](0029-keep-linked-worktrees-inside-the-repository.long.md) · [Guide](0029-keep-linked-worktrees-inside-the-repository.guide.md)
+Variants: **Short** · [Long, canonical](ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md) · [Guide](ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md)
 
-## Decision
+## Context and Problem Statement
+
+- Manual agents, delegated agents, and orchestrators may write concurrently.
+- Lead-agent, peer-agent, and ticket-driven setups such as OpenAI Symphony need the same isolation model.
+- The canonical checkout and parallel worktrees need clear write ownership.
+
+## Considered Options
+
+- Write directly in the canonical checkout.
+- Keep worktrees inside the repository.
+- Keep worktrees as ungrouped sibling directories.
+- Group external worktrees under one repository-specific root.
+
+## Decision Outcome
 
 Chosen option: **isolated external Git worktrees under a repository-specific worktree root**.
 
@@ -34,15 +47,6 @@ Chosen option: **isolated external Git worktrees under a repository-specific wor
 - Direct writes to the canonical checkout require an explicit override.
 - The setup SHOULD enforce these rules through host configuration where possible and record the enforced state in the repository's agent instructions. If an agent cannot apply required settings, it MUST provide concrete setup guidance through the available user or orchestration surface.
 
-## Context
+## Decision summary
 
-- Manual, delegated, peer, and Symphony agents need one topology-neutral isolation model.
-- Nested repository worktrees increase scanner, watcher, and tooling coupling.
-- Read visibility across worktrees can aid coordination without granting write ownership.
-
-## Consequences
-
-- Good: writers are isolated while parallel WIP can remain inspectable read-only.
-- Good: the canonical project root stays free of nested working copies.
-- Tradeoff: launchers and IDEs must open the assigned external worktree.
-- Risk: broad writable-root configuration can defeat the isolation model.
+Use one external, repository-scoped worktree per writing work unit; keep the canonical checkout and sibling worktrees read-only to that writer by default.

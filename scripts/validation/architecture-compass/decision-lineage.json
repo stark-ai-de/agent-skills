@@ -149,6 +149,11 @@
       "relations": [{ "type": "adapts", "sources": ["ADR-0039"] }]
     },
     { "id": "AC-ADR-052", "disposition": "independent", "relations": [] },
-    { "id": "AC-ADR-053", "disposition": "independent", "relations": [] }
+    { "id": "AC-ADR-053", "disposition": "independent", "relations": [] },
+    {
+      "id": "AC-ADR-054",
+      "disposition": "material",
+      "relations": [{ "type": "generalizes", "sources": ["ADR-0029"] }]
+    }
   ]
 }

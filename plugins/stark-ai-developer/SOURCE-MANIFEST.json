@@ -168,7 +168,7 @@
       "byteLength": 19454,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "c655bbf99b94eadd1e340965f887756086dfe5b30801a976b16042c21636e08d"
+      "sha256": "14d1aec5346b85dc2e66a314e96f7d7e5b2430dcc83c869c460d2e971f3bf908"
     },
     {
       "byteLength": 810,
@@ -237,10 +237,10 @@
       "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
     },
     {
-      "byteLength": 11279,
+      "byteLength": 11397,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "188ac297dc6a5f49020057e17de3fdcd70c6d904072d542c077e44060e22c4b1"
+      "sha256": "8fc6504203edb9f95de602cf7f2664965042186a9cfb29bca093131bab9ce4da"
     },
     {
       "byteLength": 3796,
@@ -1197,10 +1197,28 @@
       "sha256": "1483a0e7f95239868f44d023f1e4b12f371b01331ef0dd773eeaa9d2d50cf5a2"
     },
     {
-      "byteLength": 45405,
+      "byteLength": 3937,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md",
+      "sha256": "2dca8d360a6c5863a111f547c97a5c8a7a528d1c17255538390824c7441735dc"
+    },
+    {
+      "byteLength": 5596,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md",
+      "sha256": "53557a0c308ef15db83cc94aefc587d99ea5d58785adbe502afedc7d6b9cce7a"
+    },
+    {
+      "byteLength": 2825,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.short.md",
+      "sha256": "902bb56aaa5deb769652ef71df32723ea43001e7d661eae299fba6c7ce1259aa"
+    },
+    {
+      "byteLength": 46088,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "55edc5f6caed71affe85adb139c9d3e9f1b92257cf74e97f94feeed40611e1b7"
+      "sha256": "ba5f3adceb3fa3c3c202e43e7049a387d7f4143d5fdf872add221676e7f2fb02"
     },
     {
       "byteLength": 6996,
@@ -1707,5 +1725,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "0b2510015a96c739584a744eff0680fd8baebb049d32b22c0486cd24e9e03068"
+  "treeHash": "ef06c28bacf09f6bed63114eaaac2b42fb80415ec1f56b45756cbc3ca2d46840"
 }

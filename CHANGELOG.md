@@ -24,6 +24,7 @@
 
 ### Changed
 
+- Updated `architecture-compass` to 0.6.4 with AC-ADR-054 for exclusive external agent worktrees and canonical-checkout isolation.
 - Grouped repository CLIs into `scripts/catalog/`, `scripts/plugin/`, `scripts/release/`, and `scripts/repo/`. Prefer `npm run` names, including `release:intent`; `scripts/vendor/` and `scripts/lib/` stay put. Post-release capture keeps that tree so restored imports still resolve.
 - Dropped Architecture Compass and CodeGraph validator-mutation suites and unused visual-assertion CLI; SkillOpt stays a focused incubator gate outside `npm run validate`.
 - Expanded `DIR-001` to compare category, skill interface, SKILL.md descriptions, portal glyphs, and skills-only invariants, and pinned `portalGlyph` in listing JSON.

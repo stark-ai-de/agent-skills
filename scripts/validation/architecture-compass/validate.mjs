@@ -31,7 +31,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 53 }, (_, index) => index + 1);
+const expectedAdrIds = Array.from({ length: 54 }, (_, index) => index + 1);
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -134,6 +134,7 @@ const expectedCategories = new Map([
   [51, "governance"],
   [52, "governance"],
   [53, "quality-delivery"],
+  [54, "repository-architecture"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -198,6 +199,7 @@ const expectedStems = new Map([
   [51, "ac-adr-051-route-architecture-compass-through-public-and-internal-decision-namespaces"],
   [52, "ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces"],
   [53, "ac-adr-053-use-capability-aware-presentation-profiles-for-portable-agent-receipts"],
+  [54, "ac-adr-054-isolate-agent-writes-in-external-git-worktrees"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
