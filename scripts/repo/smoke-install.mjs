@@ -199,6 +199,8 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
+  const expectedPublicAdrCount = 54;
+  const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
     throw new Error("Installed architecture-compass payload is missing references/adr-catalog.md.");
@@ -208,9 +210,9 @@ function architectureManifest(skillDir) {
   const triplets = references.filter((file) =>
     /^ac-adr-\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*\.(?:short|long|guide)\.md$/.test(path.basename(file)),
   );
-  if (triplets.length !== 159) {
+  if (triplets.length !== expectedVariantCount) {
     throw new Error(
-      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected 159.`,
+      `Installed architecture-compass payload has ${triplets.length} ADR variant(s); expected ${expectedVariantCount}.`,
     );
   }
 
@@ -222,17 +224,19 @@ function architectureManifest(skillDir) {
     variantsByStem.set(match[1], variants);
   }
   if (
-    variantsByStem.size !== 53 ||
+    variantsByStem.size !== expectedPublicAdrCount ||
     [...variantsByStem.values()].some(
       (variants) => !["short", "long", "guide"].every((variant) => variants.has(variant)),
     )
   ) {
     throw new Error(
-      "Installed architecture-compass payload does not contain 53 complete public triplets.",
+      `Installed architecture-compass payload does not contain ${expectedPublicAdrCount} complete public triplets.`,
     );
   }
   const expectedIds = new Set(
-    Array.from({ length: 53 }, (_, index) => String(index + 1).padStart(3, "0")),
+    Array.from({ length: expectedPublicAdrCount }, (_, index) =>
+      String(index + 1).padStart(3, "0"),
+    ),
   );
   const actualIds = new Set(
     [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
