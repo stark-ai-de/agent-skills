@@ -4,7 +4,6 @@ __pycache__/
 !.agents/plugins/
 .agents/plugins/*
 !.agents/plugins/marketplace.json
-/.worktrees/
 /adapters/
 /plugins/.*.stage-*
 /plugins/.*.previous-*
