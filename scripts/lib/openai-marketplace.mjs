@@ -3,22 +3,40 @@ import path from "node:path";
 
 import { canonicalJson } from "./bundle-contract.mjs";
 import { allowedCategories } from "./openai-contract.mjs";
+import { readOpenAiListing } from "./openai-listing.mjs";
 import { assertInside } from "./plugin-projections.mjs";
-import { pluginIdentity } from "./release-descriptor.mjs";
+import { pluginArtifactPaths, pluginIdentity } from "./release-descriptor.mjs";
 
 export const COMMITTED_MARKETPLACE_PATH = ".agents/plugins/marketplace.json";
-export const COMMITTED_MARKETPLACE_NAME = "stark-ai-developer-local";
-export const COMMITTED_MARKETPLACE_DISPLAY_NAME = "stark AI Developer (local portable plugin)";
+
+export function committedMarketplaceLabels(root) {
+  const paths = pluginArtifactPaths(root);
+  return {
+    name: paths.marketplaceName,
+    displayName: paths.marketplaceDisplayName,
+  };
+}
+
+const committedLabels = committedMarketplaceLabels();
+export const COMMITTED_MARKETPLACE_NAME = committedLabels.name;
+export const COMMITTED_MARKETPLACE_DISPLAY_NAME = committedLabels.displayName;
 
 export function validateMarketplaceDocument({
   root,
   contractRoot = root,
   file,
   expectedSource,
-  expectedName = COMMITTED_MARKETPLACE_NAME,
-  expectedDisplayName = COMMITTED_MARKETPLACE_DISPLAY_NAME,
+  expectedName,
+  expectedDisplayName,
   pluginName,
 }) {
+  let resolvedName = expectedName;
+  let resolvedDisplayName = expectedDisplayName;
+  if (resolvedName === undefined || resolvedDisplayName === undefined) {
+    const labels = committedMarketplaceLabels(root);
+    resolvedName ??= labels.name;
+    resolvedDisplayName ??= labels.displayName;
+  }
   const errors = [];
   const marketplace = JSON.parse(fs.readFileSync(file, "utf8"));
   const topLevelKeys = Object.keys(marketplace).sort();
@@ -27,10 +45,10 @@ export function validateMarketplaceDocument({
       "[MKT-001] marketplace top-level keys must be exactly name, interface, and plugins",
     );
   }
-  if (marketplace.name !== expectedName) {
-    errors.push(`[MKT-001] marketplace name must be ${expectedName}`);
+  if (marketplace.name !== resolvedName) {
+    errors.push(`[MKT-001] marketplace name must be ${resolvedName}`);
   }
-  if (marketplace.interface?.displayName !== expectedDisplayName) {
+  if (marketplace.interface?.displayName !== resolvedDisplayName) {
     errors.push("[MKT-001] marketplace display name is incorrect");
   }
   if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length !== 1) {
@@ -116,11 +134,14 @@ export function committedMarketplaceSourcePath(marketplaceTarget) {
 
 export function renderCommittedMarketplace(root) {
   const identity = pluginIdentity(root);
+  const labels = committedMarketplaceLabels(root);
+  const listing = readOpenAiListing(root);
   return renderMarketplace({
-    name: COMMITTED_MARKETPLACE_NAME,
-    displayName: COMMITTED_MARKETPLACE_DISPLAY_NAME,
+    name: labels.name,
+    displayName: labels.displayName,
     pluginName: identity.name,
     sourcePath: committedMarketplaceSourcePath(identity.marketplaceTarget),
+    category: listing.plugin.category,
   });
 }
 

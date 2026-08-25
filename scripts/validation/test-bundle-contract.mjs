@@ -14,7 +14,7 @@ import {
 import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "../lib/release-descriptor.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const validatorPath = path.join(repositoryRoot, "scripts/validate-bundles.mjs");
+const validatorPath = path.join(repositoryRoot, "scripts/plugin/validate-bundles.mjs");
 
 function copyPluginSource(fixtureRoot) {
   fs.mkdirSync(path.join(fixtureRoot, "plugins"), { recursive: true, mode: 0o755 });

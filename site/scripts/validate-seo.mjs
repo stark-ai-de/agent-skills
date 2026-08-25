@@ -2,6 +2,11 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  listingArtifactPaths,
+  listingIdentityFromSource,
+} from "../../scripts/lib/listing-identity.mjs";
+
 const SITE_ORIGIN = "https://stark-ai-de.github.io";
 const SITE_BASE_PATH = "/agent-skills";
 const SITE_URL_PREFIX = `${SITE_ORIGIN}${SITE_BASE_PATH}/`;
@@ -10,9 +15,11 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(dirname, "..");
 const repoRoot = path.resolve(siteRoot, "..");
 const distRoot = path.join(siteRoot, "dist");
-const listingSource = JSON.parse(
-  readFileSync(path.join(repoRoot, "docs/listing/openai/stark-ai-developer.json"), "utf8"),
+const pluginSource = JSON.parse(
+  readFileSync(path.join(repoRoot, "plugins/stark-ai-developer.source.json"), "utf8"),
 );
+const listingRelativePath = listingArtifactPaths(listingIdentityFromSource(pluginSource)).listing;
+const listingSource = JSON.parse(readFileSync(path.join(repoRoot, listingRelativePath), "utf8"));
 const htmlCache = new Map();
 const titleOwners = new Map();
 
@@ -513,13 +520,15 @@ function validateLlmsTxt() {
   assert(existsSync(llmsPath), "llms.txt was not generated.");
 
   const content = readFileSync(llmsPath, "utf8");
+  const pluginWebsiteUrl = listingSource.plugin?.urls?.website;
   const chatgptPluginUrl = listingSource.plugin?.urls?.chatgptPlugin;
   assert(content.startsWith("# "), "llms.txt must start with an H1.");
   assert(!content.includes("/incubator/"), "llms.txt must not list incubator pages.");
   assert(
-    content.includes(`${SITE_URL_PREFIX}plugins/stark-ai-developer/`),
-    "llms.txt missing plugin URL",
+    typeof pluginWebsiteUrl === "string" && pluginWebsiteUrl.length > 0,
+    "listing source missing plugin website URL",
   );
+  assert(content.includes(pluginWebsiteUrl), "llms.txt missing plugin URL");
   assert(
     typeof chatgptPluginUrl === "string" && chatgptPluginUrl.length > 0,
     "listing source missing ChatGPT plugin URL",

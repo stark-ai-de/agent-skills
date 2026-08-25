@@ -437,7 +437,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/validate-drawio-visual-evals.mjs [--case path] [--artifacts-dir dir]
+  console.log(`Usage: node scripts/validation/drawio-diagrams/validate-visual-evals.mjs [--case path] [--artifacts-dir dir]
 
 Validates drawio-diagrams eval case schema and optional ## Visual Assertions sections.
 When --artifacts-dir is supplied, also checks matching generated .drawio, PNG, and SVG artifacts.

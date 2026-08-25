@@ -1,0 +1,60 @@
+name: Build release subjects
+description: Build reproducible release ZIPs and the versioned JSON release subject with the repository-owned script.
+
+inputs:
+  subjects-dir:
+    description: Directory that receives openai.zip, portable.zip, and release-subject.json
+    required: true
+  report-file:
+    description: Optional path for the machine-readable reproducibility report
+    required: false
+    default: ""
+
+outputs:
+  status:
+    description: Reproducibility status
+    value: ${{ steps.build.outputs.status }}
+  source_sha:
+    description: Source commit bound to the subjects
+    value: ${{ steps.build.outputs.source_sha }}
+  release_version:
+    description: Repository release version bound to the subjects
+    value: ${{ steps.build.outputs.release_version }}
+  plugin_version:
+    description: Plugin version bound to the subjects
+    value: ${{ steps.build.outputs.plugin_version }}
+  openai_sha:
+    description: SHA-256 of openai.zip
+    value: ${{ steps.build.outputs.openai_sha }}
+  portable_sha:
+    description: SHA-256 of portable.zip
+    value: ${{ steps.build.outputs.portable_sha }}
+  openai_bytes:
+    description: Byte length of openai.zip
+    value: ${{ steps.build.outputs.openai_bytes }}
+  portable_bytes:
+    description: Byte length of portable.zip
+    value: ${{ steps.build.outputs.portable_bytes }}
+  archive_profile:
+    description: Reproducible archive profile
+    value: ${{ steps.build.outputs.archive_profile }}
+  openai_archive:
+    description: OpenAI archive name from the release descriptor
+    value: ${{ steps.build.outputs.openai_archive }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build reproducible release subjects
+      id: build
+      shell: bash
+      env:
+        SUBJECTS_DIR: ${{ inputs.subjects-dir }}
+        REPORT_FILE: ${{ inputs.report-file }}
+      run: |
+        set -euo pipefail
+        args=(--subjects-dir "$SUBJECTS_DIR" --github-output "$GITHUB_OUTPUT")
+        if [ -n "$REPORT_FILE" ]; then
+          args+=(--report-file "$REPORT_FILE")
+        fi
+        node scripts/release/verify-release-reproducibility.mjs "${args[@]}"

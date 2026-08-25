@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Write run summary
+description: Write a short, safe, emoji-readable summary for the current GitHub Actions job.
+
+inputs:
+  title:
+    description: Short job title shown in the summary
+    required: true
+  success:
+    description: Next instruction when the job succeeds
+    required: false
+    default: Review the run result and continue with the documented hand-off.
+  failure:
+    description: Next instruction when the job fails
+    required: false
+    default: Open the failed step, fix the owning issue, and rerun after correction.
+
+runs:
+  using: composite
+  steps:
+    - name: Write concise job summary
+      shell: bash
+      env:
+        SUMMARY_TITLE: ${{ inputs.title }}
+        SUCCESS_INSTRUCTION: ${{ inputs.success }}
+        FAILURE_INSTRUCTION: ${{ inputs.failure }}
+        JOB_NAME: ${{ github.job }}
+        JOB_STATUS: ${{ job.status }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+        RUN_ID: ${{ github.run_id }}
+        RUN_ATTEMPT: ${{ github.run_attempt }}
+        EVENT_NAME: ${{ github.event_name }}
+        REF_NAME: ${{ github.ref_name }}
+        SOURCE_SHA: ${{ github.sha }}
+        SERVER_URL: ${{ github.server_url }}
+        REPOSITORY: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+
+        case "${JOB_STATUS}" in
+          success)
+            icon="✅"
+            instruction="${SUCCESS_INSTRUCTION}"
+            ;;
+          failure)
+            icon="❌"
+            instruction="${FAILURE_INSTRUCTION}"
+            ;;
+          cancelled)
+            icon="⏹️"
+            instruction="Rerun the workflow after the superseding or cancelled run is understood."
+            ;;
+          *)
+            icon="⚠️"
+            instruction="Inspect the run status and failed step before continuing."
+            ;;
+        esac
+
+        run_url="${SERVER_URL}/${REPOSITORY}/actions/runs/${RUN_ID}"
+        short_sha="${SOURCE_SHA:0:12}"
+        ref_name="${REF_NAME:-detached}"
+
+        {
+          printf '## %s %s\n\n' "${icon}" "${SUMMARY_TITLE}"
+          printf '%s\n' "- **Status:** \`${JOB_STATUS}\`"
+          printf '%s\n' "- **Workflow:** \`${WORKFLOW_NAME}\` · **Job:** \`${JOB_NAME}\`"
+          printf '%s\n' "- **Event:** \`${EVENT_NAME}\` · **Ref:** \`${ref_name}\` · **SHA:** \`${short_sha}\`"
+          printf '%s\n' "- **Run:** [#${RUN_ID} · attempt ${RUN_ATTEMPT}](${run_url})"
+          printf '\n### ➡️ Next\n\n'
+          printf '%s\n' "- ${instruction}"
+        } >> "${GITHUB_STEP_SUMMARY}"

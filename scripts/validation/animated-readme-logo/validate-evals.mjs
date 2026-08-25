@@ -92,7 +92,7 @@ function requiredValue(argv, index, option) {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/validate-animated-readme-logo-evals.mjs [--case path] [--artifacts-dir dir]
+  console.log(`Usage: node scripts/validation/animated-readme-logo/validate-evals.mjs [--case path] [--artifacts-dir dir]
 
 Validates the fixed v0.5 animated-readme-logo eval-case schema and optional
 ## Visual Assertions sections.

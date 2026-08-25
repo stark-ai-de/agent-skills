@@ -6,12 +6,18 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { assertInside, comparePosixPaths, enumerateTree } from "../lib/plugin-projections.mjs";
+import {
+  assertInside,
+  comparePosixPaths,
+  enumerateTree,
+  PORTABLE_TARGET,
+  RETIRED_OPENAI_ADAPTER_TARGET,
+} from "../lib/plugin-projections.mjs";
 import { loadValidatedBundle } from "../lib/bundle-contract.mjs";
 import { sourceTreeSha256 } from "../lib/release-input-digest.mjs";
 import { listUntrackedAndIgnored } from "../lib/git-index.mjs";
 import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "../lib/release-descriptor.mjs";
-import { withOpenAiStage } from "../lib/openai-projection.mjs";
+import { LISTING_PATH, withOpenAiStage } from "../lib/openai-projection.mjs";
 import { readOpenAiListing } from "../lib/openai-listing.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -58,7 +64,7 @@ try {
 
 const staleOutput = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-standalone-contract-"));
 try {
-  const syncScript = path.join(repositoryRoot, "scripts", "sync-standalone-skills.mjs");
+  const syncScript = path.join(repositoryRoot, "scripts", "plugin", "sync-standalone-skills.mjs");
   const initial = spawnSync(
     process.execPath,
     [syncScript, "--root", repositoryRoot, "--output", staleOutput],
@@ -76,7 +82,7 @@ try {
   fs.rmSync(staleOutput, { recursive: true, force: true });
 }
 
-const openaiSyncScript = path.join(repositoryRoot, "scripts", "sync-openai-plugin.mjs");
+const openaiSyncScript = path.join(repositoryRoot, "scripts", "plugin", "sync-openai-plugin.mjs");
 const missingTarget = spawnSync(process.execPath, [openaiSyncScript], { encoding: "utf8" });
 assert.notEqual(missingTarget.status, 0, "OpenAI adapter sync must require an explicit target");
 assert.match(
@@ -88,8 +94,8 @@ assert.match(
 const retiredRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-openai-retired-"));
 try {
   for (const target of [
-    "adapters/openai/stark-ai-developer",
-    "./adapters/openai/stark-ai-developer/",
+    RETIRED_OPENAI_ADAPTER_TARGET,
+    `./${RETIRED_OPENAI_ADAPTER_TARGET}/`,
     "adapters/openai",
   ]) {
     const retired = spawnSync(
@@ -116,8 +122,6 @@ withOpenAiStage(repositoryRoot, (staged) => {
   const listing = readOpenAiListing(repositoryRoot);
   assert.equal(manifest.interface.brandColor, listing.plugin.brandColors.light);
   assert.equal(manifest.interface.brandColorDark, listing.plugin.brandColors.dark);
-  assert.equal(manifest.interface.brandColor, "#0021C7");
-  assert.equal(manifest.interface.brandColorDark, "#7FA0FF");
 });
 
 const EXTRA_RELATIVES = [".env", ".codegraph/database", "coverage/result.json", "untracked.txt"];
@@ -154,9 +158,11 @@ function treeContains(root, relativePosix) {
 
 const mutationClone = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-ignored-inputs-"));
 try {
-  const clone = spawnSync("git", ["clone", "--local", "--quiet", repositoryRoot, mutationClone], {
-    encoding: "utf8",
-  });
+  const clone = spawnSync(
+    "git",
+    ["clone", "--local", "--no-hardlinks", "--quiet", repositoryRoot, mutationClone],
+    { encoding: "utf8" },
+  );
   assert.equal(clone.status, 0, clone.stderr);
   fs.copyFileSync(
     path.join(repositoryRoot, PLUGIN_SOURCE_PATH),
@@ -170,6 +176,14 @@ try {
     path.join(repositoryRoot, "scripts/vendor/snapshots"),
     path.join(mutationClone, "scripts/vendor/snapshots"),
     { recursive: true },
+  );
+  const listingDir = path.posix.dirname(LISTING_PATH);
+  fs.cpSync(path.join(repositoryRoot, listingDir), path.join(mutationClone, listingDir), {
+    recursive: true,
+  });
+  fs.copyFileSync(
+    path.join(repositoryRoot, "package.json"),
+    path.join(mutationClone, "package.json"),
   );
   const stagedContract = spawnSync(
     "git",
@@ -209,11 +223,16 @@ try {
   const standaloneOut = path.join(mutationClone, "dist-standalone");
   const evidence = path.join(mutationClone, "release-evidence.json");
   const commands = [
-    runNode("sync-agent-plugin.mjs", ["--root", mutationClone]),
-    runNode("validate-openai-plugin.mjs", ["--root", mutationClone]),
-    runNode("package-openai-plugin.mjs", ["--root", mutationClone, "--output", openaiZip]),
-    runNode("sync-standalone-skills.mjs", ["--root", mutationClone, "--output", standaloneOut]),
-    runNode("verify-release-reproducibility.mjs", ["--evidence", evidence], {
+    runNode("plugin/sync-agent-plugin.mjs", ["--root", mutationClone]),
+    runNode("plugin/validate-openai-plugin.mjs", ["--root", mutationClone]),
+    runNode("plugin/package-openai-plugin.mjs", ["--root", mutationClone, "--output", openaiZip]),
+    runNode("plugin/sync-standalone-skills.mjs", [
+      "--root",
+      mutationClone,
+      "--output",
+      standaloneOut,
+    ]),
+    runNode("release/verify-release-reproducibility.mjs", ["--evidence", evidence], {
       cwd: mutationClone,
     }),
   ];
@@ -238,12 +257,7 @@ try {
     }
   }
 
-  const leakRoots = [
-    path.join(mutationClone, "plugins", "stark-ai-developer"),
-    openaiZip,
-    standaloneOut,
-    evidence,
-  ];
+  const leakRoots = [path.join(mutationClone, PORTABLE_TARGET), openaiZip, standaloneOut, evidence];
   for (const extra of EXTRA_RELATIVES) {
     for (const leakRoot of leakRoots) {
       assert.equal(

@@ -2,15 +2,14 @@
 
 Observed 2026-08-19 after the first public OpenAI plugin listing. This file is
 the repository source for those portal and product-surface observations. Phase 6
-listing is complete. This file is not freeze evidence, not a portal draft
-identifier, and not remaining-launch lifecycle proof.
+listing is complete.
 
-Listing copy remains
-[`stark-ai-developer.json`](stark-ai-developer.json). Recommended values remain
+Listing copy is [`stark-ai-developer.json`](stark-ai-developer.json). Recommended
+values are
 [`stark-ai-developer-values-review.md`](stark-ai-developer-values-review.md).
-Committed freeze hashes remain
+Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
-until a maintainer regenerates that file from a clean tagged identity.
+only from a clean tagged identity.
 
 Do not add secrets, tokens, cookies, private reviewer messages, customer data,
 or machine-specific paths here.
@@ -22,8 +21,9 @@ The public ChatGPT plugin page is:
 https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
 
 The public listing id parsed from that URL is
-`plugins_6a85d98a7bc48191879aedd91610271e`. That slug is not a portal draft or
-submission identifier.
+`plugins_6a85d98a7bc48191879aedd91610271e`. Observed 2026-08-21: that same
+token is the Platform plugin ID in Apps Management. It is not the portal
+submission ID. The submission ID is `appsub_6a85d98ac104819182577e9e918db23d`.
 
 That URL is stored as `plugin.urls.chatgptPlugin`. Catalog website, privacy,
 terms, support, and security URLs stay on GitHub Pages. The OpenAI zip
@@ -88,6 +88,24 @@ proof of the logo swap or of the ChatGPT plugin URL.
 
 ## Portal observations
 
+### Portal identifiers
+
+Recorded 2026-08-21 from the logged-in Apps Management submission page. This
+URL requires Platform login and is not a public listing URL:
+
+https://platform.openai.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e/submissions/appsub_6a85d98ac104819182577e9e918db23d
+
+| Identifier           | Value                                      |
+| -------------------- | ------------------------------------------ |
+| Platform plugin ID   | `plugins_6a85d98a7bc48191879aedd91610271e` |
+| Portal submission ID | `appsub_6a85d98ac104819182577e9e918db23d`  |
+
+No separate draft ID appeared in that URL. Do not copy this Platform URL into
+public listing fields, README badges, or `.codex-plugin/plugin.json`. The
+submission page shows a visual JSON representation; OpenAI documents no URL
+that exports the saved portal `plugin.json`. That file is not a v1 launch
+gate.
+
 ### Country picker
 
 The live plugin portal no longer exposes a publisher country or region picker.
@@ -119,8 +137,9 @@ come from the control `aria-label` (`Use chat icon` → `chat`):
 `default`, `bolt`, `chart`, `chat`, `code`, `cursor`, `heart`, `hierarchy`,
 `pdf`, `pen`, `radar`, `search`
 
-These names are portal-only. They are not listing JSON fields and must not be
-written into `agents/openai.yaml`. Optional `icon_small` / `icon_large` image
+These names are portal-only. Pin the reviewed glyph for each skill as
+`listing.skills[].portalGlyph` for `npm run verify:openai-directory`. Do not
+write them into `agents/openai.yaml`. Optional `icon_small` / `icon_large` image
 paths inside a skill interface are a separate, unused mechanism. Do not invent
 a named-palette key such as `icon: chat`.
 
@@ -159,33 +178,24 @@ archive as `assets/logo.png` and `assets/composer-icon.png` without rewriting.
 
 The catalog PWA `site/public/icon-512.png` was not replaced.
 
-## Remaining launch evidence
-
-Recorded 2026-08-20 from Apps Management:
+## Recorded identifiers
 
 - OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`
 - verified identity: individual, Marcel Michael Mayer
-- public developer name remains `servrox solutions UG`
+- public developer name `servrox solutions UG`
+- Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`
+- portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`
 
-Still remaining:
+Directory identity is `npm run verify:openai-directory` locally and the strict
+`ChatGPT Directory Identity` workflow after publication on a schedule or manual
+dispatch, through `.github/actions/verify-openai-directory`. Deterministic hosted
+`Validate` does not fetch the live directory. That gate covers the directory
+document (`DIR-001`) and public category-catalog membership (`DIR-002`).
 
-- Apps Management permission recorded in sanitized evidence
-- portal-normalized manifest, accepted diff, and portal draft/submission IDs
-- clean tagged freeze after the logo swap, listing URL, and publisher-identity changes
-- signed release-tag provenance (annotated `v0.19.1` has no GPG signature and no artifact attestation; add Sigstore attestations with `.github/workflows/attest-release.yml` on the next GitHub Release or by dispatching that workflow against a tag)
-- live ChatGPT/Codex repeated-trial evaluations against recorded thresholds (2026-08-20 attempt recorded in [`skill-evals/stark-ai-developer/evidence/live-repeated-trials.md`](../../../skill-evals/stark-ai-developer/evidence/live-repeated-trials.md); ChatGPT web tab vanished before login, Codex desktop was not running, Codex CLI lacked the public plugin; `reliability-thresholds.json` stays `not_run`; 0 of 18 manifest cases and 0 threshold trials observed)
-- sanitized supported-client add, enable, update, disable, and remove matrix
-- clean-account install, invoke, and uninstall on every supported v1 surface
-
-Maintainer reported a post-release manual client lifecycle test on 2026-08-20.
-That report does not replace a sanitized per-surface matrix. Do not infer
-ChatGPT desktop, mobile, or clean-account results from it.
-
-Do not regenerate
+Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
-except from a clean working tree whose `HEAD` has an exact Git tag. `plugin-released`
-/`main` at `19c0829`/`a5232ae` is not tagged; the latest GitHub tag remains `v0.19.1`
-on `35101f2`. A dirty or untagged evidence write is not a freeze.
+only from a clean working tree whose `HEAD` has an exact Git tag. The latest
+GitHub tag is `v0.19.1`. A dirty or untagged evidence write is not a freeze.
 
 ## Do not
 
@@ -199,3 +209,5 @@ on `35101f2`. A dirty or untagged evidence write is not a freeze.
 - upload the portable Agent Plugins zip to the OpenAI portal
 - regenerate or rewrite committed freeze evidence except from a clean tagged identity
 - commit secrets, reviewer transcripts, or machine-specific paths
+- invent a portal URL that downloads the saved `.codex-plugin/plugin.json`
+- log ChatGPT directory-document account identifiers, cookies, session tokens, or category catalog `pageToken` values

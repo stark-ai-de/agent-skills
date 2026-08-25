@@ -30,11 +30,8 @@ disposition of the nine cases removed from the reviewed HEAD snapshot. Its
 byte-locked sources live under
 `legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/`, outside the installed skill
 payload. The owning validator binds the exact deletion set and independent
-HEAD SHA-256 values, requires every material legacy behavior bullet to map once
-to an existing target heading/marker, and executes negative lineage fixtures.
-Those tests mutate or remove only disposable copies under the operating system's
-temporary directory; they never write the repository checkout or Git index, and
-each fixture registers cleanup in `finally`.
+HEAD SHA-256 values and requires every material legacy behavior bullet to map once
+to an existing target heading/marker.
 
 ## Captured behavioral suite
 

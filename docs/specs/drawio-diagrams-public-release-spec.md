@@ -217,8 +217,8 @@ pnpm lint
 npm run validate:drawio
 npm run validate
 npm run smoke:install
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --base-ref origin/main
+node scripts/release/check-release-intent.mjs --base-ref origin/main
+node scripts/release/validate-release.mjs --base-ref origin/main
 git diff --check
 ```
 

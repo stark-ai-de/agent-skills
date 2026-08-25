@@ -14,21 +14,46 @@ import {
 } from "../lib/reproducible-archive.mjs";
 import { hashBytes } from "../lib/bundle-contract.mjs";
 import { validateContractSnapshots } from "../lib/contract-snapshots.mjs";
-import { sourceTreeEntries, sourceTreeSha256 } from "../lib/release-input-digest.mjs";
+import {
+  SOURCE_TREE_HASH_RECIPE,
+  sourceTreeEntries,
+  sourceTreeSha256,
+} from "../lib/release-input-digest.mjs";
 import {
   loadReleaseDescriptorFile,
   PLUGIN_SOURCE_PATH,
   PLUGIN_SOURCE_SCHEMA_PATH,
+  pluginArtifactPaths,
+  pluginIdentity,
   validateToolchainPins,
 } from "../lib/release-descriptor.mjs";
+import { POST_RELEASE_RECEIPT_SCHEMA_PATH } from "../release/post-release-contract.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 const { release, errors } = loadReleaseDescriptorFile(repositoryRoot);
 assert.equal(errors.length, 0, errors.join("\n"));
-assert.equal(release.pluginId, "stark-ai-developer");
-assert.equal(release.version, "1.0.0");
-assert.equal(release.build.archiveProfile, "zip-store-v1");
+const pluginSource = JSON.parse(
+  fs.readFileSync(path.join(repositoryRoot, PLUGIN_SOURCE_PATH), "utf8"),
+);
+assert.equal(release.pluginId, pluginSource.pluginId);
+assert.equal(release.version, pluginSource.version);
+assert.equal(release.build.archiveProfile, pluginSource.build.archiveProfile);
+assert.equal(release.displayName, pluginSource.displayName);
+assert.equal(pluginIdentity(repositoryRoot).displayName, pluginSource.displayName);
+const derivedPaths = pluginArtifactPaths(repositoryRoot);
+assert.equal(derivedPaths.portableTarget, pluginSource.outputs.portableProjection);
+assert.equal(derivedPaths.listing, `docs/listing/openai/${pluginSource.listingId}.json`);
+assert.equal(
+  derivedPaths.postReleaseReceiptSchema,
+  `skill-evals/${pluginSource.pluginId}/evidence/post-release-receipt.schema.json`,
+);
+assert.equal(derivedPaths.postReleaseReceiptSchema, POST_RELEASE_RECEIPT_SCHEMA_PATH);
+assert.equal(
+  fs.existsSync(path.join(repositoryRoot, derivedPaths.listing)),
+  true,
+  `${derivedPaths.listing} must exist`,
+);
 const gitAttributes = fs.readFileSync(path.join(repositoryRoot, ".gitattributes"), "utf8");
 assert.match(gitAttributes, /^\* text=auto eol=lf$/m);
 assert.match(gitAttributes, /^\*\.png binary$/m);
@@ -104,6 +129,11 @@ try {
 
 const digestEntries = sourceTreeEntries(repositoryRoot);
 assert.ok(digestEntries.length > 0, "release-input tree must enumerate tracked files");
+assert.ok(
+  digestEntries.some((entry) => entry.path === "package.json"),
+  "package.json must be included in release-input hashing",
+);
+assert.match(SOURCE_TREE_HASH_RECIPE, /package\.json/);
 assert.ok(
   digestEntries.every((entry) => entry.mode === "0644" || entry.mode === "0755"),
   "release-input modes must be Git-normalized 0644 or 0755",

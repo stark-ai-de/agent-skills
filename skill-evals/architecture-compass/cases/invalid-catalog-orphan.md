@@ -7,14 +7,14 @@ Yes.
 ## Prompt
 
 Validate an Architecture Compass catalog that links directly to
-`ac-adr-054-removed-rule.short.md`, while no matching triplet exists and the
-approved inventory ends at AC-ADR-053. Do not create AC-ADR-054.
+`ac-adr-055-removed-rule.short.md`, while no matching triplet exists and the
+approved inventory ends at AC-ADR-054. Do not create AC-ADR-055.
 
 ## Deterministic Assertions
 
 - contains: validation failed
 - contains: orphan AC-ADR link
-- contains: ac-adr-054-removed-rule.short.md
+- contains: ac-adr-055-removed-rule.short.md
 - not_contains: Architecture Compass validated
 
 ## Expected Behavior

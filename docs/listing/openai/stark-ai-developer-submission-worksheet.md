@@ -3,7 +3,7 @@
 Generated from `docs/listing/openai/stark-ai-developer.json`. This worksheet is
 portal field copy only. First-publication observations live in
 `docs/listing/openai/stark-ai-developer-first-publication.md`. This file is not
-freeze evidence, a portal draft identifier, or clean-account proof.
+freeze evidence or a portal draft identifier.
 
 ## Listing
 
@@ -36,31 +36,29 @@ freeze evidence, a portal draft identifier, or clean-account proof.
 2. Review the available code context and recommend an architecture with explicit tradeoffs.
 3. Create an editable draw.io diagram for this system.
 
-## Publisher review
+## Publisher
 
 - Legal identity: servrox solutions UG
 - Identity source: package.json author declaration
 - Verified identity: individual, Marcel Michael Mayer
 - OpenAI organization ID: org-dz0kZIfZpiaMc7YFjxGcsrk7
-- Apps Management permission: manual review required
-- Supported-client lifecycle status (add, enable, update, disable, remove): manual review required
 
 ## Bundled skill routing
 
-- `codex-memory-curator`: CODEX; implicit invocation disabled
-- `codex-spec-interviewer`: CHAT, CODEX; implicit invocation enabled
-- `animated-readme-logo`: CHAT, CODEX; implicit invocation enabled
-- `architecture-compass`: CHAT, CODEX; implicit invocation enabled
-- `codegraph-ast-grep`: CODEX; implicit invocation disabled
-- `drawio-diagrams`: CHAT, CODEX; implicit invocation enabled
+- `codex-memory-curator`: CODEX; implicit invocation disabled; portal glyph `radar`
+- `codex-spec-interviewer`: CHAT, CODEX; implicit invocation enabled; portal glyph `chat`
+- `animated-readme-logo`: CHAT, CODEX; implicit invocation enabled; portal glyph `bolt`
+- `architecture-compass`: CHAT, CODEX; implicit invocation enabled; portal glyph `hierarchy`
+- `codegraph-ast-grep`: CODEX; implicit invocation disabled; portal glyph `search`
+- `drawio-diagrams`: CHAT, CODEX; implicit invocation enabled; portal glyph `pen`
 
 ## Archive and portal evidence to attach
 
 - Submission ZIP SHA-256 and complete entry inventory from `npm run package:openai-plugin`.
+- Live ChatGPT directory identity versus listing JSON, skill interface, skills-only invariants, and public category-catalog membership from `npm run verify:openai-directory`.
 - Source commit and release tag.
 - Clean/dirty source state and deterministic release-input tree digest.
-- Generated and portal-normalized manifests.
-- Accepted normalization diff, if the portal changes the manifest.
+- Generated `.codex-plugin/plugin.json` from the submitted ZIP.
 - Positive/negative evaluations.
 - Portal draft ID, review result, and remaining sanitized publication evidence.
 - First-publication observations from `docs/listing/openai/stark-ai-developer-first-publication.md`.

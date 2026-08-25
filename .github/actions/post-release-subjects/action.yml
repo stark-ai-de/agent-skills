@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Prepare post-release subjects
+description: Capture the current receipt contract, check out an exact tag, and prepare tag-bound subjects.
+
+inputs:
+  tag:
+    description: Exact release tag to verify
+    required: true
+  subjects-dir:
+    description: Workspace-relative directory for rebuilt archive subjects
+    required: true
+  verifier-sha:
+    description: Protected default-branch commit that owns the current verifier contract
+    required: true
+  verifier-ref:
+    description: Exact default-branch workflow ref that owns the current verifier contract
+    required: true
+
+outputs:
+  release_sha:
+    description: Commit resolved from the release tag
+    value: ${{ steps.identity.outputs.release_sha }}
+  package_status:
+    description: Tag-bound reproducibility status
+    value: ${{ steps.package.outputs.status }}
+  openai_sha:
+    description: Rebuilt OpenAI archive digest
+    value: ${{ steps.package.outputs.openai_sha }}
+  portable_sha:
+    description: Rebuilt portable archive digest
+    value: ${{ steps.package.outputs.portable_sha }}
+  openai_bytes:
+    description: Rebuilt OpenAI archive size
+    value: ${{ steps.package.outputs.openai_bytes }}
+  portable_bytes:
+    description: Rebuilt portable archive size
+    value: ${{ steps.package.outputs.portable_bytes }}
+
+runs:
+  using: composite
+  steps:
+    - name: Verify the trusted workflow source
+      shell: bash
+      env:
+        VERIFIER_SHA: ${{ inputs.verifier-sha }}
+        VERIFIER_REF: ${{ inputs.verifier-ref }}
+        WORKFLOW_SHA: ${{ github.workflow_sha }}
+        WORKFLOW_REF: ${{ github.workflow_ref }}
+      run: |
+        set -euo pipefail
+        checkout_sha=$(git rev-parse HEAD)
+        if [[ ! "${VERIFIER_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "Verifier SHA must be a full 40-hex commit."
+          exit 1
+        fi
+        if [ "${checkout_sha}" != "${VERIFIER_SHA}" ] || [ "${WORKFLOW_SHA}" != "${VERIFIER_SHA}" ]; then
+          echo "Checked-out verifier source does not match the trusted workflow SHA."
+          exit 1
+        fi
+        if [ "${WORKFLOW_REF}" != "${VERIFIER_REF}" ]; then
+          echo "Workflow ref does not match the trusted verifier ref."
+          exit 1
+        fi
+
+    - name: Capture the current receipt contract
+      shell: bash
+      run: |
+        node scripts/release/post-release-contract.mjs capture \
+          --destination "$RUNNER_TEMP/post-release-contract"
+
+    - name: Resolve and check out the exact release tag
+      id: identity
+      shell: bash
+      env:
+        RELEASE_TAG: ${{ inputs.tag }}
+      run: |
+        node "$RUNNER_TEMP/post-release-contract/scripts/release/resolve-release-tag.mjs" \
+          --tag "$RELEASE_TAG" \
+          --github-output "$GITHUB_OUTPUT"
+
+    - name: Set up pnpm and Node
+      uses: pnpm/setup@v2
+      with:
+        runtime: node@24.18.0
+        cache: false
+        install: false
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile --prefer-offline
+
+    - name: Prepare tag-bound release subjects
+      id: package
+      shell: bash
+      env:
+        RELEASE_SHA: ${{ steps.identity.outputs.release_sha }}
+        RELEASE_TAG: ${{ inputs.tag }}
+        SUBJECTS_DIR: ${{ inputs.subjects-dir }}
+      run: |
+        set -euo pipefail
+        subjects_path="$PWD/$SUBJECTS_DIR"
+        rm -rf -- "${subjects_path}"
+        node "$RUNNER_TEMP/post-release-contract/scripts/release/prepare-release-subjects.mjs" \
+          --evidence "$RUNNER_TEMP/legacy-release-evidence.json" \
+          --subjects-dir "${subjects_path}" \
+          --github-output "$GITHUB_OUTPUT" \
+          --report-file "$RUNNER_TEMP/release-subject-report.json"
+        echo "source_sha=${RELEASE_SHA}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore the current receipt contract
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        node "$RUNNER_TEMP/post-release-contract/scripts/release/post-release-contract.mjs" restore \
+          --destination "$PWD"

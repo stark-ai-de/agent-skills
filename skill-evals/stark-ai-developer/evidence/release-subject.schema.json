@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/stark-ai-de/agent-skills/blob/main/skill-evals/stark-ai-developer/evidence/release-subject.schema.json",
+  "title": "stark AI Developer versioned release subject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "sourceRevision",
+    "releaseVersion",
+    "pluginVersion",
+    "archiveProfile",
+    "subjects",
+    "differences"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "status": {
+      "enum": ["pass", "blocked", "not_applicable"]
+    },
+    "sourceRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "tag", "state"],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}(?:[0-9a-f]{24})?$"
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^(?:v[0-9]+\\.[0-9]+\\.[0-9]+|manual-review-required)$"
+        },
+        "state": {
+          "enum": ["clean", "dirty", "unknown"]
+        }
+      }
+    },
+    "releaseVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "pluginVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "archiveProfile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subjects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["openai", "portable"],
+      "properties": {
+        "openai": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/archiveSubject"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "openai.zip"
+                }
+              }
+            }
+          ]
+        },
+        "portable": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/archiveSubject"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "portable.zip"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "archiveSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

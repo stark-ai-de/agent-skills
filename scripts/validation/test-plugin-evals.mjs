@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { canonicalJson } from "../lib/bundle-contract.mjs";
-import { PORTABLE_TARGET } from "../lib/plugin-projections.mjs";
+import { PORTABLE_TARGET, RETIRED_OPENAI_ADAPTER_TARGET } from "../lib/plugin-projections.mjs";
 import { renderMarketplace, validateMarketplaceDocument } from "../lib/openai-marketplace.mjs";
 import {
   PLUGIN_SOURCE_PATH,
@@ -17,7 +17,10 @@ import {
 } from "../lib/release-descriptor.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const marketplaceValidator = path.join(repositoryRoot, "scripts/validate-openai-marketplace.mjs");
+const marketplaceValidator = path.join(
+  repositoryRoot,
+  "scripts/plugin/validate-openai-marketplace.mjs",
+);
 const committedMarketplacePath = path.join(
   repositoryRoot,
   ".agents",
@@ -80,8 +83,8 @@ try {
   fs.cpSync(path.join(repositoryRoot, PORTABLE_TARGET), path.join(personalRoot, "plugin"), {
     recursive: true,
   });
-  const personalName = "stark-ai-developer-personal";
-  const personalDisplayName = "stark AI Developer (personal portable plugin)";
+  const personalName = `${identity.name}-personal`;
+  const personalDisplayName = `${identity.displayName} (personal portable plugin)`;
   const personalMarketplacePath = path.join(personalRoot, "marketplace.json");
   const personalDocument = renderMarketplace({
     name: personalName,
@@ -140,7 +143,7 @@ try {
 
   fs.writeFileSync(personalMarketplacePath, canonicalJson(personalDocument));
 
-  fs.rmSync(path.join(drifted, "plugins", "stark-ai-developer"), { recursive: true, force: true });
+  fs.rmSync(path.join(drifted, PORTABLE_TARGET), { recursive: true, force: true });
   const driftResult = runValidator(drifted);
   assert.notEqual(
     driftResult.status,
@@ -150,7 +153,7 @@ try {
 
   const marketplacePath = path.join(cleanClone, ".agents", "plugins", "marketplace.json");
   const marketplace = JSON.parse(fs.readFileSync(marketplacePath, "utf8"));
-  marketplace.plugins[0].source.path = "./adapters/openai/stark-ai-developer";
+  marketplace.plugins[0].source.path = `./${RETIRED_OPENAI_ADAPTER_TARGET}`;
   fs.writeFileSync(marketplacePath, `${JSON.stringify(marketplace, null, 2)}\n`);
   const wrongProjectionResult = runValidator(cleanClone);
   assert.notEqual(
@@ -162,7 +165,7 @@ try {
   const generator = spawnSync(
     process.execPath,
     [
-      path.join(repositoryRoot, "scripts/generate-openai-marketplace-fixture.mjs"),
+      path.join(repositoryRoot, "scripts/plugin/generate-openai-marketplace-fixture.mjs"),
       "--root",
       repositoryRoot,
       "--output",

@@ -39,14 +39,31 @@ jobs:
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      - name: 🧾 Test post-release receipt contract
+        run: npm run test:post-release-receipt
+
       - name: ✅ Validate repository contracts
         run: npm run validate
 
       - name: 📦 Validate release archives
         run: npm run validate:archives
 
-      - name: 🔁 Verify release reproducibility
-        run: npm run verify:release-reproducibility
+      - name: 🔁 Verify release reproducibility and prepare hosted subjects
+        id: release-subjects
+        uses: ./.github/actions/build-release-subjects
+        with:
+          subjects-dir: ${{ runner.temp }}/release-subjects
+          report-file: ${{ runner.temp }}/release-subject-report.json
+
+      - name: ⬆️ Upload hosted release subjects
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-subjects
+          path: ${{ runner.temp }}/release-subjects
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 90
 
       - name: 🎨 Check formatting
         run: pnpm format:check
@@ -57,17 +74,25 @@ jobs:
       - name: 🏷️ Check release intent
         id: release-intent
         if: ${{ github.event_name == 'pull_request' }}
-        run: node scripts/check-release-intent.mjs --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
+        run: npm run release:intent -- --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
 
       - name: 🚀 Validate planned release
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
-        run: node scripts/validate-release.mjs --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
+        run: npm run release:validate -- --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
 
       - name: 📋 List public skills
         run: npx skills@latest add ./skills --list
 
       - name: 🧪 Smoke-install public skills
         run: npm run smoke:install
+
+      - name: 🧭 Summarize validation
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Repository validation
+          success: Use the release-subjects artifact only from a successful main push; pull requests do not publish it. Next hosted step is Publish Release in docs/publishing.md. Operator follow-up is docs/publishing.md#operator-follow-up.
+          failure: Open the failed contract step, fix the owning boundary, and rerun the workflow.
 
   archive-identity:
     strategy:
@@ -105,13 +130,21 @@ jobs:
         run: npm run package:agent-plugin && npm run package:openai-plugin
 
       - name: 🧾 Report archive identity
-        run: node scripts/report-archive-identity.mjs
+        run: node scripts/release/report-archive-identity.mjs
 
       - name: 📤 Upload archive identity
         uses: actions/upload-artifact@v4
         with:
           name: archive-identity-${{ matrix.os }}
           path: dist/archive-identity.json
+
+      - name: 🧭 Summarize archive identity
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Archive identity · ${{ matrix.os }}
+          success: Let the aggregate comparison job check this platform report.
+          failure: Inspect the platform-specific ZIP identity output, then rerun after correction.
 
   archive-identity-compare:
     needs: archive-identity
@@ -137,4 +170,12 @@ jobs:
           path: dist/archive-identities
 
       - name: ⚖️ Compare zip-store-v1 identity
-        run: node scripts/compare-archive-identity.mjs dist/archive-identities
+        run: node scripts/release/compare-archive-identity.mjs dist/archive-identities
+
+      - name: 🧭 Summarize archive comparison
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Cross-platform archive comparison
+          success: All platform archive identities match; continue with release readiness.
+          failure: Open the platform identity artifacts and fix the cross-platform mismatch.

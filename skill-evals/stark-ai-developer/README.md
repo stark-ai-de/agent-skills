@@ -4,11 +4,8 @@ This inventory is maintainer evidence for the one **stark AI Developer**
 listing. It is not bundled into the portable or OpenAI runtime projections.
 Cases are sanitized, deterministic review prompts and expected boundaries; they
 do not claim a live ChatGPT, Codex, IDE, account, workspace, or clean-account
-result. A public ChatGPT plugin page exists; directory observations live in
+result. Public listing observations live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](../../docs/listing/openai/stark-ai-developer-first-publication.md).
-The 2026-08-20 live-trial attempt is
-[`evidence/live-repeated-trials.md`](evidence/live-repeated-trials.md); EVAL-001
-stays `not_run`.
 
 Run the structural inventory check with:
 

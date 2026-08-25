@@ -21,3 +21,4 @@
 - Add GitHub issue and pull request templates.
 - Add badges after CI is active on the public repository.
 - Evaluate Claude plugin metadata only after an ADR makes it a supported publishing surface.
+- Evaluate a candidate ADR for provenance-aware assistant statements across Architecture Compass and `codex-memory-curator`: visibly label current verification, memory-derived claims that may be stale, user-provided facts, and assumptions, with timestamps or sources when freshness matters.

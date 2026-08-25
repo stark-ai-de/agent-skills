@@ -25,8 +25,8 @@ Incubator-only changes do not require a package release unless they are being in
 Use the helper for package and changelog release surfaces:
 
 ```bash
-node scripts/prepare-release.mjs --version NEXT_VERSION --dry-run
-node scripts/prepare-release.mjs --version NEXT_VERSION
+npm run release:prepare -- --version NEXT_VERSION --dry-run
+npm run release:prepare -- --version NEXT_VERSION
 ```
 
 The helper updates only `package.json` and `CHANGELOG.md`. Update public skill `metadata.version` values directly.
@@ -39,12 +39,12 @@ Run from the repository root:
 npm run validate
 pnpm format:check
 pnpm lint
-node scripts/check-release-intent.mjs --base-ref origin/main
-node scripts/validate-release.mjs --base-ref origin/main
+npm run release:intent -- --base-ref origin/main
+npm run release:validate -- --base-ref origin/main
 npm run list
 npx skills@latest add ./skills --list
 npm run smoke:install
-node scripts/print-release-notes.mjs
+npm run release:notes
 git diff --check
 ```
 
@@ -66,12 +66,12 @@ git -C "$tmp" apply "$patch"
   npm run validate &&
   pnpm format:check &&
   pnpm lint &&
-  node scripts/check-release-intent.mjs --base-ref origin/main &&
-  node scripts/validate-release.mjs --base-ref origin/main &&
+  npm run release:intent -- --base-ref origin/main &&
+  npm run release:validate -- --base-ref origin/main &&
   npm run list &&
   npx skills@latest add ./skills --list &&
   npm run smoke:install &&
-  node scripts/print-release-notes.mjs &&
+  npm run release:notes &&
   git diff --check
 )
 git worktree remove --force "$tmp"
@@ -98,7 +98,7 @@ pnpm format:check
 pnpm lint
 npx skills@latest add ./skills --list
 npm run smoke:install
-node scripts/validate-release.mjs --base-ref origin/main
+npm run release:validate -- --base-ref origin/main
 
 git commit -m "<release message>"
 git push -u origin "$BRANCH"

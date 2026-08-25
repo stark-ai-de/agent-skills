@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "1",
+  "receiptType": "manual_client_lifecycle",
+  "status": "not_run",
+  "evidenceClass": "user-provided",
+  "generatedAt": "2026-08-20T00:00:00Z",
+  "release": {
+    "tag": "v0.19.1",
+    "sourceCommit": "35101f206b2416b2ac5a5fb7205fdd65c3f843b1",
+    "sourceState": "clean",
+    "event": "manual_observation",
+    "archiveSubjectsStatus": "not_applicable"
+  },
+  "artifacts": [],
+  "attestation": {
+    "status": "not_applicable",
+    "subjects": []
+  },
+  "client": {
+    "name": "ChatGPT",
+    "surface": "web-or-desktop"
+  },
+  "tests": {
+    "ids": [
+      "MANUAL-CLIENT-ADD",
+      "MANUAL-CLIENT-ENABLE",
+      "MANUAL-CLIENT-DISABLE",
+      "MANUAL-CLIENT-UPDATE",
+      "MANUAL-CLIENT-REMOVE"
+    ],
+    "commandFamily": "manual_public_directory_lifecycle_observation",
+    "counts": {
+      "total": 5,
+      "passed": 0,
+      "blocked": 0,
+      "notRun": 4,
+      "notApplicable": 1
+    }
+  },
+  "lifecycle": {
+    "operations": {
+      "add": {
+        "status": "not_run",
+        "reason": "manual_observation_required"
+      },
+      "enable": {
+        "status": "not_run",
+        "reason": "manual_observation_required"
+      },
+      "disable": {
+        "status": "not_run",
+        "reason": "manual_observation_required"
+      },
+      "update": {
+        "status": "not_applicable",
+        "reason": "first_public_version"
+      },
+      "remove": {
+        "status": "not_run",
+        "reason": "manual_observation_required"
+      }
+    }
+  },
+  "blockers": ["manual_observation_required"],
+  "reason": "manual_observation_required"
+}

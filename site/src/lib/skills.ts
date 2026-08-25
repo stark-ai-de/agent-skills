@@ -8,7 +8,9 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
-const REPO_NAME = "stark-ai-de/agent-skills";
+import { pluginMarketplaceSource } from "./plugin-listing";
+
+const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
 const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
 const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;

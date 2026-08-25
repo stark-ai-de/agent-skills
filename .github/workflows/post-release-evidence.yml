@@ -1,0 +1,217 @@
+name: Post-release Evidence
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Exact release tag to verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  attestations: read
+
+concurrency:
+  group: post-release-evidence-${{ github.event.release.tag_name || inputs.tag || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      EVENT_NAME: ${{ github.event_name }}
+
+    steps:
+      - name: 🛡️ Resolve trusted verifier source
+        id: verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          repository=$(gh api "repos/${GITHUB_REPOSITORY}")
+          default_branch=$(printf '%s' "${repository}" | jq -r '.default_branch')
+          if [ "${default_branch}" != "main" ]; then
+            echo "The release trust contract requires main as the protected default branch."
+            exit 1
+          fi
+
+          branch=$(gh api "repos/${GITHUB_REPOSITORY}/branches/${default_branch}")
+          verifier_sha=$(printf '%s' "${branch}" | jq -r '.commit.sha')
+          protected=$(printf '%s' "${branch}" | jq -r '.protected')
+          verifier_ref="${GITHUB_REPOSITORY}/.github/workflows/post-release-evidence.yml@refs/heads/${default_branch}"
+
+          if [ "${protected}" != "true" ] || [[ ! "${verifier_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Default branch must be protected and resolve to a full commit SHA."
+            exit 1
+          fi
+          if [ "${WORKFLOW_SHA}" != "${verifier_sha}" ] || [ "${WORKFLOW_REF}" != "${verifier_ref}" ]; then
+            echo "Running workflow source does not match the protected default-branch verifier."
+            exit 1
+          fi
+
+          {
+            echo "verifier_sha=${verifier_sha}"
+            echo "verifier_ref=${verifier_ref}"
+            echo "protected_default_branch=true"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: ⬇️ Checkout workflow sources
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.verifier.outputs.verifier_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 📦 Prepare tag-bound release subjects
+        id: release
+        continue-on-error: true
+        uses: ./.github/actions/post-release-subjects
+        with:
+          tag: ${{ github.event.release.tag_name || inputs.tag }}
+          subjects-dir: release-subjects
+          verifier-sha: ${{ steps.verifier.outputs.verifier_sha }}
+          verifier-ref: ${{ steps.verifier.outputs.verifier_ref }}
+
+      - name: 📥 Compare published release subjects
+        id: assets
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        run: |
+          set -euo pipefail
+          rm -rf published-assets
+          if [ "${RELEASE_TAG}" != "v0.19.1" ] && [ "${PACKAGE_STATUS}" = "pass" ]; then
+            mkdir -p published-assets
+            if ! gh release download "${RELEASE_TAG}" \
+                --repo "$GITHUB_REPOSITORY" \
+                --pattern openai.zip \
+                --pattern portable.zip \
+                --dir published-assets \
+                --clobber \
+                >/dev/null 2>&1; then
+              echo "Release asset download did not produce a complete subject set."
+            fi
+          fi
+          node scripts/release/compare-release-subjects.mjs \
+            --tag "${RELEASE_TAG}" \
+            --release-sha "${RELEASE_SHA}" \
+            --package-status "${PACKAGE_STATUS}" \
+            --subjects-dir "$PWD/release-subjects" \
+            --published-dir "$PWD/published-assets" \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: 🔎 Verify tag-bound attestations
+        id: attestation
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
+          ASSET_STATUS: ${{ steps.assets.outputs.status }}
+        run: |
+          set -euo pipefail
+          attestation_status=blocked
+
+          if [ "${RELEASE_TAG}" = "v0.19.1" ] && \
+              [ "${PACKAGE_STATUS}" = "not_applicable" ] && \
+              [ "${ASSET_STATUS}" = "not_applicable" ]; then
+            attestation_status=not-pre-publication-attested
+          elif [ "${PACKAGE_STATUS}" = "pass" ] && [ "${ASSET_STATUS}" = "pass" ]; then
+            attestation_status=verified
+            for archive in published-assets/openai.zip published-assets/portable.zip; do
+              gh attestation verify "$archive" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
+                --signer-digest "$RELEASE_SHA" \
+                --repo "$GITHUB_REPOSITORY" \
+                --source-digest "$RELEASE_SHA" \
+                --source-ref refs/heads/main \
+                --format json \
+                > "${archive%.zip}.attestation.json" \
+                || attestation_status=blocked
+            done
+          fi
+
+          echo "status=${attestation_status}" >> "$GITHUB_OUTPUT"
+
+      - name: 🧾 Write sanitized post-release receipt
+        id: receipt
+        if: ${{ always() }}
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
+          OPENAI_SHA: ${{ steps.release.outputs.openai_sha }}
+          PORTABLE_SHA: ${{ steps.release.outputs.portable_sha }}
+          OPENAI_BYTES: ${{ steps.release.outputs.openai_bytes }}
+          PORTABLE_BYTES: ${{ steps.release.outputs.portable_bytes }}
+          ASSET_STATUS: ${{ steps.assets.outputs.status }}
+          PUBLISHED_OPENAI_SHA: ${{ steps.assets.outputs.published_openai_sha }}
+          PUBLISHED_PORTABLE_SHA: ${{ steps.assets.outputs.published_portable_sha }}
+          ATTESTATION_STATUS: ${{ steps.attestation.outputs.status }}
+          VERIFIER_SHA: ${{ steps.verifier.outputs.verifier_sha }}
+          VERIFIER_REF: ${{ steps.verifier.outputs.verifier_ref }}
+          PROTECTED_DEFAULT_BRANCH: ${{ steps.verifier.outputs.protected_default_branch }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/publish-release.yml
+          SIGNER_DIGEST: ${{ steps.release.outputs.release_sha }}
+          SOURCE_REF: refs/heads/main
+        run: |
+          set -euo pipefail
+          RECEIPT_TAG="${RELEASE_TAG}" \
+            SOURCE_COMMIT="${RELEASE_SHA}" \
+            EVENT_NAME="${EVENT_NAME}" \
+            REPOSITORY="${GITHUB_REPOSITORY}" \
+            PACKAGE_STATUS="${PACKAGE_STATUS}" \
+            OPENAI_SHA="${OPENAI_SHA}" \
+            PORTABLE_SHA="${PORTABLE_SHA}" \
+            OPENAI_BYTES="${OPENAI_BYTES:-0}" \
+            PORTABLE_BYTES="${PORTABLE_BYTES:-0}" \
+            ASSET_STATUS="${ASSET_STATUS}" \
+            PUBLISHED_OPENAI_SHA="${PUBLISHED_OPENAI_SHA}" \
+            PUBLISHED_PORTABLE_SHA="${PUBLISHED_PORTABLE_SHA}" \
+            ATTESTATION_STATUS="${ATTESTATION_STATUS}" \
+            node scripts/release/render-post-release-receipt.mjs \
+              --render post_release_archive \
+              --file post-release-receipt.json \
+              --github-output "$GITHUB_OUTPUT"
+
+          if [ -s release-subjects/release-subject.json ]; then
+            cp release-subjects/release-subject.json post-release-subject.json
+          fi
+
+      - name: 🔍 Validate the sanitized receipt
+        id: receipt-validation
+        if: ${{ always() }}
+        run: node scripts/release/validate-post-release-receipt.mjs --schema skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json --file post-release-receipt.json
+
+      - name: ⬆️ Upload post-release evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            post-release-receipt.json
+            post-release-subject.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: 🚫 Require valid post-release evidence
+        if: ${{ always() && (steps.release.outcome != 'success' || steps.receipt.outcome != 'success' || steps.receipt-validation.outcome != 'success' || (steps.receipt.outputs.status != 'pass' && steps.receipt.outputs.status != 'retrospective')) }}
+        run: |
+          echo "Post-release preparation, receipt rendering, or receipt validation did not produce allowed evidence."
+          exit 1
+
+      - name: 🧭 Summarize run
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Post-release evidence
+          success: Download the sanitized receipt artifact, then complete docs/publishing.md#operator-follow-up.
+          failure: Inspect archive comparison, attestation, and receipt steps; rerun with the exact release tag.

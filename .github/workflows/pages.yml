@@ -57,12 +57,21 @@ jobs:
         with:
           path: site/dist
 
+      - name: 🧭 Summarize build
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: GitHub Pages build
+          success: Review the build; deployment runs only for a successful main-branch run.
+          failure: Fix the site build or dependency failure, then push a correction or rerun.
+
   deploy:
     needs: build
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
@@ -70,6 +79,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: ⬇️ Checkout workflow helpers
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: 🧭 Summarize deployment
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: GitHub Pages deployment
+          success: Open the published Pages URL, then complete docs/publishing.md#operator-follow-up (After GitHub Pages deploy).
+          failure: Inspect Pages permissions or deployment output, then rerun after correction.

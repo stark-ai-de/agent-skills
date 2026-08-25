@@ -27,7 +27,7 @@ ADR-0025	0025-keep-animated-readme-logo-portable-with-provider-routing	cffbb577f
 ADR-0026	0026-distinguish-execution-host-from-target-runtime	e5f7ada544fba6bcf992501abe67a309e50a367f2f53d41739583d6fdd287f28
 ADR-0027	0027-gate-logo-tool-installs-and-browser-fallbacks	afb58e466d0493f9bdf7988d18d04c93db8fac96319fd56d6a484ba68a229915
 ADR-0028	0028-require-reuse-and-fail-closed-isolation-before-gateway-extraction	77d6045e9025a2db4e29b1a4be3e75d0251cfd92027d9a3d7bc95050b4412259
-ADR-0029	0029-keep-linked-worktrees-inside-the-repository	5fc1ee66b6751eff297f74c77222661743b4bae573e2d2d6614e88082698a48d
+ADR-0029	0029-keep-linked-worktrees-inside-the-repository	7721031b4d7a3cb460f1e09d2dde61456483f0bac1a243bed50f02fd2880749d
 ADR-0030	0030-separate-public-contracts-from-private-provenance	6db9a58b525c7cd1f60c3ca52d5cc0bce5ff77a507801e7312502efca10cc31c
 ADR-0031	0031-use-approved-bounded-fixed-theme-rasterization	04be0a67ca95fbf8de33e59a31297d94616ca1c128b431d8d6175b503fed0865
 ADR-0032	0032-adopt-short-long-guide-adr-triplets	77a7c36653201b174ec28a964736d9b2681883d74069543e54ab074ec76ef19a
@@ -41,3 +41,6 @@ ADR-0039	0039-separate-internal-skill-implementation-policy-from-exposed-contrac
 ADR-0040	0040-route-drawio-exports-through-capability-aware-fallbacks	674629c039f9040e447126f2dd16b78f285c91c3bff501e03c2d66a068489797
 ADR-0041	0041-select-validation-from-changed-contracts-and-owning-boundaries	d68dadcd288da04cd971409e788a84ffaed3e34c9f3a06099d965d1f26f192a2
 ADR-0043	0043-package-portable-agent-plugins-and-separate-client-adapters	9df6ad364c2048ae221e690265821062c5380e3ed76a85259c0b80fde97a0deb
+ADR-0044	0044-centralize-listing-identity-and-catalog-derivations	f691c3ccf19db0208d7416eae278d6e65020307a0311b741bb63084c1eef7f41
+ADR-0045	0045-own-historical-release-verification-in-one-action-context	cd87f13c0b1c3d97c12be1755929851d9f8aa08307934cd788ade58c78bca138
+ADR-0046	0046-define-versioned-json-release-subject-contract	a5567a134f95283da0f1cd645711ed3b66c04de9d710b05a761599ef27e2c09d

@@ -12,12 +12,21 @@ import {
   normalizedGitFileMode,
 } from "./git-index.mjs";
 import { readOpenAiListing } from "./openai-listing.mjs";
-import { PINNED_AGENT_PLUGINS_SCHEMA_PATH, pluginIdentity } from "./release-descriptor.mjs";
+import {
+  PINNED_AGENT_PLUGINS_SCHEMA_PATH,
+  PLUGIN_SOURCE_PATH,
+  packageAuthorName,
+  pluginArtifactPaths,
+  pluginIdentity,
+  publicRepositoryUrl,
+  readRepoPackage,
+} from "./release-descriptor.mjs";
 import { writeZipStoreV1 } from "./reproducible-archive.mjs";
 
 export const PORTABLE_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
-export const PORTABLE_TARGET = "plugins/stark-ai-developer";
-export const RETIRED_OPENAI_ADAPTER_TARGET = "adapters/openai/stark-ai-developer";
+const artifactPaths = pluginArtifactPaths();
+export const PORTABLE_TARGET = artifactPaths.portableTarget;
+export const RETIRED_OPENAI_ADAPTER_TARGET = artifactPaths.retiredOpenAiAdapter;
 export const STANDALONE_TARGET = "dist/skills";
 
 const GENERATED_ROOT_FILES = new Set([
@@ -215,9 +224,26 @@ function readRootFile(root, fileName) {
 
 function portableManifest(root) {
   const identity = pluginIdentity(root);
-  const description = readOpenAiListing(root).plugin?.longDescription;
+  const listing = readOpenAiListing(root);
+  const description = listing.plugin?.longDescription;
   if (typeof description !== "string" || !description.trim()) {
     throw new Error("listing source plugin.longDescription is required for the portable manifest");
+  }
+  const packageJson = readRepoPackage(root);
+  const authorName = listing.publisher?.legalName ?? packageAuthorName(packageJson);
+  const authorUrl = packageJson.author?.url;
+  const repository = publicRepositoryUrl(packageJson);
+  if (typeof authorName !== "string" || !authorName.trim()) {
+    throw new Error("listing publisher.legalName or package.json author.name is required");
+  }
+  if (typeof listing.plugin?.urls?.website !== "string" || !listing.plugin.urls.website.trim()) {
+    throw new Error("listing plugin.urls.website is required for the portable manifest");
+  }
+  if (typeof packageJson.license !== "string" || !packageJson.license.trim()) {
+    throw new Error("package.json license is required for the portable manifest");
+  }
+  if (typeof repository !== "string" || !repository.trim()) {
+    throw new Error("package.json repository is required for the portable manifest");
   }
   return {
     $schema: PORTABLE_PLUGIN_SCHEMA,
@@ -225,27 +251,28 @@ function portableManifest(root) {
     version: identity.version,
     description,
     author: {
-      name: "servrox solutions UG",
-      url: "https://stark-ai.de",
+      name: authorName,
+      ...(typeof authorUrl === "string" && authorUrl.trim() ? { url: authorUrl.trim() } : {}),
     },
-    homepage: "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
-    repository: "https://github.com/stark-ai-de/agent-skills",
-    license: "Apache-2.0",
+    homepage: listing.plugin.urls.website,
+    repository,
+    license: packageJson.license,
     keywords: ["developer-tools", "agent-skills", "codex", "documentation", "harness-first"],
   };
 }
 
-function generatedReadme({ kind }) {
+function generatedReadme({ kind, bundle, root }) {
+  const identity = pluginIdentity(root);
   const projectionName = kind === "portable" ? "portable Agent Plugin" : "OpenAI-native adapter";
   const clientGuidance =
     kind === "portable"
-      ? "Use `plugins/stark-ai-developer/` only with a client that supports the portable Agent Plugins contract."
+      ? `Use \`${identity.portableProjection}/\` only with a client that supports the portable Agent Plugins contract.`
       : "Use this OpenAI-native `.codex-plugin` package only with a client that requires that native layout. It is generated at package time and is not a committed repository tree.";
-  return `# stark AI Developer
+  return `# ${bundle.displayName}
 
-${projectionName} generated from the explicit \`plugins/stark-ai-developer.source.json\` allowlist.
+${projectionName} generated from the explicit \`${PLUGIN_SOURCE_PATH}\` allowlist.
 
-This harness-first package contains six developer workflows and has no backend, MCP
+This harness-first package contains ${bundle.skills.length} developer workflows and has no backend, MCP
 server, connectors, authentication, telemetry, analytics, hidden network calls,
 or runtime downloads. Canonical skill content remains maintained under
 \`skills/<category>/<skill>/\`; this ${kind} copy is generated and must not be edited
@@ -310,7 +337,7 @@ function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
   );
   writeGeneratedFile(
     path.join(stage, "README.md"),
-    generatedReadme({ kind: "portable", bundle }),
+    generatedReadme({ kind: "portable", bundle, root }),
     manifestFiles,
     "README.md",
   );
@@ -582,7 +609,7 @@ export function writeSharedPackageFiles({
   );
   writeGeneratedFile(
     path.join(stage, "README.md"),
-    generatedReadme({ kind, bundle }),
+    generatedReadme({ kind, bundle, root }),
     manifestFiles,
     "README.md",
   );
