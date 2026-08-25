@@ -13,15 +13,31 @@ import {
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const tag = "v0.20.0";
 const releaseSha = "a".repeat(40);
+const expectedRelease = {
+  title: tag,
+  bodySha256: "c".repeat(64),
+  prerelease: false,
+};
 
 const assets = (openai = "exact", portable = "exact") => ({
   "openai.zip": { status: openai },
   "portable.zip": { status: portable },
 });
 
-const release = ({ draft = true, immutable = false, openai, portable } = {}) => ({
+const release = ({
+  draft = true,
+  immutable = false,
+  title = expectedRelease.title,
+  bodySha256 = expectedRelease.bodySha256,
+  prerelease = expectedRelease.prerelease,
+  openai,
+  portable,
+} = {}) => ({
   id: 42,
   tagName: tag,
+  title,
+  bodySha256,
+  prerelease,
   draft,
   immutable,
   assets: assets(openai, portable),
@@ -31,6 +47,7 @@ const plan = (overrides = {}) =>
   planReleaseReconciliation({
     tag,
     releaseSha,
+    expectedRelease,
     tagCommit: null,
     release: null,
     attestationStatus: "missing",
@@ -100,6 +117,10 @@ assert.deepEqual(
   "fresh publication must create an annotated tag, draft, both assets, and publish last",
 );
 assert.equal(plan().requiresAttestation, true);
+assert.equal(
+  plan({ expectedRelease: { ...expectedRelease, title: "v0.20.1" } }).reason,
+  "invalid_expected_release_metadata",
+);
 
 const tagOnly = plan({ tagCommit: releaseSha });
 assert.deepEqual(
@@ -116,6 +137,17 @@ assert.deepEqual(partialDraft.operations, [
   { type: "publish_draft" },
 ]);
 assert.equal(partialDraft.reason, "resume_draft_release");
+
+const staleDraft = plan({
+  tagCommit: releaseSha,
+  release: release({ title: "stale title" }),
+  attestationStatus: "valid",
+});
+assert.deepEqual(staleDraft.operations, [
+  { type: "update_draft_metadata" },
+  { type: "publish_draft" },
+]);
+assert.equal(staleDraft.reason, "repair_draft_release_metadata");
 
 const draftWithoutTag = plan({
   release: release({ openai: "exact", portable: "missing" }),
@@ -141,6 +173,25 @@ const publishedExact = plan({
 });
 assert.equal(publishedExact.status, "satisfied");
 assert.equal(publishedExact.reason, "published_release_matches");
+
+for (const mismatchedPublishedRelease of [
+  release({ draft: false, title: "stale title" }),
+  release({ draft: false, bodySha256: "d".repeat(64) }),
+  release({ draft: false, prerelease: true }),
+]) {
+  assert.equal(
+    plan({
+      tagCommit: releaseSha,
+      release: mismatchedPublishedRelease,
+      attestationStatus: "valid",
+    }).reason,
+    "published_release_metadata_mismatch",
+  );
+}
+assert.equal(
+  plan({ release: release({ title: null }) }).reason,
+  "unknown_release_metadata",
+);
 
 const publishedRepair = plan({
   tagCommit: releaseSha,
@@ -220,6 +271,7 @@ function applySequence(observations, { failOperations = [] } = {}) {
   const result = applyReleaseReconciliation({
     tag,
     releaseSha,
+    expectedRelease,
     observe: () => {
       assert.ok(remaining.length > 0, "test observation sequence exhausted");
       return remaining.shift();
@@ -254,7 +306,22 @@ assert.deepEqual(
   ["create_tag", "create_draft", "upload_asset", "upload_asset", "publish_draft"],
 );
 assert.equal(freshApply.result.status, "satisfied");
+assert.equal(freshApply.result.postReleaseDispatchRequired, true);
 assert.equal(freshApply.remaining.length, 0);
+
+const metadataRepairApply = applySequence([
+  validObservation({
+    tagCommit: releaseSha,
+    release: release({ title: "stale title" }),
+  }),
+  validObservation({ tagCommit: releaseSha, release: release() }),
+  validObservation({ tagCommit: releaseSha, release: release({ draft: false }) }),
+]);
+assert.deepEqual(
+  metadataRepairApply.executed.map((operation) => operation.type),
+  ["update_draft_metadata", "publish_draft"],
+);
+assert.equal(metadataRepairApply.result.postReleaseDispatchRequired, true);
 
 assert.throws(
   () =>
@@ -323,6 +390,7 @@ assert.throws(
     applyReleaseReconciliation({
       tag,
       releaseSha,
+      expectedRelease,
       observe: () => ({
         tagCommit: null,
         release: null,
@@ -341,12 +409,22 @@ const publishWorkflow = fs.readFileSync(
   path.join(repositoryRoot, ".github/workflows/publish-release.yml"),
   "utf8",
 );
+const postReleaseWorkflow = fs.readFileSync(
+  path.join(repositoryRoot, ".github/workflows/post-release-evidence.yml"),
+  "utf8",
+);
+const attestWorkflow = fs.readFileSync(
+  path.join(repositoryRoot, ".github/workflows/attest-release.yml"),
+  "utf8",
+);
 assert.doesNotMatch(reconcilerSource, /--clobber/);
 assert.match(reconcilerSource, /GITHUB_EVENT_NAME !== "workflow_dispatch"/);
 assert.match(reconcilerSource, /RELEASE_DRY_RUN !== "false"/);
+assert.match(reconcilerSource, /case "update_draft_metadata"/);
+assert.match(reconcilerSource, /bodySha256/);
 assert.match(
   reconcilerSource,
-  /if \(options\.mode === "plan"\) \{[\s\S]*?const result = plan\(options, observe\(options, localSubjects\)\);[\s\S]*?return result;[\s\S]*?\}\n  const result = apply/,
+  /if \(options\.mode === "plan"\) \{[\s\S]*?const result = plan\(options, observe\(options, localSubjects\), localSubjects\);[\s\S]*?return result;[\s\S]*?\}\n  const result = apply/,
   "plan mode must return before the apply executor is reachable",
 );
 assert.match(reconcilerSource, /execute: \(operation, observation\) =>/);
@@ -355,6 +433,14 @@ assert.match(
   /Attest release subjects[\s\S]*release_published != 'true'/,
   "Publish Release must never create a new attestation for an already-published release",
 );
+assert.match(publishWorkflow, /actions: write/);
+assert.match(
+  publishWorkflow,
+  /gh workflow run post-release-evidence\.yml[\s\S]*--ref main[\s\S]*-f "tag=/,
+  "Publish Release must explicitly dispatch protected-main post-release evidence",
+);
+assert.doesNotMatch(postReleaseWorkflow, /\n  release:\n/);
+assert.doesNotMatch(attestWorkflow, /\n  release:\n/);
 assert.equal(
   publishWorkflow.match(/reconcile-github-release\.mjs plan/g)?.length,
   2,
