@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "stark-ai-developer",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
     "longDescription": "stark AI Developer is a harness-first developer workflow toolkit for developers and coding agents: from a rough feature idea and existing code to an implementation-ready specification, architecture with transparent trade-offs, structural code findings, editable architecture diagrams, consistent repository documentation, and safely curated agent memory.\n\nThe included skills are not a theoretical catalog for the store. They come from our daily work, are used multiple times a day, and are continuously improved. The plugin reflects the standard we apply to our own work and to every tool that analyzes or changes production code.\n\nWe chose open source deliberately: transparency about how it works and what it contains, room for your own adaptations, and a way to contribute feedback, ideas, and improvements. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
@@ -46,7 +46,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Initial harness-first stark AI Developer package with six explicit developer workflows and no backend or network runtime.",
+  "releaseNotes": "Hardens release provenance and exact-tag verification, adds idempotent GitHub release recovery, and updates Architecture Compass to 0.6.5 with external worktree isolation and lean reference-first routing.",
   "skills": [
     {
       "name": "codex-memory-curator",

@@ -12,6 +12,23 @@
 
 ### Removed
 
+## v0.20.1 - 2026-08-25
+
+### Added
+
+### Changed
+
+- Advanced the independently versioned `stark-ai-developer` plugin and its OpenAI listing surfaces to 1.0.1 while preserving historical 1.0.0 publication evidence.
+- Updated `architecture-compass` to 0.6.5 with lean reference-first workflow routing while preserving its five public workflows and safety gates.
+
+### Fixed
+
+- Kept projection validation aligned with uncommitted plugin-version bump candidates.
+
+### Deprecated
+
+### Removed
+
 ## v0.20.0 - 2026-08-25
 
 ### Added

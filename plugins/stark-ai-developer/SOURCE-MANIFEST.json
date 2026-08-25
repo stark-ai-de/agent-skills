@@ -48,7 +48,7 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "1770d2e19d3b303bd8138b5b8a710b11e14ebd88d77667aa087bf748812d0e30"
+      "sha256": "b7c96715665ab18e52bf46be6f627ce8dcba325f09e037c2692f0f2972e33eea"
     },
     {
       "byteLength": 12772,
@@ -165,10 +165,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 19454,
+      "byteLength": 15969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "14d1aec5346b85dc2e66a314e96f7d7e5b2430dcc83c869c460d2e971f3bf908"
+      "sha256": "ece1d9a2f68e9ec7a74b87bc39171f7cec7a1fe2cd0e61a1e836a8657f2c12a5"
     },
     {
       "byteLength": 810,
@@ -1721,9 +1721,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "ef06c28bacf09f6bed63114eaaac2b42fb80415ec1f56b45756cbc3ca2d46840"
+  "treeHash": "8a9d270a4825ca5218c818c06446a29f7944adb1afbddc8d740876ed6362d391"
 }
