@@ -76,7 +76,8 @@ function mappedRegularFileBytes(files, file) {
 }
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
+  const executable = command === "node" ? process.execPath : command;
+  const result = spawnSync(executable, args, {
     cwd: options.cwd ?? root,
     encoding: "utf8",
     env: options.env ?? process.env,
@@ -4017,13 +4018,15 @@ export default {
   });
   check("README audit Python unavailable is unverified without path leakage", () => {
     writeFileSync(auditReadme, `![Logo](assets/logo.svg)`);
+    const unavailableRuntimePath = path.join(temp, "unavailable-runtime-path");
+    mkdirSync(unavailableRuntimePath);
     const result = spawnSync(
       process.execPath,
       [auditCli, "--root", auditRoot, "--readme", "README.md"],
       {
         cwd: tmpdir(),
         encoding: "utf8",
-        env: { ...process.env, PATH: "" },
+        env: { ...process.env, PATH: unavailableRuntimePath },
       },
     );
     assert.equal(result.status, 1, result.stderr);
