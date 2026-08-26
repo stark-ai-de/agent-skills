@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: None
-Superseded by: ADR-0047
+Superseded by: ADR-0050
 Guide verified: 2026-08-22
 Gist: A versioned JSON subject must be the single release metadata contract while ZIP subjects remain the published bytes.
 

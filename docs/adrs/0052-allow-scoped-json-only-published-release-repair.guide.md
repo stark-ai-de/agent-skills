@@ -1,6 +1,6 @@
-# ADR-0049: Allow scoped JSON-only published release repair
+# ADR-0052: Allow scoped JSON-only published release repair
 
-ID: ADR-0049
+ID: ADR-0052
 Title: Allow scoped JSON-only published release repair
 Status: Accepted
 Date: 2026-08-26
@@ -17,9 +17,9 @@ Superseded by: None
 Guide verified: 2026-08-26
 Gist: Repair exact release metadata without inventing ZIP provenance while keeping ZIP repair attestation-gated.
 
-Variants: [Short](0049-allow-scoped-json-only-published-release-repair.short.md) · [Long, canonical](0049-allow-scoped-json-only-published-release-repair.long.md) · **Guide**
+Variants: [Short](0052-allow-scoped-json-only-published-release-repair.short.md) · [Long, canonical](0052-allow-scoped-json-only-published-release-repair.long.md) · **Guide**
 
-This guide is non-normative. [Long](0049-allow-scoped-json-only-published-release-repair.long.md) is the authoritative decision; if this guidance conflicts with it, follow Long.
+This guide is non-normative. [Long](0052-allow-scoped-json-only-published-release-repair.long.md) is the authoritative decision; if this guidance conflicts with it, follow Long.
 
 ## How to apply
 

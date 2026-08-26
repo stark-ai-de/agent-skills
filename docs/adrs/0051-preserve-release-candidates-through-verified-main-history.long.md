@@ -1,6 +1,6 @@
-# ADR-0048: Preserve release candidates through verified main history
+# ADR-0051: Preserve release candidates through verified main history
 
-ID: ADR-0048
+ID: ADR-0051
 Title: Preserve release candidates through verified main history
 Status: Accepted
 Date: 2026-08-26
@@ -17,7 +17,7 @@ Superseded by: None
 Guide verified: 2026-08-26
 Gist: Keep an exact validated release candidate live while it remains in protected main history.
 
-Variants: [Short](0048-preserve-release-candidates-through-verified-main-history.short.md) · **Long, canonical** · [Guide](0048-preserve-release-candidates-through-verified-main-history.guide.md)
+Variants: [Short](0051-preserve-release-candidates-through-verified-main-history.short.md) · **Long, canonical** · [Guide](0051-preserve-release-candidates-through-verified-main-history.guide.md)
 
 ## Decision
 

@@ -45,7 +45,7 @@ candidate containment and recovery.
 
 ## Decision lineage
 
-- `adapts`: [ADR-0048](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0048-preserve-release-candidates-through-verified-main-history.long.md).
+- `adapts`: [ADR-0051](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md).
 
 ## Current sources
 

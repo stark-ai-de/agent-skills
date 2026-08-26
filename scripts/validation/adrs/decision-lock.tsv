@@ -44,6 +44,6 @@ ADR-0043	0043-package-portable-agent-plugins-and-separate-client-adapters	9df6ad
 ADR-0044	0044-centralize-listing-identity-and-catalog-derivations	f691c3ccf19db0208d7416eae278d6e65020307a0311b741bb63084c1eef7f41
 ADR-0045	0045-own-historical-release-verification-in-one-action-context	cd87f13c0b1c3d97c12be1755929851d9f8aa08307934cd788ade58c78bca138
 ADR-0046	0046-define-versioned-json-release-subject-contract	a5567a134f95283da0f1cd645711ed3b66c04de9d710b05a761599ef27e2c09d
-ADR-0047	0047-generate-release-prs-and-protect-publication	3a8e0194e123f178370edb821336bb43e17807eaffb53edd2b4a0ceda2ea20a0
-ADR-0048	0048-preserve-release-candidates-through-verified-main-history	32af589f31e5bee52c1b0b4fb21953b0fc08273f3321af4f5820cb0b3461fcc5
-ADR-0049	0049-allow-scoped-json-only-published-release-repair	744e4df7a99c193345981845657510e02c45678f7c09ccfc30fcbfe6cc5f0d1e
+ADR-0050	0050-generate-release-prs-and-protect-publication	3a8e0194e123f178370edb821336bb43e17807eaffb53edd2b4a0ceda2ea20a0
+ADR-0051	0051-preserve-release-candidates-through-verified-main-history	32af589f31e5bee52c1b0b4fb21953b0fc08273f3321af4f5820cb0b3461fcc5
+ADR-0052	0052-allow-scoped-json-only-published-release-repair	744e4df7a99c193345981845657510e02c45678f7c09ccfc30fcbfe6cc5f0d1e

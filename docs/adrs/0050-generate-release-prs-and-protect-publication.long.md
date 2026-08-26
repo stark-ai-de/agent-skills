@@ -1,6 +1,6 @@
-# ADR-0047: Generate release PRs and protect publication
+# ADR-0050: Generate release PRs and protect publication
 
-ID: ADR-0047
+ID: ADR-0050
 Title: Generate release PRs and protect publication
 Status: Accepted
 Date: 2026-08-26
@@ -17,7 +17,7 @@ Superseded by: None
 Guide verified: 2026-08-26
 Gist: Generated release PRs prepare one coherent version while protected publication preserves exact direct assets and dispatches post-release evidence explicitly.
 
-Variants: [Short](0047-generate-release-prs-and-protect-publication.short.md) · **Long, canonical** · [Guide](0047-generate-release-prs-and-protect-publication.guide.md)
+Variants: [Short](0050-generate-release-prs-and-protect-publication.short.md) · **Long, canonical** · [Guide](0050-generate-release-prs-and-protect-publication.guide.md)
 
 ## Decision
 

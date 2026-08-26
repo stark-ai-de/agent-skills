@@ -1230,7 +1230,7 @@
       "byteLength": 4400,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-055-separate-change-impact-from-generated-release-publication.guide.md",
-      "sha256": "d1c39073cd452cdf323efc736df330af9216646782f7c3716cbe93401df8460c"
+      "sha256": "e345ca9833aaad83a2b53a3ca574ca54bf45e74d71377768aa5776f7eab703d9"
     },
     {
       "byteLength": 5495,
@@ -1248,7 +1248,7 @@
       "byteLength": 2420,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-056-preserve-release-candidates-through-verified-protected-history.guide.md",
-      "sha256": "736e0373bd7a546cb60007f5a95b5d8e2340765c877c143660feca45f230e8a0"
+      "sha256": "44960a1943ffde1c496adc87281ca8abbe85ce89c38a8da13b7496fd8273c9df"
     },
     {
       "byteLength": 3254,
@@ -1266,7 +1266,7 @@
       "byteLength": 2812,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance.guide.md",
-      "sha256": "e088a7bd2c407c1d08c9901d70c427e96bb7953635b48e176085ac633ae647db"
+      "sha256": "fe6db6f11acacfca052ce966c78e4a3d1951b38b425175576dbe1cb05dc9e47a"
     },
     {
       "byteLength": 3637,
@@ -1815,5 +1815,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "94dbe4c1966e4fded3137bb06bd0b21ae38d7ae437472c396a68719f04c5e3b6"
+  "treeHash": "96ec99e0dd2e6a7e48d91b7599bff81521671d4e2dc842e3c2aeb7350ae82926"
 }

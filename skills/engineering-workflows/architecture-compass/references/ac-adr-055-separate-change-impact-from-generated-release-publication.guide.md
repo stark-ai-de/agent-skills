@@ -70,7 +70,7 @@ impact, generated preparation, publication, and evidence authority.
 
 ## Decision lineage
 
-- `adapts`: [ADR-0047](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0047-generate-release-prs-and-protect-publication.long.md).
+- `adapts`: [ADR-0050](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0050-generate-release-prs-and-protect-publication.long.md).
 
 ## Current sources
 

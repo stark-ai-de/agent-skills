@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: ADR-0011
-Superseded by: ADR-0047
+Superseded by: ADR-0050
 Guide verified: 2026-08-19
 Gist: Release metadata should travel with the public catalog change it releases.
 

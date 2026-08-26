@@ -49,7 +49,7 @@ repair classification and provenance.
 
 ## Decision lineage
 
-- `adapts`: [ADR-0049](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0049-allow-scoped-json-only-published-release-repair.long.md).
+- `adapts`: [ADR-0052](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0052-allow-scoped-json-only-published-release-repair.long.md).
 
 ## Current sources
 
