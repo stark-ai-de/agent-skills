@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { load } from "js-yaml";
 
+import { containsKnownSkillInvocationToken } from "./skill-invocation-token.mjs";
+
 const root = process.cwd();
 const publicSkillsDir = path.join(root, "skills");
 const incubatorSkillsDir = path.join(root, "incubator", "skills");
@@ -327,7 +329,7 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
       if (/^\s*\/plan\b/.test(defaultPrompt)) {
         errors.push(`${rel}: Chat-enabled interface.default_prompt must not start with /plan`);
       }
-      if (/\$[a-z0-9]+(?:-[a-z0-9]+)*/.test(defaultPrompt)) {
+      if (containsKnownSkillInvocationToken(defaultPrompt, knownSkillInvocationNames)) {
         errors.push(`${rel}: Chat-enabled interface.default_prompt must not mention a $skill`);
       }
     } else if (name && !defaultPrompt.includes(`$${name}`)) {
@@ -430,6 +432,14 @@ function validateSkillRoot(skillRoot) {
 
   return skillFiles.length;
 }
+
+const knownSkillInvocationNames = new Set(
+  skillRoots.flatMap((skillRoot) =>
+    walk(skillRoot.dir, (file) => path.basename(file) === "SKILL.md").map((file) =>
+      path.basename(path.dirname(file)),
+    ),
+  ),
+);
 
 const counts = new Map();
 for (const skillRoot of skillRoots) {

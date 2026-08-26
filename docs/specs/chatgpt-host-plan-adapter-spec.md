@@ -126,6 +126,10 @@ product claims remain separate guarded stages.
   available, THE SKILL SHALL report `Unavailable` with that evidence and MAY
   use the portable conversational fallback with the same approval and no-write
   contract.
+- WHEN the observation record explicitly contains `surface: unknown` or
+  `experience: unknown`, THE SKILL SHALL report `Indeterminate` before every
+  active, web, non-web, fallback, or handoff branch, ask for the distinguishable
+  value, and wait.
 - WHEN the surface, composer, or native Plan evidence cannot be distinguished,
   THE SKILL SHALL report `Indeterminate` and SHALL NOT use the fallback lane.
 - WHEN the current lane is Codex web, THE SKILL SHALL record
@@ -138,6 +142,11 @@ product claims remain separate guarded stages.
 - WHEN a native Plan control is observed but its current state is unknown, THE
   SKILL SHALL report `Indeterminate`, ask for confirmation, and SHALL NOT use
   the fallback lane or emit a transition handoff.
+- WHEN the user explicitly declines recommended Plan on the Codex Spec
+  Interviewer ChatGPT or Codex web lane, THE SKILL SHALL use the distinct
+  `Planning capability: Explicitly declined` label, preserve the refusal
+  evidence, continue conversationally, and SHALL NOT report `Unavailable`,
+  request Plan again, or emit a transition handoff.
 - WHEN a plan banner, mode reminder, or equivalent current-turn evidence proves
   Plan active, THE SKILL SHALL report `Active`, keep planning read-only, and
   exit Plan before persistence or execution.
@@ -161,15 +170,19 @@ product claims remain separate guarded stages.
   satisfy the Plan-mode preflight.
 - Planning capability and read-only enforcement SHALL be reported separately.
 - The four changed default prompts SHALL contain neither a leading `/plan` nor
-  a `$` invocation token and SHALL retain their current product policy and
-  workflow coverage.
+  a complete `$<name>` token for a known public or incubator skill and SHALL
+  retain their current product policy and workflow coverage.
+- WHEN the Chat-enabled default-prompt guard examines currency, an unknown
+  dollar token, embedded text, or a known-name prefix, THE VALIDATOR SHALL NOT
+  classify it as a `$skill` invocation.
 
 ### Non-functional requirements
 
 - Portability: one skill and one outcome contract remain shared across hosts;
   only observed controls, syntax, and handoff presentation vary.
 - Reliability: uncertainty fails closed to `Indeterminate`; only definitive
-  `Unavailable` or an explicit decline permits conversational fallback.
+  `Unavailable` or a separately labeled `Explicitly declined` outcome permits
+  conversational fallback.
 - Safety: Plan/read-only evidence remains behavioral and filesystem controls
   are never inferred from prompt text.
 - Public safety: public artifacts contain no credentials, private paths,
@@ -196,6 +209,11 @@ following fields are the shared ChatGPT/Codex web observation contract:
 | `host_version`    | String or `unknown`.                                                                                              |
 | `confidence`      | `observed` \| `inferred` \| `absent`.                                                                             |
 
+An explicit `unknown` surface or experience is a complete record value but not
+distinguishable routing evidence. It reaches `Indeterminate` before every other
+outcome branch. An explicit refusal is evaluated next and remains distinct from
+positive `none_proven` enumeration.
+
 `composer`, `slash_menu`, `plan_indicator`, `read_only`, and
 `skill_invocation` remain contextual or output fields; they do not replace the
 required observation record above.
@@ -205,7 +223,11 @@ The state machine is:
 ```mermaid
 flowchart TD
   start[Plan workflow selected] --> observe[Observe this composer and current controls]
-  observe --> active{Active Plan evidence?}
+  observe --> distinguishable{Surface and experience distinguishable?}
+  distinguishable -->|no| indeterminate[Indeterminate: stop and verify]
+  distinguishable -->|yes| declined{Plan explicitly declined?}
+  declined -->|yes| refusal[Explicitly declined: preserve refusal and continue conversationally]
+  declined -->|no| active{Active Plan evidence?}
   active -->|yes| planning[Active: plan read-only]
   active -->|no| capability{Native Plan evidence}
   capability -->|visible inactive| inactive[Available but inactive: handoff and wait]
@@ -214,6 +236,7 @@ flowchart TD
   planning --> exit[Exit Plan before persistence or execution]
   inactive --> wait[Wait for host confirmation]
   indeterminate --> wait
+  refusal --> fallback
   unavailable --> fallback[Same approval and behavioral no-write gates]
 ```
 
@@ -295,8 +318,9 @@ inventing ChatGPT-native spec files.
   evidence.
 - Requirements revised: removed the earlier assumption that “ChatGPT web” or
   a missing Plan state proves `Unavailable`; added a distinct observation-gated
-  Codex web lane, explicit `Indeterminate`, and a ChatGPT web Chat/Work-only
-  no-generated-`/plan` rule.
+  Codex web lane, explicit `Indeterminate`, an early gate for explicit `unknown`
+  surface or experience values, a distinct refusal outcome, and a ChatGPT web
+  Chat/Work-only no-generated-`/plan` rule.
 - Requirements preserved: only definitive unavailability permits fallback;
   Plan/read-only remain independent; Codex/Cursor/Claude rows remain; evals
   stay outside the runtime payload; publication and live proof remain separate.
@@ -333,7 +357,9 @@ inventing ChatGPT-native spec files.
 - `skills/codex-operations/codex-spec-interviewer/references/workflow-details.md`
 - the four affected canonical `SKILL.md`/`agents/openai.yaml` pairs
 - `skill-evals/architecture-compass/`
-- `skill-evals/codex-spec-interviewer/cases/native-plan-mode-fallbacks.md`
+- `skill-evals/codex-spec-interviewer/`
+- `scripts/catalog/validate-skills.mjs` plus its focused invocation-token helper
+  and regression test
 - `scripts/validation/architecture-compass/` (only for the canonical host/eval
   inventory)
 - Catalog/plugin release metadata, listing, worksheet, README badge, publishing
@@ -345,8 +371,9 @@ inventing ChatGPT-native spec files.
 
 ### Expected new or receiving files
 
-- Existing `chatgpt-plan-*.md` Architecture Compass and Codex Spec Interviewer
-  cases.
+- Existing and new `chatgpt-plan-*.md` Architecture Compass and Codex Spec
+  Interviewer cases, including explicit unknown-surface, unknown-experience,
+  and refusal outcomes.
 
 ### Preserved contract boundaries
 
@@ -387,9 +414,13 @@ inventing ChatGPT-native spec files.
 - Update four canonical OpenAI metadata files and increment the changed skill
   patch versions.
 - Add ChatGPT web-unavailable, web slash-control, desktop-inactive,
-  control-state-unknown, and indeterminate cases, plus Codex web observed
-  slash, explicit-none, and indeterminate cases, while preserving existing
+  control-state-unknown, explicit unknown-surface, explicit unknown-experience,
+  refusal, and indeterminate cases, plus Codex web observed slash,
+  explicit-none, and indeterminate cases, while preserving existing
   positive/negative lifecycle contracts.
+- Replace the broad dollar regex with complete-token matching against known
+  public and incubator skills, and run its regression test through
+  `validate:skills`.
 - Sync the generated projection after canonical edits.
 - Validation gate: focused metadata, projection, plugin-eval, and Architecture
   Compass checks.
@@ -424,6 +455,7 @@ npm run release:validate -- --version 0.20.2 --base-ref origin/main
 npm run package:openai-plugin
 npm run validate:release-proof
 npm run validate
+pnpm format:check
 git diff --check
 ```
 
@@ -435,6 +467,12 @@ and live client behavior require their own current evidence.
 
 - ChatGPT product label with missing state: report neither `Unavailable` nor a
   fallback until the current composer is observed.
+- Explicit `surface: unknown` or `experience: unknown`: report `Indeterminate`,
+  ask for the distinguishable value, and wait before any later branch.
+- Explicit ChatGPT Plan refusal in Codex Spec Interviewer: use the distinct
+  `Planning capability: Explicitly declined` label, preserve the refusal,
+  continue conversationally, and do not request Plan again or emit a generated
+  handoff.
 - ChatGPT web Chat/Work: do not emit a `/plan` line; use the observed control,
   explicit unavailability evidence, or `Indeterminate`.
 - Codex web with an observed inactive `/plan`: return the copy-ready `$`
@@ -449,6 +487,9 @@ and live client behavior require their own current evidence.
 - ChatGPT desktop Codex and Codex CLI/IDE: observed inactive `/plan` returns the
   `$` handoff.
 - `/goal`, `$plan`, and prompt text alone do not satisfy preflight.
+- `$architecture-compass` and other complete known skill invocations fail the
+  Chat-enabled prompt guard; `$20`, `$20.00`, unknown tokens, embedded text, and
+  known-name prefixes do not.
 - Generated projection and archive contain the canonical metadata and host
   references with no private or historical evidence leakage.
 
@@ -512,9 +553,13 @@ and live client behavior require their own current evidence.
       skill has the required patch-version increment.
 - [ ] Architecture Compass and Codex deterministic evals cover ChatGPT web
       explicit unavailability, ChatGPT web slash-control guarding, desktop inactive
-      handoff, control-state-unknown, docs-only evidence, and indeterminate stop;
-      Codex web covers observed slash handoff, explicit none-proven fallback, and
+      handoff, control-state-unknown, explicit unknown surface and experience,
+      explicit refusal, docs-only evidence, and indeterminate stop; Codex web
+      covers observed slash handoff, explicit none-proven fallback, and
       indeterminate stop.
+- [ ] The Chat-enabled prompt guard rejects complete known `$<name>` skill
+      invocations without false positives for currency, unknown tokens, embedded
+      text, or known-name prefixes.
 - [ ] Catalog v0.20.2 and plugin v1.0.2 are coherent across package/plugin
       identity, changelog, listing, worksheet, badge, publishing guidance, and the
       current plugin spec.

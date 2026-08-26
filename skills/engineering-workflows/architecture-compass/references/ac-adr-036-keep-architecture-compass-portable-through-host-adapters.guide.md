@@ -95,6 +95,8 @@ On this lane only, missing required fields, `evidence_source: official_docs_for_
 
 When reporting Planning capability on this lane, include `host_version` in the evidence. Do not use `host_version` or official docs to prove `Active`, `Available but inactive`, or `Unavailable`.
 
+Before every active, web, non-web, fallback, or handoff branch, treat `surface: unknown` or `experience: unknown` as `Planning capability: Indeterminate`. Ask for a distinguishable surface when `surface` is unknown and a distinguishable experience when `experience` is unknown, then wait. Do not evaluate a later outcome branch or emit a transition handoff from either unknown value.
+
 Handoff targets the individual skill (display name Architecture Compass), not the plugin bundle:
 
 - If Plan is observed active: report `Planning capability: Active` and continue read-only.

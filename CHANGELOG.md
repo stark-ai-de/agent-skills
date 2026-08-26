@@ -29,6 +29,9 @@
 
 - Prevented product identity, documentation-only evidence, or a missing `/plan` command from being treated as proof that native Plan is unavailable.
 - Prevented generated slash-command handoffs on ChatGPT web while retaining observed `/plan` handoffs for Codex web.
+- Classified explicit `unknown` surface or experience observations as `Indeterminate` before active, handoff, or fallback routing.
+- Preserved ChatGPT Plan refusals as `Explicitly declined` with their evidence instead of reporting them as `Unavailable` or requesting Plan again.
+- Limited the Chat-enabled `$skill` prompt guard to complete, known public or incubator skill tokens so currency, unknown tokens, embedded text, and known-name prefixes remain valid prose.
 
 ### Deprecated
 

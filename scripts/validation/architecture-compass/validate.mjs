@@ -245,6 +245,8 @@ const baselineEvalCases = [
   "chatgpt-plan-codex-web-indeterminate.md",
   "chatgpt-plan-codex-web-none-proven-unavailable.md",
   "chatgpt-plan-official-docs-only-indeterminate.md",
+  "chatgpt-plan-unknown-surface-indeterminate.md",
+  "chatgpt-plan-unknown-experience-indeterminate.md",
   "plan-run-state-recheck.md",
   "conflicting-adrs-stop.md",
   "stack-deviation-routing.md",

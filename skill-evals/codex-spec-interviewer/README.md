@@ -11,7 +11,8 @@ This folder contains the initial promotion proof for `codex-spec-interviewer`.
 - Native interaction: uses Codex Plan mode and structured user questions when the current surface supports them.
 - Host coverage: ChatGPT Chat/Work/mobile remains observation-gated, and Codex
   web is a separate observation-gated lane whose `$` handoff requires a
-  current-composer `/plan` observation.
+  current-composer `/plan` observation; an explicit `unknown` surface or
+  experience stops either lane before every outcome branch.
 - Manageable maintenance: mostly repo-workflow guidance plus bundled templates and rubrics.
 
 ## Eval Set
@@ -38,6 +39,9 @@ Representative cases:
 - `cases/chatgpt-plan-codex-web-indeterminate.md`
 - `cases/chatgpt-plan-codex-web-none-proven-unavailable.md`
 - `cases/chatgpt-plan-official-docs-only-indeterminate.md`
+- `cases/chatgpt-plan-unknown-surface-indeterminate.md`
+- `cases/chatgpt-plan-unknown-experience-indeterminate.md`
+- `cases/chatgpt-plan-explicitly-declined.md`
 - `cases/architecture-change-needs-adr.md`
 - `cases/api-migration-plan.md`
 - `cases/security-sensitive-refactor.md`
@@ -60,9 +64,9 @@ When the current Codex surface supports native Plan mode, positive cases are eva
 3. A verified checkpoint ends with approved artifact paths, `Persistence status: pending Plan-mode exit`, and a save-only continuation. Pending persistence is not completion.
 4. After the user exits Plan mode, the continuation persists only the approved spec, any required ADR, and the minimal ADR index entry required by repository convention; it validates them, emits the Codex execution prompt, reports paths, and stops without implementation.
 
-Conversational fallback passes only when native Plan mode is definitely unavailable or the user explicitly declined it, the outcome is recorded as `unavailable` or `declined`, and the interview continues interactively in the conversation. Indeterminate support/state uses the supported-but-inactive `/plan` handoff and never falls back.
+Conversational fallback passes only when native Plan mode is definitely unavailable or the user explicitly declined it. Proven unavailability reports `Planning capability: Unavailable`; a refusal reports `Planning capability: Explicitly declined`, preserves the user's statement, and does not request Plan again. The interview then continues interactively in the conversation. Indeterminate support/state never falls back.
 
-ChatGPT Chat, Work, and mobile are a separate lane. Those cases must switch, wait, or ask instead of claiming Plan is unavailable from ChatGPT identity, missing Codex Plan state, or a missing `/plan` slash. They must not emit `/plan Use $codex-spec-interviewer to continue this request:`. Variants A–C above remain Codex CLI/IDE/desktop-only and keep their current assertions; Codex web uses the separate observation-gated cases.
+ChatGPT Chat, Work, and mobile are a separate lane. Those cases must switch, wait, or ask instead of claiming Plan is unavailable from ChatGPT identity, missing Codex Plan state, a missing `/plan` slash, or an explicit `unknown` surface or experience. They must not emit `/plan Use $codex-spec-interviewer to continue this request:`. Variants A–C above remain Codex CLI/IDE/desktop-only and keep their current assertions; Codex web uses the separate observation-gated cases.
 
 Passing completed outputs must include a user-verified finalization checkpoint and persisted spec/ADR artifact paths, not only chat-rendered drafts. In declined or blocked persistence cases, passing outputs must write no files, return the complete save-ready spec and any ADR draft in chat, report the path that would have been used plus the decline or blocker, and state that normal persistence completion was not met.
 

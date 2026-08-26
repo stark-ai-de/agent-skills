@@ -873,10 +873,10 @@
       "sha256": "22037f24e84ccedd190e0520b0889a262af8f109cb70a7d5286d8a300eaccd8e"
     },
     {
-      "byteLength": 16963,
+      "byteLength": 17348,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
-      "sha256": "29998ade9b2b9eb48c216717876c0b94ff2cdd3325c25c84b7e602b8c84fd3c1"
+      "sha256": "e63cbe8164a8cd27f8a765017de6338e842d933b4bab139b8dec620ab3d873af"
     },
     {
       "byteLength": 4323,
@@ -1479,10 +1479,10 @@
       "sha256": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99"
     },
     {
-      "byteLength": 22909,
+      "byteLength": 23798,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/workflow-details.md",
-      "sha256": "a37fcd796feab59b33e833826fed5c7a75ebb8972db151f142166d8c9f9b9c15"
+      "sha256": "af811bdecbcb4b47089473555621e3931975ba4f68b24ba731332af60d4f2927"
     },
     {
       "byteLength": 13663,
@@ -1725,5 +1725,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7ae9ebada8b0e09c47b0e1600e801f6c1bbfc0b12a3ddd9e38b17aeefc233b8d"
+  "treeHash": "1d228882868b9a552c5dbd8026e4a9ade54f02edc387a3c7253f901c06908dad"
 }

@@ -45,15 +45,23 @@ then wait. Do not fall back. Do not emit a slash Plan command. A current
 `host_runtime_context` or `user_report` may establish observed control/state
 evidence.
 
+Before every ChatGPT or Codex web active, web, non-web, fallback, or handoff
+branch, treat `surface: unknown` or `experience: unknown` as `Planning
+capability: Indeterminate`. Ask for a distinguishable surface when `surface` is
+unknown and a distinguishable experience when `experience` is unknown, then
+wait. Do not evaluate a later outcome branch, fall back, or emit a transition
+handoff from either unknown value.
+
 Then:
 
+- If the user explicitly declined Plan after it was recommended, report `Planning capability: Explicitly declined`, preserve the refusal as `Plan-mode fallback: explicitly declined - <user statement>`, continue conversationally, and do not request Plan again or emit a transition handoff.
 - If Plan is observed active, report `Planning capability: Active` and continue the read-only interview.
 - If a native Plan control is observed but `plan_state` is `unknown`, report `Planning capability: Indeterminate`, ask whether Plan is active and how to confirm it, then wait. Do not fall back or emit a handoff from an unknown state.
 - If `surface` is `web`, `experience` is `chat` or `work`, and a `/plan` control is observed but inactive, report `Planning capability: Available but inactive`, tell the user to select the observed `/plan` item in the current composer, and wait. Do not generate or copy a `/plan` line for ChatGPT web Chat or Work.
 - If `surface` is `web`, `experience` is `chat` or `work`, and an observed native Plan control is non-slash and inactive, report `Planning capability: Available but inactive`, describe that control, and wait. Do not generate a slash command.
 - If a native Plan control is observed and inactive on a non-web surface, report `Planning capability: Available but inactive`, hand off that control, and wait. Emit a slash Plan command only when `plan_control` is `slash_plan_command`: copy-ready `/plan` with optional inline continuation text of the original request. Do not insert `@skill` into that command. If the skill is not already loaded, add a separate instruction: Open the `@` menu and select Codex Spec Interviewer. For a non-slash control, describe the observed or user-reported name and do not emit a slash Plan command.
 - If Plan support or state is unknown, or the only evidence is ChatGPT identity or missing Codex Plan state, report `Planning capability: Indeterminate`, ask whether Plan is available and how to enter it, and wait. Do not record a conversational fallback from that evidence. Do not emit a slash Plan command.
-- Report `Planning capability: Unavailable` and continue conversationally only when `plan_control` is `none_proven` from a positive enumeration of controls with no Plan control, or the user explicitly declined Plan. Record `Plan-mode fallback: unavailable - <evidence>` or `Plan-mode fallback: explicitly declined - <user statement>`.
+- If `plan_control` is `none_proven` from a positive enumeration of controls with no Plan control, report `Planning capability: Unavailable`, record `Plan-mode fallback: unavailable - <evidence>`, and continue conversationally.
 
 Do not claim `/plan Use @codex-spec-interviewer` is official ChatGPT syntax.
 
@@ -67,6 +75,7 @@ Report `Planning capability: Indeterminate`, ask for current-composer evidence,
 and wait. Do not use documentation-only evidence for `Active`, `Available but
 inactive`, or `Unavailable`.
 
+- If the user explicitly declined Plan after it was recommended, report `Planning capability: Explicitly declined`, preserve the refusal as `Plan-mode fallback: explicitly declined - <user statement>`, continue conversationally, and do not request Plan again or emit a transition handoff.
 - If Plan is observed active, report `Planning capability: Active` and continue the read-only interview.
 - If a native Plan control is observed but `plan_state` is `unknown`, report `Planning capability: Indeterminate`, ask how to confirm the state, and wait. Do not fall back or emit a handoff.
 - If `/plan` is observed and inactive, report `Planning capability: Available but inactive`, and emit this copy-ready handoff with the original request substituted:
