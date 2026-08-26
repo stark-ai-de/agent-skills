@@ -46,10 +46,10 @@ const archiveReceipt = () => {
     evidenceClass: "repo-verified",
     generatedAt: "2026-08-20T00:00:00Z",
     release: {
-      tag: "v0.20.0",
+      tag: "v0.20.1",
       sourceCommit,
       sourceState: "clean",
-      event: "release.published",
+      event: "workflow_dispatch",
       archiveSubjectsStatus: "pass",
     },
     artifacts: [artifact("openai.zip", openaiSha), artifact("portable.zip", portableSha)],
@@ -210,7 +210,7 @@ const renderPortableSha = "0".repeat(64);
 const renderArchiveEnvironment = {
   RECEIPT_TAG: "v0.20.0",
   SOURCE_COMMIT: renderSourceCommit,
-  EVENT_NAME: "release.published",
+  EVENT_NAME: "workflow_dispatch",
   REPOSITORY: "stark-ai-de/agent-skills",
   SOURCE_REF: "refs/heads/main",
   SIGNER_WORKFLOW: "stark-ai-de/agent-skills/.github/workflows/publish-release.yml",
@@ -365,9 +365,13 @@ try {
   fs.writeFileSync(path.join(workRoot, "README.md"), "release fixture\n");
   git(["add", "README.md"], workRoot);
   git(["commit", "-m", "fixture"], workRoot);
-  git(["tag", "v0.20.0"], workRoot);
+  git(["tag", "-a", "v0.21.0", "-m", "v0.21.0"], workRoot);
+  git(["tag", "v0.21.1"], workRoot);
   git(["remote", "add", "origin", remoteRoot], workRoot);
-  git(["push", "origin", "HEAD:refs/heads/main", "refs/tags/v0.20.0"], workRoot);
+  git(
+    ["push", "origin", "HEAD:refs/heads/main", "refs/tags/v0.21.0", "refs/tags/v0.21.1"],
+    workRoot,
+  );
 
   const outputPath = path.join(tagFixtureRoot, "tag-output");
   run(
@@ -375,13 +379,27 @@ try {
     [
       path.join(repositoryRoot, "scripts/release/resolve-release-tag.mjs"),
       "--tag",
-      "v0.20.0",
+      "v0.21.0",
       "--github-output",
       outputPath,
     ],
     { cwd: workRoot },
   );
   assert.equal(outputValue(outputPath, "release_sha"), git(["rev-parse", "HEAD"], workRoot));
+  assert.equal(outputValue(outputPath, "tag_annotated"), "true");
+  assert.throws(() =>
+    run(
+      process.execPath,
+      [
+        path.join(repositoryRoot, "scripts/release/resolve-release-tag.mjs"),
+        "--tag",
+        "v0.21.1",
+        "--github-output",
+        outputPath,
+      ],
+      { cwd: workRoot },
+    ),
+  );
   assert.throws(() =>
     run(
       process.execPath,
@@ -402,7 +420,7 @@ try {
       [
         path.join(repositoryRoot, "scripts/release/resolve-release-tag.mjs"),
         "--tag",
-        "v0.20.0",
+        "v0.21.0",
         "--github-output",
         outputPath,
       ],
@@ -418,6 +436,7 @@ try {
   const subjectsRoot = path.join(subjectFixtureRoot, "subjects");
   const publishedRoot = path.join(subjectFixtureRoot, "published");
   const outputPath = path.join(subjectFixtureRoot, "github-output");
+  const assetNamesPath = path.join(subjectFixtureRoot, "asset-names.json");
   fs.mkdirSync(subjectsRoot, { recursive: true });
   fs.mkdirSync(publishedRoot, { recursive: true });
   for (const name of ["openai.zip", "portable.zip"]) {
@@ -429,10 +448,10 @@ try {
     status: "pass",
     sourceRevision: {
       commit: "d".repeat(40),
-      tag: "v0.20.0",
+      tag: "v0.20.1",
       state: "clean",
     },
-    releaseVersion: "0.20.0",
+    releaseVersion: "0.20.1",
     pluginVersion: "0.20.0",
     archiveProfile: "zip-store-v1",
     openai: {
@@ -446,11 +465,14 @@ try {
   });
   const writeSubject = (subject) =>
     fs.writeFileSync(subjectPath, `${JSON.stringify(subject, null, 2)}\n`);
+  const writeAssetNames = (names) =>
+    fs.writeFileSync(assetNamesPath, `${JSON.stringify([...names].sort())}\n`);
   writeSubject(currentSubject);
+  writeAssetNames(["openai.zip", "portable.zip"]);
   const compareArgs = [
     path.join(repositoryRoot, "scripts/release/compare-release-subjects.mjs"),
     "--tag",
-    "v0.20.0",
+    "v0.20.1",
     "--release-sha",
     "d".repeat(40),
     "--package-status",
@@ -459,11 +481,21 @@ try {
     subjectsRoot,
     "--published-dir",
     publishedRoot,
+    "--asset-names-file",
+    assetNamesPath,
     "--github-output",
     outputPath,
   ];
   run(process.execPath, compareArgs);
   assert.equal(outputValue(outputPath, "status"), "pass");
+  writeAssetNames(["openai.zip", "portable.zip", "unexpected.txt"]);
+  run(process.execPath, compareArgs);
+  assert.equal(
+    outputValue(outputPath, "status"),
+    "blocked",
+    "post-release proof must reject unexpected direct assets",
+  );
+  writeAssetNames(["openai.zip", "portable.zip"]);
   fs.writeFileSync(path.join(publishedRoot, "openai.zip"), "tampered\n");
   run(process.execPath, compareArgs);
   assert.equal(outputValue(outputPath, "status"), "blocked");
@@ -497,6 +529,72 @@ try {
     run(process.execPath, compareArgs);
     assert.equal(outputValue(outputPath, "status"), "blocked");
   }
+
+  const currentV021Subject = structuredClone(currentSubject);
+  currentV021Subject.sourceRevision.tag = "v0.21.0";
+  currentV021Subject.releaseVersion = "0.21.0";
+  currentV021Subject.pluginVersion = "1.1.0";
+  writeSubject(currentV021Subject);
+  const hostedV021Subject = structuredClone(currentV021Subject);
+  hostedV021Subject.sourceRevision.tag = "manual-review-required";
+  const publishedSubjectPath = path.join(publishedRoot, "release-subject.json");
+  fs.writeFileSync(publishedSubjectPath, `${JSON.stringify(hostedV021Subject, null, 2)}\n`);
+  const compareV021Args = [...compareArgs];
+  compareV021Args[compareV021Args.indexOf("--tag") + 1] = "v0.21.0";
+  writeAssetNames(["openai.zip", "portable.zip", "release-subject.json"]);
+  run(process.execPath, compareV021Args);
+  assert.equal(
+    outputValue(outputPath, "status"),
+    "pass",
+    "hosted JSON may retain its pre-tag marker when all release semantics match",
+  );
+
+  for (const mutate of [
+    (subject) => {
+      subject.sourceRevision.commit = "c".repeat(40);
+    },
+    (subject) => {
+      subject.sourceRevision.state = "dirty";
+    },
+    (subject) => {
+      subject.releaseVersion = "0.21.1";
+    },
+    (subject) => {
+      subject.pluginVersion = "1.1.1";
+    },
+    (subject) => {
+      subject.archiveProfile = "other-profile";
+    },
+    (subject) => {
+      subject.subjects.openai.bytes += 1;
+    },
+  ]) {
+    const invalidHosted = structuredClone(hostedV021Subject);
+    mutate(invalidHosted);
+    fs.writeFileSync(publishedSubjectPath, `${JSON.stringify(invalidHosted, null, 2)}\n`);
+    run(process.execPath, compareV021Args);
+    assert.equal(outputValue(outputPath, "status"), "blocked");
+  }
+  fs.rmSync(publishedSubjectPath);
+  run(process.execPath, compareV021Args);
+  assert.equal(
+    outputValue(outputPath, "status"),
+    "blocked",
+    "v0.21.0 and newer releases require the direct metadata asset",
+  );
+
+  const unsupportedSubject = structuredClone(currentSubject);
+  unsupportedSubject.sourceRevision.tag = "v0.20.0";
+  unsupportedSubject.releaseVersion = "0.20.0";
+  writeSubject(unsupportedSubject);
+  const unsupportedCompareArgs = [...compareArgs];
+  unsupportedCompareArgs[unsupportedCompareArgs.indexOf("--tag") + 1] = "v0.20.0";
+  run(process.execPath, unsupportedCompareArgs);
+  assert.equal(
+    outputValue(outputPath, "status"),
+    "blocked",
+    "v0.20.0 is not a legacy release boundary",
+  );
 
   const historicalSubject = structuredClone(currentSubject);
   historicalSubject.status = "not_applicable";
@@ -787,7 +885,11 @@ assert.match(publishWorkflow, /test "\$\{GITHUB_SHA\}" = "\$\{RELEASE_SHA\}"/);
 assert.match(publishWorkflow, /test "\$\{GITHUB_REF\}" = "\$\{expected_ref\}"/);
 assert.match(publishWorkflow, /test "\$\{WORKFLOW_REF\}" = "\$\{expected_workflow_ref\}"/);
 assert.match(publishWorkflow, /test "\$\{WORKFLOW_SHA\}" = "\$\{RELEASE_SHA\}"/);
-assert.match(publishWorkflow, /git ls-remote origin refs\/heads\/main/);
+assert.equal(
+  publishWorkflow.match(/verify-main-release-candidate\.mjs/g)?.length,
+  2,
+  "readiness and publication must independently verify protected-main containment",
+);
 assert.equal(
   publishWorkflow.match(/--source-state clean/g)?.length,
   2,

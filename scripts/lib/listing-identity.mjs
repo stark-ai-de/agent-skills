@@ -74,10 +74,7 @@ export function publicRepositoryUrl(repository) {
 
 function validRepositorySegment(value) {
   return (
-    typeof value === "string" &&
-    /^[A-Za-z0-9_.-]+$/.test(value) &&
-    value !== "." &&
-    value !== ".."
+    typeof value === "string" && /^[A-Za-z0-9_.-]+$/.test(value) && value !== "." && value !== ".."
   );
 }
 

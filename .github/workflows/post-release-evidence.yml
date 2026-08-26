@@ -1,4 +1,5 @@
 name: Post-release Evidence
+run-name: Post-release Evidence · ${{ inputs.tag }}
 
 on:
   workflow_dispatch:
@@ -87,12 +88,26 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf published-assets
+          asset_names_file="${RUNNER_TEMP}/release-asset-names.json"
+          printf '[]\n' > "${asset_names_file}"
           if [ "${RELEASE_TAG}" != "v0.19.1" ] && [ "${PACKAGE_STATUS}" = "pass" ]; then
             mkdir -p published-assets
+            release_id=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" \
+              --jq '.id')
+            gh api \
+              --paginate \
+              --slurp \
+              "repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100" \
+              --jq 'flatten | map(.name) | sort' \
+              > "${asset_names_file}"
+            asset_patterns=(--pattern openai.zip --pattern portable.zip)
+            if [ "${RELEASE_TAG}" != "v0.20.1" ]; then
+              asset_patterns+=(--pattern release-subject.json)
+            fi
             if ! gh release download "${RELEASE_TAG}" \
                 --repo "$GITHUB_REPOSITORY" \
-                --pattern openai.zip \
-                --pattern portable.zip \
+                "${asset_patterns[@]}" \
                 --dir published-assets \
                 --clobber \
                 >/dev/null 2>&1; then
@@ -105,6 +120,7 @@ jobs:
             --package-status "${PACKAGE_STATUS}" \
             --subjects-dir "$PWD/release-subjects" \
             --published-dir "$PWD/published-assets" \
+            --asset-names-file "${asset_names_file}" \
             --github-output "$GITHUB_OUTPUT"
 
       - name: 🔎 Verify tag-bound attestations

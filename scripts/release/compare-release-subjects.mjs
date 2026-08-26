@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { releaseAssetNamesForTag } from "../lib/release-assets.mjs";
 import { HISTORICAL_RELEASES, RELEASE_SUBJECT_FILE, sha256File } from "../lib/release-subject.mjs";
 import { validateReleaseSubjectFile } from "../lib/release-subject-validation.mjs";
 
@@ -24,10 +25,19 @@ function parseArgs(argv) {
   const releaseSha = argument(argv, "--release-sha") ?? process.env.RELEASE_SHA;
   const subjectsDir = argument(argv, "--subjects-dir");
   const publishedDir = argument(argv, "--published-dir");
+  const assetNamesFile = argument(argv, "--asset-names-file");
   const githubOutput = argument(argv, "--github-output");
-  if (!tag || !packageStatus || !releaseSha || !subjectsDir || !publishedDir || !githubOutput) {
+  if (
+    !tag ||
+    !packageStatus ||
+    !releaseSha ||
+    !subjectsDir ||
+    !publishedDir ||
+    !assetNamesFile ||
+    !githubOutput
+  ) {
     throw new Error(
-      "Usage: compare-release-subjects.mjs --tag <tag> --release-sha <sha> --package-status <status> --subjects-dir <directory> --published-dir <directory> --github-output <path>",
+      "Usage: compare-release-subjects.mjs --tag <tag> --release-sha <sha> --package-status <status> --subjects-dir <directory> --published-dir <directory> --asset-names-file <path> --github-output <path>",
     );
   }
   const versionMatch = /^v([0-9]+\.[0-9]+\.[0-9]+)$/.exec(tag);
@@ -42,6 +52,7 @@ function parseArgs(argv) {
     releaseVersion: versionMatch[1],
     subjectsDir: path.resolve(subjectsDir),
     publishedDir: path.resolve(publishedDir),
+    assetNamesFile: path.resolve(assetNamesFile),
     githubOutput: path.resolve(githubOutput),
   };
 }
@@ -60,6 +71,42 @@ function appendOutput(filePath, values) {
   fs.appendFileSync(filePath, `${lines.join("\n")}\n`);
 }
 
+function publishedAssetNames(filePath) {
+  if (!filePath || !usableFile(filePath)) return null;
+  try {
+    const names = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (!Array.isArray(names) || names.some((name) => typeof name !== "string")) return null;
+    return [...names].sort();
+  } catch {
+    return null;
+  }
+}
+
+function compareSemver(left, right) {
+  const leftParts = left.split(".").map(Number);
+  const rightParts = right.split(".").map(Number);
+  for (let index = 0; index < 3; index += 1) {
+    if (leftParts[index] !== rightParts[index]) return leftParts[index] - rightParts[index];
+  }
+  return 0;
+}
+
+function semanticReleaseSubject(document) {
+  return {
+    schemaVersion: document.schemaVersion,
+    status: document.status,
+    sourceCommit: document.sourceRevision.commit,
+    sourceState: document.sourceRevision.state,
+    releaseVersion: document.releaseVersion,
+    pluginVersion: document.pluginVersion,
+    archiveProfile: document.archiveProfile,
+    subjects: {
+      openai: document.subjects.openai,
+      portable: document.subjects.portable,
+    },
+  };
+}
+
 try {
   const {
     tag,
@@ -68,6 +115,7 @@ try {
     releaseVersion,
     subjectsDir,
     publishedDir,
+    assetNamesFile,
     githubOutput,
   } = parseArgs(process.argv.slice(2));
   const output = {
@@ -77,10 +125,15 @@ try {
   };
 
   const historical = tag === "v0.19.1";
+  const legacyTwoAsset = tag === "v0.20.1";
+  const currentThreeAsset = compareSemver(releaseVersion, "0.21.0") >= 0;
+  const supportedRelease = historical || legacyTwoAsset || currentThreeAsset;
   const expectedStatus = historical ? "not_applicable" : "pass";
   const pinnedHistoricalSha = HISTORICAL_RELEASES[tag];
   if (historical && releaseSha !== pinnedHistoricalSha) {
     console.error(`- ${tag} must resolve to pinned historical commit ${pinnedHistoricalSha}`);
+  } else if (!supportedRelease) {
+    console.error(`- ${tag} is not a supported published release boundary`);
   } else if (packageStatus === expectedStatus) {
     const subjectFile = path.join(subjectsDir, RELEASE_SUBJECT_FILE);
     const validation = validateReleaseSubjectFile(subjectFile, {
@@ -104,6 +157,16 @@ try {
       output.status = "not_applicable";
     } else {
       const mismatches = [];
+      const observedAssetNames = publishedAssetNames(assetNamesFile);
+      const expectedAssetNames = releaseAssetNamesForTag(tag).sort();
+      if (
+        !observedAssetNames ||
+        JSON.stringify(observedAssetNames) !== JSON.stringify(expectedAssetNames)
+      ) {
+        mismatches.push(
+          `release assets: expected exactly ${expectedAssetNames.join(", ")}; got ${observedAssetNames?.join(", ") ?? "unavailable"}`,
+        );
+      }
       for (const [key, outputName] of SUBJECT_KEYS) {
         const subject = validation.document.subjects[key];
         const publishedPath = path.join(publishedDir, subject.name);
@@ -118,6 +181,38 @@ try {
           mismatches.push(
             `${subject.name}: published bytes or digest differs from release-subject.json`,
           );
+        }
+      }
+      if (currentThreeAsset) {
+        const publishedSubjectPath = path.join(publishedDir, RELEASE_SUBJECT_FILE);
+        if (!usableFile(publishedSubjectPath)) {
+          mismatches.push(`${RELEASE_SUBJECT_FILE}: published metadata asset is missing`);
+        } else {
+          const publishedValidation = validateReleaseSubjectFile(publishedSubjectPath, {
+            schemaPath: path.join(
+              repositoryRoot,
+              "skill-evals/stark-ai-developer/evidence/release-subject.schema.json",
+            ),
+            subjectDirectory: publishedDir,
+            expected: {
+              sourceRevision: releaseSha,
+              sourceState: "clean",
+              releaseVersion,
+              status: "pass",
+            },
+          });
+          if (publishedValidation.errors.length > 0) {
+            mismatches.push(
+              ...publishedValidation.errors.map((error) => `${RELEASE_SUBJECT_FILE}: ${error}`),
+            );
+          } else if (
+            JSON.stringify(semanticReleaseSubject(publishedValidation.document)) !==
+            JSON.stringify(semanticReleaseSubject(validation.document))
+          ) {
+            mismatches.push(
+              `${RELEASE_SUBJECT_FILE}: hosted metadata differs semantically from the tag-bound rebuild`,
+            );
+          }
         }
       }
       if (mismatches.length === 0) {

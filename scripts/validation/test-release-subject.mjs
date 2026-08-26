@@ -5,11 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  createReleaseSubject,
-  HISTORICAL_RELEASES,
-  sha256File,
-} from "../lib/release-subject.mjs";
+import { createReleaseSubject, HISTORICAL_RELEASES, sha256File } from "../lib/release-subject.mjs";
 import { validateReleaseSubjectFile } from "../lib/release-subject-validation.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -182,9 +178,10 @@ try {
   fs.rmSync(openaiPath);
   fs.rmSync(portablePath);
   assert.match(
-    validateReleaseSubjectFile(subjectPath, { schemaPath, subjectDirectory: fixtureRoot }).errors.join(
-      "\n",
-    ),
+    validateReleaseSubjectFile(subjectPath, {
+      schemaPath,
+      subjectDirectory: fixtureRoot,
+    }).errors.join("\n"),
     /archive is missing/,
     "normal release-subject validation must still require the archive files",
   );
@@ -206,6 +203,11 @@ try {
 
   const publishedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "historical-published-assets-"));
   const comparisonOutput = path.join(fixtureRoot, "comparison-output");
+  const assetNamesFile = path.join(fixtureRoot, "published-asset-names.json");
+  fs.writeFileSync(
+    assetNamesFile,
+    `${JSON.stringify(["openai.zip", "portable.zip", "release-subject.json"])}\n`,
+  );
   try {
     execFileSync(
       process.execPath,
@@ -221,6 +223,8 @@ try {
         fixtureRoot,
         "--published-dir",
         publishedRoot,
+        "--asset-names-file",
+        assetNamesFile,
         "--github-output",
         comparisonOutput,
       ],

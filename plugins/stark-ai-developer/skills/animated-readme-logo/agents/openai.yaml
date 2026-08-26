@@ -1,6 +1,8 @@
 interface:
   display_name: "Animated README Logo"
   short_description: "Creates validated animated README logo pipelines"
+  icon_small: "./assets/openai-icon.png"
+  icon_large: "./assets/openai-icon.png"
   default_prompt: "Use $animated-readme-logo for this README logo task. Show audit, create, transform, and animate; announce and proceed with the intent-bound workflow when outcome and authority are clear, otherwise ask me to choose. Keep provider spend, tool installation, and overwrites separately approved."
 policy:
   products:

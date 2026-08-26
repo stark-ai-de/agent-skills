@@ -7,11 +7,15 @@ import {
   applyReleaseReconciliation,
   classifyReleaseAsset,
   planReleaseReconciliation,
+  releaseAssetCreatedAfterPublication,
+  releaseAssetCreatedBeforePublication,
+  releaseAssetNamesForTag,
+  releaseMutationAllowed,
   resolveTagCommit,
 } from "../lib/github-release-reconciliation.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const tag = "v0.20.0";
+const tag = "v0.21.0";
 const releaseSha = "a".repeat(40);
 const expectedRelease = {
   title: tag,
@@ -19,9 +23,10 @@ const expectedRelease = {
   prerelease: false,
 };
 
-const assets = (openai = "exact", portable = "exact") => ({
+const assets = (openai = "exact", portable = "exact", subject = "exact") => ({
   "openai.zip": { status: openai },
   "portable.zip": { status: portable },
+  "release-subject.json": { status: subject },
 });
 
 const release = ({
@@ -32,6 +37,10 @@ const release = ({
   prerelease = expectedRelease.prerelease,
   openai,
   portable,
+  subject,
+  metadataAssetAddedAfterPublication = false,
+  zipAssetsCreatedBeforePublication = false,
+  unexpectedAssetNames = [],
 } = {}) => ({
   id: 42,
   tagName: tag,
@@ -40,19 +49,33 @@ const release = ({
   prerelease,
   draft,
   immutable,
-  assets: assets(openai, portable),
+  stateChangedAt: "2026-08-26T12:00:00.000Z",
+  assets: assets(openai, portable, subject),
+  metadataAssetAddedAfterPublication,
+  zipAssetsCreatedBeforePublication,
+  unexpectedAssetNames,
 });
 
-const plan = (overrides = {}) =>
-  planReleaseReconciliation({
+const plan = (overrides = {}) => {
+  const releaseValue = Object.hasOwn(overrides, "release") ? overrides.release : null;
+  const normalizedOverrides = { ...overrides };
+  if (normalizedOverrides.tagCommit && !Object.hasOwn(normalizedOverrides, "tagAnnotated")) {
+    normalizedOverrides.tagAnnotated = true;
+  }
+  return planReleaseReconciliation({
     tag,
     releaseSha,
     expectedRelease,
     tagCommit: null,
     release: null,
     attestationStatus: "missing",
-    ...overrides,
+    latestRelease:
+      releaseValue && releaseValue.draft === false
+        ? { id: releaseValue.id, tagName: releaseValue.tagName }
+        : null,
+    ...normalizedOverrides,
   });
+};
 
 const expectedAsset = { bytes: 128, sha256: "b".repeat(64) };
 const uploadedAsset = {
@@ -113,10 +136,11 @@ assert.equal(
 
 assert.deepEqual(
   plan().operations.map((operation) => operation.type),
-  ["create_tag", "create_draft", "upload_asset", "upload_asset", "publish_draft"],
-  "fresh publication must create an annotated tag, draft, both assets, and publish last",
+  ["create_tag", "create_draft", "upload_asset", "upload_asset", "upload_asset", "publish_draft"],
+  "fresh publication must create an annotated tag, draft, all three assets, and publish last",
 );
 assert.equal(plan().requiresAttestation, true);
+assert.equal(plan().attestationVerificationRequired, true);
 assert.equal(
   plan({ expectedRelease: { ...expectedRelease, title: "v0.20.1" } }).reason,
   "invalid_expected_release_metadata",
@@ -125,7 +149,12 @@ assert.equal(
 const tagOnly = plan({ tagCommit: releaseSha });
 assert.deepEqual(
   tagOnly.operations.map((operation) => operation.type),
-  ["create_draft", "upload_asset", "upload_asset", "publish_draft"],
+  ["create_draft", "upload_asset", "upload_asset", "upload_asset", "publish_draft"],
+);
+assert.equal(
+  plan({ tagCommit: releaseSha, tagAnnotated: false }).reason,
+  "release_tag_must_be_annotated",
+  "tag-only recovery must reject a lightweight release tag",
 );
 
 const partialDraft = plan({
@@ -173,6 +202,20 @@ const publishedExact = plan({
 });
 assert.equal(publishedExact.status, "satisfied");
 assert.equal(publishedExact.reason, "published_release_matches");
+assert.equal(
+  publishedExact.postReleaseDispatchRequired,
+  true,
+  "a satisfied release without observed evidence must recover the dispatch",
+);
+assert.equal(
+  plan({
+    tagCommit: releaseSha,
+    release: release({ draft: false }),
+    attestationStatus: "valid",
+    postReleaseEvidenceDispatched: true,
+  }).postReleaseDispatchRequired,
+  false,
+);
 
 for (const mismatchedPublishedRelease of [
   release({ draft: false, title: "stale title" }),
@@ -188,9 +231,10 @@ for (const mismatchedPublishedRelease of [
     "published_release_metadata_mismatch",
   );
 }
+assert.equal(plan({ release: release({ title: null }) }).reason, "unknown_release_metadata");
 assert.equal(
-  plan({ release: release({ title: null }) }).reason,
-  "unknown_release_metadata",
+  plan({ release: release({ unexpectedAssetNames: ["unexpected.zip"] }) }).reason,
+  "unexpected_release_assets:unexpected.zip",
 );
 
 const publishedRepair = plan({
@@ -201,6 +245,40 @@ const publishedRepair = plan({
 assert.equal(publishedRepair.status, "planned");
 assert.deepEqual(publishedRepair.operations, [{ type: "upload_asset", name: "openai.zip" }]);
 assert.equal(publishedRepair.requiresAttestation, false);
+assert.equal(publishedRepair.attestationVerificationRequired, true);
+
+const publishedJsonRepair = plan({
+  tagCommit: releaseSha,
+  release: release({ draft: false, subject: "missing" }),
+  attestationStatus: "valid",
+});
+assert.equal(publishedJsonRepair.status, "planned");
+assert.deepEqual(publishedJsonRepair.operations, [
+  { type: "upload_asset", name: "release-subject.json" },
+]);
+const publishedJsonRepairWithoutAttestation = plan({
+  tagCommit: releaseSha,
+  release: release({
+    draft: false,
+    subject: "missing",
+    zipAssetsCreatedBeforePublication: true,
+  }),
+  attestationStatus: "missing",
+});
+assert.equal(publishedJsonRepairWithoutAttestation.status, "planned");
+assert.equal(publishedJsonRepairWithoutAttestation.attestationVerificationRequired, false);
+assert.deepEqual(publishedJsonRepairWithoutAttestation.operations, [
+  { type: "upload_asset", name: "release-subject.json" },
+]);
+assert.equal(
+  plan({
+    tagCommit: releaseSha,
+    release: release({ draft: false, subject: "missing" }),
+    attestationStatus: "missing",
+  }).reason,
+  "published_release_json_repair_chronology_ambiguous",
+  "JSON-only repair must prove both ZIPs predate publication",
+);
 
 assert.equal(
   plan({
@@ -232,6 +310,101 @@ assert.equal(
   }).status,
   "blocked",
 );
+const completedJsonRepairWithoutAttestation = plan({
+  tagCommit: releaseSha,
+  release: release({
+    draft: false,
+    metadataAssetAddedAfterPublication: true,
+    zipAssetsCreatedBeforePublication: true,
+  }),
+  attestationStatus: "missing",
+});
+assert.equal(completedJsonRepairWithoutAttestation.status, "satisfied");
+assert.equal(
+  completedJsonRepairWithoutAttestation.reason,
+  "published_json_repair_matches_without_publish_attestation",
+);
+assert.equal(completedJsonRepairWithoutAttestation.postReleaseDispatchRequired, true);
+assert.equal(completedJsonRepairWithoutAttestation.attestationVerificationRequired, false);
+assert.equal(
+  plan({
+    tagCommit: releaseSha,
+    release: release({
+      draft: false,
+      metadataAssetAddedAfterPublication: true,
+      zipAssetsCreatedBeforePublication: true,
+    }),
+    attestationStatus: "missing",
+    postReleaseEvidenceDispatched: true,
+  }).postReleaseDispatchRequired,
+  false,
+);
+assert.equal(
+  plan({
+    tagCommit: releaseSha,
+    release: release({ draft: false }),
+    attestationStatus: "valid",
+    latestRelease: { id: 99, tagName: "v0.20.1" },
+  }).reason,
+  "published_release_is_not_latest",
+  "a stable target is satisfied only when the latest endpoint identifies it",
+);
+
+const legacyTag = "v0.20.1";
+const legacyPlan = planReleaseReconciliation({
+  tag: legacyTag,
+  releaseSha,
+  expectedRelease: { ...expectedRelease, title: legacyTag },
+  tagCommit: null,
+  release: null,
+  attestationStatus: "missing",
+});
+assert.deepEqual(
+  legacyPlan.operations.map((operation) => operation.type),
+  ["create_tag", "create_draft", "upload_asset", "upload_asset", "publish_draft"],
+  "v0.20.1 remains the explicit two-asset legacy boundary",
+);
+assert.deepEqual(releaseAssetNamesForTag("v0.19.1"), [
+  "openai.zip",
+  "portable.zip",
+  "release-subject.json",
+]);
+assert.equal(releaseMutationAllowed("v0.19.1"), false);
+assert.equal(releaseMutationAllowed("v0.20.0"), false);
+assert.equal(releaseMutationAllowed("v0.20.1"), false);
+assert.equal(releaseMutationAllowed("v0.21.0"), true);
+assert.equal(
+  releaseAssetCreatedAfterPublication(
+    { created_at: "2026-08-26T12:00:01Z" },
+    "2026-08-26T12:00:00Z",
+  ),
+  true,
+);
+assert.equal(
+  releaseAssetCreatedAfterPublication(
+    { created_at: "2026-08-26T12:00:00Z" },
+    "2026-08-26T12:00:00Z",
+  ),
+  false,
+  "same-second asset creation is ambiguous and must fail closed",
+);
+assert.equal(releaseAssetCreatedAfterPublication({}, "2026-08-26T12:00:00Z"), false);
+assert.equal(
+  releaseAssetCreatedBeforePublication(
+    { created_at: "2026-08-26T11:59:59Z" },
+    "2026-08-26T12:00:00Z",
+  ),
+  true,
+);
+assert.equal(
+  releaseAssetCreatedBeforePublication(
+    { created_at: "2026-08-26T12:00:00Z" },
+    "2026-08-26T12:00:00Z",
+  ),
+  false,
+  "same-second ZIP creation is ambiguous and must fail closed",
+);
+assert.equal(releaseAssetCreatedBeforePublication({}, "2026-08-26T12:00:00Z"), false);
 
 assert.equal(plan({ tagCommit: "b".repeat(40) }).reason, "tag_points_to_different_commit");
 assert.equal(
@@ -286,24 +459,36 @@ function applySequence(observations, { failOperations = [] } = {}) {
   return { result, executed, remaining };
 }
 
-const validObservation = (overrides = {}) => ({
-  tagCommit: null,
-  release: null,
-  attestationStatus: "valid",
-  ...overrides,
-});
+const validObservation = (overrides = {}) => {
+  const releaseValue = Object.hasOwn(overrides, "release") ? overrides.release : null;
+  const observation = {
+    tagCommit: null,
+    release: null,
+    attestationStatus: "valid",
+    latestRelease:
+      releaseValue && releaseValue.draft === false
+        ? { id: releaseValue.id, tagName: releaseValue.tagName }
+        : null,
+    ...overrides,
+  };
+  if (observation.tagCommit && !Object.hasOwn(overrides, "tagAnnotated")) {
+    observation.tagAnnotated = true;
+  }
+  return observation;
+};
 
 const freshApply = applySequence([
   validObservation(),
   validObservation({ tagCommit: releaseSha }),
   validObservation({ tagCommit: releaseSha, release: release({ openai: "missing" }) }),
   validObservation({ tagCommit: releaseSha, release: release({ portable: "missing" }) }),
+  validObservation({ tagCommit: releaseSha, release: release({ subject: "missing" }) }),
   validObservation({ tagCommit: releaseSha, release: release() }),
   validObservation({ tagCommit: releaseSha, release: release({ draft: false }) }),
 ]);
 assert.deepEqual(
   freshApply.executed.map((operation) => operation.type),
-  ["create_tag", "create_draft", "upload_asset", "upload_asset", "publish_draft"],
+  ["create_tag", "create_draft", "upload_asset", "upload_asset", "upload_asset", "publish_draft"],
 );
 assert.equal(freshApply.result.status, "satisfied");
 assert.equal(freshApply.result.postReleaseDispatchRequired, true);
@@ -323,19 +508,49 @@ assert.deepEqual(
 );
 assert.equal(metadataRepairApply.result.postReleaseDispatchRequired, true);
 
+const jsonRepairWithoutAttestationApply = applySequence([
+  validObservation({
+    tagCommit: releaseSha,
+    release: release({
+      draft: false,
+      subject: "missing",
+      zipAssetsCreatedBeforePublication: true,
+    }),
+    attestationStatus: "missing",
+  }),
+  validObservation({
+    tagCommit: releaseSha,
+    release: release({
+      draft: false,
+      metadataAssetAddedAfterPublication: true,
+      zipAssetsCreatedBeforePublication: true,
+    }),
+    attestationStatus: "missing",
+  }),
+]);
+assert.deepEqual(jsonRepairWithoutAttestationApply.executed, [
+  { type: "upload_asset", name: "release-subject.json" },
+]);
+assert.equal(jsonRepairWithoutAttestationApply.result.status, "satisfied");
+assert.equal(jsonRepairWithoutAttestationApply.result.postReleaseDispatchRequired, true);
+
 assert.throws(
   () =>
     applySequence(
       [
         {
           tagCommit: releaseSha,
+          tagAnnotated: true,
           release: release({ draft: false, openai: "missing" }),
           attestationStatus: "valid",
+          latestRelease: { id: 42, tagName: tag },
         },
         {
           tagCommit: releaseSha,
+          tagAnnotated: true,
           release: release({ draft: false, openai: "missing" }),
           attestationStatus: "valid",
+          latestRelease: { id: 42, tagName: tag },
         },
       ],
       { failOperations: [0] },
@@ -348,13 +563,17 @@ const concurrentRepair = applySequence(
   [
     {
       tagCommit: releaseSha,
+      tagAnnotated: true,
       release: release({ draft: false, openai: "missing" }),
       attestationStatus: "valid",
+      latestRelease: { id: 42, tagName: tag },
     },
     {
       tagCommit: releaseSha,
+      tagAnnotated: true,
       release: release({ draft: false }),
       attestationStatus: "valid",
+      latestRelease: { id: 42, tagName: tag },
     },
   ],
   { failOperations: [0] },
@@ -383,6 +602,70 @@ assert.throws(
     ),
   /Reconciliation conflict after upload_asset: release_asset_conflict:portable\.zip/,
   "a conflicting upload race must block after fresh observation",
+);
+
+let repairConflict;
+try {
+  applySequence(
+    [
+      validObservation({
+        tagCommit: releaseSha,
+        release: release({
+          draft: false,
+          subject: "missing",
+          zipAssetsCreatedBeforePublication: true,
+        }),
+        attestationStatus: "missing",
+      }),
+      validObservation({
+        tagCommit: releaseSha,
+        release: release({
+          draft: false,
+          subject: "conflict",
+          zipAssetsCreatedBeforePublication: true,
+        }),
+        attestationStatus: "missing",
+      }),
+    ],
+    { failOperations: [0] },
+  );
+} catch (error) {
+  repairConflict = error;
+}
+assert.match(repairConflict?.message ?? "", /Reconciliation conflict after upload_asset/);
+assert.equal(
+  repairConflict?.postReleaseDispatchRequired,
+  true,
+  "a blocked observation after a published repair must retain the evidence-dispatch marker",
+);
+
+let observationFailure;
+let observationCount = 0;
+try {
+  applyReleaseReconciliation({
+    tag,
+    releaseSha,
+    expectedRelease,
+    observe: () => {
+      observationCount += 1;
+      if (observationCount === 1) {
+        return validObservation({
+          tagCommit: releaseSha,
+          release: release({ draft: false, openai: "missing" }),
+        });
+      }
+      throw new Error("simulated observation failure");
+    },
+    execute: () => {},
+  });
+} catch (error) {
+  observationFailure = error;
+}
+assert.match(observationFailure?.message ?? "", /simulated observation failure/);
+assert.equal(
+  observationFailure?.postReleaseDispatchRequired,
+  true,
+  "an observation failure after a published mutation must retain the evidence-dispatch marker",
 );
 
 assert.throws(
@@ -418,13 +701,21 @@ const attestWorkflow = fs.readFileSync(
   "utf8",
 );
 assert.doesNotMatch(reconcilerSource, /--clobber/);
-assert.match(reconcilerSource, /GITHUB_EVENT_NAME !== "workflow_dispatch"/);
-assert.match(reconcilerSource, /RELEASE_DRY_RUN !== "false"/);
+assert.doesNotMatch(reconcilerSource, /--mark-latest/);
+assert.doesNotMatch(reconcilerSource, /git", \["push"/);
+assert.match(reconcilerSource, /repos\/\$\{options\.repository\}\/git\/tags/);
+assert.match(reconcilerSource, /repos\/\$\{options\.repository\}\/git\/refs/);
+assert.match(reconcilerSource, /tagger\[name\]=github-actions\[bot\]/);
+assert.match(reconcilerSource, /"make_latest=true"/);
+assert.match(reconcilerSource, /releases\/latest/);
+assert.match(reconcilerSource, /eventName === "workflow_dispatch"/);
+assert.match(reconcilerSource, /eventName === "push"/);
+assert.match(reconcilerSource, /RELEASE_ENVIRONMENT !== "release"/);
 assert.match(reconcilerSource, /case "update_draft_metadata"/);
 assert.match(reconcilerSource, /bodySha256/);
 assert.match(
   reconcilerSource,
-  /if \(options\.mode === "plan"\) \{[\s\S]*?const result = plan\(options, observe\(options, localSubjects\), localSubjects\);[\s\S]*?return result;[\s\S]*?\}\n  const result = apply/,
+  /if \(options\.mode === "plan"\) \{[\s\S]*?const result = plan\(options, observe\(options, localSubjects\), localSubjects\);[\s\S]*?return result;[\s\S]*?\}\n  try \{\n    const result = apply/,
   "plan mode must return before the apply executor is reachable",
 );
 assert.match(reconcilerSource, /execute: \(operation, observation\) =>/);
@@ -434,9 +725,15 @@ assert.match(
   "Publish Release must never create a new attestation for an already-published release",
 );
 assert.match(publishWorkflow, /actions: write/);
+assert.match(publishWorkflow, /artifact-metadata: write/);
+assert.match(
+  reconcilerSource,
+  /catch \(error\) \{[\s\S]*?appendGithubOutput\(options\.githubOutput,[\s\S]*?postReleaseDispatchRequired: error\.postReleaseDispatchRequired === true/,
+  "apply failures must persist the evidence-dispatch marker to GitHub outputs",
+);
 assert.match(
   publishWorkflow,
-  /gh workflow run post-release-evidence\.yml[\s\S]*--ref main[\s\S]*-f "tag=/,
+  /always\(\) && steps\.reconciliation-apply\.outputs\.post_release_dispatch_required == 'true'[\s\S]*gh workflow run post-release-evidence\.yml[\s\S]*--ref main[\s\S]*-f "tag=/,
   "Publish Release must explicitly dispatch protected-main post-release evidence",
 );
 assert.doesNotMatch(postReleaseWorkflow, /\n  release:\n/);
