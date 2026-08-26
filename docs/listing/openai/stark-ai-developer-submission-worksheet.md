@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.0.1`
+- Version: `1.0.2`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Hardens release provenance and exact-tag verification, adds idempotent GitHub release recovery, and updates Architecture Compass to 0.6.5 with external worktree isolation and lean reference-first routing.
+- Release notes: Adds fail-closed ChatGPT and Codex web Plan routing with deterministic evaluations for Architecture Compass and Codex Spec Interviewer, plus product-neutral starter prompts across all four Chat-enabled skills.
 
 ## Capabilities
 

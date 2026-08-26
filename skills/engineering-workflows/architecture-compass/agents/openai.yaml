@@ -1,7 +1,7 @@
 interface:
   display_name: "Architecture Compass"
   short_description: "Governs and reviews ADR-guided architecture changes"
-  default_prompt: "Use $architecture-compass for this repository, including architecture PR review, Next.js request patterns, source placement, backend/runtime/env/config boundaries, or stack deviations when relevant. Expose setup, audit, refactor, plan-refactor, and plan-run-refactor; select and explain the task-matching workflow when intent and authority are clear, or ask when they are ambiguous. Rank architecture evidence through AC-ADR-046 without expanding execution authority, preserve accepted history and protected state, and keep later high-risk or external actions behind their own approvals."
+  default_prompt: "Use Architecture Compass for this repository, including architecture PR review, Next.js request patterns, source placement, backend/runtime/env/config boundaries, or stack deviations when relevant. Expose setup, audit, refactor, plan-refactor, and plan-run-refactor; select and explain the task-matching workflow when intent and authority are clear, or ask when they are ambiguous. Rank architecture evidence through AC-ADR-046 without expanding execution authority, preserve accepted history and protected state, and keep later high-risk or external actions behind their own approvals."
 policy:
   products:
     - CHAT

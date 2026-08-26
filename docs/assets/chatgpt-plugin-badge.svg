@@ -9,8 +9,8 @@
   docs/listing/openai/stark-ai-developer.json.
   This is not an OpenAI Verified badge.
 -->
-<svg xmlns="http://www.w3.org/2000/svg" width="122" height="20" role="img" aria-label="ChatGPT plugin 1.0.1">
-  <title>ChatGPT plugin 1.0.1</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="122" height="20" role="img" aria-label="ChatGPT plugin 1.0.2">
+  <title>ChatGPT plugin 1.0.2</title>
   <clipPath id="r">
     <rect width="122" height="20" rx="3"/>
   </clipPath>
@@ -23,6 +23,6 @@
   </svg>
   <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
     <text x="51" y="14.5">ChatGPT</text>
-    <text x="102" y="14.5">1.0.1</text>
+    <text x="102" y="14.5">1.0.2</text>
   </g>
 </svg>

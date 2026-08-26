@@ -48,19 +48,19 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "b7c96715665ab18e52bf46be6f627ce8dcba325f09e037c2692f0f2972e33eea"
+      "sha256": "31f2378af67c5de41a11f8acdc0273d0221f1ad1ec359b420045de4cd7ff3c39"
     },
     {
       "byteLength": 12772,
       "mode": "0644",
       "path": "skills/animated-readme-logo/SKILL.md",
-      "sha256": "b2502d7316ffde4a535cad6e68b2973eecb7049a1c57bbb2f0549487946623aa"
+      "sha256": "7fd77888ca4e61aab228c5e5ff4f53d1d580a6995c028b41f815455097b516c9"
     },
     {
-      "byteLength": 510,
+      "byteLength": 509,
       "mode": "0644",
       "path": "skills/animated-readme-logo/agents/openai.yaml",
-      "sha256": "13f50f7c71996a40d0373481f205fa63dc7e9299ddf8e88202b61d42c8c1990e"
+      "sha256": "7fcd9e60768ce6d6d24167a8c767675b4fb5846391a8580732b9a1a47bb697bf"
     },
     {
       "byteLength": 2893,
@@ -165,16 +165,16 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 15969,
+      "byteLength": 16382,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "ece1d9a2f68e9ec7a74b87bc39171f7cec7a1fe2cd0e61a1e836a8657f2c12a5"
+      "sha256": "74bf975899d3f50ccfb546ea976b9389755593bbdaa6373848802742c4b384ce"
     },
     {
-      "byteLength": 810,
+      "byteLength": 809,
       "mode": "0644",
       "path": "skills/architecture-compass/agents/openai.yaml",
-      "sha256": "9e4addedf37f8b8ba5c33734cf7ee759a9afd01a8ad15ad5b3fb3f09f88e2ece"
+      "sha256": "56150b350f429dda8657b5bcd3ff34ac02b604f0f01cd5112d22d547e1b109b0"
     },
     {
       "byteLength": 1492,
@@ -873,10 +873,10 @@
       "sha256": "22037f24e84ccedd190e0520b0889a262af8f109cb70a7d5286d8a300eaccd8e"
     },
     {
-      "byteLength": 7486,
+      "byteLength": 16963,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
-      "sha256": "2046b7240f9a3d5210e87a72a0c1fabb1dadc686f477618495eef9594b387b61"
+      "sha256": "29998ade9b2b9eb48c216717876c0b94ff2cdd3325c25c84b7e602b8c84fd3c1"
     },
     {
       "byteLength": 4323,
@@ -1395,16 +1395,16 @@
       "sha256": "7751f4fe095618cd1ffed693325b4a04095fc7e18346e6699ff108c0d4cefcd3"
     },
     {
-      "byteLength": 11099,
+      "byteLength": 12646,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/SKILL.md",
-      "sha256": "e5a964a9798969cf96b4f007c8ba7cfb0764c536280911438ea7642435279cc3"
+      "sha256": "7f1cfe7d6268c462303dee71eff15f7ea1395e641b45d5c15fc00229f65ced79"
     },
     {
-      "byteLength": 473,
+      "byteLength": 466,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/agents/openai.yaml",
-      "sha256": "9e1814a603e49a1c32b87204eb7c02e4ad49d1877efcf528fdb57ce5355dfc1b"
+      "sha256": "6cb237f6526a7d7d04aab776188c80964b850161e6fdb8dabcea5ee5886886ff"
     },
     {
       "byteLength": 1711,
@@ -1479,22 +1479,22 @@
       "sha256": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99"
     },
     {
-      "byteLength": 13232,
+      "byteLength": 22909,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/workflow-details.md",
-      "sha256": "9cfdf18a0b35f9be68f3e6879e48b291c795dedc1f2c3faadc8ef9f2eebee546"
+      "sha256": "a37fcd796feab59b33e833826fed5c7a75ebb8972db151f142166d8c9f9b9c15"
     },
     {
       "byteLength": 13663,
       "mode": "0644",
       "path": "skills/drawio-diagrams/SKILL.md",
-      "sha256": "655f427e87d99c254737ec92169e3d5453f07b3aed469e089797901489a2bb0f"
+      "sha256": "5bf3605ea2df4531cd35c0781ce1af5d8a3797f69a7e6dd3e9d3d92fc071c946"
     },
     {
       "byteLength": 1226,
       "mode": "0644",
       "path": "skills/drawio-diagrams/agents/openai.yaml",
-      "sha256": "e07d35e4fbbaa58527091e6cd206b34b4c4fd8824e916161fb0946349190c7b6"
+      "sha256": "c3dea2e747363174762fbfb8e8e1a386f32a7a180a986683db06d55edfe62720"
     },
     {
       "byteLength": 11766,
@@ -1721,9 +1721,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.0.1"
+    "version": "1.0.2"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8a9d270a4825ca5218c818c06446a29f7944adb1afbddc8d740876ed6362d391"
+  "treeHash": "7ae9ebada8b0e09c47b0e1600e801f6c1bbfc0b12a3ddd9e38b17aeefc233b8d"
 }

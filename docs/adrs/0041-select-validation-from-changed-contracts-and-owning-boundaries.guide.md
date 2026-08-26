@@ -54,6 +54,9 @@ When a required aggregate fails, run the smallest owning reproducer while fixing
 - For a release-intent candidate, run the focused checks, freeze the candidate, run the local aggregate, and validate release metadata against the immediate base.
 - For a pull request, keep hosted CI as a distinct aggregate proof on the pushed head.
 - Keep publication, deployment, Preview, production, and third-party evidence separate and approval-gated.
+- If the user explicitly excludes tests or validation scripts, record the
+  affected obligations as `not run` and do not report the candidate as locally
+  validated or release-ready.
 
 ## Revisit
 

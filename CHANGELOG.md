@@ -12,6 +12,28 @@
 
 ### Removed
 
+## v0.20.2 - 2026-08-26
+
+### Added
+
+- Added observation-gated Plan routing and deterministic host-surface evaluations for ChatGPT Chat, Work, mobile, and Codex web.
+- Added the public `chatgpt-host-plan-adapter` implementation spec and linked it from the tracked spec index.
+
+### Changed
+
+- Updated `architecture-compass` to 0.6.6 and `codex-spec-interviewer` to 0.3.3 with fail-closed ChatGPT and Codex web Plan lanes.
+- Updated `drawio-diagrams` to 0.7.3 and `animated-readme-logo` to 0.5.2, and made all four Chat-enabled starter prompts product-neutral.
+- Advanced the independently versioned `stark-ai-developer` plugin and its OpenAI listing surfaces to 1.0.2.
+
+### Fixed
+
+- Prevented product identity, documentation-only evidence, or a missing `/plan` command from being treated as proof that native Plan is unavailable.
+- Prevented generated slash-command handoffs on ChatGPT web while retaining observed `/plan` handoffs for Codex web.
+
+### Deprecated
+
+### Removed
+
 ## v0.20.1 - 2026-08-25
 
 ### Added

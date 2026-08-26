@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex Spec Interviewer"
   short_description: "Interviews, verifies, ADR-gates, and saves Codex-ready specs"
-  default_prompt: "/plan Use $codex-spec-interviewer to interview me about my request, source-check the requirements, ADR-gate durable decisions, verify the final scope, and prepare a Codex-ready implementation spec for save-only persistence after Plan mode."
+  default_prompt: "Use Codex Spec Interviewer to interview me about my request, source-check the requirements, ADR-gate durable decisions, verify the final scope, and prepare a Codex-ready implementation spec for save-only persistence after Plan mode."
 policy:
   products:
     - CHAT

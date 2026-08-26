@@ -33,7 +33,8 @@ This guide is non-normative. [Long](0015-prepare-releases-in-change-prs.long.md)
 - Record the exact commands or scenarios executed and the evidence stage each result proves.
 - Confirm that generated reports and release claims do not exceed the available evidence.
 - Cite the exact files, commands, and evidence boundaries used for the conclusion.
-- Confirm `CHANGELOG.md` versus the PR base: historical `## vX.Y.Z` sections are unchanged, and the new `## v<package-version>` section describes the current tree compared with the previous release.
+- Confirm `CHANGELOG.md` versus the PR base: historical `## vX.Y.Z` sections are unchanged, the `## Unreleased` section has no list items when the package is bumped, and the new `## v<package-version>` section describes the current tree compared with the previous release.
+- A direct release-intent candidate may prepare package, plugin, listing, and worksheet metadata together, but publication remains a separate guarded evidence stage.
 
 ## Historical follow-up context
 
