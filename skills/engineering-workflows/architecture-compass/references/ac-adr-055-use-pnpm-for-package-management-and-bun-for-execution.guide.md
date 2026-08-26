@@ -151,6 +151,12 @@ Copy only the verified artifact and required runtime assets into the final conta
 
 These are minimums. Select and update to newer compatible releases without adding an upper bound unless evidence requires one.
 
+### Coordination with evidence-selected runtimes
+
+[AC-ADR-014](ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.short.md) remains the final selection authority for each concrete executable or deployable. This ADR supplies the Bun starting candidate for relevant repository tooling and its representative checks may count as matrix evidence; adopting the ADR is not itself proof that Bun wins every boundary.
+
+Record the selected candidate in the target repository's evidence matrix or equivalent maintained record. A complete target-specific matrix decision may supersede this ADR's Bun candidate for that target boundary without rewriting this provider record; it may select Bun, Node.js, a framework-owned runtime, or another supported candidate. When Bun is unavailable or incompatible and no alternative has better qualifying evidence, use the working Node.js candidate as the default fallback. `Fastest supported runtime` means the fastest candidate that also preserves correctness, operations, security, upstream support, and required platform behavior; speed never overrides those requirements. A target repository may keep unknown matrix cells advisory when its actual commands and mandatory gates remain fail-closed.
+
 ## Verification
 
 - `pnpm install --frozen-lockfile` succeeds from a clean checkout.

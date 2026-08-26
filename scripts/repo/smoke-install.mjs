@@ -66,8 +66,8 @@ const smokeEnvironment = {
   DISABLE_TELEMETRY: "1",
   DO_NOT_TRACK: "1",
 };
-const skillsCommand = configuredSkillsCli || "npx";
-const skillsPrefixArguments = configuredSkillsCli ? [] : ["--yes", "skills@latest"];
+const skillsCommand = configuredSkillsCli || "pnpm";
+const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"];
 const installCases = [
   {
     agent: "codex",

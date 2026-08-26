@@ -47,6 +47,12 @@ Before changing a framework, runtime, adapter, target, or host, record:
 
 Prefer the existing target combination and built-in capability when they satisfy the requirement. If the evidence-backed gap is `not insufficient`, reject the extra runtime, adapter, or host and continue only with the authorized bounded change. If the chosen option creates a durable deviation from an accepted target rule, stop the affected implementation and use the target repository's ADR change or successor process; AC-ADR-046 ranks the evidence but grants no write authority.
 
+### Coordination with Bun-first tooling
+
+[AC-ADR-055](ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.short.md) supplies a Bun-first candidate and package-ownership contract for JavaScript/TypeScript repository tooling. A representative AC-ADR-055 command, fixture, build, or runtime observation may populate this ADR's compatibility matrix, but the existence or adoption of AC-ADR-055 alone is not compatibility proof.
+
+Apply the matrix to the concrete executable or deployable. Bun remains the winner only when it preserves correctness, operations, security, upstream support, and required delivery behavior. If another candidate has better qualifying evidence, select that candidate. When Bun cannot run the boundary and Node.js works with no better evidenced alternative, Node.js is the default fallback. Unknown or non-material cells may remain visible without blocking an otherwise mandatory-command-verified selection; the target repository decides whether its matrix is advisory or a gate.
+
 ### Suggested evidence record
 
 Capture exact framework/runtime/adapter/package-manager versions, platform and architecture, build command, lockfile hash or revision, exercised capabilities, host deployment ID, and unresolved gaps. Repeat the matrix after a major runtime, framework, host, or plugin update.

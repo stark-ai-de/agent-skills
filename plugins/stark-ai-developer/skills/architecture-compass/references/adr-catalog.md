@@ -137,6 +137,6 @@ These entries are adoption candidates. Setup records each as `adopt`, `adapt`, `
 | Host-neutral persistence      | AC-ADR-052, then AC-ADR-048, AC-ADR-036, and AC-ADR-004            |
 | Public skill reuse            | AC-ADR-039 plus target authority and AC-ADR-004                    |
 | New public skill repository   | AC-ADR-040, then its linked component provider ADRs                |
-| JavaScript/TypeScript tooling | AC-ADR-055, then AC-ADR-013, AC-ADR-014, and AC-ADR-018            |
+| JavaScript/TypeScript tooling | AC-ADR-014 and AC-ADR-055, then AC-ADR-013 and AC-ADR-018          |
 | Public skill publication      | AC-ADR-034 plus AC-ADR-041, AC-ADR-028, and AC-ADR-029             |
 | ADR decision lineage          | AC-ADR-044 plus AC-ADR-001 and AC-ADR-004                          |

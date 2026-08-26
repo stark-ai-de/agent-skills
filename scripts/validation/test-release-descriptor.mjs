@@ -39,8 +39,10 @@ const pluginSource = JSON.parse(
 assert.equal(release.pluginId, pluginSource.pluginId);
 assert.equal(release.version, pluginSource.version);
 assert.equal(release.build.archiveProfile, pluginSource.build.archiveProfile);
+assert.equal(release.build.bunVersion, pluginSource.build.bunVersion);
 assert.equal(release.displayName, pluginSource.displayName);
 assert.equal(pluginIdentity(repositoryRoot).displayName, pluginSource.displayName);
+assert.equal(pluginIdentity(repositoryRoot).bunVersion, pluginSource.build.bunVersion);
 const derivedPaths = pluginArtifactPaths(repositoryRoot);
 assert.equal(derivedPaths.portableTarget, pluginSource.outputs.portableProjection);
 assert.equal(derivedPaths.listing, `docs/listing/openai/${pluginSource.listingId}.json`);

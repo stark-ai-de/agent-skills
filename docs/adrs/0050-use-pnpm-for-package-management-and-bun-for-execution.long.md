@@ -2,7 +2,7 @@
 
 ID: ADR-0050
 Title: Use pnpm for package management and Bun for execution
-Status: Proposed
+Status: Accepted
 Date: 2026-08-26
 Owner: stark-ai-de
 Scope: repository
@@ -12,7 +12,7 @@ Applies when: Changing repository JavaScript/TypeScript package ownership, scrip
 Adoptable: false
 Variant: Long
 Canonical variant: Long
-Supersedes: None
+Supersedes: ADR-0034
 Superseded by: None
 Guide verified: 2026-08-26
 Gist: Let pnpm own persistent dependencies and run JavaScript tooling through Bun unless verified incompatibility requires a supported fallback.
@@ -21,26 +21,30 @@ Variants: [Short](0050-use-pnpm-for-package-management-and-bun-for-execution.sho
 
 ## Decision
 
-The repository will let pnpm exclusively own persistent dependency management, run supported JavaScript and TypeScript tooling through Bun by default with fail-closed installation and verification-based fallbacks, use Vite and Vitest where no framework-owned default applies, and prefer compiled or minified Bun server artifacts for compatible deployments.
+The repository will let pnpm exclusively own persistent dependency management and use Bun as the default candidate for repository JavaScript and TypeScript execution. Bun runs only with fail-closed local configuration; each concrete command uses the winner recorded by [ADR-0051](0051-select-repository-runtimes-through-an-advisory-evidence-matrix.short.md), so verified incompatibility selects the best evidenced supported fallback without weakening correctness, operations, or security.
 
 ## Why
 
-- pnpm already owns the repository lockfile, but package-script entrypoints still mix npm and Node.js.
+- pnpm already owns the repository lockfile, while package scripts, CI, and release tooling previously mixed npm entrypoints and caller-selected Node.js execution.
 - Runtime selection inside each script keeps commands short and prevents the outer runner from changing behavior.
-- Bun-first execution provides a measurable fast path while verification-based fallbacks protect correctness.
-- The Architecture Compass provider record makes the policy reusable beyond this repository.
+- AC-ADR-055 provides a useful Bun-first repository-tooling candidate, while AC-ADR-014 requires evidence for the actual executable or deployable.
+- Separating package ownership and default candidacy here from final per-boundary selection in ADR-0051 preserves both responsibilities.
+- pnpm owns installation, updates, workspaces, dependency trust, and the only package-manager lockfile; Bun runs with automatic installation and environment-file loading disabled.
+- Compatible CLIs use `bun --bun`, composed expressions use `bun exec`, and explicit project entrypoints use `pnpm run`; native executables remain direct.
+- The public upstream interface of a consumer tool does not change merely because repository-maintainer automation selects another transient runner.
+- Bun is a starting candidate rather than a universal winner; if no candidate has better qualifying evidence and Node.js works, Node.js is the default fallback.
 
 ## Options
 
-- Chosen: Adopt AC-ADR-055 locally through a proposed repository record, then migrate implementation in a separately reviewed change after conflicts are reconciled.
-- Rejected: Rewrite ADR-0034 in place. Accepted ADR history must remain stable.
-- Rejected: Change scripts in the same unresolved decision change. Current accepted guidance requires conflict resolution before affected implementation.
-- Rejected: Keep pnpm ownership but leave runtime selection to each caller. That preserves inconsistent behavior.
+- Chosen: pnpm ownership plus a Bun-first candidate, coordinated with ADR-0051's advisory evidence matrix.
+- Rejected: Rewrite ADR-0034 in place. Accepted ADR history remains stable and is superseded reciprocally.
+- Rejected: Make Bun the unconditional runtime. That would discard AC-ADR-014's deployable-specific evidence requirements.
+- Rejected: Leave runtime selection to each caller. That preserves inconsistent behavior and hides fallbacks.
 
 ## Consequences
 
-- Benefit: The desired package, runtime, shell, build, test, transient CLI, deployment, and version policy is explicit and reusable.
-- Benefit: The implementation migration can be reviewed against one concrete target.
-- Tradeoff: This Proposed record does not override accepted ADR-0034.
-- Tradeoff: Current scripts and pnpm version remain implementation drift until a successor or adaptation is accepted.
-- Risk: Accepting both records without reconciliation would leave contradictory runtime authority.
+- Benefit: Dependency ownership is deterministic and compatible commands have an explicit Bun fast path.
+- Benefit: Evidence-selected exceptions remain visible rather than becoming undocumented drift.
+- Tradeoff: The repository maintains Bun alongside Node.js and pnpm because each has an owned boundary.
+- Tradeoff: Runtime upgrades may require focused matrix evidence before a winner changes.
+- Risk: Blindly forcing Bun could introduce subtle failures; ADR-0051 and mandatory command checks contain that risk.

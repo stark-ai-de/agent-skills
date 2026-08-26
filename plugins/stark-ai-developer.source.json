@@ -52,7 +52,8 @@
   },
   "build": {
     "nodeVersion": "24.18.0",
-    "pnpmVersion": "11.22.0",
+    "bunVersion": "1.4.0",
+    "pnpmVersion": "11.24.0",
     "archiveProfile": "zip-store-v1"
   }
 }

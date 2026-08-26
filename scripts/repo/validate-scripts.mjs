@@ -33,11 +33,11 @@ const shellScripts = [
   ...walk(path.join(root, "incubator"), (file) => file.endsWith(".sh")),
 ].sort();
 
-for (const script of nodeScripts) check(process.execPath, ["--check", script]);
+for (const script of nodeScripts) check("node", ["--check", script]);
 for (const script of shellScripts) check("bash", ["-n", script]);
 check(process.execPath, ["scripts/validation/smoke-install-contract.test.mjs"]);
 check(process.execPath, ["scripts/validation/test-release-intent.mjs"]);
 
 console.log(
-  `Validated syntax for ${nodeScripts.length} Node script(s) and ${shellScripts.length} shell script(s).`,
+  `Validated syntax for ${nodeScripts.length} JavaScript script(s) and ${shellScripts.length} shell script(s).`,
 );

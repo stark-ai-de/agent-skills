@@ -2,7 +2,7 @@
 
 - **Status:** Phase 6 complete; public listing live
 - **Contract revision:** 12
-- **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 listing is live. Directory identity is a continuous scheduled/manual post-publication plus local `npm run verify:openai-directory` gate.
+- **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 listing is live. Directory identity is a continuous scheduled/manual post-publication plus local `pnpm run verify:openai-directory` gate.
 - **Specification date:** 2026-08-21
 - **External contracts last verified:** 2026-08-18; live portal observations from 2026-08-19 in `docs/listing/openai/stark-ai-developer-first-publication.md` outrank stale country-picker and separate-Codex-directory procedure. The listing source omits publisher region fields.
 - **Repository:** `stark-ai-de/agent-skills`
@@ -27,7 +27,7 @@ exists. The release descriptor, dated contract snapshots, the
 fixtures, requirement traceability, and the supply-chain inventory command are
 present. A public ChatGPT plugin page was observed on 2026-08-19, and Codex in the
 ChatGPT Windows app showed the same directory. That observation exits Phase 6.
-Directory identity is enforced by `npm run verify:openai-directory` locally and
+Directory identity is enforced by `pnpm run verify:openai-directory` locally and
 by the strict scheduled/manual post-publication `ChatGPT Directory Identity`
 workflow through `.github/actions/verify-openai-directory`. Hosted `Validate`
 does not fetch the live directory. Record portal
@@ -272,7 +272,8 @@ Current identity values in `plugins/stark-ai-developer.source.json`:
   },
   "build": {
     "nodeVersion": "24.18.0",
-    "pnpmVersion": "11.22.0",
+    "bunVersion": "1.4.0",
+    "pnpmVersion": "11.24.0",
     "archiveProfile": "zip-store-v1"
   }
 }
@@ -286,10 +287,10 @@ The plugin source file's identity fields are the sole source for:
 - submission type and public-listing strategy;
 - generated projection paths and canonical repository marketplace target;
 - active external-contract snapshot identifiers;
-- exact release Node.js and pnpm versions;
+- exact release Node.js, Bun, and pnpm versions;
 - reproducible archive-profile identifier.
 
-Validators must then require `package.json#packageManager` to equal `pnpm@11.22.0`, `.node-version` to equal `24.18.0`, and `package.json#engines.node` to admit that version. Manually duplicated version fields are allowed only in generated artifacts and must fail drift checks.
+Validators must then require `package.json#packageManager` to equal `pnpm@11.24.0`, `.node-version` to equal `24.18.0`, `.bun-version` to equal `1.4.0`, and the matching `package.json` engines to admit both runtimes. Manually duplicated version fields are allowed only in generated artifacts and must fail drift checks.
 
 Version 1 creates one public plugin listing. The six skills are bundled components with their own OpenAI metadata; they are not six independent public directory listings. Independent public discovery for a skill requires a separate one-skill plugin package and submission, which is an optional later phase.
 
@@ -336,7 +337,7 @@ staging at package time, archived, and deleted; it is not a second committed
 skill tree. The submitted ZIP, submitted `.codex-plugin/plugin.json`, and
 sanitized portal identifiers must be retained as release evidence. OpenAI may
 rewrite fields when saving a draft; it documents no URL that exports that
-saved file. `npm run verify:openai-directory` compares listing JSON, skill
+saved file. `pnpm run verify:openai-directory` compares listing JSON, skill
 interface, SKILL.md descriptions, portal glyphs, and skills-only invariants to
 the public ChatGPT directory document (`DIR-001`) and confirms public category
 catalog membership (`DIR-002`). It does not rebuild the OpenAI zip.
@@ -359,7 +360,7 @@ catalog membership (`DIR-002`). It does not rebuild the OpenAI zip.
 | Sanitized release-evidence records                            | Evidence generator plus maintainer review |       Yes |       Yes | Audit, release, and post-publication verification                              |
 | OpenAI portal draft and reviewer communication                | OpenAI Platform                           |    Partly |        No | Portal only; commit only sanitized identifiers, manifests, diffs, and outcomes |
 
-Generated artifacts must carry a generated-file notice where the target format permits it and must never be hand-edited. The documented sync command is the only restoration path for the portable projection. `dist/` and temporary marketplaces remain ignored by Git. `npm run sync:openai-plugin` is a refuse-redirect and must not materialize `adapters/openai/stark-ai-developer/`.
+Generated artifacts must carry a generated-file notice where the target format permits it and must never be hand-edited. The documented sync command is the only restoration path for the portable projection. `dist/` and temporary marketplaces remain ignored by Git. `pnpm run sync:openai-plugin` is a refuse-redirect and must not materialize `adapters/openai/stark-ai-developer/`.
 
 ## 8. Plugin source contract
 
@@ -388,7 +389,7 @@ Identity fields in the same file remain the sole source for plugin identity, as 
 
 ### Plugin-source validation requirements
 
-`npm run validate:bundles` must fail when any of the following is true:
+`pnpm run validate:bundles` must fail when any of the following is true:
 
 1. A JSON file cannot be parsed.
 2. A parsed source file is `null`, an array, a scalar, or otherwise not a top-level object.
@@ -558,7 +559,7 @@ directory card as the saved `.codex-plugin/plugin.json`.
 The scheduled/manual post-publication `ChatGPT Directory Identity` workflow runs
 `.github/actions/verify-openai-directory`, which calls
 `scripts/plugin/verify-openai-directory.mjs`. Local fallback is
-`npm run verify:openai-directory`. That script runs two checks against the
+`pnpm run verify:openai-directory`. That script runs two checks against the
 unofficial ChatGPT web API:
 
 - `DIR-001` compares listing JSON, skill interface, SKILL.md descriptions,
@@ -579,7 +580,7 @@ Do not package an OpenAI zip in that check. Do not compare portal-rewritten
 plugin-card short or long descriptions, logo or catalog icon CDN URLs,
 `discoverability`, support/security/chatgptPlugin URLs, dark brand color, or
 account identifiers. Do not log category `pageToken` values, cookies, or other
-private fields. The live directory fetch is part of neither `npm run validate`
+private fields. The live directory fetch is part of neither `pnpm run validate`
 nor hosted `Validate`; only the dedicated scheduled/manual workflow runs it.
 
 Release evidence still records:
@@ -777,7 +778,7 @@ The README must distinguish:
 
 ### Canonical repository marketplace
 
-Create `.agents/plugins/marketplace.json` only when the portable projection is complete. Generate it from release policy with `npm run sync:agent-plugin`; `--check` fails when the committed file drifts. Point its repository-local source to `./plugins/stark-ai-developer`, as required by ADR-0043. The OpenAI adapter remains a separate packaging and submission projection.
+Create `.agents/plugins/marketplace.json` only when the portable projection is complete. Generate it from release policy with `pnpm run sync:agent-plugin`; `--check` fails when the committed file drifts. Point its repository-local source to `./plugins/stark-ai-developer`, as required by ADR-0043. The OpenAI adapter remains a separate packaging and submission projection.
 
 This committed marketplace is the canonical local/repository catalog for Codex CLI 0.147.0 or later. It must not point to a staged or committed OpenAI adapter and must not be rewritten for adapter tests.
 
@@ -846,7 +847,7 @@ scripts/repo/generate-traceability.mjs
 scripts/release/verify-supply-chain.mjs
 ```
 
-`scripts/plugin/sync-openai-plugin.mjs` is a refuse-redirect. It does not materialize `adapters/openai/stark-ai-developer/`. Validate or package the native adapter with `npm run validate:openai-plugin` and `npm run package:openai-plugin`.
+`scripts/plugin/sync-openai-plugin.mjs` is a refuse-redirect. It does not materialize `adapters/openai/stark-ai-developer/`. Validate or package the native adapter with `pnpm run validate:openai-plugin` and `pnpm run package:openai-plugin`.
 
 ### Shared synchronization behavior
 
@@ -919,7 +920,7 @@ The OpenAI submission skill bundle must be derived from the same validated stage
 
 The following algorithm is the normative profile for version 1. Packaging uses `scripts/lib/reproducible-archive.mjs` and does not call a platform `zip` executable.
 
-1. **Toolchain:** run Node.js `24.18.0` and pnpm `11.22.0` through Corepack with the frozen `pnpm-lock.yaml`. Do not call a platform `zip` executable. The ZIP implementation must be repository-pinned and locked.
+1. **Toolchain:** use Node.js `24.18.0` as the compatibility runtime, Bun `1.4.0` as the selected repository JavaScript runtime, and pnpm `11.24.0` as the sole package owner with the frozen `pnpm-lock.yaml`. Do not call a platform `zip` executable. The ZIP implementation must be repository-pinned and locked.
 2. **Environment:** set `TZ=UTC`, `LC_ALL=C`, and `SOURCE_DATE_EPOCH=315532800` (`1980-01-01T00:00:00Z`). No environment value may enter generated content.
 3. **Inputs:** build from an immutable source commit and tag. Release mode requires a clean worktree and index, Git-tracked inputs only, and byte equality between selected working files and their Git blobs. Working-tree text files use LF so they match Git blobs on every platform: `.gitattributes` sets `* text=auto eol=lf`, and hosted `archive-identity` jobs set `core.autocrlf=false` and `core.eol=lf` before checkout.
 4. **Git modes:** accept only blob modes `100644` and `100755`; reject symlinks `120000`, submodules `160000`, and every other entry type. Normalize package modes to `0644` and `0755` respectively.
@@ -1032,7 +1033,7 @@ Secret scanning, private-path scanning, full archive inspection, regular-file va
 
 ### Supply-chain and licensing gate
 
-`npm run verify:supply-chain` inventories bundled files, scans executable scripts for forbidden download/install patterns, and emits an SPDX-2.3 toolchain package list from the frozen lockfile. Signed annotated release-tag provenance or a verifiable artifact attestation remains a publication gate. Before release freeze:
+`pnpm run verify:supply-chain` inventories bundled files, scans executable scripts for forbidden download/install patterns, and emits an SPDX-2.3 toolchain package list from the frozen lockfile. Signed annotated release-tag provenance or a verifiable artifact attestation remains a publication gate. Before release freeze:
 
 - inventory every bundled file and its license or repository ownership;
 - verify rights for logos, icons, fonts, templates, screenshots used outside the package, and other third-party assets;
@@ -1161,7 +1162,7 @@ non-publishing, waits for that exact-SHA hosted run, and downloads its artifact.
 A real publish creates `actions/attest@v4` attestations only after digest and
 identity checks pass, then attaches those same downloaded subjects to the
 GitHub Release. Any missing artifact, digest, attestation, or source-identity
-failure blocks tag and release creation. The local `npm run build:release-subjects`
+failure blocks tag and release creation. The local `pnpm run build:release-subjects`
 command writes the subject set to
 `dist/release-subjects/` using the same script as a backup/fallback and is not
 required for hosted publication.
@@ -1354,7 +1355,7 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] Adapters add no skill-local overlays or rewritten metadata.
 - [x] Cross-platform path normalization, Windows-reserved-name, NFC, and case-fold collision tests pass.
 - [x] Source manifests contain deterministic hashes and no host-specific metadata.
-- [x] Node `24.18.0`, pnpm `11.22.0`, the frozen lockfile, and the pinned ZIP implementation are recorded and enforced as the `zip-store-v1` release toolchain.
+- [x] Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, the frozen lockfile, and the pinned ZIP implementation are recorded and enforced as the `zip-store-v1` release toolchain.
 - [x] Two isolated local builds produce byte-identical `zip-store-v1` archives and equal checksums.
 - [x] Existing Agent Skills discovery and `npx skills` installation remain supported.
 
@@ -1382,7 +1383,7 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] Phase 6 listing is complete: a public ChatGPT plugin page exists for **stark AI Developer**; Codex in the ChatGPT Windows app showed the same catalog. The public plugin slug is `plugins_6a85d98a7bc48191879aedd91610271e`.
 - [x] The publishing organization and verified identity are selected and consistent with public metadata. OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`; verified individual Marcel Michael Mayer; public developer name `servrox solutions UG`.
 - [x] OpenAI review identifiers are recorded in sanitized evidence. Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`; portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`.
-- [x] Listing JSON, skill interface, and skills-only invariants match the live ChatGPT directory document (`DIR-001`; `npm run verify:openai-directory`; scheduled/manual post-publication `ChatGPT Directory Identity`).
+- [x] Listing JSON, skill interface, and skills-only invariants match the live ChatGPT directory document (`DIR-001`; `pnpm run verify:openai-directory`; scheduled/manual post-publication `ChatGPT Directory Identity`).
 - [x] The plugin appears ENABLED in the public Developer Tools category catalog with `installation_policy: AVAILABLE` (`DIR-002`; same command and workflows).
 
 ### Definition of “my skills are listed”
@@ -1402,47 +1403,47 @@ It does not require six independent public directory cards. That requires Phase 
 Foundation commands:
 
 ```bash
-npm run validate:bundles
-npm run validate:adrs
+pnpm run validate:bundles
+pnpm run validate:adrs
 node --check scripts/plugin/validate-bundles.mjs
-npm run validate
-pnpm format:check
-pnpm lint
+pnpm run validate
+pnpm run format:check
+pnpm run lint
 ```
 
 Implemented projection and release commands:
 
 ```bash
-npm run sync:agent-plugin
-npm run sync:standalone-skills
-npm run validate:projections
-npm run validate:agent-plugin
-npm run validate:openai-plugin
-npm run validate:openai-listing
-npm run validate:openai-marketplace
-npm run validate:openai-submission
-npm run validate:standalone-skills
-npm run validate:plugin-evals
-npm run package:agent-plugin
-npm run package:openai-plugin
-npm run package:standalone-skills
-npm run generate:openai-worksheet
-npm run validate:openai-worksheet
-npm run generate:release-evidence
-npm run validate:archives
-npm run validate:network-endpoints
-npm run verify:release-reproducibility
-npm run validate:release-proof
-npm run validate:release-descriptor
-npm run validate:contract-snapshots
-npm run generate:openai-marketplace-fixture
-npm run generate:traceability
-npm run validate:traceability
-npm run verify:openai-directory
-npm run verify:supply-chain
+pnpm run sync:agent-plugin
+pnpm run sync:standalone-skills
+pnpm run validate:projections
+pnpm run validate:agent-plugin
+pnpm run validate:openai-plugin
+pnpm run validate:openai-listing
+pnpm run validate:openai-marketplace
+pnpm run validate:openai-submission
+pnpm run validate:standalone-skills
+pnpm run validate:plugin-evals
+pnpm run package:agent-plugin
+pnpm run package:openai-plugin
+pnpm run package:standalone-skills
+pnpm run generate:openai-worksheet
+pnpm run validate:openai-worksheet
+pnpm run generate:release-evidence
+pnpm run validate:archives
+pnpm run validate:network-endpoints
+pnpm run verify:release-reproducibility
+pnpm run validate:release-proof
+pnpm run validate:release-descriptor
+pnpm run validate:contract-snapshots
+pnpm run generate:openai-marketplace-fixture
+pnpm run generate:traceability
+pnpm run validate:traceability
+pnpm run verify:openai-directory
+pnpm run verify:supply-chain
 ```
 
-`npm run sync:openai-plugin` remains a refuse-redirect. Hosted pull-request validation remains required for the complete checkout.
+`pnpm run sync:openai-plugin` remains a refuse-redirect. Hosted pull-request validation remains required for the complete checkout.
 
 ## 25. User verification
 
@@ -1528,7 +1529,8 @@ release:
   descriptor_path: plugins/stark-ai-developer.source.json
   archive_profile: zip-store-v1
   node_version: 24.18.0
-  pnpm_version: 11.22.0
+  bun_version: 1.4.0
+  pnpm_version: 11.24.0
   public_listing_strategy: single-plugin-six-bundled-skills
 ```
 
@@ -1549,7 +1551,7 @@ release:
 | `DIR-001`      | Live ChatGPT directory identity versus listing JSON, skill interface, and skills-only invariants                                   | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
 | `DIR-002`      | Live ChatGPT category catalog membership versus listing plugin id, display name, ENABLED status, and AVAILABLE installation policy | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
 
-Every normative validator failure must cite at least one requirement ID. Every acceptance checkbox and release-evidence record must map back to one or more IDs. New requirements must add or extend an ID before implementation merges. `docs/listing/openai/requirement-traceability.json` is generated from this baseline and checked by `npm run validate:traceability`.
+Every normative validator failure must cite at least one requirement ID. Every acceptance checkbox and release-evidence record must map back to one or more IDs. New requirements must add or extend an ID before implementation merges. `docs/listing/openai/requirement-traceability.json` is generated from this baseline and checked by `pnpm run validate:traceability`.
 
 ## Appendix C — Official references
 

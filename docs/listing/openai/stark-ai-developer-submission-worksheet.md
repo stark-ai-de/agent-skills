@@ -54,8 +54,8 @@ freeze evidence or a portal draft identifier.
 
 ## Archive and portal evidence to attach
 
-- Submission ZIP SHA-256 and complete entry inventory from `npm run package:openai-plugin`.
-- Live ChatGPT directory identity versus listing JSON, skill interface, skills-only invariants, and public category-catalog membership from `npm run verify:openai-directory`.
+- Submission ZIP SHA-256 and complete entry inventory from `pnpm run package:openai-plugin`.
+- Live ChatGPT directory identity versus listing JSON, skill interface, skills-only invariants, and public category-catalog membership from `pnpm run verify:openai-directory`.
 - Source commit and release tag.
 - Clean/dirty source state and deterministic release-input tree digest.
 - Generated `.codex-plugin/plugin.json` from the submitted ZIP.

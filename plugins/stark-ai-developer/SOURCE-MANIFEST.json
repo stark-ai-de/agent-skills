@@ -477,10 +477,10 @@
       "sha256": "6659c17d2973b41251da292887bbedfc9563c91ac32c1548cc24cf62c356019b"
     },
     {
-      "byteLength": 5429,
+      "byteLength": 6445,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md",
-      "sha256": "310a63278ebbf6faac52f126999e98f94ce1eb64fa47e8efcd2bfc9ef941d606"
+      "sha256": "75859a09178f3328a53eb09e9b02b9dd812f562bf27c1d680a747988eb72ec0c"
     },
     {
       "byteLength": 5571,
@@ -1215,10 +1215,10 @@
       "sha256": "902bb56aaa5deb769652ef71df32723ea43001e7d661eae299fba6c7ce1259aa"
     },
     {
-      "byteLength": 6025,
+      "byteLength": 7294,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
-      "sha256": "c8386b2a52dbd82b32d6b141162d33abca45b71e20707c4172c496d39c52e214"
+      "sha256": "53b872aa86ca27e7c93454adc8e4c1b1b1a6fabc4a8bfc78f925132a2287d8f7"
     },
     {
       "byteLength": 8185,
@@ -1236,7 +1236,7 @@
       "byteLength": 46771,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "9ce142c43bbe1fa0d5c52321bacb3896ca8962cd55db0e45c4c02008c4b2abdb"
+      "sha256": "73a9be23a09b8a1ed012c628144abe216c628c4615c48a457d4044f18d894f7f"
     },
     {
       "byteLength": 6996,
@@ -1743,5 +1743,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "d15ce728a12a11a0448da30a65b9b882d69c9110ad2e4891ce79cb154518e661"
+  "treeHash": "9015514a57e34de4143cf3f9d4bc436727f1a5ecfe5af3cf1c16daf25fbba721"
 }

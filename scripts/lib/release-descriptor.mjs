@@ -141,6 +141,7 @@ export function pluginIdentity(root = moduleRoot) {
     marketplaceTarget: release.outputs.repositoryMarketplaceTarget,
     archiveProfile: release.build.archiveProfile,
     nodeVersion: release.build.nodeVersion,
+    bunVersion: release.build.bunVersion,
     pnpmVersion: release.build.pnpmVersion,
     contractSnapshots: release.contractSnapshots,
   };
@@ -212,6 +213,19 @@ export function validateToolchainPins(root = moduleRoot) {
     : "";
   if (nodeVersion !== release.release.build.nodeVersion) {
     errors.push(`[REL-001] .node-version must equal ${release.release.build.nodeVersion}`);
+  }
+  const bunEngines = packageJson.engines?.bun;
+  if (typeof bunEngines !== "string" || !bunEngines.includes(release.release.build.bunVersion)) {
+    errors.push(
+      `[REL-001] package.json#engines.bun must admit ${release.release.build.bunVersion}`,
+    );
+  }
+  const bunVersionPath = path.join(resolvedRoot, ".bun-version");
+  const bunVersion = fs.existsSync(bunVersionPath)
+    ? fs.readFileSync(bunVersionPath, "utf8").trim()
+    : "";
+  if (bunVersion !== release.release.build.bunVersion) {
+    errors.push(`[REL-001] .bun-version must equal ${release.release.build.bunVersion}`);
   }
   return errors;
 }

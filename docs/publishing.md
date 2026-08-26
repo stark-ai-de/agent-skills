@@ -74,23 +74,23 @@ The `-a` option selects the installation host, not the skill's target runtime. A
 From the repository root:
 
 ```bash
-npm run validate
-npm run list
-npx skills@latest add ./skills --list
-npm run smoke:fingerprint
-npm run smoke:install
+pnpm run validate
+pnpm run list
+pnpm dlx skills@1.5.23 add ./skills --list
+pnpm run smoke:fingerprint
+pnpm run smoke:install
 ```
 
-`npm run smoke:fingerprint` reads the exact candidate set without copying or changing repository state. Its deterministic SHA-256 binds each sorted repository-relative path, normalized permission mode, byte size, and content hash. Run it immediately before and after the broader gates used by a validation receipt and require an exact match.
+`pnpm run smoke:fingerprint` reads the exact candidate set without copying or changing repository state. Its deterministic SHA-256 binds each sorted repository-relative path, normalized permission mode, byte size, and content hash. Run it immediately before and after the broader gates used by a validation receipt and require an exact match.
 
-`npm run smoke:install` creates a temporary candidate copy from existing Git-indexed files plus non-ignored untracked files through the same selection and safe-read pipeline. Before copying, it checks every repository-relative path component with `lstat`, rejects parent or leaf symlinks, identity-checks each open file before and after reading, and stages regular files transactionally so a rejected candidate exposes neither external bytes nor a partial destination. It emits the fingerprint of the bytes it actually copied. It excludes `.git/`, local agent state, private `docs/specs/do-not-publish/` content, lock state, dependencies, and generated build or temporary directories even if such a path is indexed. It requires the CLI's `Available Skills` output to equal the public `skills/` catalog exactly, then performs disposable project-local Codex, Cursor, and Claude Code installs and asserts their exact destinations before removing only its own temporary tree. Telemetry is disabled and no global skills are installed.
+`pnpm run smoke:install` creates a temporary candidate copy from existing Git-indexed files plus non-ignored untracked files through the same selection and safe-read pipeline. Before copying, it checks every repository-relative path component with `lstat`, rejects parent or leaf symlinks, identity-checks each open file before and after reading, and stages regular files transactionally so a rejected candidate exposes neither external bytes nor a partial destination. It emits the fingerprint of the bytes it actually copied. It excludes `.git/`, local agent state, private `docs/specs/do-not-publish/` content, lock state, dependencies, and generated build or temporary directories even if such a path is indexed. It requires the CLI's `Available Skills` output to equal the public `skills/` catalog exactly, then performs disposable project-local Codex, Cursor, and Claude Code installs and asserts their exact destinations before removing only its own temporary tree. Telemetry is disabled and no global skills are installed.
 
 Do not publish, push, tag, send telemetry-triggering installs, or install globally unless the maintainer explicitly asks for that action.
 
 Test the changed public skill locally after approval:
 
 ```bash
-npx skills@latest add ./skills --skill codegraph-ast-grep -a codex --copy -y
+pnpm dlx skills@1.5.23 add ./skills --skill codegraph-ast-grep -a codex --copy -y
 ```
 
 ## Repository Settings
@@ -129,8 +129,8 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 - Project-local helper skills under `.agents/skills/` and local `skills-lock.json` files are ignored.
 - Category README files exist and match `SKILL.md` frontmatter.
 - Clean-copy smoke install passes without listing project-local helper skills.
-- `npm run validate` passes.
-- `npx skills@latest add ./skills --list` works from the local checkout.
+- `pnpm run validate` passes.
+- `pnpm dlx skills@1.5.23 add ./skills --list` works from the local checkout.
 - At least one promoted skill can be locally installed after maintainer approval.
 - GitHub Actions validation and publish release workflows are configured.
 
@@ -151,8 +151,8 @@ Use the local helper when preparing the package and changelog release files:
 
 ```bash
 NEXT_VERSION=0.2.1
-node scripts/release/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
-node scripts/release/prepare-release.mjs --version "$NEXT_VERSION"
+pnpm run release:prepare -- --version "$NEXT_VERSION" --dry-run
+pnpm run release:prepare -- --version "$NEXT_VERSION"
 ```
 
 The helper updates only `package.json` and `CHANGELOG.md`. Bump changed public skill `metadata.version` values directly in the same PR.
@@ -168,8 +168,8 @@ The changelog section a pull request adds is the currently planned catalog relea
 Validate the release contract locally:
 
 ```bash
-npm run release:intent -- --base-ref origin/main
-npm run release:validate -- --base-ref origin/main
+pnpm run release:intent -- --base-ref origin/main
+pnpm run release:validate -- --base-ref origin/main
 ```
 
 ### Publish Release
@@ -204,7 +204,7 @@ script and translates the legacy evidence format used by historical tags.
 Hosted `Validate` uses the repository-owned script to build and upload the
 `release-subjects` artifact on `main`. `Publish Release` downloads that artifact
 and uses those exact bytes for attestation and publication; it does not require
-a local packaging workflow. The local `npm run build:release-subjects` command
+a local packaging workflow. The local `pnpm run build:release-subjects` command
 writes to `dist/release-subjects/` using the same script and is only a manual
 backup if the hosted artifact is unavailable. Post-release jobs rebuild from
 the exact release tag. The workflow downloads the published `openai.zip` and
@@ -219,7 +219,7 @@ pre-publication-attested; no current branch output may be used to upgrade that
 historical status.
 
 Use the [post-release receipt schema](../skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json)
-and `npm run validate:post-release-receipt -- --file <receipt.json>` when
+and `pnpm run validate:post-release-receipt -- --file <receipt.json>` when
 reviewing a receipt. Receipts remain workflow artifacts and are not committed.
 Schema v1 keeps a common client/lifecycle envelope for sanitized validation;
 archive receipts use `not_a_client_lifecycle_receipt`.
@@ -231,8 +231,8 @@ Use `dry_run: true` to rerun the same readiness and remote-state plan. Use `dry_
 Equivalent local release validation:
 
 ```bash
-node scripts/release/validate-release.mjs
-node scripts/release/print-release-notes.mjs
+pnpm run release:validate
+pnpm run release:notes
 ```
 
 ## Release Artifacts
@@ -242,18 +242,18 @@ path. Plugin projections and optional standalone archives are generated from the
 explicit bundle with the following focused commands:
 
 ```bash
-npm run validate:projections
-npm run validate:openai-plugin
-npm run validate:release-descriptor
-npm run package:openai-plugin
-npm run validate:archives
-npm run verify:release-reproducibility
-npm run verify:supply-chain
-npm run generate:release-evidence
+pnpm run validate:projections
+pnpm run validate:openai-plugin
+pnpm run validate:release-descriptor
+pnpm run package:openai-plugin
+pnpm run validate:archives
+pnpm run verify:release-reproducibility
+pnpm run verify:supply-chain
+pnpm run generate:release-evidence
 ```
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
-`npm run sync:openai-plugin` does not write a repository adapter tree.
+`pnpm run sync:openai-plugin` does not write a repository adapter tree.
 `dist/openai/stark-ai-developer-1.1.0.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
 package time. The normal publication source is `openai.zip` downloaded from
@@ -272,13 +272,13 @@ portable Agent Plugins zip or a locally rebuilt archive.
 GitHub Releases also provide source archives for each tag, and normal
 standalone installation uses the skills CLI:
 
-`npm run build:release-subjects` writes the same final `openai.zip`,
+`pnpm run build:release-subjects` writes the same final `openai.zip`,
 `portable.zip`, and versioned `release-subject.json` subject set to
 `dist/release-subjects/`; it is the local fallback, not the normal publication
 path. The JSON subject is the release contract; standalone skill archives may
 retain their own independent checksum files.
 
-`npm run generate:release-evidence` is the explicit release-preparation command.
+`pnpm run generate:release-evidence` is the explicit release-preparation command.
 It refreshes
 [`docs/listing/openai/stark-ai-developer-release-evidence.json`](listing/openai/stark-ai-developer-release-evidence.json)
 with the source commit/tag, projection and manifest hashes, complete archive
@@ -290,14 +290,14 @@ file. After first publication, sanitized portal observations belong in
 The committed evidence recipe may lag listing-asset changes until a maintainer
 regenerates it from a clean tagged identity.
 
-Directory identity is `npm run verify:openai-directory` locally. The dedicated
+Directory identity is `pnpm run verify:openai-directory` locally. The dedicated
 `ChatGPT Directory Identity` workflow runs the same strict script through
 `.github/actions/verify-openai-directory` on a schedule or manual dispatch after
 publication; deterministic hosted `Validate` does not fetch the live directory.
 That gate covers the directory document (`DIR-001`) and public category-catalog
 membership (`DIR-002`). Provenance for later
 GitHub Releases is `Publish Release` plus `Post-release Evidence`; the local
-fallback is `npm run build:release-subjects`. Annotated GitHub Release tags on this
+fallback is `pnpm run build:release-subjects`. Annotated GitHub Release tags on this
 repository are unsigned today. The existing
 `.github/workflows/attest-release.yml` attests archives from an existing tag;
 it does not replace that two-stage proof. Do not regenerate freeze JSON except
@@ -305,7 +305,7 @@ from a clean exact-tag identity.
 
 The committed repository-local catalog is
 [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json),
-generated from `plugins/stark-ai-developer.source.json` by `npm run sync:agent-plugin`.
+generated from `plugins/stark-ai-developer.source.json` by `pnpm run sync:agent-plugin`.
 Its source path is resolved from the repository root and points to the portable
 projection. The skills-only entry uses
 `policy.installation: "AVAILABLE"` and `policy.authentication: "ON_INSTALL"`:
@@ -372,7 +372,7 @@ Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence
    [`skill-evals/stark-ai-developer/evidence/manual-client-lifecycle-receipt.template.json`](../skill-evals/stark-ai-developer/evidence/manual-client-lifecycle-receipt.template.json)
    to a local release-specific file, fill operation status and a short reason,
    and validate with
-   `npm run validate:post-release-receipt -- --file <receipt.json>`. Do not copy
+   `pnpm run validate:post-release-receipt -- --file <receipt.json>`. Do not copy
    cookies, session identifiers, prompts, transcripts, private endpoints, or
    personal account details into the receipt.
 
@@ -384,7 +384,7 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.1.0`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
+   `1.1.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
 3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
@@ -423,12 +423,12 @@ security routes return HTTP 200.
 ## Release Update Process
 
 1. Update public or incubator skills.
-2. Run `npm run smoke:fingerprint` and record the initial candidate digest before any broader local gate.
-3. Run `npm run validate`.
-4. Run `pnpm format:check` and `pnpm lint`.
-5. Run `npx skills@latest add ./skills --list` locally.
-6. Run `npm run smoke:install` and require its emitted digest to match the initial fingerprint.
-7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest to remain unchanged.
+2. Run `pnpm run smoke:fingerprint` and record the initial candidate digest before any broader local gate.
+3. Run `pnpm run validate`.
+4. Run `pnpm run format:check` and `pnpm run lint`.
+5. Run `pnpm dlx skills@1.5.23 add ./skills --list` locally.
+6. Run `pnpm run smoke:install` and require its emitted digest to match the initial fingerprint.
+7. Run `pnpm run smoke:fingerprint` again after the last local gate and require the digest to remain unchanged.
 8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR. That section is the planned release compared with the previous one; do not rewrite historical changelog entries.
 9. Add an ADR only if a decision changed.
 10. Confirm the release-intent PR gate passed.

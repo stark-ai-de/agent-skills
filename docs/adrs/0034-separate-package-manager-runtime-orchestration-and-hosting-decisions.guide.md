@@ -2,7 +2,7 @@
 
 ID: ADR-0034
 Title: Separate package manager, runtime, orchestration, and hosting decisions
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0018
-Superseded by: None
+Superseded by: ADR-0050, ADR-0051
 Guide verified: 2026-07-28
 Gist: Tool and platform choices require independent target evidence.
 

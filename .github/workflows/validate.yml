@@ -36,17 +36,22 @@ jobs:
           cache: true
           install: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: 🧾 Test post-release receipt contract
-        run: npm run test:post-release-receipt
+        run: pnpm run test:post-release-receipt
 
       - name: ✅ Validate repository contracts
-        run: npm run validate
+        run: pnpm run validate
 
       - name: 📦 Validate release archives
-        run: npm run validate:archives
+        run: pnpm run validate:archives
 
       - name: 🔁 Verify release reproducibility and prepare hosted subjects
         id: release-subjects
@@ -66,25 +71,25 @@ jobs:
           retention-days: 90
 
       - name: 🎨 Check formatting
-        run: pnpm format:check
+        run: pnpm run format:check
 
       - name: 🧹 Lint scripts
-        run: pnpm lint
+        run: pnpm run lint
 
       - name: 🏷️ Check release intent
         id: release-intent
         if: ${{ github.event_name == 'pull_request' }}
-        run: npm run release:intent -- --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
+        run: pnpm run release:intent -- --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
 
       - name: 🚀 Validate planned release
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
-        run: npm run release:validate -- --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
+        run: pnpm run release:validate -- --version "${{ steps.release-intent.outputs.release_version }}" --base-ref "${{ github.event.pull_request.base.sha }}"
 
       - name: 📋 List public skills
-        run: npx skills@latest add ./skills --list
+        run: pnpm dlx skills@1.5.23 add ./skills --list
 
       - name: 🧪 Smoke-install public skills
-        run: npm run smoke:install
+        run: pnpm run smoke:install
 
       - name: 🧭 Summarize validation
         if: ${{ always() }}
@@ -123,14 +128,19 @@ jobs:
           cache: true
           install: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: 📦 Package zip-store-v1 archives
-        run: npm run package:agent-plugin && npm run package:openai-plugin
+        run: bun exec "pnpm run package:agent-plugin && pnpm run package:openai-plugin"
 
       - name: 🧾 Report archive identity
-        run: node scripts/release/report-archive-identity.mjs
+        run: bun --bun scripts/release/report-archive-identity.mjs
 
       - name: 📤 Upload archive identity
         uses: actions/upload-artifact@v4
@@ -163,6 +173,11 @@ jobs:
           cache: true
           install: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 📥 Download identity reports
         uses: actions/download-artifact@v4
         with:
@@ -170,7 +185,7 @@ jobs:
           path: dist/archive-identities
 
       - name: ⚖️ Compare zip-store-v1 identity
-        run: node scripts/release/compare-archive-identity.mjs dist/archive-identities
+        run: bun --bun scripts/release/compare-archive-identity.mjs dist/archive-identities
 
       - name: 🧭 Summarize archive comparison
         if: ${{ always() }}

@@ -614,7 +614,13 @@ if (format === "png") {
   if (smokeOutput.includes(temp) || smokeOutput.includes(nativeDrawio)) {
     throw new Error("native smoke receipt leaked a temporary or private executable path");
   }
-  const probePath = `${nativeBin}${path.delimiter}${path.dirname(process.execPath)}`;
+  const nodePath = resolveCommandPath("node", { pathValue: process.env.PATH || "" });
+  if (!nodePath) {
+    throw new Error(
+      "draw.io fixtures require Node.js for the explicit shebang compatibility probe",
+    );
+  }
+  const probePath = `${nativeBin}${path.delimiter}${path.dirname(nodePath)}`;
   const probeEnv = {
     ...process.env,
     DRAWIO_BIN: nativeDrawio,
@@ -2987,7 +2993,7 @@ if (format === "png") {
     chmodSync(fakeDiagramsNet, 0o755);
 
     function runFakeRenderer(mode, extraArgs = []) {
-      return spawnSync("node", [renderer, rendererInput, ...extraArgs], {
+      return spawnSync(nodePath, [renderer, rendererInput, ...extraArgs], {
         cwd: root,
         encoding: "utf8",
         env: {
@@ -2996,7 +3002,7 @@ if (format === "png") {
           DRAWIO_BIN: fakeDiagramsNet,
           DRAWIO_FAKE_MODE: mode,
           DRAWIO_FAKE_PNG: rendererPngCases.get(mode)?.toString("base64") || "",
-          PATH: `${fakeBin}${path.delimiter}${path.dirname(process.execPath)}`,
+          PATH: `${fakeBin}${path.delimiter}${path.dirname(nodePath)}`,
         },
       });
     }

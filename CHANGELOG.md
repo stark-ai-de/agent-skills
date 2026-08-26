@@ -16,11 +16,13 @@
 
 ### Added
 
-- Added AC-ADR-055 and proposed repository ADR-0050 for pnpm-owned dependencies, Bun-first verified execution, Vite/Vitest defaults, and optimized Bun server artifacts.
+- Added AC-ADR-055 plus accepted repository ADR-0050 and ADR-0051 for pnpm-owned dependencies, evidence-selected execution, explicit fallbacks, and optimized Bun server artifacts.
+- Added an advisory runtime evidence matrix and validator covering repository scripts, nested projects, CI, transient CLIs, native tools, and historical evidence boundaries.
 
 ### Changed
 
 - Updated `architecture-compass` to 0.6.6 with an adoptable pnpm and Bun JavaScript tooling policy.
+- Migrated current repository JavaScript execution and hosted automation to Bun 1.4.0, pnpm 11.24.0 orchestration, Astro 7.2.7, and Vite 8.2.2 while preserving evidenced Node.js fallbacks.
 - Advanced the independently versioned `stark-ai-developer` plugin to 1.1.0 for the new backward-compatible Architecture Compass capability.
 
 ### Fixed

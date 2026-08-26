@@ -94,8 +94,7 @@ function updateChangelog(version, changed, dryRun) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (!args.version)
-  fail("Usage: node scripts/release/prepare-release.mjs --version <x.y.z> [--dry-run]");
+if (!args.version) fail("Usage: pnpm run release:prepare -- --version <x.y.z> [--dry-run]");
 if (!semverPattern.test(args.version))
   fail(`Version must be x.y.z without leading v: ${args.version}`);
 

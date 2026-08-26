@@ -200,7 +200,7 @@ export function assertWritableOpenAiTarget(root, target) {
   const adaptersRoot = path.resolve(resolvedRoot, "adapters");
   if (resolved === adaptersRoot || resolved.startsWith(`${adaptersRoot}${path.sep}`)) {
     throw new Error(
-      `refusing to materialize ${RETIRED_OPENAI_ADAPTER_TARGET}; use npm run validate:openai-plugin or npm run package:openai-plugin`,
+      `refusing to materialize ${RETIRED_OPENAI_ADAPTER_TARGET}; use pnpm run validate:openai-plugin or pnpm run package:openai-plugin`,
     );
   }
 }

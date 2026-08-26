@@ -1,10 +1,15 @@
 packages:
   - "."
   - "site"
+overrides:
+  "vite@": 8.2.2
 strictDepBuilds: true
 blockExoticSubdeps: true
 minimumReleaseAge: 1440
 minimumReleaseAgeStrict: true
+minimumReleaseAgeExclude:
+  # Exact reviewed release needed by PR #68; remove after 2026-08-26T19:53:38Z.
+  - astro@7.2.7
 trustPolicy: no-downgrade
 trustPolicyExclude:
   # Existing Astro transitive dependency; remove after Astro no longer resolves tinyexec@1.2.2.

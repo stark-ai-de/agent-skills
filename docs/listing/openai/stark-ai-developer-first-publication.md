@@ -138,7 +138,7 @@ come from the control `aria-label` (`Use chat icon` → `chat`):
 `pdf`, `pen`, `radar`, `search`
 
 These names are portal-only. Pin the reviewed glyph for each skill as
-`listing.skills[].portalGlyph` for `npm run verify:openai-directory`. Do not
+`listing.skills[].portalGlyph` for `pnpm run verify:openai-directory`. Do not
 write them into `agents/openai.yaml`. Optional `icon_small` / `icon_large` image
 paths inside a skill interface are a separate, unused mechanism. Do not invent
 a named-palette key such as `icon: chat`.
@@ -186,7 +186,7 @@ The catalog PWA `site/public/icon-512.png` was not replaced.
 - Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`
 - portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`
 
-Directory identity is `npm run verify:openai-directory` locally and the strict
+Directory identity is `pnpm run verify:openai-directory` locally and the strict
 `ChatGPT Directory Identity` workflow after publication on a schedule or manual
 dispatch, through `.github/actions/verify-openai-directory`. Deterministic hosted
 `Validate` does not fetch the live directory. That gate covers the directory

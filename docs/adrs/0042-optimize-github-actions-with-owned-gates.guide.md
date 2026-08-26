@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: None
 Superseded by: None
-Guide verified: 2026-08-11
+Guide verified: 2026-08-26
 Gist: Assign checks to their owning events, cache dependencies, cancel stale validation, and reuse exact release-readiness proof.
 
 Variants: [Short](0042-optimize-github-actions-with-owned-gates.short.md) · [Long, canonical](0042-optimize-github-actions-with-owned-gates.long.md) · **Guide**
@@ -23,16 +23,16 @@ This guide is non-normative. [Long](0042-optimize-github-actions-with-owned-gate
 
 ## How to apply
 
-- Use `pnpm/setup@v2` after checkout with `runtime: node@24.18.0`, `cache: true`, and `install: false`; run `pnpm install --frozen-lockfile --prefer-offline` explicitly.
+- Use `pnpm/setup@v2` after checkout with `runtime: node@24.18.0`, `cache: true`, and `install: false`; install Bun from `.bun-version` with `oven-sh/setup-bun@v2`; then run `pnpm install --frozen-lockfile --prefer-offline` explicitly.
 - Keep checkout shallow. On pull requests, fetch only `pull_request.base.sha` so release-intent scripts can diff without cloning full history.
-- After `npm run validate` (which already includes `validate:network-endpoints`), run `validate:archives` and `verify:release-reproducibility` in Validate. Keep the full `validate:release-proof` chain on `Publish Release`, which does not run the local aggregate.
+- After `pnpm run validate` (which already includes `validate:network-endpoints`), run `validate:archives` and `verify:release-reproducibility` in Validate. Keep the full `validate:release-proof` chain on `Publish Release`, which does not run the local aggregate.
 - Keep the required `Validate` workflow unfiltered for pull requests, add per-event concurrency cancellation for pull requests and pushes, and leave manual dispatches independent.
 - Let the Pages workflow run on relevant `main` changes and explicit dispatches. Site output inputs are `site/**`, `skills/**`, `incubator/**`, `skill-evals/**`, package-manager manifests, and the Pages workflow itself.
 - In `Publish Release`, wait for a successful hosted `Validate` run for the checked-out `main` SHA when that run is still queued or in progress, fail closed if it completed unsuccessfully, run release-specific checks, and capture that immutable SHA; the publish job must verify that SHA and current `main` before tagging and must not repeat the aggregate suite.
 
 ## Verification
 
-- Run `npm run lint:actions` and `git diff --check` for the workflow and documentation changes.
+- Run `pnpm run lint:actions` and `git diff --check` for the workflow and documentation changes.
 - After publication, inspect hosted runs for a pnpm cache hit, a canceled superseded Validate run, no Pages pull-request runs, a successful Pages deployment, and a successful release handoff.
 - Keep local workflow lint separate from hosted run and deployment proof.
 

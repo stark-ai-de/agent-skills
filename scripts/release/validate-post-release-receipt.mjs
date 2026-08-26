@@ -277,7 +277,7 @@ function validateReceiptInvariants(receipt) {
 const { file, schema: schemaPath } = parseArgs(process.argv.slice(2));
 if (!file) {
   writeStderr([
-    "Usage: node scripts/release/validate-post-release-receipt.mjs --file <receipt.json> [--schema <schema.json>]",
+    "Usage: pnpm run validate:post-release-receipt -- --file <receipt.json> [--schema <schema.json>]",
   ]);
   process.exitCode = 1;
 } else {
