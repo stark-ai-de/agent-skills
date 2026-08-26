@@ -27,8 +27,8 @@ Use this template as a starting point. Remove instructional placeholders before 
 
 ## Conflicts and review decisions
 
-| ADR or PR                 | Status     | Relationship                            | Conflict           | Affected scope | Proposed resolution |
-| ------------------------- | ---------- | --------------------------------------- | ------------------ | -------------- | ------------------- |
+| ADR or PR                 | Status     | Relationship                          | Conflict           | Affected scope | Proposed resolution |
+| ------------------------- | ---------- | ------------------------------------- | ------------------ | -------------- | ------------------- |
 | `<ID/link or None found>` | `<status>` | `<overlap/adapts/diverges/successor>` | `<exact conflict>` | `<scope>`      | `<review decision>` |
 
 The proposed ADR remains in this PR even when a conflict is listed. Accepted history is unchanged unless this PR explicitly contains an authorized successor transition.
