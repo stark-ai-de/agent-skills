@@ -2,11 +2,11 @@
 name: architecture-compass
 description: Set up repository-native ADR governance, audit architecture, or plan and execute ADR-guided refactors through intent-bound workflows. Use when work needs binding agent-facing ADRs, provider-to-local mapping, architecture PR review or drift, Next.js request patterns, source placement, backend/runtime/env/config boundaries, stack deviations, or bounded ADR-governed implementation. Do not use for tiny edits, generic framework education, or work with no architecture or governance consequence.
 license: Apache-2.0
-compatibility: Designed for Codex, Cursor, Claude Code, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
+compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex web, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.5"
+  version: "0.6.6"
 ---
 
 # Architecture Compass
@@ -130,7 +130,7 @@ Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-be
 
 Use the AC-ADR-048 and AC-ADR-036 Guides for detailed transitions and portable status handling:
 
-1. Report `Planning capability` exactly as `Active | Available but inactive | Unavailable | Explicitly declined | Indeterminate | Not applicable`. `Available but inactive` and `Indeterminate` stop pending confirmed activation; only `Unavailable` permits the portable fallback. Uncertainty never authorizes fallback.
+1. Select the host lane from host_runtime_context, then report `Planning capability` exactly as `Active | Available but inactive | Unavailable | Explicitly declined | Indeterminate | Not applicable`. Codex CLI, IDE, and desktop, Cursor, and Claude Code keep the AC-ADR-036 Guide adapter rows. ChatGPT Chat, Work, or mobile follow that Guide's ChatGPT Plan observation; Codex web follows its separate observation-gated lane and may use a `$` handoff only when this turn exposes `/plan`. Unknown hosts are `Indeterminate` and wait. `Available but inactive` and `Indeterminate` stop pending confirmed activation; only `Unavailable` permits the portable fallback. Uncertainty never authorizes fallback.
 2. Honor `Explicitly declined` without repeating the unchanged request; use another workflow only when its preconditions hold. `Not applicable` is valid only for a non-Plan workflow.
 3. Write no target repository/workspace artifact while Plan mode is active. Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit. Exit before persistence or implementation.
 4. For execution, recheck state after approval and Plan-mode exit; changed scope, invalidated approval, or material drift requires a new checkpoint.

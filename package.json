@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -61,7 +61,7 @@
     "release:validate": "node scripts/release/validate-release.mjs",
     "release:notes": "node scripts/release/print-release-notes.mjs",
     "release:reconcile": "node scripts/release/reconcile-github-release.mjs",
-    "validate:skills": "node scripts/catalog/validate-skills.mjs",
+    "validate:skills": "node scripts/catalog/validate-skills.mjs && node scripts/validation/test-skill-invocation-token.mjs",
     "validate:memory-curators": "node scripts/validation/memory-curators/validate.mjs",
     "validate:adrs": "node scripts/validation/adrs/validate.mjs",
     "validate:ownership": "node scripts/validation/test-validation-ownership.mjs",

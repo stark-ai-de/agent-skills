@@ -249,7 +249,7 @@ plugins/stark-ai-developer.source.json
 plugins/stark-ai-developer.source.schema.json
 ```
 
-Identity fields in this sibling source file are the sole author-maintained release-identity source. Generated manifests, source manifests, archive names, checksums, worksheets, release notes, and evidence must not introduce another version source. Duplicated `1.0.0` fields in listing copy and generated manifests must stay aligned with this file. Catalog version stays in `package.json`.
+Identity fields in this sibling source file are the sole author-maintained release-identity source. Generated manifests, source manifests, archive names, checksums, worksheets, release notes, and evidence must not introduce another version source. Duplicated version fields in listing copy and generated manifests must stay aligned with this file. Catalog version stays in `package.json`.
 
 Current identity values in `plugins/stark-ai-developer.source.json`:
 
@@ -258,13 +258,13 @@ Current identity values in `plugins/stark-ai-developer.source.json`:
   "schemaVersion": 1,
   "id": "codex",
   "pluginId": "stark-ai-developer",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-six-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.0.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-1.0.2.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {

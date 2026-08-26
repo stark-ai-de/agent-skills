@@ -2,7 +2,7 @@ interface:
   display_name: "Draw.io Diagrams"
   short_description: "Verified draw.io diagrams with capability-aware export"
   default_prompt: >-
-    Use $drawio-diagrams for this diagram task. Expose create, edit-repair, review,
+    Use Draw.io Diagrams for this diagram task. Expose create, edit-repair, review,
     and export; after workflow and authority selection, run the capability preflight
     before any create/edit-repair/export inspection or mutation, while keeping review
     strictly read-only. Select and announce the task-matching route, inputs, outputs,

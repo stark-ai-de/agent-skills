@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.1"
+  version: "0.5.2"
 ---
 
 # Animated README Logo

@@ -12,6 +12,10 @@ Passing behavior must:
 - use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
 - keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
 - use native Plan mode for plan workflows when supported, block on indeterminate state, fall back only when native Plan is definitely unavailable, exit before writes, and recheck state before execution;
+- distinguish ChatGPT web Chat/Work from Codex web: only an observed inactive
+  Codex web `/plan` may receive the Codex `$` handoff, while missing evidence is
+  `Indeterminate`, explicit `unknown` surface or experience values stop before
+  every outcome branch, and a positive no-control enumeration permits fallback;
 - route from `references/adr-catalog.md` to Short variants first, then load only applicable canonical Long ADRs and optional Guides;
 - preserve accepted local ADR identity and history, use repository-native provider mapping, and keep skill-runtime ADRs outside target adoption matrices;
 - rank architecture evidence through AC-ADR-046 independently from operational authority and stop the affected scope when same-rank accepted decisions conflict;
@@ -55,6 +59,22 @@ Focused workflow and lifecycle cases:
 - `cases/plan-mode-unavailable-fallback.md`
 - `cases/plan-mode-indeterminate-stop.md`
 - `cases/plan-mode-declined-stop.md`
+- `cases/chatgpt-plan-live-incident-replay.md`
+- `cases/chatgpt-plan-product-label-only.md`
+- `cases/chatgpt-plan-missing-slash-not-unavailable.md`
+- `cases/chatgpt-plan-goal-and-plan-skill.md`
+- `cases/chatgpt-plan-nonslash-native-control.md`
+- `cases/chatgpt-plan-mobile-indeterminate.md`
+- `cases/chatgpt-plan-observed-slash-handoff.md`
+- `cases/chatgpt-plan-none-proven-unavailable.md`
+- `cases/chatgpt-plan-observed-control-state-unknown.md`
+- `cases/chatgpt-plan-web-slash-control.md`
+- `cases/chatgpt-plan-codex-web-observed-slash-handoff.md`
+- `cases/chatgpt-plan-codex-web-indeterminate.md`
+- `cases/chatgpt-plan-codex-web-none-proven-unavailable.md`
+- `cases/chatgpt-plan-official-docs-only-indeterminate.md`
+- `cases/chatgpt-plan-unknown-surface-indeterminate.md`
+- `cases/chatgpt-plan-unknown-experience-indeterminate.md`
 - `cases/plan-run-state-recheck.md`
 - `cases/conflicting-adrs-stop.md`
 - `cases/stack-deviation-routing.md`
@@ -113,7 +133,7 @@ Focused adaptive-output and governance-boundary cases:
 
 Clear task intent is selection evidence, not a new approval. The skill exposes all five workflows, announces the matching route and rationale, and proceeds within the user's existing authority. Bare activation, conflicting cues, or ambiguity about outcome, scope, persistence, governance, or mutation authority requires a question. Selection never grants destructive, paid, irreversible, external, deployment, publication, production, or scope-expanding authority.
 
-Plan cases are multi-turn. While native Plan mode is active, repository/workspace artifacts remain read-only. Supported-inactive and indeterminate states require a host transition and confirmed Plan mode; only definitive unavailability permits a portable in-chat fallback. Approved content is persisted only after Plan-mode exit. `plan-run-refactor` then rechecks repository and external state before executing an unchanged plan.
+Plan cases are multi-turn. While native Plan mode is active, repository/workspace artifacts remain read-only. Supported-inactive and indeterminate states require a host transition and confirmed Plan mode; only definitive unavailability permits a portable in-chat fallback. Approved content is persisted only after Plan-mode exit. `plan-run-refactor` then rechecks repository and external state before executing an unchanged plan. ChatGPT Chat, Work, and mobile Plan-required cases must switch, wait, or ask rather than treating ChatGPT identity, missing Codex Plan state, a missing `/plan` slash, or an explicit `unknown` surface or experience as unavailability.
 
 Audit cases perform no repository, untracked, ignored, index, generated-artifact, install, or external mutation. Direct refactor is available only for bounded, reversible work fully governed by accepted local ADRs. Missing governance routes to setup; unresolved durable decisions or broad implementation route to a Plan workflow.
 
