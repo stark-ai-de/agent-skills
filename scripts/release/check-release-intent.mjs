@@ -2,8 +2,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { listChangedGitPaths } from "../lib/git-changed-paths.mjs";
+
 const root = process.cwd();
 const semverPattern = /^\d+\.\d+\.\d+$/;
+const pluginSourcePath = "plugins/stark-ai-developer.source.json";
+const listingPath = "docs/listing/openai/stark-ai-developer.json";
 
 function parseArgs(argv) {
   const args = { githubOutput: false, headRef: null };
@@ -51,15 +55,6 @@ function readTargetFile(file, headRef) {
   return headRef ? readGitFile(headRef, file) : readCurrentFile(file);
 }
 
-function changedFiles(baseRef, headRef) {
-  const args = ["diff", "--name-only", "--diff-filter=ACDMRT", baseRef];
-  if (headRef) args.push(headRef);
-  return git(args)
-    .split("\n")
-    .map((file) => file.trim())
-    .filter(Boolean);
-}
-
 function packageVersion(text) {
   if (!text) return null;
   try {
@@ -67,6 +62,77 @@ function packageVersion(text) {
   } catch {
     return null;
   }
+}
+
+function jsonObject(text) {
+  if (!text) return null;
+  try {
+    const value = JSON.parse(text);
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function pluginVersion(text) {
+  return jsonObject(text)?.version ?? null;
+}
+
+function pluginSkillSources(...descriptorTexts) {
+  const sources = new Set();
+  for (const text of descriptorTexts) {
+    const descriptor = jsonObject(text);
+    if (!Array.isArray(descriptor?.skills)) continue;
+    for (const skill of descriptor.skills) {
+      if (typeof skill?.source === "string" && skill.source.trim()) {
+        sources.add(skill.source.replace(/\/$/, ""));
+      }
+    }
+  }
+  return [...sources];
+}
+
+function listingAssetPaths(...listingTexts) {
+  const assets = new Set();
+  for (const text of listingTexts) {
+    const listing = jsonObject(text);
+    for (const value of Object.values(listing?.plugin?.assets ?? {})) {
+      if (typeof value === "string" && value.trim()) assets.add(value);
+    }
+  }
+  return [...assets];
+}
+
+function packageProjectionIdentity(text) {
+  const manifest = jsonObject(text);
+  if (!manifest) return null;
+  return JSON.stringify({
+    author: manifest.author ?? null,
+    repository: manifest.repository ?? null,
+    license: manifest.license ?? null,
+  });
+}
+
+function changedPluginInputs(
+  files,
+  { baseDescriptor, currentDescriptor, baseListing, currentListing, basePackage, currentPackage },
+) {
+  const directInputs = new Set([
+    pluginSourcePath,
+    listingPath,
+    "LICENSE",
+    ...listingAssetPaths(baseListing, currentListing),
+  ]);
+  const skillSources = pluginSkillSources(baseDescriptor, currentDescriptor);
+  const packageIdentityChanged =
+    packageProjectionIdentity(basePackage) !== packageProjectionIdentity(currentPackage);
+
+  return files.filter(
+    (file) =>
+      directInputs.has(file) ||
+      skillSources.some((source) => file === source || file.startsWith(`${source}/`)) ||
+      (file === "package.json" && packageIdentityChanged),
+  );
 }
 
 function metadataVersion(text) {
@@ -138,9 +204,11 @@ if (!args.baseRef || /^0+$/.test(args.baseRef)) {
 }
 
 if (errors.length === 0) {
-  const files = changedFiles(args.baseRef, args.headRef);
-  const basePackageVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
-  const currentPackageVersion = packageVersion(readTargetFile("package.json", args.headRef));
+  const files = listChangedGitPaths({ root, baseRef: args.baseRef, headRef: args.headRef });
+  const basePackageText = readGitFile(args.baseRef, "package.json");
+  const currentPackageText = readTargetFile("package.json", args.headRef);
+  const basePackageVersion = packageVersion(basePackageText);
+  const currentPackageVersion = packageVersion(currentPackageText);
   const packageChanged = basePackageVersion !== currentPackageVersion;
 
   if (packageChanged) {
@@ -159,6 +227,45 @@ if (errors.length === 0) {
     } else {
       reasons.push(
         `package.json version changed from ${basePackageVersion ?? "(missing)"} to ${currentPackageVersion}`,
+      );
+    }
+  }
+
+  const basePluginDescriptor = readGitFile(args.baseRef, pluginSourcePath);
+  const currentPluginDescriptor = readTargetFile(pluginSourcePath, args.headRef);
+  const baseListing = readGitFile(args.baseRef, listingPath);
+  const currentListing = readTargetFile(listingPath, args.headRef);
+  const pluginInputFiles = changedPluginInputs(files, {
+    baseDescriptor: basePluginDescriptor,
+    currentDescriptor: currentPluginDescriptor,
+    baseListing,
+    currentListing,
+    basePackage: basePackageText,
+    currentPackage: currentPackageText,
+  });
+
+  if (pluginInputFiles.length > 0) {
+    const basePluginVersion = pluginVersion(basePluginDescriptor);
+    const currentPluginVersion = pluginVersion(currentPluginDescriptor);
+    if (!currentPluginVersion || !semverPattern.test(currentPluginVersion)) {
+      errors.push(
+        `${pluginSourcePath} uses invalid or missing semver version: ${currentPluginVersion ?? "(missing)"}`,
+      );
+    } else if (basePluginVersion && !semverPattern.test(basePluginVersion)) {
+      errors.push(`${pluginSourcePath} base version is invalid semver: ${basePluginVersion}`);
+    } else if (basePluginVersion && compareSemver(currentPluginVersion, basePluginVersion) <= 0) {
+      errors.push(
+        `Bundled plugin inputs changed without increasing ${pluginSourcePath} version from ${basePluginVersion}; got ${currentPluginVersion}. Changed inputs: ${pluginInputFiles.join(", ")}`,
+      );
+    } else {
+      reasons.push(
+        `${pluginSourcePath} version changed from ${basePluginVersion ?? "(missing)"} to ${currentPluginVersion}`,
+      );
+    }
+
+    if (!packageChanged) {
+      errors.push(
+        `Bundled plugin input changes require a package.json version bump: ${pluginInputFiles.join(", ")}`,
       );
     }
   }

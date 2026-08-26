@@ -34,12 +34,12 @@
 - Repository evidence state: `new | evidence-empty | established`
 - Foundation eligibility and evidence:
 - Catalog path and revision/fingerprint:
-- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `36`
-- Matrix row count: `36`
+- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `37`
+- Matrix row count: `37`
 - Selected count (`adopt` + `adapt`): `<number from completed matrix>`
 - Not-selected count (`defer` + `reject`): `<number from completed matrix>`
-- Total disposition count (`selected` + `not-selected`): `<number; must equal 36>`
-- Count equality: `selected + not-selected = total = 36`: `pass | fail`
+- Total disposition count (`selected` + `not-selected`): `<number; must equal 37>`
+- Count equality: `selected + not-selected = total = 37`: `pass | fail`
 - Duplicate IDs: `0 | <count and IDs>`
 - Missing IDs: `0 | <count and IDs>`
 - Deferred provider ADRs, triggers, and owners:
@@ -103,6 +103,7 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-041   |             |                 |                     |                        |                     |
 | AC-ADR-049   |             |                 |                     |                        |                     |
 | AC-ADR-054   |             |                 |                     |                        |                     |
+| AC-ADR-055   |             |                 |                     |                        |                     |
 
 AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, and AC-ADR-048 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-042 and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
 

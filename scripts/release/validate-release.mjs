@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { listChangedGitPaths } from "../lib/git-changed-paths.mjs";
+
 const root = process.cwd();
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const errors = [];
@@ -26,19 +28,6 @@ function parseArgs(argv) {
   return args;
 }
 
-function git(args, allowFailure = false) {
-  const result = spawnSync("git", args, {
-    cwd: root,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  if (result.status !== 0) {
-    if (allowFailure) return null;
-    throw new Error(result.stderr.trim() || `git ${args.join(" ")} failed`);
-  }
-  return result.stdout.trimEnd();
-}
-
 function readGitFile(ref, file) {
   const result = spawnSync("git", ["show", `${ref}:${file}`], {
     cwd: root,
@@ -56,15 +45,6 @@ function readCurrentFile(file) {
 
 function readTargetFile(file, headRef) {
   return headRef ? readGitFile(headRef, file) : readCurrentFile(file);
-}
-
-function changedFiles(baseRef, headRef) {
-  const args = ["diff", "--name-only", "--diff-filter=ACDMRT", baseRef];
-  if (headRef) args.push(headRef);
-  return git(args)
-    .split("\n")
-    .map((file) => file.trim())
-    .filter(Boolean);
 }
 
 function walk(dir, predicate = () => true) {
@@ -179,7 +159,7 @@ function validateReleaseDiff(baseRef, headRef, releaseVersion) {
     );
   }
 
-  const files = changedFiles(baseRef, headRef);
+  const files = listChangedGitPaths({ root, baseRef, headRef });
   for (const skillFile of uniqueSkillFiles(files)) {
     const baseText = readGitFile(baseRef, skillFile);
     const currentText = readTargetFile(skillFile, headRef);

@@ -224,7 +224,7 @@ reviewing a receipt. Receipts remain workflow artifacts and are not committed.
 Schema v1 keeps a common client/lifecycle envelope for sanitized validation;
 archive receipts use `not_a_client_lifecycle_receipt`.
 
-Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
+Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, changed public skill files, or changed canonical bundled-plugin inputs. Bundled-plugin input changes must increase both the independent plugin version and the repository package version. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
 
 Use `dry_run: true` to rerun the same readiness and remote-state plan. Use `dry_run: false` only after maintainer approval. If reconciliation repairs an already-published mutable release, explicitly dispatch `Post-release Evidence` for the exact tag before treating the repair as verified. GitHub Actions job summaries name the next operator follow-up after each run.
 
@@ -254,7 +254,7 @@ npm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `npm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.0.1.zip` is the local OpenAI-native
+`dist/openai/stark-ai-developer-1.1.0.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
 package time. The normal publication source is `openai.zip` downloaded from
 the `release-subjects` artifact of the successful hosted `Validate` run for the
@@ -384,7 +384,7 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.0.1`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
+   `1.1.0`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
 3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
    generated copies.

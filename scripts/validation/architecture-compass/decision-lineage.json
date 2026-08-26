@@ -154,6 +154,14 @@
       "id": "AC-ADR-054",
       "disposition": "material",
       "relations": [{ "type": "generalizes", "sources": ["ADR-0029"] }]
+    },
+    {
+      "id": "AC-ADR-055",
+      "disposition": "material",
+      "relations": [
+        { "type": "adapts", "sources": ["ADR-0018"] },
+        { "type": "diverges-from", "sources": ["ADR-0034"] }
+      ]
     }
   ]
 }

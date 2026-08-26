@@ -12,6 +12,25 @@
 
 ### Removed
 
+## v0.20.2 - 2026-08-26
+
+### Added
+
+- Added AC-ADR-055 and proposed repository ADR-0050 for pnpm-owned dependencies, Bun-first verified execution, Vite/Vitest defaults, and optimized Bun server artifacts.
+
+### Changed
+
+- Updated `architecture-compass` to 0.6.6 with an adoptable pnpm and Bun JavaScript tooling policy.
+- Advanced the independently versioned `stark-ai-developer` plugin to 1.1.0 for the new backward-compatible Architecture Compass capability.
+
+### Fixed
+
+- Enforced independent plugin semver increases when canonical bundled-plugin inputs change, with focused release-intent regression fixtures.
+
+### Deprecated
+
+### Removed
+
 ## v0.20.1 - 2026-08-25
 
 ### Added

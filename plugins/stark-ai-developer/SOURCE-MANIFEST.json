@@ -48,7 +48,7 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "b7c96715665ab18e52bf46be6f627ce8dcba325f09e037c2692f0f2972e33eea"
+      "sha256": "62f22efa3a2682828272c62e463f7b89a6ec169d14f0af624e126f8dc9247b2c"
     },
     {
       "byteLength": 12772,
@@ -168,7 +168,7 @@
       "byteLength": 15969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "ece1d9a2f68e9ec7a74b87bc39171f7cec7a1fe2cd0e61a1e836a8657f2c12a5"
+      "sha256": "49f9a99c0cd8b27226e075ffbba9e65adccc453c7714a509bfc3c4009bf480b7"
     },
     {
       "byteLength": 810,
@@ -237,10 +237,10 @@
       "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
     },
     {
-      "byteLength": 11397,
+      "byteLength": 11515,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "8fc6504203edb9f95de602cf7f2664965042186a9cfb29bca093131bab9ce4da"
+      "sha256": "d91001d63acc4d599e714881d2837c874c32a2514cb6973c4a4324d46cea7e02"
     },
     {
       "byteLength": 3796,
@@ -1215,10 +1215,28 @@
       "sha256": "902bb56aaa5deb769652ef71df32723ea43001e7d661eae299fba6c7ce1259aa"
     },
     {
-      "byteLength": 46088,
+      "byteLength": 6025,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
+      "sha256": "c8386b2a52dbd82b32d6b141162d33abca45b71e20707c4172c496d39c52e214"
+    },
+    {
+      "byteLength": 8185,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.long.md",
+      "sha256": "a35406d9c0971b39b1b9274ecafe4570e8492ccfa5968b74b92fe3df15dda3ec"
+    },
+    {
+      "byteLength": 3478,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.short.md",
+      "sha256": "0a46bb162c66c491b7a7a7369707144fc48eec6fae129c5d0e43deeac3a6d87d"
+    },
+    {
+      "byteLength": 46771,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "ba5f3adceb3fa3c3c202e43e7049a387d7f4143d5fdf872add221676e7f2fb02"
+      "sha256": "9ce142c43bbe1fa0d5c52321bacb3896ca8962cd55db0e45c4c02008c4b2abdb"
     },
     {
       "byteLength": 6996,
@@ -1721,9 +1739,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.0.1"
+    "version": "1.1.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8a9d270a4825ca5218c818c06446a29f7944adb1afbddc8d740876ed6362d391"
+  "treeHash": "d15ce728a12a11a0448da30a65b9b882d69c9110ad2e4891ce79cb154518e661"
 }
