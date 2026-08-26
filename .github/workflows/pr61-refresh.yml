@@ -40,7 +40,7 @@ jobs:
             {
               id: "ADR-0047",
               after: "| [ADR-0034](adrs/0034-separate-package-manager-runtime-orchestration-and-hosting-decisions.short.md)",
-              row: "| [ADR-0047](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.short.md) | Proposed | Use an isolated, pinned loopback LiteLLM gateway as the default shared client boundary, with direct Hetzner calls reserved for discovery, probes, or an explicitly verified direct lane. | [Long, canonical](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.long.md) | [Guide](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.guide.md) |",
+              row: "| [ADR-0047](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.short.md) | Proposed | Use an isolated, pinned loopback LiteLLM gateway as the default client boundary, with direct Hetzner calls reserved for discovery, probes, or an explicitly verified direct lane. | [Long, canonical](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.long.md) | [Guide](adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.guide.md) |",
             },
             {
               id: "ADR-0049",
