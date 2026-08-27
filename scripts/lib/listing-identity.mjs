@@ -53,13 +53,16 @@ export function listingArtifactPaths(identity) {
   };
 }
 
+function rawRepositoryUrl(repository) {
+  return typeof repository === "string"
+    ? repository
+    : repository && typeof repository === "object"
+      ? repository.url
+      : undefined;
+}
+
 export function publicRepositoryUrl(repository) {
-  const raw =
-    typeof repository === "string"
-      ? repository
-      : repository && typeof repository === "object"
-        ? repository.url
-        : undefined;
+  const raw = rawRepositoryUrl(repository);
   if (typeof raw !== "string" || !raw.trim()) return undefined;
 
   return raw
@@ -69,9 +72,51 @@ export function publicRepositoryUrl(repository) {
     .replace(/\.git$/, "");
 }
 
+function validRepositorySegment(value) {
+  return (
+    typeof value === "string" && /^[A-Za-z0-9_.-]+$/.test(value) && value !== "." && value !== ".."
+  );
+}
+
 export function githubRepositorySlug(repository) {
-  const url = publicRepositoryUrl(repository);
-  if (!url) return undefined;
-  const match = /github\.com[:/]([^/]+\/[^/]+)/i.exec(url);
-  return match ? match[1].replace(/\.git$/, "") : undefined;
+  const raw = rawRepositoryUrl(repository);
+  if (typeof raw !== "string" || !raw.trim()) return undefined;
+  const normalized = raw.trim().replace(/^git\+/, "");
+
+  const scp = /^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(normalized);
+  if (scp) {
+    const [, owner, repositoryName] = scp;
+    return validRepositorySegment(owner) && validRepositorySegment(repositoryName)
+      ? `${owner}/${repositoryName}`
+      : undefined;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    return undefined;
+  }
+  const allowedProtocol = ["https:", "http:", "git:", "ssh:"].includes(parsed.protocol);
+  const validSshUser = parsed.protocol !== "ssh:" || !parsed.username || parsed.username === "git";
+  if (
+    !allowedProtocol ||
+    parsed.hostname.toLowerCase() !== "github.com" ||
+    parsed.password ||
+    parsed.port ||
+    parsed.search ||
+    parsed.hash ||
+    !validSshUser ||
+    (["https:", "http:", "git:"].includes(parsed.protocol) && parsed.username)
+  ) {
+    return undefined;
+  }
+
+  const segments = parsed.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  if (segments.length !== 2) return undefined;
+  const owner = segments[0];
+  const repositoryName = segments[1].replace(/\.git$/, "");
+  return validRepositorySegment(owner) && validRepositorySegment(repositoryName)
+    ? `${owner}/${repositoryName}`
+    : undefined;
 }

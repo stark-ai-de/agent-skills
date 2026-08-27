@@ -1,23 +1,23 @@
 {
   "schema_version": 2,
-  "suite_id": "codegraph-ast-grep-v0.3.2-current-contract-2026-08-19",
-  "reviewed_at": "2026-08-19",
+  "suite_id": "codegraph-ast-grep-v0.3.3-current-contract-2026-08-26",
+  "reviewed_at": "2026-08-26",
   "evidence_mode": "hash-bound-internal-reviewer-capture",
   "refresh": {
-    "kind": "local-metadata-only",
+    "kind": "local-metadata-and-packaging-only",
     "behavioralCaptureReused": true,
-    "authorizedAt": "2026-08-19"
+    "authorizedAt": "2026-08-26"
   },
   "candidate": {
     "skill_path": "skills/engineering-workflows/codegraph-ast-grep",
-    "skill_version": "0.3.2",
-    "sha256": "2afc240c21a70f328d04d008ed9845cf29f6b30388669dbf40d6c4b5ac24e24a",
-    "hash_recipe": "For each behavioral runtime file in bytewise lexicographic path order, excluding host routing metadata: relative path, NUL, file bytes, NUL; then SHA-256."
+    "skill_version": "0.3.3",
+    "sha256": "991c2cec9b1d5966f7c65ece3d0879eb58ddff50094a4224a6f00c3a6d43f324",
+    "hash_recipe": "For each behavioral runtime file in bytewise lexicographic path order, excluding host routing and visual metadata: relative path, NUL, file bytes, NUL; then SHA-256."
   },
   "capture": {
-    "mode": "local-metadata-refresh",
+    "mode": "local-nonbehavioral-refresh",
     "provenance_path": "skill-evals/codegraph-ast-grep/behavioral/current-contract/capture-provenance.json",
-    "sha256": "f6ff0de0f0b541e340d40a0f13658d1d46b1116e3d91ee8dc054405b3ff82423"
+    "sha256": "b2406ca1795034ffb0fd6bdbaffd128cab0947ef1d7a3507263b09af68687842"
   },
   "grading": {
     "mode": "independent-collaboration-reviewer",
@@ -172,6 +172,6 @@
     "The outputs are reused clean-context internal collaboration-reviewer captures, not external codex-exec runs.",
     "The independent internal grader found 35 of 35 assertions passing; this is not a no-skill baseline or statistical reliability study.",
     "The exact runtime hash and artifact hashes bind this result to one candidate; they do not prove live CodeGraph, ast-grep, CI, hosted, or production behavior.",
-    "The historical v0.2 captures remain separate evidence and are not reused as v0.3.2 proof."
+    "The historical v0.2 captures remain separate evidence and are not reused as v0.3.3 proof."
   ]
 }

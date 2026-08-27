@@ -1,67 +1,90 @@
 ---
 name: release-manager
-description: Prepare repository releases. Use when the user asks to draft release notes, update changelog, check semver, verify CI, create a release checklist, or decide whether a public repo is ready to tag and publish.
+description: Prepare and operate repository releases through a finite, approval-gated hosted workflow. Use when the user asks to inspect release status, check setup, record component impact, create a generated release PR, plan or approve publication, dispatch post-release evidence, or prepare the OpenAI handoff.
 license: Apache-2.0
 metadata:
   internal: true
   author: stark-ai-de
   category: repo-maintenance
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Release Manager
 
 ## Goal
 
-Prepare a release with clear versioning, changelog coverage, validation status, release notes, and approval gates before any irreversible publish action.
+Prepare and operate a release through repository-owned hosted workflows without creating local tags or releases.
 
 ## When to use
 
 - The user asks to prepare, review, or draft a release.
-- A changelog, semver bump, tag, or release note needs review.
-- CI and package readiness need preflight checks.
+- Release setup, component impact, generated version PRs, protected publication,
+  evidence, or OpenAI handoff needs review or execution.
 
 ## When not to use
 
 - The user wants a PR review before merge; use `pr-review`.
 - The user wants a repository-wide maintenance audit; use `repo-health-audit`.
-- The user asks to publish immediately but version, changelog, or validation state is unknown.
+- The repository has no explicit hosted release contract; first inspect its native
+  instructions and ADRs.
 
 ## Inputs
 
-- Changelog, package manifests, tags, commits since last release, and merged PRs.
-- CI status, test results, docs changes, migration notes, and breaking-change signals.
-- Publishing workflow and maintainer approval policy.
+- Requested command and its exact arguments.
+- Repository release configuration, manifest, component versions, hosted runs,
+  release environment policy, and publication evidence.
 
 ## Inputs to inspect
 
-- Inspect release history, current version, changelog, package metadata, CI state, and validation output.
-- Check docs or migration notes for user-facing changes.
+- Inspect the repository-native `release:manage` surface before selecting a route.
+- Check accepted ADRs, current branch/SHA, release history, component versions,
+  hosted validation, environment policy, and evidence by layer.
 
 ## Process
 
-1. Identify the last release and changes since then.
-2. Classify changes as added, changed, fixed, deprecated, removed, or security. Write the planned catalog release compared with the previous release; do not record intra-PR history or rewrite older changelog sections.
-3. Recommend a semver bump with reasoning.
-4. Check changelog, docs, CI, package metadata, and release workflow.
-5. Draft release notes and a preflight checklist.
-6. Ask for explicit approval before tagging, pushing, publishing, or creating a release.
+1. Select exactly one supported workflow from the finite set below.
+2. Verify repository identity, protected state, and the requested command's authority.
+3. Run the repository-owned command. Read-only commands need no mutation approval;
+   every hosted dispatch or approval must include `--confirm`.
+4. Report local, hosted, publication, evidence, and portal state separately.
+5. Stop at the next approval or manual portal boundary.
 
 ## Workflow
 
-Follow the process above, then stop at a release-ready draft unless the user explicitly approves tag, push, publish, or release creation.
+The complete workflow set is:
+
+- `status` — read-only release and workflow state.
+- `setup-check` — read-only App, secret, lifecycle-label, environment, branch,
+  and workflow preflight.
+- `impact --kind patch|minor|breaking [--skill <name>]` — read-only component-impact guidance.
+- `release-pr --confirm` — dispatch Release Please to create or update its draft PR.
+- `publish-plan --confirm` — dispatch the read-only hosted publication plan.
+- `publish --confirm` — dispatch protected publication and wait for environment approval.
+- `approve --run-id <id> --confirm` — approve the waiting `release` environment deployment.
+- `post-release --tag vX.Y.Z --confirm` — dispatch tag-bound evidence on protected `main`.
+- `openai-handoff --tag vX.Y.Z` — read-only handoff checklist after verifying the latest three-asset release and a newer successful exact-tag Evidence run.
+
+On a bare or materially ambiguous invocation, show this set and ask which outcome
+the user wants. When intent and authority are clear, announce the selected route
+and proceed.
 
 ## Decision points
 
-- Breaking changes require major version notes or explicit migration instructions.
-- Security fixes require careful disclosure language.
-- Failed or missing CI blocks release readiness unless the maintainer accepts risk.
+- Feature PRs raise affected component versions; Release Please alone changes the
+  root manifest, package version, and release changelog section.
+- `publish-plan` proves readiness only; `publish` additionally crosses the protected
+  environment boundary.
+- Post-release evidence and OpenAI portal publication are distinct completion layers.
 
 ## Safety rules
 
-- Do not tag, publish, push, or create releases without explicit approval.
+- Never create a tag or GitHub Release locally.
+- Never bypass `--confirm`, the hosted workflow, or the protected environment.
 - Do not include secrets or private incident details in release notes.
-- Do not claim CI passed unless verified.
+- Do not claim hosted validation, publication, evidence, or portal completion unless
+  verified at that exact layer and revision.
+- OpenAI upload and portal asset edits remain manual external actions unless the
+  user separately authorizes them.
 
 ## References
 
@@ -78,21 +101,21 @@ No bundled scripts.
 
 Return:
 
-1. Release readiness verdict
-2. Recommended version bump
-3. Changelog draft
-4. Release notes draft
-5. Preflight checklist
-6. Approval needed
+1. Selected workflow and exact command
+2. Current state by evidence layer
+3. Result or blocker
+4. Next approval/manual action
 
 ## Failure modes
 
-- If the previous release cannot be identified, say which tags or versions were inspected.
-- If CI cannot be checked, mark release readiness as unverified.
-- If the changelog and commits disagree, block release readiness until reconciled.
+- Missing App, secret, Release Please lifecycle labels, or environment
+  configuration blocks hosted mutations.
+- A missing successful Validate run blocks publication.
+- Mismatched or immutable release assets block without clobber.
+- If portal state cannot be inspected, mark OpenAI completion as manual and unverified.
 
 ## Completion criteria
 
-- Version, changelog, validation status, and risks are explicit.
-- Release notes are ready for maintainer editing.
-- Irreversible actions are gated behind approval.
+- The requested finite workflow completed at its own evidence layer.
+- Every later hosted, publication, evidence, and portal boundary remains explicit.
+- No local tag or release was created.

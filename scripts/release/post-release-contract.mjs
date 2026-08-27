@@ -18,6 +18,7 @@ export const POST_RELEASE_CONTRACT_FILES = Object.freeze([
   "scripts/release/render-post-release-receipt.mjs",
   "scripts/lib/release-subject.mjs",
   "scripts/lib/release-subject-validation.mjs",
+  "scripts/lib/release-assets.mjs",
   "scripts/lib/post-release-receipt-renderer.mjs",
   POST_RELEASE_RECEIPT_SCHEMA_PATH,
   "skill-evals/stark-ai-developer/evidence/release-subject.schema.json",

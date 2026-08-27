@@ -136,80 +136,144 @@ Do not change GitHub settings, publish releases, push tags, or install globally 
 
 ## Release Process
 
-Releases are prepared in the same pull request that changes the public catalog, then published manually from `main`.
+Feature pull requests record component impact. Release Please prepares the root
+catalog version in a separate draft pull request, and GitHub Release publication
+runs behind the protected `release` environment on `main`.
 
-### Prepare In The Change PR
+### Record impact in the feature PR
 
 Public skill versions are independent from the repository package version:
 
 - New promoted skills may start at `metadata.version: "0.1.0"`.
 - Changed promoted skills must increase their own `metadata.version`.
 - Unchanged promoted skills keep their existing `metadata.version`.
-- The repository `package.json` version represents the public catalog release and must increase when public skills are added, removed, or their own versions increase.
+- A bundled-skill change also increases `plugins/stark-ai-developer.source.json`.
+- The feature PR does not change the root package version,
+  `.release-please-manifest.json`, or add a root release heading.
 
-Use the local helper when preparing the package and changelog release files:
-
-```bash
-NEXT_VERSION=0.2.1
-node scripts/release/prepare-release.mjs --version "$NEXT_VERSION" --dry-run
-node scripts/release/prepare-release.mjs --version "$NEXT_VERSION"
-```
-
-The helper updates only `package.json` and `CHANGELOG.md`. Bump changed public skill `metadata.version` values directly in the same PR.
-
-The changelog section a pull request adds is the currently planned catalog release compared with the previous release, not a diary of intermediate PR states:
-
-- Keep historical `## vX.Y.Z` sections unchanged.
-- Describe the current tree versus the previous release (the base branch's package version).
-- Do not record paths or layouts that were added and then removed inside the same PR.
-- Keep in-progress notes in `## Unreleased` until the package version is bumped; then fold those notes into `## v<package-version>` so GitHub Release notes match the planned tag.
-- After that fold, `## Unreleased` stays as empty headings. It is the next release, not this one.
-
-Validate the release contract locally:
+Record or inspect the intended component impact without changing root release
+files:
 
 ```bash
+npm run release:manage -- impact --kind patch --skill architecture-compass
 npm run release:intent -- --base-ref origin/main
 npm run release:validate -- --base-ref origin/main
 ```
 
+`scripts/release/prepare-release.mjs` intentionally refuses local version
+writes. Release Please is the sole generator of the root release change.
+Historical `## vX.Y.Z - date` headings and new Release Please headings are both
+valid; historical sections and the existing `## Unreleased` section remain
+unchanged in the generated PR.
+
+### Generate the release PR
+
+After feature work merges, the `Release Please` workflow uses a repository-scoped
+GitHub App token with Contents, Pull requests, and Issues write permissions. The
+App needs no webhooks. It creates or updates a draft titled
+`chore(release): release <version>`. The PR changes exactly:
+
+- `.release-please-manifest.json`;
+- `package.json`;
+- `CHANGELOG.md`.
+
+Before the App private key is used, a credentialless preflight requires the
+workflow definition, checkout, event ref, workflow SHA, and remote branch tip to
+be the same protected `main` revision. A manual dispatch from another branch or
+tag therefore fails before GitHub creates the write-capable App token.
+
+Pull-request validation resolves the configured App ID, requires the
+repository-local Release Please branch and exactly one App-bot-authored head
+commit with GitHub's valid signature, then validates the complete three-file
+transformation. Publication repeats the merged-PR provenance check against the
+exact candidate commit.
+
+The baseline is `0.20.1`; `v0.20.0` remains unpublished and the first generated
+catalog release is `v0.21.0`. `skip-github-release: true` reserves tags and
+GitHub Releases for the reconciliation workflow. Merging a generated release PR
+does not run Release Please again.
+
+While the manifest remains at the `0.20.1` bootstrap baseline, the workflow
+selects `release-please-config.v0.21.0.json`. That manifest configuration sets
+the package-local `release-as: 0.21.0` value that Release Please actually reads
+in manifest mode. After the manifest advances, the workflow selects the normal
+`release-please-config.json`, so later versions return to Conventional Commit
+calculation. Generated PR validation independently rejects any first version
+other than `0.21.0`.
+
+Release Please labels an open draft `autorelease: pending`. After publication
+and evidence dispatch, the protected publisher uses a new repository-scoped App
+token to add `autorelease: tagged` and remove `autorelease: pending` for that
+exact generated PR. A failed dispatch or label transition keeps the run failed
+and is safe to retry; it cannot silently unlock the next generated release PR.
+If `main` advanced after the candidate was validated, recover that older
+candidate through **Actions → Publish Release → original run → Re-run jobs** or
+`gh run rerun <original-run-id>`. A new
+`npm run release:manage -- publish --confirm` dispatch always targets current
+`main` and is not a retry of the older candidate.
+Create both labels in **Settings → Issues → Labels** before the first dispatch;
+`setup-check` is read-only and fails if either label is absent.
+
 ### Publish Release
 
-After the change PR is merged, run the `Publish Release` workflow manually with `dry_run: true` for a final release-readiness check.
+Merging the generated release PR changes `.release-please-manifest.json` on
+`main` and starts `Publish Release`. A manual `dry_run: true` dispatch remains a
+read-only readiness option.
 
-The workflow reads the release version from `package.json`, binds the dispatch ref, workflow ref/SHA, `GITHUB_SHA`, checked-out `HEAD`, and current `main` head to one release SHA, waits for a successful hosted `Validate` push run for that SHA (or reuses one that already completed), and downloads that run's `release-subjects` artifact. It verifies subject identity and digests, then runs the read-only GitHub Release reconciliation plan. With `dry_run: false`, the publish job rechecks remote state, reuses those GitHub-produced bytes, creates missing Publish Release attestations only before publication, and applies the planned annotated-tag/draft/asset transitions. The draft is published last, after both ZIPs and their signer/source bindings are reverified; the workflow does not rebuild subjects locally or rerun the aggregate validation suite.
+The readiness job has read-only permissions. It binds the workflow and hosted
+`Validate` to the exact generated-release SHA, downloads `openai.zip`,
+`portable.zip`, and `release-subject.json` as three direct artifacts with no
+extraction or repacking, validates them, and computes the remote plan. The SHA
+must remain equal to or an ancestor of the currently observed protected `main`;
+later feature commits belong to the next release cycle and do not invalidate a
+waiting approval. Diverged, removed, or unprotected candidates fail closed. The
+write-capable `publish` job is the only job targeting `environment: release`;
+it waits for approval before it can attest, tag, upload, or publish. Before the
+first API mutation it verifies that the environment exists, has a required
+reviewer, uses exactly one custom deployment-branch policy named `main`,
+confirms that `main` is protected, and disables administrator bypass.
 
 ### Post-release evidence and lifecycle lanes
 
-`dry_run: true` downloads and verifies the already-hosted release subjects and
-computes a strictly read-only reconciliation plan. It does not create a new
-subject artifact, attestation, tag, GitHub Release, or release attachment. A
-real publish may resume a matching tag or draft, uploads only missing exact
-subjects, never replaces an existing named asset, validates and uploads a
-pre-publication receipt only while the release is still unpublished, and
-publishes the completed draft last. A published release with both exact ZIPs
-and valid Publish Release attestations is an idempotent success. A mutable
-published release may receive a missing ZIP only when that exact ZIP already
-has a valid Publish Release attestation; immutable, ambiguous, mismatched, or
-unknown states fail closed. Unrelated assets remain untouched and
+`dry_run: true` never creates an artifact, attestation, tag, release, or asset.
+A real publish may resume a matching tag or draft, uploads only missing exact
+subjects, never replaces a named asset, and publishes the completed draft last
+with `make_latest=true`. A published target is satisfied only when
+`/releases/latest` returns the same release ID and tag. Only the two ZIPs are
+attested. The reconciler creates annotated tag objects and refs through the
+authenticated GitHub Git API; checkout credentials are never persisted.
+`v0.20.1` is the explicit legacy two-asset boundary; from `v0.21.0`
+onward all three direct assets are required. An exact mutable release may accept
+a missing validated JSON without a valid ZIP attestation only when both exact
+ZIP assets have creation timestamps strictly before publication; after upload,
+the JSON timestamp must be strictly later. Equal, missing, or invalid timestamps
+block. A missing ZIP additionally requires its existing valid Publish Release
+attestation. Immutable, ambiguous, mismatched, non-latest, or unknown states
+fail closed. No published repair creates a new attestation, and
 `gh release upload --clobber` is prohibited.
 
 The [`Post-release Evidence`](../.github/workflows/post-release-evidence.yml)
-workflow runs for `release.published` and can be dispatched again with an exact
-tag. Before checkout it resolves the current default branch through the GitHub
+workflow is `workflow_dispatch`-only. `Publish Release` explicitly dispatches it
+through protected `main` whenever `post_release_dispatch_required=true`, after
+both first publication and an allowed repair. Before checkout it resolves the
+current default branch through the GitHub
 API, requires protected `main`, and binds `github.workflow_ref` and
 `github.workflow_sha` to that branch head. The tracked
 [`prepare-release-subjects.mjs`](../scripts/release/prepare-release-subjects.mjs)
 wrapper runs the tag-local [`verify-release-reproducibility.mjs`](../scripts/release/verify-release-reproducibility.mjs)
 script and translates the legacy evidence format used by historical tags.
-Hosted `Validate` uses the repository-owned script to build and upload the
-`release-subjects` artifact on `main`. `Publish Release` downloads that artifact
-and uses those exact bytes for attestation and publication; it does not require
-a local packaging workflow. The local `npm run build:release-subjects` command
+Hosted `Validate` uses the repository-owned script to build and upload the three
+direct artifacts on `main`. `Publish Release` downloads those exact bytes for
+attestation and publication; it does not require a local packaging workflow.
+The local `npm run build:release-subjects` command
 writes to `dist/release-subjects/` using the same script and is only a manual
 backup if the hosted artifact is unavailable. Post-release jobs rebuild from
-the exact release tag. The workflow downloads the published `openai.zip` and
-`portable.zip`, compares their bytes
-with the tag-bound subjects, verifies attestations against those downloaded
+the exact release tag. The workflow downloads the published ZIPs and, from
+`v0.21.0`, the hosted `release-subject.json`. ZIP bytes must match the tag-bound
+subjects. Hosted JSON is compared semantically with the tag rebuild: commit,
+versions, clean state, archive profile, ZIP sizes, and digests must match; JSON
+byte equality and a pre-populated tag in the hosted JSON are not required. It
+verifies attestations against the downloaded ZIPs,
 files, the release commit, `refs/heads/main`, and the unique
 `publish-release.yml` signer workflow, and uploads a sanitized receipt carrying
 the protected verifier identity. Attestations made by `attest-release.yml` do
@@ -224,9 +288,30 @@ reviewing a receipt. Receipts remain workflow artifacts and are not committed.
 Schema v1 keeps a common client/lifecycle envelope for sanitized validation;
 archive receipts use `not_a_client_lifecycle_receipt`.
 
-Release intent means a pull request changed `package.json` version, added a `CHANGELOG.md` release heading, or changed public skill files. Pull request validation runs release validation for release-intent changes so partial release preparation fails before merge.
+Feature impact means a pull request changed a skill or bundled plugin and raised
+the affected component versions without creating root release files. Generated
+release intent means Manifest, Root-Package, and one Changelog release section
+changed together and no other files changed. Pull request validation checks both
+contracts and runs root release validation only for the generated release PR.
 
-Use `dry_run: true` to rerun the same readiness and remote-state plan. Use `dry_run: false` only after maintainer approval. If reconciliation repairs an already-published mutable release, explicitly dispatch `Post-release Evidence` for the exact tag before treating the repair as verified. GitHub Actions job summaries name the next operator follow-up after each run.
+GitHub Actions job summaries name the next operator follow-up after each run.
+
+### CLI and GitHub web equivalents
+
+All local commands dispatch hosted workflows or APIs; none creates a local tag
+or release. Hosted mutations require `--confirm`.
+
+| CLI                                                                             | GitHub web equivalent                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run release:manage -- status`                                              | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
+| `npm run release:manage -- setup-check`                                         | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
+| `npm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]` | Review the feature diff and affected component versions.                                                                                                                                                                                     |
+| `npm run release:manage -- release-pr --confirm`                                | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
+| `npm run release:manage -- publish-plan --confirm`                              | **Actions → Publish Release → Run workflow**, `dry_run=true`.                                                                                                                                                                                |
+| `npm run release:manage -- publish --confirm`                                   | **Actions → Publish Release → Run workflow**, `dry_run=false`; this targets current `main`, while an older candidate requires rerunning its original workflow run.                                                                           |
+| `npm run release:manage -- approve --run-id ID --confirm`                       | Open the waiting run/deployment and approve the `release` environment.                                                                                                                                                                       |
+| `npm run release:manage -- post-release --tag vX.Y.Z --confirm`                 | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
+| `npm run release:manage -- openai-handoff --tag vX.Y.Z`                         | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
 
 Equivalent local release validation:
 
@@ -254,11 +339,11 @@ npm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `npm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.0.1.zip` is the local OpenAI-native
+`dist/openai/stark-ai-developer-1.1.0.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
-package time. The normal publication source is `openai.zip` downloaded from
-the `release-subjects` artifact of the successful hosted `Validate` run for the
-exact release commit.
+package time. The normal portal handoff source is the direct `openai.zip` asset
+from the verified GitHub Release; its bytes came unchanged from successful
+hosted `Validate` for the exact release commit.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
 that archive; the adapter does not generate or overlay skill-local metadata.
 `dist/skills/*.zip` contains one skill root per optional standalone archive.
@@ -266,7 +351,7 @@ These artifacts do not replace canonical sources. A generated archive is not
 by itself proof of public-directory publication. First-publication observations
 for the OpenAI plugin live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
-Upload the hosted `release-subjects/openai.zip` to the OpenAI portal, not the
+Upload the direct GitHub Release asset `openai.zip` to the OpenAI portal, not the
 portable Agent Plugins zip or a locally rebuilt archive.
 
 GitHub Releases also provide source archives for each tag, and normal
@@ -384,7 +469,7 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.0.1`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
+   `1.1.0`, Node `24.18.0`, pnpm `11.22.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
 3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
@@ -404,20 +489,25 @@ security routes return HTTP 200.
    publishing organization.
 2. Create a plugin draft and choose **Skills only**.
 3. Enter the public listing and verified developer identity.
-4. Upload the exact final `openai.zip` from the hosted `release-subjects`
-   artifact for that commit.
-5. Review automated scans and every portal warning, including
+4. Upload the exact direct `openai.zip` asset from the verified GitHub Release.
+5. Verify all six packaged skill icons. If the portal ignores package metadata,
+   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, and `pen`
+   glyphs.
+6. Upload `site/public/logo.png` as the light Plugin Info logo.
+7. Upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon.
+8. Review automated scans and every portal warning, including
    `manifest_normalized` if shown.
-6. Add no more than three realistic starter prompts.
-7. Add at least six positive and three negative tests for v1.
-8. Add release notes and complete policy attestations only after listing,
-   skills, prompts, tests, and privacy claims are confirmed.
-9. Submit for review. Treat non-blocking `skill_metadata_ignored` warnings as
-   expected when `SKILL.md` carries `metadata:`.
-10. Track requested changes as release-blocking issues; update source artifacts
+9. Add no more than three realistic starter prompts.
+10. Add at least six positive and three negative tests for v1.
+11. Add release notes and complete policy attestations only after listing,
+    skills, prompts, tests, and privacy claims are confirmed.
+12. Submit for review. Treat non-blocking `skill_metadata_ignored` warnings as
+    expected when `SKILL.md` carries `metadata:`.
+13. Track requested changes as release-blocking issues; update source artifacts
     first, regenerate, retest, and resubmit.
-11. After approval, explicitly publish from the portal.
-12. Confirm the listing appears in the universal Plugins Directory shared by
+14. After approval, explicitly publish from the portal.
+15. Verify light/dark rendering after propagation and confirm the listing appears
+    in the universal Plugins Directory shared by
     ChatGPT and Codex. There is no separate Codex public directory URL.
 
 ## Release Update Process
@@ -429,12 +519,14 @@ security routes return HTTP 200.
 5. Run `npx skills@latest add ./skills --list` locally.
 6. Run `npm run smoke:install` and require its emitted digest to match the initial fingerprint.
 7. Run `npm run smoke:fingerprint` again after the last local gate and require the digest to remain unchanged.
-8. For public catalog changes, bump changed skill versions, bump `package.json`, and add the matching `CHANGELOG.md` release section in the same PR. That section is the planned release compared with the previous one; do not rewrite historical changelog entries.
+8. For public catalog changes, bump changed skill/plugin versions in the feature
+   PR; do not change root release files there.
 9. Add an ADR only if a decision changed.
 10. Confirm the release-intent PR gate passed.
 11. Merge changes through a PR.
-12. Run `Publish Release` manually with `dry_run: true`.
-13. Run `Publish Release` manually with `dry_run: false`.
-14. Inspect the pre-publication receipt and the automatic `Post-release Evidence`
+12. Let Release Please create the draft root release PR and merge it after review.
+13. Inspect automatic Publish readiness; optionally dispatch `dry_run: true` again.
+14. Approve the waiting `release` environment deployment.
+15. Inspect the pre-publication receipt and the explicitly dispatched `Post-release Evidence`
     receipt, or dispatch the latter with the exact tag when a repeat is needed.
-15. Complete [Operator follow-up](#operator-follow-up).
+16. Complete [Operator follow-up](#operator-follow-up), including the manual OpenAI handoff.

@@ -44,7 +44,7 @@ function validateExpected(document, expected) {
 
 export function validateReleaseSubjectDocument(
   document,
-  { schemaPath, subjectDirectory, expected } = {},
+  { schemaPath, subjectDirectory, expected, validateSubjectFiles = true } = {},
 ) {
   const errors = [];
   if (!document || typeof document !== "object" || Array.isArray(document)) {
@@ -64,7 +64,7 @@ export function validateReleaseSubjectDocument(
     errors.push("pass release subjects must not contain differences");
   }
 
-  if (subjectDirectory) {
+  if (subjectDirectory && validateSubjectFiles) {
     const directory = path.resolve(subjectDirectory);
     for (const legacyName of ["SHA256SUMS", "IDENTITY"]) {
       if (fs.existsSync(path.join(directory, legacyName))) {
@@ -104,7 +104,10 @@ export function validateReleaseSubjectFile(filePath, options = {}) {
       errors: validateReleaseSubjectDocument(document, {
         ...options,
         schemaPath,
-        subjectDirectory: options.subjectDirectory ?? path.dirname(absoluteFile),
+        subjectDirectory:
+          options.validateSubjectFiles === false
+            ? undefined
+            : (options.subjectDirectory ?? path.dirname(absoluteFile)),
       }),
     };
   } catch (error) {

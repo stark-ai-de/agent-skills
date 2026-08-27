@@ -2,7 +2,7 @@
 
 ID: ADR-0046
 Title: Define a versioned JSON release subject contract
-Status: Accepted
+Status: Superseded
 Date: 2026-08-22
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0050
 Guide verified: 2026-08-22
 Gist: A versioned JSON subject must be the single release metadata contract while ZIP subjects remain the published bytes.
 

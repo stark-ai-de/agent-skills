@@ -1,8 +1,6 @@
 name: Attest Release Archives
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -14,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: attest-release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+  group: attest-release-${{ inputs.tag }}
   cancel-in-progress: false
 
 jobs:
@@ -22,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      RELEASE_TAG: ${{ inputs.tag }}
     permissions:
       contents: read
       id-token: write
@@ -75,7 +73,7 @@ jobs:
         id: release
         uses: ./.github/actions/post-release-subjects
         with:
-          tag: ${{ env.RELEASE_TAG }}
+          tag: ${{ inputs.tag }}
           subjects-dir: release-subjects
           verifier-sha: ${{ steps.verifier.outputs.verifier_sha }}
           verifier-ref: ${{ steps.verifier.outputs.verifier_ref }}

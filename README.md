@@ -86,6 +86,15 @@ npx skills@latest update
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
 ```
 
+Install the portable plugin with Codex CLI 0.147.0 or later:
+
+```bash
+codex plugin marketplace add stark-ai-de/agent-skills
+codex plugin add stark-ai-developer@stark-ai-developer-local
+```
+
+See the [plugin documentation](plugins/README.md) for package and distribution details.
+
 </details>
 
 <details>
@@ -110,56 +119,18 @@ Bundles use explicit, version-controlled manifests. The Codex bundle is the orde
 
 The `-a` option selects the host where a skill is installed; it does not change that skill's target contract. An intentionally cross-host install preserves target-specific evidence and output while adapting collaboration controls to the selected host.
 
-## stark AI Developer plugin distributions
-
-The repository's six-skill **stark AI Developer** bundle is explicit and
-generated from [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json):
-
-- [`plugins/stark-ai-developer/`](plugins/stark-ai-developer/) is the portable
-  Agent Plugins projection for compatible clients and direct local testing.
-- `dist/openai/*.zip` is the OpenAI-native harness-first submission archive,
-  generated from ephemeral adapter staging at package time.
-- `dist/skills/*.zip` contains optional one-skill standalone archives.
-
-Listing copy lives in [`docs/listing/openai/`](docs/listing/openai/) and is not bundle
-membership or part of the adapter archive tree.
-First-publication portal observations live in
-[`docs/listing/openai/stark-ai-developer-first-publication.md`](docs/listing/openai/stark-ai-developer-first-publication.md).
-
-[`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json)
-holds membership and plugin identity. Catalog version stays in `package.json`.
-
-The repository marketplace and any personal or workspace marketplace are local
-testing/distribution catalogs. They do not, by themselves, prove submission,
-approval, or public-directory publication. The public ChatGPT plugin page is
-the shared ChatGPT/Codex catalog card. The package has no backend, MCP server,
-connectors, authentication, telemetry, analytics, hidden network calls, or
-runtime downloads.
-
-These are separate installation routes:
-
-- **ChatGPT plugin:** [chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). Account, workspace, and plan eligibility still apply.
-- **Repository/local plugin:** the portable projection through a compatible
-  local or repository marketplace.
-- **Standalone ChatGPT skill:** upload, share, or workspace-install an
-  individual skill where the account and client support that route.
-- **Standalone Codex or IDE skill:** install an individual skill through the
-  supported Codex/IDE skill path or the standalone archive.
-- **`npx skills`:** the existing canonical repository catalog and CLI
-  installation path.
-
 ## Choose a skill
 
-| When you need to…                                                    | Use                                                                                                                                                                                                                                                                    | Scope                |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Turn a fuzzy coding request into an implementation-ready spec        | [`codex-spec-interviewer`](skills/codex-operations/codex-spec-interviewer/SKILL.md), [`cursor-spec-interviewer`](skills/cursor-operations/cursor-spec-interviewer/SKILL.md), or [`claude-spec-interviewer`](skills/claude-operations/claude-spec-interviewer/SKILL.md) | Runtime-specific     |
-| Review, plan, or clean persistent agent context                      | [`codex-memory-curator`](skills/codex-operations/codex-memory-curator/SKILL.md), [`cursor-memory-curator`](skills/cursor-operations/cursor-memory-curator/SKILL.md), or [`claude-memory-curator`](skills/claude-operations/claude-memory-curator/SKILL.md)             | Runtime-specific     |
-| Set up or audit ADR governance and plan or run governed refactors    | [`architecture-compass`](skills/engineering-workflows/architecture-compass/SKILL.md)                                                                                                                                                                                   | Cross-runtime        |
-| Set up, update, or diagnose CodeGraph and ast-grep for coding agents | [`codegraph-ast-grep`](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)                                                                                                                                                                                       | Cross-runtime        |
-| Create, edit, validate, or export an editable diagram                | [`drawio-diagrams`](skills/engineering-workflows/drawio-diagrams/SKILL.md)                                                                                                                                                                                             | Engineering workflow |
-| Audit, create, transform, or animate a verified README logo pipeline | [`animated-readme-logo`](skills/engineering-workflows/animated-readme-logo/SKILL.md)                                                                                                                                                                                   | Engineering workflow |
+|                                                            Icon                                                             | Skill                                                                              | When to use                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| :-------------------------------------------------------------------------------------------------------------------------: | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  <img src="plugins/stark-ai-developer/skills/codex-memory-curator/assets/openai-icon.png" alt="" width="24" height="24" />  | [Codex Memory Curator](skills/codex-operations/codex-memory-curator/SKILL.md)      | Audit, review, clean up, and prune Codex memories. Use when the user asks about `~/.codex/memories`, stale or noisy memories, memory pollution, cross-repo rule leakage, sensitive memory contents, memory config tuning, cleanup plans, or whether entries belong in memory, `AGENTS.md`, repo docs, skills, config, or deletion. Do not use for ordinary repo docs cleanup.                                                                                                                                  |
+| <img src="plugins/stark-ai-developer/skills/codex-spec-interviewer/assets/openai-icon.png" alt="" width="24" height="24" /> | [Codex Spec Interviewer](skills/codex-operations/codex-spec-interviewer/SKILL.md)  | Interview, source-challenge, verify, save, and ADR-gate fuzzy coding requests into Codex-ready implementation specs. Use when a feature, bugfix, refactor, migration, repo-wide change, or architecture task needs user-verified requirements, source-backed decisions, durable architecture decisions, acceptance criteria, validation commands, rollout notes, saved spec/ADR files, and a Codex execution prompt. Do not use when already fully specified or when the user wants direct implementation now. |
+|  <img src="plugins/stark-ai-developer/skills/animated-readme-logo/assets/openai-icon.png" alt="" width="24" height="24" />  | [Animated README Logo](skills/engineering-workflows/animated-readme-logo/SKILL.md) | Audit, create, transform, or animate verified logo pipelines for GitHub READMEs. Use when a repository needs a new or reconstructed mark, motion specification, SVG animation master, executable animation recipe, static PNG, animated GIF, README-safe markup, reduced-motion fallback, or compatibility review. Do not use for unrelated app/site motion or generic image generation without a README branding target.                                                                                      |
+|  <img src="plugins/stark-ai-developer/skills/architecture-compass/assets/openai-icon.png" alt="" width="24" height="24" />  | [Architecture Compass](skills/engineering-workflows/architecture-compass/SKILL.md) | Set up repository-native ADR governance, audit architecture, or plan and execute ADR-guided refactors through intent-bound workflows. Use when work needs binding agent-facing ADRs, provider-to-local mapping, architecture PR review or drift, Next.js request patterns, source placement, backend/runtime/env/config boundaries, stack deviations, or bounded ADR-governed implementation. Do not use for tiny edits, generic framework education, or work with no architecture or governance consequence.  |
+|   <img src="plugins/stark-ai-developer/skills/codegraph-ast-grep/assets/openai-icon.png" alt="" width="24" height="24" />   | [CodeGraph + ast-grep](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)   | Set up, update, or diagnose CodeGraph and ast-grep so coding agents can use semantic repository scope and structural syntax evidence automatically. Use when a repository needs an idempotent CodeGraph/ast-grep installation, stable tool and index migrations, MCP reconnection, persisted agent guidance, or a read-only setup diagnosis.                                                                                                                                                                   |
+|    <img src="plugins/stark-ai-developer/skills/drawio-diagrams/assets/openai-icon.png" alt="" width="24" height="24" />     | [Draw.io Diagrams](skills/engineering-workflows/drawio-diagrams/SKILL.md)          | Create, draw, generate, edit, verify, and export draw.io/diagrams.net `.drawio` diagrams. Use when the user asks for editable diagrams, flowcharts, architecture, sequence, ER/UML/state, BPMN, SysML, ML/DL, swimlane, timeline, network, icon-rich technical diagrams, or PNG/SVG/PDF exports; do not use for charts/plots or artistic image generation.                                                                                                                                                     |
 
-See the [complete public catalog](skills/README.md) for exact trigger descriptions and [`skill-evals/`](skill-evals/README.md) for maintainer proof.
+The icons follow the six glyph choices shown on the [stark AI Developer plugin page](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). See the [complete public catalog](skills/README.md) for Cursor- and Claude-specific variants, exact trigger descriptions, and [`skill-evals/`](skill-evals/README.md) for maintainer proof.
 
 ## How the catalog works
 
@@ -171,47 +142,6 @@ See the [complete public catalog](skills/README.md) for exact trigger descriptio
 | [`site/`](site/)                           | Astro source for the generated catalog                | GitHub Pages          |
 
 Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`, backed by demonstrated value, activation tests, a reusable use case, manageable maintenance, and reviewable evaluation proof. See the [spec policy](docs/specs.md#documentation-updates) for public-contract updates.
-
-## Development
-
-```bash
-pnpm install
-```
-
-Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `npm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request. OpenAI-native adapter packaging is proven with `npm run validate:openai-plugin` or hosted `validate:release-proof`, not by writing `adapters/`.
-
-<details>
-<summary><strong>Common maintainer commands</strong></summary>
-
-| Command                                  | Purpose                                                        |
-| ---------------------------------------- | -------------------------------------------------------------- |
-| `npm run list`                           | List promoted public skills                                    |
-| `npm run list:incubator`                 | List incubator skills                                          |
-| `npm run validate`                       | Validate skills, ADRs, scripts, and repository contracts       |
-| `npm run sync:agent-plugin`              | Regenerate `plugins/stark-ai-developer/` from canonical skills |
-| `npm run validate:projections`           | Check the committed portable Agent Plugin projection           |
-| `npm run validate:openai-plugin`         | Stage, validate, and discard the OpenAI-native adapter         |
-| `npm run package:openai-plugin`          | Write `dist/openai/*.zip` from ephemeral adapter staging       |
-| `npm run validate:archives`              | Build and inspect release archives                             |
-| `npm run verify:release-reproducibility` | Compare two isolated deterministic builds                      |
-| `npm run build:release-subjects`         | Local fallback for the hosted final release subject artifact   |
-| `npm run validate:release-proof`         | Archive, reproducibility, and endpoint release proof           |
-| `npm run smoke:fingerprint`              | Fingerprint the exact clean-copy candidate set read-only       |
-| `npm run smoke:install`                  | Test clean-copy discovery and exact host destinations          |
-| `npx skills@latest add ./skills --list`  | Check local public skill discovery                             |
-| `pnpm --filter ./site build`             | Build the generated catalog                                    |
-| `pnpm format:check`                      | Check formatting                                               |
-| `pnpm lint`                              | Lint repository scripts                                        |
-| `npm run release:validate`               | Validate release readiness                                     |
-
-Scaffold a skill only when its destination is clear:
-
-```bash
-npm run scaffold repo-maintenance/my-new-skill
-npm run scaffold:incubator engineering-workflows/my-candidate-skill
-```
-
-</details>
 
 ## Documentation
 
@@ -236,9 +166,9 @@ npm run scaffold:incubator engineering-workflows/my-candidate-skill
 
 ## Compatibility and safety
 
-This repository follows the open Agent Skills specification. Individual compatibility varies by skill and host; read a skill's `SKILL.md` before installing it. Runtime-specific skills stay in their runtime category, while reusable workflows live under `engineering-workflows`.
+Standalone skills follow the open [Agent Skills specification](https://agentskills.io/specification). The portable **stark AI Developer** plugin follows the [Agent Plugins](https://agent-plugins.org/) contract. Compatibility varies by skill, plugin client, and host; review a skill's `SKILL.md` and the installing client's plugin support before installation. Runtime-specific skills stay in their runtime category, while reusable workflows live under `engineering-workflows`.
 
-Skills are executable context. Helper scripts are read-only unless their documentation explicitly says otherwise. Never add secrets, tokens, customer data, private repository paths, or internal hostnames to public skills, references, assets, tests, or examples.
+Skills and plugins are executable context. Helper scripts are read-only unless their documentation explicitly says otherwise. Never add secrets, tokens, customer data, private repository paths, or internal hostnames to public skills, plugins, references, assets, tests, or examples.
 
 ## License
 
