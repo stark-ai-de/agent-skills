@@ -97,6 +97,29 @@
       "revisit": "Re-test when Bun documents Node-compatible syntax-only checking."
     },
     {
+      "id": "drawio-node-compatibility-children",
+      "surfaces": ["internal:validate-drawio:node-children"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "representativeFixtures": "pass",
+            "hostedLinux": "pass",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/drawio-diagrams/validate-fixtures.mjs",
+        "pnpm run validate:drawio"
+      ],
+      "rationale": "The Bun parent intentionally invokes Node.js children to verify explicit Node CLI, shebang, renderer, and executable-resolution compatibility.",
+      "fallbackOrder": ["node"],
+      "revisit": "Revisit when the compatibility probes are removed or their explicit Node.js contract changes."
+    },
+    {
       "id": "native-oxc-tooling",
       "surfaces": ["package:root:native-oxc"],
       "candidates": [

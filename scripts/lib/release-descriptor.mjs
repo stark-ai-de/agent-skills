@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
+import satisfies from "semver/functions/satisfies.js";
 
 import {
   githubRepositorySlug as deriveGithubRepositorySlug,
@@ -168,6 +169,15 @@ export function githubRepositorySlug(packageJson) {
   return deriveGithubRepositorySlug(packageJson?.repository);
 }
 
+export function engineRangeAdmits(range, version) {
+  if (typeof range !== "string" || typeof version !== "string") return false;
+  try {
+    return satisfies(version, range);
+  } catch {
+    return false;
+  }
+}
+
 export function pluginArtifactPaths(root = moduleRoot) {
   const identity = pluginIdentity(root);
   const evalRoot = `skill-evals/${identity.name}`;
@@ -202,7 +212,7 @@ export function validateToolchainPins(root = moduleRoot) {
     );
   }
   const engines = packageJson.engines?.node;
-  if (typeof engines !== "string" || !engines.includes(release.release.build.nodeVersion)) {
+  if (!engineRangeAdmits(engines, release.release.build.nodeVersion)) {
     errors.push(
       `[REL-001] package.json#engines.node must admit ${release.release.build.nodeVersion}`,
     );
@@ -215,7 +225,7 @@ export function validateToolchainPins(root = moduleRoot) {
     errors.push(`[REL-001] .node-version must equal ${release.release.build.nodeVersion}`);
   }
   const bunEngines = packageJson.engines?.bun;
-  if (typeof bunEngines !== "string" || !bunEngines.includes(release.release.build.bunVersion)) {
+  if (!engineRangeAdmits(bunEngines, release.release.build.bunVersion)) {
     errors.push(
       `[REL-001] package.json#engines.bun must admit ${release.release.build.bunVersion}`,
     );
