@@ -936,6 +936,20 @@ assert.doesNotMatch(
 assert.match(postReleaseWorkflow, /uses: \.\/\.github\/actions\/post-release-subjects/);
 assert.match(attestWorkflow, /uses: \.\/\.github\/actions\/post-release-subjects/);
 assert.match(postReleaseWorkflow, /--release-sha "\$\{RELEASE_SHA\}"/);
+const publishedSubjectComparison = workflowStepBlock(
+  postReleaseWorkflow,
+  "Compare published release subjects",
+);
+assert.match(
+  publishedSubjectComparison,
+  /jq -e 'index\("release-subject\.json"\) != null'[\s\S]*"\$\{asset_names_file\}"/,
+  "the workflow must select the metadata download from the observed release assets",
+);
+assert.doesNotMatch(
+  publishedSubjectComparison,
+  /RELEASE_TAG\}" != "v0\.20\.1/,
+  "the workflow must leave version-specific asset policy to the release-subject comparator",
+);
 assert.match(
   postReleaseWorkflow,
   /Prepare tag-bound release subjects[\s\S]*?continue-on-error: true[\s\S]*?uses: \.\/\.github\/actions\/post-release-subjects/,

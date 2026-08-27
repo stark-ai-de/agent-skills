@@ -102,7 +102,8 @@ jobs:
               --jq 'flatten | map(.name) | sort' \
               > "${asset_names_file}"
             asset_patterns=(--pattern openai.zip --pattern portable.zip)
-            if [ "${RELEASE_TAG}" != "v0.20.1" ]; then
+            if jq -e 'index("release-subject.json") != null' \
+                "${asset_names_file}" >/dev/null; then
               asset_patterns+=(--pattern release-subject.json)
             fi
             if ! gh release download "${RELEASE_TAG}" \
