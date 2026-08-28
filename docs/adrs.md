@@ -16,7 +16,7 @@ This file defines the ADR contract and indexes every decision in [`docs/adrs/`](
 
 ## Authoring
 
-Use `npm run adr:new -- "<title>" --category <category> --tags "<tags>" --applies-when "<condition>" --gist "<summary>"` or copy all three `docs/adrs/TEMPLATE.*.md` files. The command creates the triplet and rewrites the grouped index atomically; complete every body placeholder before validation.
+Use `pnpm run adr:new -- "<title>" --category <category> --tags "<tags>" --applies-when "<condition>" --gist "<summary>"` or copy all three `docs/adrs/TEMPLATE.*.md` files. The command creates the triplet and rewrites the grouped index atomically; complete every body placeholder before validation.
 
 New records remain `Proposed` and unlocked. When maintainers accept or otherwise finalize one, add its stable ID, stem, and SHA-256 of the trimmed canonical Long `Decision` section to `scripts/validation/adrs/decision-lock.tsv` in the same reviewed change. Never refresh a lock merely to make an in-place decision edit pass.
 
