@@ -199,7 +199,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedPublicAdrCount = 57;
+  const expectedPublicAdrCount = 58;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
