@@ -1,0 +1,114 @@
+name: Release Please
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-please-main
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: ⬇️ Checkout exact main candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 🛡️ Verify trusted protected-main source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          expected_ref="refs/heads/main"
+          expected_workflow_ref="${GITHUB_REPOSITORY}/.github/workflows/release-please.yml@${expected_ref}"
+          candidate_sha=$(git rev-parse HEAD)
+          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
+
+          test "${GITHUB_REF}" = "${expected_ref}"
+          test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
+          test "${WORKFLOW_SHA}" = "${candidate_sha}"
+          test "${GITHUB_SHA}" = "${candidate_sha}"
+          test "${main_sha}" = "${candidate_sha}"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq '.protected')" = "true"
+
+      - name: 🧭 Classify current main update
+        id: classify
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          associated_titles=""
+          if [ "$EVENT_NAME" = "push" ]; then
+            test "${BEFORE_SHA}" != "0000000000000000000000000000000000000000"
+            git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null || \
+              git fetch --no-tags --depth=1 origin "${BEFORE_SHA}"
+            associated_titles=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+              --jq '[.[] | select(.merged_at != null) | .title] | join("\n")')
+          fi
+          ASSOCIATED_TITLES="${associated_titles}" \
+            COMMIT_TITLE="$(git log -1 --pretty=%s)" \
+            bun --bun scripts/release/classify-release-please-trigger.mjs --github-output
+
+      - name: 🎯 Select the one-time v0.21.0 manifest config
+        if: ${{ steps.classify.outputs.skip != 'true' }}
+        id: release-config
+        run: |
+          set -euo pipefail
+          manifest_version=$(bun --bun --eval 'const manifest = await Bun.file(".release-please-manifest.json").json(); console.log(manifest["."])')
+          if [ "${manifest_version}" = "0.20.1" ]; then
+            echo "config_file=release-please-config.v0.21.0.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "config_file=release-please-config.json" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🔑 Create repository-scoped release App token
+        if: ${{ steps.classify.outputs.skip != 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
+      - name: 📝 Create or update draft release PR
+        if: ${{ steps.classify.outputs.skip != 'true' }}
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          target-branch: main
+          config-file: ${{ steps.release-config.outputs.config_file }}
+          manifest-file: .release-please-manifest.json
+
+      - name: 🧭 Summarize release preparation
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Release Please
+          success: Release Please either updated the draft version PR or intentionally skipped its own merged release PR.
+          failure: Check the repository-scoped GitHub App configuration and the release preparation contract.

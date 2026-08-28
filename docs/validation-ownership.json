@@ -89,7 +89,7 @@
       "id": "scripts",
       "command": "pnpm run validate:scripts",
       "owner": "scripts/repo/validate-scripts.mjs",
-      "proof": "Repository script syntax and focused script fixtures",
+      "proof": "Repository script syntax, protected release environment, and release operator-management fixtures",
       "cadence": "every aggregate run"
     },
     {

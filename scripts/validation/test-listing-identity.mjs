@@ -29,10 +29,28 @@ assert.equal(
   "stark-ai-de/agent-skills",
 );
 assert.equal(
+  githubRepositorySlug("ssh://git@github.com/stark-ai-de/agent-skills.git"),
+  "stark-ai-de/agent-skills",
+);
+assert.equal(
   githubRepositorySlug({ url: "https://github.com/stark-ai-de/agent-skills/" }),
   "stark-ai-de/agent-skills",
 );
-assert.equal(githubRepositorySlug("https://example.com/stark-ai-de/agent-skills"), undefined);
+for (const invalidRepository of [
+  "https://example.com/stark-ai-de/agent-skills",
+  "https://notgithub.com/stark-ai-de/agent-skills",
+  "https://github.com.example.test/stark-ai-de/agent-skills",
+  "https://example.test/github.com/stark-ai-de/agent-skills",
+  "https://github.com/stark-ai-de/agent-skills/extra",
+  "https://user@github.com/stark-ai-de/agent-skills",
+  "https://github.com/stark-ai-de/agent-skills?ref=main",
+]) {
+  assert.equal(
+    githubRepositorySlug(invalidRepository),
+    undefined,
+    `lookalike or non-canonical repository URL was accepted: ${invalidRepository}`,
+  );
+}
 
 const sharedPaths = listingArtifactPaths(identity);
 const releasePaths = pluginArtifactPaths(repoRoot);

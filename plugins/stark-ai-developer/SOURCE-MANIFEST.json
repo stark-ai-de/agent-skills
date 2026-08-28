@@ -48,19 +48,25 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "62f22efa3a2682828272c62e463f7b89a6ec169d14f0af624e126f8dc9247b2c"
+      "sha256": "07b79ae328833529ed7ba0157065c6395d018d5da7db2bd41ecea91da064bac4"
     },
     {
       "byteLength": 12772,
       "mode": "0644",
       "path": "skills/animated-readme-logo/SKILL.md",
-      "sha256": "b2502d7316ffde4a535cad6e68b2973eecb7049a1c57bbb2f0549487946623aa"
+      "sha256": "7fd77888ca4e61aab228c5e5ff4f53d1d580a6995c028b41f815455097b516c9"
     },
     {
-      "byteLength": 510,
+      "byteLength": 592,
       "mode": "0644",
       "path": "skills/animated-readme-logo/agents/openai.yaml",
-      "sha256": "13f50f7c71996a40d0373481f205fa63dc7e9299ddf8e88202b61d42c8c1990e"
+      "sha256": "dd85a8d0d67ed88536b7c846dbea726cbb211c6b0e091e340892aeb8ef2ca0b4"
+    },
+    {
+      "byteLength": 64736,
+      "mode": "0644",
+      "path": "skills/animated-readme-logo/assets/openai-icon.png",
+      "sha256": "400efe8af6cbdfc76b211cd609004da5828eff6f3564367b0d730e2442e29f2d"
     },
     {
       "byteLength": 2893,
@@ -168,13 +174,13 @@
       "byteLength": 15969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "49f9a99c0cd8b27226e075ffbba9e65adccc453c7714a509bfc3c4009bf480b7"
+      "sha256": "6326f9e63520887976cac7a4520d074b225af8401a456711cb9a9ce452786ee7"
     },
     {
-      "byteLength": 810,
+      "byteLength": 892,
       "mode": "0644",
       "path": "skills/architecture-compass/agents/openai.yaml",
-      "sha256": "9e4addedf37f8b8ba5c33734cf7ee759a9afd01a8ad15ad5b3fb3f09f88e2ece"
+      "sha256": "ce05551d20c0eee14b589fd112be2c8cf8ac98536e8ced9de42008e8a9bc07e2"
     },
     {
       "byteLength": 1492,
@@ -231,16 +237,22 @@
       "sha256": "b045aca266e58e1a29fece118f9d91b713eecfb66f180cc41c7610217565c921"
     },
     {
+      "byteLength": 64281,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/openai-icon.png",
+      "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
+    },
+    {
       "byteLength": 7196,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
       "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
     },
     {
-      "byteLength": 11515,
+      "byteLength": 11764,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "d91001d63acc4d599e714881d2837c874c32a2514cb6973c4a4324d46cea7e02"
+      "sha256": "b32a03e07218109c8d8cbb2a65062ec8a8e887affd6a15a630bbff4328c568b9"
     },
     {
       "byteLength": 3796,
@@ -480,7 +492,7 @@
       "byteLength": 6445,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md",
-      "sha256": "75859a09178f3328a53eb09e9b02b9dd812f562bf27c1d680a747988eb72ec0c"
+      "sha256": "13341834b9f81c3df961446371d02272dab7c9f7cb6d7bc8daf3118cb4afa10e"
     },
     {
       "byteLength": 5571,
@@ -837,22 +849,22 @@
       "sha256": "4702208c066dcf64678bf1d5a9445c266c72cf17267f49f64f40f7baa27bb3ab"
     },
     {
-      "byteLength": 2366,
+      "byteLength": 2375,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.guide.md",
-      "sha256": "814824922f75c66f38e74ea2e0ab04830f54823c0d627a6f8d71381017d75b58"
+      "sha256": "129bc287f2f852e3646d688f5e9fd24727e21cd42d738b8bd6dd49d308d1041c"
     },
     {
-      "byteLength": 3847,
+      "byteLength": 3856,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.long.md",
-      "sha256": "1a9cfb8f126d59cd104222218d71c350fef0d5f950b763a017ac2b23e98980a0"
+      "sha256": "0bf929bf16ab886ea40d6c4d9850843b01c0fdd32703deb6c646131d658e39b2"
     },
     {
-      "byteLength": 1809,
+      "byteLength": 1818,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-034-keep-release-metadata-coherent-with-public-catalog-changes.short.md",
-      "sha256": "8e2caeb370312c2fe2f03237ebb2c0946654729962c80cdeea079506d264db3d"
+      "sha256": "bf1013cd124b3ba7a04a11cb51cc6f83717a2fd386a77b5f2dac57d2d2b463cf"
     },
     {
       "byteLength": 2939,
@@ -1215,28 +1227,82 @@
       "sha256": "902bb56aaa5deb769652ef71df32723ea43001e7d661eae299fba6c7ce1259aa"
     },
     {
+      "byteLength": 4400,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-separate-change-impact-from-generated-release-publication.guide.md",
+      "sha256": "e345ca9833aaad83a2b53a3ca574ca54bf45e74d71377768aa5776f7eab703d9"
+    },
+    {
+      "byteLength": 5495,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-separate-change-impact-from-generated-release-publication.long.md",
+      "sha256": "20bb73becccc672c4d5c6835d9b83a22872be1e17706408b9b1c9309d02f88b8"
+    },
+    {
+      "byteLength": 2379,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-055-separate-change-impact-from-generated-release-publication.short.md",
+      "sha256": "f41c284872a20483d109128f0e4d6918940bf474924a51a4f87985b88e65d721"
+    },
+    {
+      "byteLength": 2420,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-056-preserve-release-candidates-through-verified-protected-history.guide.md",
+      "sha256": "44960a1943ffde1c496adc87281ca8abbe85ce89c38a8da13b7496fd8273c9df"
+    },
+    {
+      "byteLength": 3254,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-056-preserve-release-candidates-through-verified-protected-history.long.md",
+      "sha256": "848665d32d69d0285c570d24cddc06d922f22e36b1c297e19005e6e08a158247"
+    },
+    {
+      "byteLength": 1879,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-056-preserve-release-candidates-through-verified-protected-history.short.md",
+      "sha256": "42483667a86969f697d0aa723243b01421525c4320336e875fe62a58d88ebaa9"
+    },
+    {
+      "byteLength": 2812,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance.guide.md",
+      "sha256": "fe6db6f11acacfca052ce966c78e4a3d1951b38b425175576dbe1cb05dc9e47a"
+    },
+    {
+      "byteLength": 3637,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance.long.md",
+      "sha256": "72a29d46d973ad313bf5a6a6558b8333e48d723bdbf46b1cdccb56efa6eb74a4"
+    },
+    {
+      "byteLength": 1972,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance.short.md",
+      "sha256": "f88bed56865dcbceecb887061145de2b6ef6769b5e8523eab735cfc71f6e8e5d"
+    },
+    {
       "byteLength": 7294,
       "mode": "0644",
-      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
-      "sha256": "53b872aa86ca27e7c93454adc8e4c1b1b1a6fabc4a8bfc78f925132a2287d8f7"
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
+      "sha256": "ca413f4861ae7c2db51413dc17c513bcef19437798d9a24cce7dc2efac97232a"
     },
     {
       "byteLength": 8185,
       "mode": "0644",
-      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.long.md",
-      "sha256": "a35406d9c0971b39b1b9274ecafe4570e8492ccfa5968b74b92fe3df15dda3ec"
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.long.md",
+      "sha256": "029e4490b5b5a3eb305317647ab9603a2844c3ceabc6a262370b6d93ce63f05b"
     },
     {
       "byteLength": 3478,
       "mode": "0644",
-      "path": "skills/architecture-compass/references/ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.short.md",
-      "sha256": "0a46bb162c66c491b7a7a7369707144fc48eec6fae129c5d0e43deeac3a6d87d"
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.short.md",
+      "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
     },
     {
-      "byteLength": 46771,
+      "byteLength": 48634,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "73a9be23a09b8a1ed012c628144abe216c628c4615c48a457d4044f18d894f7f"
+      "sha256": "71f200a769602add8f3c9e4e2697da94cde9cca8105ef3ef3e824a5013b1094e"
     },
     {
       "byteLength": 6996,
@@ -1284,13 +1350,19 @@
       "byteLength": 12319,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/SKILL.md",
-      "sha256": "620c6810dca45fca138e7770e3acde4c29c390652f0540fa9051f3edd1b0bba6"
+      "sha256": "a2220d0a43638303311602cc540e84ffeb3de31efe8f91ddc83f55cd0ab70134"
     },
     {
-      "byteLength": 622,
+      "byteLength": 704,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/agents/openai.yaml",
-      "sha256": "21207a0261c4b07428334d193da6ccb6f4314baed0057f9d3ee9dab29decc976"
+      "sha256": "c2ae6c4bfe34236538f6a19fcef019b684a3f91685dfd0039c9bf386024dc98d"
+    },
+    {
+      "byteLength": 66967,
+      "mode": "0644",
+      "path": "skills/codegraph-ast-grep/assets/openai-icon.png",
+      "sha256": "a003537b01cf1014215674dc2124564056c98ee74d0da991de4bb6b43ff03ed8"
     },
     {
       "byteLength": 7526,
@@ -1338,19 +1410,25 @@
       "byteLength": 16300,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "84fa548d4d15336c00e46f5b8358adad6595a1387514acedf8eed4d0e2b68314"
+      "sha256": "e3291a1898bb78a22a4ea2ac39c35865d64dc975c47391b922febccb74f000d4"
     },
     {
-      "byteLength": 444,
+      "byteLength": 526,
       "mode": "0644",
       "path": "skills/codex-memory-curator/agents/openai.yaml",
-      "sha256": "c1258e1e19bfe02fd9fc963a859bb0ea42ae46e060a117eb79b0c8e73224db67"
+      "sha256": "cd5da1c2c5afa46ab7d02a3b1cda2162c7be32c702cb4a2b77ccb89c18777adf"
     },
     {
       "byteLength": 1962,
       "mode": "0644",
       "path": "skills/codex-memory-curator/assets/cleanup-plan-template.md",
       "sha256": "105459491a4261e0539629f11422a1bb88b960c4d7cb6f54be067adeafb8d73a"
+    },
+    {
+      "byteLength": 93893,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/assets/openai-icon.png",
+      "sha256": "5408d634debafdbf3ff363429df858cfc179ff0d7c1288f8c18622cd60ef6b24"
     },
     {
       "byteLength": 2159,
@@ -1416,13 +1494,13 @@
       "byteLength": 11099,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/SKILL.md",
-      "sha256": "e5a964a9798969cf96b4f007c8ba7cfb0764c536280911438ea7642435279cc3"
+      "sha256": "976f75b107f5836c8e847aa9312c49d9724db04be4a3343e27b875e166fae7f7"
     },
     {
-      "byteLength": 473,
+      "byteLength": 555,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/agents/openai.yaml",
-      "sha256": "9e1814a603e49a1c32b87204eb7c02e4ad49d1877efcf528fdb57ce5355dfc1b"
+      "sha256": "82a308f4a439beacc592093dbecf5eeb44b4e653c55637e55bd01ba296ade5dd"
     },
     {
       "byteLength": 1711,
@@ -1441,6 +1519,12 @@
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/example-small-task.spec.md",
       "sha256": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029"
+    },
+    {
+      "byteLength": 33537,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/openai-icon.png",
+      "sha256": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d"
     },
     {
       "byteLength": 1506,
@@ -1506,13 +1590,19 @@
       "byteLength": 13663,
       "mode": "0644",
       "path": "skills/drawio-diagrams/SKILL.md",
-      "sha256": "655f427e87d99c254737ec92169e3d5453f07b3aed469e089797901489a2bb0f"
+      "sha256": "5bf3605ea2df4531cd35c0781ce1af5d8a3797f69a7e6dd3e9d3d92fc071c946"
     },
     {
-      "byteLength": 1226,
+      "byteLength": 1308,
       "mode": "0644",
       "path": "skills/drawio-diagrams/agents/openai.yaml",
-      "sha256": "e07d35e4fbbaa58527091e6cd206b34b4c4fd8824e916161fb0946349190c7b6"
+      "sha256": "70987434d4e15a8c7c65ac44d67a86dfdd582f43d8fbd176bc353df3097d0327"
+    },
+    {
+      "byteLength": 57703,
+      "mode": "0644",
+      "path": "skills/drawio-diagrams/assets/openai-icon.png",
+      "sha256": "16b3aa03f1194223c4f77f09b32b2cbbc8b19acb50535d383d337570c8274836"
     },
     {
       "byteLength": 11766,
@@ -1739,9 +1829,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "9015514a57e34de4143cf3f9d4bc436727f1a5ecfe5af3cf1c16daf25fbba721"
+  "treeHash": "ddad63df04a4ffbaf356406bb59f2e934f8b7106492271e00215cbe46630daed"
 }

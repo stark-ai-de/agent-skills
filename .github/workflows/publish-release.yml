@@ -1,15 +1,15 @@
 name: Publish Release
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release-please-manifest.json
   workflow_dispatch:
     inputs:
       dry_run:
         description: Validate without creating a tag or GitHub Release
-        required: true
-        default: true
-        type: boolean
-      mark_latest:
-        description: Mark the GitHub Release as latest
         required: true
         default: true
         type: boolean
@@ -18,13 +18,104 @@ permissions:
   contents: read
   actions: read
   attestations: read
+  pull-requests: read
 
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
+  publication-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ github.sha }}
+      release_candidate: ${{ steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true' }}
+      release_pull_request: ${{ steps.release-provenance.outputs.pull_request }}
+      readiness_required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') }}
+    timeout-minutes: 5
+
+    steps:
+      - name: ⬇️ Checkout publication candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 🔏 Verify configured Release Please App provenance
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == true) }}
+        id: release-provenance
+        env:
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          bun --bun scripts/release/verify-release-please-merge.mjs
+          --repository "$GITHUB_REPOSITORY"
+          --commit "$GITHUB_SHA"
+          --expected-app-id "$EXPECTED_APP_ID"
+          --allow-unmatched
+          --github-output
+
+      - name: 🧭 Require a generated release-PR transition
+        id: release-intent
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          PROVENANCE_AUTHORIZED: ${{ steps.release-provenance.outputs.authorized }}
+          TRANSITION_BASE: ${{ steps.release-provenance.outputs.transition_base }}
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/main"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          base_sha="${BEFORE_SHA}"
+          if [ "${PROVENANCE_AUTHORIZED}" = "true" ]; then
+            base_sha="${TRANSITION_BASE}"
+            test "${EVENT_NAME}" != "push" || test "${base_sha}" = "${BEFORE_SHA}"
+          elif [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            base_sha=$(git rev-parse HEAD^1)
+          else
+            test "${base_sha}" != "0000000000000000000000000000000000000000"
+          fi
+          test -n "${base_sha}"
+          git cat-file -e "${base_sha}^{commit}" 2>/dev/null || \
+            git fetch --no-tags --depth=1 origin "${base_sha}"
+          pnpm run release:intent -- \
+            --base-ref "${base_sha}" \
+            --head-ref "${GITHUB_SHA}" \
+            --github-output
+
+      - name: 🚫 Reject a manual mutating non-release candidate
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && steps.release-provenance.outputs.authorized != 'true' }}
+        run: |
+          echo "Manual publication requires main HEAD to be a generated release-PR merge."
+          exit 1
+
+      - name: 🚫 Reject unauthorized root release metadata
+        if: ${{ steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized != 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run == true) }}
+        run: |
+          echo "Root release metadata requires the configured Release Please App-owned PR."
+          exit 1
+
+      - name: 🧭 Summarize publication trigger
+        run: |
+          echo "Readiness required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') }}"
+          echo "Mutation candidate: ${{ steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true' }}"
+
   release-readiness:
+    needs: publication-trigger
+    if: ${{ needs.publication-trigger.outputs.readiness_required == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -35,10 +126,10 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: ⬇️ Checkout main
+      - name: ⬇️ Checkout exact publication candidate
         uses: actions/checkout@v6
         with:
-          ref: main
+          ref: ${{ needs.publication-trigger.outputs.candidate_sha }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -60,6 +151,8 @@ jobs:
       - name: 🏷️ Read release identity
         id: version
         env:
+          CANDIDATE_SHA: ${{ needs.publication-trigger.outputs.candidate_sha }}
+          GH_TOKEN: ${{ github.token }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
           WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
@@ -74,9 +167,11 @@ jobs:
           test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
           test "${WORKFLOW_SHA}" = "${release_sha}"
           test "${GITHUB_SHA}" = "${release_sha}"
+          test "${CANDIDATE_SHA}" = "${release_sha}"
 
-          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
-          test "${main_sha}" = "${release_sha}"
+          bun --bun scripts/release/verify-main-release-candidate.mjs \
+            --repository "${GITHUB_REPOSITORY}" \
+            --candidate "${release_sha}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "release_sha=${release_sha}" >> "$GITHUB_OUTPUT"
 
@@ -129,14 +224,35 @@ jobs:
       - name: 🚀 Validate release contract
         run: pnpm run release:validate
 
-      - name: ⬇️ Download final release subjects from hosted Validate
-        uses: actions/download-artifact@v4
+      - name: ⬇️ Download hosted OpenAI subject
+        uses: actions/download-artifact@v8
         with:
-          name: release-subjects
+          name: openai.zip
           repository: ${{ github.repository }}
           run-id: ${{ steps.validate-receipt.outputs.run_id }}
           github-token: ${{ github.token }}
           path: release-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download hosted portable subject
+        uses: actions/download-artifact@v8
+        with:
+          name: portable.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.validate-receipt.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download hosted release metadata
+        uses: actions/download-artifact@v8
+        with:
+          name: release-subject.json
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.validate-receipt.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
 
       - name: 🔐 Verify hosted release subjects
         id: subject-identity
@@ -166,7 +282,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ steps.version.outputs.release_sha }}
           VERSION: ${{ steps.version.outputs.version }}
-          MARK_LATEST: ${{ inputs.mark_latest }}
         run: |
           set -euo pipefail
           bun --bun scripts/release/reconcile-github-release.mjs plan \
@@ -175,33 +290,34 @@ jobs:
             --release-sha "${RELEASE_SHA}" \
             --subjects-dir release-subjects \
             --notes-file release-notes.md \
-            --mark-latest "${MARK_LATEST}" \
             --github-output "$GITHUB_OUTPUT"
 
       - name: 📣 Print release readiness
         run: |
           echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
           echo "Release reconciliation plan: ${{ steps.reconciliation-plan.outputs.status }} (${{ steps.reconciliation-plan.outputs.reason }})."
-          echo "Remote mutation only runs from manual dispatch with dry_run=false."
+          echo "Remote mutation runs only in the protected release environment after an automatic release-PR merge or manual dry_run=false dispatch."
 
       - name: 🧭 Summarize readiness
         if: ${{ always() }}
         uses: ./.github/actions/write-run-summary
         with:
           title: Release readiness
-          success: Hosted subjects verified. After maintainer approval, dispatch Publish Release with dry_run=false. Operator follow-up is docs/publishing.md#operator-follow-up.
+          success: Hosted subjects verified. The write-capable job now waits for release-environment approval unless this was a read-only dry run. Operator follow-up is docs/publishing.md#operator-follow-up.
           failure: Fix the failed readiness gate; do not create a tag or GitHub Release.
 
   publish:
-    needs: release-readiness
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
+    needs: [publication-trigger, release-readiness]
+    if: ${{ needs.publication-trigger.outputs.release_candidate == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)) }}
+    environment: release
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: write
-      actions: read
+      actions: write
       id-token: write
       attestations: write
+      artifact-metadata: write
 
     steps:
       - name: ⬇️ Checkout validated SHA
@@ -209,25 +325,25 @@ jobs:
         with:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 1
-
-      # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
-      - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
-        with:
-          runtime: node@24.18.0
-          cache: false
-          install: false
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: ".bun-version"
 
-      - name: 📦 Install receipt validation dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: 🛡️ Verify protected release environment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          bun --bun scripts/release/check-release-environment.mjs
+          --repository "$GITHUB_REPOSITORY"
+          --environment release
+          --branch main
 
       - name: 🔍 Verify validated release identity
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
@@ -243,21 +359,57 @@ jobs:
           test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
           test "${WORKFLOW_SHA}" = "${RELEASE_SHA}"
           test -z "$(git status --porcelain --untracked-files=all)"
+          bun --bun --eval '
+            const [major, minor] = process.argv[1].split(".").map(Number);
+            if (!/^\d+\.\d+\.\d+$/.test(process.argv[1]) || major < 0 || (major === 0 && minor < 21)) {
+              throw new Error("Publication mutation supports only v0.21.0 and newer releases");
+            }
+          ' "${VERSION}"
 
-          main_sha=$(git ls-remote origin refs/heads/main | cut -f1)
-          if [ "${main_sha}" != "${RELEASE_SHA}" ]; then
-            echo "main advanced after release readiness; rerun the workflow."
-            exit 1
-          fi
+          bun --bun scripts/release/verify-main-release-candidate.mjs \
+            --repository "${GITHUB_REPOSITORY}" \
+            --candidate "${RELEASE_SHA}"
 
-      - name: ⬇️ Download final release subjects from hosted Validate
-        uses: actions/download-artifact@v4
+      # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
         with:
-          name: release-subjects
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: 📦 Install receipt validation dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+
+      - name: ⬇️ Download hosted OpenAI subject
+        uses: actions/download-artifact@v8
+        with:
+          name: openai.zip
           repository: ${{ github.repository }}
           run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
           github-token: ${{ github.token }}
           path: release-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download hosted portable subject
+        uses: actions/download-artifact@v8
+        with:
+          name: portable.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download hosted release metadata
+        uses: actions/download-artifact@v8
+        with:
+          name: release-subject.json
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
 
       - name: 🔐 Verify release subjects before publication
         id: subject-identity
@@ -287,7 +439,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
-          MARK_LATEST: ${{ inputs.mark_latest }}
         run: |
           set -euo pipefail
           bun --bun scripts/release/reconcile-github-release.mjs plan \
@@ -296,7 +447,6 @@ jobs:
             --release-sha "${RELEASE_SHA}" \
             --subjects-dir release-subjects \
             --notes-file release-notes.md \
-            --mark-latest "${MARK_LATEST}" \
             --github-output "$GITHUB_OUTPUT"
 
       - name: 🔏 Attest release subjects
@@ -308,6 +458,7 @@ jobs:
             release-subjects/portable.zip
 
       - name: 🔎 Verify release attestations
+        if: ${{ steps.reconciliation.outputs.attestation_verification_required == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
@@ -370,9 +521,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           RELEASE_DRY_RUN: ${{ inputs.dry_run }}
+          RELEASE_ENVIRONMENT: release
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
           VERSION: ${{ needs.release-readiness.outputs.version }}
-          MARK_LATEST: ${{ inputs.mark_latest }}
         run: |
           set -euo pipefail
           bun --bun scripts/release/reconcile-github-release.mjs apply \
@@ -381,13 +532,65 @@ jobs:
             --release-sha "${RELEASE_SHA}" \
             --subjects-dir release-subjects \
             --notes-file release-notes.md \
-            --mark-latest "${MARK_LATEST}" \
             --github-output "$GITHUB_OUTPUT"
+
+      - name: 🧾 Dispatch post-release evidence
+        if: ${{ always() && steps.reconciliation-apply.outputs.post_release_dispatch_required == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh workflow run post-release-evidence.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f "tag=v${VERSION}"
+
+      - name: 🔑 Create release-label lifecycle token
+        id: release-label-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+          permission-contents: read
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: 🏷️ Complete the generated release-PR lifecycle
+        env:
+          APP_SLUG: ${{ steps.release-label-token.outputs.app-slug }}
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
+          RELEASE_PULL_REQUEST: ${{ needs.publication-trigger.outputs.release_pull_request }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "apps/${APP_SLUG}" --jq '.id')" = "${EXPECTED_APP_ID}"
+          labels=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/issues/${RELEASE_PULL_REQUEST}" \
+            --jq '[.labels[].name]')
+          pending=$(printf '%s' "${labels}" | jq 'index("autorelease: pending") != null')
+          tagged=$(printf '%s' "${labels}" | jq 'index("autorelease: tagged") != null')
+          if [ "${pending}" != "true" ] && [ "${tagged}" != "true" ]; then
+            echo "Generated release PR has neither the pending nor tagged lifecycle label."
+            exit 1
+          fi
+          if [ "${tagged}" != "true" ]; then
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/issues/${RELEASE_PULL_REQUEST}/labels" \
+              -f 'labels[]=autorelease: tagged' >/dev/null
+          fi
+          if [ "${pending}" = "true" ]; then
+            gh api \
+              --method DELETE \
+              "repos/${GITHUB_REPOSITORY}/issues/${RELEASE_PULL_REQUEST}/labels/autorelease%3A%20pending" \
+              >/dev/null
+          fi
 
       - name: 📣 Print post-release verification
         run: |
           echo "Complete operator follow-up in docs/publishing.md#operator-follow-up."
-          echo "Post-release dispatch required: ${{ steps.reconciliation-apply.outputs.post_release_dispatch_required }}"
+          echo "Post-release evidence dispatch required: ${{ steps.reconciliation-apply.outputs.post_release_dispatch_required }}"
           echo "gh release view v${{ needs.release-readiness.outputs.version }} -R stark-ai-de/agent-skills"
 
       - name: 🧭 Summarize publication
@@ -395,5 +598,5 @@ jobs:
         uses: ./.github/actions/write-run-summary
         with:
           title: GitHub Release publication
-          success: Inspect Post-release Evidence for this tag, then complete docs/publishing.md#operator-follow-up.
+          success: Inspect the dispatched Post-release Evidence run, then complete docs/publishing.md#operator-follow-up.
           failure: No release hand-off is complete; inspect the failed gate and rerun after correction.

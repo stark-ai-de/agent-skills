@@ -31,7 +31,7 @@
         }
       ],
       "winner": "bun",
-      "evidenceRefs": ["package.json#scripts", "pnpm run validate", "ADR-0050"],
+      "evidenceRefs": ["package.json#scripts", "pnpm run validate", "ADR-0053"],
       "rationale": "Bun 1.4.0 passes the representative repository validators and is the accepted starting candidate; command and hosted failures remain authoritative.",
       "fallbackOrder": ["bun", "node"],
       "revisit": "Re-evaluate after a Bun runtime regression, a failing mandatory validator, or a changed upstream runtime contract."

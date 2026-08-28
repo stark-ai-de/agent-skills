@@ -54,9 +54,12 @@ GitHub Pages plugin, privacy, terms, support, and security URLs returned HTTP
 
 ## Upload and package
 
-Upload the OpenAI-native archive from `dist/openai/`, the zip that contains
-`.codex-plugin/plugin.json`. Do not upload the portable Agent Plugins archive
-from `dist/agent-plugins/`.
+For the dated first publication, the OpenAI-native archive came from
+`dist/openai/`; this is historical evidence, not the current update procedure.
+For every current update, wait for successful exact-tag Post-release Evidence,
+download the direct GitHub Release asset named `openai.zip`, and upload those
+exact bytes. Do not upload the portable Agent Plugins archive or a GitHub source
+archive. See `docs/publishing.md#operator-follow-up` for the current handoff.
 
 Plugin version `1.0.0` is independent of the repository catalog version. The
 first public source identity is Git tag `v0.19.1` (`35101f2` on `main`). There
@@ -139,9 +142,11 @@ come from the control `aria-label` (`Use chat icon` → `chat`):
 
 These names are portal-only. Pin the reviewed glyph for each skill as
 `listing.skills[].portalGlyph` for `pnpm run verify:openai-directory`. Do not
-write them into `agents/openai.yaml`. Optional `icon_small` / `icon_large` image
-paths inside a skill interface are a separate, unused mechanism. Do not invent
-a named-palette key such as `icon: chat`.
+write a named-palette key such as `icon: chat` into `agents/openai.yaml`.
+OpenAI's skill metadata supports packaged `icon_small` and `icon_large` paths;
+version 1.1.0 uses those fields for six original transparent PNGs. If the portal
+ignores the package selection during update, restore the reviewed portal glyphs
+below manually.
 
 Keep one distinct glyph per skill:
 
@@ -159,14 +164,22 @@ select `cursor`; that glyph is a browser window, not Cursor the product. The
 only reviewed swap is `code` for `codegraph-ast-grep` if the search glyph is
 too generic in the portal UI.
 
-### Codex Skills list icons
+### Packaged skill icons and portal limits
 
-No per-skill icons ship in the package. In the Codex Skills list, four
-engineering skills showed OpenAI's default cube. `codex-memory-curator` and
-`codex-spec-interviewer` showed Codex host chrome (cloud and `>_`). Codex
-appears to special-case `codex-*` display names. Keep this split as-is. Portal
-glyphs do not appear in that Codex list. Do not add `icon_small` / `icon_large`
-to silence it.
+Each bundled skill now ships `assets/openai-icon.png` and references it unchanged
+for `icon_small` and `icon_large`. The OpenAI plugin manifest separately supports
+one `logo`, one `composerIcon`, and brand colors. The public documentation does
+not define separate light and dark Plugin Info logo fields in the package, does
+not guarantee that a portal glyph survives a package update, and documents no
+public publication API. Therefore the portal inspection remains mandatory:
+
+1. verify all six skill icons and restore the reviewed portal glyphs if needed;
+2. upload `site/public/logo.png` as the light Plugin Info logo;
+3. upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon;
+4. verify light/dark rendering and directory identity after propagation.
+
+See [Build plugins](https://developers.openai.com/plugins/build/plugins) and
+[Submit and publish plugins](https://developers.openai.com/plugins/deploy/submission).
 
 ## Brand assets
 
@@ -195,7 +208,8 @@ document (`DIR-001`) and public category-catalog membership (`DIR-002`).
 Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
 only from a clean working tree whose `HEAD` has an exact Git tag. The latest
-GitHub tag is `v0.19.1`. A dirty or untagged evidence write is not a freeze.
+published GitHub baseline is `v0.20.1`. A dirty or untagged evidence write is
+not a freeze.
 
 ## Do not
 

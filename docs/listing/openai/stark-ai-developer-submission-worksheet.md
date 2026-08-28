@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.1.0`
+- Version: `1.2.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds AC-ADR-055 in Architecture Compass 0.6.6 for pnpm-owned persistent dependencies, fail-closed Bun-first execution, collision-safe script entrypoints, explicit transient CLI trust boundaries, Vite/Vitest defaults, and optimized Bun server artifacts.
+- Release notes: Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.
 
 ## Capabilities
 
@@ -51,6 +51,13 @@ freeze evidence or a portal draft identifier.
 - `architecture-compass`: CHAT, CODEX; implicit invocation enabled; portal glyph `hierarchy`
 - `codegraph-ast-grep`: CODEX; implicit invocation disabled; portal glyph `search`
 - `drawio-diagrams`: CHAT, CODEX; implicit invocation enabled; portal glyph `pen`
+
+## Portal asset handoff
+
+1. Verify the six packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
+2. Upload `site/public/logo.png` as the light Plugin Info logo.
+3. Upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon.
+4. After propagation, verify light and dark rendering plus the public directory identity.
 
 ## Archive and portal evidence to attach
 

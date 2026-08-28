@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0018
-Superseded by: ADR-0050, ADR-0051
+Superseded by: ADR-0053, ADR-0054
 Guide verified: 2026-07-28
 Gist: Tool and platform choices require independent target evidence.
 

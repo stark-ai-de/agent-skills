@@ -49,7 +49,7 @@ Prefer the existing target combination and built-in capability when they satisfy
 
 ### Coordination with Bun-first tooling
 
-[AC-ADR-055](ac-adr-055-use-pnpm-for-package-management-and-bun-for-execution.short.md) supplies a Bun-first candidate and package-ownership contract for JavaScript/TypeScript repository tooling. A representative AC-ADR-055 command, fixture, build, or runtime observation may populate this ADR's compatibility matrix, but the existence or adoption of AC-ADR-055 alone is not compatibility proof.
+[AC-ADR-058](ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.short.md) supplies a Bun-first candidate and package-ownership contract for JavaScript/TypeScript repository tooling. A representative AC-ADR-058 command, fixture, build, or runtime observation may populate this ADR's compatibility matrix, but the existence or adoption of AC-ADR-058 alone is not compatibility proof.
 
 Apply the matrix to the concrete executable or deployable. Bun remains the winner only when it preserves correctness, operations, security, upstream support, and required delivery behavior. If another candidate has better qualifying evidence, select that candidate. When Bun cannot run the boundary and Node.js works with no better evidenced alternative, Node.js is the default fallback. Unknown or non-material cells may remain visible without blocking an otherwise mandatory-command-verified selection; the target repository decides whether its matrix is advisory or a gate.
 

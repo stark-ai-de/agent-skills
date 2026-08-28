@@ -2,7 +2,11 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { listChangedGitPaths } from "../lib/git-changed-paths.mjs";
+import { changelogReleaseOrder, splitChangelogSections } from "../lib/release-changelog.mjs";
+import {
+  automatedReleaseVersionSupported,
+  FIRST_AUTOMATED_RELEASE_VERSION,
+} from "../lib/release-please.mjs";
 
 const root = process.cwd();
 const semverPattern = /^\d+\.\d+\.\d+$/;
@@ -28,6 +32,19 @@ function parseArgs(argv) {
   return args;
 }
 
+function git(args, allowFailure = false) {
+  const result = spawnSync("git", args, {
+    cwd: root,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.status !== 0) {
+    if (allowFailure) return null;
+    throw new Error(result.stderr.trim() || `git ${args.join(" ")} failed`);
+  }
+  return result.stdout.trimEnd();
+}
+
 function readGitFile(ref, file) {
   const result = spawnSync("git", ["show", `${ref}:${file}`], {
     cwd: root,
@@ -47,6 +64,15 @@ function readTargetFile(file, headRef) {
   return headRef ? readGitFile(headRef, file) : readCurrentFile(file);
 }
 
+function changedFiles(baseRef, headRef) {
+  const args = ["diff", "--name-only", "--diff-filter=ACDMRT", baseRef];
+  if (headRef) args.push(headRef);
+  return git(args)
+    .split("\n")
+    .map((file) => file.trim())
+    .filter(Boolean);
+}
+
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -63,6 +89,15 @@ function packageVersion(text = readCurrentFile("package.json")) {
   if (!text) return null;
   try {
     return JSON.parse(text).version ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function manifestVersion(text = readCurrentFile(".release-please-manifest.json")) {
+  if (!text) return null;
+  try {
+    return JSON.parse(text)["."] ?? null;
   } catch {
     return null;
   }
@@ -94,7 +129,11 @@ function compareSemver(a, b) {
 
 function hasChangelogRelease(version) {
   const changelog = readCurrentFile("CHANGELOG.md") ?? "";
-  return new RegExp(`^##\\s+v${version}(\\s|$)`, "m").test(changelog);
+  return splitChangelogSections(changelog).has(version);
+}
+
+function newestChangelogRelease() {
+  return changelogReleaseOrder(readCurrentFile("CHANGELOG.md") ?? "")[0] ?? null;
 }
 
 function skillFileFor(changedFile) {
@@ -117,6 +156,25 @@ function runSkillValidation() {
     process.stdout.write(result.stdout);
     process.stderr.write(result.stderr);
     errors.push("pnpm run validate:skills failed");
+  }
+}
+
+function runImpactValidation(baseRef, headRef) {
+  const commandArgs = [
+    path.join(root, "scripts/release/check-release-intent.mjs"),
+    "--base-ref",
+    baseRef,
+  ];
+  if (headRef) commandArgs.push("--head-ref", headRef);
+  const result = spawnSync(process.execPath, commandArgs, {
+    cwd: root,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+  if (result.status !== 0) {
+    process.stdout.write(result.stdout);
+    process.stderr.write(result.stderr);
+    errors.push("release impact contract failed");
   }
 }
 
@@ -159,7 +217,7 @@ function validateReleaseDiff(baseRef, headRef, releaseVersion) {
     );
   }
 
-  const files = listChangedGitPaths({ root, baseRef, headRef });
+  const files = changedFiles(baseRef, headRef);
   for (const skillFile of uniqueSkillFiles(files)) {
     const baseText = readGitFile(baseRef, skillFile);
     const currentText = readTargetFile(skillFile, headRef);
@@ -191,6 +249,10 @@ args.version ??= packageVersion();
 
 if (!args.version || !semverPattern.test(args.version)) {
   errors.push(`Version must be x.y.z without leading v: ${args.version ?? "(missing)"}`);
+} else if (args.version !== "0.20.1" && !automatedReleaseVersionSupported(args.version)) {
+  errors.push(
+    `Automated release versions must be ${FIRST_AUTOMATED_RELEASE_VERSION} or newer; got ${args.version}`,
+  );
 }
 
 if (errors.length === 0) {
@@ -199,11 +261,31 @@ if (errors.length === 0) {
   if (currentPackageVersion !== args.version) {
     errors.push(`package.json version is ${currentPackageVersion}; expected ${args.version}`);
   }
-  if (!hasChangelogRelease(args.version)) {
-    errors.push(`CHANGELOG.md is missing a '## v${args.version}' release section`);
-  }
   validateCurrentPublicSkills(args.version);
-  if (args.baseRef) validateReleaseDiff(args.baseRef, args.headRef, args.version);
+  if (args.baseRef) {
+    runImpactValidation(args.baseRef, args.headRef);
+    const basePackageVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
+    if (basePackageVersion !== currentPackageVersion) {
+      if (!hasChangelogRelease(args.version)) {
+        errors.push(`CHANGELOG.md is missing a ${args.version} release section`);
+      } else if (newestChangelogRelease() !== args.version) {
+        errors.push(`CHANGELOG.md newest release is not ${args.version}`);
+      }
+      if (manifestVersion() !== args.version) {
+        errors.push(`.release-please-manifest.json is not synchronized to ${args.version}`);
+      }
+      validateReleaseDiff(args.baseRef, args.headRef, args.version);
+    }
+  } else {
+    if (!hasChangelogRelease(args.version)) {
+      errors.push(`CHANGELOG.md is missing a ${args.version} release section`);
+    } else if (newestChangelogRelease() !== args.version) {
+      errors.push(`CHANGELOG.md newest release is not ${args.version}`);
+    }
+    if (manifestVersion() !== args.version) {
+      errors.push(`.release-please-manifest.json is not synchronized to ${args.version}`);
+    }
+  }
 }
 
 if (errors.length) {

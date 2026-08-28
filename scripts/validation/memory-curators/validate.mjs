@@ -2015,8 +2015,10 @@ for (const curator of curators) {
     fail(`${skillRelative}: runtime contract must link the report asset without embedding it`);
   }
   const version = skill.match(/\n  version: "([^"]+)"/)?.[1];
-  if (version !== "0.2.1")
-    fail(`${skillRelative}: expected version 0.2.1; found ${version ?? "none"}`);
+  const expectedVersion = curator.runtime === "codex" ? "0.2.2" : "0.2.1";
+  if (version !== expectedVersion) {
+    fail(`${skillRelative}: expected version ${expectedVersion}; found ${version ?? "none"}`);
+  }
 
   const report = read(path.join(curator.dir, "assets", "review-report-template.md"));
   for (const heading of [

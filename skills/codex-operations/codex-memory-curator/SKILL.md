@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # Codex Memory Curator
