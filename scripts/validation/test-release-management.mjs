@@ -195,8 +195,11 @@ assert.deepEqual(
   config,
   "the one-time manifest config must differ only by its package-local release-as override",
 );
-assert.equal(manifest["."], "0.20.1");
-assert.equal(rootPackage.version, manifest["."], "root package and manifest baseline must match");
+assert.ok(
+  manifest["."] === "0.20.1" || automatedReleaseVersionSupported(manifest["."]),
+  "repository manifest must be the bootstrap baseline or a supported automated release",
+);
+assert.equal(rootPackage.version, manifest["."], "root package and manifest versions must match");
 
 const mixedChangelog = [
   "# Changelog",
