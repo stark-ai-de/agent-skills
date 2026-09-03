@@ -652,6 +652,12 @@ const validateWorkflow = read(".github/workflows/validate.yml");
 const publishWorkflow = read(".github/workflows/publish-release.yml");
 const evidenceWorkflow = read(".github/workflows/post-release-evidence.yml");
 const candidateVerifier = read("scripts/release/verify-main-release-candidate.mjs");
+const formatIgnore = read(".oxfmtignore");
+assert.match(
+  formatIgnore,
+  /^CHANGELOG\.md$/m,
+  "the Release Please-owned root changelog must remain outside formatter ownership",
+);
 assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v2/);
 for (const permission of ["contents", "pull-requests", "issues"]) {
   assert.match(releasePleaseWorkflow, new RegExp(`permission-${permission}: write`));
