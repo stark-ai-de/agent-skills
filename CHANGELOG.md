@@ -12,6 +12,14 @@
 
 ### Removed
 
+## [0.21.1](https://github.com/stark-ai-de/agent-skills/compare/v0.21.0...v0.21.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **release:** make evidence pagination gh-compatible ([ebe74ee](https://github.com/stark-ai-de/agent-skills/commit/ebe74ee6e2b41dff9beec4076c1dbf3fc3a6558c))
+* **release:** make post-release evidence pagination compatible ([284d268](https://github.com/stark-ai-de/agent-skills/commit/284d2688146ed99f89a4ca0466cf4db92ced8126))
+
 ## [0.21.0](https://github.com/stark-ai-de/agent-skills/compare/v0.20.1...v0.21.0) (2026-09-03)
 
 
