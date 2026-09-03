@@ -602,8 +602,12 @@ const containedCandidate = {
   branch: { protected: true, commit: { sha: mergeCommitSha } },
   comparison: {
     status: "identical",
+    ahead_by: 0,
+    behind_by: 0,
+    total_commits: 0,
     base_commit: { sha: mergeCommitSha },
-    head_commit: { sha: mergeCommitSha },
+    merge_base_commit: { sha: mergeCommitSha },
+    commits: [],
   },
 };
 const advancedMainSha = "d".repeat(40);
@@ -611,8 +615,12 @@ const containedAfterMainAdvance = {
   branch: { protected: true, commit: { sha: advancedMainSha } },
   comparison: {
     status: "ahead",
+    ahead_by: 1,
+    behind_by: 0,
+    total_commits: 1,
     base_commit: { sha: mergeCommitSha },
-    head_commit: { sha: advancedMainSha },
+    merge_base_commit: { sha: mergeCommitSha },
+    commits: [{ sha: advancedMainSha }],
   },
 };
 assert.deepEqual(approvalRunErrors(waitingPublishRun, containedCandidate), []);
@@ -625,6 +633,54 @@ assert.deepEqual(
   mainCandidateContainmentErrors({ candidateSha: mergeCommitSha, ...containedAfterMainAdvance }),
   [],
 );
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedAfterMainAdvance,
+    comparison: {
+      ...containedAfterMainAdvance.comparison,
+      commits: [{ sha: "e".repeat(40) }],
+    },
+  }).join(";"),
+  /comparison head is not the observed main revision/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedCandidate,
+    comparison: { ...containedCandidate.comparison, merge_base_commit: { sha: "e".repeat(40) } },
+  }).join(";"),
+  /merge base is not the release candidate/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedCandidate,
+    comparison: { ...containedCandidate.comparison, ahead_by: 1 },
+  }).join(";"),
+  /comparison distance is inconsistent with identical revisions/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedAfterMainAdvance,
+    comparison: { ...containedAfterMainAdvance.comparison, behind_by: 1 },
+  }).join(";"),
+  /comparison distance is inconsistent with an advanced main revision/,
+);
+for (const comparison of [
+  { ...containedAfterMainAdvance.comparison, ahead_by: 2 },
+  { ...containedAfterMainAdvance.comparison, total_commits: 2 },
+]) {
+  assert.match(
+    mainCandidateContainmentErrors({
+      candidateSha: mergeCommitSha,
+      ...containedAfterMainAdvance,
+      comparison,
+    }).join(";"),
+    /comparison distance is inconsistent with an advanced main revision/,
+  );
+}
 assert.match(
   approvalRunErrors(
     { ...waitingPublishRun, path: ".github/workflows/foreign.yml" },

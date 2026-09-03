@@ -17,16 +17,42 @@ const COMMIT_SHA = /^[0-9a-f]{40}$/;
 export function mainCandidateContainmentErrors({ candidateSha, branch, comparison } = {}) {
   const errors = [];
   const mainSha = branch?.commit?.sha;
+  const candidateIsObservedMain = COMMIT_SHA.test(candidateSha ?? "") && candidateSha === mainSha;
   if (branch?.protected !== true) errors.push("main is not protected");
   if (!COMMIT_SHA.test(candidateSha ?? "")) errors.push("release candidate SHA is invalid");
   if (!COMMIT_SHA.test(mainSha ?? "")) errors.push("main SHA is invalid");
   if (comparison?.base_commit?.sha !== candidateSha) {
     errors.push("comparison base is not the release candidate");
   }
-  if (comparison?.head_commit?.sha !== mainSha) {
+  if (comparison?.merge_base_commit?.sha !== candidateSha) {
+    errors.push("comparison merge base is not the release candidate");
+  }
+  // GitHub omits head_commit; the last commit of an unpaginated comparison is its documented head.
+  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;
+  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {
     errors.push("comparison head is not the observed main revision");
   }
-  const expectedStatus = candidateSha === mainSha ? "identical" : "ahead";
+  if (
+    candidateIsObservedMain &&
+    (comparison?.ahead_by !== 0 ||
+      comparison?.behind_by !== 0 ||
+      comparison?.total_commits !== 0 ||
+      commits?.length !== 0)
+  ) {
+    errors.push("comparison distance is inconsistent with identical revisions");
+  }
+  if (
+    !candidateIsObservedMain &&
+    (!Number.isSafeInteger(comparison?.ahead_by) ||
+      comparison.ahead_by < 1 ||
+      comparison?.behind_by !== 0 ||
+      !Number.isSafeInteger(comparison?.total_commits) ||
+      comparison.total_commits < 1 ||
+      comparison.ahead_by !== comparison.total_commits)
+  ) {
+    errors.push("comparison distance is inconsistent with an advanced main revision");
+  }
+  const expectedStatus = candidateIsObservedMain ? "identical" : "ahead";
   if (comparison?.status !== expectedStatus) {
     errors.push("release candidate is not contained in protected main");
   }
