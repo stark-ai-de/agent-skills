@@ -47,3 +47,4 @@ ADR-0046	0046-define-versioned-json-release-subject-contract	a5567a134f95283da0f
 ADR-0050	0050-generate-release-prs-and-protect-publication	3a8e0194e123f178370edb821336bb43e17807eaffb53edd2b4a0ceda2ea20a0
 ADR-0051	0051-preserve-release-candidates-through-verified-main-history	32af589f31e5bee52c1b0b4fb21953b0fc08273f3321af4f5820cb0b3461fcc5
 ADR-0052	0052-allow-scoped-json-only-published-release-repair	744e4df7a99c193345981845657510e02c45678f7c09ccfc30fcbfe6cc5f0d1e
+ADR-0053	0053-recover-unpublished-releases-through-protected-replacement-candidates	e68760930ab9f05b052d37d7d10b66a47e58a7b83be83b01928104f895d1760a

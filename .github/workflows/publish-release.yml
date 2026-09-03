@@ -1,4 +1,5 @@
 name: Publish Release
+run-name: ${{ inputs.recovery_release_sha != '' && format('Publish Release · recovery {0}', inputs.recovery_release_sha) || 'Publish Release' }}
 
 on:
   push:
@@ -13,6 +14,11 @@ on:
         required: true
         default: true
         type: boolean
+      recovery_release_sha:
+        description: Full original generated-release SHA for guarded pre-publication recovery
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -29,9 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       candidate_sha: ${{ github.sha }}
-      release_candidate: ${{ steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true' }}
-      release_pull_request: ${{ steps.release-provenance.outputs.pull_request }}
-      readiness_required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') }}
+      recovery_candidate: ${{ steps.release-recovery.outputs.authorized == 'true' }}
+      recovery_release_sha: ${{ steps.release-recovery.outputs.release_origin_sha }}
+      origin_validate_run_id: ${{ steps.release-recovery.outputs.origin_validate_run_id }}
+      release_candidate: ${{ (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}
+      release_pull_request: ${{ steps.release-provenance.outputs.pull_request || steps.release-recovery.outputs.pull_request }}
+      readiness_required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}
     timeout-minutes: 5
 
     steps:
@@ -43,7 +52,7 @@ jobs:
           persist-credentials: false
 
       - name: 🔏 Verify configured Release Please App provenance
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == true) }}
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == true && inputs.recovery_release_sha == '') }}
         id: release-provenance
         env:
           EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
@@ -84,10 +93,25 @@ jobs:
             --head-ref "${GITHUB_SHA}" \
             --github-output
 
+      - name: 🛟 Verify guarded pre-publication recovery
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.recovery_release_sha != '' }}
+        id: release-recovery
+        env:
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          GH_TOKEN: ${{ github.token }}
+          RECOVERY_RELEASE_SHA: ${{ inputs.recovery_release_sha }}
+        run: >-
+          node scripts/release/verify-prepublication-release-recovery.mjs
+          --repository "$GITHUB_REPOSITORY"
+          --release-origin "$RECOVERY_RELEASE_SHA"
+          --candidate "$GITHUB_SHA"
+          --expected-app-id "$EXPECTED_APP_ID"
+          --github-output
+
       - name: 🚫 Reject a manual mutating non-release candidate
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && steps.release-provenance.outputs.authorized != 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == false && steps.release-provenance.outputs.authorized != 'true' && steps.release-recovery.outputs.authorized != 'true' }}
         run: |
-          echo "Manual publication requires main HEAD to be a generated release-PR merge."
+          echo "Manual publication requires main HEAD to be a generated release-PR merge or an authorized pre-publication recovery candidate."
           exit 1
 
       - name: 🚫 Reject unauthorized root release metadata
@@ -98,8 +122,9 @@ jobs:
 
       - name: 🧭 Summarize publication trigger
         run: |
-          echo "Readiness required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') }}"
-          echo "Mutation candidate: ${{ steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true' }}"
+          echo "Readiness required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}"
+          echo "Mutation candidate: ${{ (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}"
+          echo "Guarded recovery: ${{ steps.release-recovery.outputs.authorized == 'true' }}"
 
   release-readiness:
     needs: publication-trigger
@@ -237,6 +262,39 @@ jobs:
           path: release-subjects
           skip-decompress: true
 
+      - name: ⬇️ Download release-origin OpenAI subject
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: openai.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.publication-trigger.outputs.origin_validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-origin-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download release-origin portable subject
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: portable.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.publication-trigger.outputs.origin_validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-origin-subjects
+          skip-decompress: true
+
+      - name: ⬇️ Download release-origin metadata
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: release-subject.json
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.publication-trigger.outputs.origin_validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-origin-subjects
+          skip-decompress: true
+
       - name: 🔐 Verify hosted release subjects
         id: subject-identity
         env:
@@ -255,6 +313,25 @@ jobs:
             --source-state clean \
             --status pass
           echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
+          echo "archive_profile=${archive_profile}" >> "$GITHUB_OUTPUT"
+
+      - name: 🧬 Verify recovery payload equivalence
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        env:
+          ARCHIVE_PROFILE: ${{ steps.subject-identity.outputs.archive_profile }}
+          CANDIDATE_SHA: ${{ steps.version.outputs.release_sha }}
+          ORIGIN_SHA: ${{ needs.publication-trigger.outputs.recovery_release_sha }}
+          PLUGIN_VERSION: ${{ steps.subject-identity.outputs.plugin_version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: >-
+          node scripts/release/verify-release-recovery-subjects.mjs
+          --origin-dir release-origin-subjects
+          --candidate-dir release-subjects
+          --origin-sha "$ORIGIN_SHA"
+          --candidate-sha "$CANDIDATE_SHA"
+          --release-version "$VERSION"
+          --plugin-version "$PLUGIN_VERSION"
+          --archive-profile "$ARCHIVE_PROFILE"
 
       - name: 📝 Build release notes
         run: node scripts/release/print-release-notes.mjs > release-notes.md
@@ -278,6 +355,7 @@ jobs:
       - name: 📣 Print release readiness
         run: |
           echo "Release readiness dry run passed for v${{ steps.version.outputs.version }} using Validate run ${{ steps.validate-receipt.outputs.run_id }}."
+          echo "Guarded recovery payload equivalence: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}."
           echo "Release reconciliation plan: ${{ steps.reconciliation-plan.outputs.status }} (${{ steps.reconciliation-plan.outputs.reason }})."
           echo "Remote mutation runs only in the protected release environment after an automatic release-PR merge or manual dry_run=false dispatch."
 
