@@ -182,11 +182,12 @@ workflow definition, checkout, event ref, workflow SHA, and remote branch tip to
 be the same protected `main` revision. A manual dispatch from another branch or
 tag therefore fails before GitHub creates the write-capable App token.
 
-Pull-request validation resolves the configured App ID, requires the
-repository-local Release Please branch and exactly one App-bot-authored head
-commit with GitHub's valid signature, then validates the complete three-file
-transformation. Publication repeats the merged-PR provenance check against the
-exact candidate commit.
+Pull-request validation matches the configured App ID against GitHub's canonical
+App-bot actor payload, requires the repository-local Release Please branch and
+exactly one App-bot-authored head commit with GitHub's valid signature, then
+validates the complete three-file transformation. Unknown actor metadata fails
+closed. Publication repeats the merged-PR provenance check against the exact
+candidate commit.
 
 The baseline is `0.20.1`; `v0.20.0` remains unpublished and the first generated
 catalog release is `v0.21.0`. `skip-github-release: true` reserves tags and

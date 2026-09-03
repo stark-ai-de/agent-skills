@@ -536,13 +536,10 @@ jobs:
 
       - name: 🏷️ Complete the generated release-PR lifecycle
         env:
-          APP_SLUG: ${{ steps.release-label-token.outputs.app-slug }}
-          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
           GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
           RELEASE_PULL_REQUEST: ${{ needs.publication-trigger.outputs.release_pull_request }}
         run: |
           set -euo pipefail
-          test "$(gh api "apps/${APP_SLUG}" --jq '.id')" = "${EXPECTED_APP_ID}"
           labels=$(gh api \
             "repos/${GITHUB_REPOSITORY}/issues/${RELEASE_PULL_REQUEST}" \
             --jq '[.labels[].name]')
