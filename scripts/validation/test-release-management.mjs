@@ -1396,6 +1396,16 @@ assert.doesNotMatch(validateWorkflow.split("\nconcurrency:")[0], /issues: read/)
 assert.match(evidenceWorkflow, /^on:\n  workflow_dispatch:/m);
 assert.match(evidenceWorkflow, /^run-name: Post-release Evidence · \$\{\{ inputs\.tag \}\}$/m);
 assert.doesNotMatch(evidenceWorkflow, /release:\n\s+types:|release\.published/);
+assert.doesNotMatch(
+  evidenceWorkflow,
+  /gh api \\\n\s+--paginate \\\n\s+--slurp \\\n[\s\S]{0,240}--jq/,
+  "GitHub CLI rejects --slurp when the same api call also formats through --jq",
+);
+assert.match(
+  evidenceWorkflow,
+  /gh api \\\n\s+--paginate \\\n[\s\S]{0,240}\| \\\n\s+jq -s 'add \| map\(\.name\) \| sort'/,
+  "all GitHub API pages must become one sorted JSON asset-name array",
+);
 
 const managerScript = read("scripts/release/manage-release.mjs");
 assert.match(managerScript, /tagName,isLatest,isDraft,publishedAt/);

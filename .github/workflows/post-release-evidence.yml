@@ -97,9 +97,9 @@ jobs:
               --jq '.id')
             gh api \
               --paginate \
-              --slurp \
               "repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100" \
-              --jq 'flatten | map(.name) | sort' \
+              | \
+              jq -s 'add | map(.name) | sort' \
               > "${asset_names_file}"
             asset_patterns=(--pattern openai.zip --pattern portable.zip)
             if jq -e 'index("release-subject.json") != null' \
