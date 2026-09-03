@@ -27,6 +27,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 🛡️ Verify trusted protected-main source
         env:
           GH_TOKEN: ${{ github.token }}
@@ -66,14 +71,14 @@ jobs:
           fi
           ASSOCIATED_TITLES="${associated_titles}" \
             COMMIT_TITLE="$(git log -1 --pretty=%s)" \
-            node scripts/release/classify-release-please-trigger.mjs --github-output
+            bun --bun scripts/release/classify-release-please-trigger.mjs --github-output
 
       - name: 🎯 Select the one-time v0.21.0 manifest config
         if: ${{ steps.classify.outputs.skip != 'true' }}
         id: release-config
         run: |
           set -euo pipefail
-          manifest_version=$(node -p "require('./.release-please-manifest.json')['.']")
+          manifest_version=$(bun --bun --eval 'const manifest = await Bun.file(".release-please-manifest.json").json(); console.log(manifest["."])')
           if [ "${manifest_version}" = "0.20.1" ]; then
             echo "config_file=release-please-config.v0.21.0.json" >> "$GITHUB_OUTPUT"
           else

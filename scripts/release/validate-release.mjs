@@ -147,7 +147,7 @@ function uniqueSkillFiles(files) {
 }
 
 function runSkillValidation() {
-  const result = spawnSync("npm", ["run", "validate:skills"], {
+  const result = spawnSync("pnpm", ["run", "validate:skills"], {
     cwd: root,
     encoding: "utf8",
     stdio: "pipe",
@@ -155,7 +155,7 @@ function runSkillValidation() {
   if (result.status !== 0) {
     process.stdout.write(result.stdout);
     process.stderr.write(result.stderr);
-    errors.push("npm run validate:skills failed");
+    errors.push("pnpm run validate:skills failed");
   }
 }
 

@@ -38,7 +38,7 @@ function writeGithubOutput(filePath, receipt) {
 const { render, file, githubOutput } = parseArgs(process.argv.slice(2));
 if (!render || !file) {
   console.error(
-    "Usage: node scripts/release/render-post-release-receipt.mjs --render <kind> --file <receipt.json> [--github-output <path>]",
+    "Usage: bun --bun scripts/release/render-post-release-receipt.mjs --render <kind> --file <receipt.json> [--github-output <path>]",
   );
   process.exitCode = 1;
 } else {

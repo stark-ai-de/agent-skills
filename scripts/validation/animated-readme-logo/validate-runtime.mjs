@@ -75,8 +75,8 @@ function mappedRegularFileBytes(files, file) {
   return Buffer.from(typeof value === "object" && value !== null ? value.content : value);
 }
 
-function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
+function run(executable, args, options = {}) {
+  const result = spawnSync(executable, args, {
     cwd: options.cwd ?? root,
     encoding: "utf8",
     env: options.env ?? process.env,
@@ -86,9 +86,9 @@ function run(command, args, options = {}) {
   return { ...result, output: `${result.stdout || ""}${result.stderr || ""}` };
 }
 
-function expectRun(name, command, args, status, outputPart) {
+function expectRun(name, executable, args, status, outputPart) {
   check(name, () => {
-    const result = run(command, args);
+    const result = run(executable, args);
     assert.equal(result.status, status, result.output);
     if (outputPart) assert.match(result.output, outputPart);
   });
@@ -357,7 +357,7 @@ try {
 
   expectRun(
     "README logo exporter help",
-    "node",
+    process.execPath,
     [exporterCli, "--help"],
     0,
     /trusted, repository-owned JavaScript recipe/,
@@ -2544,48 +2544,50 @@ export default {
     });
     expectRun(
       `${format.name} CLI validation`,
-      "node",
+      process.execPath,
       [animatedCli, format.animatedFile],
       0,
       /Frames: 2/,
     );
     check(`${format.name} JSON validation`, () => {
-      const parsed = JSON.parse(run("node", [animatedCli, "--json", format.animatedFile]).stdout);
+      const parsed = JSON.parse(
+        run(process.execPath, [animatedCli, "--json", format.animatedFile]).stdout,
+      );
       assert.equal(parsed.valid, true);
       assert.equal(parsed.frameCount, 2);
       assert.equal(parsed.animated, true);
     });
     expectRun(
       `${format.name} static rejection`,
-      "node",
+      process.execPath,
       [animatedCli, format.staticFile],
       1,
       /\[STATIC_IMAGE]/,
     );
     expectRun(
       `${format.name} truncation rejection`,
-      "node",
+      process.execPath,
       [animatedCli, format.truncatedFile],
       1,
       /\[(?:TRUNCATED_FILE|MISSING_GIF_TRAILER|WEBP_SIZE_MISMATCH)]/,
     );
     expectRun(
       `${format.name} frame limit`,
-      "node",
+      process.execPath,
       [animatedCli, "--max-frames", "1", format.animatedFile],
       1,
       /\[FRAME_LIMIT]/,
     );
     expectRun(
       `${format.name} dimension limit`,
-      "node",
+      process.execPath,
       [animatedCli, "--max-dimension", "1", format.animatedFile],
       1,
       /\[DIMENSION_LIMIT]/,
     );
     expectRun(
       `${format.name} chunk limit`,
-      "node",
+      process.execPath,
       [animatedCli, "--max-chunk-bytes", "1", format.animatedFile],
       1,
       /\[CHUNK_LIMIT]/,
@@ -2619,7 +2621,7 @@ export default {
   );
   expectRun(
     "APNG accepts excluded default image ordering",
-    "node",
+    process.execPath,
     [animatedCli, defaultImageExcluded],
     0,
     /Frames: 2/,
@@ -2639,7 +2641,7 @@ export default {
   );
   expectRun(
     "APNG included default frame must match canvas",
-    "node",
+    process.execPath,
     [animatedCli, mismatchedIncludedDefault],
     1,
     /\[INVALID_FCTL]/,
@@ -2660,7 +2662,7 @@ export default {
   );
   expectRun(
     "APNG rejects fdAT before IDAT",
-    "node",
+    process.execPath,
     [animatedCli, fdatBeforeIdat],
     1,
     /\[INVALID_FDAT]/,
@@ -2681,7 +2683,7 @@ export default {
   );
   expectRun(
     "APNG rejects IDAT after fdAT",
-    "node",
+    process.execPath,
     [animatedCli, idatAfterFdat],
     1,
     /\[PNG_ORDER]/,
@@ -2699,7 +2701,7 @@ export default {
   );
   expectRun(
     "APNG indexed image requires PLTE",
-    "node",
+    process.execPath,
     [animatedCli, indexedWithoutPalette],
     1,
     /\[MISSING_PLTE]/,
@@ -2718,7 +2720,7 @@ export default {
   );
   expectRun(
     "APNG rejects PLTE after IDAT",
-    "node",
+    process.execPath,
     [animatedCli, latePalette],
     1,
     /\[INVALID_PLTE]/,
@@ -2735,7 +2737,7 @@ export default {
   );
   expectRun(
     "GIF comment metadata rejection",
-    "node",
+    process.execPath,
     [animatedCli, gifComment],
     1,
     /\[HIDDEN_METADATA]/,
@@ -2751,7 +2753,7 @@ export default {
   );
   expectRun(
     "GIF application metadata rejection",
-    "node",
+    process.execPath,
     [animatedCli, gifApplication],
     1,
     /\[HIDDEN_METADATA]/,
@@ -2769,7 +2771,7 @@ export default {
     );
     expectRun(
       `PNG ${type} metadata rejection`,
-      "node",
+      process.execPath,
       [animatedCli, metadataPng],
       1,
       /\[HIDDEN_METADATA]/,
@@ -2781,7 +2783,7 @@ export default {
   );
   expectRun(
     "PNG unknown ancillary rejection",
-    "node",
+    process.execPath,
     [animatedCli, unknownAncillaryPng],
     1,
     /\[UNSUPPORTED_ANCILLARY_CHUNK]/,
@@ -2795,7 +2797,7 @@ export default {
     );
     expectRun(
       `WebP ${type.trim()} metadata rejection`,
-      "node",
+      process.execPath,
       [animatedCli, metadataWebp],
       1,
       /\[HIDDEN_METADATA]/,
@@ -2806,7 +2808,7 @@ export default {
   const metadataFlagWebp = fixture("metadata-flag.webp", metadataFlagWebpBytes);
   expectRun(
     "WebP metadata flag rejection",
-    "node",
+    process.execPath,
     [animatedCli, metadataFlagWebp],
     1,
     /\[HIDDEN_METADATA]/,
@@ -2823,7 +2825,7 @@ export default {
     });
     expectRun(
       "animated inspector rejects FIFO without blocking",
-      "node",
+      process.execPath,
       [animatedCli, fifo],
       2,
       /\[NOT_REGULAR_FILE]/,
@@ -2832,12 +2834,18 @@ export default {
 
   expectRun(
     "animated file-size limit",
-    "node",
+    process.execPath,
     [animatedCli, "--max-file-bytes", "10", formats[0].animatedFile],
     1,
     /\[FILE_LIMIT]/,
   );
-  expectRun("animated CLI usage", "node", [animatedCli, "--max-frames", "0"], 2, /INVALID_OPTION/);
+  expectRun(
+    "animated CLI usage",
+    process.execPath,
+    [animatedCli, "--max-frames", "0"],
+    2,
+    /INVALID_OPTION/,
+  );
 
   const validSvg = fixture(
     "valid.svg",
@@ -3646,7 +3654,7 @@ export default {
     writeFileSync(auditReadme, markdown);
     expectRun(
       name,
-      "node",
+      process.execPath,
       [auditCli, "--root", auditRoot, "--readme", "README.md"],
       expectedStatus,
       expectedOutput,
@@ -3997,7 +4005,7 @@ export default {
   writeFileSync(path.join(nestedDocs, "README.md"), `![Logo](../assets/logo.svg)`);
   expectRun(
     "README audit allows root-bounded parent segment",
-    "node",
+    process.execPath,
     [auditCli, "--root", auditRoot, "--readme", "docs/README.md"],
     0,
     /`assets\/logo\.svg` \| yes \| yes/,
@@ -4017,13 +4025,15 @@ export default {
   });
   check("README audit Python unavailable is unverified without path leakage", () => {
     writeFileSync(auditReadme, `![Logo](assets/logo.svg)`);
+    const unavailableRuntimePath = path.join(temp, "unavailable-runtime-path");
+    mkdirSync(unavailableRuntimePath);
     const result = spawnSync(
       process.execPath,
       [auditCli, "--root", auditRoot, "--readme", "README.md"],
       {
         cwd: tmpdir(),
         encoding: "utf8",
-        env: { ...process.env, PATH: "" },
+        env: { ...process.env, PATH: unavailableRuntimePath },
       },
     );
     assert.equal(result.status, 1, result.stderr);
@@ -4045,7 +4055,7 @@ export default {
   });
   expectRun(
     "README audit help documents exit statuses",
-    "node",
+    process.execPath,
     [auditCli, "--help"],
     0,
     /0 clean; 1 compatibility\/readiness findings; 2 unsafe input or path/,
@@ -4053,7 +4063,7 @@ export default {
 
   expectRun(
     "README snippet safe asset",
-    "node",
+    process.execPath,
     snippetArgs("assets/logo.svg"),
     0,
     /src="assets\/logo\.svg"/,
@@ -4077,7 +4087,7 @@ export default {
     ],
   ];
   for (const [name, assetPath, expected] of unsafeSnippetCases) {
-    expectRun(name, "node", snippetArgs(assetPath), 1, expected);
+    expectRun(name, process.execPath, snippetArgs(assetPath), 1, expected);
   }
 
   console.log(`animated-readme-logo validators: ${checkCount} checks passed`);

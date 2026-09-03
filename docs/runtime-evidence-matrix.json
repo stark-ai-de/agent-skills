@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "advisory": true,
+  "toolchain": {
+    "node": "24.18.0",
+    "bun": "1.4.0",
+    "pnpm": "11.24.0",
+    "skillsCli": "1.5.23"
+  },
+  "signalValues": ["pass", "fail", "unknown", "not-applicable"],
+  "boundaries": [
+    {
+      "id": "root-javascript-tooling",
+      "surfaces": ["package:root:bun-default"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "representativeValidators": "pass",
+            "crossPlatformHosted": "unknown",
+            "securityRegression": "not-applicable"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "representativeValidators": "pass",
+            "crossPlatformHosted": "pass",
+            "securityRegression": "not-applicable"
+          }
+        }
+      ],
+      "winner": "bun",
+      "evidenceRefs": ["package.json#scripts", "pnpm run validate", "ADR-0053"],
+      "rationale": "Bun 1.4.0 passes the representative repository validators and is the accepted starting candidate; command and hosted failures remain authoritative.",
+      "fallbackOrder": ["bun", "node"],
+      "revisit": "Re-evaluate after a Bun runtime regression, a failing mandatory validator, or a changed upstream runtime contract."
+    },
+    {
+      "id": "memory-curator-fail-closed-fixtures",
+      "surfaces": ["package:root:validate-memory-curators"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "failClosedBackupRootFixtures": "fail",
+            "remainingFixtures": "pass",
+            "crossPlatformHosted": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "failClosedBackupRootFixtures": "pass",
+            "remainingFixtures": "pass",
+            "crossPlatformHosted": "pass"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/memory-curators/validate.mjs",
+        "pnpm run validate:memory-curators"
+      ],
+      "rationale": "Bun 1.4.0 fails three fail-closed backup-root replacement fixtures before their temporary-directory boundary; Node.js 24.18.0 preserves the required security behavior.",
+      "fallbackOrder": ["node"],
+      "revisit": "Re-test on a Bun release that changes filesystem replacement behavior or after an independently justified fixture-boundary change."
+    },
+    {
+      "id": "javascript-syntax-only-check",
+      "surfaces": ["internal:validate-scripts:syntax-check"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "syntaxOnlySemantics": "fail",
+            "focusedFixtureRuntime": "pass",
+            "crossPlatformHosted": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "syntaxOnlySemantics": "pass",
+            "focusedFixtureRuntime": "not-applicable",
+            "crossPlatformHosted": "pass"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/repo/validate-scripts.mjs#syntax-check",
+        "pnpm run validate:scripts"
+      ],
+      "rationale": "Node.js --check provides the required syntax-only contract; Bun --check executes scripts. The parent validator and focused fixtures still execute under Bun.",
+      "fallbackOrder": ["node"],
+      "revisit": "Re-test when Bun documents Node-compatible syntax-only checking."
+    },
+    {
+      "id": "drawio-node-compatibility-children",
+      "surfaces": ["internal:validate-drawio:node-children"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "representativeFixtures": "pass",
+            "hostedLinux": "pass",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/drawio-diagrams/validate-fixtures.mjs",
+        "pnpm run validate:drawio"
+      ],
+      "rationale": "The Bun parent intentionally invokes Node.js children to verify explicit Node CLI, shebang, renderer, and executable-resolution compatibility.",
+      "fallbackOrder": ["node"],
+      "revisit": "Revisit when the compatibility probes are removed or their explicit Node.js contract changes."
+    },
+    {
+      "id": "native-oxc-tooling",
+      "surfaces": ["package:root:native-oxc"],
+      "candidates": [
+        {
+          "id": "native",
+          "signals": {
+            "formatter": "pass",
+            "linter": "pass",
+            "javascriptRuntime": "not-applicable"
+          }
+        }
+      ],
+      "winner": "native",
+      "evidenceRefs": ["package.json#scripts.format", "package.json#scripts.lint"],
+      "rationale": "Oxfmt and Oxlint are native executables and do not require a JavaScript runtime wrapper.",
+      "fallbackOrder": ["native"],
+      "revisit": "Revisit if the installed Oxc entrypoints stop being native executables."
+    },
+    {
+      "id": "pnpm-project-orchestration",
+      "surfaces": ["package:root:pnpm-orchestration"],
+      "candidates": [
+        {
+          "id": "pnpm",
+          "signals": {
+            "workspaceSelection": "pass",
+            "persistentTrustBoundary": "pass",
+            "javascriptRuntime": "not-applicable"
+          }
+        }
+      ],
+      "winner": "pnpm",
+      "evidenceRefs": ["package.json#scripts.validate:site", "pnpm-workspace.yaml"],
+      "rationale": "pnpm owns workspace selection and delegates to the site package, whose script selects Bun explicitly.",
+      "fallbackOrder": ["pnpm"],
+      "revisit": "Revisit if persistent package or workspace ownership changes."
+    },
+    {
+      "id": "astro-site-build",
+      "surfaces": ["package:site:bun"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "productionBuild": "pass",
+            "seoValidation": "pass",
+            "hostedPages": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "productionBuild": "pass",
+            "seoValidation": "pass",
+            "hostedPages": "pass"
+          }
+        }
+      ],
+      "winner": "bun",
+      "evidenceRefs": ["site/package.json#scripts", "pnpm run validate:site"],
+      "rationale": "Astro 7.2.7 and its SEO validator complete the 43-page production build under Bun 1.4.0; hosted Pages remains a separate observation.",
+      "fallbackOrder": ["bun", "node"],
+      "revisit": "Re-evaluate after a material Astro, Vite, adapter, or GitHub Pages runtime change."
+    },
+    {
+      "id": "current-github-automation",
+      "surfaces": ["ci:current:bun"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "localLinux": "pass",
+            "hostedLinux": "unknown",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "priorHostedLinux": "pass",
+            "priorHostedMacos": "pass",
+            "priorHostedWindows": "pass"
+          }
+        }
+      ],
+      "winner": "bun",
+      "evidenceRefs": [".github/workflows/validate.yml", ".github/workflows/publish-release.yml"],
+      "rationale": "Current repository-owned automation installs the pinned Bun runtime and runs the same package-script winners; cross-platform hosted results remain authoritative as they arrive.",
+      "fallbackOrder": ["bun", "node"],
+      "revisit": "Re-evaluate on a failed hosted lane or material GitHub runner/runtime change."
+    },
+    {
+      "id": "historical-tag-bound-release-contract",
+      "surfaces": ["ci:historical-tag:node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "capturedContract": "pass",
+            "immutability": "pass",
+            "bunMigration": "not-applicable"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        ".github/actions/post-release-subjects/action.yml",
+        ".github/workflows/post-release-evidence.yml"
+      ],
+      "rationale": "Historical release verification executes scripts captured from the tagged contract; changing their runtime in place would weaken immutable evidence.",
+      "fallbackOrder": ["node"],
+      "revisit": "Revisit only through a successor to the historical release-evidence contract."
+    },
+    {
+      "id": "transient-skills-cli",
+      "surfaces": ["transient:skills-cli:pnpm-dlx"],
+      "candidates": [
+        {
+          "id": "pnpm-dlx",
+          "signals": {
+            "versionQualified": "pass",
+            "repositoryTrustBoundary": "pass",
+            "persistentMutation": "pass"
+          }
+        },
+        {
+          "id": "bunx",
+          "signals": {
+            "versionQualified": "pass",
+            "repositoryTrustBoundary": "fail",
+            "persistentMutation": "pass"
+          }
+        }
+      ],
+      "winner": "pnpm-dlx",
+      "evidenceRefs": ["scripts/repo/smoke-install.mjs", ".github/workflows/validate.yml"],
+      "rationale": "The repository requires pnpm's transient resolution and trust boundary for the pinned upstream skills CLI.",
+      "fallbackOrder": ["pnpm-dlx"],
+      "revisit": "Revisit when the upstream CLI or repository dependency-trust policy changes."
+    },
+    {
+      "id": "bun-server-artifact",
+      "surfaces": ["deployable:bun-server-artifact"],
+      "candidates": [
+        {
+          "id": "not-applicable",
+          "signals": {
+            "serverDeployable": "not-applicable",
+            "compile": "not-applicable",
+            "shutdownProbe": "not-applicable"
+          }
+        }
+      ],
+      "winner": "not-applicable",
+      "evidenceRefs": ["package.json", "site/package.json"],
+      "rationale": "This repository publishes skills, plugins, archives, and a static Astro site; it has no Bun server artifact in scope.",
+      "fallbackOrder": ["not-applicable"],
+      "revisit": "Revisit if the repository adds a server deployable."
+    }
+  ]
+}

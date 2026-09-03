@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.1.0`
+- Version: `1.2.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds original icons for all six bundled skills, automates release preparation through Release Please, publishes three direct release assets behind protected approval, and dispatches fresh post-release evidence after publication or repair.
+- Release notes: Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.
 
 ## Capabilities
 
@@ -61,8 +61,8 @@ freeze evidence or a portal draft identifier.
 
 ## Archive and portal evidence to attach
 
-- Submission ZIP SHA-256 and complete entry inventory from `npm run package:openai-plugin`.
-- Live ChatGPT directory identity versus listing JSON, skill interface, skills-only invariants, and public category-catalog membership from `npm run verify:openai-directory`.
+- Submission ZIP SHA-256 and complete entry inventory from `pnpm run package:openai-plugin`.
+- Live ChatGPT directory identity versus listing JSON, skill interface, skills-only invariants, and public category-catalog membership from `pnpm run verify:openai-directory`.
 - Source commit and release tag.
 - Clean/dirty source state and deterministic release-input tree digest.
 - Generated `.codex-plugin/plugin.json` from the submitted ZIP.

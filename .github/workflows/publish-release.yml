@@ -42,6 +42,18 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
+      - name: 🟢 Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 🔏 Verify configured Release Please App provenance
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == true) }}
         id: release-provenance
@@ -49,7 +61,7 @@ jobs:
           EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
           GH_TOKEN: ${{ github.token }}
         run: >-
-          node scripts/release/verify-release-please-merge.mjs
+          bun --bun scripts/release/verify-release-please-merge.mjs
           --repository "$GITHUB_REPOSITORY"
           --commit "$GITHUB_SHA"
           --expected-app-id "$EXPECTED_APP_ID"
@@ -79,7 +91,7 @@ jobs:
           test -n "${base_sha}"
           git cat-file -e "${base_sha}^{commit}" 2>/dev/null || \
             git fetch --no-tags --depth=1 origin "${base_sha}"
-          npm run release:intent -- \
+          pnpm run release:intent -- \
             --base-ref "${base_sha}" \
             --head-ref "${GITHUB_SHA}" \
             --github-output
@@ -128,6 +140,11 @@ jobs:
           cache: true
           install: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
@@ -140,7 +157,7 @@ jobs:
           WORKFLOW_SHA: ${{ github.workflow_sha }}
         run: |
           set -euo pipefail
-          version=$(node -p "require('./package.json').version")
+          version=$(bun --bun --eval 'const packageJson = await Bun.file("package.json").json(); console.log(packageJson.version)')
           release_sha=$(git rev-parse HEAD)
           expected_ref="refs/heads/main"
           expected_workflow_ref="${GITHUB_REPOSITORY}/.github/workflows/publish-release.yml@${expected_ref}"
@@ -152,7 +169,7 @@ jobs:
           test "${GITHUB_SHA}" = "${release_sha}"
           test "${CANDIDATE_SHA}" = "${release_sha}"
 
-          node scripts/release/verify-main-release-candidate.mjs \
+          bun --bun scripts/release/verify-main-release-candidate.mjs \
             --repository "${GITHUB_REPOSITORY}" \
             --candidate "${release_sha}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
@@ -205,7 +222,7 @@ jobs:
           echo "Reusing successful Validate run ${run_id} for ${RELEASE_SHA}."
 
       - name: 🚀 Validate release contract
-        run: npm run release:validate
+        run: pnpm run release:validate
 
       - name: ⬇️ Download hosted OpenAI subject
         uses: actions/download-artifact@v8
@@ -244,9 +261,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          plugin_version=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
-          archive_profile=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
-          node scripts/release/validate-release-subject.mjs \
+          plugin_version=$(bun --bun --eval 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
+          archive_profile=$(bun --bun --eval 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
+          bun --bun scripts/release/validate-release-subject.mjs \
             --directory release-subjects \
             --source-revision "${RELEASE_SHA}" \
             --release-version "${VERSION}" \
@@ -257,7 +274,7 @@ jobs:
           echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
 
       - name: 📝 Build release notes
-        run: node scripts/release/print-release-notes.mjs > release-notes.md
+        run: bun exec "pnpm run release:notes > release-notes.md"
 
       - name: 🧭 Plan GitHub Release reconciliation
         id: reconciliation-plan
@@ -267,7 +284,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          node scripts/release/reconcile-github-release.mjs plan \
+          bun --bun scripts/release/reconcile-github-release.mjs plan \
             --repository "$GITHUB_REPOSITORY" \
             --tag "v${VERSION}" \
             --release-sha "${RELEASE_SHA}" \
@@ -310,11 +327,16 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
       - name: 🛡️ Verify protected release environment
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          node scripts/release/check-release-environment.mjs
+          bun --bun scripts/release/check-release-environment.mjs
           --repository "$GITHUB_REPOSITORY"
           --environment release
           --branch main
@@ -331,20 +353,20 @@ jobs:
           expected_ref="refs/heads/main"
           expected_workflow_ref="${GITHUB_REPOSITORY}/.github/workflows/publish-release.yml@${expected_ref}"
           test "$(git rev-parse HEAD)" = "${RELEASE_SHA}"
-          test "$(node -p "require('./package.json').version")" = "${VERSION}"
+          test "$(bun --bun --eval 'const packageJson = await Bun.file("package.json").json(); console.log(packageJson.version)')" = "${VERSION}"
           test "${GITHUB_SHA}" = "${RELEASE_SHA}"
           test "${GITHUB_REF}" = "${expected_ref}"
           test "${WORKFLOW_REF}" = "${expected_workflow_ref}"
           test "${WORKFLOW_SHA}" = "${RELEASE_SHA}"
           test -z "$(git status --porcelain --untracked-files=all)"
-          node --input-type=module -e '
+          bun --bun --eval '
             const [major, minor] = process.argv[1].split(".").map(Number);
             if (!/^\d+\.\d+\.\d+$/.test(process.argv[1]) || major < 0 || (major === 0 && minor < 21)) {
               throw new Error("Publication mutation supports only v0.21.0 and newer releases");
             }
           ' "${VERSION}"
 
-          node scripts/release/verify-main-release-candidate.mjs \
+          bun --bun scripts/release/verify-main-release-candidate.mjs \
             --repository "${GITHUB_REPOSITORY}" \
             --candidate "${RELEASE_SHA}"
 
@@ -396,9 +418,9 @@ jobs:
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           set -euo pipefail
-          plugin_version=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
-          archive_profile=$(node --input-type=module -e 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
-          node scripts/release/validate-release-subject.mjs \
+          plugin_version=$(bun --bun --eval 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).version)')
+          archive_profile=$(bun --bun --eval 'import { pluginIdentity } from "./scripts/lib/release-descriptor.mjs"; console.log(pluginIdentity(process.cwd()).archiveProfile)')
+          bun --bun scripts/release/validate-release-subject.mjs \
             --directory release-subjects \
             --source-revision "${RELEASE_SHA}" \
             --release-version "${VERSION}" \
@@ -409,7 +431,7 @@ jobs:
           echo "plugin_version=${plugin_version}" >> "$GITHUB_OUTPUT"
 
       - name: 📝 Build release notes
-        run: node scripts/release/print-release-notes.mjs > release-notes.md
+        run: bun exec "pnpm run release:notes > release-notes.md"
 
       - name: 🧭 Recheck GitHub Release reconciliation
         id: reconciliation
@@ -419,7 +441,7 @@ jobs:
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           set -euo pipefail
-          node scripts/release/reconcile-github-release.mjs plan \
+          bun --bun scripts/release/reconcile-github-release.mjs plan \
             --repository "$GITHUB_REPOSITORY" \
             --tag "v${VERSION}" \
             --release-sha "${RELEASE_SHA}" \
@@ -476,13 +498,13 @@ jobs:
             PORTABLE_SHA="${portable_sha}" \
             OPENAI_BYTES="${openai_bytes}" \
             PORTABLE_BYTES="${portable_bytes}" \
-            node scripts/release/render-post-release-receipt.mjs \
+            bun --bun scripts/release/render-post-release-receipt.mjs \
               --render pre_release_archive \
               --file pre-release-receipt.json
 
       - name: 🔍 Validate pre-publication receipt
         if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
-        run: node scripts/release/validate-post-release-receipt.mjs --file pre-release-receipt.json
+        run: bun --bun scripts/release/validate-post-release-receipt.mjs --file pre-release-receipt.json
 
       - name: ⬆️ Upload pre-publication evidence
         if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
@@ -504,7 +526,7 @@ jobs:
           VERSION: ${{ needs.release-readiness.outputs.version }}
         run: |
           set -euo pipefail
-          node scripts/release/reconcile-github-release.mjs apply \
+          bun --bun scripts/release/reconcile-github-release.mjs apply \
             --repository "$GITHUB_REPOSITORY" \
             --tag "v${VERSION}" \
             --release-sha "${RELEASE_SHA}" \

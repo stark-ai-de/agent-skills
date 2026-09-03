@@ -24,8 +24,8 @@ try {
   if (!options.target) {
     writeStderr([
       `The OpenAI adapter is not a committed tree (${RETIRED_OPENAI_ADAPTER_TARGET} is retired). Use:`,
-      "  npm run validate:openai-plugin",
-      "  npm run package:openai-plugin",
+      "  pnpm run validate:openai-plugin",
+      "  pnpm run package:openai-plugin",
     ]);
     process.exitCode = 1;
   } else {

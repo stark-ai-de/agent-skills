@@ -7,4 +7,4 @@ runs:
   steps:
     - name: Compare listing to ChatGPT directory and category catalog
       shell: bash
-      run: node scripts/plugin/verify-openai-directory.mjs
+      run: bun --bun scripts/plugin/verify-openai-directory.mjs

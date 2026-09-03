@@ -352,7 +352,7 @@ function openAiHandoff(repository, tag) {
 
 function usage() {
   return [
-    "Usage: npm run release:manage -- <command>",
+    "Usage: pnpm run release:manage -- <command>",
     "Commands: status | setup-check | impact --kind patch|minor|breaking [--skill name] | release-pr --confirm | publish-plan --confirm | publish --confirm | approve --run-id id --confirm | post-release --tag vX.Y.Z --confirm | openai-handoff --tag vX.Y.Z",
   ].join("\n");
 }

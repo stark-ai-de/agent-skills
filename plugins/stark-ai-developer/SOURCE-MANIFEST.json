@@ -48,7 +48,7 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "62f22efa3a2682828272c62e463f7b89a6ec169d14f0af624e126f8dc9247b2c"
+      "sha256": "07b79ae328833529ed7ba0157065c6395d018d5da7db2bd41ecea91da064bac4"
     },
     {
       "byteLength": 12772,
@@ -174,7 +174,7 @@
       "byteLength": 15969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "49f9a99c0cd8b27226e075ffbba9e65adccc453c7714a509bfc3c4009bf480b7"
+      "sha256": "6326f9e63520887976cac7a4520d074b225af8401a456711cb9a9ce452786ee7"
     },
     {
       "byteLength": 892,
@@ -249,10 +249,10 @@
       "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
     },
     {
-      "byteLength": 11646,
+      "byteLength": 11764,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "9e0d582e7c35944c1cbd3936871aab082d510c21bfb3b876fbeb4c947d59992e"
+      "sha256": "b32a03e07218109c8d8cbb2a65062ec8a8e887affd6a15a630bbff4328c568b9"
     },
     {
       "byteLength": 3796,
@@ -489,10 +489,10 @@
       "sha256": "6659c17d2973b41251da292887bbedfc9563c91ac32c1548cc24cf62c356019b"
     },
     {
-      "byteLength": 5429,
+      "byteLength": 6445,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-014-select-application-runtimes-deployment-hosts-and-additional-targets-by-evidence.guide.md",
-      "sha256": "310a63278ebbf6faac52f126999e98f94ce1eb64fa47e8efcd2bfc9ef941d606"
+      "sha256": "13341834b9f81c3df961446371d02272dab7c9f7cb6d7bc8daf3118cb4afa10e"
     },
     {
       "byteLength": 5571,
@@ -1281,10 +1281,28 @@
       "sha256": "f88bed56865dcbceecb887061145de2b6ef6769b5e8523eab735cfc71f6e8e5d"
     },
     {
-      "byteLength": 47955,
+      "byteLength": 7294,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
+      "sha256": "ca413f4861ae7c2db51413dc17c513bcef19437798d9a24cce7dc2efac97232a"
+    },
+    {
+      "byteLength": 8185,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.long.md",
+      "sha256": "029e4490b5b5a3eb305317647ab9603a2844c3ceabc6a262370b6d93ce63f05b"
+    },
+    {
+      "byteLength": 3478,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.short.md",
+      "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
+    },
+    {
+      "byteLength": 48634,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "4d808edc06fbebb0bc319b62d53e2e49aa1509e8a4431b0a7dacaaaf175a83e1"
+      "sha256": "71f200a769602add8f3c9e4e2697da94cde9cca8105ef3ef3e824a5013b1094e"
     },
     {
       "byteLength": 6996,
@@ -1811,9 +1829,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "96ec99e0dd2e6a7e48d91b7599bff81521671d4e2dc842e3c2aeb7350ae82926"
+  "treeHash": "ddad63df04a4ffbaf356406bb59f2e934f8b7106492271e00215cbe46630daed"
 }

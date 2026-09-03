@@ -169,6 +169,14 @@
       "id": "AC-ADR-057",
       "disposition": "material",
       "relations": [{ "type": "adapts", "sources": ["ADR-0052"] }]
+    },
+    {
+      "id": "AC-ADR-058",
+      "disposition": "material",
+      "relations": [
+        { "type": "adapts", "sources": ["ADR-0018"] },
+        { "type": "diverges-from", "sources": ["ADR-0034"] }
+      ]
     }
   ]
 }

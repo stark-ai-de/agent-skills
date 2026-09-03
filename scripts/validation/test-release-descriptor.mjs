@@ -20,6 +20,7 @@ import {
   sourceTreeSha256,
 } from "../lib/release-input-digest.mjs";
 import {
+  engineRangeAdmits,
   loadReleaseDescriptorFile,
   PLUGIN_SOURCE_PATH,
   PLUGIN_SOURCE_SCHEMA_PATH,
@@ -36,11 +37,79 @@ assert.equal(errors.length, 0, errors.join("\n"));
 const pluginSource = JSON.parse(
   fs.readFileSync(path.join(repositoryRoot, PLUGIN_SOURCE_PATH), "utf8"),
 );
+
+function toolchainFixtureErrors({ nodeRange, bunRange }) {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "release-toolchain-"));
+  try {
+    fs.mkdirSync(path.join(fixture, "plugins"), { recursive: true, mode: 0o755 });
+    fs.copyFileSync(
+      path.join(repositoryRoot, PLUGIN_SOURCE_PATH),
+      path.join(fixture, PLUGIN_SOURCE_PATH),
+    );
+    fs.copyFileSync(
+      path.join(repositoryRoot, PLUGIN_SOURCE_SCHEMA_PATH),
+      path.join(fixture, PLUGIN_SOURCE_SCHEMA_PATH),
+    );
+    fs.writeFileSync(
+      path.join(fixture, "package.json"),
+      `${JSON.stringify(
+        {
+          packageManager: `pnpm@${pluginSource.build.pnpmVersion}`,
+          engines: { node: nodeRange, bun: bunRange },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    fs.writeFileSync(path.join(fixture, ".node-version"), `${pluginSource.build.nodeVersion}\n`);
+    fs.writeFileSync(path.join(fixture, ".bun-version"), `${pluginSource.build.bunVersion}\n`);
+    return validateToolchainPins(fixture);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+assert.equal(engineRangeAdmits("1.4.0", "1.4.0"), true);
+assert.equal(engineRangeAdmits(">=1.4.0", "1.4.0"), true);
+assert.equal(engineRangeAdmits("^1.3.0 || >=1.4.0", "1.4.0"), true);
+assert.equal(engineRangeAdmits("<1.4.0", "1.4.0"), false);
+assert.equal(engineRangeAdmits("not a semver range", "1.4.0"), false);
+
+assert.deepEqual(
+  toolchainFixtureErrors({
+    nodeRange: pluginSource.build.nodeVersion,
+    bunRange: `^1.3.0 || >=${pluginSource.build.bunVersion}`,
+  }),
+  [],
+);
+assert.deepEqual(
+  toolchainFixtureErrors({
+    nodeRange: ">=24.0.0 <25",
+    bunRange: `>=${pluginSource.build.bunVersion}`,
+  }),
+  [],
+);
+assert.match(
+  toolchainFixtureErrors({
+    nodeRange: `>=${pluginSource.build.nodeVersion}`,
+    bunRange: "<1.4.0",
+  }).join("\n"),
+  /engines\.bun must admit 1\.4\.0/,
+);
+assert.match(
+  toolchainFixtureErrors({
+    nodeRange: "not a semver range",
+    bunRange: `>=${pluginSource.build.bunVersion}`,
+  }).join("\n"),
+  /engines\.node must admit 24\.18\.0/,
+);
 assert.equal(release.pluginId, pluginSource.pluginId);
 assert.equal(release.version, pluginSource.version);
 assert.equal(release.build.archiveProfile, pluginSource.build.archiveProfile);
+assert.equal(release.build.bunVersion, pluginSource.build.bunVersion);
 assert.equal(release.displayName, pluginSource.displayName);
 assert.equal(pluginIdentity(repositoryRoot).displayName, pluginSource.displayName);
+assert.equal(pluginIdentity(repositoryRoot).bunVersion, pluginSource.build.bunVersion);
 const derivedPaths = pluginArtifactPaths(repositoryRoot);
 assert.equal(derivedPaths.portableTarget, pluginSource.outputs.portableProjection);
 assert.equal(derivedPaths.listing, `docs/listing/openai/${pluginSource.listingId}.json`);
