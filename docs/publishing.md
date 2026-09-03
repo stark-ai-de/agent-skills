@@ -207,11 +207,38 @@ and evidence dispatch, the protected publisher uses a new repository-scoped App
 token to add `autorelease: tagged` and remove `autorelease: pending` for that
 exact generated PR. A failed dispatch or label transition keeps the run failed
 and is safe to retry; it cannot silently unlock the next generated release PR.
-If `main` advanced after the candidate was validated, recover that older
-candidate through **Actions → Publish Release → original run → Re-run jobs** or
-`gh run rerun <original-run-id>`. A new
+If `main` advanced after the candidate was validated, recover a transient
+failure through **Actions → Publish Release → original run → Re-run jobs** or
+`gh run rerun <original-run-id>`. A normal new
 `npm run release:manage -- publish --confirm` dispatch always targets current
 `main` and is not a retry of the older candidate.
+
+If an immutable workflow-code defect blocked the original run before any target
+tag or GitHub Release existed, use the narrower recovery route:
+
+<!-- prettier-ignore -->
+[ADR-0053](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.short.md) ([Long, canonical](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.long.md) · [Guide](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.guide.md))
+
+Merge only the reviewed recovery controller, validation, runbook, and
+successor-ADR files, then dispatch a read-only plan with the original full
+generated-release merge SHA:
+
+```bash
+npm run release:manage -- publish-plan \
+  --recovery-release-sha ORIGINAL_RELEASE_SHA \
+  --confirm
+```
+
+The recovery preflight authenticates the original Release Please App-owned PR,
+requires successful hosted `Validate` runs for its exact head and merged
+origin, proves a bounded allowed diff to the exact protected current `main`,
+verifies unchanged root release inputs, and requires the target tag and Release
+to be absent. Readiness then requires a fresh successful `Validate` run for the
+replacement and byte-identical hosted ZIPs from both revisions. Each metadata document must identify its own commit
+while retaining the same release, plugin, archive profile, sizes, and digests.
+The replacement SHA—not the origin—becomes the tag, release-subject,
+workflow/source-digest, and environment-approval revision. Any ambiguity blocks
+before the write-capable job.
 Create both labels in **Settings → Issues → Labels** before the first dispatch;
 `setup-check` is read-only and fails if either label is absent.
 
@@ -302,17 +329,17 @@ GitHub Actions job summaries name the next operator follow-up after each run.
 All local commands dispatch hosted workflows or APIs; none creates a local tag
 or release. Hosted mutations require `--confirm`.
 
-| CLI                                                                             | GitHub web equivalent                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run release:manage -- status`                                              | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
-| `npm run release:manage -- setup-check`                                         | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
-| `npm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]` | Review the feature diff and affected component versions.                                                                                                                                                                                     |
-| `npm run release:manage -- release-pr --confirm`                                | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
-| `npm run release:manage -- publish-plan --confirm`                              | **Actions → Publish Release → Run workflow**, `dry_run=true`.                                                                                                                                                                                |
-| `npm run release:manage -- publish --confirm`                                   | **Actions → Publish Release → Run workflow**, `dry_run=false`; this targets current `main`, while an older candidate requires rerunning its original workflow run.                                                                           |
-| `npm run release:manage -- approve --run-id ID --confirm`                       | Open the waiting run/deployment and approve the `release` environment.                                                                                                                                                                       |
-| `npm run release:manage -- post-release --tag vX.Y.Z --confirm`                 | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
-| `npm run release:manage -- openai-handoff --tag vX.Y.Z`                         | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
+| CLI                                                                                    | GitHub web equivalent                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run release:manage -- status`                                                     | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
+| `npm run release:manage -- setup-check`                                                | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
+| `npm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]`        | Review the feature diff and affected component versions.                                                                                                                                                                                     |
+| `npm run release:manage -- release-pr --confirm`                                       | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
+| `npm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                              |
+| `npm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                     |
+| `npm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                 |
+| `npm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
+| `npm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
 
 Equivalent local release validation:
 

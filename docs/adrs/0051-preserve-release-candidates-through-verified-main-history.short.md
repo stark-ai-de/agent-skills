@@ -2,7 +2,7 @@
 
 ID: ADR-0051
 Title: Preserve release candidates through verified main history
-Status: Accepted
+Status: Superseded
 Date: 2026-08-26
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0053
 Guide verified: 2026-08-26
 Gist: Keep an exact validated release candidate live while it remains in protected main history.
 

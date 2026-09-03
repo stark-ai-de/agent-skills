@@ -76,6 +76,15 @@ function validateTag(tag) {
   return tag;
 }
 
+function recoveryReleaseSha(argv) {
+  const present = argv.includes("--recovery-release-sha");
+  const value = argument(argv, "--recovery-release-sha");
+  if (present && !/^[0-9a-f]{40}$/.test(value ?? "")) {
+    throw new Error("--recovery-release-sha must be one full lowercase 40-hex commit SHA");
+  }
+  return value;
+}
+
 function runWorkflow(repository, workflow, fields = []) {
   const args = ["workflow", "run", workflow, "--repo", repository, "--ref", "main"];
   for (const [name, value] of fields) args.push("-f", `${name}=${value}`);
@@ -195,6 +204,7 @@ function impact(argv) {
 
 function approve(repository, argv) {
   const runId = argument(argv, "--run-id");
+  const recoverySha = recoveryReleaseSha(argv);
   if (!/^\d+$/.test(runId ?? "")) throw new Error("approve requires numeric --run-id");
   const run = ghJson(["api", `repos/${repository}/actions/runs/${runId}`]);
   if (!/^[0-9a-f]{40}$/.test(run?.head_sha ?? "")) {
@@ -220,6 +230,7 @@ function approve(repository, argv) {
     run.head_sha,
     "--expected-app-id",
     String(variable.value ?? ""),
+    "--allow-unmatched",
     "--json",
   ]);
   let candidate;
@@ -228,8 +239,46 @@ function approve(repository, argv) {
   } catch {
     throw new Error("Refusing deployment approval: release candidate provenance is invalid");
   }
+  let recovery = false;
+  if (candidate.authorized === true) {
+    if (recoverySha) {
+      throw new Error(
+        "Refusing deployment approval: --recovery-release-sha is not valid for an ordinary generated release candidate",
+      );
+    }
+  } else {
+    if (!recoverySha || run?.event !== "workflow_dispatch") {
+      throw new Error(
+        "Refusing deployment approval: run SHA is neither an App-owned release candidate nor an explicitly identified recovery candidate",
+      );
+    }
+    if (run?.display_title !== `Publish Release · recovery ${recoverySha}`) {
+      throw new Error(
+        "Refusing deployment approval: recovery SHA does not match the workflow run title",
+      );
+    }
+    const recoveryProof = commandResult(process.execPath, [
+      path.join(root, "scripts/release/verify-prepublication-release-recovery.mjs"),
+      "--repository",
+      repository,
+      "--release-origin",
+      recoverySha,
+      "--candidate",
+      run.head_sha,
+      "--expected-app-id",
+      String(variable.value ?? ""),
+      "--allow-contained-candidate",
+      "--json",
+    ]);
+    try {
+      candidate = JSON.parse(recoveryProof.stdout);
+    } catch {
+      throw new Error("Refusing deployment approval: recovery candidate provenance is invalid");
+    }
+    recovery = true;
+  }
   if (candidate.authorized !== true || !/^\d+$/.test(String(candidate.pullRequest ?? ""))) {
-    throw new Error("Refusing deployment approval: run SHA is not an App-owned release candidate");
+    throw new Error("Refusing deployment approval: release candidate provenance is invalid");
   }
   const pending = ghJson([
     "api",
@@ -256,7 +305,7 @@ function approve(repository, argv) {
     { input: payload },
   );
   console.log(
-    `Approved Publish Release run ${runId} for PR #${candidate.pullRequest} at ${run.head_sha} on main.`,
+    `Approved Publish Release run ${runId} for ${recovery ? "recovery of " : ""}PR #${candidate.pullRequest} at ${run.head_sha} on main.`,
   );
 }
 
@@ -353,7 +402,7 @@ function openAiHandoff(repository, tag) {
 function usage() {
   return [
     "Usage: npm run release:manage -- <command>",
-    "Commands: status | setup-check | impact --kind patch|minor|breaking [--skill name] | release-pr --confirm | publish-plan --confirm | publish --confirm | approve --run-id id --confirm | post-release --tag vX.Y.Z --confirm | openai-handoff --tag vX.Y.Z",
+    "Commands: status | setup-check | impact --kind patch|minor|breaking [--skill name] | release-pr --confirm | publish-plan [--recovery-release-sha sha] --confirm | publish [--recovery-release-sha sha] --confirm | approve --run-id id [--recovery-release-sha sha] --confirm | post-release --tag vX.Y.Z --confirm | openai-handoff --tag vX.Y.Z",
   ].join("\n");
 }
 
@@ -377,10 +426,16 @@ try {
       runWorkflow(repository, "release-please.yml");
       break;
     case "publish-plan":
-      runWorkflow(repository, "publish-release.yml", [["dry_run", "true"]]);
+      runWorkflow(repository, "publish-release.yml", [
+        ["dry_run", "true"],
+        ...(recoveryReleaseSha(argv) ? [["recovery_release_sha", recoveryReleaseSha(argv)]] : []),
+      ]);
       break;
     case "publish":
-      runWorkflow(repository, "publish-release.yml", [["dry_run", "false"]]);
+      runWorkflow(repository, "publish-release.yml", [
+        ["dry_run", "false"],
+        ...(recoveryReleaseSha(argv) ? [["recovery_release_sha", recoveryReleaseSha(argv)]] : []),
+      ]);
       break;
     case "approve":
       approve(repository, argv.slice(1));
