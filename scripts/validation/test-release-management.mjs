@@ -461,6 +461,7 @@ const releasePullRequest = {
     id: 67890,
     login: botLogin,
     type: "Bot",
+    avatar_url: `https://avatars.githubusercontent.com/in/${appId}?v=4`,
     html_url: `https://github.com/apps/${appSlug}`,
   },
 };
@@ -482,11 +483,14 @@ const releasePleaseCommit = {
 const provenance = (overrides = {}) =>
   releasePleasePullRequestOwnershipErrors({
     pullRequest: releasePullRequest,
-    app: { id: appId, slug: appSlug },
     commits: [releasePleaseCommit],
     repository: "stark-ai-de/agent-skills",
     expectedAppId: appId,
     ...overrides,
+  });
+const provenanceForUser = (user) =>
+  provenance({
+    pullRequest: { ...releasePullRequest, user: { ...releasePullRequest.user, ...user } },
   });
 assert.deepEqual(provenance(), []);
 assert.equal(
@@ -494,7 +498,66 @@ assert.equal(
   releasePullRequest.number,
 );
 assert.equal(generatedReleasePullRequestForCommit([releasePullRequest], "d".repeat(40)), null);
-assert.match(provenance({ app: { id: 999, slug: appSlug } }).join(";"), /App identity/);
+assert.match(provenance({ expectedAppId: 999 }).join(";"), /App identity/);
+assert.match(provenance({ expectedAppId: "not-an-app-id" }).join(";"), /App identity/);
+assert.match(
+  provenanceForUser({
+    avatar_url: "https://avatars.githubusercontent.com/in/not-an-app-id?v=4",
+  }).join(";"),
+  /App identity/,
+);
+assert.match(
+  provenanceForUser({ avatar_url: `https://example.com/in/${appId}?v=4` }).join(";"),
+  /App identity/,
+);
+assert.match(provenanceForUser({ avatar_url: undefined }).join(";"), /App identity/);
+assert.match(provenanceForUser({ type: "User" }).join(";"), /configured App bot/);
+assert.match(provenanceForUser({ id: undefined }).join(";"), /configured App bot/);
+assert.match(
+  provenanceForUser({ id: String(releasePullRequest.user.id) }).join(";"),
+  /configured App bot/,
+);
+assert.match(provenanceForUser({ login: "other-app[bot]" }).join(";"), /configured App bot/);
+assert.match(
+  provenanceForUser({ html_url: "https://github.com/apps/other-app" }).join(";"),
+  /configured App bot/,
+);
+assert.match(provenanceForUser({ html_url: undefined }).join(";"), /configured App bot/);
+const renamedAppSlug = "renamed-release-please-test";
+const renamedBotLogin = `${renamedAppSlug}[bot]`;
+const renamedPullRequest = {
+  ...releasePullRequest,
+  user: {
+    ...releasePullRequest.user,
+    login: renamedBotLogin,
+    html_url: `https://github.com/apps/${renamedAppSlug}`,
+  },
+};
+const renamedReleasePleaseCommit = {
+  ...releasePleaseCommit,
+  author: { login: renamedBotLogin },
+  commit: {
+    ...releasePleaseCommit.commit,
+    author: {
+      name: renamedBotLogin,
+      email: `${renamedPullRequest.user.id}+${renamedBotLogin}@users.noreply.github.com`,
+    },
+  },
+};
+assert.deepEqual(
+  provenance({ pullRequest: renamedPullRequest, commits: [renamedReleasePleaseCommit] }),
+  [],
+  "a self-consistent App slug rename remains bound to the same immutable App ID",
+);
+assert.match(
+  provenance({
+    pullRequest: {
+      ...releasePullRequest,
+      head: { ...releasePullRequest.head, repo: { full_name: "other/repository" } },
+    },
+  }).join(";"),
+  /repository-local/,
+);
 assert.match(
   provenance({ commits: [{ ...releasePleaseCommit, author: { login: "human" } }] }).join(";"),
   /not authored/,
@@ -652,6 +715,7 @@ const validateWorkflow = read(".github/workflows/validate.yml");
 const publishWorkflow = read(".github/workflows/publish-release.yml");
 const evidenceWorkflow = read(".github/workflows/post-release-evidence.yml");
 const candidateVerifier = read("scripts/release/verify-main-release-candidate.mjs");
+const releaseProvenanceVerifier = read("scripts/release/verify-release-please-merge.mjs");
 const formatIgnore = read(".oxfmtignore");
 assert.match(
   formatIgnore,
@@ -729,6 +793,8 @@ assert.match(
 );
 assert.match(publishWorkflow, /verify-release-please-merge\.mjs/);
 assert.match(publishWorkflow, /--expected-app-id "\$EXPECTED_APP_ID"/);
+assert.doesNotMatch(releaseProvenanceVerifier, /ghJson\(`apps\//);
+assert.doesNotMatch(publishWorkflow, /gh api "apps\/\$\{APP_SLUG\}"/);
 assert.match(publishWorkflow, /Publication mutation supports only v0\.21\.0 and newer releases/);
 assert.match(
   publishWorkflow,

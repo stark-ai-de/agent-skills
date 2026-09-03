@@ -43,13 +43,6 @@ function ghJsonPages(endpoint) {
   return JSON.parse(result.stdout).flatMap((page) => (Array.isArray(page) ? page : []));
 }
 
-function appSlug(pullRequest) {
-  const match = /^https:\/\/github\.com\/apps\/([A-Za-z0-9-]+)$/.exec(
-    pullRequest?.user?.html_url ?? "",
-  );
-  return match?.[1] ?? null;
-}
-
 function writeGithubOutput(filePath, values) {
   if (!filePath) return;
   fs.appendFileSync(
@@ -113,15 +106,11 @@ export function runCli(argv = process.argv.slice(2)) {
       );
     }
   }
-  const slug = appSlug(pullRequest);
-  if (!slug) throw new Error("Generated release pull request has no GitHub App bot identity");
-  const app = ghJson(`apps/${slug}`);
   const commits = ghJsonPages(
     `repos/${repository}/pulls/${pullRequest.number}/commits?per_page=100`,
   );
   const ownershipErrors = releasePleasePullRequestOwnershipErrors({
     pullRequest,
-    app,
     commits,
     repository,
     expectedAppId,
