@@ -521,8 +521,11 @@ security routes return HTTP 200.
 5. Verify all six packaged skill icons. If the portal ignores package metadata,
    restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, and `pen`
    glyphs.
-6. Upload `site/public/logo.png` as the light Plugin Info logo.
-7. Upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon.
+6. Keep the existing light and dark Plugin Info logos unchanged.
+7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)
+   to upload the separate light/dark Composer PNGs and restore Plugin Info logos
+   only if the package upload reset them. The ZIP's single `composerIcon` field
+   does not document a way to select both theme variants.
 8. Review automated scans and every portal warning, including
    `manifest_normalized` if shown.
 9. Add no more than three realistic starter prompts.
