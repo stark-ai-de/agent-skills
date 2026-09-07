@@ -55,8 +55,8 @@ freeze evidence or a portal draft identifier.
 ## Portal asset handoff
 
 1. Verify the six packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
-2. Upload `site/public/logo.png` as the light Plugin Info logo.
-3. Upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon.
+2. Keep both existing Plugin Info logos unchanged. Restore them only if the ZIP upload reset them.
+3. Follow the [Composer icon handoff](stark-ai-developer-first-publication.md#composer-icon-handoff) to set the separate light and dark PNGs manually; do not use the Plugin Info logos for these fields.
 4. After propagation, verify light and dark rendering plus the public directory identity.
 
 ## Archive and portal evidence to attach
