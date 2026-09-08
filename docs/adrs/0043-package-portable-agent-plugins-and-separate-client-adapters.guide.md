@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: None
 Superseded by: None
-Guide verified: 2026-08-18
+Guide verified: 2026-08-26
 Gist: Make Agent Plugins the canonical package projection and generate a separate client adapter only when a target surface cannot consume that projection or requires client-native files.
 
 Variants: [Short](0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) · [Long, canonical](0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · **Guide**
@@ -43,7 +43,7 @@ Identity fields in `plugins/stark-ai-developer.source.json` are the sole source 
 
 ## How to apply
 
-1. Edit a skill only in its canonical `skills/<category>/<skill>/` directory. When a skill is distributed to OpenAI surfaces, maintain its reviewed `agents/openai.yaml` there as skill-local canonical metadata. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `npm run sync:agent-plugin`. Confirm with `npm run validate:projections` when the portable contract changed.
+1. Edit a skill only in its canonical `skills/<category>/<skill>/` directory. When a skill is distributed to OpenAI surfaces, maintain its reviewed `agents/openai.yaml` there as skill-local canonical metadata. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `pnpm run sync:agent-plugin`. Confirm with `pnpm run validate:projections` when the portable contract changed.
 2. Add or remove plugin membership only through `plugins/stark-ai-developer.source.json`, together with the required version, routing, listing, evaluation, and release-review changes.
 3. Change plugin identity, semantic version, submission type, public-listing strategy, release toolchain, or archive profile only through identity fields in `plugins/stark-ai-developer.source.json`. Do not introduce a second author-maintained version source in generated artifacts.
 4. Always generate `plugins/stark-ai-developer/` as the Agent Plugins 1.0.0 projection:
@@ -63,7 +63,7 @@ Identity fields in `plugins/stark-ai-developer.source.json` are the sole source 
 | Older or incompatible client                                                                                    | A validated client adapter, only when required     |
 
 6. Keep the committed `.agents/plugins/marketplace.json` pointed at `./plugins/stark-ai-developer`. Test the OpenAI adapter with an isolated generated marketplace or direct path; never repoint the canonical repository marketplace.
-7. When an adapter is required, generate it from the same bundle, listing source, and canonical skills into disposable staging. Keep package-level client manifests, listing assets, policies, hooks, application mappings, and compatibility files inside that staged adapter root, then archive it and delete the stage. Do not commit the adapter tree. Use `npm run validate:openai-plugin` and `npm run package:openai-plugin`. `npm run sync:openai-plugin` is a refuse-redirect and must not materialize `adapters/openai/stark-ai-developer/`.
+7. When an adapter is required, generate it from the same bundle, listing source, and canonical skills into disposable staging. Keep package-level client manifests, listing assets, policies, hooks, application mappings, and compatibility files inside that staged adapter root, then archive it and delete the stage. Do not commit the adapter tree. Use `pnpm run validate:openai-plugin` and `pnpm run package:openai-plugin`. `pnpm run sync:openai-plugin` is a refuse-redirect and must not materialize `adapters/openai/stark-ai-developer/`.
 8. Do not generate, overlay, or rewrite canonical skill-local files in an adapter. Put provenance and generation notices in package-level README or source-manifest files rather than modifying copied `SKILL.md` or `agents/openai.yaml` files.
 9. Keep the existing `npx skills` catalog and category layout supported independently of plugin packaging.
 10. Treat one public **stark AI Developer** listing with six bundled skills as the version 1 product strategy. Create independent public cards only through separately named and reviewed one-skill plugin submissions.
@@ -105,7 +105,7 @@ Identity fields in `plugins/stark-ai-developer.source.json` are the sole source 
 - For the portable projection, generate into clean staging directories and compare deterministic tree hashes with committed output.
 - For the OpenAI adapter, regenerate into disposable staging, validate the stage and archive against canonical sources, and delete the stage.
 - Run isolated generation twice and require an empty second diff.
-- Enforce Node 24.18.0, pnpm 11.22.0, the frozen lockfile, and the `zip-store-v1` STORE-only archive profile. Packaging must not call a platform `zip` executable or use a compressed ZIP writer.
+- Enforce Node 24.18.0, Bun 1.4.0, pnpm 11.24.0, the frozen lockfile, and the `zip-store-v1` STORE-only archive profile. Packaging must not call a platform `zip` executable or use a compressed ZIP writer.
 - Pin Git to LF (`core.autocrlf=false`, `core.eol=lf`) before Windows-inclusive archive-identity checkouts, and keep `* text=auto eol=lf` in `.gitattributes`, so packaged file bytes match Git blobs.
 - Derive README installation commands and release contents from the same bundle membership.
 - Require security, license, dependency, legal, evaluation, publisher, and explicit-publication gates before release.

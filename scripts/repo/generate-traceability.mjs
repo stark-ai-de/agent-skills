@@ -98,7 +98,7 @@ if (check) {
   if (!fs.existsSync(outputPath)) {
     errors.push(`[FOUND-001] ${TRACEABILITY_PATH} is missing`);
   } else if (fs.readFileSync(outputPath, "utf8") !== serialized) {
-    errors.push(`[FOUND-001] ${TRACEABILITY_PATH} is stale; run npm run generate:traceability`);
+    errors.push(`[FOUND-001] ${TRACEABILITY_PATH} is stale; run pnpm run generate:traceability`);
   }
 } else {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true, mode: 0o755 });

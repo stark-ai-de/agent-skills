@@ -4,7 +4,7 @@ import { fingerprintGitCandidateRepository } from "../validation/smoke-install-c
 
 function usage() {
   return [
-    "Usage: node scripts/repo/fingerprint-smoke-candidate.mjs [--repository <path>] [--json]",
+    "Usage: pnpm run smoke:fingerprint -- [--repository <path>] [--json]",
     "",
     "Print the deterministic SHA-256 fingerprint of the Git-derived smoke candidate set.",
   ].join("\n");

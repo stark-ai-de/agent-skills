@@ -1,6 +1,8 @@
 packages:
   - "."
   - "site"
+overrides:
+  "vite@": 8.2.2
 strictDepBuilds: true
 blockExoticSubdeps: true
 minimumReleaseAge: 1440

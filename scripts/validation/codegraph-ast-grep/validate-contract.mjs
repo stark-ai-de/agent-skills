@@ -2918,14 +2918,14 @@ const packageText = requireFile(packagePath);
 requirePattern(
   packagePath,
   packageText,
-  /"validate:codegraph-ast-grep":\s*"node scripts\/validation\/codegraph-ast-grep\/validate-contract\.mjs"/,
+  /"validate:codegraph-ast-grep":\s*"bun --bun scripts\/validation\/codegraph-ast-grep\/validate-contract\.mjs"/,
   "missing dedicated contract-validation script",
 );
 requirePattern(
   packagePath,
   packageText,
   /"validate"[^\n]*validate:codegraph-ast-grep/,
-  "npm run validate must execute the contract validator",
+  "pnpm run validate must execute the contract validator",
 );
 
 export const validationErrors = [...new Set(errors)].sort();

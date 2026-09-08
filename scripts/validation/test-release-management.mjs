@@ -1331,20 +1331,20 @@ assert.match(
 );
 assert.equal(occurrences(publishWorkflow, /verify-main-release-candidate\.mjs/g), 2);
 assert.equal(
-  occurrences(
-    publishWorkflow,
-    /node scripts\/release\/print-release-notes\.mjs > release-notes\.md/g,
-  ),
+  occurrences(publishWorkflow, /bun exec "pnpm run release:notes > release-notes\.md"/g),
   2,
 );
-assert.doesNotMatch(publishWorkflow, /npm run release:notes > release-notes\.md/);
+assert.doesNotMatch(
+  publishWorkflow,
+  /node scripts\/release\/print-release-notes\.mjs > release-notes\.md/,
+);
 assert.doesNotMatch(publishWorkflow, /main advanced after release readiness/);
 assert.match(candidateVerifier, /branches\/main/);
 assert.match(candidateVerifier, /compare\/\$\{candidateSha\}\.\.\.\$\{mainSha\}/);
 assert.match(candidateVerifier, /mainCandidateContainmentErrors/);
 assert.match(
   publishWorkflow,
-  /npm run release:intent -- \\\n\s+--base-ref "\$\{base_sha\}" \\\n\s+--head-ref "\$\{GITHUB_SHA\}" \\\n\s+--github-output/,
+  /pnpm run release:intent -- \\\n\s+--base-ref "\$\{base_sha\}" \\\n\s+--head-ref "\$\{GITHUB_SHA\}" \\\n\s+--github-output/,
 );
 assert.match(
   publishWorkflow,

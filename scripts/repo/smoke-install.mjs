@@ -66,8 +66,8 @@ const smokeEnvironment = {
   DISABLE_TELEMETRY: "1",
   DO_NOT_TRACK: "1",
 };
-const skillsCommand = configuredSkillsCli || "npx";
-const skillsPrefixArguments = configuredSkillsCli ? [] : ["--yes", "skills@latest"];
+const skillsCommand = configuredSkillsCli || "pnpm";
+const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"];
 const installCases = [
   {
     agent: "codex",
@@ -199,7 +199,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedPublicAdrCount = 57;
+  const expectedPublicAdrCount = 58;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {

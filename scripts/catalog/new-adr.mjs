@@ -21,7 +21,7 @@ const allowedCategories = new Set(categories);
 function usage(message) {
   if (message) console.error(message);
   console.error(
-    'Usage: npm run adr:new -- "Use category-based skill folders" --category governance --tags "adr, taxonomy" --applies-when "Changing skill categories." --gist "Skills use durable workflow categories." [--owner stark-ai-de]',
+    'Usage: pnpm run adr:new -- "Use category-based skill folders" --category governance --tags "adr, taxonomy" --applies-when "Changing skill categories." --gist "Skills use durable workflow categories." [--owner stark-ai-de]',
   );
   process.exit(1);
 }
@@ -220,4 +220,4 @@ try {
 
 for (const target of targets) console.log(`Created ${path.relative(root, target)}`);
 console.log("Updated docs/adrs.md");
-console.log("Complete every body placeholder before running npm run validate:adrs.");
+console.log("Complete every body placeholder before running pnpm run validate:adrs.");

@@ -57,4 +57,4 @@ runs:
         if [ -n "$REPORT_FILE" ]; then
           args+=(--report-file "$REPORT_FILE")
         fi
-        node scripts/release/verify-release-reproducibility.mjs "${args[@]}"
+        bun --bun scripts/release/verify-release-reproducibility.mjs "${args[@]}"

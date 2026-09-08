@@ -60,25 +60,25 @@ Follow [`docs/specs.md`](docs/specs.md) for spec persistence, filename examples,
 Select checks from changed contracts and owning boundaries as required by [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Common repository gates are:
 
 ```bash
-npm run validate
-npm run list
-npm run list:incubator
-npm run smoke:fingerprint
-npm run smoke:install
+pnpm run validate
+pnpm run list
+pnpm run list:incubator
+pnpm run smoke:fingerprint
+pnpm run smoke:install
 ```
 
-Run the local `npm run validate` aggregate for release intent or when another mandatory gate requires it; hosted Validate remains mandatory for every pull request. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
+Run the local `pnpm run validate` aggregate for release intent or when another mandatory gate requires it; hosted Validate remains mandatory for every pull request. Run catalog listing checks when discovery changes, and run fingerprint/install smoke checks when install behavior or the release payload changes.
 
-Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `npm run sync:agent-plugin`, then `npm run validate:projections` when the portable contract changed.
+Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit `plugins/stark-ai-developer/`. After changing a bundled skill or `plugins/stark-ai-developer.source.json`, run `pnpm run sync:agent-plugin`, then `pnpm run validate:projections` when the portable contract changed.
 
-The `npx` command requires network access the first time the CLI is fetched.
+The pinned `pnpm dlx` discovery command requires network access the first time the CLI is fetched.
 
 Optional Oxc checks:
 
 ```bash
 pnpm install
-pnpm format:check
-pnpm lint
+pnpm run format:check
+pnpm run lint
 ```
 
 ## Pull Request Checklist
@@ -93,10 +93,10 @@ pnpm lint
 - [ ] Scripts are documented, deterministic, and safe.
 - [ ] README skill catalog is current.
 - [ ] ADR added if a repo-level decision changed.
-- [ ] Bundled skill or `plugins/stark-ai-developer.source.json` changes were synced with `npm run sync:agent-plugin`; `plugins/stark-ai-developer/` was not hand-edited.
+- [ ] Bundled skill or `plugins/stark-ai-developer.source.json` changes were synced with `pnpm run sync:agent-plugin`; `plugins/stark-ai-developer/` was not hand-edited.
 - [ ] Checks required by ADR-0041 and the changed contracts pass; release-intent work includes the local aggregate, and hosted Validate is green.
-- [ ] `npx skills@latest add ./skills --list` works when local catalog discovery changed.
-- [ ] `npm run smoke:install` passes when install smoke behavior changed.
+- [ ] `pnpm dlx skills@1.5.23 add ./skills --list` works when local catalog discovery changed.
+- [ ] `pnpm run smoke:install` passes when install smoke behavior changed.
 - [ ] No private or sensitive data is included.
 
 ## Publishing Checklist

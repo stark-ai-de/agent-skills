@@ -137,13 +137,16 @@
     "build": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodeVersion", "pnpmVersion", "archiveProfile"],
+      "required": ["nodeVersion", "bunVersion", "pnpmVersion", "archiveProfile"],
       "properties": {
         "nodeVersion": {
           "const": "24.18.0"
         },
+        "bunVersion": {
+          "const": "1.4.0"
+        },
         "pnpmVersion": {
-          "const": "11.22.0"
+          "const": "11.24.0"
         },
         "archiveProfile": {
           "const": "zip-store-v1"

@@ -27,12 +27,12 @@ This guide is non-normative. [Long](0053-recover-unpublished-releases-through-pr
    correction.
 2. For a controller defect before any tag or Release exists, merge only the
    reviewed controller, validator, runbook, and successor-ADR repair files.
-3. Run `npm run release:manage -- publish-plan --recovery-release-sha SHA --confirm`
+3. Run `pnpm run release:manage -- publish-plan --recovery-release-sha SHA --confirm`
    with the full original generated-release merge SHA. Inspect the authenticated
    origin PR, successful origin validation, protected ancestry, allowed file
    set, target absence, fresh candidate validation, and exact ZIP comparison.
 4. After the plan succeeds, separately dispatch
-   `npm run release:manage -- publish --recovery-release-sha SHA --confirm`.
+   `pnpm run release:manage -- publish --recovery-release-sha SHA --confirm`.
 5. Approve the waiting `release` environment only after verifying the exact run
    SHA. That replacement SHA becomes the annotated tag and attestation source.
 6. Verify Latest, the three direct assets, both ZIP attestations, and the exact

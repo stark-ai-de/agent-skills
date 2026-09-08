@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: None
 Superseded by: None
-Guide verified: 2026-08-11
+Guide verified: 2026-08-26
 Gist: Assign checks to their owning events, cache dependencies, cancel stale validation, and reuse exact release-readiness proof.
 
 Variants: **Short** · [Long, canonical](0042-optimize-github-actions-with-owned-gates.long.md) · [Guide](0042-optimize-github-actions-with-owned-gates.guide.md)

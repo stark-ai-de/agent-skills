@@ -16,6 +16,7 @@ assert.equal(new Set(ids).size, ids.length, "validation gate ids must be unique"
 const requiredIds = new Set([
   "repository-aggregate",
   "adrs",
+  "runtime-matrix",
   "listing-identity",
   "site-seo",
   "historical-release-context",
@@ -42,12 +43,12 @@ for (const gate of plan.gates) {
   assert.equal(typeof gate.cadence, "string");
   assert.ok(gate.cadence.trim(), `${gate.id} must describe cadence`);
 
-  const commandMatch = /^npm run ([a-z0-9:-]+)$/.exec(gate.command);
-  assert.ok(commandMatch, `${gate.id} must reference one readable npm command`);
+  const commandMatch = /^pnpm run ([a-z0-9:-]+)$/.exec(gate.command);
+  assert.ok(commandMatch, `${gate.id} must reference one readable pnpm command`);
   assert.equal(
     typeof packageJson.scripts?.[commandMatch[1]],
     "string",
-    `${gate.id} references missing npm script ${commandMatch[1]}`,
+    `${gate.id} references missing pnpm script ${commandMatch[1]}`,
   );
 
   const ownerPath = gate.owner.split("#", 1)[0];

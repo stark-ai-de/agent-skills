@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: None
 Superseded by: None
-Guide verified: 2026-08-18
+Guide verified: 2026-08-26
 Gist: Make Agent Plugins the canonical package projection and generate a separate client adapter only when a target surface cannot consume that projection or requires client-native files.
 
 Variants: [Short](0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) · **Long, canonical** · [Guide](0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)

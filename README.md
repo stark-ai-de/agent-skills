@@ -143,6 +143,48 @@ The icons follow the six glyph choices shown on the [stark AI Developer plugin p
 
 Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`, backed by demonstrated value, activation tests, a reusable use case, manageable maintenance, and reviewable evaluation proof. See the [spec policy](docs/specs.md#documentation-updates) for public-contract updates.
 
+## Development
+
+```bash
+pnpm install
+```
+
+Select checks from changed contracts and owning boundaries under [ADR-0041](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](docs/adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)). Run the local `pnpm run validate` aggregate for release intent or another mandatory gate; hosted Validate remains required for every pull request. OpenAI-native adapter packaging is proven with `pnpm run validate:openai-plugin` or hosted `validate:release-proof`, not by writing `adapters/`.
+
+<details>
+<summary><strong>Common maintainer commands</strong></summary>
+
+| Command                                      | Purpose                                                        |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `pnpm run list`                              | List promoted public skills                                    |
+| `pnpm run list:incubator`                    | List incubator skills                                          |
+| `pnpm run validate`                          | Validate skills, ADRs, scripts, and repository contracts       |
+| `pnpm run validate:runtime-matrix`           | Validate advisory runtime selections and fallbacks             |
+| `pnpm run sync:agent-plugin`                 | Regenerate `plugins/stark-ai-developer/` from canonical skills |
+| `pnpm run validate:projections`              | Check the committed portable Agent Plugin projection           |
+| `pnpm run validate:openai-plugin`            | Stage, validate, and discard the OpenAI-native adapter         |
+| `pnpm run package:openai-plugin`             | Write `dist/openai/*.zip` from ephemeral adapter staging       |
+| `pnpm run validate:archives`                 | Build and inspect release archives                             |
+| `pnpm run verify:release-reproducibility`    | Compare two isolated deterministic builds                      |
+| `pnpm run build:release-subjects`            | Local fallback for the hosted final release subject artifact   |
+| `pnpm run validate:release-proof`            | Archive, reproducibility, and endpoint release proof           |
+| `pnpm run smoke:fingerprint`                 | Fingerprint the exact clean-copy candidate set read-only       |
+| `pnpm run smoke:install`                     | Test clean-copy discovery and exact host destinations          |
+| `pnpm dlx skills@1.5.23 add ./skills --list` | Check local public skill discovery                             |
+| `pnpm --filter ./site run build`             | Build the generated catalog                                    |
+| `pnpm run format:check`                      | Check formatting                                               |
+| `pnpm run lint`                              | Lint repository scripts                                        |
+| `pnpm run release:validate`                  | Validate release readiness                                     |
+
+Scaffold a skill only when its destination is clear:
+
+```bash
+pnpm run scaffold repo-maintenance/my-new-skill
+pnpm run scaffold:incubator engineering-workflows/my-candidate-skill
+```
+
+</details>
+
 ## Documentation
 
 | Topic                                | Reference                                                                   |

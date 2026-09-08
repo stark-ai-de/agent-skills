@@ -8,8 +8,8 @@ const [target] = args;
 const skillRoot = rootArg ? path.join("incubator", "skills") : "skills";
 
 function usage() {
-  console.error("Usage: npm run scaffold <category>/<skill-name>");
-  console.error("       npm run scaffold:incubator <category>/<skill-name>");
+  console.error("Usage: pnpm run scaffold <category>/<skill-name>");
+  console.error("       pnpm run scaffold:incubator <category>/<skill-name>");
   process.exit(1);
 }
 
@@ -64,4 +64,4 @@ console.log(`Next: add ${skillName} to ${path.join(skillRoot, category, "README.
 if (!rootArg) {
   console.log("Next: add promotion proof under skill-evals/ before release.");
 }
-console.log("Then run npm run validate.");
+console.log("Then run pnpm run validate.");

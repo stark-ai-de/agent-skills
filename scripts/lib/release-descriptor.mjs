@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
+import satisfies from "semver/functions/satisfies.js";
 
 import {
   githubRepositorySlug as deriveGithubRepositorySlug,
@@ -141,6 +142,7 @@ export function pluginIdentity(root = moduleRoot) {
     marketplaceTarget: release.outputs.repositoryMarketplaceTarget,
     archiveProfile: release.build.archiveProfile,
     nodeVersion: release.build.nodeVersion,
+    bunVersion: release.build.bunVersion,
     pnpmVersion: release.build.pnpmVersion,
     contractSnapshots: release.contractSnapshots,
   };
@@ -165,6 +167,15 @@ export function publicRepositoryUrl(packageJson) {
 
 export function githubRepositorySlug(packageJson) {
   return deriveGithubRepositorySlug(packageJson?.repository);
+}
+
+export function engineRangeAdmits(range, version) {
+  if (typeof range !== "string" || typeof version !== "string") return false;
+  try {
+    return satisfies(version, range);
+  } catch {
+    return false;
+  }
 }
 
 export function pluginArtifactPaths(root = moduleRoot) {
@@ -201,7 +212,7 @@ export function validateToolchainPins(root = moduleRoot) {
     );
   }
   const engines = packageJson.engines?.node;
-  if (typeof engines !== "string" || !engines.includes(release.release.build.nodeVersion)) {
+  if (!engineRangeAdmits(engines, release.release.build.nodeVersion)) {
     errors.push(
       `[REL-001] package.json#engines.node must admit ${release.release.build.nodeVersion}`,
     );
@@ -212,6 +223,19 @@ export function validateToolchainPins(root = moduleRoot) {
     : "";
   if (nodeVersion !== release.release.build.nodeVersion) {
     errors.push(`[REL-001] .node-version must equal ${release.release.build.nodeVersion}`);
+  }
+  const bunEngines = packageJson.engines?.bun;
+  if (!engineRangeAdmits(bunEngines, release.release.build.bunVersion)) {
+    errors.push(
+      `[REL-001] package.json#engines.bun must admit ${release.release.build.bunVersion}`,
+    );
+  }
+  const bunVersionPath = path.join(resolvedRoot, ".bun-version");
+  const bunVersion = fs.existsSync(bunVersionPath)
+    ? fs.readFileSync(bunVersionPath, "utf8").trim()
+    : "";
+  if (bunVersion !== release.release.build.bunVersion) {
+    errors.push(`[REL-001] .bun-version must equal ${release.release.build.bunVersion}`);
   }
   return errors;
 }
