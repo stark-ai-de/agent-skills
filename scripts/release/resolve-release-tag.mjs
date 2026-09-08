@@ -40,6 +40,11 @@ try {
   }
 
   git(["fetch", "--force", "origin", `refs/tags/${tag}:refs/tags/${tag}`]);
+  const tagType = git(["cat-file", "-t", `refs/tags/${tag}`]);
+  const historical = Boolean(HISTORICAL_RELEASES[tag]);
+  if (!historical && tagType !== "tag") {
+    throw new Error(`${tag} must be an annotated tag; observed ${tagType}`);
+  }
   git(["checkout", "--detach", `refs/tags/${tag}`]);
 
   const releaseSha = git(["rev-parse", `refs/tags/${tag}^{commit}`]);
@@ -54,6 +59,7 @@ try {
   }
 
   appendOutput(githubOutput, "release_sha", releaseSha);
+  appendOutput(githubOutput, "tag_annotated", tagType === "tag");
   console.log(`Checked out ${tag} at ${releaseSha}`);
 } catch (error) {
   console.error(`Release tag resolution failed: ${error.message}`);

@@ -1,13 +1,14 @@
-# Current v0.3.2 Local Metadata Refresh
+# Current v0.3.3 Local Nonbehavioral Refresh
 
 This directory is deterministic, regradable maintainer evidence for the current
-`codegraph-ast-grep` `0.3.2` runtime payload. Schema 2 of `manifest.json` binds
+`codegraph-ast-grep` `0.3.3` behavioral runtime payload. Schema 2 of `manifest.json` binds
 five public-safe prompts, reused captured final responses, independent historical
 gradings, and both provenance records to the exact runtime hash.
 
-This is an authorized local metadata-only refresh of the 2026-08-10 internal clean-context collaboration reviewer capture. The five captured responses and
+This is an authorized local metadata-and-packaging-only refresh of the 2026-08-10 internal clean-context collaboration reviewer capture. The five captured responses and
 separate 35-assertion grade are reused; no new reviewer, client, CodeGraph, or
-ast-grep run occurred. The validator rechecks candidate and artifact hashes,
+ast-grep run occurred. The OpenAI icon is tested as presentation metadata and
+excluded from the behavioral hash. The validator rechecks candidate and artifact hashes,
 exact assertion identity and order, evidence fields, per-case totals,
 provenance, and the 5/35/0 aggregate.
 

@@ -2,18 +2,18 @@
 
 ID: AC-ADR-034
 Title: Keep Release Metadata Coherent With Public Catalog Changes
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: target-repository
 Category: quality-delivery
 Tags: release, changelog, versioning, pull-request
 Applies when: Adding, removing, promoting, or materially changing a public skill or catalog contract.
-Adoptable: true
+Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-055
 Guide verified: 2026-07-28
 Gist: Review release metadata with the public catalog change while keeping publication separately approved.
 

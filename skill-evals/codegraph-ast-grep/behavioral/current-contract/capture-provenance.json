@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-08-19",
-  "capture_kind": "local-metadata-refresh",
+  "captured_at": "2026-08-26",
+  "capture_kind": "local-nonbehavioral-refresh",
   "reviewer_role": "repository-maintainer-authorized-receipt-refresh",
   "runtime_files_read": [
     "skill-evals/codegraph-ast-grep/behavioral/current-contract/setup-workflow/prompt.md",
@@ -22,14 +22,15 @@
   "network": false,
   "tools_executed": false,
   "output_normalization": "Captured words and claims are unchanged; only repository Markdown formatting is normalized.",
-  "candidate_sha256": "2afc240c21a70f328d04d008ed9845cf29f6b30388669dbf40d6c4b5ac24e24a",
+  "candidate_sha256": "991c2cec9b1d5966f7c65ece3d0879eb58ddff50094a4224a6f00c3a6d43f324",
   "refresh": {
-    "kind": "local-metadata-only",
+    "kind": "local-metadata-and-packaging-only",
     "behavioralCaptureReused": true,
-    "authorizedAt": "2026-08-19"
+    "authorizedAt": "2026-08-26"
   },
   "limitations": [
-    "This is a local metadata refresh of an internal capture, not a new reviewer run.",
+    "This is a local metadata-and-packaging refresh of an internal capture, not a new reviewer run.",
+    "The OpenAI icon is presentation metadata, is validated separately, and is excluded from the behavioral runtime hash.",
     "This is not an external codex-exec run.",
     "Synthetic fixture facts were supplied; this is not live tool-state, CI, hosted, or production evidence."
   ]

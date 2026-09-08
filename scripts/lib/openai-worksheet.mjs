@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { pluginArtifactPaths } from "./release-descriptor.mjs";
 
 export function openaiWorksheetPath(root) {
@@ -27,6 +29,7 @@ export function renderOpenAiSubmissionWorksheet(listing, paths = pluginArtifactP
   const { plugin, publisher, releaseNotes, skills } = listing;
   const listingFile = paths.listing;
   const firstPublication = paths.firstPublication;
+  const handoffLink = `${path.posix.relative(path.posix.dirname(paths.worksheet), firstPublication)}#composer-icon-handoff`;
   const lines = [
     `# OpenAI submission worksheet: ${plugin.displayName}`,
     "",
@@ -72,6 +75,13 @@ export function renderOpenAiSubmissionWorksheet(listing, paths = pluginArtifactP
       (skill) =>
         `- \`${skill.name}\`: ${skill.products.join(", ")}; implicit invocation ${skill.allowImplicitInvocation ? "enabled" : "disabled"}; portal glyph \`${skill.portalGlyph}\``,
     ),
+    "",
+    "## Portal asset handoff",
+    "",
+    "1. Verify the six packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.",
+    "2. Keep both existing Plugin Info logos unchanged. Restore them only if the ZIP upload reset them.",
+    `3. Follow the [Composer icon handoff](${handoffLink}) to set the separate light and dark PNGs manually; do not use the Plugin Info logos for these fields.`,
+    "4. After propagation, verify light and dark rendering plus the public directory identity.",
     "",
     "## Archive and portal evidence to attach",
     "",

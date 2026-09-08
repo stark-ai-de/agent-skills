@@ -6,7 +6,7 @@ metadata:
   internal: true
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Skill Repo Curator

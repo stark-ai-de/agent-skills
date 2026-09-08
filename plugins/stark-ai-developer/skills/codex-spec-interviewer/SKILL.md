@@ -6,7 +6,7 @@ compatibility: Designed for Codex CLI, IDE extension, and Codex app. Native Plan
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.3.2"
+  version: "0.3.3"
 ---
 
 # Codex Spec Interviewer

@@ -1,20 +1,33 @@
+#!/usr/bin/env node
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
+
+import {
+  changelogReleaseOrder,
+  changelogReleaseVersions,
+  removeChangelogReleaseSection,
+  splitChangelogSections,
+} from "../lib/release-changelog.mjs";
+import {
+  automatedReleaseVersionSupported,
+  FIRST_AUTOMATED_RELEASE_VERSION,
+  GENERATED_RELEASE_FILES,
+} from "../lib/release-please.mjs";
 
 const root = process.cwd();
 const semverPattern = /^\d+\.\d+\.\d+$/;
-
 function parseArgs(argv) {
   const args = { githubOutput: false, headRef: null };
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
     if (arg === "--base-ref") {
-      args.baseRef = argv[i + 1];
-      i += 1;
+      args.baseRef = argv[index + 1];
+      index += 1;
     } else if (arg === "--head-ref") {
-      args.headRef = argv[i + 1];
-      i += 1;
+      args.headRef = argv[index + 1];
+      index += 1;
     } else if (arg === "--github-output") {
       args.githubOutput = true;
     } else {
@@ -39,12 +52,19 @@ function git(args, allowFailure = false) {
 
 function readCurrentFile(file) {
   const full = path.join(root, file);
-  if (!fs.existsSync(full)) return null;
-  return fs.readFileSync(full, "utf8");
+  return fs.existsSync(full) ? fs.readFileSync(full, "utf8") : null;
 }
 
 function readGitFile(ref, file) {
-  return git(["show", `${ref}:${file}`], true);
+  try {
+    return execFileSync("git", ["show", `${ref}:${file}`], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch {
+    return null;
+  }
 }
 
 function readTargetFile(file, headRef) {
@@ -57,16 +77,46 @@ function changedFiles(baseRef, headRef) {
   return git(args)
     .split("\n")
     .map((file) => file.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort();
 }
 
-function packageVersion(text) {
+function jsonValue(text, selector) {
   if (!text) return null;
   try {
-    return JSON.parse(text).version ?? null;
+    return selector(JSON.parse(text));
   } catch {
     return null;
   }
+}
+
+function jsonDocument(text) {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function jsonDiffChangesOnlyKey(baseText, currentText, key) {
+  const base = jsonDocument(baseText);
+  const current = jsonDocument(currentText);
+  if (!base || !current || !Object.hasOwn(base, key) || !Object.hasOwn(current, key)) return false;
+  current[key] = base[key];
+  return isDeepStrictEqual(current, base);
+}
+
+function packageVersion(text) {
+  return jsonValue(text, (document) => document.version ?? null);
+}
+
+function manifestVersion(text) {
+  return jsonValue(text, (document) => document["."] ?? null);
+}
+
+function pluginSource(text) {
+  return jsonValue(text, (document) => document);
 }
 
 function metadataVersion(text) {
@@ -75,49 +125,22 @@ function metadataVersion(text) {
   return frontmatter?.match(/^\s+version:\s*["']?([^"'\n]+)["']?$/m)?.[1]?.trim() ?? null;
 }
 
-function compareSemver(a, b) {
-  const left = a.split(".").map(Number);
-  const right = b.split(".").map(Number);
-  for (let i = 0; i < 3; i += 1) {
-    if (left[i] !== right[i]) return left[i] - right[i];
+function compareSemver(left, right) {
+  const leftParts = left.split(".").map(Number);
+  const rightParts = right.split(".").map(Number);
+  for (let index = 0; index < 3; index += 1) {
+    if (leftParts[index] !== rightParts[index]) return leftParts[index] - rightParts[index];
   }
   return 0;
 }
 
-function normalizeChangelogSection(text) {
-  return `${text.replace(/[ \t]+$/gm, "").trim()}\n`;
+function changedSkillFile(changedFile) {
+  const match = changedFile.match(/^((?:skills|incubator\/skills)\/[^/]+\/[^/]+)\//);
+  return match ? `${match[1]}/SKILL.md` : null;
 }
 
-function splitChangelogSections(text) {
-  const sections = new Map();
-  if (!text) return sections;
-  for (const chunk of text.split(/^(?=## )/m)) {
-    const heading = chunk.match(/^##\s+(\S.*)$/m)?.[1]?.trim();
-    if (!heading) continue;
-    const normalized = normalizeChangelogSection(chunk);
-    const version = heading.match(/^v(\d+\.\d+\.\d+)(?:\s|$)/);
-    if (version) sections.set(version[1], normalized);
-    else if (/^Unreleased\b/i.test(heading)) sections.set("Unreleased", normalized);
-  }
-  return sections;
-}
-
-function changelogReleaseVersions(text) {
-  return new Set([...splitChangelogSections(text).keys()].filter((key) => key !== "Unreleased"));
-}
-
-function changelogSectionHasListItems(section) {
-  return /^- /m.test(section ?? "");
-}
-
-function skillFileFor(changedFile) {
-  const match = changedFile.match(/^(skills\/[^/]+\/[^/]+)\//);
-  if (!match) return null;
-  return `${match[1]}/SKILL.md`;
-}
-
-function uniqueSkillFiles(files) {
-  return [...new Set(files.map(skillFileFor).filter(Boolean))].sort();
+function uniqueChangedSkillFiles(files) {
+  return [...new Set(files.map(changedSkillFile).filter(Boolean))].sort();
 }
 
 function writeGithubOutput(values) {
@@ -126,120 +149,26 @@ function writeGithubOutput(values) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join("\n")}\n`);
 }
 
-const args = parseArgs(process.argv.slice(2));
-const errors = [];
-const reasons = [];
-const skillReasons = [];
-
-if (!args.baseRef || /^0+$/.test(args.baseRef)) {
-  errors.push("A non-empty --base-ref is required to detect release intent.");
-} else if (git(["rev-parse", "--verify", `${args.baseRef}^{commit}`], true) === null) {
-  errors.push(`Base ref is not available locally: ${args.baseRef}`);
-}
-
-if (errors.length === 0) {
-  const files = changedFiles(args.baseRef, args.headRef);
-  const basePackageVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
-  const currentPackageVersion = packageVersion(readTargetFile("package.json", args.headRef));
-  const packageChanged = basePackageVersion !== currentPackageVersion;
-
-  if (packageChanged) {
-    if (!currentPackageVersion || !semverPattern.test(currentPackageVersion)) {
-      errors.push(
-        `package.json uses invalid or missing semver version: ${currentPackageVersion ?? "(missing)"}`,
-      );
-    } else if (
-      basePackageVersion &&
-      semverPattern.test(basePackageVersion) &&
-      compareSemver(currentPackageVersion, basePackageVersion) <= 0
-    ) {
-      errors.push(
-        `package.json version must increase from ${basePackageVersion} to a higher semver; got ${currentPackageVersion}`,
-      );
-    } else {
-      reasons.push(
-        `package.json version changed from ${basePackageVersion ?? "(missing)"} to ${currentPackageVersion}`,
-      );
-    }
-  }
-
-  const baseChangelog = readGitFile(args.baseRef, "CHANGELOG.md") ?? "";
-  const currentChangelog = readTargetFile("CHANGELOG.md", args.headRef) ?? "";
-  const baseChangelogSections = splitChangelogSections(baseChangelog);
-  const currentChangelogSections = splitChangelogSections(currentChangelog);
-  const baseChangelogVersions = changelogReleaseVersions(baseChangelog);
-  const currentChangelogVersions = changelogReleaseVersions(currentChangelog);
-  const addedChangelogVersions = [...currentChangelogVersions].filter(
-    (version) => !baseChangelogVersions.has(version),
-  );
-
-  for (const version of baseChangelogVersions) {
-    const baseSection = baseChangelogSections.get(version);
-    const currentSection = currentChangelogSections.get(version);
-    if (!currentSection) {
-      errors.push(`CHANGELOG.md removed historical release v${version}`);
-    } else if (currentSection !== baseSection) {
-      errors.push(
-        `CHANGELOG.md rewrote historical v${version}; pull requests may only change Unreleased or add the planned v${currentPackageVersion ?? "<package-version>"} section comparing that release with the previous one`,
-      );
-    }
-  }
-
-  if (packageChanged && changelogSectionHasListItems(currentChangelogSections.get("Unreleased"))) {
-    errors.push(
-      `CHANGELOG.md Unreleased still has list items; fold them into the planned v${currentPackageVersion} section so the GitHub Release describes this release versus the previous one`,
-    );
-  }
-
-  if (addedChangelogVersions.length > 0) {
-    if (!packageChanged) {
-      errors.push(
-        `CHANGELOG.md release sections require a package.json version bump: v${addedChangelogVersions.join(", v")}`,
-      );
-    }
-    for (const version of addedChangelogVersions) {
-      if (version !== currentPackageVersion) {
-        errors.push(
-          `CHANGELOG.md added v${version}, but package.json is ${currentPackageVersion ?? "(missing)"}`,
-        );
-      } else {
-        reasons.push(`CHANGELOG.md added v${version}`);
-      }
-    }
-  } else if (packageChanged && currentPackageVersion) {
-    errors.push(
-      `package.json version bump to ${currentPackageVersion} requires a CHANGELOG.md v${currentPackageVersion} section`,
-    );
-  }
-
-  for (const skillFile of uniqueSkillFiles(files)) {
-    const baseText = readGitFile(args.baseRef, skillFile);
-    const currentText = readTargetFile(skillFile, args.headRef);
+function validateChangedSkills(files, baseRef, headRef, errors, reasons) {
+  for (const skillFile of uniqueChangedSkillFiles(files)) {
+    const baseText = readGitFile(baseRef, skillFile);
+    const currentText = readTargetFile(skillFile, headRef);
     const baseVersion = metadataVersion(baseText);
     const currentVersion = metadataVersion(currentText);
-
     if (!baseText && currentText) {
       if (!currentVersion || !semverPattern.test(currentVersion)) {
-        errors.push(`${skillFile}: new public skills must set metadata.version with x.y.z semver`);
+        errors.push(`${skillFile}: new skills must set metadata.version with x.y.z semver`);
       } else {
-        skillReasons.push(`${skillFile} added at ${currentVersion}`);
+        reasons.push(`${skillFile} added at ${currentVersion}`);
       }
       continue;
     }
-
     if (baseText && !currentText) {
-      skillReasons.push(`${skillFile} removed`);
+      reasons.push(`${skillFile} removed`);
       continue;
     }
-
-    if (!baseVersion || !currentVersion) {
-      errors.push(
-        `${skillFile}: public skill changes require metadata.version in base and current file`,
-      );
-    } else if (!semverPattern.test(currentVersion)) {
-      errors.push(`${skillFile}: metadata.version must use x.y.z semver`);
-    } else if (currentVersion === baseVersion) {
-      errors.push(`${skillFile} changed without increasing metadata.version from ${baseVersion}`);
+    if (!baseVersion || !currentVersion || !semverPattern.test(currentVersion)) {
+      errors.push(`${skillFile}: changed skills require metadata.version with x.y.z semver`);
     } else if (
       !semverPattern.test(baseVersion) ||
       compareSemver(currentVersion, baseVersion) <= 0
@@ -248,46 +177,198 @@ if (errors.length === 0) {
         `${skillFile} metadata.version must increase from ${baseVersion} to a higher semver; got ${currentVersion}`,
       );
     } else {
-      skillReasons.push(
+      reasons.push(
         `${skillFile} metadata.version changed from ${baseVersion} to ${currentVersion}`,
       );
     }
   }
+}
 
-  if (skillReasons.length > 0) {
-    reasons.push(...skillReasons);
-    if (!packageChanged) {
+function validateBundledPlugin(files, baseRef, headRef, errors, reasons) {
+  const descriptor = "plugins/stark-ai-developer.source.json";
+  const base = pluginSource(readGitFile(baseRef, descriptor));
+  const current = pluginSource(readTargetFile(descriptor, headRef));
+  const bundledRoots = new Set(
+    [...(base?.skills ?? []), ...(current?.skills ?? [])]
+      .map((skill) => skill?.source)
+      .filter((source) => typeof source === "string"),
+  );
+  const bundledChanged = files.some((file) =>
+    [...bundledRoots].some((source) => file === source || file.startsWith(`${source}/`)),
+  );
+  const descriptorChanged = files.includes(descriptor);
+  if (bundledChanged && !descriptorChanged) {
+    errors.push(`${descriptor} must increase its version when a bundled skill changes`);
+  }
+  if (!descriptorChanged) return;
+  if (
+    !base?.version ||
+    !current?.version ||
+    !semverPattern.test(base.version) ||
+    !semverPattern.test(current.version) ||
+    compareSemver(current.version, base.version) <= 0
+  ) {
+    errors.push(
+      `${descriptor} version must increase from ${base?.version ?? "(missing)"} to a higher semver; got ${current?.version ?? "(missing)"}`,
+    );
+  } else {
+    reasons.push(`${descriptor} version changed from ${base.version} to ${current.version}`);
+  }
+}
+
+const args = parseArgs(process.argv.slice(2));
+const errors = [];
+const reasons = [];
+
+if (!args.baseRef || /^0+$/.test(args.baseRef)) {
+  errors.push("A non-empty --base-ref is required to detect release impact.");
+} else if (git(["rev-parse", "--verify", `${args.baseRef}^{commit}`], true) === null) {
+  errors.push(`Base ref is not available locally: ${args.baseRef}`);
+}
+
+let contractKind = "none";
+let releaseVersion = "";
+if (errors.length === 0) {
+  const files = changedFiles(args.baseRef, args.headRef);
+  const basePackageText = readGitFile(args.baseRef, "package.json");
+  const currentPackageText = readTargetFile("package.json", args.headRef);
+  const baseManifestText = readGitFile(args.baseRef, ".release-please-manifest.json");
+  const currentManifestText = readTargetFile(".release-please-manifest.json", args.headRef);
+  const basePackageVersion = packageVersion(basePackageText);
+  const currentPackageVersion = packageVersion(currentPackageText);
+  const baseManifestVersion = manifestVersion(baseManifestText);
+  const currentManifestVersion = manifestVersion(currentManifestText);
+  const packageChanged = basePackageVersion !== currentPackageVersion;
+  const manifestChanged =
+    baseManifestVersion !== null && baseManifestVersion !== currentManifestVersion;
+  if (baseManifestVersion === null) {
+    const currentManifest = jsonDocument(currentManifestText);
+    if (
+      currentManifestVersion !== basePackageVersion ||
+      !currentManifest ||
+      JSON.stringify(Object.keys(currentManifest).sort()) !== JSON.stringify(["."])
+    ) {
       errors.push(
-        `Public skill changes require a package.json version bump: ${skillReasons.join("; ")}`,
+        "The initial Release Please manifest must contain only the existing package.json baseline",
       );
     }
+  }
+
+  const baseChangelog = readGitFile(args.baseRef, "CHANGELOG.md") ?? "";
+  const currentChangelog = readTargetFile("CHANGELOG.md", args.headRef) ?? "";
+  const baseSections = splitChangelogSections(baseChangelog);
+  const currentSections = splitChangelogSections(currentChangelog);
+  const baseVersions = changelogReleaseVersions(baseChangelog);
+  const currentVersions = changelogReleaseVersions(currentChangelog);
+  const addedVersions = [...currentVersions].filter((version) => !baseVersions.has(version));
+
+  for (const version of baseVersions) {
+    if (!currentSections.has(version)) {
+      errors.push(`CHANGELOG.md removed historical release ${version}`);
+    } else if (currentSections.get(version) !== baseSections.get(version)) {
+      errors.push(`CHANGELOG.md rewrote historical release ${version}`);
+    }
+  }
+
+  const generatedRelease = packageChanged || manifestChanged || addedVersions.length > 0;
+  if (generatedRelease) {
+    contractKind = "release-pr";
+    releaseVersion = currentPackageVersion ?? "";
+    if (!packageChanged || !manifestChanged || addedVersions.length !== 1) {
+      errors.push(
+        "Generated release PRs must update package.json, .release-please-manifest.json, and exactly one CHANGELOG.md release section together",
+      );
+    }
+    if (
+      !currentPackageVersion ||
+      !semverPattern.test(currentPackageVersion) ||
+      !basePackageVersion ||
+      !semverPattern.test(basePackageVersion) ||
+      compareSemver(currentPackageVersion, basePackageVersion) <= 0
+    ) {
+      errors.push(
+        `package.json version must increase from ${basePackageVersion ?? "(missing)"}; got ${currentPackageVersion ?? "(missing)"}`,
+      );
+    }
+    if (!automatedReleaseVersionSupported(currentPackageVersion)) {
+      errors.push(
+        `Generated release versions must be ${FIRST_AUTOMATED_RELEASE_VERSION} or newer; got ${currentPackageVersion ?? "(missing)"}`,
+      );
+    }
+    if (
+      basePackageVersion === "0.20.1" &&
+      currentPackageVersion !== FIRST_AUTOMATED_RELEASE_VERSION
+    ) {
+      errors.push(
+        `The first generated release after 0.20.1 must be ${FIRST_AUTOMATED_RELEASE_VERSION}; got ${currentPackageVersion ?? "(missing)"}`,
+      );
+    }
+    if (baseManifestVersion !== basePackageVersion) {
+      errors.push("The base Release Please manifest and package.json versions must match");
+    }
+    if (currentManifestVersion !== currentPackageVersion) {
+      errors.push("The generated Release Please manifest and package.json versions must match");
+    }
+    if (!jsonDiffChangesOnlyKey(basePackageText, currentPackageText, "version")) {
+      errors.push("Generated release PRs may change only package.json version");
+    }
+    if (!jsonDiffChangesOnlyKey(baseManifestText, currentManifestText, ".")) {
+      errors.push("Generated release PRs may change only the root manifest version");
+    }
+    if (addedVersions.length === 1 && addedVersions[0] !== currentPackageVersion) {
+      errors.push(
+        `CHANGELOG.md added ${addedVersions[0]}, but the generated package version is ${currentPackageVersion ?? "(missing)"}`,
+      );
+    }
+    if (currentSections.get("Unreleased") !== baseSections.get("Unreleased")) {
+      errors.push("Generated release PRs must preserve the existing Unreleased section");
+    }
+    if (changelogReleaseOrder(currentChangelog)[0] !== currentPackageVersion) {
+      errors.push("The generated release must be the newest CHANGELOG.md release heading");
+    }
+    if (
+      addedVersions.length !== 1 ||
+      removeChangelogReleaseSection(currentChangelog, addedVersions[0]) !== baseChangelog
+    ) {
+      errors.push(
+        "Generated release PRs may only insert one new CHANGELOG.md release section; all existing bytes must remain unchanged",
+      );
+    }
+    if (JSON.stringify(files) !== JSON.stringify([...GENERATED_RELEASE_FILES])) {
+      errors.push(
+        `Generated release PRs may change only ${GENERATED_RELEASE_FILES.join(", ")}; got ${files.join(", ")}`,
+      );
+    }
+    reasons.push(`generated catalog release ${currentPackageVersion ?? "(missing)"}`);
+  } else {
+    if (baseManifestVersion !== null && files.includes(".release-please-manifest.json")) {
+      errors.push("Feature PRs must not change .release-please-manifest.json");
+    }
+    if (files.includes("CHANGELOG.md")) {
+      errors.push("Feature PRs must not change the root CHANGELOG.md");
+    }
+    validateChangedSkills(files, args.baseRef, args.headRef, errors, reasons);
+    validateBundledPlugin(files, args.baseRef, args.headRef, errors, reasons);
+    if (reasons.length > 0) contractKind = "feature";
   }
 }
 
 if (errors.length > 0) {
-  console.error("Release intent check failed:");
+  console.error("Release impact check failed:");
   for (const error of errors) console.error(`- ${error}`);
   process.exit(1);
 }
 
-if (reasons.length === 0) {
-  if (args.githubOutput) {
-    writeGithubOutput({
-      release_intent: "false",
-      release_version: "",
-      release_reasons: "",
-    });
-  }
-  console.log("No release intent detected.");
+const output = {
+  release_intent: contractKind === "release-pr" ? "true" : "false",
+  component_impact: contractKind === "feature" ? "true" : "false",
+  contract_kind: contractKind,
+  release_version: releaseVersion,
+  release_reasons: reasons.join("; "),
+};
+if (args.githubOutput) writeGithubOutput(output);
+if (contractKind === "none") {
+  console.log("No release impact detected.");
 } else {
-  const releaseVersion = packageVersion(readTargetFile("package.json", args.headRef));
-  const releaseReasons = reasons.join("; ");
-  if (args.githubOutput) {
-    writeGithubOutput({
-      release_intent: "true",
-      release_version: releaseVersion,
-      release_reasons: releaseReasons,
-    });
-  }
-  console.log(`Release intent detected for v${releaseVersion}: ${releaseReasons}`);
+  console.log(`${contractKind} contract passed: ${output.release_reasons}`);
 }

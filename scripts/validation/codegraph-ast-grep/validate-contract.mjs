@@ -1479,12 +1479,15 @@ const runtimePaths = [
   "skills/engineering-workflows/codegraph-ast-grep/references/extensions-and-escalation.md",
   "skills/engineering-workflows/codegraph-ast-grep/references/troubleshooting.md",
 ];
+const runtimeAssetPaths = [
+  "skills/engineering-workflows/codegraph-ast-grep/assets/openai-icon.png",
+];
 
 const runtime = new Map(
   runtimePaths.map((relativePath) => [relativePath, requireFile(relativePath)]),
 );
 const currentContractHashRecipe =
-  "For each behavioral runtime file in bytewise lexicographic path order, excluding host routing metadata: relative path, NUL, file bytes, NUL; then SHA-256.";
+  "For each behavioral runtime file in bytewise lexicographic path order, excluding host routing and visual metadata: relative path, NUL, file bytes, NUL; then SHA-256.";
 const combinedRuntime = [...runtime.values()].join("\n");
 const executableSnippets = [...runtime.values()].flatMap((text) => fencedBlocks(text));
 const commands = executableSnippets.map((block) => block.body).join("\n");
@@ -1506,7 +1509,7 @@ const extensions = runtime.get(extensionPath);
 const openAiPath = runtimePaths[1];
 const openAi = runtime.get(openAiPath);
 
-requirePattern(skillPath, skill, /version:\s*"0\.3\.2"/, "metadata.version must be 0.3.2");
+requirePattern(skillPath, skill, /version:\s*"0\.3\.3"/, "metadata.version must be 0.3.3");
 const workflowSection = /## Workflow selection([\s\S]*?)(?=\n## Inputs to inspect)/.exec(skill);
 const expectedWorkflows = ["setup", "update", "doctor"];
 const listedWorkflows = workflowSection
@@ -2062,7 +2065,9 @@ requirePattern(
   "standalone checksum example must fail closed in a temporary directory",
 );
 
-const allowedRuntimeFiles = new Set(runtimePaths.map((file) => path.normalize(file)));
+const allowedRuntimeFiles = new Set(
+  [...runtimePaths, ...runtimeAssetPaths].map((file) => path.normalize(file)),
+);
 const unexpectedRuntimeFiles = walk(skillDir).filter(
   (file) =>
     !fs.lstatSync(file).isFile() ||
@@ -2070,7 +2075,7 @@ const unexpectedRuntimeFiles = walk(skillDir).filter(
 );
 if (unexpectedRuntimeFiles.length > 0) {
   fail(
-    `runtime payload: files outside the explicit Markdown/YAML allowlist: ${unexpectedRuntimeFiles
+    `runtime payload: files outside the explicit runtime allowlist: ${unexpectedRuntimeFiles
       .map((file) => path.relative(root, file))
       .join(", ")}`,
   );
@@ -2191,7 +2196,7 @@ const currentContractRoot = `${behavioralRoot}/current-contract`;
 const currentContractManifestPath = `${currentContractRoot}/manifest.json`;
 const currentContractManifest = requireJson(currentContractManifestPath);
 const currentRuntimeCandidateHash = hashRuntimeCandidate(skillDir, {
-  excludedRelativePaths: ["agents/openai.yaml"],
+  excludedRelativePaths: ["agents/openai.yaml", "assets/openai-icon.png"],
 });
 let currentContractCases = 0;
 let currentContractPassed = 0;
@@ -2200,7 +2205,7 @@ let currentContractFailed = 0;
 if (currentContractManifest) {
   if (
     currentContractManifest.schema_version !== 2 ||
-    currentContractManifest.suite_id !== "codegraph-ast-grep-v0.3.2-current-contract-2026-08-19" ||
+    currentContractManifest.suite_id !== "codegraph-ast-grep-v0.3.3-current-contract-2026-08-26" ||
     currentContractManifest.evidence_mode !== "hash-bound-internal-reviewer-capture" ||
     !isValidIsoDate(currentContractManifest.reviewed_at)
   ) {
@@ -2209,7 +2214,7 @@ if (currentContractManifest) {
   if (
     currentContractManifest.candidate?.skill_path !==
       "skills/engineering-workflows/codegraph-ast-grep" ||
-    currentContractManifest.candidate?.skill_version !== "0.3.2" ||
+    currentContractManifest.candidate?.skill_version !== "0.3.3" ||
     currentContractManifest.candidate?.sha256 !== currentRuntimeCandidateHash ||
     currentContractManifest.candidate?.hash_recipe !== currentContractHashRecipe
   ) {
@@ -2229,7 +2234,7 @@ if (currentContractManifest) {
     `${currentContractRoot}${path.sep}`,
   );
   if (
-    currentContractManifest.capture?.mode !== "local-metadata-refresh" ||
+    currentContractManifest.capture?.mode !== "local-nonbehavioral-refresh" ||
     captureProvenancePath !== `${currentContractRoot}/capture-provenance.json` ||
     currentContractManifest.grading?.mode !== "independent-collaboration-reviewer" ||
     gradeProvenancePath !== `${currentContractRoot}/grade-provenance.json`
@@ -2254,7 +2259,7 @@ if (currentContractManifest) {
   if (
     captureProvenance?.schema_version !== 1 ||
     captureProvenance?.captured_at !== currentContractManifest.reviewed_at ||
-    captureProvenance?.capture_kind !== "local-metadata-refresh" ||
+    captureProvenance?.capture_kind !== "local-nonbehavioral-refresh" ||
     captureProvenance?.reviewer_role !== "repository-maintainer-authorized-receipt-refresh" ||
     captureProvenance?.candidate_sha256 !== currentRuntimeCandidateHash ||
     captureProvenance?.network !== false ||
@@ -2271,7 +2276,7 @@ if (currentContractManifest) {
     gradeProvenance?.schema_version !== 1 ||
     (gradeProvenance?.graded_at !== currentContractManifest.reviewed_at &&
       !(
-        currentContractManifest.capture?.mode === "local-metadata-refresh" &&
+        currentContractManifest.capture?.mode === "local-nonbehavioral-refresh" &&
         gradeProvenance?.graded_at === "2026-08-10"
       )) ||
     gradeProvenance?.grade_kind !== "independent-collaboration-reviewer" ||
@@ -2292,7 +2297,7 @@ if (currentContractManifest) {
     JSON.stringify(manifestCases.map((entry) => entry.id)) !==
       JSON.stringify([...expectedCurrentContractCases.keys()])
   ) {
-    fail(`${currentContractManifestPath}: expected the five captured v0.3.2 contract cases`);
+    fail(`${currentContractManifestPath}: expected the five captured v0.3.3 contract cases`);
   } else {
     const seenSources = new Set();
     const seenPrompts = new Set();
@@ -2302,7 +2307,7 @@ if (currentContractManifest) {
       const caseLabel = `${currentContractManifestPath}:${entry.id || "<missing-id>"}`;
       const expected = expectedCurrentContractCases.get(entry.id);
       if (!expected) {
-        fail(`${caseLabel}: case is outside the reviewed v0.3.2 contract`);
+        fail(`${caseLabel}: case is outside the reviewed v0.3.3 contract`);
         continue;
       }
       if (entry.source_case !== expected.source_case) {
@@ -2533,7 +2538,7 @@ if (currentContractManifest) {
   );
 
   const currentContractRunPath =
-    "skill-evals/codegraph-ast-grep/runs/2026-08-19-v0.3.2-local-metadata-refresh.md";
+    "skill-evals/codegraph-ast-grep/runs/2026-08-26-v0.3.3-local-nonbehavioral-refresh.md";
   const currentContractRun = requireFile(currentContractRunPath);
   for (const marker of [
     currentRuntimeCandidateHash,
@@ -2924,7 +2929,7 @@ requirePattern(
 );
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3.2 local metadata refresh captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
+export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3.3 local nonbehavioral refresh captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
 const isMain = entrypoint === path.resolve(fileURLToPath(import.meta.url));

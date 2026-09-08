@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
@@ -55,12 +56,35 @@ jobs:
           subjects-dir: ${{ runner.temp }}/release-subjects
           report-file: ${{ runner.temp }}/release-subject-report.json
 
-      - name: ⬆️ Upload hosted release subjects
+      - name: ⬆️ Upload hosted OpenAI subject
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: release-subjects
-          path: ${{ runner.temp }}/release-subjects
+          name: openai.zip
+          path: ${{ runner.temp }}/release-subjects/openai.zip
+          archive: false
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 90
+
+      - name: ⬆️ Upload hosted portable subject
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: portable.zip
+          path: ${{ runner.temp }}/release-subjects/portable.zip
+          archive: false
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 90
+
+      - name: ⬆️ Upload hosted release metadata
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-subject.json
+          path: ${{ runner.temp }}/release-subjects/release-subject.json
+          archive: false
           if-no-files-found: error
           overwrite: true
           retention-days: 90
@@ -75,6 +99,17 @@ jobs:
         id: release-intent
         if: ${{ github.event_name == 'pull_request' }}
         run: npm run release:intent -- --base-ref "${{ github.event.pull_request.base.sha }}" --github-output
+
+      - name: 🔏 Verify generated release-PR provenance
+        if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.contract_kind == 'release-pr' }}
+        env:
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/release/verify-release-please-merge.mjs
+          --repository "$GITHUB_REPOSITORY"
+          --pull-request "${{ github.event.pull_request.number }}"
+          --expected-app-id "$EXPECTED_APP_ID"
 
       - name: 🚀 Validate planned release
         if: ${{ github.event_name == 'pull_request' && steps.release-intent.outputs.release_intent == 'true' }}
@@ -91,7 +126,7 @@ jobs:
         uses: ./.github/actions/write-run-summary
         with:
           title: Repository validation
-          success: Use the release-subjects artifact only from a successful main push; pull requests do not publish it. Next hosted step is Publish Release in docs/publishing.md. Operator follow-up is docs/publishing.md#operator-follow-up.
+          success: Use the three direct release-subject artifacts only from a successful main push; pull requests do not publish them. Next hosted step is Publish Release in docs/publishing.md. Operator follow-up is docs/publishing.md#operator-follow-up.
           failure: Open the failed contract step, fix the owning boundary, and rerun the workflow.
 
   archive-identity:

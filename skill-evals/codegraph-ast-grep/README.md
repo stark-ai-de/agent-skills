@@ -20,10 +20,10 @@ installed runtime content.
 Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, reused internal clean-context reviewer outputs, historical
-independent gradings, and provenance to the exact v0.3.2 runtime payload. The
-local metadata refresh retains the 35/35 assertion result and does not claim a
+independent gradings, and provenance to the exact v0.3.3 behavioral runtime payload. The
+local nonbehavioral refresh retains the 35/35 assertion result and does not claim a
 new reviewer or client run. The dated receipt is
-[`2026-08-19-v0.3.2-local-metadata-refresh.md`](runs/2026-08-19-v0.3.2-local-metadata-refresh.md).
+[`2026-08-26-v0.3.3-local-nonbehavioral-refresh.md`](runs/2026-08-26-v0.3.3-local-nonbehavioral-refresh.md).
 
 [`legacy-case-lineage.json`](legacy-case-lineage.json) records the explicit
 disposition of the nine cases removed from the reviewed HEAD snapshot. Its
@@ -38,7 +38,7 @@ to an existing target heading/marker.
 [`behavioral/`](behavioral/README.md) also retains four historical Codex final
 responses, exact synthetic prompts, capture provenance, artifact hashes, and 28
 machine-regraded assertions. That suite proves only the named v0.2.0 candidate
-behaviors and remains separate from the v0.3.2 result.
+behaviors and remains separate from the v0.3.3 result.
 
 ## Deterministic gate
 

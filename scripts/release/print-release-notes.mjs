@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { extractChangelogReleaseNotes } from "../lib/release-changelog.mjs";
+
 const root = process.cwd();
 const semverPattern = /^\d+\.\d+\.\d+$/;
 
@@ -32,16 +34,8 @@ function packageVersion() {
 }
 
 function extractReleaseNotes(changelog, version) {
-  const lines = changelog.split("\n");
-  const headingPattern = new RegExp(`^##\\s+v${version}(\\s|$)`);
-  const start = lines.findIndex((line) => headingPattern.test(line));
-  if (start === -1) fail(`CHANGELOG.md does not contain a v${version} release section.`);
-
-  const end = lines.findIndex((line, index) => index > start && line.startsWith("## "));
-  const body = lines
-    .slice(start + 1, end === -1 ? undefined : end)
-    .join("\n")
-    .trim();
+  const body = extractChangelogReleaseNotes(changelog, version);
+  if (body === null) fail(`CHANGELOG.md does not contain a ${version} release section.`);
   if (!body) fail(`CHANGELOG.md v${version} release section is empty.`);
   return body;
 }

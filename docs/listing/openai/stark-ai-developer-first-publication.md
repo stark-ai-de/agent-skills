@@ -54,9 +54,12 @@ GitHub Pages plugin, privacy, terms, support, and security URLs returned HTTP
 
 ## Upload and package
 
-Upload the OpenAI-native archive from `dist/openai/`, the zip that contains
-`.codex-plugin/plugin.json`. Do not upload the portable Agent Plugins archive
-from `dist/agent-plugins/`.
+For the dated first publication, the OpenAI-native archive came from
+`dist/openai/`; this is historical evidence, not the current update procedure.
+For every current update, wait for successful exact-tag Post-release Evidence,
+download the direct GitHub Release asset named `openai.zip`, and upload those
+exact bytes. Do not upload the portable Agent Plugins archive or a GitHub source
+archive. See `docs/publishing.md#operator-follow-up` for the current handoff.
 
 Plugin version `1.0.0` is independent of the repository catalog version. The
 first public source identity is Git tag `v0.19.1` (`35101f2` on `main`). There
@@ -139,9 +142,11 @@ come from the control `aria-label` (`Use chat icon` → `chat`):
 
 These names are portal-only. Pin the reviewed glyph for each skill as
 `listing.skills[].portalGlyph` for `npm run verify:openai-directory`. Do not
-write them into `agents/openai.yaml`. Optional `icon_small` / `icon_large` image
-paths inside a skill interface are a separate, unused mechanism. Do not invent
-a named-palette key such as `icon: chat`.
+write a named-palette key such as `icon: chat` into `agents/openai.yaml`.
+OpenAI's skill metadata supports packaged `icon_small` and `icon_large` paths;
+version 1.1.0 uses those fields for six original transparent PNGs. If the portal
+ignores the package selection during update, restore the reviewed portal glyphs
+below manually.
 
 Keep one distinct glyph per skill:
 
@@ -159,14 +164,57 @@ select `cursor`; that glyph is a browser window, not Cursor the product. The
 only reviewed swap is `code` for `codegraph-ast-grep` if the search glyph is
 too generic in the portal UI.
 
-### Codex Skills list icons
+### Packaged skill icons and portal limits
 
-No per-skill icons ship in the package. In the Codex Skills list, four
-engineering skills showed OpenAI's default cube. `codex-memory-curator` and
-`codex-spec-interviewer` showed Codex host chrome (cloud and `>_`). Codex
-appears to special-case `codex-*` display names. Keep this split as-is. Portal
-glyphs do not appear in that Codex list. Do not add `icon_small` / `icon_large`
-to silence it.
+Each bundled skill now ships `assets/openai-icon.png` and references it unchanged
+for `icon_small` and `icon_large`. The OpenAI plugin manifest separately supports
+one `logo`, one `composerIcon`, and brand colors. The public documentation does
+not define separate light and dark Plugin Info logo or Composer icon fields in
+the package, does not guarantee that a portal glyph survives a package update,
+and documents no public publication API. Therefore the portal inspection remains
+mandatory:
+
+1. verify all six skill icons and restore the reviewed portal glyphs if needed;
+2. keep both existing Plugin Info logos unchanged;
+3. follow the [Composer icon handoff](#composer-icon-handoff) for the two manual uploads;
+4. verify light/dark rendering and directory identity after propagation.
+
+See [Build plugins](https://developers.openai.com/plugins/build/plugins) and
+[Submit and publish plugins](https://developers.openai.com/plugins/deploy/submission).
+
+### Composer icon handoff
+
+The ZIP can configure **one** Composer icon through
+`interface.composerIcon` in `.codex-plugin/plugin.json`, with a path such as
+`./assets/composer-icon.png`. Separate light/dark Composer image paths are not
+documented. `brandColor` and `brandColorDark` set colors, not image selection.
+SVG is an accepted package image format, but the documentation does not promise
+that the portal preserves CSS `prefers-color-scheme` switching. Do not rely on
+a theme-aware SVG to populate both portal fields automatically. Sources checked
+2026-09-07: [manifest fields](https://developers.openai.com/plugins/build/plugins#manifest-fields)
+and [image validation](https://developers.openai.com/plugins/deploy/submission-errors#image-errors).
+
+The current packager still uses `site/public/logo-dark.png` for its single
+`assets/composer-icon.png`. The two full-width Composer PNGs below are separate
+repository assets, not entries in `openai.zip`. After each verified ZIP upload:
+
+1. Keep the existing **Plugin Info** light and dark logos. If the upload reset
+   them, restore `site/public/logo.png` for light mode and
+   `site/public/logo-dark.png` for dark mode. Do not replace these logos with
+   the Composer icons.
+2. In **ChatGPT composer icon**, upload
+   [chatgpt-composer-icon-light.png](assets/chatgpt-composer-icon-light.png) to
+   the light-mode field and
+   [chatgpt-composer-icon-dark.png](assets/chatgpt-composer-icon-dark.png) to
+   the dark-mode field. Download the original PNG files from the reviewed
+   repository revision; do not upload a screenshot or the GitHub file-view page.
+3. Confirm both Composer previews, save the selections, and verify light/dark
+   rendering and directory identity after propagation. Recheck on every package
+   update because package defaults may replace portal selections.
+
+Both PNGs are transparent 1024×1024 images with no added side padding. Do not
+unpack, replace files in, or repack the verified release ZIP for this handoff.
+Portal observations remain manual evidence, separate from package validation.
 
 ## Brand assets
 
@@ -195,7 +243,8 @@ document (`DIR-001`) and public category-catalog membership (`DIR-002`).
 Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
 only from a clean working tree whose `HEAD` has an exact Git tag. The latest
-GitHub tag is `v0.19.1`. A dirty or untagged evidence write is not a freeze.
+published GitHub baseline is `v0.20.1`. A dirty or untagged evidence write is
+not a freeze.
 
 ## Do not
 

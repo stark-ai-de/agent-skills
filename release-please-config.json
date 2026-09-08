@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "skip-github-release": true,
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "draft-pull-request": true,
+  "pull-request-title-pattern": "chore(release): release ${version}",
+  "label": "autorelease: pending",
+  "release-label": "autorelease: tagged",
+  "packages": {
+    ".": {}
+  }
+}

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.2"
+  version: "0.3.3"
 ---
 
 # CodeGraph + ast-grep
