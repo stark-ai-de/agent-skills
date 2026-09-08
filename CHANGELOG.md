@@ -12,6 +12,24 @@
 
 ### Removed
 
+## [0.22.0](https://github.com/stark-ai-de/agent-skills/compare/v0.21.0...v0.22.0) (2026-09-08)
+
+
+### Features
+
+* **skill-maintenance:** add Architecture Compass ADR authoring skill ([4a44e32](https://github.com/stark-ai-de/agent-skills/commit/4a44e326c3474f225e112b4a93fde15f98b7edd3))
+* **skills:** add ChatGPT Plan host adapters ([f353db6](https://github.com/stark-ai-de/agent-skills/commit/f353db6fbd772a592a9056d0d38f40083ea722a4))
+
+
+### Bug Fixes
+
+* **release:** make evidence pagination gh-compatible ([ebe74ee](https://github.com/stark-ai-de/agent-skills/commit/ebe74ee6e2b41dff9beec4076c1dbf3fc3a6558c))
+* **release:** make post-release evidence pagination compatible ([284d268](https://github.com/stark-ai-de/agent-skills/commit/284d2688146ed99f89a4ca0466cf4db92ced8126))
+* **skill-maintenance:** respect generated release ownership ([8c3894c](https://github.com/stark-ai-de/agent-skills/commit/8c3894c122bd80bc43867039dcd4a0d7858e0a8b))
+* **skills:** correct Plan preflight and observed handoffs ([cc3c139](https://github.com/stark-ai-de/agent-skills/commit/cc3c139f4940e0074deeb16f6d437c4eb53c04a1))
+* **tooling:** reconcile Plan adapters with Bun execution ([5584eca](https://github.com/stark-ai-de/agent-skills/commit/5584eca1ace01ccb36edfcbe822227341e4435a8))
+* **tooling:** resolve runtime review findings and integrate main ([e4439af](https://github.com/stark-ai-de/agent-skills/commit/e4439af2efb952ef562af9b47fbe0b413a25baf8))
+
 ## [0.21.0](https://github.com/stark-ai-de/agent-skills/compare/v0.20.1...v0.21.0) (2026-09-03)
 
 
