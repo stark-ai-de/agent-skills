@@ -1443,24 +1443,40 @@ for (const command of [
   assert.match(managerScript, new RegExp(`(?:case |\\")${command}`));
 }
 assert.doesNotMatch(managerScript, /commandResult\("git"|\["release", "create"\]/);
-const preMajorBreakingImpact = spawnSync(
-  process.execPath,
-  [
-    path.join(repositoryRoot, "scripts/release/manage-release.mjs"),
-    "impact",
-    "--kind",
-    "breaking",
-    "--skill",
-    "architecture-compass",
-  ],
-  { cwd: repositoryRoot, encoding: "utf8" },
-);
-assert.equal(
-  preMajorBreakingImpact.status,
-  0,
-  preMajorBreakingImpact.stderr || preMajorBreakingImpact.stdout,
-);
-assert.match(preMajorBreakingImpact.stdout, /0\.6\.6 -> 0\.7\.0 \(breaking\)/);
+const preMajorBreakingFixture = createReleaseFixture();
+try {
+  writeJson(preMajorBreakingFixture.root, "package.json", {
+    name: "fixture",
+    version: "0.20.1",
+    repository: "https://github.com/example/fixture.git",
+  });
+  const skillPath = path.join(preMajorBreakingFixture.root, "skills/test/demo/SKILL.md");
+  const skillBefore = fs.readFileSync(skillPath, "utf8");
+  const preMajorBreakingImpact = spawnSync(
+    process.execPath,
+    [
+      path.join(repositoryRoot, "scripts/release/manage-release.mjs"),
+      "impact",
+      "--kind",
+      "breaking",
+      "--skill",
+      "demo",
+    ],
+    { cwd: preMajorBreakingFixture.root, encoding: "utf8" },
+  );
+  assert.equal(
+    preMajorBreakingImpact.status,
+    0,
+    preMajorBreakingImpact.stderr || preMajorBreakingImpact.stdout,
+  );
+  assert.equal(
+    preMajorBreakingImpact.stdout,
+    "demo: 0.1.0 -> 0.2.0 (breaking); no files changed.\n",
+  );
+  assert.equal(fs.readFileSync(skillPath, "utf8"), skillBefore);
+} finally {
+  fs.rmSync(preMajorBreakingFixture.root, { recursive: true, force: true });
+}
 const missingConfirmation = spawnSync(
   process.execPath,
   [path.join(repositoryRoot, "scripts/release/manage-release.mjs"), "release-pr"],

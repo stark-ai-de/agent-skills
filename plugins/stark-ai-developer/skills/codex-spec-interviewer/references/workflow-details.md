@@ -6,6 +6,167 @@ Read this reference when running the full interview, persistence, or output work
 
 Run this preflight before substantive interviewing or repository exploration. A skill cannot change the host's collaboration mode during an active turn, and the user's use of the word "plan" does not prove that native Plan mode is active.
 
+Identify the host lane from current host context and distinguish it from the
+product being discussed. User-reported composer details can complete the record.
+
+- Codex CLI, Codex IDE extension, or Codex in the ChatGPT desktop app: run the
+  native Codex steps below. Do not require the ChatGPT observation fields or
+  infer unavailability from a missing slash-menu dump.
+- ChatGPT Chat/Work on web, desktop, or mobile, and the distinct Codex web
+  experience: run the shared ordered gates below, then the matching handoff.
+- Unknown or contradictory host identity: report `Planning capability:
+Indeterminate`, ask for the host/surface distinction, and wait without a
+  generated transition command.
+
+### Independent read-only enforcement
+
+Every preflight result, including a transition, refusal, or uncertainty stop,
+reports two separate evidence-backed lines:
+
+```text
+Planning capability: <state> - <mode/control evidence or refusal>
+Read-only enforcement: <state> - <scope and permission evidence>
+```
+
+Use `enforced`, `available but inactive`, `unavailable`, `explicitly declined`,
+`indeterminate`, or `not applicable` for enforcement. The last state is not
+valid for this read-only interview. A Plan banner, `/plan` text, or refusal does
+not establish filesystem enforcement. Report `enforced` only when current
+runtime/permission evidence proves a read-only boundary for the relevant scope.
+With known writable permissions, use `available but inactive` only if a
+read-only control is observed; otherwise use `unavailable` when its absence is
+proven, or `indeterminate` when unknown. In the latter cases, explicitly retain
+a behavioral no-write gate: conversation and proven non-mutating reads may
+continue, but stop before any check that could write. If the user declines an
+enforcement transition, preserve that decision separately and retain the same
+gate. Never test enforcement by attempting a write or silently change host
+permissions/configuration. Filesystem restrictions do not prove restrictions on
+connector or other external mutations; those remain prohibited in the interview.
+
+### ChatGPT and Codex web observation
+
+Record `surface`, `experience`, `plan_control`, `plan_state`, `evidence_source`,
+`host_version`, and `confidence` from current host context or user reports.
+Official documentation describes possible controls, not this turn's capability.
+
+| Field             | Values                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `surface`         | `web`, `desktop`, `mobile`, `unknown`                                                                  |
+| `experience`      | `chat`, `work`, `codex`, `unknown`                                                                     |
+| `plan_control`    | `slash_plan_command`, `host_mode_toggle`, `structured_tool`, `user_reported`, `none_proven`, `unknown` |
+| `plan_state`      | `active`, `inactive`, `unknown`                                                                        |
+| `evidence_source` | `host_runtime_context`, `user_report`, `official_docs_for_this_surface`, `none`                        |
+| `host_version`    | string or `unknown`                                                                                    |
+| `confidence`      | `observed`, `inferred`, `absent`                                                                       |
+
+ChatGPT Chat/Work uses `experience: chat|work`; Codex web uses `surface: web`
+and `experience: codex`. `/goal`, a bundled plan skill, and text requesting
+Plan do not satisfy native Plan preflight. Preserve the observation record and
+include `host_version` in capability evidence; an unknown version is permitted.
+
+Evaluate these gates in order and stop at the first applicable outcome:
+
+1. **Distinguish routing.** Before every active, web, non-web, refusal, fallback,
+   or handoff branch, missing/contradictory routing fields, `surface: unknown`,
+   or `experience: unknown` mean `Planning capability: Indeterminate`. Ask for
+   the distinguishable value and wait. Do not emit a transition handoff.
+2. **Honor an explicit refusal.** If Plan was recommended and the user declined,
+   report `Planning capability: Explicitly declined`, record `Plan-mode
+fallback: explicitly declined - <user statement>`, and continue
+   conversationally. Evaluate this before requiring native-control evidence:
+   unknown/missing controls, `evidence_source: none`, and documentation-only
+   evidence must not mask the refusal. Do not request Plan again or emit a
+   transition handoff. Refusal is separate user evidence, not proof of technical
+   unavailability. If the runtime still reports Plan active, the refusal does
+   not exit it; keep persistence pending until the host confirms exit.
+3. **Wait when a usable composer is still needed.** Unless current evidence
+   already proves Plan active, a running turn or temporarily disabled Plan
+   control means `Planning capability: Indeterminate`: explain the temporary
+   condition, wait for the turn to finish, and re-observe the composer. A
+   busy-turn menu cannot establish `none_proven`. An observed active mode still
+   passes the evidence gate below and does not need another transition.
+4. **Check capability evidence.** For the remaining branches, missing required
+   fields, contradictory values, `evidence_source: official_docs_for_this_surface`,
+   `evidence_source: none`, or `confidence: inferred` or `confidence: absent` mean
+   `Planning capability: Indeterminate`. Ask for current-composer evidence and
+   wait without fallback or a transition. In particular, `none_proven` with an
+   active state is contradictory. A positive enumeration with
+   `plan_state: unknown` is not contradictory when no Plan control exists.
+5. **Handle proven absence.** `plan_control: none_proven` from a positive current
+   enumeration by the host or user yields `Planning capability: Unavailable`.
+   Record `Plan-mode fallback: unavailable - <evidence>` and continue
+   conversationally. This precedes unknown-state handling, so
+   `plan_state: unknown` does not block a proven-absence fallback.
+6. **Keep active Plan.** Observed active Plan yields `Planning capability:
+Active`. Continue the read-only interview and do not toggle Plan again.
+7. **Confirm an observed control's state.** A native control with
+   `plan_state: unknown` yields `Planning capability: Indeterminate`. Ask how to
+   confirm the state and wait without fallback or a transition handoff.
+8. **Request an observed inactive control.** Report `Planning capability:
+Available but inactive`, use the matching handoff below, and wait for
+   confirmed activation on the next turn before interviewing.
+9. **Stop on remaining uncertainty.** Unknown support/control/state yields
+   `Planning capability: Indeterminate`; ask for current evidence and wait.
+   A product label, missing Codex Plan reminder, or unobserved `/plan` is not
+   fallback authority.
+
+### ChatGPT Chat, Work, or mobile handoff
+
+For ChatGPT web Chat/Work, tell the user to select the observed `/plan` item or
+named non-slash native control in the current composer, then wait. Never
+generate or copy a `/plan` line for this web lane.
+
+On a non-web ChatGPT surface, select the observed control. When that control is
+`slash_plan_command`, standalone `/plan` is a copy-ready option. Put the original
+request in a separate continuation prompt unless this composer also proves
+inline prompt support. If the skill is not loaded, separately instruct: Open
+the `@` menu and select Codex Spec Interviewer. Do not insert `@skill` into the
+mode command or describe `/plan Use @codex-spec-interviewer` as official syntax.
+For a non-slash control, use its observed/user-reported name without inventing a
+slash command. Confirm the next turn's mode instead of treating copied text as
+activation.
+
+### Codex web handoff
+
+When this composer exposes an inactive `/plan`, select that item or provide
+standalone `/plan`, then use a separate continuation prompt after activation:
+
+```text
+Use $codex-spec-interviewer to continue this request: <original request>
+```
+
+Only if this same composer also proves inline argument support may the handoff
+combine them as `/plan Use $codex-spec-interviewer to continue this request:
+<original request>`. Observing `/plan` alone does not prove CLI-style parsing.
+For an observed non-slash control, name it and wait. Never infer a web control
+from Codex CLI/IDE/desktop or substitute ChatGPT `@` syntax.
+
+### Official mechanism and evidence boundary
+
+Verified against official documentation on 2026-09-08:
+
+- [Developer commands](https://learn.chatgpt.com/docs/developer-commands):
+  ChatGPT web has its own composer menu. Codex CLI documents `/plan` with an
+  optional inline prompt; `/plan` is temporarily unavailable while Codex works.
+  A native CLI transition request therefore waits for the running turn to end.
+- [Desktop slash commands](https://learn.chatgpt.com/docs/reference/slash-commands):
+  select `/plan` in the app composer to toggle Plan; availability varies. An
+  available toggle does not prove it accepts CLI inline arguments.
+- [Skills & Plugins](https://learn.chatgpt.com/docs/skills-and-plugins):
+  ChatGPT uses `@` skill selection; Codex uses `$`.
+- [Plugins](https://learn.chatgpt.com/docs/plugins): bundled skills need a new
+  chat/session after installation; the IDE extension does not support plugin
+  installation. This does not prohibit separately installed standalone skills.
+- [Agent approvals & security](https://learn.chatgpt.com/docs/agent-approvals-security):
+  sandbox and approval policies are separate controls. Codex documents
+  `/permissions` for selecting read-only access; verify the observed control and
+  effective permissions rather than inferring enforcement from Plan.
+
+Documentation is not live client proof. Do not claim universal web/mobile Plan
+support, activate a mode by prompt text, or change host permissions automatically.
+
+### Codex CLI, IDE extension, or Codex in the ChatGPT desktop app
+
 1. Inspect the host-provided mode context and available tools. Classify the state as `active`, `supported-inactive`, `definitely-unavailable`, or `indeterminate`; treat `indeterminate` as `supported-inactive`, never as fallback authority.
 2. If native Plan mode is active, continue the workflow. Use `request_user_input` for material user decisions whenever it is available; otherwise ask one concise question at a time.
 3. If native Plan mode is supported but inactive, do not interview, inspect the repository, or write files. Stop the turn with a brief explanation and this copy-ready command, replacing the placeholder with the user's complete original request:
@@ -47,7 +208,7 @@ The active Plan-mode interview is read-only. It may inspect repository and exter
 
 ## Codex integration
 
-- Native Plan mode is host-controlled. The skill must request a user-initiated `/plan` transition when supported and inactive; it must not claim to switch modes itself.
+- Native Plan mode is host-controlled. On Codex CLI, IDE, or Codex in the ChatGPT desktop app, the skill must request a user-initiated `/plan` transition when supported and inactive; it must not claim to switch modes itself. On ChatGPT Chat, Work, or mobile, follow the ChatGPT lane; on Codex web, follow the observation-gated Codex web lane in this file.
 - Use `request_user_input` in active Plan mode when available so material choices require explicit user action.
 - Treat the saved spec file as the durable artifact that outlives Plan mode and chat context. An approved in-chat plan with persistence still pending is not the final artifact.
 - Treat `AGENTS.md`, `docs/agents/`, and Codex memories as repo and user evidence, not as the artifact format. Do not write spec content into memories or `AGENTS.md` unless the user explicitly asks for it after the tradeoff is stated.
@@ -67,7 +228,13 @@ The active Plan-mode interview is read-only. It may inspect repository and exter
 
 ## Output format
 
-When supported native Plan mode is inactive, return only the brief transition explanation and copy-ready `/plan` command from the preflight.
+Every preflight response includes `Planning capability:` and `Read-only enforcement:`
+with independent scope/evidence. Include these lines before the native Codex
+transition explanation, ChatGPT select/wait response, Codex web handoff, or
+fallback result. Apply the ordered gates and surface-specific handoffs above;
+do not infer read-only enforcement from a Plan label or emit an unsupported
+combined command. Repeat or update both evidence lines in the verified-checkpoint
+and final result when their state changes.
 
 After a verified checkpoint in active Plan mode, return in this order:
 
@@ -111,8 +278,10 @@ Do not paste the full final spec or ADR by default after they are saved. Print f
 ## Failure modes
 
 - If the repository context is unavailable, produce a repo-agnostic spec and mark repo-specific details as `unspecified`.
-- If native Plan mode is supported but inactive, stop with the preflight's copy-ready `/plan` command; do not silently fall back.
-- If native Plan mode is unavailable or explicitly declined, record the fallback reason and continue conversationally.
+- If native Plan mode is supported but inactive on Codex CLI, IDE, or Codex in the ChatGPT desktop app, stop with the preflight's copy-ready `/plan` command; do not silently fall back.
+- If native Plan mode is definitely unavailable on Codex CLI, IDE, or Codex in the ChatGPT desktop app, or the user explicitly declined it, record the fallback reason and continue conversationally.
+- If the host lane is ChatGPT Chat, Work, or mobile, follow the ChatGPT lane above. Conversational fallback on that lane is allowed only when `plan_control` is `none_proven` from a positive enumeration, or the user explicitly declined Plan. Do not report `Planning capability: Unavailable` from ChatGPT identity, missing Codex Plan state, or a missing `/plan` slash.
+- If the host lane is Codex web, follow the Codex web lane above. Conversational fallback is allowed only after a positive enumeration proves no Plan control or the user explicitly declines Plan; missing or contradictory evidence remains `Planning capability: Indeterminate`.
 - If the user remains in Plan mode after approving the checkpoint, keep persistence marked pending, repeat the save-only handoff if useful, and do not claim completion.
 - If a save-only continuation lacks enough conversation context to reproduce the approved artifact exactly, stop and ask the user to resume the original conversation or provide the approved artifact; do not invent missing content.
 - If the user's goal is internally inconsistent, stop and surface the conflict clearly.

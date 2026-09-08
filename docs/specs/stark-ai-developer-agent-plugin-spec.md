@@ -258,13 +258,13 @@ Current identity values in `plugins/stark-ai-developer.source.json`:
   "schemaVersion": 1,
   "id": "codex",
   "pluginId": "stark-ai-developer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-six-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.1.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-1.1.1.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
@@ -306,7 +306,7 @@ skills/<category>/<skill>/          canonical author-maintained skills, includin
                 │       ├── plugin.json
                 │       └── skills/<skill>/
                 │
-                ├── dist/openai/stark-ai-developer-1.1.0.zip
+                ├── dist/openai/stark-ai-developer-1.1.1.zip
                 │       └── skills-only archive from ephemeral OpenAI adapter staging
                 │
                 └── dist/skills/<skill>.zip
