@@ -104,7 +104,9 @@ For the repository-local adoption, inspect and update as required:
 - `scripts/validation/adrs/decision-lock.tsv` only when the decision enters a locked final status
 - `AGENTS.md`, `CONTEXT.md`, or owning documentation only where the accepted local decision needs an effective instruction surface
 
-The promoted skill change creates release intent. Prepare the required repository package version and `CHANGELOG.md` release section through the live release helper or owning contract. Because Architecture Compass is bundled, inspect and update `plugins/stark-ai-developer.source.json` release identity and derived listing surfaces when the current plugin release contract requires a new plugin version. Then run `npm run sync:agent-plugin` so the committed portable projection derives from canonical sources.
+Under ADR-0050, this is a feature PR with component impact. Increase the affected public skill version and update `plugins/stark-ai-developer.source.json` release identity and derived listing surfaces as required by the live feature-impact contract. Run `npm run sync:agent-plugin` so the committed portable projection derives from canonical sources.
+
+Release Please exclusively prepares the root `package.json` version, `.release-please-manifest.json`, and `CHANGELOG.md` in a separate generated release PR. Keep those root release surfaces unchanged in the ADR feature PR, and identify generated release preparation as a separate follow-up. Do not invoke the disabled `npm run release:prepare` helper or create a release PR as part of this paired-authoring workflow.
 
 Do not edit `plugins/stark-ai-developer/` by hand.
 
@@ -128,7 +130,7 @@ Use `None found` only after searching the current catalogs, related text, and op
 
 ## Validation
 
-Inspect current scripts before running them. Synchronize generated output first, run the focused checks, and run the mandatory aggregate last:
+Inspect current scripts before running them. Synchronize generated output first and run the focused checks:
 
 ```bash
 npm run sync:agent-plugin
@@ -140,10 +142,9 @@ npm run release:intent -- --base-ref origin/main
 npm run release:validate -- --base-ref origin/main
 pnpm format:check
 git diff --check origin/main...HEAD
-npm run validate
 ```
 
-Run `npm run list:incubator` only when incubator discovery changes. Add owning checks for every changed instruction, catalog, release, listing, eval, or site contract. This workflow materially changes a promoted skill and prepares release intent, so the local aggregate is a mandatory final proof after focused checks stabilize.
+Run `npm run list:incubator` only when incubator discovery changes. Add owning checks for every changed instruction, catalog, release, listing, eval, or site contract. The release-impact checker distinguishes `component_impact` on feature PRs from `release_intent` on generated root release PRs; a promoted skill change alone does not create root release intent. Select the local `npm run validate` aggregate under ADR-0041: run it after focused checks stabilize when release intent or another mandatory gate requires it. Honor an explicit user exclusion and record any resulting required proof as `not run`. The hosted PR aggregate remains mandatory.
 
 Report each check with exactly one status: `verified`, `failed`, `not run`, `unavailable`, or `stale`. Bind the final receipt to the clean candidate commit SHA, command or observation, evidence stage, result, time or freshness boundary, and material limitations. Run the final range checks after committing, confirm `HEAD` is that candidate, and do not use committed-only evidence to describe uncommitted bytes. Local success does not prove hosted CI, publication, deployment, installation, or production behavior.
 
@@ -154,5 +155,5 @@ Report each check with exactly one status: `verified`, `failed`, `not run`, `una
 - Keep generated output in the same reviewed branch as its source change.
 - Require a clean worktree and identify the exact candidate commit before recording final validation evidence or creating the PR.
 - Put `## Requirements` before the repository-specific summary in the PR body.
-- Create one first PR containing the paired ADRs, required synchronization and release metadata, conflict report, candidate-bound evidence, and remaining review decisions.
+- Create one first feature PR containing the paired ADRs, required synchronization and component version changes, conflict report, candidate-bound evidence, and remaining review decisions. Leave root release preparation to the separate generated Release Please PR.
 - Do not merge, release, publish, deploy, or modify production state without separate authority.

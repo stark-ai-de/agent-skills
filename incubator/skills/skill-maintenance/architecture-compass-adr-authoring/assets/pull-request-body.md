@@ -16,7 +16,7 @@ Use this template as a starting point. Remove instructional placeholders before 
 
 - Add `<AC-ADR-ID>` to Architecture Compass.
 - Add `<ADR-ID>` as the repository-local adoption.
-- Synchronize the affected validator inventory, catalogs, lineage, locks, release metadata, instructions, and generated plugin projection.
+- Synchronize the affected validator inventory, catalogs, lineage, locks, component versions, instructions, and generated plugin projection.
 
 ## ADRs
 
@@ -43,7 +43,8 @@ Both proposed triplets remain in this PR even when a conflict is listed. Accepte
 - `<lineage disposition and accepted-decision lock update>`
 - `<repository ADR index and local lock update, or reason not required>`
 - `<instruction/documentation update, or reason not required>`
-- `<skill, package, changelog, and plugin release metadata update>`
+- `<affected skill/plugin version and derived listing update>`
+- Root `package.json` version, `.release-please-manifest.json`, and `CHANGELOG.md`: unchanged; Release Please owns root release preparation in a separate generated PR.
 - `<generated projection command and result>`
 
 ## Validation
@@ -52,6 +53,8 @@ Candidate: `<commit SHA>`
 Observed: `<UTC timestamp>`
 
 Use only `verified`, `failed`, `not run`, `unavailable`, or `stale` as status values.
+
+Release-impact classification: `<component_impact / release_intent result and evidence>`. Select the local aggregate under ADR-0041; component impact alone does not require it. For an unselected aggregate, use `not run` and explain why no mandatory gate applies.
 
 | Stage | Check                                                | Status     | Evidence or limitation |
 | ----- | ---------------------------------------------------- | ---------- | ---------------------- |
@@ -81,6 +84,7 @@ Use only `verified`, `failed`, `not run`, `unavailable`, or `stale` as status va
 - [ ] Conflicts are explicit and accepted history is preserved.
 - [ ] Every unresolved review decision names its owner.
 - [ ] Architecture Compass validator inventory, lineage, and lock are synchronized.
-- [ ] Skill, repository, changelog, and applicable plugin release versions are coherent.
+- [ ] Affected skill and plugin versions satisfy the feature-impact contract.
+- [ ] Root release metadata is unchanged and deferred to a separate generated Release Please PR.
 - [ ] Generated plugin files came from the owning sync command.
 - [ ] The worktree is clean and validation evidence names the exact candidate commit, stage, status, and gaps.
