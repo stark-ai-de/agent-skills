@@ -4,7 +4,7 @@ interface:
   icon_small: "./assets/openai-icon.png"
   icon_large: "./assets/openai-icon.png"
   default_prompt: >-
-    Use $drawio-diagrams for this diagram task. Expose create, edit-repair, review,
+    Use Draw.io Diagrams for this diagram task. Expose create, edit-repair, review,
     and export; after workflow and authority selection, run the capability preflight
     before any create/edit-repair/export inspection or mutation, while keeping review
     strictly read-only. Select and announce the task-matching route, inputs, outputs,
