@@ -50,24 +50,44 @@ export function automatedReleaseVersionSupported(version) {
   return true;
 }
 
+function appSlugFromBotActor(pullRequest) {
+  const match = /^https:\/\/github\.com\/apps\/([A-Za-z0-9-]+)$/.exec(
+    pullRequest?.user?.html_url ?? "",
+  );
+  return match?.[1] ?? null;
+}
+
+function appIdFromBotActor(pullRequest) {
+  // GitHub's canonical App-bot actor payload currently encodes the numeric integration ID here.
+  // Accept only that exact shape so provider drift blocks instead of weakening provenance.
+  const match = /^https:\/\/avatars\.githubusercontent\.com\/in\/(\d+)(?:\?v=\d+)?$/.exec(
+    pullRequest?.user?.avatar_url ?? "",
+  );
+  return match?.[1] ?? null;
+}
+
+function botAccountIdFromActor(pullRequest) {
+  const accountId = pullRequest?.user?.id;
+  return Number.isSafeInteger(accountId) && accountId > 0 ? String(accountId) : null;
+}
+
 export function releasePleasePullRequestOwnershipErrors({
   pullRequest,
-  app,
   commits,
   repository,
   expectedAppId,
 }) {
   const errors = [];
-  const appSlug = app?.slug;
+  const appSlug = appSlugFromBotActor(pullRequest);
+  const actorAppId = appIdFromBotActor(pullRequest);
+  const botAccountId = botAccountIdFromActor(pullRequest);
   const botLogin = typeof appSlug === "string" ? `${appSlug}[bot]` : null;
-  if (
-    !/^\d+$/.test(String(expectedAppId ?? "")) ||
-    String(app?.id ?? "") !== String(expectedAppId)
-  ) {
+  if (!/^\d+$/.test(String(expectedAppId ?? "")) || actorAppId !== String(expectedAppId)) {
     errors.push("configured GitHub App identity does not match the release PR actor");
   }
   if (
     !botLogin ||
+    !botAccountId ||
     pullRequest?.user?.type !== "Bot" ||
     pullRequest?.user?.login !== botLogin ||
     pullRequest?.user?.html_url !== `https://github.com/apps/${appSlug}`
@@ -87,7 +107,8 @@ export function releasePleasePullRequestOwnershipErrors({
     return errors;
   }
   const [commit] = commits;
-  const expectedAuthorEmail = `${pullRequest?.user?.id}+${botLogin}@users.noreply.github.com`;
+  const expectedAuthorEmail =
+    botAccountId && botLogin ? `${botAccountId}+${botLogin}@users.noreply.github.com` : null;
   if (
     commit?.sha !== pullRequest?.head?.sha ||
     commit?.author?.login !== botLogin ||

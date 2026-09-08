@@ -21,19 +21,19 @@ Variants: [Short](0054-select-repository-runtimes-through-an-advisory-evidence-m
 
 ## Decision
 
-The repository will maintain an advisory evidence matrix for each current execution boundary, start relevant JavaScript/TypeScript tooling from ADR-0053's Bun candidate, and encode the best evidenced supported winner in the owning command or workflow. Unknown or non-material matrix signals do not block work; actual command results and mandatory repository checks determine failure.
+The repository will maintain an advisory evidence matrix for each current execution boundary, start relevant JavaScript/TypeScript tooling from ADR-0055's Bun candidate, and encode the best evidenced supported winner in the owning command or workflow. Unknown or non-material matrix signals do not block work; actual command results and mandatory repository checks determine failure.
 
 ## Why
 
 - AC-ADR-014 selects runtimes and hosts from evidence for the concrete executable or deployable.
-- AC-ADR-058 and ADR-0053 deliberately provide a Bun-first repository-tooling candidate and a verified-fallback contract.
+- AC-ADR-058 and ADR-0055 deliberately provide a Bun-first repository-tooling candidate and a verified-fallback contract.
 - A repository-owned matrix makes their coordination inspectable without treating the existence of an ADR as compatibility proof.
 - Advisory unknown cells preserve honest gaps while mandatory executable and repository checks remain fail-closed.
 - Encoding the winner in the owning command prevents callers from silently choosing a different runtime.
 - Each boundary records candidates, material signals, a winner, evidence references, rationale, fallback order, and a revisit trigger.
 - The fastest supported winner must preserve correctness, operational behavior, security, upstream contracts, and required platform coverage; performance alone is insufficient.
 - Signals may be `pass`, `fail`, `unknown`, or `not-applicable`; malformed declarations, unclassified current boundaries, winner/command drift, and undocumented fallbacks remain invalid.
-- Changing a winner updates the matrix, owning command, focused evidence, and affected docs together without rewriting ADR-0053 unless package ownership or Bun's candidate status changes.
+- Changing a winner updates the matrix, owning command, focused evidence, and affected docs together without rewriting ADR-0055 unless package ownership or Bun's candidate status changes.
 
 ## Options
 

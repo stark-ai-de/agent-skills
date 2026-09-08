@@ -182,11 +182,12 @@ workflow definition, checkout, event ref, workflow SHA, and remote branch tip to
 be the same protected `main` revision. A manual dispatch from another branch or
 tag therefore fails before GitHub creates the write-capable App token.
 
-Pull-request validation resolves the configured App ID, requires the
-repository-local Release Please branch and exactly one App-bot-authored head
-commit with GitHub's valid signature, then validates the complete three-file
-transformation. Publication repeats the merged-PR provenance check against the
-exact candidate commit.
+Pull-request validation matches the configured App ID against GitHub's canonical
+App-bot actor payload, requires the repository-local Release Please branch and
+exactly one App-bot-authored head commit with GitHub's valid signature, then
+validates the complete three-file transformation. Unknown actor metadata fails
+closed. Publication repeats the merged-PR provenance check against the exact
+candidate commit.
 
 The baseline is `0.20.1`; `v0.20.0` remains unpublished and the first generated
 catalog release is `v0.21.0`. `skip-github-release: true` reserves tags and
@@ -206,11 +207,38 @@ and evidence dispatch, the protected publisher uses a new repository-scoped App
 token to add `autorelease: tagged` and remove `autorelease: pending` for that
 exact generated PR. A failed dispatch or label transition keeps the run failed
 and is safe to retry; it cannot silently unlock the next generated release PR.
-If `main` advanced after the candidate was validated, recover that older
-candidate through **Actions → Publish Release → original run → Re-run jobs** or
-`gh run rerun <original-run-id>`. A new
+If `main` advanced after the candidate was validated, recover a transient
+failure through **Actions → Publish Release → original run → Re-run jobs** or
+`gh run rerun <original-run-id>`. A normal new
 `pnpm run release:manage -- publish --confirm` dispatch always targets current
 `main` and is not a retry of the older candidate.
+
+If an immutable workflow-code defect blocked the original run before any target
+tag or GitHub Release existed, use the narrower recovery route:
+
+<!-- prettier-ignore -->
+[ADR-0053](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.short.md) ([Long, canonical](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.long.md) · [Guide](adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.guide.md))
+
+Merge only the reviewed recovery controller, validation, runbook, and
+successor-ADR files, then dispatch a read-only plan with the original full
+generated-release merge SHA:
+
+```bash
+pnpm run release:manage -- publish-plan \
+  --recovery-release-sha ORIGINAL_RELEASE_SHA \
+  --confirm
+```
+
+The recovery preflight authenticates the original Release Please App-owned PR,
+requires successful hosted `Validate` runs for its exact head and merged
+origin, proves a bounded allowed diff to the exact protected current `main`,
+verifies unchanged root release inputs, and requires the target tag and Release
+to be absent. Readiness then requires a fresh successful `Validate` run for the
+replacement and byte-identical hosted ZIPs from both revisions. Each metadata document must identify its own commit
+while retaining the same release, plugin, archive profile, sizes, and digests.
+The replacement SHA—not the origin—becomes the tag, release-subject,
+workflow/source-digest, and environment-approval revision. Any ambiguity blocks
+before the write-capable job.
 Create both labels in **Settings → Issues → Labels** before the first dispatch;
 `setup-check` is read-only and fails if either label is absent.
 
@@ -301,17 +329,17 @@ GitHub Actions job summaries name the next operator follow-up after each run.
 All local commands dispatch hosted workflows or APIs; none creates a local tag
 or release. Hosted mutations require `--confirm`.
 
-| CLI                                                                              | GitHub web equivalent                                                                                                                                                                                                                        |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run release:manage -- status`                                              | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
-| `pnpm run release:manage -- setup-check`                                         | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
-| `pnpm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]` | Review the feature diff and affected component versions.                                                                                                                                                                                     |
-| `pnpm run release:manage -- release-pr --confirm`                                | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
-| `pnpm run release:manage -- publish-plan --confirm`                              | **Actions → Publish Release → Run workflow**, `dry_run=true`.                                                                                                                                                                                |
-| `pnpm run release:manage -- publish --confirm`                                   | **Actions → Publish Release → Run workflow**, `dry_run=false`; this targets current `main`, while an older candidate requires rerunning its original workflow run.                                                                           |
-| `pnpm run release:manage -- approve --run-id ID --confirm`                       | Open the waiting run/deployment and approve the `release` environment.                                                                                                                                                                       |
-| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                 | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
-| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                         | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
+| CLI                                                                                     | GitHub web equivalent                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run release:manage -- status`                                                     | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
+| `pnpm run release:manage -- setup-check`                                                | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
+| `pnpm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]`        | Review the feature diff and affected component versions.                                                                                                                                                                                     |
+| `pnpm run release:manage -- release-pr --confirm`                                       | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
+| `pnpm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                              |
+| `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                     |
+| `pnpm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                 |
+| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
+| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
 
 Equivalent local release validation:
 
@@ -493,8 +521,11 @@ security routes return HTTP 200.
 5. Verify all six packaged skill icons. If the portal ignores package metadata,
    restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, and `pen`
    glyphs.
-6. Upload `site/public/logo.png` as the light Plugin Info logo.
-7. Upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon.
+6. Keep the existing light and dark Plugin Info logos unchanged.
+7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)
+   to upload the separate light/dark Composer PNGs and restore Plugin Info logos
+   only if the package upload reset them. The ZIP's single `composerIcon` field
+   does not document a way to select both theme variants.
 8. Review automated scans and every portal warning, including
    `manifest_normalized` if shown.
 9. Add no more than three realistic starter prompts.

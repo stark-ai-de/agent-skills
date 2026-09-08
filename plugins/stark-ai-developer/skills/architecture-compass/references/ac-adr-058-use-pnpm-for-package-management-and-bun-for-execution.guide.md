@@ -134,7 +134,7 @@ bun build --compile --target bun   --minify-whitespace --minify-syntax   ./src/i
 When compilation is not supported but Bun bundling is:
 
 ```bash
-bun build --minify ./src/index.ts --outdir dist
+bun build --target bun --minify ./src/index.ts --outdir dist
 ```
 
 Copy only the verified artifact and required runtime assets into the final container stage. Keep the framework-native production build when the framework requires it.

@@ -21,11 +21,11 @@ Variants: **Short** · [Long, canonical](0054-select-repository-runtimes-through
 
 ## Decision
 
-The repository will maintain an advisory evidence matrix for each current execution boundary, start relevant JavaScript/TypeScript tooling from ADR-0053's Bun candidate, and encode the best evidenced supported winner in the owning command or workflow. Unknown or non-material matrix signals do not block work; actual command results and mandatory repository checks determine failure.
+The repository will maintain an advisory evidence matrix for each current execution boundary, start relevant JavaScript/TypeScript tooling from ADR-0055's Bun candidate, and encode the best evidenced supported winner in the owning command or workflow. Unknown or non-material matrix signals do not block work; actual command results and mandatory repository checks determine failure.
 
 ## Context
 
-AC-ADR-014 requires selection by concrete deployable evidence, while AC-ADR-058 and ADR-0053 provide a useful Bun-first tooling candidate. A small repository-owned matrix coordinates them without making either decision universal or weakening narrow fallbacks.
+AC-ADR-014 requires selection by concrete deployable evidence, while AC-ADR-058 and ADR-0055 provide a useful Bun-first tooling candidate. A small repository-owned matrix coordinates them without making either decision universal or weakening narrow fallbacks.
 
 ## Consequences
 

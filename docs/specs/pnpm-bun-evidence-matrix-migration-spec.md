@@ -7,7 +7,7 @@ status: "accepted"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-08-26"
-updated: "2026-08-26"
+updated: "2026-09-08"
 source_request: "Keep AC-ADR-014 and the Bun-first provider decision, reconcile them through an evidence matrix, supersede local ADR-0034 with two joint successors, and complete the pnpm/Bun migration in PR #68."
 ---
 
@@ -20,7 +20,7 @@ Keep evidence-based runtime selection and Bun-first repository tooling as comple
 ## Scope
 
 - Reconcile AC-ADR-014 and AC-ADR-058 without rewriting their accepted decisions.
-- Accept local ADR-0053 and ADR-0054 as joint successors to ADR-0034.
+- Accept local ADR-0054 and ADR-0055 as joint successors to ADR-0034.
 - Add a public, machine-validated runtime evidence matrix whose unknown cells remain advisory.
 - Keep pnpm as the only persistent dependency and lockfile owner.
 - Use Bun 1.4.0 as the selected runtime for compatible repository JavaScript/TypeScript commands and record narrow Node.js fallbacks.
@@ -75,7 +75,7 @@ Keep evidence-based runtime selection and Bun-first repository tooling as comple
 ## File plan
 
 - Add: this spec, ADR-0054 triplet, `.bun-version`, `bunfig.toml`, `docs/runtime-evidence-matrix.json`, and its validator.
-- Update: ADR-0034 metadata, ADR-0053 triplet, ADR index and decision lock, AC-ADR-014/058 Guides, package manifests and lockfile, CI/actions, release descriptor/schema/tests, validation ownership, current maintainer docs, and release/listing metadata already in PR #68.
+- Update: ADR-0034 metadata, ADR-0055 triplet, ADR index and decision lock, AC-ADR-014/058 Guides, package manifests and lockfile, CI/actions, release descriptor/schema/tests, validation ownership, current maintainer docs, and release/listing metadata already in PR #68.
 - Regenerate: `plugins/stark-ai-developer/` from canonical skill and plugin source inputs.
 - Preserve: unrelated worktrees, historical decision text, immutable post-release action behavior, consumer installation examples, versions not already part of PR #68, and all publication/deployment state.
 
@@ -86,7 +86,7 @@ Keep evidence-based runtime selection and Bun-first repository tooling as comple
 - Runtime observations checked: Bun 1.4.0 passed the representative Astro production build and most repository validators; Node.js passed the memory-curator fail-closed fixtures that Bun failed; Node.js `--check` and Bun script execution have different semantics.
 - Current primary-source versions checked on 2026-08-26: pnpm 11.24.0, Astro 7.2.7, Vite 8.2.2, and skills CLI 1.5.23.
 - Requirements revised: the matrix is advisory rather than a completeness gate, and Node.js remains a documented fallback for the two evidenced incompatibility boundaries.
-- ADR gate result: ADR-0053 and ADR-0054 are required joint successors and are accepted by explicit maintainer direction.
+- ADR gate result: ADR-0054 and ADR-0055 are required joint successors and are accepted by explicit maintainer direction.
 
 ## Validation
 
@@ -124,13 +124,14 @@ Hosted validation must pass on the exact pushed head, including the Ubuntu aggre
 ## User verification
 
 - The maintainer approved keeping AC-ADR-014 and AC-ADR-058 through reciprocal explanatory references.
-- The maintainer approved accepting ADR-0053 and ADR-0054 jointly and superseding ADR-0034.
+- The maintainer approved accepting ADR-0054 and ADR-0055 jointly and superseding ADR-0034.
+- The maintainer approved assigning the pnpm/Bun decision to ADR-0055 to avoid the accepted release-recovery ADR-0053, updating its references and the ADR-0054 decision lock without changing either decision's meaning.
 - The maintainer selected an advisory matrix: unknown cells do not block and the best evidenced working candidate wins.
 - The maintainer authorized the full migration, exact staging, commit, fast-forward push, PR-body update, thematic inline review comments, replies to old explanatory threads, and thread resolution after green CI.
 
 ## Done when
 
-- [ ] ADR-0034 is Superseded by accepted ADR-0053 and ADR-0054 without changing its locked Decision text.
+- [ ] ADR-0034 is Superseded by accepted ADR-0054 and ADR-0055 without changing its locked Decision text.
 - [ ] AC-ADR-014 and AC-ADR-058 explain how candidate evidence and final selection coordinate without changing their locked decisions.
 - [ ] The advisory matrix and validator agree with package scripts, CI, fallbacks, and toolchain declarations.
 - [ ] pnpm 11.24.0 owns dependencies; Bun 1.4.0 runs compatible repository tooling; documented Node.js fallbacks remain narrow.

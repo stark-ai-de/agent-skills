@@ -29,7 +29,7 @@ For each current boundary:
 
 1. Name the owning package script, workflow, action, direct maintained command, or explicit historical contract.
 2. List only realistic candidates and record material signals as `pass`, `fail`, `unknown`, or `not-applicable`.
-3. Start repository JavaScript/TypeScript tooling with ADR-0053's Bun candidate; start framework, native, or immutable upstream contracts with their supported candidate.
+3. Start repository JavaScript/TypeScript tooling with ADR-0055's Bun candidate; start framework, native, or immutable upstream contracts with their supported candidate.
 4. Select the fastest candidate that preserves correctness, operations, security, upstream support, and required platform behavior.
 5. If Bun is not the winner, record the exact evidence and revisit trigger. When Node.js works and no other candidate has better qualifying evidence, select Node.js as the default fallback.
 6. Encode the winner in the owning command and update the matrix in the same change.

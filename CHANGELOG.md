@@ -12,6 +12,35 @@
 
 ### Removed
 
+## [0.21.0](https://github.com/stark-ai-de/agent-skills/compare/v0.20.1...v0.21.0) (2026-09-03)
+
+
+### Features
+
+* **release:** automate release preparation and direct artifacts ([d357972](https://github.com/stark-ai-de/agent-skills/commit/d357972e76d63b18c6cd57ecddcfdb1c9e0c3eb1))
+* **release:** automate release preparation and direct artifacts ([b6b444f](https://github.com/stark-ai-de/agent-skills/commit/b6b444f96d4532565465b362f77aaa6fe1dcb23a))
+
+
+### Bug Fixes
+
+* **governance:** resolve current-main ADR IDs ([42fc79d](https://github.com/stark-ai-de/agent-skills/commit/42fc79d90d2bb6ab2a1d1a61356a0ab40e9aa825))
+* **identity:** require canonical GitHub repository hosts ([0101e98](https://github.com/stark-ai-de/agent-skills/commit/0101e984b57fa244f14290f3d7a4e9e24c402ab2))
+* **release:** accept automated manifest lifecycle ([bdf7112](https://github.com/stark-ai-de/agent-skills/commit/bdf7112e9c585b6e85700eb7b2cce898eb668b81))
+* **release:** accept automated manifest lifecycle ([b4d17df](https://github.com/stark-ai-de/agent-skills/commit/b4d17df9ca3e6e593c2e1d4abe4038373442b7fb))
+* **release:** bind private App provenance to bot actor ([16210d5](https://github.com/stark-ai-de/agent-skills/commit/16210d50db281cb2087a9a2032ebb9b5e96547cd))
+* **release:** bind provenance to app bot actor ([f86904b](https://github.com/stark-ai-de/agent-skills/commit/f86904b30bf615e4f9de5c06237277db8599dbfd))
+* **release:** bind reconciliation to exact release metadata ([8576184](https://github.com/stark-ai-de/agent-skills/commit/8576184572c59cd62213d9ffe2370bb55fa8004f))
+* **release:** derive evidence downloads from observed assets ([418188f](https://github.com/stark-ai-de/agent-skills/commit/418188fa7e726063e677947696499a777be4bec4))
+* **release:** dispatch protected-main evidence after publication ([571da70](https://github.com/stark-ai-de/agent-skills/commit/571da70845a333538524cbfd7c52b2fc74323bbc))
+* **release:** keep auxiliary attestations manual-only ([1fae040](https://github.com/stark-ai-de/agent-skills/commit/1fae04008a6f036debecb702cad86ef0532b1060))
+* **release:** keep v0.19.1 retrospective validation metadata-only ([721226a](https://github.com/stark-ai-de/agent-skills/commit/721226a0412d3d4f5f0b387b7d21a822904f970e))
+* **release:** preserve generated changelog formatting ([b7b5fb4](https://github.com/stark-ai-de/agent-skills/commit/b7b5fb44753a1ecd6a26f396d66a323e796bac50))
+* **release:** preserve generated changelog formatting ([ad6fb29](https://github.com/stark-ai-de/agent-skills/commit/ad6fb29fe31a0e229a6b014d92f8e108b872cc3d))
+* **release:** reconcile draft metadata before publication ([fb55f98](https://github.com/stark-ai-de/agent-skills/commit/fb55f98bae04b068b8a7aff5b49f0654a8ab34bb))
+* **release:** run post-release evidence only from protected main ([652c899](https://github.com/stark-ai-de/agent-skills/commit/652c899fd713496f5c3cf04c5755caa6dadffaa9))
+* **release:** support metadata-only historical subjects ([dd97e2b](https://github.com/stark-ai-de/agent-skills/commit/dd97e2b39618dfc7186fe47721473c86a0cc0d1c))
+* **validation:** align installed Architecture Compass count ([d93d054](https://github.com/stark-ai-de/agent-skills/commit/d93d05442e2a0d847986c3b63ba1ba5c32c72d7b))
+
 ## v0.20.1 - 2026-08-25
 
 ### Added

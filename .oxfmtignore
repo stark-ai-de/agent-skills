@@ -8,6 +8,9 @@ build
 dist
 coverage
 
+# Release Please owns the root changelog bytes; release validators enforce its generated structure.
+CHANGELOG.md
+
 # Wide, human-authored draw.io reference tables are easier to read without oxfmt alignment churn.
 skills/engineering-workflows/drawio-diagrams/references/*.md
 plugins/stark-ai-developer/skills/drawio-diagrams/references/*.md

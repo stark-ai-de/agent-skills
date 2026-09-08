@@ -1,6 +1,6 @@
-# ADR-0053: Use pnpm for package management and Bun for execution
+# ADR-0055: Use pnpm for package management and Bun for execution
 
-ID: ADR-0053
+ID: ADR-0055
 Title: Use pnpm for package management and Bun for execution
 Status: Accepted
 Date: 2026-08-26
@@ -17,7 +17,7 @@ Superseded by: None
 Guide verified: 2026-08-26
 Gist: Let pnpm own persistent dependencies and run JavaScript tooling through Bun unless verified incompatibility requires a supported fallback.
 
-Variants: [Short](0053-use-pnpm-for-package-management-and-bun-for-execution.short.md) · **Long, canonical** · [Guide](0053-use-pnpm-for-package-management-and-bun-for-execution.guide.md)
+Variants: [Short](0055-use-pnpm-for-package-management-and-bun-for-execution.short.md) · **Long, canonical** · [Guide](0055-use-pnpm-for-package-management-and-bun-for-execution.guide.md)
 
 ## Decision
 

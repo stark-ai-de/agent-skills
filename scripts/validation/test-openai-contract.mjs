@@ -10,7 +10,11 @@ import {
   OPENAI_WORKSHEET_PATH,
   renderOpenAiSubmissionWorksheet,
 } from "../lib/openai-worksheet.mjs";
-import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "../lib/release-descriptor.mjs";
+import {
+  PLUGIN_SOURCE_PATH,
+  PLUGIN_SOURCE_SCHEMA_PATH,
+  pluginArtifactPaths,
+} from "../lib/release-descriptor.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -220,6 +224,30 @@ try {
   );
 } finally {
   fs.rmSync(duplicateGlyphFixture, { recursive: true, force: true });
+}
+
+const listing = JSON.parse(fs.readFileSync(path.join(repositoryRoot, LISTING_PATH), "utf8"));
+const worksheet = renderOpenAiSubmissionWorksheet(listing);
+const paths = pluginArtifactPaths(repositoryRoot);
+const handoffLink = `${path.posix.relative(path.posix.dirname(paths.worksheet), paths.firstPublication)}#composer-icon-handoff`;
+assert.ok(worksheet.includes(`[Composer icon handoff](${handoffLink})`));
+assert.match(worksheet, /Keep both existing Plugin Info logos unchanged/);
+assert.doesNotMatch(worksheet, /dark Plugin Info logo and Composer icon/);
+
+const relocatedWorksheet = renderOpenAiSubmissionWorksheet(listing, {
+  listing: "docs/example/listing.json",
+  worksheet: "docs/example/submissions/worksheet.md",
+  firstPublication: "docs/example/runbooks/portal.md",
+});
+assert.ok(relocatedWorksheet.includes("(../runbooks/portal.md#composer-icon-handoff)"));
+
+const runbook = fs.readFileSync(path.join(repositoryRoot, paths.firstPublication), "utf8");
+assert.match(runbook, /^### Composer icon handoff$/m);
+assert.match(runbook, /interface\.composerIcon/);
+for (const theme of ["light", "dark"]) {
+  const icon = `assets/chatgpt-composer-icon-${theme}.png`;
+  assert.ok(runbook.includes(`(${icon})`), `${theme} Composer upload must be linked`);
+  assert.ok(fs.existsSync(path.join(repositoryRoot, path.dirname(paths.firstPublication), icon)));
 }
 
 console.log("OpenAI listing contract fixtures passed.");

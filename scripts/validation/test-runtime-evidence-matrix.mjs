@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { packageCommandRuntimes, runtimeAlignmentErrors } from "../lib/runtime-selection.mjs";
+
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const errors = [];
 const nativeRootScripts = new Set(["format", "format:check", "lint", "lint:fix"]);
@@ -114,17 +116,32 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
     } else {
       findings.push(`package.json#scripts.${name}: unclassified runtime command: ${command}`);
     }
-    if (surface) occurrences.push({ source: `package.json#scripts.${name}`, surface });
+    if (surface) {
+      const source = `package.json#scripts.${name}`;
+      try {
+        const runtimes =
+          surface === "package:root:pnpm-orchestration"
+            ? ["pnpm"]
+            : packageCommandRuntimes(command, rootScripts);
+        for (const runtime of runtimes) occurrences.push({ source, surface, runtime });
+      } catch (error) {
+        findings.push(`${source}: ${error.message}`);
+      }
+    }
   }
 
   for (const [name, command] of Object.entries(siteScripts)) {
     if (!/^(?:bun --bun\b|bun exec ")/.test(command)) {
       findings.push(`site/package.json#scripts.${name}: site tooling must select Bun`);
     } else {
-      occurrences.push({
-        source: `site/package.json#scripts.${name}`,
-        surface: "package:site:bun",
-      });
+      const source = `site/package.json#scripts.${name}`;
+      try {
+        for (const runtime of packageCommandRuntimes(command, siteScripts)) {
+          occurrences.push({ source, surface: "package:site:bun", runtime });
+        }
+      } catch (error) {
+        findings.push(`${source}: ${error.message}`);
+      }
     }
   }
 
@@ -157,7 +174,11 @@ function discoverAutomationSurfaces(sources) {
       if (!hasExplicitNode) {
         findings.push(`${relativePath}: historical Node.js owner must select Node explicitly`);
       } else {
-        occurrences.push({ source: relativePath, surface: historicalOwner.surface });
+        occurrences.push({
+          source: relativePath,
+          surface: historicalOwner.surface,
+          runtime: "node",
+        });
       }
       continue;
     }
@@ -170,7 +191,7 @@ function discoverAutomationSurfaces(sources) {
       findings.push(`${relativePath}: unclassified explicit Node.js automation owner`);
     }
     if (hasBunCommand || hasPnpmExecution) {
-      occurrences.push({ source: relativePath, surface: "ci:current:bun" });
+      occurrences.push({ source: relativePath, surface: "ci:current:bun", runtime: "bun" });
     }
     if (relativePath.startsWith(".github/workflows/") && (hasBunCommand || hasPnpmExecution)) {
       if (
@@ -200,7 +221,7 @@ function discoverInternalNodeSurfaces(sources, owners = internalNodeOwners) {
       continue;
     }
     matchedOwners.add(relativePath);
-    occurrences.push({ source: relativePath, surface });
+    occurrences.push({ source: relativePath, surface, runtime: "node" });
   }
 
   for (const relativePath of owners.keys()) {
@@ -272,6 +293,68 @@ function negativeFixtureErrors() {
   ) {
     findings.push("unregistered explicit Node.js automation fixture must be rejected");
   }
+
+  const changedWinner = structuredClone(matrix.boundaries);
+  const rootOwner = changedWinner.find((boundary) => boundary.id === "root-javascript-tooling");
+  rootOwner.winner = "node";
+  rootOwner.fallbackOrder = ["node", "bun"];
+  if (
+    !runtimeAlignmentErrors(changedWinner, packageDiscovery.occurrences).some((error) =>
+      error.includes("selected runtime bun disagrees with root-javascript-tooling winner node"),
+    )
+  ) {
+    findings.push("a matrix winner change without a command change must be rejected");
+  }
+
+  const nodeCommand = "node scripts/catalog/validate-skills.mjs";
+  const nestedNodeExpression = `bun exec ${JSON.stringify(nodeCommand)}`;
+  const driftedCommands = [
+    `bun --bun exec ${JSON.stringify(nodeCommand)}`,
+    `bun exec ${JSON.stringify(nodeCommand)}`,
+    `bun exec ${JSON.stringify(`LOG_LEVEL=debug bun --bun scripts/catalog/list-skills.mjs && ${nodeCommand}`)}`,
+    `bun exec ${JSON.stringify(nestedNodeExpression)}`,
+    `bun --bun scripts/catalog/list-skills.mjs; ${nodeCommand}`,
+  ];
+  for (const command of driftedCommands) {
+    const discovery = discoverPackageScriptSurfaces(
+      { ...packageJson.scripts, "validate:skills": command },
+      sitePackageJson.scripts,
+    );
+    if (
+      !runtimeAlignmentErrors(matrix.boundaries, discovery.occurrences).some((error) =>
+        error.includes("selected runtime node disagrees with root-javascript-tooling winner bun"),
+      )
+    ) {
+      findings.push(`a Node child hidden inside a Bun command must be rejected: ${command}`);
+    }
+  }
+
+  for (const command of [
+    'bun exec "bash -c unknown-command"',
+    'bun exec "pnpm run nonexistent-runtime-fixture"',
+    'bun exec "${RUNTIME} scripts/catalog/validate-skills.mjs"',
+  ]) {
+    const discovery = discoverPackageScriptSurfaces(
+      { ...packageJson.scripts, "validate:skills": command },
+      sitePackageJson.scripts,
+    );
+    if (
+      !discovery.errors.some((error) => error.startsWith("package.json#scripts.validate:skills:"))
+    ) {
+      findings.push(`an unclassified composed command must be rejected: ${command}`);
+    }
+  }
+
+  // Each nested pnpm script keeps its own matrix owner, including the intentional
+  // Node fallback reached by the normal Bun aggregate.
+  const delegation = discoverPackageScriptSurfaces(
+    { ...packageJson.scripts, "validate:skills": 'bun exec "pnpm run validate:memory-curators"' },
+    sitePackageJson.scripts,
+  );
+  findings.push(
+    ...delegation.errors,
+    ...runtimeAlignmentErrors(matrix.boundaries, delegation.occurrences),
+  );
 
   return findings;
 }
@@ -399,11 +482,13 @@ if (
   surfaceOccurrences.push({
     source: "scripts/repo/smoke-install.mjs + .github/workflows/validate.yml",
     surface: "transient:skills-cli:pnpm-dlx",
+    runtime: "pnpm-dlx",
   });
 }
 surfaceOccurrences.push({
   source: "package.json + site/package.json",
   surface: "deployable:bun-server-artifact",
+  runtime: "not-applicable",
 });
 
 const requiredSurfaces = new Set(surfaceOccurrences.map(({ surface }) => surface));
@@ -427,6 +512,7 @@ requireCondition(
   matrix.boundaries?.length === 11,
   `current runtime evidence matrix must define 11 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
+errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());
 
 requireCondition(

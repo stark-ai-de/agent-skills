@@ -169,17 +169,52 @@ too generic in the portal UI.
 Each bundled skill now ships `assets/openai-icon.png` and references it unchanged
 for `icon_small` and `icon_large`. The OpenAI plugin manifest separately supports
 one `logo`, one `composerIcon`, and brand colors. The public documentation does
-not define separate light and dark Plugin Info logo fields in the package, does
-not guarantee that a portal glyph survives a package update, and documents no
-public publication API. Therefore the portal inspection remains mandatory:
+not define separate light and dark Plugin Info logo or Composer icon fields in
+the package, does not guarantee that a portal glyph survives a package update,
+and documents no public publication API. Therefore the portal inspection remains
+mandatory:
 
 1. verify all six skill icons and restore the reviewed portal glyphs if needed;
-2. upload `site/public/logo.png` as the light Plugin Info logo;
-3. upload `site/public/logo-dark.png` as the dark Plugin Info logo and Composer icon;
+2. keep both existing Plugin Info logos unchanged;
+3. follow the [Composer icon handoff](#composer-icon-handoff) for the two manual uploads;
 4. verify light/dark rendering and directory identity after propagation.
 
 See [Build plugins](https://developers.openai.com/plugins/build/plugins) and
 [Submit and publish plugins](https://developers.openai.com/plugins/deploy/submission).
+
+### Composer icon handoff
+
+The ZIP can configure **one** Composer icon through
+`interface.composerIcon` in `.codex-plugin/plugin.json`, with a path such as
+`./assets/composer-icon.png`. Separate light/dark Composer image paths are not
+documented. `brandColor` and `brandColorDark` set colors, not image selection.
+SVG is an accepted package image format, but the documentation does not promise
+that the portal preserves CSS `prefers-color-scheme` switching. Do not rely on
+a theme-aware SVG to populate both portal fields automatically. Sources checked
+2026-09-07: [manifest fields](https://developers.openai.com/plugins/build/plugins#manifest-fields)
+and [image validation](https://developers.openai.com/plugins/deploy/submission-errors#image-errors).
+
+The current packager still uses `site/public/logo-dark.png` for its single
+`assets/composer-icon.png`. The two full-width Composer PNGs below are separate
+repository assets, not entries in `openai.zip`. After each verified ZIP upload:
+
+1. Keep the existing **Plugin Info** light and dark logos. If the upload reset
+   them, restore `site/public/logo.png` for light mode and
+   `site/public/logo-dark.png` for dark mode. Do not replace these logos with
+   the Composer icons.
+2. In **ChatGPT composer icon**, upload
+   [chatgpt-composer-icon-light.png](assets/chatgpt-composer-icon-light.png) to
+   the light-mode field and
+   [chatgpt-composer-icon-dark.png](assets/chatgpt-composer-icon-dark.png) to
+   the dark-mode field. Download the original PNG files from the reviewed
+   repository revision; do not upload a screenshot or the GitHub file-view page.
+3. Confirm both Composer previews, save the selections, and verify light/dark
+   rendering and directory identity after propagation. Recheck on every package
+   update because package defaults may replace portal selections.
+
+Both PNGs are transparent 1024×1024 images with no added side padding. Do not
+unpack, replace files in, or repack the verified release ZIP for this handoff.
+Portal observations remain manual evidence, separate from package validation.
 
 ## Brand assets
 

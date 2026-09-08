@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -16,7 +17,15 @@ import {
   approvalRunErrors,
   mainCandidateContainmentErrors,
   missingReleasePleaseLifecycleLabels,
+  PRE_PUBLICATION_RECOVERY_IMMUTABLE_PATHS,
+  PRE_PUBLICATION_RECOVERY_MAX_COMMITS,
+  PRE_PUBLICATION_RECOVERY_PATHS,
+  prePublicationRecoveryErrors,
+  releaseRecoveryComparisonErrors,
+  releaseRecoverySubjectErrors,
   RELEASE_PLEASE_LIFECYCLE_LABELS,
+  successfulMainValidateRun,
+  successfulPullRequestValidateRun,
 } from "../lib/release-management.mjs";
 import {
   evidenceRunCoversRelease,
@@ -31,6 +40,7 @@ import {
   isGeneratedReleaseMerge,
   releasePleasePullRequestOwnershipErrors,
 } from "../lib/release-please.mjs";
+import { runCli as verifyReleaseRecoverySubjects } from "../release/verify-release-recovery-subjects.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const releaseImpactScript = path.join(repositoryRoot, "scripts/release/check-release-intent.mjs");
@@ -62,7 +72,9 @@ function git(root, args) {
 
 function createReleaseFixture({ manifest = true } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-release-management-"));
-  fs.mkdirSync(path.join(root, "skills/test/demo/references"), { recursive: true });
+  fs.mkdirSync(path.join(root, "skills/test/demo/references"), {
+    recursive: true,
+  });
   fs.writeFileSync(
     path.join(root, "skills/test/demo/SKILL.md"),
     [
@@ -195,8 +207,11 @@ assert.deepEqual(
   config,
   "the one-time manifest config must differ only by its package-local release-as override",
 );
-assert.equal(manifest["."], "0.20.1");
-assert.equal(rootPackage.version, manifest["."], "root package and manifest baseline must match");
+assert.ok(
+  manifest["."] === "0.20.1" || automatedReleaseVersionSupported(manifest["."]),
+  "repository manifest must be the bootstrap baseline or a supported automated release",
+);
+assert.equal(rootPackage.version, manifest["."], "root package and manifest versions must match");
 
 const mixedChangelog = [
   "# Changelog",
@@ -310,8 +325,13 @@ try {
 
 const releaseFixture = createReleaseFixture();
 try {
-  writeJson(releaseFixture.root, "package.json", { name: "fixture", version: "0.21.0" });
-  writeJson(releaseFixture.root, ".release-please-manifest.json", { ".": "0.21.0" });
+  writeJson(releaseFixture.root, "package.json", {
+    name: "fixture",
+    version: "0.21.0",
+  });
+  writeJson(releaseFixture.root, ".release-please-manifest.json", {
+    ".": "0.21.0",
+  });
   fs.writeFileSync(path.join(releaseFixture.root, "CHANGELOG.md"), releaseChangelog("0.21.0"));
   const result = runImpact(releaseFixture.root, releaseFixture.base);
   assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -344,7 +364,9 @@ try {
     name: "fixture",
     version: "0.21.0",
   });
-  writeJson(overbroadReleaseFixture.root, ".release-please-manifest.json", { ".": "0.21.0" });
+  writeJson(overbroadReleaseFixture.root, ".release-please-manifest.json", {
+    ".": "0.21.0",
+  });
   fs.writeFileSync(path.join(overbroadReleaseFixture.root, "CHANGELOG.md"), mixedChangelog);
   fs.writeFileSync(path.join(overbroadReleaseFixture.root, "README.md"), "overbroad\n");
   const result = runImpact(overbroadReleaseFixture.root, overbroadReleaseFixture.base);
@@ -372,7 +394,10 @@ for (const [name, prepare, expected] of [
   ],
   [
     "generated changelog preamble rewrite",
-    (root) => prepareGeneratedRelease(root, "0.21.0", { preamble: "# Changed Changelog" }),
+    (root) =>
+      prepareGeneratedRelease(root, "0.21.0", {
+        preamble: "# Changed Changelog",
+      }),
     /all existing bytes must remain unchanged/,
   ],
   [
@@ -395,7 +420,11 @@ for (const [name, prepare, expected] of [
 for (const [name, mutate, expected] of [
   [
     "feature manifest edit",
-    (root) => writeJson(root, ".release-please-manifest.json", { ".": "0.20.1", extra: true }),
+    (root) =>
+      writeJson(root, ".release-please-manifest.json", {
+        ".": "0.20.1",
+        extra: true,
+      }),
     /Feature PRs must not change \.release-please-manifest\.json/,
   ],
   [
@@ -417,7 +446,9 @@ for (const [name, mutate, expected] of [
 
 const bootstrapFixture = createReleaseFixture({ manifest: false });
 try {
-  writeJson(bootstrapFixture.root, ".release-please-manifest.json", { ".": "0.20.1" });
+  writeJson(bootstrapFixture.root, ".release-please-manifest.json", {
+    ".": "0.20.1",
+  });
   const result = runImpact(bootstrapFixture.root, bootstrapFixture.base);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.githubOutput.contract_kind, "none");
@@ -458,6 +489,7 @@ const releasePullRequest = {
     id: 67890,
     login: botLogin,
     type: "Bot",
+    avatar_url: `https://avatars.githubusercontent.com/in/${appId}?v=4`,
     html_url: `https://github.com/apps/${appSlug}`,
   },
 };
@@ -479,11 +511,17 @@ const releasePleaseCommit = {
 const provenance = (overrides = {}) =>
   releasePleasePullRequestOwnershipErrors({
     pullRequest: releasePullRequest,
-    app: { id: appId, slug: appSlug },
     commits: [releasePleaseCommit],
     repository: "stark-ai-de/agent-skills",
     expectedAppId: appId,
     ...overrides,
+  });
+const provenanceForUser = (user) =>
+  provenance({
+    pullRequest: {
+      ...releasePullRequest,
+      user: { ...releasePullRequest.user, ...user },
+    },
   });
 assert.deepEqual(provenance(), []);
 assert.equal(
@@ -491,9 +529,76 @@ assert.equal(
   releasePullRequest.number,
 );
 assert.equal(generatedReleasePullRequestForCommit([releasePullRequest], "d".repeat(40)), null);
-assert.match(provenance({ app: { id: 999, slug: appSlug } }).join(";"), /App identity/);
+assert.match(provenance({ expectedAppId: 999 }).join(";"), /App identity/);
+assert.match(provenance({ expectedAppId: "not-an-app-id" }).join(";"), /App identity/);
 assert.match(
-  provenance({ commits: [{ ...releasePleaseCommit, author: { login: "human" } }] }).join(";"),
+  provenanceForUser({
+    avatar_url: "https://avatars.githubusercontent.com/in/not-an-app-id?v=4",
+  }).join(";"),
+  /App identity/,
+);
+assert.match(
+  provenanceForUser({ avatar_url: `https://example.com/in/${appId}?v=4` }).join(";"),
+  /App identity/,
+);
+assert.match(provenanceForUser({ avatar_url: undefined }).join(";"), /App identity/);
+assert.match(provenanceForUser({ type: "User" }).join(";"), /configured App bot/);
+assert.match(provenanceForUser({ id: undefined }).join(";"), /configured App bot/);
+assert.match(
+  provenanceForUser({ id: String(releasePullRequest.user.id) }).join(";"),
+  /configured App bot/,
+);
+assert.match(provenanceForUser({ login: "other-app[bot]" }).join(";"), /configured App bot/);
+assert.match(
+  provenanceForUser({ html_url: "https://github.com/apps/other-app" }).join(";"),
+  /configured App bot/,
+);
+assert.match(provenanceForUser({ html_url: undefined }).join(";"), /configured App bot/);
+const renamedAppSlug = "renamed-release-please-test";
+const renamedBotLogin = `${renamedAppSlug}[bot]`;
+const renamedPullRequest = {
+  ...releasePullRequest,
+  user: {
+    ...releasePullRequest.user,
+    login: renamedBotLogin,
+    html_url: `https://github.com/apps/${renamedAppSlug}`,
+  },
+};
+const renamedReleasePleaseCommit = {
+  ...releasePleaseCommit,
+  author: { login: renamedBotLogin },
+  commit: {
+    ...releasePleaseCommit.commit,
+    author: {
+      name: renamedBotLogin,
+      email: `${renamedPullRequest.user.id}+${renamedBotLogin}@users.noreply.github.com`,
+    },
+  },
+};
+assert.deepEqual(
+  provenance({
+    pullRequest: renamedPullRequest,
+    commits: [renamedReleasePleaseCommit],
+  }),
+  [],
+  "a self-consistent App slug rename remains bound to the same immutable App ID",
+);
+assert.match(
+  provenance({
+    pullRequest: {
+      ...releasePullRequest,
+      head: {
+        ...releasePullRequest.head,
+        repo: { full_name: "other/repository" },
+      },
+    },
+  }).join(";"),
+  /repository-local/,
+);
+assert.match(
+  provenance({
+    commits: [{ ...releasePleaseCommit, author: { login: "human" } }],
+  }).join(";"),
   /not authored/,
 );
 assert.match(
@@ -536,8 +641,12 @@ const containedCandidate = {
   branch: { protected: true, commit: { sha: mergeCommitSha } },
   comparison: {
     status: "identical",
+    ahead_by: 0,
+    behind_by: 0,
+    total_commits: 0,
     base_commit: { sha: mergeCommitSha },
-    head_commit: { sha: mergeCommitSha },
+    merge_base_commit: { sha: mergeCommitSha },
+    commits: [],
   },
 };
 const advancedMainSha = "d".repeat(40);
@@ -545,8 +654,12 @@ const containedAfterMainAdvance = {
   branch: { protected: true, commit: { sha: advancedMainSha } },
   comparison: {
     status: "ahead",
+    ahead_by: 1,
+    behind_by: 0,
+    total_commits: 1,
     base_commit: { sha: mergeCommitSha },
-    head_commit: { sha: advancedMainSha },
+    merge_base_commit: { sha: mergeCommitSha },
+    commits: [{ sha: advancedMainSha }],
   },
 };
 assert.deepEqual(approvalRunErrors(waitingPublishRun, containedCandidate), []);
@@ -556,9 +669,63 @@ assert.deepEqual(
   "a previously validated release candidate may remain waiting while protected main advances",
 );
 assert.deepEqual(
-  mainCandidateContainmentErrors({ candidateSha: mergeCommitSha, ...containedAfterMainAdvance }),
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedAfterMainAdvance,
+  }),
   [],
 );
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedAfterMainAdvance,
+    comparison: {
+      ...containedAfterMainAdvance.comparison,
+      commits: [{ sha: "e".repeat(40) }],
+    },
+  }).join(";"),
+  /comparison head is not the observed main revision/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedCandidate,
+    comparison: {
+      ...containedCandidate.comparison,
+      merge_base_commit: { sha: "e".repeat(40) },
+    },
+  }).join(";"),
+  /merge base is not the release candidate/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedCandidate,
+    comparison: { ...containedCandidate.comparison, ahead_by: 1 },
+  }).join(";"),
+  /comparison distance is inconsistent with identical revisions/,
+);
+assert.match(
+  mainCandidateContainmentErrors({
+    candidateSha: mergeCommitSha,
+    ...containedAfterMainAdvance,
+    comparison: { ...containedAfterMainAdvance.comparison, behind_by: 1 },
+  }).join(";"),
+  /comparison distance is inconsistent with an advanced main revision/,
+);
+for (const comparison of [
+  { ...containedAfterMainAdvance.comparison, ahead_by: 2 },
+  { ...containedAfterMainAdvance.comparison, total_commits: 2 },
+]) {
+  assert.match(
+    mainCandidateContainmentErrors({
+      candidateSha: mergeCommitSha,
+      ...containedAfterMainAdvance,
+      comparison,
+    }).join(";"),
+    /comparison distance is inconsistent with an advanced main revision/,
+  );
+}
 assert.match(
   approvalRunErrors(
     { ...waitingPublishRun, path: ".github/workflows/foreign.yml" },
@@ -588,13 +755,458 @@ assert.match(
   /not waiting/,
 );
 
+const recoveryOriginSha = mergeCommitSha;
+const recoveryCandidateSha = advancedMainSha;
+const recoveryControllerSha = "e".repeat(40);
+const recoveryValidationRun = {
+  databaseId: 123456,
+  event: "push",
+  headBranch: "main",
+  headSha: recoveryOriginSha,
+  status: "completed",
+  conclusion: "success",
+};
+const recoveryReleasePullRequest = {
+  number: 70,
+  merged_at: "2026-09-03T10:00:00Z",
+  merge_commit_sha: recoveryOriginSha,
+  base: { ref: "main" },
+  head: {
+    ref: "release-please--branches--main--components--agent-skills",
+    sha: "9".repeat(40),
+  },
+};
+const recoveryPullRequestValidationRun = {
+  databaseId: 123455,
+  event: "pull_request",
+  headBranch: recoveryReleasePullRequest.head.ref,
+  headSha: recoveryReleasePullRequest.head.sha,
+  status: "completed",
+  conclusion: "success",
+};
+const recoveryComparison = {
+  status: "ahead",
+  ahead_by: 2,
+  behind_by: 0,
+  total_commits: 2,
+  base_commit: { sha: recoveryOriginSha },
+  merge_base_commit: { sha: recoveryOriginSha },
+  commits: [{ sha: recoveryControllerSha }, { sha: recoveryCandidateSha }],
+  files: PRE_PUBLICATION_RECOVERY_PATHS.map((filename) => ({
+    filename,
+    status:
+      filename.startsWith(
+        "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.",
+      ) || filename.startsWith("scripts/release/verify-")
+        ? "added"
+        : "modified",
+  })),
+};
+const recoveryImmutableFiles = PRE_PUBLICATION_RECOVERY_IMMUTABLE_PATHS.map(
+  (immutablePath, index) => ({
+    path: immutablePath,
+    originBlobSha: String(index + 1).repeat(40),
+    candidateBlobSha: String(index + 1).repeat(40),
+  }),
+);
+const recoveryInput = (overrides = {}) => ({
+  releaseOriginSha: recoveryOriginSha,
+  candidateSha: recoveryCandidateSha,
+  branch: { protected: true, commit: { sha: recoveryCandidateSha } },
+  comparison: recoveryComparison,
+  validateRuns: [recoveryValidationRun],
+  releasePullRequest: recoveryReleasePullRequest,
+  releasePullRequestFiles: GENERATED_RELEASE_FILES.map((filename) => ({
+    filename,
+    status: "modified",
+  })),
+  releasePullRequestValidateRuns: [recoveryPullRequestValidationRun],
+  immutableFiles: recoveryImmutableFiles,
+  releaseExists: false,
+  tagExists: false,
+  ...overrides,
+});
+
+assert.equal(PRE_PUBLICATION_RECOVERY_MAX_COMMITS, 4);
+assert.equal(new Set(PRE_PUBLICATION_RECOVERY_PATHS).size, PRE_PUBLICATION_RECOVERY_PATHS.length);
+assert.deepEqual(
+  successfulMainValidateRun([recoveryValidationRun], recoveryOriginSha),
+  recoveryValidationRun,
+);
+assert.deepEqual(
+  successfulPullRequestValidateRun(
+    [recoveryPullRequestValidationRun],
+    recoveryReleasePullRequest.head.sha,
+    recoveryReleasePullRequest.head.ref,
+  ),
+  recoveryPullRequestValidationRun,
+);
+assert.equal(
+  successfulMainValidateRun(
+    [{ ...recoveryValidationRun, conclusion: "failure" }],
+    recoveryOriginSha,
+  ),
+  null,
+);
+assert.deepEqual(prePublicationRecoveryErrors(recoveryInput()), []);
+assert.deepEqual(
+  recoveryComparison.files.map((file) => file.filename).sort(),
+  [...PRE_PUBLICATION_RECOVERY_PATHS].sort(),
+  "the accepted recovery fixture must exercise every fixed allowlist path",
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      branch: { protected: true, commit: { sha: "f".repeat(40) } },
+    }),
+  ).join(";"),
+  /not the exact protected main revision/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        commits: [recoveryControllerSha],
+      },
+    }),
+  ).join(";"),
+  /commit response is incomplete/,
+);
+assert.match(
+  releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryOriginSha,
+    comparison: {
+      ...recoveryComparison,
+      status: "identical",
+      ahead_by: 0,
+      total_commits: 0,
+      commits: [],
+    },
+  }).join(";"),
+  /must be newer|not a strict descendant/,
+  "an equal origin and candidate must not enter recovery",
+);
+assert.match(
+  releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      status: "diverged",
+      behind_by: 1,
+    },
+  }).join(";"),
+  /not a strict descendant/,
+  "a diverged candidate must not enter recovery",
+);
+for (const [boundary, comparison] of [
+  ["comparison base", { ...recoveryComparison, base_commit: { sha: recoveryControllerSha } }],
+  ["merge base", { ...recoveryComparison, merge_base_commit: { sha: recoveryControllerSha } }],
+]) {
+  assert.match(
+    releaseRecoveryComparisonErrors({
+      releaseOriginSha: recoveryOriginSha,
+      candidateSha: recoveryCandidateSha,
+      comparison,
+    }).join(";"),
+    new RegExp(`recovery ${boundary} is not the release origin`),
+  );
+}
+assert.match(
+  releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      ahead_by: PRE_PUBLICATION_RECOVERY_MAX_COMMITS + 1,
+      total_commits: PRE_PUBLICATION_RECOVERY_MAX_COMMITS + 1,
+      commits: Array.from({ length: PRE_PUBLICATION_RECOVERY_MAX_COMMITS }, (_, index) => ({
+        sha: String(index + 1).repeat(40),
+      })).concat({ sha: recoveryCandidateSha }),
+    },
+  }).join(";"),
+  /exceeds the reviewed bound/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [
+          {
+            filename: "skills/engineering-workflows/example/SKILL.md",
+            status: "modified",
+          },
+        ],
+      },
+    }),
+  ).join(";"),
+  /path is not allowed/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [
+          {
+            filename: "scripts/lib/release-management.mjs",
+            previous_filename: "scripts/lib/old-release-management.mjs",
+            status: "renamed",
+          },
+        ],
+      },
+    }),
+  ).join(";"),
+  /file status is not allowed/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [
+          { filename: ".github/workflows/publish-release.yml", status: "modified" },
+          { filename: "docs/publishing.md", status: "removed" },
+        ],
+      },
+    }),
+  ).join(";"),
+  /file status is not allowed/,
+  "removed recovery paths must fail even when the publication workflow changed",
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [
+          {
+            filename:
+              "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.long.md",
+            status: "added",
+          },
+        ],
+      },
+    }),
+  ).join(";"),
+  /does not change the guarded publication workflow/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      immutableFiles: recoveryImmutableFiles.map((file) =>
+        file.path === "package.json" ? { ...file, candidateBlobSha: "f".repeat(40) } : file,
+      ),
+    }),
+  ).join(";"),
+  /immutable release input changed.*package\.json/,
+);
+assert.match(
+  prePublicationRecoveryErrors(recoveryInput({ validateRuns: [] })).join(";"),
+  /no successful hosted Validate/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      releasePullRequestFiles: [
+        ...GENERATED_RELEASE_FILES.map((filename) => ({
+          filename,
+          status: "modified",
+        })),
+        { filename: "README.md", status: "modified" },
+      ],
+    }),
+  ).join(";"),
+  /did not change exactly the generated release files/,
+);
+assert.match(
+  prePublicationRecoveryErrors(recoveryInput({ releasePullRequestValidateRuns: [] })).join(";"),
+  /pull request has no successful hosted Validate run/,
+);
+assert.match(
+  prePublicationRecoveryErrors(recoveryInput({ releaseExists: true })).join(";"),
+  /GitHub Release is not proven absent/,
+);
+assert.match(
+  prePublicationRecoveryErrors(recoveryInput({ tagExists: true })).join(";"),
+  /target tag is not proven absent/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      branch: { protected: false, commit: { sha: recoveryCandidateSha } },
+    }),
+  ).join(";"),
+  /main is not protected/,
+  "recovery must not target an unprotected main revision",
+);
+
+const mainAfterRecoverySha = "f".repeat(40);
+assert.deepEqual(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      branch: { protected: true, commit: { sha: mainAfterRecoverySha } },
+      allowContainedCandidate: true,
+      candidateContainmentComparison: {
+        status: "ahead",
+        ahead_by: 1,
+        behind_by: 0,
+        total_commits: 1,
+        base_commit: { sha: recoveryCandidateSha },
+        merge_base_commit: { sha: recoveryCandidateSha },
+        commits: [{ sha: mainAfterRecoverySha }],
+      },
+    }),
+  ),
+  [],
+  "approval may re-prove an already authorized replacement candidate contained in newer main",
+);
+
+const releaseSubjects = {
+  schemaVersion: 1,
+  status: "pass",
+  sourceRevision: {
+    commit: recoveryOriginSha,
+    tag: "manual-review-required",
+    state: "clean",
+  },
+  releaseVersion: "0.21.0",
+  pluginVersion: "1.1.0",
+  archiveProfile: "zip-store-v1",
+  subjects: {
+    openai: { name: "openai.zip", sha256: "1".repeat(64), bytes: 10 },
+    portable: { name: "portable.zip", sha256: "2".repeat(64), bytes: 20 },
+  },
+  differences: [],
+};
+const replacementSubjects = {
+  ...structuredClone(releaseSubjects),
+  sourceRevision: {
+    ...releaseSubjects.sourceRevision,
+    commit: recoveryCandidateSha,
+  },
+};
+assert.deepEqual(releaseRecoverySubjectErrors(releaseSubjects, replacementSubjects), []);
+assert.match(
+  releaseRecoverySubjectErrors(releaseSubjects, {
+    ...structuredClone(replacementSubjects),
+    subjects: {
+      ...replacementSubjects.subjects,
+      openai: {
+        ...replacementSubjects.subjects.openai,
+        sha256: "3".repeat(64),
+      },
+    },
+  }).join(";"),
+  /not payload-equivalent/,
+);
+assert.match(
+  releaseRecoverySubjectErrors(releaseSubjects, {
+    ...structuredClone(replacementSubjects),
+    sourceRevision: { ...replacementSubjects.sourceRevision, tag: "v0.21.0" },
+  }).join(";"),
+  /untagged validation marker/,
+);
+assert.throws(
+  () =>
+    verifyReleaseRecoverySubjects([
+      "--origin-sha",
+      recoveryOriginSha,
+      "--candidate-sha",
+      recoveryCandidateSha,
+      "--release-version",
+      "0.21.0",
+      "--plugin-version",
+      "1.1.0",
+      "--archive-profile",
+      "zip-store-v1",
+    ]),
+  /Usage: verify-release-recovery-subjects/,
+  "missing artifact directories must fail instead of resolving to the working directory",
+);
+
+const recoverySubjectFixture = fs.mkdtempSync(
+  path.join(os.tmpdir(), "agent-skills-release-recovery-subjects-"),
+);
+try {
+  const originDirectory = path.join(recoverySubjectFixture, "origin");
+  const candidateDirectory = path.join(recoverySubjectFixture, "candidate");
+  fs.mkdirSync(originDirectory, { recursive: true });
+  fs.mkdirSync(candidateDirectory, { recursive: true });
+  const archiveBytes = {
+    "openai.zip": Buffer.from("exact hosted openai zip bytes"),
+    "portable.zip": Buffer.from("exact hosted portable zip bytes"),
+  };
+  const subjects = {};
+  for (const [archive, bytes] of Object.entries(archiveBytes)) {
+    fs.writeFileSync(path.join(originDirectory, archive), bytes);
+    fs.writeFileSync(path.join(candidateDirectory, archive), bytes);
+    subjects[archive] = {
+      name: archive,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+      bytes: bytes.length,
+    };
+  }
+  const originDocument = {
+    ...structuredClone(releaseSubjects),
+    subjects: {
+      openai: subjects["openai.zip"],
+      portable: subjects["portable.zip"],
+    },
+  };
+  const candidateDocument = {
+    ...structuredClone(originDocument),
+    sourceRevision: {
+      ...originDocument.sourceRevision,
+      commit: recoveryCandidateSha,
+    },
+  };
+  writeJson(originDirectory, "release-subject.json", originDocument);
+  writeJson(candidateDirectory, "release-subject.json", candidateDocument);
+  const recoverySubjectArguments = [
+    "--origin-dir",
+    originDirectory,
+    "--candidate-dir",
+    candidateDirectory,
+    "--origin-sha",
+    recoveryOriginSha,
+    "--candidate-sha",
+    recoveryCandidateSha,
+    "--release-version",
+    "0.21.0",
+    "--plugin-version",
+    "1.1.0",
+    "--archive-profile",
+    "zip-store-v1",
+  ];
+  assert.doesNotThrow(() => verifyReleaseRecoverySubjects(recoverySubjectArguments));
+  fs.writeFileSync(path.join(candidateDirectory, "openai.zip"), "different candidate bytes");
+  assert.throws(
+    () => verifyReleaseRecoverySubjects(recoverySubjectArguments),
+    /openai\.zip.*differs|sha256 does not match/,
+  );
+} finally {
+  fs.rmSync(recoverySubjectFixture, { recursive: true, force: true });
+}
+
 const releaseWatermark = releaseStateChangedAt(
   {
     published_at: "2026-08-26T12:00:00Z",
     updated_at: "2026-08-26T12:01:00Z",
     assets: [
-      { name: "openai.zip", created_at: "2026-08-26T12:02:00Z", updated_at: null },
-      { name: "portable.zip", created_at: "2026-08-26T12:00:30Z", updated_at: null },
+      {
+        name: "openai.zip",
+        created_at: "2026-08-26T12:02:00Z",
+        updated_at: null,
+      },
+      {
+        name: "portable.zip",
+        created_at: "2026-08-26T12:00:30Z",
+        updated_at: null,
+      },
     ],
   },
   ["openai.zip", "portable.zip"],
@@ -609,7 +1221,9 @@ const evidenceRun = {
   createdAt: releaseWatermark,
 };
 assert.equal(
-  evidenceRunCoversRelease(evidenceRun, releaseWatermark, { requireSuccess: true }),
+  evidenceRunCoversRelease(evidenceRun, releaseWatermark, {
+    requireSuccess: true,
+  }),
   false,
   "evidence created in the same timestamp second must not cover a release update",
 );
@@ -649,6 +1263,15 @@ const validateWorkflow = read(".github/workflows/validate.yml");
 const publishWorkflow = read(".github/workflows/publish-release.yml");
 const evidenceWorkflow = read(".github/workflows/post-release-evidence.yml");
 const candidateVerifier = read("scripts/release/verify-main-release-candidate.mjs");
+const releaseProvenanceVerifier = read("scripts/release/verify-release-please-merge.mjs");
+const recoveryVerifier = read("scripts/release/verify-prepublication-release-recovery.mjs");
+const recoverySubjectVerifier = read("scripts/release/verify-release-recovery-subjects.mjs");
+const formatIgnore = read(".oxfmtignore");
+assert.match(
+  formatIgnore,
+  /^CHANGELOG\.md$/m,
+  "the Release Please-owned root changelog must remain outside formatter ownership",
+);
 assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v2/);
 for (const permission of ["contents", "pull-requests", "issues"]) {
   assert.match(releasePleaseWorkflow, new RegExp(`permission-${permission}: write`));
@@ -683,16 +1306,25 @@ assert.equal(occurrences(validateWorkflow, /^\s+archive: false$/gm), 3);
 for (const asset of ["openai.zip", "portable.zip", "release-subject.json"]) {
   assert.match(validateWorkflow, new RegExp(`name: ${asset.replace(".", "\\.")}`));
 }
-assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 6);
-assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 6);
+assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 9);
+assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 9);
 assert.match(publishWorkflow, /^\s+environment: release$/m);
 assert.match(publishWorkflow, /^\s+RELEASE_ENVIRONMENT: release$/m);
 assert.doesNotMatch(publishWorkflow, /mark_latest|mark-latest/);
 assert.match(
   publishWorkflow,
-  /release_candidate: \$\{\{ steps\.release-intent\.outputs\.contract_kind == 'release-pr' && steps\.release-provenance\.outputs\.authorized == 'true' \}\}/,
+  /release_candidate: \$\{\{ \(steps\.release-intent\.outputs\.contract_kind == 'release-pr' && steps\.release-provenance\.outputs\.authorized == 'true'\) \|\| steps\.release-recovery\.outputs\.authorized == 'true' \}\}/,
 );
 assert.match(publishWorkflow, /candidate_sha: \$\{\{ github\.sha \}\}/);
+assert.match(
+  publishWorkflow,
+  /run-name: \$\{\{ inputs\.recovery_release_sha != '' && format\('Publish Release · recovery \{0\}', inputs\.recovery_release_sha\) \|\| 'Publish Release' \}\}/,
+);
+assert.match(publishWorkflow, /^\s+recovery_release_sha:$/m);
+assert.match(publishWorkflow, /verify-prepublication-release-recovery\.mjs/);
+assert.match(publishWorkflow, /verify-release-recovery-subjects\.mjs/);
+assert.match(publishWorkflow, /origin_validate_run_id/);
+assert.match(publishWorkflow, /release-origin-subjects/);
 assert.match(
   publishWorkflow,
   /ref: \$\{\{ needs\.publication-trigger\.outputs\.candidate_sha \}\}/,
@@ -720,6 +1352,20 @@ assert.match(
 );
 assert.match(publishWorkflow, /verify-release-please-merge\.mjs/);
 assert.match(publishWorkflow, /--expected-app-id "\$EXPECTED_APP_ID"/);
+assert.match(recoveryVerifier, /PRE_PUBLICATION_RECOVERY_IMMUTABLE_PATHS/);
+assert.match(recoveryVerifier, /releases\/tags\/\$\{tag\}/);
+assert.match(recoveryVerifier, /git\/ref\/tags\/\$\{tag\}/);
+assert.match(recoveryVerifier, /--workflow",\s+"validate\.yml"/);
+assert.doesNotMatch(
+  recoveryVerifier,
+  /compare\/\$\{candidateSha\}\.\.\.\$\{branch\?\.commit\?\.sha\}\?per_page=/,
+  "approval containment must use GitHub's unpaginated comparison head guarantee",
+);
+assert.doesNotMatch(recoveryVerifier, /reconcile-github-release|release create|git push/);
+assert.match(recoverySubjectVerifier, /readFileSync\(left\)\.equals\(fs\.readFileSync\(right\)\)/);
+assert.match(recoverySubjectVerifier, /validateReleaseSubjectFile/);
+assert.doesNotMatch(releaseProvenanceVerifier, /ghJson\(`apps\//);
+assert.doesNotMatch(publishWorkflow, /gh api "apps\/\$\{APP_SLUG\}"/);
 assert.match(publishWorkflow, /Publication mutation supports only v0\.21\.0 and newer releases/);
 assert.match(
   publishWorkflow,
@@ -750,6 +1396,16 @@ assert.doesNotMatch(validateWorkflow.split("\nconcurrency:")[0], /issues: read/)
 assert.match(evidenceWorkflow, /^on:\n  workflow_dispatch:/m);
 assert.match(evidenceWorkflow, /^run-name: Post-release Evidence · \$\{\{ inputs\.tag \}\}$/m);
 assert.doesNotMatch(evidenceWorkflow, /release:\n\s+types:|release\.published/);
+assert.doesNotMatch(
+  evidenceWorkflow,
+  /gh api \\\n\s+--paginate \\\n\s+--slurp \\\n[\s\S]{0,240}--jq/,
+  "GitHub CLI rejects --slurp when the same api call also formats through --jq",
+);
+assert.match(
+  evidenceWorkflow,
+  /gh api \\\n\s+--paginate \\\n[\s\S]{0,240}\| \\\n\s+jq -s 'add \| map\(\.name\) \| sort'/,
+  "all GitHub API pages must become one sorted JSON asset-name array",
+);
 
 const managerScript = read("scripts/release/manage-release.mjs");
 assert.match(managerScript, /tagName,isLatest,isDraft,publishedAt/);
@@ -770,6 +1426,9 @@ assert.match(managerScript, /\.github\/workflows\/publish-release\.yml/);
 assert.match(managerScript, /pending_deployments/);
 assert.match(managerScript, /repos\/\$\{repository\}\/labels\?per_page=100/);
 assert.match(managerScript, /Release Please lifecycle labels are missing/);
+assert.match(managerScript, /--recovery-release-sha/);
+assert.match(managerScript, /Publish Release · recovery/);
+assert.match(managerScript, /verify-prepublication-release-recovery\.mjs/);
 for (const command of [
   "status",
   "setup-check",
@@ -809,5 +1468,18 @@ const missingConfirmation = spawnSync(
 );
 assert.notEqual(missingConfirmation.status, 0);
 assert.match(missingConfirmation.stderr, /rerun with --confirm/);
+const invalidRecoverySha = spawnSync(
+  process.execPath,
+  [
+    path.join(repositoryRoot, "scripts/release/manage-release.mjs"),
+    "publish-plan",
+    "--recovery-release-sha",
+    "abc123",
+    "--confirm",
+  ],
+  { cwd: repositoryRoot, encoding: "utf8" },
+);
+assert.notEqual(invalidRecoverySha.status, 0);
+assert.match(invalidRecoverySha.stderr, /full lowercase 40-hex commit SHA/);
 
 console.log("Release Please, release-impact, workflow, and management fixtures passed.");

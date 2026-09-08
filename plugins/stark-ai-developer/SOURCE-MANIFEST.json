@@ -1281,10 +1281,10 @@
       "sha256": "f88bed56865dcbceecb887061145de2b6ef6769b5e8523eab735cfc71f6e8e5d"
     },
     {
-      "byteLength": 7294,
+      "byteLength": 7307,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution.guide.md",
-      "sha256": "ca413f4861ae7c2db51413dc17c513bcef19437798d9a24cce7dc2efac97232a"
+      "sha256": "7e01183b63b5500e12fd863955e0da0bb03b9b317cf496156bb48ff79c2ed1a0"
     },
     {
       "byteLength": 8185,
@@ -1833,5 +1833,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "ddad63df04a4ffbaf356406bb59f2e934f8b7106492271e00215cbe46630daed"
+  "treeHash": "8fa4d563e4ca850566129bb6069f228694bfaea7203614460fd226de81913ef7"
 }
