@@ -62,7 +62,7 @@
     "release:notes": "bun --bun scripts/release/print-release-notes.mjs",
     "release:reconcile": "bun --bun scripts/release/reconcile-github-release.mjs",
     "release:manage": "bun --bun scripts/release/manage-release.mjs",
-    "validate:skills": "bun --bun scripts/catalog/validate-skills.mjs",
+    "validate:skills": "bun exec \"bun --bun scripts/catalog/validate-skills.mjs && bun --bun scripts/validation/test-skill-invocation-token.mjs\"",
     "validate:memory-curators": "node scripts/validation/memory-curators/validate.mjs",
     "validate:adrs": "bun --bun scripts/validation/adrs/validate.mjs",
     "validate:runtime-matrix": "bun --bun scripts/validation/test-runtime-evidence-matrix.mjs",

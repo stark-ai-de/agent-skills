@@ -2,11 +2,11 @@
 name: codex-spec-interviewer
 description: Interview, source-challenge, verify, save, and ADR-gate fuzzy coding requests into Codex-ready implementation specs. Use when a feature, bugfix, refactor, migration, repo-wide change, or architecture task needs user-verified requirements, source-backed decisions, durable architecture decisions, acceptance criteria, validation commands, rollout notes, saved spec/ADR files, and a Codex execution prompt. Do not use when already fully specified or when the user wants direct implementation now.
 license: Apache-2.0
-compatibility: Designed for Codex CLI, IDE extension, and Codex app. Native Plan mode is required when the current surface supports it; use the documented fallback only when Plan mode is unavailable or explicitly declined.
+compatibility: Designed for Codex CLI, IDE extension, Codex app, Codex web, and ChatGPT Chat/Work/mobile. Plan lanes, including observation-gated Codex web and ChatGPT switch-wait-or-ask, live in references/workflow-details.md.
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.3.3"
+  version: "0.3.4"
 ---
 
 # Codex Spec Interviewer
@@ -45,7 +45,7 @@ This is one end-to-end outcome, not a public multi-workflow skill. Do not invent
 
 ## Native Plan mode preflight
 
-Run the preflight in [workflow-details.md](references/workflow-details.md) before substantive interviewing or repository exploration. A supported-but-inactive or indeterminate Plan state stops the turn with the copy-ready `/plan` handoff; only definitely unavailable or explicitly declined Plan mode permits the documented conversational fallback. Active Plan interviewing is read-only.
+Run the preflight in [workflow-details.md](references/workflow-details.md) before substantive interviewing or repository exploration. Preserve the native Codex CLI/IDE/desktop supported-inactive and indeterminate transition contract. On ChatGPT and Codex web, evaluate the ordered gates: distinguish routing, honor explicit refusal, wait for a usable composer if Plan is not already proven active, then assess capability evidence. Proven absence permits fallback with an unknown Plan state. Observe inline parsing separately before combining a mode command with a skill prompt. Every outcome reports both `Planning capability:` and `Read-only enforcement:` from independent evidence. Active Plan interviewing remains read-only.
 
 ## Workflow
 
@@ -61,7 +61,8 @@ Follow the complete numbered procedure in [workflow-details.md](references/workf
 
 ## Codex integration
 
-- Native Plan mode is host-controlled. The skill must request a user-initiated `/plan` transition when supported and inactive; it must not claim to switch modes itself.
+- Native Plan mode is host-controlled. On Codex CLI, IDE, or Codex in the ChatGPT desktop app, the skill must request a user-initiated `/plan` transition when supported and inactive; it must not claim to switch modes itself.
+- On Codex web, the preflight is observation-gated: an observed inactive `/plan` permits the native transition followed by a `$` skill continuation. Combine them only when this composer also proves inline argument support. Proven absence and explicit refusal have distinct fallback outcomes; missing or contradictory capability evidence remains `Indeterminate`.
 - Use `request_user_input` in active Plan mode when available so material choices require explicit user action.
 - Treat the saved spec file as the durable artifact that outlives Plan mode and chat context. An approved in-chat plan with persistence still pending is not the final artifact.
 - Treat `AGENTS.md`, `docs/agents/`, and Codex memories as repo and user evidence, not as the artifact format. Do not write spec content into memories or `AGENTS.md` unless the user explicitly asks for it after the tradeoff is stated.
@@ -102,7 +103,7 @@ No bundled scripts.
 
 ## Output format
 
-Use the detailed output contract in [workflow-details.md](references/workflow-details.md). In Plan mode, report the interview result, assumptions, source challenge, ADR result, approved path, `Persistence status: pending Plan-mode exit`, and save-only continuation. After persistence or in fallback, report persisted paths, verification, assumptions, source challenge, ADR result, saved spec, execution prompt, validation, and risk/rollout notes. Do not claim persistence or completion before its gate is satisfied.
+Use the detailed output contract in [workflow-details.md](references/workflow-details.md). Every preflight result reports `Planning capability:` and `Read-only enforcement:` from independent evidence, including refusals and uncertainty stops. In Plan mode, report the interview result, assumptions, source challenge, ADR result, approved path, `Persistence status: pending Plan-mode exit`, and save-only continuation. After persistence or in fallback, report persisted paths, verification, assumptions, source challenge, ADR result, saved spec, execution prompt, validation, and risk/rollout notes. Do not claim persistence or completion before its gate is satisfied.
 
 ## Completion criteria
 
@@ -119,8 +120,10 @@ Use the detailed output contract in [workflow-details.md](references/workflow-de
 ## Failure modes
 
 - If the repository context is unavailable, produce a repo-agnostic spec and mark repo-specific details as `unspecified`.
-- If native Plan mode is supported but inactive, stop with the preflight's copy-ready `/plan` command; do not silently fall back.
-- If native Plan mode is unavailable or explicitly declined, record the fallback reason and continue conversationally.
+- If native Plan mode is supported but inactive on Codex CLI, IDE, or Codex in the ChatGPT desktop app, stop with the preflight's copy-ready `/plan` command; do not silently fall back.
+- If native Plan mode is definitely unavailable on Codex CLI, IDE, or Codex in the ChatGPT desktop app, or the user explicitly declined it, record the fallback reason and continue conversationally.
+- If the host lane is ChatGPT Chat, Work, or mobile, follow the ChatGPT lane in [workflow-details.md](references/workflow-details.md). Conversational fallback on that lane is allowed only when `plan_control` is `none_proven` from a positive enumeration, or the user explicitly declined Plan. Do not report `Planning capability: Unavailable` from ChatGPT identity, missing Codex Plan state, or a missing `/plan` slash.
+- If the host lane is Codex web, follow the Codex web lane in [workflow-details.md](references/workflow-details.md). Apply the ordered gates: known routing first, explicit refusal next, then current capability evidence. Proven absence permits fallback even with an unknown Plan state; remaining uncertainty is `Indeterminate`. Observe both the control and any inline argument support before choosing a combined handoff.
 - If the user remains in Plan mode after approving the checkpoint, keep persistence marked pending, repeat the save-only handoff if useful, and do not claim completion.
 - If a save-only continuation lacks enough conversation context to reproduce the approved artifact exactly, stop and ask the user to resume the original conversation or provide the approved artifact; do not invent missing content.
 - If the user's goal is internally inconsistent, stop and surface the conflict clearly.

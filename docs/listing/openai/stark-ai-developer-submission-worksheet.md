@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.
+- Release notes: Adds observation-gated ChatGPT and Codex web Plan adapters, preserves explicit refusals and proven-absence fallback, reports read-only enforcement independently, and uses documented native controls with product-neutral skill starter prompts. Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.
 
 ## Capabilities
 

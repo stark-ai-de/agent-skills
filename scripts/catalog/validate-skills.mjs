@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { load } from "js-yaml";
 
+import { containsKnownSkillInvocationToken } from "./skill-invocation-token.mjs";
+
 const root = process.cwd();
 const publicSkillsDir = path.join(root, "skills");
 const incubatorSkillsDir = path.join(root, "incubator", "skills");
@@ -261,6 +263,7 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
     }
   }
 
+  let defaultPrompt = "";
   const interfaceBlock = data.interface;
   if (!isMapping(interfaceBlock)) {
     errors.push(`${rel}: interface must be a mapping`);
@@ -272,7 +275,8 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
     }
     const displayName = interfaceBlock.display_name;
     const shortDescription = interfaceBlock.short_description;
-    const defaultPrompt = interfaceBlock.default_prompt;
+    defaultPrompt =
+      typeof interfaceBlock.default_prompt === "string" ? interfaceBlock.default_prompt : "";
 
     if (typeof displayName !== "string" || !displayName.trim()) {
       errors.push(`${rel}: interface.display_name must be a non-empty string`);
@@ -282,12 +286,9 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
     } else if (shortDescription.length < 25 || shortDescription.length > 64) {
       errors.push(`${rel}: interface.short_description must be 25-64 characters`);
     }
-    if (typeof defaultPrompt !== "string" || !defaultPrompt.trim()) {
+    if (!defaultPrompt.trim()) {
       errors.push(`${rel}: interface.default_prompt must be a non-empty string`);
     } else {
-      if (name && !defaultPrompt.includes(`$${name}`)) {
-        errors.push(`${rel}: interface.default_prompt must mention $${name}`);
-      }
       const normalizedPrompt = defaultPrompt.replace(/\s+/g, " ");
       for (const [label, pattern] of foreignOpenAiPromptControls) {
         if (pattern.test(normalizedPrompt)) {
@@ -318,6 +319,21 @@ function validateOpenAiMetadata(file, name, skillRoot, category) {
       ) {
         errors.push(`${rel}: policy.products must contain unique CHAT/CODEX values`);
       }
+    }
+  }
+
+  const chatEnabled =
+    isMapping(policy) && Array.isArray(policy.products) && policy.products.includes("CHAT");
+  if (defaultPrompt.trim()) {
+    if (chatEnabled) {
+      if (/^\s*\/plan\b/.test(defaultPrompt)) {
+        errors.push(`${rel}: Chat-enabled interface.default_prompt must not start with /plan`);
+      }
+      if (containsKnownSkillInvocationToken(defaultPrompt, knownSkillInvocationNames)) {
+        errors.push(`${rel}: Chat-enabled interface.default_prompt must not mention a $skill`);
+      }
+    } else if (name && !defaultPrompt.includes(`$${name}`)) {
+      errors.push(`${rel}: interface.default_prompt must mention $${name}`);
     }
   }
 
@@ -416,6 +432,14 @@ function validateSkillRoot(skillRoot) {
 
   return skillFiles.length;
 }
+
+const knownSkillInvocationNames = new Set(
+  skillRoots.flatMap((skillRoot) =>
+    walk(skillRoot.dir, (file) => path.basename(file) === "SKILL.md").map((file) =>
+      path.basename(path.dirname(file)),
+    ),
+  ),
+);
 
 const counts = new Map();
 for (const skillRoot of skillRoots) {

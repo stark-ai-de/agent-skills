@@ -32,6 +32,9 @@ This guide is non-normative. [Long](0030-separate-public-contracts-from-private-
 - Use bounded negative fixtures to prove rejection of unsafe, remote, active, privileged, or identifying inputs as applicable.
 - Audit every public output surface and distinguish static inspection from runtime containment proof.
 - Cite the exact files, commands, and evidence boundaries used for the conclusion.
+- Before publishing a public spec, remove branch, worktree, concurrent-change,
+  and private source-challenge provenance while retaining the public contract,
+  applicable ADR links, and official public references.
 
 ## Historical follow-up context
 

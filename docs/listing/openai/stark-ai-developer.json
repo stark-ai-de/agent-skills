@@ -46,7 +46,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.",
+  "releaseNotes": "Adds observation-gated ChatGPT and Codex web Plan adapters, preserves explicit refusals and proven-absence fallback, reports read-only enforcement independently, and uses documented native controls with product-neutral skill starter prompts. Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.",
   "skills": [
     {
       "name": "codex-memory-curator",
