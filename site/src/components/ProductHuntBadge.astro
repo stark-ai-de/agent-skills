@@ -12,6 +12,10 @@ const badgeUrl =
   rel="noopener noreferrer"
   aria-label="Find Agent Skills on Product Hunt (opens in a new tab)"
 >
+  <span class="product-hunt-badge__fallback" aria-hidden="true">
+    Find us on
+    <strong>Product Hunt</strong>
+  </span>
   <img
     class="product-hunt-badge__light"
     src={`${badgeUrl}&theme=light`}
@@ -32,17 +36,54 @@ const badgeUrl =
   />
 </a>
 
+<script>
+  for (const image of document.querySelectorAll<HTMLImageElement>(".product-hunt-badge img")) {
+    if (image.complete && image.naturalWidth === 0) {
+      image.remove();
+    } else {
+      image.addEventListener("error", () => image.remove(), { once: true });
+    }
+  }
+</script>
+
 <style>
   .product-hunt-badge {
+    position: relative;
+    isolation: isolate;
     display: inline-block;
     width: 250px;
+    height: 54px;
     max-width: 100%;
     border-radius: 10px;
+    background: var(--surface-solid);
+    color: var(--foreground);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+
+  .product-hunt-badge__fallback {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    padding-inline: 1rem;
+    font-size: 0.625rem;
+    font-weight: 650;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .product-hunt-badge__fallback strong {
+    font-size: 1.125rem;
+    text-transform: none;
   }
 
   img {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
     width: 100%;
-    height: auto;
+    height: 100%;
+    border-radius: inherit;
   }
 
   .product-hunt-badge__light {
