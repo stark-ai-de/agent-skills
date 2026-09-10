@@ -5,6 +5,7 @@ import ChatGptLink from "../components/ChatGptLink.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import ContextTooltip from "../components/ContextTooltip.astro";
 import HeroLogo from "../components/HeroLogo.astro";
+import ProductHuntBadge from "../components/ProductHuntBadge.astro";
 import SkillCard from "../components/SkillCard.astro";
 import StarkAi from "../components/StarkAi.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
@@ -76,6 +77,7 @@ const structuredData = [
         <a class="button button--secondary" href={withBase(PLUGIN_PATH)}
           >View the plugin</a
         >
+        <ProductHuntBadge />
       </div>
     </div>
     <div class="hero-brand" data-reveal aria-hidden="true">
