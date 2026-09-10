@@ -12,6 +12,22 @@
 
 ### Removed
 
+## [0.23.0](https://github.com/stark-ai-de/agent-skills/compare/v0.22.0...v0.23.0) (2026-09-10)
+
+
+### Features
+
+* **site:** add Product Hunt launch badge ([b14a05f](https://github.com/stark-ai-de/agent-skills/commit/b14a05fa040cd5dcbc9ce95a4f01508135c9dcf5))
+* **site:** add Product Hunt launch badge ([e57e8a4](https://github.com/stark-ai-de/agent-skills/commit/e57e8a40a7b1bebfc9701f11c1c6ed7044f480ee))
+
+
+### Bug Fixes
+
+* **site:** keep Product Hunt badge visible when images are blocked ([6e42570](https://github.com/stark-ai-de/agent-skills/commit/6e425701183ab189c556b91cd546ef920dad8a28))
+* **site:** keep Product Hunt badge visible when images are blocked ([a808a24](https://github.com/stark-ai-de/agent-skills/commit/a808a2438b6596da8ee4163b3eb2538451daef18))
+* **site:** use project branding for catalog logos and icons ([7cc92b8](https://github.com/stark-ai-de/agent-skills/commit/7cc92b8f83b96554422ee122e2db74f0d96d7be0))
+* **site:** use project branding for catalog logos and icons ([09d691a](https://github.com/stark-ai-de/agent-skills/commit/09d691a51ecbb9acec211f7b4bbdf361d415f751))
+
 ## [0.22.0](https://github.com/stark-ai-de/agent-skills/compare/v0.21.0...v0.22.0) (2026-09-08)
 
 
