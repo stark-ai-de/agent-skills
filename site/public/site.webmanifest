@@ -24,7 +24,7 @@
       "purpose": "any"
     },
     {
-      "src": "/agent-skills/favicon.svg",
+      "src": "/agent-skills/agent-skills-head.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     },
@@ -36,11 +36,6 @@
     {
       "src": "/agent-skills/apple-icon.png",
       "sizes": "204x204",
-      "type": "image/png"
-    },
-    {
-      "src": "/agent-skills/logo-alternative.png",
-      "sizes": "2048x2048",
       "type": "image/png"
     }
   ]

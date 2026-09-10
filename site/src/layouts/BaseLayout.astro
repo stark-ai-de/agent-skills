@@ -131,8 +131,8 @@ const tracingMode =
     <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
     <link rel="sitemap" type="application/xml" title="Sitemap" href={sitemapUrl} />
     <link rel="manifest" href={manifestUrl} />
-    <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" sizes="any" />
-    <link rel="alternate icon" href={withBase("/favicon.ico")} type="image/x-icon" sizes="16x16" />
+    <link rel="icon" href={withBase("/agent-skills-head.svg")} type="image/svg+xml" sizes="any" />
+    <link rel="alternate icon" href={withBase("/favicon.ico")} type="image/x-icon" sizes="16x16 32x32 48x48" />
     <link
       rel="apple-touch-icon"
       href={withBase("/apple-icon.png")}
@@ -199,13 +199,21 @@ const tracingMode =
     <header class="site-header">
       <nav class="topbar" aria-label="Primary navigation">
         <a class="brand-link" href={withBase("/")} aria-current={isCatalogHome ? "page" : undefined}>
-          <img
-            src={withBase("/stark-ai-de-agent-skills-logo.svg")}
-            alt={withStarkAi("Agent Skills by stark AI")}
-            width="217"
-            height="72"
-            fetchpriority="high"
-          />
+          <picture>
+            <source
+              media="(max-width: 620px)"
+              srcset={withBase("/agent-skills-head.svg")}
+              width="560"
+              height="560"
+            />
+            <img
+              src={withBase("/agent-skills-full-logo.svg")}
+              alt="Agent Skills home"
+              width="2172"
+              height="724"
+              fetchpriority="high"
+            />
+          </picture>
         </a>
         <div class="nav-capsule">
           <div class="nav-links nav-links--desktop">
