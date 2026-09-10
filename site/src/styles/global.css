@@ -3215,7 +3215,8 @@ main {
   }
 
   .brand-link img {
-    width: min(8.4rem, 42vw);
+    width: 2.25rem;
+    aspect-ratio: 1;
   }
 
   .brand-link,

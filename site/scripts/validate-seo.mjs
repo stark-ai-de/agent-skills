@@ -271,7 +271,7 @@ function validateHtmlPage(filePath) {
   assert(description.length <= 160, `${relativePath}: meta description exceeds 160 characters`);
   assert(canonicalUrl?.startsWith(SITE_URL_PREFIX), `${relativePath}: invalid canonical URL`);
   assert(
-    getLinkHref(linkTags, "icon") === "/agent-skills/favicon.svg",
+    getLinkHref(linkTags, "icon") === "/agent-skills/agent-skills-head.svg",
     `${relativePath}: missing SVG favicon link`,
   );
   assert(
