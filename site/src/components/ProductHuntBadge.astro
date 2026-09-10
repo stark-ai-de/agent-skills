@@ -1,0 +1,73 @@
+---
+const productUrl =
+  "https://www.producthunt.com/products/agent-skills-by-stark-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-agent-skills-by-stark-ai";
+const badgeUrl =
+  "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1245476";
+---
+
+<a
+  class="product-hunt-badge"
+  href={productUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Find Agent Skills on Product Hunt (opens in a new tab)"
+>
+  <img
+    class="product-hunt-badge__light"
+    src={`${badgeUrl}&theme=light`}
+    alt=""
+    width="250"
+    height="54"
+    decoding="async"
+    referrerpolicy="no-referrer"
+  />
+  <img
+    class="product-hunt-badge__dark"
+    src={`${badgeUrl}&theme=dark`}
+    alt=""
+    width="250"
+    height="54"
+    decoding="async"
+    referrerpolicy="no-referrer"
+  />
+</a>
+
+<style>
+  .product-hunt-badge {
+    display: inline-block;
+    width: 250px;
+    max-width: 100%;
+    border-radius: 10px;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+
+  .product-hunt-badge__light {
+    display: block;
+  }
+
+  .product-hunt-badge__dark {
+    display: none;
+  }
+
+  :global(:root[data-theme="dark"]) .product-hunt-badge__light {
+    display: none;
+  }
+
+  :global(:root[data-theme="dark"]) .product-hunt-badge__dark {
+    display: block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .product-hunt-badge__light {
+      display: none;
+    }
+
+    :global(:root:not([data-theme="light"])) .product-hunt-badge__dark {
+      display: block;
+    }
+  }
+</style>
