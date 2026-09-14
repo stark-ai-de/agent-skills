@@ -3,11 +3,11 @@ title: "Architecture Compass: Measurable Testing ADR Set"
 slug: "architecture-compass-measurable-testing-adr-set"
 artifact_path: "docs/specs/architecture-compass-measurable-testing-adr-set-spec.md"
 mode: "deep"
-status: "proposed"
+status: "approved"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-09-13"
-updated: "2026-09-13"
+updated: "2026-09-14"
 baseline_ref: "6e425701183ab189c556b91cd546ef920dad8a28"
 source_request: "Evaluate the testing setup and specify reusable, intent-preserving, measurable ADRs for Architecture Compass; open a specification PR."
 ---
@@ -18,9 +18,9 @@ source_request: "Evaluate the testing setup and specify reusable, intent-preserv
 
 Make repository validation easier to discover, faster to execute, and harder to misreport, without losing the rules it protects. The reusable outcome is not “install Vitest and enable four shards.” It is **complete, attributable validation with measured feedback time and cost, reproducible failure detection, and no silent correctness tradeoffs**.
 
-This specification PR contains planning artifacts only. It evaluates the prior Bun/Vitest setup, supplies four proposed Short/Long/Guide decision triplets in the [draft companion](architecture-compass-measurable-testing-adr-drafts-spec.md), and defines their later integration into Architecture Compass. It does not migrate this repository's tests, change runtime policy, publish new skill content, or adopt decisions in another repository.
+The approved scope includes the four provider ADR triplets, catalog/routing and derived evidence guidance, owning integrity checks, fourteen evaluation scenarios, isolated executable target pilots, and generated plugin/install proof. The [reviewed companion](architecture-compass-measurable-testing-adr-drafts-spec.md) preserves the accepted design text. This does not migrate the repository's validation framework, change existing runtime policy, adopt these decisions in a production target, or publish a release.
 
-The request to create a PR authorizes public persistence of this non-sensitive plan. It does not imply acceptance of every proposed decision. The provider drafts remain Proposed until maintainers accept their canonical Long text. Target repositories still require local adoption or adaptation.
+Maintainer approval on 2026-09-14 authorizes the refined spec's full implementation and PR update, including promotion of the four reviewed provider decisions. Target repositories still require native adoption or adaptation. Existing accepted provider and repository decisions remain unchanged.
 
 ## 2. Source challenge and evaluation
 
@@ -32,23 +32,23 @@ The inspected baseline has package version `0.22.0`, Architecture Compass `0.6.8
 
 ### Evaluation of the complete proposal
 
-| Earlier approach | Disposition and reason | Verification required |
-| --- | --- | --- |
-| Validation becomes framework tests, not just tests of old scripts | Keep. Move contract assertions and lifecycle into the runner; shelling into each old validator is not completion. | Complete old-rule inventory, direct discoverable assertions, positive/negative parity. |
-| Never extract a validator function | Narrow. Reusable parsers, schemas, domain functions, diagnostic formatting and public validation APIs remain legitimate. Avoid duplicating a runner, not ordinary abstraction. | No auto-running repository validator or custom scheduling/reporting layer; production guards remain intact. |
-| One framework for all repos and all test layers | Adapt. Vitest is the requested JS/TS profile; native language/framework owners remain valid for other layers and non-JS repos. | Each obligation has an owner; no unsupported tool is installed merely to match a provider. |
-| Bun launch always implies Node-backed tests | Correct. Outer launcher, CLI runtime, worker runtime and product runtime are different facts. | Runtime evidence matrix and narrowly scoped fallback record. |
-| Exactly four shards everywhere | Replace with measured selection. Four is an initial candidate for substantial suites, not a durable invariant. Small repositories may stay unsharded. | Compare 1/2/4 where applicable; approve latency and runner-cost budgets before enabling fan-out. |
-| Always enable filesystem module caching | Keep as a capability/profile candidate, not an unconditional success claim. V4 exposes an experimental transform cache with plugin-input limitations. | On/off and warm/cleared parity, mutation invalidation, trusted cache scope, positive net benefit. |
-| Root config automatically configures every project | Correct. Use explicit inheritance or a tested shared configuration. | Resolved child settings and disjoint project discovery are tested. [S3] |
-| Static test inventory means no data-driven tests | Correct. Stable file discovery is important; deterministic cases derived from current repository data are useful. | Sorted current input enumeration, additions/deletions detected, independent coverage sentinel. |
-| Watch mode finds all repository dependencies | Correct. Plain filesystem reads are outside the import graph. | Root watch mappings and change-selection tests for Markdown, JSON, YAML, generated inputs, additions and deletions. [S4] |
-| Fork isolation makes tests safe | Narrow. It is a starting compatibility choice, not an OS security boundary or shared-database/filesystem lock. | Resource namespaces, bounded child processes, actual egress controls where required, and cleanup on failure. |
-| TypeScript execution proves type safety | Reject. Preserve or define the owning typecheck boundary; transformation is not typechecking. | Applicable TS tests/config are covered by the target's typecheck command or an explicit evidence gap. [S5] |
-| Four report files prove full execution | Reject. Identity, partition, outcomes and upstream job states matter, not just count. | Missing/extra/duplicate/foreign/stale reports and failed/cancelled/skipped required jobs never produce success. |
-| Build, lint, format and external smoke run once | Keep one owner per obligation and artifact. “Once” is per required environment/artifact, not a reason to remove cross-OS or production-like proof. | CI graph has no accidental repeated work or omitted supported platform. |
-| Grep filenames to ban validators | Use as discovery aid only. Classify executable behavior, imports, scripts and workflow call sites; exclude historical prose and runtime APIs. | Positive and negative guard fixtures, reviewed operational exceptions, zero unowned live validation entrypoints. |
-| Thirty percent faster is universally required | Replace with target-owned budgets and counter-metrics. The percentage can be a declared example target, never invented proof. | Comparable measured baseline, sample count, spread, approved thresholds and raw evidence. |
+| Earlier approach                                                  | Disposition and reason                                                                                                                                                         | Verification required                                                                                                    |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Validation becomes framework tests, not just tests of old scripts | Keep. Move contract assertions and lifecycle into the runner; shelling into each old validator is not completion.                                                              | Complete old-rule inventory, direct discoverable assertions, positive/negative parity.                                   |
+| Never extract a validator function                                | Narrow. Reusable parsers, schemas, domain functions, diagnostic formatting and public validation APIs remain legitimate. Avoid duplicating a runner, not ordinary abstraction. | No auto-running repository validator or custom scheduling/reporting layer; production guards remain intact.              |
+| One framework for all repos and all test layers                   | Adapt. Vitest is the requested JS/TS profile; native language/framework owners remain valid for other layers and non-JS repos.                                                 | Each obligation has an owner; no unsupported tool is installed merely to match a provider.                               |
+| Bun launch always implies Node-backed tests                       | Correct. Outer launcher, CLI runtime, worker runtime and product runtime are different facts.                                                                                  | Runtime evidence matrix and narrowly scoped fallback record.                                                             |
+| Exactly four shards everywhere                                    | Replace with measured selection. Four is an initial candidate for substantial suites, not a durable invariant. Small repositories may stay unsharded.                          | Compare 1/2/4 where applicable; approve latency and runner-cost budgets before enabling fan-out.                         |
+| Always enable filesystem module caching                           | Keep as a capability/profile candidate, not an unconditional success claim. V4 exposes an experimental transform cache with plugin-input limitations.                          | On/off and warm/cleared parity, mutation invalidation, trusted cache scope, positive net benefit.                        |
+| Root config automatically configures every project                | Correct. Use explicit inheritance or a tested shared configuration.                                                                                                            | Resolved child settings and disjoint project discovery are tested. [S3]                                                  |
+| Static test inventory means no data-driven tests                  | Correct. Stable file discovery is important; deterministic cases derived from current repository data are useful.                                                              | Sorted current input enumeration, additions/deletions detected, independent coverage sentinel.                           |
+| Watch mode finds all repository dependencies                      | Correct. Plain filesystem reads are outside the import graph.                                                                                                                  | Root watch mappings and change-selection tests for Markdown, JSON, YAML, generated inputs, additions and deletions. [S4] |
+| Fork isolation makes tests safe                                   | Narrow. It is a starting compatibility choice, not an OS security boundary or shared-database/filesystem lock.                                                                 | Resource namespaces, bounded child processes, actual egress controls where required, and cleanup on failure.             |
+| TypeScript execution proves type safety                           | Reject. Preserve or define the owning typecheck boundary; transformation is not typechecking.                                                                                  | Applicable TS tests/config are covered by the target's typecheck command or an explicit evidence gap. [S5]               |
+| Four report files prove full execution                            | Reject. Identity, partition, outcomes and upstream job states matter, not just count.                                                                                          | Missing/extra/duplicate/foreign/stale reports and failed/cancelled/skipped required jobs never produce success.          |
+| Build, lint, format and external smoke run once                   | Keep one owner per obligation and artifact. “Once” is per required environment/artifact, not a reason to remove cross-OS or production-like proof.                             | CI graph has no accidental repeated work or omitted supported platform.                                                  |
+| Grep filenames to ban validators                                  | Use as discovery aid only. Classify executable behavior, imports, scripts and workflow call sites; exclude historical prose and runtime APIs.                                  | Positive and negative guard fixtures, reviewed operational exceptions, zero unowned live validation entrypoints.         |
+| Thirty percent faster is universally required                     | Replace with target-owned budgets and counter-metrics. The percentage can be a declared example target, never invented proof.                                                  | Comparable measured baseline, sample count, spread, approved thresholds and raw evidence.                                |
 
 ### Architectural conclusion
 
@@ -56,14 +56,14 @@ Keep framework ownership, focused execution, deterministic fixtures, native repo
 
 ## 3. Reusable decision set and existing owners
 
-Provisional IDs are `AC-ADR-059` through `AC-ADR-062`, based on the inspected 58-record library. They are not reserved merely by this document. Recheck the provider inventory before promotion, then update every new sibling link, catalog entry and fixture consistently if allocation changes.
+The integration rechecked the 58-record baseline and allocated `AC-ADR-059` through `AC-ADR-062`. The live library contains 62 public identities, 186 variant files and 43 eligible target-repository adoption candidates.
 
-| Proposed ADR | Single durable decision | Intent and primary measurable outcome |
-| --- | --- | --- |
-| 059 — Own repository validation through discoverable framework tests | The framework owns executable repository contract assertions and lifecycle. | Complete rule-to-test mapping; zero unowned bare validator entrypoints; current input changes reach the owning tests. |
-| 060 — Isolate test execution by effects and runtime contracts | Each execution lane declares and enforces its state, I/O and runtime boundary. | No unauthorized checkout/index/shared-state writes; representative runtime coverage; no unexplained outcome changes under selected concurrency. |
-| 061 — Shard tests as complete fail-closed evidence sets | Parallel results count as success only for one complete, identity-bound partition. | Exact inventory union with no overlap; all required outcomes pass; lower feedback latency within approved cost limits. |
-| 062 — Cache test transforms without reusing correctness | Transform caches are disposable accelerators, never validation receipts. | Same correctness with cache enabled/disabled/cleared and after input mutation; trusted cache boundaries; positive measured net savings. |
+| Proposed ADR                                                         | Single durable decision                                                            | Intent and primary measurable outcome                                                                                                           |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 059 — Own repository validation through discoverable framework tests | The framework owns executable repository contract assertions and lifecycle.        | Complete rule-to-test mapping; zero unowned bare validator entrypoints; current input changes reach the owning tests.                           |
+| 060 — Isolate test execution by effects and runtime contracts        | Each execution lane declares and enforces its state, I/O and runtime boundary.     | No unauthorized checkout/index/shared-state writes; representative runtime coverage; no unexplained outcome changes under selected concurrency. |
+| 061 — Shard tests as complete fail-closed evidence sets              | Parallel results count as success only for one complete, identity-bound partition. | Exact inventory union with no overlap; all required outcomes pass; lower feedback latency within approved cost limits.                          |
+| 062 — Cache test transforms without reusing correctness              | Transform caches are disposable accelerators, never validation receipts.           | Same correctness with cache enabled/disabled/cleared and after input mutation; trusted cache boundaries; positive measured net savings.         |
 
 Reuse existing decisions instead of creating redundant runtime, performance or migration policies:
 
@@ -78,21 +78,21 @@ The four additions are target-repository candidates, not skill-runtime instructi
 
 ## 4. Mandatory intent and measurement contract
 
-Every new canonical Long must contain `Intent`, `Decision`, `Invariants`, `Measurable outcomes`, `Adoption evidence`, `Failure and exceptions`, and `Revisit` sections. Short must preserve all obligations in abstraction. Guide is non-normative and may not weaken a metric or add a new mandatory policy.
+Every new canonical Long must retain the provider's required `Context`, `Decision` and `Consequences` sections and include `Intent`, `Invariants`, `Measurable outcomes`, `Adoption evidence`, `Failure and exceptions`, and `Revisit`. Every Short must contain `Decision summary` and preserve all obligations in abstraction. Extract the complete bodies using the [companion's heading and metadata conversion](architecture-compass-measurable-testing-adr-drafts-spec.md#extraction-and-acceptance-contract). Guide is non-normative and may not weaken a metric or add a new mandatory policy. Independent lineage dispositions remain in the repository-only manifest; Guides keep related decisions and technical sources separate from lineage under AC-ADR-044.
 
 For each adopted/adapted decision, the target records the following in its existing ADR/validation receipt convention, not a new provider-owned database:
 
-| Field | Required content |
-| --- | --- |
-| Identity | Provider ID, provider version/commit and canonical content identity; local ADR ID/status and mapping disposition. |
-| Intent | Original problem, beneficiaries, desired behavior and explicitly prohibited tradeoffs. |
-| Applicability | Owning package/language/runtime/lane, in-scope rules/inputs, exclusions and their authority. |
-| Baseline | Subject identity, test/input inventory identities, selected command, environment, cache state, samples and raw evidence location. |
-| Metric | Name, definition, unit, population/denominator, aggregation, threshold, direction and measurement command. |
-| Target | Target-approved value and owner; timing of approval; cost/memory/flake counter-metrics. |
-| Observation | Actual value or explicitly unmeasured, evidence stage, subject, run ID/attempt and collection date. |
-| Enforcement | Guidance/report-only/blocking stage; restoration trigger for a regression; next review. |
-| Exceptions | Scope, rationale, approver/owner, expiry or observable revisit trigger and replacement evidence. |
+| Field         | Required content                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Identity      | Provider ID, provider version/commit and canonical content identity; local ADR ID/status and mapping disposition.                 |
+| Intent        | Original problem, beneficiaries, desired behavior and explicitly prohibited tradeoffs.                                            |
+| Applicability | Owning package/language/runtime/lane, in-scope rules/inputs, exclusions and their authority.                                      |
+| Baseline      | Subject identity, test/input inventory identities, selected command, environment, cache state, samples and raw evidence location. |
+| Metric        | Name, definition, unit, population/denominator, aggregation, threshold, direction and measurement command.                        |
+| Target        | Target-approved value and owner; timing of approval; cost/memory/flake counter-metrics.                                           |
+| Observation   | Actual value or explicitly unmeasured, evidence stage, subject, run ID/attempt and collection date.                               |
+| Enforcement   | Guidance/report-only/blocking stage; restoration trigger for a regression; next review.                                           |
+| Exceptions    | Scope, rationale, approver/owner, expiry or observable revisit trigger and replacement evidence.                                  |
 
 A null baseline is not zero. An unmeasured outcome is not met. Adoption is a governance state; rollout completion and achieved outcome are separately reported. No fixed p95 claim from five samples: use a sufficiently populated distribution or report only the measured median/range and uncertainty.
 
@@ -126,8 +126,17 @@ Profile experiments normally compare an unsharded baseline with 2 and 4 shards w
   "intent": "Reduce required validation feedback without losing rules or increasing approved runner cost",
   "scope": { "lane": "contracts", "ruleInventoryDigest": null, "inputInventoryDigest": null },
   "execution": { "framework": "Vitest 4 profile", "runtimeEvidence": null, "shards": 1 },
-  "correctness": { "missingTestsTarget": 0, "duplicateTestsTarget": 0, "falseGreenFaultCasesTarget": 0 },
-  "performance": { "baselineSeconds": null, "targetSeconds": null, "runnerSecondsCeiling": null, "samples": [] },
+  "correctness": {
+    "missingTestsTarget": 0,
+    "duplicateTestsTarget": 0,
+    "falseGreenFaultCasesTarget": 0
+  },
+  "performance": {
+    "baselineSeconds": null,
+    "targetSeconds": null,
+    "runnerSecondsCeiling": null,
+    "samples": []
+  },
   "evidence": { "stage": "source/static", "subject": null, "runId": null, "attempt": null },
   "measurementState": "unmeasured",
   "enforcement": "report-only",
@@ -139,94 +148,13 @@ A target may use Markdown rather than JSON. Preserve the semantics and avoid a s
 
 ## 5. Vitest 4 implementation profile
 
-This is a dated, non-normative profile for the requested stack. Use the exact compatible versions selected in the target lockfile and runtime matrix; do not copy old Bun/Vitest patch pins or freeze “4” into durable architectural intent. The V4 APIs below are sourced from V4 documentation, not mixed with later-major configuration. [S1–S8]
-
-### Runtime and dependency ownership
-
-On a target adopting AC-ADR-058, pnpm owns persistent installs and its lockfile; Bun automatic installation is disabled. Script bodies select the intended runtime consistently even when callers use `pnpm run` or `bun run`.
-
-The initial candidate is `bun --bun vitest ...`. Representative tests must cover worker startup, subprocess behavior, ESM/CJS/module transforms, required mocks, shutdown, coverage when used, sharding and reporting. Record actual parent/worker and tested application runtimes. Required Node/browser/Bun product behavior gets an appropriate real-runtime boundary test; running a harness under Node cannot establish Bun-only behavior or vice versa.
-
-When a specific configuration is unsupported or materially worse under Bun, retain the narrow supported fallback with evidence, selected command and revisit trigger. Do not reject Bun generally from the optional native-loader limitation, and do not silently run an unsupported harness to obey a speed preference. [R3, S1, S2]
-
-### Explicit project configuration
-
-```ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: false,
-    allowOnly: false,
-    passWithNoTests: false,
-    retry: 0,
-    environment: "node",
-    pool: "forks",
-    isolate: true,
-    experimental: {
-      fsModuleCache: process.env.TEST_TRANSFORM_CACHE !== "off",
-      fsModuleCachePath:
-        process.env.VITEST_FS_MODULE_CACHE_PATH ?? ".cache/vitest/transforms/local",
-    },
-    projects: [
-      {
-        extends: true,
-        test: { name: "contracts", include: ["tests/contracts/**/*.test.ts"] },
-      },
-      {
-        extends: true,
-        test: {
-          name: "external",
-          include: ["tests/external/**/*.test.ts"],
-          fileParallelism: false,
-        },
-      },
-    ],
-  },
-});
-```
-
-This is a configuration template, not proof of compatibility. Target tests must verify effective inherited settings. Put global reporters and `watchTriggerPatterns` at the root. Add only projects with real distinct execution needs; do not create five empty projects in a small repository. Ensure default commands select the offline lane, not external smoke. Retain the target's typecheck gate and include new TS tests/config in its documented scope. [S3–S5]
-
-### Commands and data dependencies
-
-A Bun-compatible target can define `test` as `bun --bun vitest --project contracts` and `test:run` as `bun --bun vitest run --project contracts`. `pnpm run test:run` is the AC-ADR-058 entrypoint; `bun run test:run` reaches the same script body. `bun test` is not an alias for the Vitest script.
-
-Use focused aliases for real owning domains. Filesystem-loaded schemas, Markdown and directory listings need explicit watch/change ownership. For V4, use root `watchTriggerPatterns` where appropriate and a separate conservative affected-check map where change selection requires it. Unknown changed inputs broaden to the relevant suite; an import-only `--changed` result must not silently exclude required repository rules. Add/delete/rename and empty-domain scenarios need tests. Stable discovered test-file identities can contain deterministically enumerated per-file assertions; prohibit silent omissions, not useful data-driven tests. [S4]
-
-### Parallel execution and reports
-
-The reference large-suite experiment is four file shards; production N is recorded in the target's profile. Bound `maxWorkers` per process and aggregate concurrency across local shards, monorepo tasks and CI jobs. Account for Vite servers, memory and subprocess cost rather than allocating all host cores independently to every shard. [S6]
-
-Shard command shape, with arguments passed directly through the package script:
-
-```bash
-pnpm run test:run --shard=1/4 --reporter=blob --outputFile=reports/vitest/blobs/shard-1.json
-```
-
-Keep incoming blobs in a dedicated directory and merged JUnit/JSON elsewhere. Before merge, verify envelopes and predecessor states as specified by ADR-061; use framework-native report parsing rather than inventing a stable schema for Vitest internals. A small tested reporter/integration adapter may emit inventory and identity metadata, but must not become a second test runner. Attachments are separate artifacts when used. [S7]
-
-```bash
-pnpm run test:run --merge-reports=reports/vitest/blobs --reporter=default --reporter=junit --outputFile.junit=reports/vitest/merged/junit.xml
-```
-
-Test these argument combinations against the selected V4 patch before publishing them as executable target guidance. Use unique namespaces for run, attempt, subject, project and shard. Diagnostic aggregation should run after failures where possible; cancellations may prevent it, but never establish a successful required check. Keep existing required-check context and release receipts intact. A simple `if: always()` is not itself proof of completeness. [S8, S9]
-
-### Cache safety and economics
-
-V4 `experimental.fsModuleCache` is a filesystem transform cache, not a test-result cache; its custom path is separate from Vite's general cache directory. Plugin transforms may depend on inputs not captured in the default key. Local correctness needs complete input identity, an appropriate plugin key generator or selective opt-out; a remote CI cache key alone does not fix local stale transforms. [S1]
-
-Separate dependency, transform, build-artifact and result-evidence caches. Keep generated output outside release/smoke source inventories. Use project/shard/config/runtime-qualified transform paths when processes must not share mutable entries. Remote persistence is optional after measuring total overhead.
-
-Cache keys cover OS/architecture, relevant runtime/framework/plugin versions, lockfile, configuration and transform inputs. Use content/config identity for reuse, with a content-relevant save suffix when the CI cache service is immutable; do not accidentally make every compatible run a permanent cold cache. Never restore untrusted pull-request transformed code into privileged release execution. No secrets or authenticated state in caches. Separate trust namespaces and disable reuse across unsafe boundaries. [S9]
-
-Recovery may discard only the owned cache and rerun once without it, recording the event. Real source errors and persistent failures remain failures. Do not implement endless retries that turn intermittent correctness faults into apparent success.
+The derived [Vitest 4 profile](../../skills/engineering-workflows/architecture-compass/assets/vitest4-testing-profile.md) owns the dated API examples, commands, data-dependency selection, report handling and cache guidance. It is non-normative and applies only to targets selecting that stack. Its executable qualification fixture pins Vitest 4.1.11 outside the installable payload.
 
 ## 6. Architecture Compass integration contract
 
 ### Provider lifecycle
 
-The companion contains reviewable proposed text, not installed provider files. Current validation allows Accepted/Superseded statuses and expects 58 identities. Do not weaken that validator to ship Proposed drafts. After approval, add the twelve accepted variants atomically, update the expected inventory to 62 if IDs remain available, and preserve all existing decision hashes. A source implementation PR must recheck current inventory and local governance first. [R4]
+The companion records the reviewed design; installed canonical Longs now own accepted provider policy. Validation continues to allow only Accepted/Superseded, expects 62 identities, preserves all previous decision hashes, and checks the new triplets, independently recorded lineage, receipt fields and rendered adoption/catalog tables. Negative fixtures must continue rejecting Proposed provider records. [R4]
 
 This plan requires new provider decisions, not automatic adoption of all four in `agent-skills`. Use the repository's next free local ADR identity only if the owning integration decision needs one; do not reuse old assumed ADR-0044. If an accepted local policy conflicts, resolve only the dependent implementation through the native successor/adaptation process.
 
@@ -240,7 +168,7 @@ In `setup/complete`, evaluate every accepted adoptable candidate with `adopt`, `
 
 In `audit`, compare local evidence against adopted outcomes and report met/unmet/unmeasured/waived/not-applicable measurement states without writes. These are metric states, not replacements for Architecture Compass's existing execution or presentation statuses. Refactor routes use already approved scope and governing local decisions.
 
-### Intended later file changes
+### Owned implementation files
 
 - `skills/engineering-workflows/architecture-compass/references/`: add the twelve promoted variants; update `adr-catalog.md` concern routing and category rows.
 - The same skill's `assets/`: add a derived `testing-outcome-receipt-template.md` and optional V4 profile asset only when it avoids duplicated guidance; reference canonical Long text.
@@ -272,15 +200,15 @@ Each scenario defines input, expected selection/decision, expected refusal/failu
 
 ## 7. Delivery plan, validation and rollback
 
-| Phase | Deliverable | Exit evidence |
-| --- | --- | --- |
-| A — This specification PR | Evaluation, proposed four-ADR text, measurable adoption contract, integration tasks | Source review, artifact consistency and scoped diff; no runtime claim. |
-| B — Maintainer decision review | Accept/revise four canonical Longs; allocate IDs; resolve local-policy dependencies | Explicit decision approval; unchanged existing accepted decisions. |
-| C — Provider integration | Twelve variants, catalog/assets, validator/lineage changes and eval scenarios | Focused governance/library checks, negative cases, type/config validation for any executable examples. |
-| D — Representative target pilots | Small TS, large TS, runtime fallback and non-JS/native-framework adoption examples | Actual target receipts; command/runtime/cache/shard evidence; no fabricated results. |
-| E — Promotion and maintenance | Generated projection/install proof and current release process | Owned hosted/install evidence; review dates and triggers for changing APIs/budgets. |
+| Phase                            | Deliverable                                                                         | Exit evidence                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| A — Specification                | Evaluation, proposed four-ADR text, measurable adoption contract, integration tasks | Source review, artifact consistency and scoped diff; no runtime claim.                                 |
+| B — Accepted decision review     | Accept/revise four canonical Longs; allocate IDs; resolve local-policy dependencies | Explicit decision approval; unchanged existing accepted decisions.                                     |
+| C — Provider integration         | Twelve variants, catalog/assets, validator/lineage changes and eval scenarios       | Focused governance/library checks, negative cases, type/config validation for any executable examples. |
+| D — Representative target pilots | Small TS, large TS, runtime fallback and non-JS/native-framework adoption examples  | Actual target receipts; command/runtime/cache/shard evidence; no fabricated results.                   |
+| E — Promotion and maintenance    | Generated projection/install proof and current release process                      | Owned hosted/install evidence; review dates and triggers for changing APIs/budgets.                    |
 
-Current candidate commands for the later integration slice, confirmed from baseline package scripts:
+Owning validation commands for the integration:
 
 ```bash
 pnpm run validate:adrs
@@ -295,26 +223,28 @@ pnpm run lint
 
 Select these only when their owning boundary changes; follow the local ADR-0041 mapping. `pnpm run sync:agent-plugin` is a separate authorized generator, not a read-only check. Run smoke/install, site, hosted and release-specific gates when those obligations change. Do not invent an already existing Vitest command in this repository.
 
-For this docs-only PR, review links, variant metadata parity, metric definitions, prospective ID allocation, protected scopes and diff. Full runtime/hosted/pilot proof is a later stage, not something this plan claims.
+The implementation requires link/metadata fidelity, preserved decision history, owned malformed-candidate checks, actual isolated target receipts, source-identical generated/install payloads and current hosted validation. Static evaluation contracts are not reported as executed agent-behavior tests.
 
 Before merging provider implementation, failures of history locking, routing, portability, non-sensitive payload boundaries or required evidence stop promotion. Revert the unmerged implementation normally; after publication use a forward patch or governed successor, not rewritten accepted decisions or moved tags. A target can reduce shard count or disable a bad cache without losing framework validation. Revert a target execution-path cutover together with its commands and checks, not as disconnected deletions.
 
 ## 8. Acceptance and completion
 
-- [ ] Four one-decision ADRs retain measurable intent in canonical Long, faithfully abstracted in Short and operationalized in Guide.
-- [ ] Existing 018/025/049/058 ownership and accepted local precedence remain intact; runtime conflict is explicit and resolved through evidence.
-- [ ] Target-native mappings record scope, problem, baseline, units, denominators, thresholds, owner, observations, evidence stage and revisit conditions.
-- [ ] Adoption state is separate from implementation completion and achieved outcome; unmeasured never means passed.
-- [ ] Four shards and `fsModuleCache` are documented profile candidates, not universal requirements or claimed performance results.
-- [ ] JS/TS, small-repo, monorepo and non-JS/framework-owned adoption routes are specified without compulsory tool churn.
-- [ ] Watch/changed-file input coverage, typecheck ownership, real-runtime proof and effective project inheritance have verification scenarios.
-- [ ] Partition identity, expected inventory, outcomes and predecessor states are checked before a successful aggregate; attachments remain available when required.
-- [ ] Cache invalidation covers local plugin inputs as well as remote keys; trust boundaries and safe clear/disable paths are defined.
-- [ ] Existing validation semantics, warnings and production guards survive; no custom runner or misleading one-wrapper-per-old-script migration remains.
-- [ ] Provider promotion updates all live catalog/lock/lineage/eval/install expectations without rewriting historical evidence.
-- [ ] No repository-wide migration, new automatic workflow, unapproved ADR acceptance, target adoption or release is bundled into the specification PR.
+- [x] Four one-decision ADRs retain measurable intent in canonical Long, faithfully abstracted in Short and operationalized in Guide.
+- [x] Existing 018/025/049/058 ownership and accepted local precedence remain intact; runtime conflict is explicit and resolved through evidence.
+- [x] Target-native mappings record scope, problem, baseline, units, denominators, thresholds, owner, observations, evidence stage and revisit conditions.
+- [x] Adoption state is separate from implementation completion and achieved outcome; unmeasured never means passed.
+- [x] Four shards and `fsModuleCache` are documented profile candidates, not universal requirements or claimed performance results.
+- [x] JS/TS, small-repo, monorepo and non-JS/framework-owned adoption routes are specified without compulsory tool churn.
+- [x] Watch/changed-file input coverage, typecheck ownership, real-runtime proof and effective project inheritance have verification scenarios.
+- [x] Partition identity, expected inventory, outcomes and predecessor states are checked before a successful aggregate; attachments remain available when required.
+- [x] Cache invalidation covers local plugin inputs as well as remote keys; trust boundaries and safe clear/disable paths are defined.
+- [x] Existing validation semantics, warnings and production guards survive; no custom runner or misleading one-wrapper-per-old-script migration remains.
+- [x] Provider promotion updates all live catalog/lock/lineage/eval/install expectations without rewriting historical evidence.
+- [x] No repository-wide validation migration, new automatic skill workflow, production target adoption or release is bundled into this implementation PR.
 
-Planning completion means these artifacts are persisted in a reviewable PR. Provider integration and measurable target outcomes remain future, separately evidenced stages.
+The [dated implementation receipt](../../skill-evals/architecture-compass/runs/2026-09-14-measurable-testing-implementation.md) records current source/local/generated/install proof and the remaining hosted gate. Checked items describe implemented contracts; they do not assert that all completion gates have passed.
+
+Completion requires the implemented artifacts and exact current local, hosted and install evidence. A pilot may truthfully report unmet or unmeasured optimization outcomes and retain conservative execution; such a receipt is not an achieved-performance claim.
 
 ## 9. Source register and evidence limits
 
@@ -335,8 +265,8 @@ Repository sources refer to `baseline_ref`; resolve their paths in that revision
 - S8: [Vitest V4 CLI](https://v4.vitest.dev/guide/cli).
 - S9: [GitHub cache reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching) and [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
 
-External mechanics were inspected on 2026-09-13. Examples are design templates, not runtime-tested fixtures. No benchmark, cache correctness, hosted CI, installation or product-runtime outcome is claimed from document review. Native host Plan activation is not asserted or manipulated; the authorized mutation is the isolated GitHub documentation branch and PR, not a user checkout or feature implementation.
+External mechanics were reviewed against the pinned Vitest 4 documentation on 2026-09-14. The isolated fixture package pins Vitest 4.1.11 and records its actual environment; the provider profile remains non-normative. Document review alone proves no runtime, benchmark, hosted or installation outcome. Native host Plan activation is neither asserted nor manipulated.
 
 ## 10. Bounded implementation handoff
 
-Implement only the approved Architecture Compass provider integration from this specification and its companion. Read current repository instructions and relevant accepted Long ADRs; recheck HEAD, IDs, runtime policy, release process and protected paths. Obtain acceptance of the four proposed provider decisions before installing them as live Accepted records. Preserve existing accepted history and the five workflows. Add faithful triplets, routing, derived receipt guidance, integrity checks and the specified evaluation cases; regenerate plugin projections only through their owner. Demonstrate focused source/local/hosted/install stages separately. Do not migrate this repository's validation framework or other target repositories without a separate approved specification. Stop the dependent slice on conflicts or missing proof, and report exactly what was and was not executed.
+Implement only the approved Architecture Compass provider integration from this specification and its companion. Read current repository instructions and relevant accepted Long ADRs; recheck HEAD, IDs, runtime policy, release process and protected paths. The four reviewed provider decisions were accepted with the 2026-09-14 implementation approval; preserve that exact canonical text. Preserve existing accepted history and the five workflows. Add faithful triplets, routing, derived receipt guidance, integrity checks and the specified evaluation cases; regenerate plugin projections only through their owner. Demonstrate focused source/local/hosted/install stages separately. Do not migrate this repository's validation framework or other target repositories without a separate approved specification. Stop the dependent slice on conflicts or missing proof, and report exactly what was and was not executed.

@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.8"
+  version: "0.7.0"
 ---
 
 # Architecture Compass
@@ -75,6 +75,8 @@ Route skill behavior through:
 For provider mechanics, resolve the applicable public AC-ADR and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only `AC-INTERNAL-001` for persistence resolution or `AC-INTERNAL-002` for receipt rendering. Internal ADRs are implementation policy, do not enter target-repository adoption, and cannot relax an accepted public Long decision.
 
 Use the catalog for namespace authority, lineage, canonical Long variants, and task-specific decisions. AC-ADR-001 is superseded historical context only.
+
+For testing work, use the catalog to select AC-ADR-059 for repository validation ownership, AC-ADR-060 for runtime/state effects, AC-ADR-061 for distributed proof, and AC-ADR-062 for transform-cache evaluation. Select only applicable candidates; keep the seven-decision evidence-empty foundation unchanged. Map existing equivalent local decisions instead of duplicating them. Audit adopted outcomes without writes and distinguish `met`, `unmet`, `unmeasured`, `waived`, and `not-applicable` from execution statuses. Use the [testing receipt](assets/testing-outcome-receipt-template.md) within the target's existing evidence convention.
 
 ## Inputs to inspect
 

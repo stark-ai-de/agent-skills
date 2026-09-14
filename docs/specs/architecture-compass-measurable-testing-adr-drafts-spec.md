@@ -1,25 +1,27 @@
 ---
-title: "Architecture Compass: Proposed Measurable Testing ADR Drafts"
+title: "Architecture Compass: Reviewed Measurable Testing ADR Drafts"
 slug: "architecture-compass-measurable-testing-adr-drafts"
 artifact_path: "docs/specs/architecture-compass-measurable-testing-adr-drafts-spec.md"
 mode: "deep"
-status: "proposed"
+status: "approved"
 owner: "stark-ai-de"
 created: "2026-09-13"
-updated: "2026-09-13"
+updated: "2026-09-14"
 ---
 
-# Architecture Compass: Proposed Measurable Testing ADR Drafts
+# Architecture Compass: Reviewed Measurable Testing ADR Drafts
 
-Companion to the [integration specification](architecture-compass-measurable-testing-adr-set-spec.md). These are four reviewable decision triplets, not live provider records and not accepted target-repository policy.
+Companion to the [integration specification](architecture-compass-measurable-testing-adr-set-spec.md). These triplets preserve the design accepted for provider integration on 2026-09-14. Installed canonical Longs under the skill references own live provider policy; target repositories still require native adoption or adaptation.
 
 ## Extraction and acceptance contract
 
-For each draft below, create three files only after the integration approval gate: the listed stem plus `.short.md`, `.long.md`, `.guide.md`. Begin each with its ADR title, repeat the shared metadata unchanged, and insert `Variant: Short`, `Variant: Long` or `Variant: Guide`. Add the repository's exact direct sibling navigation. Long is canonical; Short may not relax it; Guide is non-normative. Shared metadata here is an editorial convenience, not a fourth policy variant.
+For each draft below, create three files only after the integration approval gate: the listed stem plus `.short.md`, `.long.md`, `.guide.md`. Begin each with `# <ID>: <Title>` from its shared metadata, repeat that metadata unchanged, and insert `Variant: Short`, `Variant: Long` or `Variant: Guide` immediately before `Canonical variant`. Add the repository's exact direct sibling navigation.
 
-IDs 059–062 are provisional after the inspected 58-record inventory. Reconcile allocation before promotion. Set Accepted only after actual acceptance, update dates truthfully, and preserve all pre-existing accepted identities and decisions. Each draft's repository-ADR lineage disposition is `independent` with `relations: []`: it supplements existing provider decisions but is not claimed to derive from a specific repository ADR. Update that disposition only if actual derivation changes during review.
+Copy only the selected variant's body below that navigation: omit the `### Short`, `### Long` or `### Guide` wrapper and promote its `####` body headings to `##`. Each Short includes `Decision summary`; each Long includes `Context`, `Decision` and `Consequences` alongside its intent, invariants, measurement, evidence, exception and revisit sections. Preserve the supplied body text through extraction. Long is canonical; Short may not relax it; Guide is non-normative. Shared metadata here is an editorial convenience, not a fourth policy variant.
 
-Do not place these Proposed drafts inside the installable skill references to bypass the current Accepted/Superseded gate. The integration specification names evaluation, lock, catalog and publication work that must accompany later promotion.
+IDs 059–062 were allocated after rechecking the 58-record baseline and accepted on 2026-09-14. Preserve all pre-existing accepted identities and decisions; future changes follow the normal acceptance and successor process. Each draft's repository-ADR lineage disposition is `independent` with `relations: []`: it supplements existing provider decisions but is not claimed to derive from a specific repository ADR. Keep that disposition in the repository-only manifest; omit lineage declarations from independent Guides under accepted AC-ADR-044. Update the disposition only if actual derivation changes during review.
+
+The integration preserves the Accepted/Superseded gate. The following extraction recipe documents the reviewed conversion; approval and ID allocation have now completed. The integration specification retains the required evaluation, lock, catalog and installation proof.
 
 ## AC-ADR-059 — Own repository validation through discoverable framework tests
 
@@ -30,8 +32,8 @@ Stem: `ac-adr-059-own-repository-validation-through-discoverable-framework-tests
 ```text
 ID: AC-ADR-059
 Title: Own repository validation through discoverable framework tests
-Status: Proposed
-Date: 2026-09-13
+Status: Accepted
+Date: 2026-09-14
 Owner: stark-ai-de
 Scope: target-repository
 Category: quality-delivery
@@ -41,17 +43,23 @@ Adoptable: true
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-09-13
+Guide verified: 2026-09-14
 Gist: Make contract failures attributable and discoverable without retaining an unowned script-driven validation system.
 ```
 
 ### Short
+
+#### Decision summary
 
 Move repository-maintenance contract assertions and their lifecycle into the selected test framework. Inventory rules and call sites by behavior, preserve positive and negative semantics, and complete the migration with zero unowned bare validation entrypoints. Keep native tool gates, operational commands and reusable production/domain validation logic under their legitimate owners. Do not merely wrap old validator processes or recreate a scheduler/reporter.
 
 Prove current inputs, including additions/deletions and file-read dependencies, reach the right tests. Record intent, scope, rule coverage, diagnostics, feedback targets and evidence in target-native receipts. Unknown coverage is not success. Promote the anti-regression guard gradually with tested exceptions; resolve conflicts and waivers explicitly. Revisit when contract ownership or discovery changes.
 
 ### Long
+
+#### Context
+
+Repository-maintenance checks can distribute assertions and orchestration across standalone scripts, package commands and CI calls. That makes ownership and selective execution hard to discover, while a migration can accidentally lose warning, failure or input-discovery behavior.
 
 #### Intent
 
@@ -89,6 +97,10 @@ Missing mapping or semantic regression blocks completion. Preserve a reviewed tr
 
 Reassess on new contract domains, changed source discovery, schema ownership, native tool integration or a material diagnosis/feedback regression. Use the local successor process for a changed accepted decision.
 
+#### Consequences
+
+Framework ownership gives repository rules a discoverable execution and reporting path. Migration requires a maintained rule/input inventory and semantic parity evidence; shared domain logic and native tool gates continue under their existing owners.
+
 ### Guide
 
 This Guide is non-normative; the Long controls.
@@ -101,7 +113,13 @@ A migration receipt should show rule mapping coverage, old/new representative ou
 
 Verification examples: a missing required schema fails; a newly added invalid file is collected; a release CLI continues to work without importing Vitest; the guard permits a public schema validator but rejects an auto-running repository check. No observed baseline means no improvement claim.
 
-Decision lineage: independent of specific repository ADRs; complements AC-ADR-018, 021, 022, 049 and 058. Current API references: [V4 projects](https://v4.vitest.dev/guide/projects), [watch mappings](https://v4.vitest.dev/config/watchtriggerpatterns), [type testing](https://v4.vitest.dev/guide/testing-types).
+#### Related decisions
+
+Use AC-ADR-018 for enforcement stages, AC-ADR-021/022 for migration and delivery, AC-ADR-049 for validation evidence and AC-ADR-058 for applicable runtime/tooling selection.
+
+#### Sources
+
+Current API references: [V4 projects](https://v4.vitest.dev/guide/projects), [watch mappings](https://v4.vitest.dev/config/watchtriggerpatterns), [type testing](https://v4.vitest.dev/guide/testing-types).
 
 ## AC-ADR-060 — Isolate test execution by effects and runtime contracts
 
@@ -112,8 +130,8 @@ Stem: `ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts`
 ```text
 ID: AC-ADR-060
 Title: Isolate test execution by effects and runtime contracts
-Status: Proposed
-Date: 2026-09-13
+Status: Accepted
+Date: 2026-09-14
 Owner: stark-ai-de
 Scope: target-repository
 Category: quality-delivery
@@ -123,17 +141,23 @@ Adoptable: true
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-09-13
+Guide verified: 2026-09-14
 Gist: Keep parallel test results representative and independent by owning their runtime and side effects.
 ```
 
 ### Short
+
+#### Decision summary
 
 Assign each test lane explicit runtime, state, I/O, concurrency and cleanup contracts. Preserve native tool/runtime ownership and prove required product behavior in a representative runtime, not just the harness. Repository-conformance tests remain read-only; negative cases use uniquely owned disposable resources. No hidden retries, unexpected external access or shared-state coupling may manufacture success.
 
 Record actual runtime evidence, sequential/concurrent outcomes, cleanup and network enforcement limits, feedback/cost budgets and target-native adoption measurements. Start conservatively and relax isolation only after representative proof. Report missing evidence, leaks and expiring exceptions explicitly; revisit on runtime, topology or resource changes.
 
 ### Long
+
+#### Context
+
+Parallel tests can couple through files, ports, databases, environment state and child processes even when their modules are isolated. A passing harness also does not establish product compatibility when the harness and product use different runtimes.
 
 #### Intent
 
@@ -172,6 +196,10 @@ Leaks, incomplete cleanup, unhandled errors and unsupported required runtime beh
 
 Requalify on runtime/framework changes, a new operating system, pool changes, new native dependencies, external service changes or changed concurrency/resource topology.
 
+#### Consequences
+
+Explicit lane contracts make state leaks, runtime gaps and concurrency regressions attributable. Qualification adds fixture and measurement work, while conservative isolation may cost time or memory; any relaxation remains tied to representative correctness and benefit evidence.
+
 ### Guide
 
 This Guide is non-normative; the Long controls.
@@ -182,7 +210,13 @@ Separate local filesystem/loopback fixtures from genuinely external services. Wh
 
 Qualification examples: repeated runs with fixed and varied recorded seeds; malformed input after a successful run; concurrent jobs with distinct fixture roots; child-process timeout; database namespace leak; a Bun-only product API with Node-hosted orchestration. Record observed results rather than inventing a fixed universal test-count threshold.
 
-Decision lineage: independent; operationalizes AC-ADR-018 with existing AC-ADR-013/014/058 selection rather than superseding it. Current references: [V4 performance/isolation](https://v4.vitest.dev/guide/improving-performance), [Bun runtime selection](https://bun.sh/docs/runtime).
+#### Related decisions
+
+Use AC-ADR-018 for owning-boundary proof and AC-ADR-013/014/058 for applicable toolchain and runtime selection.
+
+#### Sources
+
+Current references: [V4 performance/isolation](https://v4.vitest.dev/guide/improving-performance), [Bun runtime selection](https://bun.sh/docs/runtime).
 
 ## AC-ADR-061 — Shard tests as complete fail-closed evidence sets
 
@@ -193,8 +227,8 @@ Stem: `ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets`
 ```text
 ID: AC-ADR-061
 Title: Shard tests as complete fail-closed evidence sets
-Status: Proposed
-Date: 2026-09-13
+Status: Accepted
+Date: 2026-09-14
 Owner: stark-ai-de
 Scope: target-repository
 Category: quality-delivery
@@ -204,17 +238,23 @@ Adoptable: true
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-09-13
+Guide verified: 2026-09-14
 Gist: Reduce feedback latency through measured parallelism without allowing partial or mismatched evidence to pass.
 ```
 
 ### Short
+
+#### Decision summary
 
 Distribute tests only as an identity-bound, complete partition of the selected proof obligation. Define the expected inventory independently, match every result to subject/configuration/runtime/platform/run attempt, and require all mandatory outcomes and predecessors. Missing, extra, overlapping, stale, foreign, failed or unexpectedly skipped evidence cannot produce green.
 
 Measure end-to-end feedback and total runner cost before selecting shard and worker counts; four shards are a candidate, not policy. Preserve separate artifact/environment owners and required-check identity. Record targets, partition proof, adversarial merge cases and observations in local receipts. Unmeasured speedup is not success; use an unsharded equivalent or stop on incomplete evidence.
 
 ### Long
+
+#### Context
+
+Distributing tests across independently reported jobs can shorten feedback, but report counts and successful individual jobs do not establish a complete required verdict. Setup, transfer and aggregation costs can also outweigh the time saved by additional shards.
 
 #### Intent
 
@@ -253,6 +293,10 @@ Stop promotion on incomplete proof or a reproducible budget breach. Reducing N o
 
 Rebenchmark after test distribution, runner capacity, billing model, artifact topology or report format changes. Requalify fault cases when CI conditions, required checks or partial-rerun rules change.
 
+#### Consequences
+
+Explicit partition identity and completeness protect the required verdict from partial or mismatched reports. Aggregation needs inventory metadata and adversarial fixtures, and its overhead may favor an unsharded equivalent over additional parallel jobs.
+
 ### Guide
 
 This Guide is non-normative; the Long controls.
@@ -265,7 +309,13 @@ In GitHub Actions, continue collecting independent shard diagnostics after a fai
 
 For a small repository, record N=1 and the trigger to reconsider. For a large repository, record critical-path gain together with runner seconds, memory and variance. Do not discard a required OS lane to improve those numbers.
 
-Decision lineage: independent; complements AC-ADR-018/025/049 and existing delivery/release ownership. Current references: [V4 sharding](https://v4.vitest.dev/guide/improving-performance), [V4 reporters](https://v4.vitest.dev/guide/reporters), [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
+#### Related decisions
+
+Use AC-ADR-018 for owning-boundary proof, AC-ADR-025 for performance budgets and AC-ADR-049 for evidence reuse alongside the target's delivery and release decisions.
+
+#### Sources
+
+Current references: [V4 sharding](https://v4.vitest.dev/guide/improving-performance), [V4 reporters](https://v4.vitest.dev/guide/reporters), [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
 
 ## AC-ADR-062 — Cache test transforms without reusing correctness
 
@@ -276,8 +326,8 @@ Stem: `ac-adr-062-cache-test-transforms-without-reusing-correctness`
 ```text
 ID: AC-ADR-062
 Title: Cache test transforms without reusing correctness
-Status: Proposed
-Date: 2026-09-13
+Status: Accepted
+Date: 2026-09-14
 Owner: stark-ai-de
 Scope: target-repository
 Category: quality-delivery
@@ -287,17 +337,23 @@ Adoptable: true
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-09-13
+Guide verified: 2026-09-14
 Gist: Reuse transformation work only when inputs and trust match, while executing and proving validation independently.
 ```
 
 ### Short
+
+#### Decision summary
 
 Use transform caches only as disposable performance artifacts. Test-result evidence, dependency caches and generated build artifacts retain separate identities and owners. Complete transform inputs and trust boundaries must govern reuse, including local plugin dependencies not represented by a remote key.
 
 Execute selected tests regardless of cache hits; require enabled/disabled/cleared and mutation parity, safe bounded recovery and zero false-green failures. Persist remotely only when measured end-to-end savings justify overhead within cost/security budgets. Record intent, inputs, targets, evidence, ownership and revisit conditions locally. Disable unsafe or unhelpful caching without weakening validation; unknown invalidation is not correctness proof.
 
 ### Long
+
+#### Context
+
+Repeated transformation can contribute to test feedback time, but cached code may become stale when plugins depend on inputs outside the tracked file content or configuration. Shared persistence adds transfer costs and provenance concerns that a cache-hit percentage cannot resolve.
 
 #### Intent
 
@@ -336,6 +392,10 @@ Disable or invalidate unsafe caching and rerun the affected proof without it. A 
 
 Requalify on changed transforms, plugin inputs, framework/runtime versions, coverage mode, trust model or remote cache semantics. Rebenchmark when transfer/storage overhead or the test workload changes.
 
+#### Consequences
+
+Disposable, input-bound caches can reduce repeated transformation while preserving fresh validation. Maintaining input identity, trust boundaries and parity fixtures adds work; workloads without qualifying net savings can retain local-only caching or disable it.
+
 ### Guide
 
 This Guide is non-normative; the Long controls.
@@ -346,4 +406,10 @@ Use a project/runtime/config namespace and separate shard paths where appropriat
 
 Qualification examples: warm the cache, change a plugin-read JSON file, and verify the changed result; compare with caching disabled; remove the cache; supply a corrupt entry; attempt a cross-trust restore; test cleanup confined to the owned directory. Store raw timing samples and faults. A fresh passing test run remains necessary after every cache recovery.
 
-Decision lineage: independent; supplements AC-ADR-025's cache/performance requirements and AC-ADR-049's evidence distinction. Current references: [V4 experimental cache](https://v4.vitest.dev/config/experimental), [GitHub cache semantics and access](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching).
+#### Related decisions
+
+Use AC-ADR-025 for cache/performance budgets and AC-ADR-049 to distinguish transform reuse from reusable validation evidence.
+
+#### Sources
+
+Current references: [V4 experimental cache](https://v4.vitest.dev/config/experimental), [GitHub cache semantics and access](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching).
