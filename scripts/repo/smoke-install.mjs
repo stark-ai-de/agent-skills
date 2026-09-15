@@ -199,7 +199,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedPublicAdrCount = 58;
+  const expectedPublicAdrCount = 62;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
@@ -329,6 +329,8 @@ function architectureManifest(skillDir) {
   }
 
   for (const required of [
+    "assets/testing-outcome-receipt-template.md",
+    "assets/vitest4-testing-profile.md",
     "assets/adr-template.short.md",
     "assets/adr-template.long.md",
     "assets/adr-template.guide.md",

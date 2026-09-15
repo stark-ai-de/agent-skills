@@ -48,7 +48,7 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "07b79ae328833529ed7ba0157065c6395d018d5da7db2bd41ecea91da064bac4"
+      "sha256": "7687fdb4549409386c01a0d2e805047edde8a94085a2d8f8c7a67265229fdf13"
     },
     {
       "byteLength": 12772,
@@ -171,10 +171,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 16382,
+      "byteLength": 17019,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "6971ae62e55e701e80c05143322e33493135d5df55fc28e07bb9004734ae5458"
+      "sha256": "d7c8a6934df0dce6161142029c7f1047ff01e6caa7ecc467955752b54405d6db"
     },
     {
       "byteLength": 891,
@@ -243,16 +243,28 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 7196,
+      "byteLength": 7577,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
+      "sha256": "b2a311390dfcbbcd06bcdc20732bed34ed5f6160de036f9451823d77376972c7"
     },
     {
-      "byteLength": 11764,
+      "byteLength": 12617,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "b32a03e07218109c8d8cbb2a65062ec8a8e887affd6a15a630bbff4328c568b9"
+      "sha256": "fa644b00c7df28fd720fbd7450fcba29b82099d5f1d7577fc441243fb788686b"
+    },
+    {
+      "byteLength": 6103,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/testing-outcome-receipt-template.md",
+      "sha256": "894ed710f10c0ccb910640ac9b5b642178e2e5272ab57a70861910136b5afc96"
+    },
+    {
+      "byteLength": 9212,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/vitest4-testing-profile.md",
+      "sha256": "cc36c3d424e43bf5922d8df81bbd2286dbc8f407b820a31c8c304e07a6894874"
     },
     {
       "byteLength": 3796,
@@ -1299,10 +1311,82 @@
       "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
     },
     {
-      "byteLength": 48634,
+      "byteLength": 2868,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.guide.md",
+      "sha256": "e9d76e7ff8aa1bacae02048d5a604e5e9d6e5a79accfeb094b5a82d3d56c9be3"
+    },
+    {
+      "byteLength": 5421,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.long.md",
+      "sha256": "921f2452f542660c899164b5449e3a206b05d8b41a5eac57c78d9a840f14aa6d"
+    },
+    {
+      "byteLength": 1839,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.short.md",
+      "sha256": "1513ac0efedda38dccbb012e7f5d9906138ea5eb464b34d9cc9c61408fb1f6af"
+    },
+    {
+      "byteLength": 2493,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.guide.md",
+      "sha256": "2e62add0ba300c7ee07e2548415cbef0c870b8dc3dd63b2d7400b22a27d911a3"
+    },
+    {
+      "byteLength": 5331,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.long.md",
+      "sha256": "e9dc4367506ffbd75bee8476f878debdfabf1542ebe345a08aac84f98a949948"
+    },
+    {
+      "byteLength": 1672,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.short.md",
+      "sha256": "83b7fc274e4e155a81682c2bd67f2fea65aae061b3a9560c2d03080590e362f8"
+    },
+    {
+      "byteLength": 2785,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.guide.md",
+      "sha256": "e14fecceceb5ad610d3c64162f6c492c20709cae85a1f6a8fdb7213710132bf0"
+    },
+    {
+      "byteLength": 5575,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.long.md",
+      "sha256": "18e05f2151e72b35e3bde1a40dcf900f3278ff86817a9c9ce6c58f16bfefcefc"
+    },
+    {
+      "byteLength": 1651,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.short.md",
+      "sha256": "678958f6f3d4d3e91d8658d78dde9facfd71899b6745d81cadf071d1ff9bdf53"
+    },
+    {
+      "byteLength": 2621,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.guide.md",
+      "sha256": "55b3649b9f761ebb9c0ffa50640d96735e2248900ff1196adb14357e03719861"
+    },
+    {
+      "byteLength": 5319,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.long.md",
+      "sha256": "489dacfbe885df7e8cfdfc9124f9a4ead5c21fe7bb554d381791b69c94b68283"
+    },
+    {
+      "byteLength": 1635,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.short.md",
+      "sha256": "bdc916731983178de134f2487a1d4b5e6c9080cae2671b28211df0f6263f4635"
+    },
+    {
+      "byteLength": 52748,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "71f200a769602add8f3c9e4e2697da94cde9cca8105ef3ef3e824a5013b1094e"
+      "sha256": "e6aa884b2685422b8165acb0034b8062ebe141306d7b891b6e95780f70bc27b2"
     },
     {
       "byteLength": 6996,
@@ -1829,9 +1913,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8bb3edcf753821f46bdf9f7c37bfa09ac20b0b9ee90649af154a9645c8ae374b"
+  "treeHash": "972a3acebf6edeb5e8f5c0a789648a8db83c8d12d141ff3a4a11cadaa9d666c6"
 }

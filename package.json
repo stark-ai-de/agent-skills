@@ -103,7 +103,7 @@
     "verify:openai-directory": "bun --bun scripts/plugin/verify-openai-directory.mjs",
     "build:release-subjects": "bun --bun scripts/release/verify-release-reproducibility.mjs --subjects-dir dist/release-subjects",
     "generate:release-evidence": "bun --bun scripts/release/verify-release-reproducibility.mjs --evidence docs/listing/openai/stark-ai-developer-release-evidence.json",
-    "validate:architecture-compass": "bun --bun scripts/validation/architecture-compass/validate.mjs",
+    "validate:architecture-compass": "bun exec \"bun --bun scripts/validation/architecture-compass/validate.mjs && bun --bun scripts/validation/architecture-compass/validate-contract.test.mjs\"",
     "validate:codegraph-ast-grep": "bun --bun scripts/validation/codegraph-ast-grep/validate-contract.mjs",
     "validate:drawio": "bun exec \"bun --bun scripts/validation/drawio-diagrams/validate-fixtures.mjs && bun --bun scripts/validation/drawio-diagrams/validate-visual-evals.mjs\"",
     "validate:animated-readme-logo": "bun exec \"bun --bun scripts/validation/animated-readme-logo/validate-runtime.mjs && bun --bun scripts/validation/animated-readme-logo/validate-evals.mjs\"",

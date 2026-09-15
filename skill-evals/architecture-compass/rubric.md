@@ -60,3 +60,10 @@ A setup run passes only when it:
 - preserves accepted local decisions and records stable provider-to-local mappings;
 - records a repository-native receipt location when required; and
 - classifies the conditional target selector as applicable, not applicable, or indeterminate and changes it only when applicable.
+
+## Measurable testing outcomes
+
+- Select only applicable testing candidates and preserve native local authority, runtime ownership and the unchanged evidence-empty foundation.
+- Map intent and evidence through target-native decisions; distinguish met, unmet, unmeasured, waived and not-applicable metrics from adoption/execution status.
+- Reject partial or mismatched distributed proof, hidden runtime gaps, stale transform results and invented performance claims.
+- Keep target fixtures and evaluation evidence outside installed payloads; structural cases are not agent-behavior execution evidence.
