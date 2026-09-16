@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.3.0`
+- Version: `1.4.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds four Architecture Compass decisions for discoverable framework-owned validation, effect and runtime isolation, complete shard evidence, and safe transform caching. Includes conditional adoption routes, target-native outcome receipts, and a qualified Vitest 4 profile with explicit measurement and compatibility limits.
+- Release notes: Adds an adoptable Architecture Compass decision for Tailwind design-system linting with all supported shadcn lint rules enabled by default. Includes ESLint and Oxlint examples, shared UI discovery, scoped component contracts, staged enforcement, and explicit compatibility and evidence boundaries.
 
 ## Capabilities
 

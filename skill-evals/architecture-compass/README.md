@@ -166,3 +166,16 @@ The fourteen scenario contracts below cover AC-ADR-059 through AC-ADR-062. They 
 - `cases/testing-metric-truth.md`
 - `cases/testing-selective-routing.md`
 - `cases/testing-promotion-integrity.md`
+
+## Tailwind design-system lint cases
+
+These cases cover AC-ADR-063. Structural validation is not an executed agent
+behavior or plugin-runtime pass. Required-concept assertions complement semantic
+review of Expected Behavior; they do not classify a quoted unsafe suggestion as
+an endorsement, nor prove correctness merely because keywords are present.
+
+- `cases/shadcn-lint-default-profile.md`
+- `cases/shadcn-lint-ownership-and-compatibility.md`
+- `cases/shadcn-lint-staged-enforcement.md`
+- `cases/shadcn-lint-discovery-and-freshness.md`
+- `cases/shadcn-lint-component-and-evidence-boundaries.md`
