@@ -48,13 +48,13 @@
       "byteLength": 1486,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "07b79ae328833529ed7ba0157065c6395d018d5da7db2bd41ecea91da064bac4"
+      "sha256": "7687fdb4549409386c01a0d2e805047edde8a94085a2d8f8c7a67265229fdf13"
     },
     {
-      "byteLength": 12772,
+      "byteLength": 13030,
       "mode": "0644",
       "path": "skills/animated-readme-logo/SKILL.md",
-      "sha256": "ceb726975c1377765f7c5bb91e136128907b507393b072791779dea8b5fad763"
+      "sha256": "9b7b9f43b2fe69e44f6b2b5fc6b5e0fca29b88d7d05e55f222d0d21274556790"
     },
     {
       "byteLength": 591,
@@ -171,16 +171,16 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 16382,
+      "byteLength": 16705,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "6971ae62e55e701e80c05143322e33493135d5df55fc28e07bb9004734ae5458"
+      "sha256": "6b65f167c0d9a7d41b7aeb0722cace6e5ac89174ed99450ffb4fe7238ad7b8c3"
     },
     {
-      "byteLength": 891,
+      "byteLength": 692,
       "mode": "0644",
       "path": "skills/architecture-compass/agents/openai.yaml",
-      "sha256": "6124ac153a89ffc5853eeecaa228bdeb880470ccf7c1efcca6533e7c3b685fc7"
+      "sha256": "3e332841e61d770a58520873fe5eb035f17a94b295570af5c294e307082d72cb"
     },
     {
       "byteLength": 1492,
@@ -243,16 +243,16 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 7196,
+      "byteLength": 7561,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
+      "sha256": "afed8b4539917a0bd366b3e5a74a52b622beaac756d6b9539ee2dd5c470776fc"
     },
     {
-      "byteLength": 11764,
+      "byteLength": 11861,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "b32a03e07218109c8d8cbb2a65062ec8a8e887affd6a15a630bbff4328c568b9"
+      "sha256": "80e26f1bda7c90251fad99e836b7dbab2c4a2745ee649dfb060397284757df44"
     },
     {
       "byteLength": 3796,
@@ -885,10 +885,10 @@
       "sha256": "22037f24e84ccedd190e0520b0889a262af8f109cb70a7d5286d8a300eaccd8e"
     },
     {
-      "byteLength": 18400,
+      "byteLength": 19764,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
-      "sha256": "cc04e71af7f58be81dba28fe73cd11883d5bb51691159085b220a27eddff17f6"
+      "sha256": "b3e7f1d5e585e7544f5507b551937cd3f592e1d906fba4da1d7709f2a3665bb7"
     },
     {
       "byteLength": 4323,
@@ -1032,7 +1032,7 @@
       "byteLength": 3713,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-044-record-material-decision-lineage-in-non-normative-guides.guide.md",
-      "sha256": "36fa6e59ab57d6ee5cbdaaafd430c870b91e3daee5f5f278539155274de9a7fe"
+      "sha256": "d0eb907d4146aa5e932d1c5ab1357896f430ab6f4fc7fba371b6478cc5f364d6"
     },
     {
       "byteLength": 6502,
@@ -1101,22 +1101,22 @@
       "sha256": "8ac4eaf5cc3d8beb65e2cc4bf8d57360a245eb54bd298f7a3a8fdef5ffe4360f"
     },
     {
-      "byteLength": 10723,
+      "byteLength": 10899,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
-      "sha256": "6a56783e52c257a407f464c3c4bf88532b3814297b40adf5e3bd248229a61946"
+      "sha256": "a662317cdfb3e8fb61696bf3e5786a2587967aa166434b48cb2b1e7f3b649e44"
     },
     {
-      "byteLength": 8930,
+      "byteLength": 8938,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
-      "sha256": "843cdf03a16d096676736027d04a0983c886f88f564523d8038c2ebe7b581f84"
+      "sha256": "46e9280a7b053dd70da39909db06be64c2dfe8ba0506ad1fda4199aed3d8e0ae"
     },
     {
-      "byteLength": 3210,
+      "byteLength": 3218,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md",
-      "sha256": "f5cf28c193cb8c634743b51b069baaeac7c9719aa795c2349e7639695757764b"
+      "sha256": "f220683f5597ccbabca660f11ffa32a0de522041efe6d9cd9aa584accb1a076d"
     },
     {
       "byteLength": 10142,
@@ -1173,10 +1173,10 @@
       "sha256": "932d1c91ff319336c29afe44724837d882335f810ef0c711ea110167443df38b"
     },
     {
-      "byteLength": 4553,
+      "byteLength": 4537,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.guide.md",
-      "sha256": "735a913046b5b2e57167adf2c5f1df666f25f0c65162e43b858e06eedc1be3b5"
+      "sha256": "17626c05ab37aad6b9ced29c7f0fbfb0f4e4102dcd9891746b0dcf64dddf3bde"
     },
     {
       "byteLength": 7154,
@@ -1299,22 +1299,40 @@
       "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
     },
     {
-      "byteLength": 48634,
+      "byteLength": 12348,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
+      "sha256": "6b1f375bb19ef5463a269c2264848227f7c42ace63d328ed37902e3f197a8c8e"
+    },
+    {
+      "byteLength": 9221,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
+      "sha256": "3cdd3dbad64b16d42db2f98896ee3b93914800e3d6bc02d5b679eb2fdf2f986f"
+    },
+    {
+      "byteLength": 2615,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md",
+      "sha256": "9e095f6a44a9d78928aeed56bcc5d367284b5da2b31147cf6303549d0b2c5993"
+    },
+    {
+      "byteLength": 49104,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "71f200a769602add8f3c9e4e2697da94cde9cca8105ef3ef3e824a5013b1094e"
+      "sha256": "b06fa0e3e126318bef1dabbb14d65d22a4e254b4fc399d2090651ee57df1fc5d"
     },
     {
-      "byteLength": 6996,
+      "byteLength": 6988,
       "mode": "0644",
       "path": "skills/architecture-compass/references/internal/internal-adr-001-resolve-persistence-surfaces-before-writes.guide.md",
-      "sha256": "fa5da7b99f421ac0f67ebd728be7b87b7f4cfa08ea72a6efc8f1d2028de7014c"
+      "sha256": "a82fa81b2696aa39c8f312ce0efca2f5c11ffbd4e2b6b9ab2284cef791eea612"
     },
     {
-      "byteLength": 11439,
+      "byteLength": 11441,
       "mode": "0644",
       "path": "skills/architecture-compass/references/internal/internal-adr-001-resolve-persistence-surfaces-before-writes.long.md",
-      "sha256": "82e17004a8eaeec682238d0b4c6236ef577ff7759757155e54373cb1e358f4e0"
+      "sha256": "c3a8e0b1d07324e5ee41db8643c4cd960ef17f6231aaf739472c7d229a64d972"
     },
     {
       "byteLength": 2486,
@@ -1341,10 +1359,10 @@
       "sha256": "ea0db8a05d1136d3774a9d0bd4bfd087c14a4b7763b0abd0cb34ff45214bf599"
     },
     {
-      "byteLength": 7418,
+      "byteLength": 7386,
       "mode": "0644",
       "path": "skills/architecture-compass/references/internal/internal-adr-index.md",
-      "sha256": "718e72e5cbb40948a6b9352f233beaf39847a6b63e13af6e2c0a0226a3e7ef10"
+      "sha256": "0282f00a5c522ac6c1578a13cb5e4ac2c1d6e0d92f3e6d0ebd5bb9357d3abb18"
     },
     {
       "byteLength": 12319,
@@ -1407,22 +1425,22 @@
       "sha256": "483247453e62c19a6e602e8425d7a35984f6cdd610b033c8f47849a8ddbd86b2"
     },
     {
-      "byteLength": 16300,
+      "byteLength": 16329,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "e3291a1898bb78a22a4ea2ac39c35865d64dc975c47391b922febccb74f000d4"
+      "sha256": "7017bfedf476a7a609f2dc2ba9dec2f72dbad83f25637203b284a99bac4a3289"
     },
     {
-      "byteLength": 526,
+      "byteLength": 575,
       "mode": "0644",
       "path": "skills/codex-memory-curator/agents/openai.yaml",
-      "sha256": "cd5da1c2c5afa46ab7d02a3b1cda2162c7be32c702cb4a2b77ccb89c18777adf"
+      "sha256": "ca43774bf56b10d50cd4f842bfda8ca3fbfd1b0444eaddec240debd85fd8af01"
     },
     {
-      "byteLength": 1962,
+      "byteLength": 2246,
       "mode": "0644",
       "path": "skills/codex-memory-curator/assets/cleanup-plan-template.md",
-      "sha256": "105459491a4261e0539629f11422a1bb88b960c4d7cb6f54be067adeafb8d73a"
+      "sha256": "7deae18d80c23b1d17a9488a01a6d40b5cd64e8c4b389e022e86427d88394eab"
     },
     {
       "byteLength": 93893,
@@ -1443,10 +1461,10 @@
       "sha256": "4c02b82b17b99e4133a3d34b9916b4e924f347093d449a3ffefdd0a2c77b3cd0"
     },
     {
-      "byteLength": 6199,
+      "byteLength": 6828,
       "mode": "0644",
       "path": "skills/codex-memory-curator/references/config-modes.md",
-      "sha256": "e1cf07aafd7d7ffe8fb7511bf0270859e695006a6d078ee5d410d5b3622eaef5"
+      "sha256": "9e0631b94fcb3e02a1da76dea9d0580f72d2b2397e254f2c59346f2ca4cc71c5"
     },
     {
       "byteLength": 1628,
@@ -1455,10 +1473,10 @@
       "sha256": "4b20b564e33dc67443c3df352fdbd2fe9dd4fd2052de792e3914e64707fbf500"
     },
     {
-      "byteLength": 4043,
+      "byteLength": 4078,
       "mode": "0644",
       "path": "skills/codex-memory-curator/references/example-review-report.md",
-      "sha256": "3d1042ba3302b69d3abe193e57956134b46dfff15d285263985d752149728835"
+      "sha256": "892bcefe16bf1c9d6045a3b355e738a6a0fb44288b6b931580db60c1d6244d19"
     },
     {
       "byteLength": 2253,
@@ -1467,10 +1485,16 @@
       "sha256": "4551aecfcc80d700e9fdaeb1f0a09eb582b3b1aca6666c7b227b1f026634cbf5"
     },
     {
-      "byteLength": 5262,
+      "byteLength": 1875,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/references/plan-lifecycle.md",
+      "sha256": "f08e75ffee590651c84b96c229035767c2713c9da9315dac2ea41dec213cbc0e"
+    },
+    {
+      "byteLength": 5470,
       "mode": "0644",
       "path": "skills/codex-memory-curator/references/safe-editing-procedure.md",
-      "sha256": "a79ca849ab82c434ea35b8ab093b0a0eee83a84522d5d6aa8a511245bebd313c"
+      "sha256": "8a5eda0c49fb6d340c5c4e8dfb3d49d012f4fc7325941776511da4364b5755b3"
     },
     {
       "byteLength": 40317,
@@ -1485,34 +1509,40 @@
       "sha256": "6133c7cf8df3ff3f058fa8973dac02447222d8e0b0fc1603eb485363c68bd01a"
     },
     {
+      "byteLength": 2729,
+      "mode": "0644",
+      "path": "skills/codex-memory-curator/scripts/locate-memory-config.mjs",
+      "sha256": "5da766626cea162bd2309da6bd5e9fb85f4ba869bfe86830a9399b1c75b041ec"
+    },
+    {
       "byteLength": 8800,
       "mode": "0644",
       "path": "skills/codex-memory-curator/scripts/scan-memory-risks.mjs",
       "sha256": "7751f4fe095618cd1ffed693325b4a04095fc7e18346e6699ff108c0d4cefcd3"
     },
     {
-      "byteLength": 12987,
+      "byteLength": 7817,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/SKILL.md",
-      "sha256": "f6a7e362bb710de403fa082210aeeec2ddafcd5a4da66328d659ef112657d859"
+      "sha256": "08b182b17e245ed628727b9d6d0a22c717c1452e44552113e49f22d2a3af7236"
     },
     {
-      "byteLength": 548,
+      "byteLength": 470,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/agents/openai.yaml",
-      "sha256": "69a2e383bdb2c1024af42a20d8aca796650e1252359d35ae8458c83040b81175"
+      "sha256": "7075a18e6012ff78eed81f24b225a8befa667d8ff9a054c5e73c43c9130318b4"
     },
     {
-      "byteLength": 1711,
+      "byteLength": 1962,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/codex-execution-prompt.md",
-      "sha256": "fb1f52c45d57b74767bddaa4e66dd37b135ae7edd009a147e15096bff2273dfa"
+      "sha256": "fef9ec1d9873b5e4c567003f71676c5da06045dd7564a874b96b621bd7aec506"
     },
     {
-      "byteLength": 10616,
+      "byteLength": 10195,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/example-repo-refactor.spec.md",
-      "sha256": "f5af9a08262f5d307478aac52f381b3ba1e60bb6222c2a97362c1ab5dd31a615"
+      "sha256": "4cbc5a2776256214c151834d1381bb9d8489fd0be434819dcb592aec3e313d46"
     },
     {
       "byteLength": 3568,
@@ -1533,34 +1563,40 @@
       "sha256": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300"
     },
     {
-      "byteLength": 4238,
+      "byteLength": 4035,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/spec-template.deep.md",
-      "sha256": "d18cc6072f59e6f110f1621efbab938129820b8c9f9d2fa2bf66166d49baa835"
+      "sha256": "1764e0f62e462ee0db13e25261925cd636cfb87dd0bd8f93fdce2a5eb878e78e"
     },
     {
-      "byteLength": 3546,
+      "byteLength": 3384,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/spec-template.standard.md",
-      "sha256": "9fd35e680b573df083ee17e8d227530f44a95fd7b8731286d6556e27c4c6a952"
+      "sha256": "5397c2f40d84b062cf8cdad585bd2d46af8945e022d12ddd41a43bd0711d0f13"
     },
     {
-      "byteLength": 2559,
+      "byteLength": 2776,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/adr-gate.md",
-      "sha256": "0c9fc69d12a1c3edba7de4de581078b329519bdf39728606d1b4ed80eac88c69"
+      "sha256": "4ee1c127452f04e96a6150bbfa3d590c1069923ad4a1f0cdf0402350c2b6499f"
     },
     {
-      "byteLength": 4679,
+      "byteLength": 3034,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/artifact-destinations.md",
-      "sha256": "7399f9284ca9ce9c14cbfd3fe476947f193ba795da6331ecf8a83876e1016cbd"
+      "sha256": "7d4729da14da88949a1708ac30856df3bab3ac1e98689c1e4a00e185e5703688"
     },
     {
-      "byteLength": 4438,
+      "byteLength": 5610,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/host-adapters.md",
+      "sha256": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3"
+    },
+    {
+      "byteLength": 4929,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/question-bank.md",
-      "sha256": "fef64c73333ad6d207f5793f6e25f5856bb1aefae297822fda5706d542bc5243"
+      "sha256": "1afbe246f58a894edb87ee011f6f6ec4879b61407eb107b8ca91dee58af22e5f"
     },
     {
       "byteLength": 2752,
@@ -1575,22 +1611,22 @@
       "sha256": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b"
     },
     {
-      "byteLength": 5573,
+      "byteLength": 4226,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/spec-rubric.md",
-      "sha256": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99"
+      "sha256": "3958a2d8eacb2bf80ef995cf94151a80aa098eb7b66175e69cd82d09044766dd"
     },
     {
-      "byteLength": 24724,
+      "byteLength": 9213,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/workflow-details.md",
-      "sha256": "9a25c0335d9ee5d01a81c9294e2a4bf51b439b0f49b1643c7fdd9feccea8d1bf"
+      "sha256": "fd824eda3cbe916b53ca8c746ec743b4effeb0e33564368de17275d4cd3ddbdf"
     },
     {
-      "byteLength": 13663,
+      "byteLength": 13948,
       "mode": "0644",
       "path": "skills/drawio-diagrams/SKILL.md",
-      "sha256": "9d52f3051a628e63ae6f6939c1c156caa585f430b9f9c2c421f1ce41352be6a0"
+      "sha256": "b26b0cb35aa196677d1abdea7a855f8e14cbbf67f425c58181e12d77a4dd91ed"
     },
     {
       "byteLength": 1308,
@@ -1761,10 +1797,10 @@
       "sha256": "e99c88d028e7b7b984ec33bb1f198b04975ec0883264bf6eab146c189378ca5b"
     },
     {
-      "byteLength": 14837,
+      "byteLength": 15211,
       "mode": "0644",
       "path": "skills/drawio-diagrams/references/workflow-details.md",
-      "sha256": "d5a0ab88d8fad28271130ab45d04523999806e94b06a5549f690b1fd2957a692"
+      "sha256": "d950f32b97f5d8adc44b44b1fba170c8447cf86fa6d51f5aff03855ce0aff82a"
     },
     {
       "byteLength": 9553,
@@ -1829,9 +1865,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8bb3edcf753821f46bdf9f7c37bfa09ac20b0b9ee90649af154a9645c8ae374b"
+  "treeHash": "c95b0d51e27a386a7c2b58c17e24f4e7d9112662e892c3bd5267f2f005abb059"
 }

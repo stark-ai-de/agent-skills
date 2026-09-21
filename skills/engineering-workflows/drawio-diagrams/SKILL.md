@@ -1,6 +1,6 @@
 ---
 name: drawio-diagrams
-description: Create, edit, review, or export editable draw.io diagrams. Use for .drawio architecture, flow, sequence, network, or other technical diagrams; not data plots or artistic images.
+description: Create, edit, review, or export editable draw.io diagrams. Use when the user needs .drawio architecture, flow, sequence, network, or other technical diagrams; not data plots or artistic images.
 license: Apache-2.0
 metadata:
   author: stark-ai-de

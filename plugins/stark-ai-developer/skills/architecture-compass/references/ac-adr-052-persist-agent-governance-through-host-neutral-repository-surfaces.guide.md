@@ -62,7 +62,7 @@ Use focused fixtures for active-host selection, wrong-host handling, repository-
 
 - [Agent Skills specification](https://agentskills.io/specification), verified 2026-08-05.
 - [AC-ADR-036: Keep Architecture Compass Portable Through Host Adapters](ac-adr-036-keep-architecture-compass-portable-through-host-adapters.long.md), verified 2026-08-05.
-- [AC-ADR-048: Persist Approved Governance Before Planned Architecture Refactors](ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md), verified 2026-08-05.
+- [AC-ADR-064: Preserve Approved Scope Through Capability-Aware Planning](ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md), verified 2026-09-21.
 - [AC-ADR-004: Report Staged Evidence and Protect Public Outputs](ac-adr-004-report-staged-evidence-and-protect-public-outputs.long.md), verified 2026-08-05.
 
 ## Revisit

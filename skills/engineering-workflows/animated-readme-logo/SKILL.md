@@ -1,6 +1,6 @@
 ---
 name: animated-readme-logo
-description: Create, transform, animate, or audit GitHub README logos and their verified SVG/PNG/GIF delivery. Use for repository branding assets, not ordinary README prose or app/site motion.
+description: Create, transform, animate, or audit GitHub README logos and their verified SVG/PNG/GIF delivery. Use when a repository needs branding assets, not ordinary README prose or app/site motion.
 license: Apache-2.0
 metadata:
   author: stark-ai-de

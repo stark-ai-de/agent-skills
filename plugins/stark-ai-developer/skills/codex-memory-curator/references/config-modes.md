@@ -6,11 +6,13 @@ For exact TOML edits, verify current Codex config docs when network access is av
 
 ## Active Mode Classification
 
-Inspect:
+Locate relevant lines across the entire document without exposing values:
 
 ```bash
-sed -n '1,220p' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null
+node scripts/locate-memory-config.mjs --codex-home "${CODEX_HOME:-$HOME/.codex}" --json
 ```
+
+The locator returns only line numbers and fixed signal names. It does not parse TOML, resolve profiles, or determine effective settings; comments and multiline strings may also match. Inspect bounded relevant sections with their table context, redact values before presenting excerpts, and resolve dotted/quoted keys, active profiles, command-line overrides, and duplicates before classification. Never truncate discovery at an arbitrary line count. Missing or ambiguous evidence remains unknown; a lexical match alone is not an active setting.
 
 Classify the observed state:
 

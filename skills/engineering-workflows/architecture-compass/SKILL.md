@@ -1,6 +1,6 @@
 ---
 name: architecture-compass
-description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors. Use for binding architecture decisions, provider-to-local mapping, architecture PR review, and durable runtime or source-boundary changes.
+description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors. Use when work needs binding architecture decisions, provider-to-local mapping, architecture PR review, and durable runtime or source-boundary changes.
 license: Apache-2.0
 compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex web, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
