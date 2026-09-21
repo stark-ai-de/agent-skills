@@ -11,3 +11,7 @@ Use real conversation continuation for interactive evidence. Preserve material d
 ## Evidence boundaries
 
 `validate:skills` checks structural consistency, metadata, template records and scenario inventory. Case assertions are evaluator expectations, not live passes. Parent PR evidence records the bounded Codex/Astra pilot separately; a CLI result does not prove ChatGPT, Claude Code, Cursor or native UI behavior. Historical case filenames are retained for compatibility even where the current expected lifecycle changed.
+
+## 2026-09-21 refresh pilot
+
+The [Astra CLI pilot](runs/2026-09-21-astra-refresh.md) records nine actual released/candidate/no-skill conversations and 21 turns, including exact source hashes and sanitized outputs. No duplicate save approval was reproduced in the released CLI fallback. Native UI transitions and other clients remain unqualified.
