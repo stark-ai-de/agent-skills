@@ -69,6 +69,15 @@ const smokeEnvironment = {
 const skillsCommand = configuredSkillsCli || "pnpm";
 const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"];
 const installCases = [
+  ...["codex", "cursor", "claude-code"].map((agent) => ({
+    agent,
+    destination: path.join(
+      agent === "claude-code" ? ".claude" : ".agents",
+      "skills",
+      "hetzner-inference-setup",
+    ),
+    skill: "hetzner-inference-setup",
+  })),
   {
     agent: "codex",
     destination: path.join(".agents", "skills", "codex-spec-interviewer"),
@@ -424,6 +433,22 @@ function installAndAssertDestination({ agent, destination, skill }) {
   }
 
   console.log(`Smoke installed ${skill} for ${agent} at ${destination}.`);
+
+  if (skill === "hetzner-inference-setup") {
+    const source = path.join(copyRoot, "skills", "engineering-workflows", skill);
+    const installed = path.dirname(installedSkillFile);
+    const manifest = (directory) =>
+      walk(directory)
+        .map(
+          (file) => `${path.relative(directory, file).split(path.sep).join("/")}:${sha256(file)}`,
+        )
+        .sort()
+        .join("\n");
+    if (manifest(source) !== manifest(installed)) {
+      throw new Error(`Installed Hetzner scripts/references differ for ${agent}.`);
+    }
+    console.log(`Hetzner installed payload matches source for ${agent}.`);
+  }
 
   if (skill === "architecture-compass") {
     architectureManifests.set(agent, architectureManifest(path.dirname(installedSkillFile)));

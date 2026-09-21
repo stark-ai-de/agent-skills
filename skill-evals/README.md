@@ -26,6 +26,8 @@ Use this folder for:
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 
+- [`hetzner-inference-setup`](hetzner-inference-setup/README.md)
+
 ## Layout
 
 ```text

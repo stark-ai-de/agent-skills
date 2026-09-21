@@ -55,7 +55,7 @@
   "scripts": {
     "list": "bun --bun scripts/catalog/list-skills.mjs",
     "list:incubator": "bun --bun scripts/catalog/list-incubator-skills.mjs",
-    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:site\"",
+    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:hetzner-inference && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:site\"",
     "release:prepare": "bun --bun scripts/release/prepare-release.mjs",
     "release:intent": "bun --bun scripts/release/check-release-intent.mjs",
     "release:validate": "bun --bun scripts/release/validate-release.mjs",
@@ -117,9 +117,10 @@
     "scaffold:incubator": "bun --bun scripts/catalog/scaffold-skill.mjs --incubator",
     "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --write .",
     "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check .",
-    "lint": "oxlint --config oxlint.json scripts",
+    "lint": "oxlint --config oxlint.json scripts skills/engineering-workflows/hetzner-inference-setup",
     "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
-    "lint:fix": "oxlint --config oxlint.json --fix scripts"
+    "lint:fix": "oxlint --config oxlint.json --fix scripts skills/engineering-workflows/hetzner-inference-setup",
+    "validate:hetzner-inference": "bun --bun scripts/validation/hetzner-inference-setup/validate.mjs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

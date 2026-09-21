@@ -98,6 +98,13 @@
       "owner": ".github/actions/verify-openai-directory/action.yml",
       "proof": "Hosted directory identity and catalog membership",
       "cadence": "scheduled/manual post-publication"
+    },
+    {
+      "id": "hetzner-inference",
+      "command": "pnpm run validate:hetzner-inference",
+      "owner": "scripts/validation/hetzner-inference-setup/validate.mjs",
+      "proof": "Standalone skill contract, local lifecycle, remote ownership, manual no-access routing, and client credential isolation",
+      "cadence": "every aggregate run; hosted Linux/macOS/Windows compatibility"
     }
   ]
 }

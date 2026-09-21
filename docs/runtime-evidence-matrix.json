@@ -279,6 +279,29 @@
       "rationale": "This repository publishes skills, plugins, archives, and a static Astro site; it has no Bun server artifact in scope.",
       "fallbackOrder": ["not-applicable"],
       "revisit": "Revisit if the repository adds a server deployable."
+    },
+    {
+      "id": "hetzner-node-cli-compatibility",
+      "surfaces": ["internal:validate-hetzner:node-children"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "cliFixtures": "pass",
+            "hostedLinux": "unknown",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/hetzner-inference-setup/validate.mjs",
+        "pnpm run validate:hetzner-inference"
+      ],
+      "rationale": "The Bun validator launches Node.js compatibility tests for the public Node CLI and installed Node launchers, including process ownership, signal cancellation and secret-source boundaries. Hosted platform evidence remains separate.",
+      "fallbackOrder": ["node"],
+      "revisit": "Revisit if the public helper runtime contract changes."
     }
   ]
 }
