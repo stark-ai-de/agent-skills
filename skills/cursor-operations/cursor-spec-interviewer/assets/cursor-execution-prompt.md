@@ -12,11 +12,11 @@ Implement the attached or referenced spec exactly, with minimal scope creep and 
 - Read the spec from `{{SPEC_PATH}}` when a path is provided; otherwise use the attached spec content.
 - Treat the source challenge findings as part of the task contract.
 - Treat referenced ADRs and ADR gate results as architectural constraints.
-- Treat the user verification section as the boundary of approved scope.
+- Treat the user verification record as the boundary of approved scope, not as implementation authorization by itself. Execute only when implementation is separately authorized; reuse that existing authorization without asking again.
 - Read repository instructions such as `AGENTS.md` before editing.
 - For medium or larger work, create and maintain a short plan before making code changes.
 - Prefer the repository's existing patterns and abstractions over inventing new ones.
-- If repo reality conflicts with the spec, prefer repo reality and report the conflict clearly.
+- If repository reality materially conflicts with the approved spec, report the affected difference and resolve it before that implementation; do not silently change the approved scope.
 - If repo reality or current docs contradict a challenged requirement, stop and report the conflict before implementing that part.
 - Make the smallest safe change that satisfies the spec.
 - Do not implement explicit non-goals.

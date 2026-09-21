@@ -42,10 +42,10 @@ Include this result before the final spec:
 ## If ADR Is Required
 
 1. Draft exactly one architectural decision per ADR.
-2. Use the repo ADR template and word limit.
-3. Mark status as `Proposed` unless the maintainer explicitly accepts it.
+2. Use the repository ADR template and required linked representations; do not impose a numeric word or section limit.
+3. Mark status as `Proposed` unless the maintainer explicitly accepts the reviewed decision. Permission to save a proposed ADR is distinct from accepting its decision; preserve prior acceptance when unchanged.
 4. Use the repo ADR filename pattern. If no pattern exists, use `NNNN-kebab-title.md` with the next sequential number.
-5. If the ADR folder is missing, ask the user whether to create `docs/adrs/` or use another path before writing.
+5. Resolve missing ADR directories in the same concrete final checkpoint, reusing earlier directory-creation authority.
 6. Persist the ADR when required and report its path. While the current execution host's Plan mode is active, defer this write to the save-only continuation. During persistence, update the repository's existing ADR index when its convention requires one; treat that minimal entry as part of ADR persistence, not unrelated documentation.
 7. Reference the ADR from the implementation spec.
 8. If the spec depends on ADR acceptance, mark implementation as blocked or phased.
