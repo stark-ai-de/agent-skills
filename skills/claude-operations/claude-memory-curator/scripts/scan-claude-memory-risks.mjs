@@ -186,7 +186,11 @@ function collectProjectFiles(repo) {
     ...walk(path.join(repo, ".claude", "rules"), (file) => file.endsWith(".md")),
     ...walk(repo, (file) => {
       const name = path.basename(file);
-      return name === "CLAUDE.md" || name === "CLAUDE.local.md";
+      return (
+        name === "CLAUDE.md" ||
+        name === "CLAUDE.local.md" ||
+        (name === "AGENTS.md" && !path.relative(repo, file).split(path.sep).includes(".agents"))
+      );
     }),
   ];
 }
@@ -275,6 +279,8 @@ function surfaceFor(repo, claudeHome, memoryDir, file) {
     if (homeRelative.startsWith("rules/")) return "claude-user-rule";
   }
   if (repoRelative !== null) {
+    if (/(^|\/)\.claude\/rules\//.test(repoRelative)) return "claude-project-rule";
+    if (path.basename(file) === "AGENTS.md") return "claude-agents-md-candidate";
     if (repoRelative === "CLAUDE.md" || repoRelative === ".claude/CLAUDE.md") {
       return "claude-project-md";
     }

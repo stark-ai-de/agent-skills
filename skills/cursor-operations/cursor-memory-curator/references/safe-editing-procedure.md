@@ -4,7 +4,7 @@ Use this before modifying any Cursor context file.
 
 ## Route Authority Gate
 
-Do not mutate unless the selected cleanup route is supported by an explicit user cleanup request for the exact Cursor context scope. A direct cleanup route authorizes only high-confidence atomic changes. A plan-run route authorizes only the unchanged user-approved plan after the state recheck and Plan-mode exit. Do not add a generic second cleanup question after those gates.
+Do not mutate unless the selected cleanup route is supported by an explicit user cleanup request for the exact Cursor context scope. A direct cleanup route authorizes only high-confidence atomic changes. A plan-run route authorizes only the unchanged user-approved plan after the state recheck and exit from active Plan mode, with actual write permission. Earlier approval of the same unchanged plan and named writes remains valid; only material content, scope, destination, or target-state drift requires a new decision. Do not add a generic second cleanup question after those gates.
 
 Whole-file deletion, User/Team settings, destructive recovery, external actions, and scope expansion retain separate approval boundaries.
 

@@ -1943,6 +1943,252 @@ async function runBackupContract(curator) {
   }
 }
 
+function runConfigDiscoveryContract(curator) {
+  const script = path.join(root, curator.dir, "scripts", "locate-memory-config.mjs");
+  const fixture = path.join(root, "skill-evals", curator.name, "fixtures", "late-config");
+  const before = snapshotTree(fixture);
+  const source = fs.readFileSync(path.join(fixture, "config.toml"), "utf8");
+  const result = spawnSync(process.execPath, [script, "--codex-home", fixture, "--json"], {
+    encoding: "utf8",
+  });
+  let payload;
+  try {
+    payload = JSON.parse(result.stdout);
+  } catch {
+    fail("Codex locator: expected valid JSON");
+    return;
+  }
+  if (
+    result.status !== 0 ||
+    payload.status !== "scanned" ||
+    payload.interpretation !== "candidate-locations-only"
+  ) {
+    fail(
+      "Codex locator: complete discovery must remain distinct from effective configuration proof",
+    );
+  }
+  for (const [lineText, signal] of [
+    ["[features]", "features"],
+    ["[memories]", "memories"],
+    ["use_memories = false", "use_memories"],
+    ['[profiles."synthetic-private-profile"]', "profiles"],
+    ["memories.use_memories = true", "use_memories"],
+  ]) {
+    const line = source.split(/\r?\n/).indexOf(lineText) + 1;
+    if (
+      line <= 220 ||
+      !payload.candidates?.some(
+        (candidate) => candidate.line === line && candidate.signals.includes(signal),
+      )
+    ) {
+      fail(`Codex locator: missing complete-document discovery for ${signal} beyond line 220`);
+    }
+  }
+  if (payload.lines_scanned !== source.split(/\r?\n/).length) fail("Codex locator: truncated scan");
+  const output = result.stdout + result.stderr;
+  for (const sensitive of [
+    "synthetic-never-print-early",
+    "synthetic-never-print-late",
+    "synthetic-private-profile",
+    fixture,
+  ]) {
+    if (output.includes(sensitive))
+      fail("Codex locator: source values, profile names, and paths must not be emitted");
+  }
+  if (JSON.stringify(before) !== JSON.stringify(snapshotTree(fixture)))
+    fail("Codex locator: must be read-only");
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "memory-config-discovery-"));
+  try {
+    const missing = spawnSync(process.execPath, [script, "--codex-home", temp, "--json"], {
+      encoding: "utf8",
+    });
+    if (missing.status !== 0 || JSON.parse(missing.stdout).status !== "missing")
+      fail("Codex locator: missing config must remain explicit");
+    writeFixture(
+      path.join(temp, "config.toml"),
+      '"features"."memories" = true\n["memories"]\n"use_memories" = false\n',
+    );
+    const quoted = spawnSync(process.execPath, [script, "--codex-home", temp, "--json"], {
+      encoding: "utf8",
+    });
+    const quotedPayload = JSON.parse(quoted.stdout);
+    if (
+      quoted.status !== 0 ||
+      quotedPayload.candidates.length !== 3 ||
+      !quotedPayload.candidates[2].signals.includes("use_memories")
+    ) {
+      fail("Codex locator: quoted and dotted configuration must be discoverable");
+    }
+    fs.unlinkSync(path.join(temp, "config.toml"));
+    fs.mkdirSync(path.join(temp, "config.toml"));
+    const unreadable = spawnSync(process.execPath, [script, "--codex-home", temp, "--json"], {
+      encoding: "utf8",
+    });
+    if (unreadable.status !== 2 || unreadable.stderr.includes(temp))
+      fail("Codex locator: unreadable input must fail without path leakage");
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+  const guidance = read(path.join(curator.dir, "references", "config-modes.md"));
+  if (
+    !guidance.includes("entire document") ||
+    !guidance.includes("not parse TOML") ||
+    guidance.includes("1,220p")
+  ) {
+    fail(
+      "Codex config guidance: must locate the complete document and preserve interpretation uncertainty",
+    );
+  }
+  read(path.join("skill-evals", curator.name, "cases", "late-config-discovery.md"));
+}
+
+function runClaudeCandidateContract(curator) {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "claude-agents-candidates-"));
+  try {
+    const repo = path.join(temp, "repo");
+    const home = path.join(temp, "claude");
+    const allowed = ["AGENTS.md", ".claude/AGENTS.md", "nested/AGENTS.md"];
+    const excluded = ["AGENTS.local.md", "AGENTS.override.md", ".agents/AGENTS.md"];
+    for (const file of [...allowed, ...excluded])
+      writeFixture(path.join(repo, file), "Always use synthetic policy.\n");
+    writeFixture(path.join(repo, "CLAUDE.local.md"), "# Local instruction candidate\n");
+    const rulePaths = [".claude/rules/nested/AGENTS.md", "packages/sample/.claude/rules/AGENTS.md"];
+    for (const file of rulePaths) {
+      writeFixture(
+        path.join(repo, file),
+        "---\npaths: src/**\n---\nAlways preserve this path-scoped rule.\n",
+      );
+    }
+    const userSettings = {
+      pluginConfigs: {
+        "agents-md@builtin": { options: { instructionFiles: "claude-md-and-agents-md" } },
+      },
+      disableAllHooks: false,
+      allowManagedHooksOnly: false,
+      enabledPlugins: { "agents-md@builtin": true },
+      apiKey: "synthetic-never-print-settings",
+    };
+    writeFixture(path.join(home, "settings.json"), JSON.stringify(userSettings));
+    writeFixture(path.join(repo, ".claude", "settings.json"), JSON.stringify(userSettings));
+    const script = path.join(root, curator.dir, "scripts", "inventory-claude-memory.mjs");
+    const args = [script, "--repo", repo, "--claude-home", home, "--json"];
+    const before = snapshotTree(temp);
+    const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+    const payload = JSON.parse(result.stdout);
+    const candidates = payload.files.filter(
+      (file) => file.surface === "claude-agents-md-candidate",
+    );
+    if (
+      result.status !== 0 ||
+      candidates.length !== allowed.length ||
+      candidates.some((file) => file.loading !== "unverified")
+    ) {
+      fail("Claude inventory: native AGENTS candidates must not be reported as effective loading");
+    }
+    for (const file of allowed) {
+      if (!candidates.some((candidate) => candidate.path === path.join(repo, file)))
+        fail(`Claude inventory: missing AGENTS candidate ${file}`);
+    }
+    for (const file of rulePaths) {
+      const rule = payload.files.find((candidate) => candidate.path === path.join(repo, file));
+      if (
+        rule?.surface !== "claude-project-rule" ||
+        rule.frontmatter?.paths !== "src/**" ||
+        rule.loading !== null
+      ) {
+        fail(
+          "Claude inventory: AGENTS.md inside .claude/rules must retain rule metadata, not native candidate classification",
+        );
+      }
+    }
+    for (const file of excluded) {
+      if (payload.files.some((candidate) => candidate.path === path.join(repo, file)))
+        fail(`Claude inventory: unsupported AGENTS name included: ${file}`);
+    }
+    const user = payload.files.find((file) => file.path === path.join(home, "settings.json"));
+    const project = payload.files.find(
+      (file) => file.path === path.join(repo, ".claude", "settings.json"),
+    );
+    if (
+      user?.settings?.instructionFiles !== "claude-md-and-agents-md" ||
+      user.instruction_files_setting_scope !== "eligible" ||
+      project?.instruction_files_setting_scope !== "ignored"
+    ) {
+      fail(
+        "Claude inventory: instructionFiles setting scope must distinguish user from ignored project values",
+      );
+    }
+    if (result.stdout.includes("synthetic-never-print-settings"))
+      fail("Claude inventory: unrelated settings value leaked");
+    if (JSON.stringify(before) !== JSON.stringify(snapshotTree(temp)))
+      fail("Claude inventory: must be read-only");
+    writeFixture(
+      path.join(home, "settings.json"),
+      JSON.stringify({
+        ...userSettings,
+        disableAllHooks: true,
+        allowManagedHooksOnly: true,
+        enabledPlugins: { "agents-md@builtin": false },
+      }),
+    );
+    const restricted = JSON.parse(spawnSync(process.execPath, args, { encoding: "utf8" }).stdout);
+    const blocked = restricted.files.find((file) => file.path === path.join(home, "settings.json"));
+    if (
+      !blocked.settings.disableAllHooks ||
+      !blocked.settings.allowManagedHooksOnly ||
+      blocked.settings.agentsMdPluginEnabled !== false ||
+      restricted.files.some(
+        (file) => file.surface === "claude-agents-md-candidate" && file.loading !== "unverified",
+      )
+    ) {
+      fail(
+        "Claude inventory: hook/plugin restrictions must remain observed evidence, not a loading conclusion",
+      );
+    }
+    const scan = spawnSync(
+      process.execPath,
+      [
+        path.join(root, curator.dir, "scripts", "scan-claude-memory-risks.mjs"),
+        "--repo",
+        repo,
+        "--claude-home",
+        home,
+        "--json",
+      ],
+      { encoding: "utf8" },
+    );
+    const scanPayload = JSON.parse(scan.stdout);
+    if (
+      scan.status !== 1 ||
+      !scanPayload.findings.some((finding) => finding.surface === "claude-agents-md-candidate")
+    ) {
+      fail(
+        "Claude scanner: requested AGENTS candidate content must be included as unverified candidate evidence",
+      );
+    }
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+  const anatomy = read(path.join(curator.dir, "references", "context-surface-anatomy.md"));
+  for (const marker of [
+    "v2.1.277",
+    "Bedrock",
+    "telemetry",
+    "disableAllHooks",
+    "allowManagedHooksOnly",
+    "instructionFiles",
+    "@AGENTS.md",
+    "InstructionsLoaded",
+    "not proof of non-loading",
+  ]) {
+    if (!anatomy.includes(marker))
+      fail(`Claude anatomy: missing conditional loading boundary ${marker}`);
+  }
+  if (anatomy.includes("does not read `AGENTS.md` directly"))
+    fail("Claude anatomy: obsolete blanket denial of native AGENTS support");
+  read(path.join("skill-evals", curator.name, "cases", "conditional-agents-loading.md"));
+}
+
 const requiredEvalCases = [
   "explicit-start-selection.md",
   "implicit-selection-no-start.md",
@@ -1951,6 +2197,9 @@ const requiredEvalCases = [
   "backup-manifest-reconciliation.md",
   "file-persistence-failure.md",
   "plan-mode-lifecycle.md",
+  "scoped-review-intent.md",
+  "approval-reuse-and-drift.md",
+  "async-answer-boundary.md",
 ];
 
 for (const curator of curators) {
@@ -1963,8 +2212,20 @@ for (const curator of curators) {
   if (routeRows.join("\n") !== workflows.join("\n")) {
     fail(`${skillRelative}: workflow table must use the canonical eight-route order`);
   }
-  if (!selection.includes("`plan-run-cleanup-file` is always first and Recommended")) {
-    fail(`${skillRelative}: plan-run-cleanup-file must be first and always Recommended`);
+  for (const marker of [
+    "Recommend the route matching the requested outcome and delivery",
+    "for a bare invocation recommend `review-chat` while asking the user to choose",
+    "Do not repeat the selector or ask for an unchanged selection again",
+  ]) {
+    if (!selection.includes(marker))
+      fail(`${skillRelative}: missing intent-bound routing: ${marker}`);
+  }
+  if (
+    /always first and Recommended|require native Plan mode when the host supports it|first 220 lines/.test(
+      skill,
+    )
+  ) {
+    fail(`${skillRelative}: obsolete unconditional cleanup, mode, or truncated-discovery contract`);
   }
   if (/\| `auto`/.test(selection)) fail(`${skillRelative}: recursive auto workflow is forbidden`);
   for (const marker of [
@@ -1974,6 +2235,7 @@ for (const curator of curators) {
     "If it is ambiguous, stop before inventory and ask",
     "Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence atomic",
     "native Plan mode",
+    "same review quality to the explicitly requested scope",
     "Do not ask a generic second cleanup question after plan approval",
     "Review`, `Plan`, `Execution Receipt`, `Deferred Work`, `Backup`, and `Verification",
     "Manifest reconciliation and unmatched paths",
@@ -2014,8 +2276,32 @@ for (const curator of curators) {
   if (skill.includes("Memory Curation Record") || embeddedReportHeadings.length >= 3) {
     fail(`${skillRelative}: runtime contract must link the report asset without embedding it`);
   }
+  if (
+    !skill.includes("[references/plan-lifecycle.md](references/plan-lifecycle.md)") ||
+    !skill.includes(
+      "no report, backup, or cleanup write while Plan is active or permission is unknown",
+    )
+  ) {
+    fail(
+      `${skillRelative}: entrypoint must load lifecycle detail and retain the universal write boundary`,
+    );
+  }
+  const lifecycle = read(path.join(curator.dir, "references", "plan-lifecycle.md"));
+  for (const marker of [
+    "Unknown mode or permission state never permits writes",
+    "Native Plan restrictions apply to reports, backups, and cleanup alike",
+    "Silence, timeouts, and preselected options are not approval",
+    "Reuse earlier approval of the unchanged plan and named actions",
+    "a mode toggle alone cannot",
+    "Preserve approval across that transition",
+    "reconfirm only the affected action",
+    "Plan-only routes still stop",
+  ]) {
+    if (!lifecycle.includes(marker))
+      fail(`${curator.name}: missing plan lifecycle invariant ${marker}`);
+  }
   const version = skill.match(/\n  version: "([^"]+)"/)?.[1];
-  const expectedVersion = curator.runtime === "codex" ? "0.2.2" : "0.2.1";
+  const expectedVersion = curator.runtime === "codex" ? "0.2.3" : "0.2.2";
   if (version !== expectedVersion) {
     fail(`${skillRelative}: expected version ${expectedVersion}; found ${version ?? "none"}`);
   }
@@ -2208,6 +2494,8 @@ for (const curator of curators) {
     }
   }
 
+  if (curator.runtime === "codex") runConfigDiscoveryContract(curator);
+  if (curator.runtime === "claude") runClaudeCandidateContract(curator);
   await runBackupContract(curator);
 }
 
@@ -2218,5 +2506,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  "Memory curators validated: 3 skills, 8 workflows, external-root exact/legacy no-clobber manifest fixtures.",
+  "Memory curators validated: 3 skills, 8 workflows, scoped approval contracts, late redacted config discovery, conditional Claude candidates, external-root exact/legacy no-clobber manifest fixtures.",
 );

@@ -21,7 +21,7 @@ When two current repo surfaces disagree, prefer the more specific scoped file fo
 - Read only the repo files needed to verify the disputed claim.
 - Prefer live files over remembered commands, branch names, or generated summaries.
 - Treat scoped repo guidance as local; do not generalize it into user-level Claude rules.
-- If a cross-agent repo rule is currently duplicated between `AGENTS.md` and `CLAUDE.md`, recommend one source of truth plus import.
+- If a cross-agent repo rule is currently duplicated between `AGENTS.md` and `CLAUDE.md`, recommend one source of truth with verified native loading or a compatible import; preserve working imports for older or restricted sessions.
 - If evidence is insufficient, classify `ASK USER`.
 
 ## Report Shape

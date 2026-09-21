@@ -210,7 +210,22 @@ function settingsSignals(file) {
   const data = readJson(file);
   if (!data || typeof data !== "object") return null;
 
+  const mode = data.pluginConfigs?.["agents-md@builtin"]?.options?.instructionFiles;
+  const knownModes = [
+    "claude-md-or-agents-md",
+    "claude-md-and-agents-md",
+    "claude-md",
+    "managed-only",
+  ];
   return {
+    instructionFiles: knownModes.includes(mode) ? mode : null,
+    disableAllHooks: typeof data.disableAllHooks === "boolean" ? data.disableAllHooks : null,
+    allowManagedHooksOnly:
+      typeof data.allowManagedHooksOnly === "boolean" ? data.allowManagedHooksOnly : null,
+    agentsMdPluginEnabled:
+      typeof data.enabledPlugins?.["agents-md@builtin"] === "boolean"
+        ? data.enabledPlugins["agents-md@builtin"]
+        : null,
     autoMemoryEnabled: Object.hasOwn(data, "autoMemoryEnabled")
       ? Boolean(data.autoMemoryEnabled)
       : null,
@@ -253,7 +268,11 @@ function collectProjectFiles(repo) {
     ...walk(path.join(repo, ".claude", "rules"), (file) => file.endsWith(".md")),
     ...walk(repo, (file) => {
       const name = path.basename(file);
-      return name === "CLAUDE.md" || name === "CLAUDE.local.md";
+      return (
+        name === "CLAUDE.md" ||
+        name === "CLAUDE.local.md" ||
+        (name === "AGENTS.md" && !path.relative(repo, file).split(path.sep).includes(".agents"))
+      );
     }),
   ];
 }
@@ -330,6 +349,8 @@ function surfaceFor(repo, claudeHome, memoryDir, file) {
     if (homeRelative.startsWith("rules/")) return "claude-user-rule";
   }
   if (repoRelative !== null) {
+    if (/(^|\/)\.claude\/rules\//.test(repoRelative)) return "claude-project-rule";
+    if (path.basename(file) === "AGENTS.md") return "claude-agents-md-candidate";
     if (repoRelative === "CLAUDE.md" || repoRelative === ".claude/CLAUDE.md") {
       return "claude-project-md";
     }
@@ -365,6 +386,12 @@ function recordFor(repo, claudeHome, memoryDir, file) {
       surface.includes("settings") || surface === "claude-managed-settings"
         ? settingsSignals(file)
         : null,
+    loading: surface === "claude-agents-md-candidate" ? "unverified" : null,
+    instruction_files_setting_scope: surface.includes("settings")
+      ? ["claude-user-settings", "claude-managed-settings"].includes(surface)
+        ? "eligible"
+        : "ignored"
+      : null,
     read_only: surface === "claude-managed-policy" || surface === "claude-managed-settings",
   };
 }
@@ -409,6 +436,8 @@ const payload = {
   auto_memory_note: memoryDir
     ? null
     : "No auto memory directory found. Use /memory or pass --memory-dir when Claude Code uses a project-derived path that cannot be proven statically.",
+  agents_md_note:
+    "AGENTS.md candidates and observed settings do not prove effective loading. Confirm version, provider/feature flags, hook/plugin restrictions, and session evidence; preserve imports for unsupported hosts.",
   files_count: records.length,
   files: records,
   message:
@@ -422,6 +451,7 @@ if (format === "json") {
 } else {
   console.log(`Repo: ${repo}`);
   console.log(`Claude home: ${claudeHome}`);
+  console.log(payload.agents_md_note);
   if (payload.auto_memory_dir) console.log(`Auto memory: ${payload.auto_memory_dir}`);
   if (payload.auto_memory_note) console.log(payload.auto_memory_note);
   if (records.length === 0) {

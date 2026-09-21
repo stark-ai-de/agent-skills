@@ -25,4 +25,4 @@ Use the Codex Memory Curator for my memory store.
 
 ## Expected Behavior
 
-Show all eight workflows in canonical order, with `plan-run-cleanup-file` first and Recommended. Because the request does not identify review versus cleanup or delivery, ask the user to choose without inventorying, scanning, or reading memory/config state.
+Show all eight workflows in canonical order; recommend `review-chat` for this bare invocation. Because the request does not identify review versus cleanup or delivery, ask the user to choose without inventorying, scanning, or reading memory/config state.

@@ -21,7 +21,7 @@ Use this reference when the classification decision is not obvious from `SKILL.m
 7. Is the claim a concise learned fact for future Claude Code work?
    - Classify `MOVE TO AUTO MEMORY TOPIC`.
 8. Is the claim a cross-agent repo rule?
-   - Classify `MOVE TO AGENTS.md` and recommend a `CLAUDE.md` import.
+   - Classify `MOVE TO AGENTS.md`; verify native loading or retain/recommend a `CLAUDE.md` import for unsupported or uncertain sessions.
 9. Is the claim longer architecture or operations context?
    - Classify `MOVE TO REPO DOCS`.
 10. Is the claim a reusable on-demand workflow?
@@ -40,22 +40,22 @@ Use this reference when the classification decision is not obvious from `SKILL.m
 
 ## Primary Classifications
 
-| Classification              | Use when                                                   | Typical action                                 |
-| --------------------------- | ---------------------------------------------------------- | ---------------------------------------------- |
-| `KEEP`                      | Accurate durable context in the right Claude surface       | Leave as-is                                    |
-| `KEEP BUT REWRITE`          | Useful but broad, vague, stale, duplicated, or over-strong | Rewrite with scope and verification wording    |
-| `MOVE TO CLAUDE.md`         | Broad project or user Claude instruction                   | Add or move to the right `CLAUDE.md`           |
-| `MOVE TO CLAUDE.local.md`   | Private project-specific Claude preference                 | Add or move to `CLAUDE.local.md`               |
-| `MOVE TO CLAUDE RULE`       | Path-scoped, package-scoped, or topic-scoped instruction   | Create or update `.claude/rules/*.md`          |
-| `MOVE TO AUTO MEMORY TOPIC` | Learned project fact or pattern that should not be a rule  | Add concise index plus topic detail if needed  |
-| `MOVE TO AGENTS.md`         | Cross-agent repo rule                                      | Put in `AGENTS.md` and import from `CLAUDE.md` |
-| `MOVE TO REPO DOCS`         | Detailed architecture or operations context                | Move to repo docs or ADRs                      |
-| `MOVE TO SKILL`             | Reusable workflow should load on demand                    | Create or update a skill                       |
-| `MOVE TO SETTINGS`          | Runtime setting, permission rule, sandbox rule, or toggle  | Move to Claude settings                        |
-| `MOVE TO HOOK`              | Deterministic lifecycle automation or guard                | Create or update a Claude Code hook            |
-| `MOVE TO MANAGED POLICY`    | Organization-wide non-user policy                          | Recommend manual managed-policy change         |
-| `DELETE`                    | Harmful, stale, duplicated, sensitive, or conflicting      | Remove after approval and backup               |
-| `ASK USER`                  | Cannot be safely classified from available evidence        | Ask one focused question before editing        |
+| Classification              | Use when                                                   | Typical action                                                      |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| `KEEP`                      | Accurate durable context in the right Claude surface       | Leave as-is                                                         |
+| `KEEP BUT REWRITE`          | Useful but broad, vague, stale, duplicated, or over-strong | Rewrite with scope and verification wording                         |
+| `MOVE TO CLAUDE.md`         | Broad project or user Claude instruction                   | Add or move to the right `CLAUDE.md`                                |
+| `MOVE TO CLAUDE.local.md`   | Private project-specific Claude preference                 | Add or move to `CLAUDE.local.md`                                    |
+| `MOVE TO CLAUDE RULE`       | Path-scoped, package-scoped, or topic-scoped instruction   | Create or update `.claude/rules/*.md`                               |
+| `MOVE TO AUTO MEMORY TOPIC` | Learned project fact or pattern that should not be a rule  | Add concise index plus topic detail if needed                       |
+| `MOVE TO AGENTS.md`         | Cross-agent repo rule                                      | Use `AGENTS.md` with verified native loading or a compatible import |
+| `MOVE TO REPO DOCS`         | Detailed architecture or operations context                | Move to repo docs or ADRs                                           |
+| `MOVE TO SKILL`             | Reusable workflow should load on demand                    | Create or update a skill                                            |
+| `MOVE TO SETTINGS`          | Runtime setting, permission rule, sandbox rule, or toggle  | Move to Claude settings                                             |
+| `MOVE TO HOOK`              | Deterministic lifecycle automation or guard                | Create or update a Claude Code hook                                 |
+| `MOVE TO MANAGED POLICY`    | Organization-wide non-user policy                          | Recommend manual managed-policy change                              |
+| `DELETE`                    | Harmful, stale, duplicated, sensitive, or conflicting      | Remove after approval and backup                                    |
+| `ASK USER`                  | Cannot be safely classified from available evidence        | Ask one focused question before editing                             |
 
 ## Risk Tags
 
