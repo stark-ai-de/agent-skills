@@ -1,6 +1,6 @@
 # ADR Governance Setup Report
 
-> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts. Include only applicable sections; keep activation compact and report each fact once.
 
 ## Intent-bound selection
 
@@ -107,7 +107,7 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-057   |             |                 |                     |                        |                     |
 | AC-ADR-058   |             |                 |                     |                        |                     |
 
-AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, and AC-ADR-048 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
+AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
 
 ## Accepted ADR overlap and conflict
 

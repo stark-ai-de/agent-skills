@@ -1,12 +1,12 @@
 ---
 name: architecture-compass
-description: Set up repository-native ADR governance, audit architecture, or plan and execute ADR-guided refactors through intent-bound workflows. Use when work needs binding agent-facing ADRs, provider-to-local mapping, architecture PR review or drift, Next.js request patterns, source placement, backend/runtime/env/config boundaries, stack deviations, or bounded ADR-governed implementation. Do not use for tiny edits, generic framework education, or work with no architecture or governance consequence.
+description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors. Use for binding architecture decisions, provider-to-local mapping, architecture PR review, and durable runtime or source-boundary changes.
 license: Apache-2.0
 compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex web, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.8"
+  version: "0.7.0"
 ---
 
 # Architecture Compass
@@ -49,7 +49,7 @@ There is no `auto` workflow. Route by task evidence:
 | Broad implementation or unresolved durable decisions before execution | `plan-run-refactor` |
 | Explicit bounded work fully governed by accepted local ADRs           | `refactor`          |
 
-For clear direct or agent-discovered intent with sufficient authority, state the complete workflow set, selected workflow and rationale, setup coverage when applicable, exact write scope, expected artifacts, planning/read-only capability, protected state, and separate approval boundaries, then proceed. A bare activation, conflicting cues, or ambiguity about outcome, governance, scope, persistence, or mutation authority requires showing the workflows and asking.
+For clear direct or agent-discovered intent with sufficient authority, state the complete workflow set, selected workflow and rationale compactly, then proceed. Name write scope and any material capability, protected-state, or separate approval boundary; put detailed evidence in the matching receipt. A bare activation, conflicting cues, or ambiguity about outcome, governance, scope, persistence, or mutation authority requires showing the workflows and asking.
 
 Agent-initiated activation may select and announce `audit` without mutation authority. It may select a mutating workflow only when the user's existing task already requests that outcome and scope. Selection never authorizes destructive, paid, irreversible, external, deployment, publication, production, or scope-expanding work.
 
@@ -65,7 +65,7 @@ Start with [the ADR catalog](references/adr-catalog.md). Select entries by `Scop
 
 Route skill behavior through:
 
-- **Workflows:** [AC-ADR-048 Short](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md) · [Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md).
+- **Workflows:** [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md) · [Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md).
 - **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md).
 - **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md).
 - **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
@@ -104,7 +104,7 @@ If evidence changes the route materially, announce the reclassification and reso
 
 ## Workflow
 
-Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md) and the matching report asset after selection and before producing an artifact or executing a mutation. Keep these entry gates visible:
+Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md) and the matching report asset after selection and before producing an artifact or executing a mutation. Keep these entry gates visible:
 
 ### `setup`
 
@@ -120,7 +120,7 @@ Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-be
 
 ### `plan-refactor`
 
-- Resolve and approve the bounded specification in the Plan lifecycle; after exit, persist only authorized governance artifacts and stop before source implementation.
+- Resolve and approve the bounded specification through native or conversational planning; after any required exit, persist only authorized governance artifacts and stop before source implementation.
 
 ### `plan-run-refactor`
 
@@ -128,12 +128,13 @@ Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-be
 
 ## Plan lifecycle
 
-Use the AC-ADR-048 and AC-ADR-036 Guides for detailed transitions and portable status handling:
+Use the AC-ADR-064 and AC-ADR-036 Guides for detailed transitions and portable status handling:
 
-1. Select the host lane from host_runtime_context, then report `Planning capability` exactly as `Active | Available but inactive | Unavailable | Explicitly declined | Indeterminate | Not applicable`. Codex CLI, IDE, and desktop, Cursor, and Claude Code keep the AC-ADR-036 Guide adapter rows. ChatGPT Chat, Work, or mobile follow that Guide's ChatGPT Plan observation; Codex web follows its separate observation-gated lane and may use a `$` handoff only when this turn exposes `/plan`. Unknown hosts are `Indeterminate` and wait. `Available but inactive` and `Indeterminate` stop pending confirmed activation; only `Unavailable` permits the portable fallback. Uncertainty never authorizes fallback.
-2. Honor `Explicitly declined` without repeating the unchanged request; use another workflow only when its preconditions hold. `Not applicable` is valid only for a non-Plan workflow.
-3. Write no target repository/workspace artifact while Plan mode is active. Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit. Exit before persistence or implementation.
-4. For execution, recheck state after approval and Plan-mode exit; changed scope, invalidated approval, or material drift requires a new checkpoint.
+1. Select the execution host lane from observed capabilities, independently of the target runtime. Report `Planning capability` as `Active | Available but inactive | Unavailable | Explicitly declined | Indeterminate | Not applicable` when material. Respect active or explicitly requested native Plan and recommend it for substantial ambiguous work. Inactive, missing, declined, or unknown controls do not alone block permitted read-only discovery and conversation; do not invent controls or claim a mode change.
+2. Reuse prior answers and authority. Prepare the complete reviewable draft and exact delivery/write scope before one approval. A native final approval can cover content and writes only when its actual semantics do so; a mode toggle alone cannot. Preserve approval across required host transitions and ask again only for the affected material change.
+3. Write no target repository/workspace artifact while Plan mode is active. Unknown mode or permission state never authorizes writes. Keep no-write conversation and proven non-mutating reads available while resolving a necessary transition. An explicit native-Plan request remains pending until observed active; honoring a declined recommendation does not silently exit active Plan.
+4. Recheck state after approval and Plan-mode exit when required, before persistence or execution. `plan-refactor` saves only authorized approved governance or completes explicit chat-only delivery without claiming persistence; source implementation belongs to separately authorized execution. Proposed ADR persistence does not accept its decision.
+5. Use structured or asynchronous questions only when supported. Continue only independent authorized work while a required answer is pending. Silence, timeout, and preselected options are not approval.
 
 ## Conditional stable-skill selector instruction
 
@@ -175,12 +176,12 @@ Use the matching report asset and AC-ADR-004 evidence table. Include the workflo
 
 Render the final receipt through AC-ADR-053 and its conditional internal adapter route; keep this section limited to output assembly rather than duplicating their durable presentation policy.
 
-For `audit`, provide findings in severity order without patches or repository writes. For plan routes, distinguish approved in-Plan content, pending exit/persistence, persisted artifacts, state-recheck result, and executed work.
+For `audit`, provide findings in severity order without patches or repository writes. For plan routes, distinguish approved content and write scope, pending transitions/persistence, persisted artifacts, state-recheck result, and executed work.
 
 ## Completion criteria
 
-Apply the selected procedure's criteria in the AC-ADR-048 Guide and reconcile its AC-ADR-049 receipt. Completion covers only the authorized workflow and evidence stages.
+Apply the selected procedure's criteria in the AC-ADR-064 Guide and reconcile its AC-ADR-049 receipt. Completion covers only the authorized workflow and evidence stages.
 
 ## Failure modes
 
-Apply the route and Plan stops in the AC-ADR-048 Guide and validation recovery in the AC-ADR-049 Guide. Never turn a blocked or indeterminate state into a completion claim.
+Apply the route and Plan stops in the AC-ADR-064 Guide and validation recovery in the AC-ADR-049 Guide. Never turn a blocked or indeterminate state into a completion claim.

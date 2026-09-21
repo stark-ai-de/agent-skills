@@ -6,6 +6,8 @@ Yes.
 
 ## Prompt
 
+I explicitly request native Plan mode and a handoff through the observed control.
+
 Run `plan-refactor` on ChatGPT Work on the web. The current composer visibly
 lists `/plan`, and Plan mode is inactive.
 
@@ -19,6 +21,8 @@ lists `/plan`, and Plan mode is inactive.
 - not_contains: /plan Use
 
 ## Expected Behavior
+
+Respect this explicit native-mode request. Only its transition waits for observed activation; independent safe discovery and conversation may continue.
 
 Use the observed web composer item and wait. Do not generate a copy-ready
 `/plan` handoff for the web surface.

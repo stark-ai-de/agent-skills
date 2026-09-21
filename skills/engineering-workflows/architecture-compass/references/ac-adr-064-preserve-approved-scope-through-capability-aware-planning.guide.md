@@ -23,7 +23,7 @@ This Guide is non-normative. The canonical Long decision controls. AC-ADR-048 re
 
 ## Activation routing
 
-Expose the complete workflow set on every activation:
+Expose the complete workflow set on every activation, plus the selected route and reason. Keep that announcement compact; the expanded receipt fields below are reference fields for material scope, state, or approval evidence, not questions to ask or a mandatory opening block:
 
 ```text
 Available workflows: setup | audit | refactor | plan-refactor | plan-run-refactor
