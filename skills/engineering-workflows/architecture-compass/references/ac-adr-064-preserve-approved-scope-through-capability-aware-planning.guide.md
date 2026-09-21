@@ -1,25 +1,25 @@
-# AC-ADR-048: Persist Approved Governance Before Planned Architecture Refactors
+# AC-ADR-064: Preserve Approved Scope Through Capability-Aware Planning
 
-ID: AC-ADR-048
-Title: Persist Approved Governance Before Planned Architecture Refactors
-Status: Superseded
-Date: 2026-07-29
+ID: AC-ADR-064
+Title: Preserve Approved Scope Through Capability-Aware Planning
+Status: Accepted
+Date: 2026-09-21
 Owner: stark-ai-de
 Scope: skill-runtime
 Category: governance
-Tags: actions, intent-routing, planning, governance-persistence
-Applies when: Architecture Compass is activated, establishes ADR governance, audits architecture, plans ADR work, or performs ADR-guided refactoring.
+Tags: actions, intent-routing, planning, approval, governance-persistence
+Applies when: Architecture Compass selects workflows, plans architecture changes, confirms a result, or persists approved governance across host transitions.
 Adoptable: false
 Variant: Guide
 Canonical variant: Long
-Supersedes: AC-ADR-045
-Superseded by: AC-ADR-064
-Guide verified: 2026-07-29
-Gist: Preserve five intent-bound workflows while making approved post-Plan governance persistence explicit and bounded.
+Supersedes: AC-ADR-048
+Superseded by: none
+Guide verified: 2026-09-21
+Gist: Preserve five workflows and one concrete approval while adapting planning controls to observed host capabilities.
 
-Variants: [Short](ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md) · [Long, canonical](ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md) · **Guide**
+Variants: [Short](ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md) · [Long, canonical](ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md) · **Guide**
 
-This Guide is non-normative. The canonical Long decision controls.
+This Guide is non-normative. The canonical Long decision controls. AC-ADR-048 remains historical context only.
 
 ## Activation routing
 
@@ -107,14 +107,16 @@ If governance is missing, route to `setup`. If durable decisions or broad sequen
 
 For both plan routes:
 
-1. Detect native Plan-mode support before substantive planning.
-2. If supported and active, plan there. If supported but inactive or support is indeterminate, stop and ask the user to enter or confirm Plan mode. Use a portable in-chat fallback only when native Plan mode is definitely unavailable.
-3. Resolve durable choices with the user, identify exact write scope, protected state, receipts, rollback, and separate approval boundaries.
-4. Include any post-Plan persistence as an explicit bounded slice: the approved specification plus only the ADR and index artifacts required by the repository convention.
-5. Exit native Plan mode before any persistence or implementation mutation.
-6. For `plan-refactor`, persist that authorized governance slice when requested, validate and report the persisted paths, emit a bounded copy-ready execution handoff, then stop without implementing the refactor. Without persistence authority, return the same bounded copy-ready handoff and stop.
-7. For `plan-run-refactor`, persist and validate the same governance slice, then recheck HEAD, index, working tree, authority, dependencies, and external state. Stop on material drift; otherwise execute only the unchanged approved plan.
-8. New decisions, changed scope, or invalidated approval require a new planning checkpoint.
+1. Observe the execution host's planning and permission capabilities independently through the AC-ADR-036 Guide. Respect active/explicitly requested Plan. Recommend Plan for substantial ambiguous work, but continue permitted read-only discovery and conversation when controls are inactive, missing, declined, or unknown. Do not invent host controls or treat unknown state as write permission.
+2. Inspect discoverable facts, reuse prior answers, and resolve only open material decisions. Derive persistence intent and paths from the task and repository; bundle unresolved destination, directory, overwrite, and governance actions at the final checkpoint.
+3. Prepare the complete reviewable draft, including exact scope, protected state, proof obligations, receipts, rollback, and separate approval boundaries. Ask positively to approve that version and its named save actions. Reuse a prior approval of the same version/scope; a native final approval can serve this checkpoint when its actual semantics confirm both. A mode toggle alone is not content approval.
+4. Keep the approval while awaiting any required Plan exit or permission. Exit active Plan before mutation. If state is unknown, continue no-write work only until it is resolved. Do not repeat the unchanged approval after exit.
+5. Recheck repository, target paths, authority, and protected state before persistence. If content, write scope, destination, or target state changed materially, resolve only the affected change. A specific instruction to change A and save authorizes that bounded revision without an extra ceremony; new ambiguity still asks.
+6. For `plan-refactor`, persist only the approved specification and required ADR/index artifacts when authorized, validate and report actual paths, emit a bounded handoff, then stop before implementation. Keep Proposed ADR persistence separate from acceptance. Explicit chat-only delivery completes that delivery and reports persistence as not requested.
+7. For `plan-run-refactor`, persist and validate the same required governance slice, then recheck HEAD, index, working tree, authority, dependencies, and external state. Stop dependent execution on material drift; otherwise execute only the unchanged approved plan. An outer task may resume separately authorized implementation after a planning-only handoff.
+8. Use structured or asynchronous questions only when exposed. While a required answer is pending, continue only independent authorized work. Silence, timeout, and preselected answers are not approval.
+
+Record approval identity/scope and actual persistence separately. Do not claim a save, ADR acceptance, or implementation from an approved draft alone.
 
 ## Risk-based validation receipt
 
@@ -143,7 +145,7 @@ Select focused checks from the changed governance contract and owning boundary. 
 
 ## Source
 
-- [Agent Skills specification](https://agentskills.io/specification), verified 2026-07-29.
+- [Agent Skills specification](https://agentskills.io/specification), verified 2026-09-21.
 
 ## Revisit
 
