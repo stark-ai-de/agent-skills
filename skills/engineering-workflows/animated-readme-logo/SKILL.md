@@ -1,11 +1,11 @@
 ---
 name: animated-readme-logo
-description: Audit, create, transform, or animate verified logo pipelines for GitHub READMEs. Use when a repository needs a new or reconstructed mark, motion specification, SVG animation master, executable animation recipe, static PNG, animated GIF, README-safe markup, reduced-motion fallback, or compatibility review. Do not use for unrelated app/site motion or generic image generation without a README branding target.
+description: Create, transform, animate, or audit GitHub README logos and their verified SVG/PNG/GIF delivery. Use for repository branding assets, not ordinary README prose or app/site motion.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.3"
+  version: "0.5.4"
 ---
 
 # Animated README Logo
@@ -47,6 +47,8 @@ Route from task intent:
 On every activation, show all four workflows, then `Selected`, `Reason`, source evidence, write scope, required outputs, protected originals, and remaining paid/tool/install/overwrite approvals. Proceed after the announcement when intent and mutation authority are unambiguous. A bare invocation, conflicting source evidence, or ambiguity about identity preservation, outcome, scope, or write authority asks the user to choose before substantive inspection. Agent-initiated activation may select `audit`; it may select a mutating workflow only when the existing task explicitly requested that outcome and scope.
 
 Source routing is internal. Provider evaluation is available only within `create`, and selection never authorizes a credit-consuming call or tool installation.
+
+For clear intent, a compact disclosure of `audit | create | transform | animate` and the selected route is sufficient; do not repeat a selection question or details already established in the conversation. Reuse an explicit approval only when it still covers the exact action, target, tool/provider, cost when relevant, and write scope. Separate approval boundaries remain separate: authorization for one never implies another. Ask again only for a changed or missing decision.
 
 ## Inputs to inspect
 
