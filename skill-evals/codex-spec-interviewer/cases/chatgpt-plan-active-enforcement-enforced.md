@@ -19,12 +19,10 @@ Yes.
 
 Use Codex Spec Interviewer to define a safe polling-to-webhook migration. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Active
-- contains: Read-only enforcement: enforced
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-Report the exact repository scope of enforced filesystem protection; keep connector and other external mutations prohibited independently.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Keep observed Plan active without toggling again; a busy composer does not invalidate active-mode evidence.
+- Record filesystem enforcement as enforced for the stated repository only; that evidence does not cover connectors.

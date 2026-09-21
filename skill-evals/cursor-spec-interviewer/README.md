@@ -1,41 +1,13 @@
-# cursor-spec-interviewer Eval Proof
+# cursor-spec-interviewer evaluation evidence
 
-This folder contains the initial promotion proof for `cursor-spec-interviewer`.
+`cases/` contains trigger, target-runtime and host-capability scenarios. `rubric.md` defines the current outcome criteria. Historical `runs/` are dated records, not current proof.
 
-## Promotion Rationale
+## Shared approval regression matrix
 
-- Broad utility: applies to fuzzy features, refactors, migrations, bugfixes, and architecture work.
-- Clear boundary: excludes tiny direct edits and already complete implementation specs.
-- High value: produces implementation specs, ADR gate results, validation plans, and Cursor execution prompts.
-- Durable output: verifies final scope, saves the spec, and creates ADR files only when required.
-- Cross-host Cursor fit: uses the current execution host's Plan-mode lifecycle and structured-question controls. It keeps `.cursor/rules/**/*.mdc` and the execution prompt Cursor-targeted while specs and ADRs remain repository-owned artifacts.
-- Manageable maintenance: mostly repo-workflow guidance plus bundled templates and rubrics.
+Run [approval-scenarios.json](../codex-spec-interviewer/approval-scenarios.json) against all three interviewer targets. It supplies fixed context, prompts, answer cards and required/forbidden observations for prior authority, native/manual exit, revisions, destination drift, ADR status, chat delivery, async pending answers and older hosts.
 
-## Eval Set
+Use real conversation continuation for interactive evidence. Preserve material decisions while counting duplicate questions and avoidable mode interruptions. Separate native UI prompts from skill-generated questions. Test actual saved artifacts and permissions; do not score expected text as execution.
 
-Cases cover positive triggers, negative triggers, and output-quality expectations:
+## Evidence boundaries
 
-- `cases/fuzzy-refactor-request.md`
-- `cases/vague-feature-request.md`
-- `cases/plan-before-coding-trigger.md`
-- `cases/native-plan-mode-lifecycle.md`
-- `cases/native-plan-mode-fallbacks.md`
-- `cases/codex-execution-host.md`
-- `cases/architecture-change-needs-adr.md`
-- `cases/cursor-rules-adr-implications.md`
-- `cases/rule-artifact-request.md`
-- `cases/no-spec-structure-repo.md`
-- `cases/declined-persistence.md`
-- `cases/already-specified-negative.md`
-- `cases/codex-memory-curator-negative.md`
-- `cases/direct-implementation-negative.md`
-
-Use `rubric.md` to grade outputs. `runs/` stores run summaries and evidence.
-
-Passing outputs must identify the current execution host and run that host's Plan Mode preflight before substantive interviewing. When Plan Mode is available, they must use the current host's structured-question control, make no repository or workspace changes apart from a plan artifact created by that host's plan-exit control, and finish the verified checkpoint with that control or an accurate manual handoff only when no such control exists. Cursor-native controls apply only when Cursor executes the skill. After leaving Plan Mode, the continuation may persist only the repository-owned approved spec, any required ADR, and the minimal ADR index entry required by repository convention; it must emit the Cursor-targeted execution prompt and stop without implementing the feature.
-
-Conversational fallback is valid only when Plan Mode is definitely unavailable or explicitly declined. Indeterminate support/state follows the supported-but-inactive transition/handoff and never falls back.
-
-Completion requires persisted spec/ADR artifact paths. While still in Plan Mode, passing outputs must write no files, report the approved artifact paths and pending status, and provide the save-only continuation. Only declined or blocked persistence requires the complete save-ready spec and any ADR draft in chat, the intended paths and reason, and an explicit statement that completion was not met.
-
-The 2026-07-13 Codex run is historical routing evidence from an environment with only `cursor-spec-interviewer` installed; it does not prove competing-skill selection, checkpoint verification, Plan-mode exit, or save-only persistence for the strengthened cross-host case.
+`validate:skills` checks structural consistency, metadata, template records and scenario inventory. Case assertions are evaluator expectations, not live passes. Parent PR evidence records the bounded Codex/Astra pilot separately; a CLI result does not prove ChatGPT, Claude Code, Cursor or native UI behavior. Historical case filenames are retained for compatibility even where the current expected lifecycle changed.

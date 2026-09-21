@@ -21,17 +21,10 @@ Yes.
 
 Use Codex Spec Interviewer to define a safe polling-to-webhook migration. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Explicitly declined
-- contains: Plan-mode fallback: explicitly declined
-- contains: Read-only enforcement: indeterminate
-- contains: continue conversationally
-- not_contains: Planning capability: Indeterminate
-- not_contains: Planning capability: Unavailable
-- not_contains: ask whether Plan is available
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-Honor the refusal immediately after identifying surface/experience. Missing or documentation-only native-control evidence must not cause another Plan request. Keep behavioral no-write protection.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Honor the explicit Plan refusal even when surface/experience/control evidence is incomplete; do not request Plan again or label it technically unavailable.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

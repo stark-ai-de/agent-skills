@@ -39,10 +39,9 @@ Yes, for all three variants.
 
 ## Expected Behavior
 
-- Run the Plan-mode preflight before repository exploration or substantive questions.
-- For Variant A, record `Plan mode fallback: unavailable` and the runtime evidence or limitation that made Plan mode unavailable; do not give manual switch instructions as if they were usable.
-- For Variant B, record `Plan mode fallback: declined` from the initial request and do not invoke `EnterPlanMode`.
-- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty. Resume the normal workflow only after the host confirms that Plan mode is active.
-- For Variants A and B, continue the full interview conversationally in the main conversation, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
-- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Claude Code execution-prompt requirements in all three variants.
-- Do not treat the mode fallback as a persistence decline. Persist after verification unless the user separately declines persistence or a blocker prevents it.
+- Continue the full read-only interview in all three variants, preserving material questions, source challenge, ADR gate and the same final checkpoint.
+- Distinguish proven unavailable from explicitly declined and indeterminate controls; do not claim technical absence from missing evidence.
+- Ask conversationally when structured question tools are unavailable. Do not require a mode switch simply to inspect or discuss requirements.
+- Preserve an explicit refusal without recommending Plan again. A refusal does not exit an already active mode.
+- Unknown Plan or permission state blocks writes, not permissible conversation. Resolve only the relevant state before requested persistence.
+- Explicit chat-only output completes its requested delivery; a blocked requested save stays pending.

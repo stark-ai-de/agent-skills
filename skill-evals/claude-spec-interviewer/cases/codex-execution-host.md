@@ -14,8 +14,8 @@ Prepare a Claude Code-ready implementation spec for separating cookie parsing fr
 
 1. Answer the first material question: preserve current cookie and session compatibility, limit the first slice to the server boundary, and require rollback to the existing composition.
 2. Answer any independent validation or rollout question with the repository's discovered commands and a canary-first rollout; do not approve invented commands.
-3. At the final checkpoint, reply: `Verified. Persist the approved repository artifacts after leaving Plan mode.`
-4. Approve Codex's plan-exit handoff, or manually exit when Codex exposes no plan-exit control, then reply `continue` for save-only finalization.
+3. Review the complete draft and named writes. Approve once through the native review when available, otherwise reply: `Approved. Persist these artifacts after leaving Plan mode.`
+4. Perform only any remaining actual mode-exit action, then continue save-only finalization without another content-approval answer.
 
 ## Expected Behavior
 
@@ -26,4 +26,4 @@ Prepare a Claude Code-ready implementation spec for separating cookie parsing fr
 - Completes the substantive interview, source challenge, ADR gate, validation and rollout plan, and an explicit checkpoint covering scope, non-goals, assumptions, risks, validation, ADR result, and artifact paths.
 - Writes no repository or workspace artifacts in Plan mode. After checkpoint verification, reports persistence pending and exits through Codex's plan-exit control or an accurate manual handoff.
 - In save-only finalization, writes only the approved spec, any required ADR, and the convention-required minimal ADR index entry; validates and reports their paths, emits the Claude Code execution prompt, and stops without implementing the refactor.
-- Does not report completion before persistence succeeds. If persistence is blocked, writes nothing and returns complete save-ready artifacts with proposed repository paths and the blocker.
+- Does not report requested-save completion before persistence succeeds; explicit chat-only delivery is a separate completed outcome. If persistence is blocked, writes nothing and returns complete save-ready artifacts with proposed repository paths and the blocker.
