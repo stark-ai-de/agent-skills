@@ -1,8 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
-import { constants } from "node:fs";
+import { constants, lstatSync, realpathSync } from "node:fs";
 import { lstat, open, readFile, realpath } from "node:fs/promises";
 import { resolve } from "node:path";
-import { readProtectedSecret } from "../../assets/templates/protected-file.mjs";
+import {
+  inspectCurrentUserDirectoryBoundaryAsync,
+  pathIdentity,
+  readProtectedSecret,
+  samePathIdentity,
+  secureAndVerifyCurrentUserFileAsync,
+  verifyCurrentUserFileAsync,
+} from "../../assets/templates/protected-file.mjs";
 
 const SCHEMA = "hetzner-remote/v1";
 const BASE = "https://inference.hetzner.com/api/v1";
@@ -514,7 +521,7 @@ function receipt(value, row, action) {
     credentialProof: row.credentialProof,
   });
 }
-async function beginAttempt(options, value) {
+function attemptPath(options, value) {
   const path = resolve(
     options["attempt-file"] ??
       (typeof options.plan === "string" ? `${options.plan}.${value.id}.attempt.json` : ""),
@@ -524,21 +531,41 @@ async function beginAttempt(options, value) {
       "attempt_file_required",
       "An in-memory plan needs --attempt-file; file plans use an adjacent .<plan-id>.attempt.json journal.",
     );
-  let handle;
+  return path;
+}
+async function inspectAttemptDirectory(path) {
   try {
     const parent = resolve(path, "..");
-    const directory = await lstat(parent);
+    const directory = await lstat(parent, { bigint: true });
     if (
       !directory.isDirectory() ||
       (await realpath(parent)) !== parent ||
       (process.platform !== "win32" &&
-        ((directory.mode & 0o022) !== 0 || directory.uid !== process.getuid()))
+        ((directory.mode & 0o022n) !== 0n || directory.uid !== BigInt(process.getuid())))
     ) {
-      fail(
-        "unsafe_attempt_directory",
-        "The attempt journal must be in an owned directory without symlink components or group/other write permissions.",
-      );
+      throw new Error("Unsafe attempt directory");
     }
+    if (process.platform === "win32")
+      return await inspectCurrentUserDirectoryBoundaryAsync(parent, "Remote attempt directory");
+    return {
+      birthtimeNs: String(directory.birthtimeNs),
+      dev: String(directory.dev),
+      ino: String(directory.ino),
+      mode: String(directory.mode),
+      uid: String(directory.uid),
+    };
+  } catch {
+    fail(
+      "unsafe_attempt_directory",
+      "The attempt journal needs an owned canonical directory without group/other write access. Native Windows requires a directory inside LOCALAPPDATA with a verified current-user-only ACL; existing directory permissions are never changed.",
+    );
+  }
+}
+async function beginAttempt(path, value, expectedDirectory) {
+  let handle;
+  try {
+    if (hash(await inspectAttemptDirectory(path)) !== hash(expectedDirectory))
+      fail("unsafe_attempt_directory", "The attempt directory changed before journal creation.");
     try {
       handle = await open(
         path,
@@ -553,6 +580,9 @@ async function beginAttempt(options, value) {
         );
       throw error;
     }
+    const expectedIdentity = pathIdentity(await handle.stat({ bigint: true }));
+    if (process.platform === "win32")
+      await secureAndVerifyCurrentUserFileAsync(path, 0o600, { expectedIdentity });
     await handle.writeFile(
       JSON.stringify({
         schema: SCHEMA,
@@ -562,6 +592,14 @@ async function beginAttempt(options, value) {
       }),
     );
     await handle.sync();
+    if (process.platform === "win32")
+      await verifyCurrentUserFileAsync(path, 0o600, { expectedIdentity });
+    if (hash(await inspectAttemptDirectory(path)) !== hash(expectedDirectory))
+      fail(
+        "unsafe_attempt_directory",
+        "The attempt directory changed while recording the journal.",
+      );
+    return expectedIdentity;
   } catch (error) {
     if (error instanceof RemoteError) throw error;
     fail(
@@ -570,6 +608,23 @@ async function beginAttempt(options, value) {
     );
   } finally {
     await handle?.close();
+  }
+}
+function verifyAttemptIdentity(path, expectedIdentity) {
+  try {
+    const current = lstatSync(path, { bigint: true });
+    if (
+      !current.isFile() ||
+      current.isSymbolicLink() ||
+      realpathSync.native(path) !== path ||
+      !samePathIdentity(pathIdentity(current), expectedIdentity)
+    )
+      throw new Error("Attempt journal path changed");
+  } catch {
+    fail(
+      "attempt_journal_unavailable",
+      "The attempt journal disappeared or changed before creation. No remote write was attempted.",
+    );
   }
 }
 async function apply(options) {
@@ -626,6 +681,8 @@ async function apply(options) {
     };
   }
   if (value.action !== "create") fail("invalid_document", "Unsupported planned action.");
+  const journal = attemptPath(options, value);
+  const journalDirectory = await inspectAttemptDirectory(journal);
   const providerKey =
     value.provider?.kind === "remote-env"
       ? `os.environ/${textOption(value.provider.name, "Remote provider environment name", /^[A-Za-z_][A-Za-z0-9_]{0,127}$/)}`
@@ -641,9 +698,11 @@ async function apply(options) {
     },
     model_info: { id: value.modelId, [MARKER]: value.ownerToken },
   };
-  await beginAttempt(options, value);
+  const journalIdentity = await beginAttempt(journal, value, journalDirectory);
   let response;
   let createError;
+  // No asynchronous boundary may separate this named-file proof from starting the POST.
+  verifyAttemptIdentity(journal, journalIdentity);
   try {
     response = await request(base, "model/new", key, options, body);
   } catch (error) {
@@ -764,7 +823,7 @@ async function check(options) {
         "Remote management credentials must not be reused as inference client credentials.",
       );
   }
-  const maxTokens = Number(options["max-tokens"] ?? 256);
+  const maxTokens = Number(options["max-tokens"] ?? 1024);
   if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 2048)
     fail("invalid_input", "max-tokens must be between 1 and 2048.");
   const data = await request(base, "chat/completions", key, options, {

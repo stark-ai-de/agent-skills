@@ -94,7 +94,7 @@ export function manualCommand(command = "setup", options = {}) {
   const local = [
     {
       instruction:
-        "Create an isolated Python environment in a machine-local directory outside your repository.",
+        "Create an isolated Python environment in a machine-local directory outside your repository. Native NixOS also requires a user-provided Python/library environment satisfying the proxy's native dependencies; this venv recipe does not supply or qualify it. Use an existing remote gateway if that prerequisite is unavailable.",
       command: `${platform === "win32" ? "py -3" : "python3"} -m venv hetzner-venv`,
       expected: "A dedicated hetzner-venv directory.",
     },

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   pathIdentity,
+  powershellCommand,
   pathSegments,
   samePathIdentity,
 } from "../../assets/templates/protected-file.mjs";
@@ -27,7 +28,7 @@ async function run(executable, args, options = {}) {
     {
       deadlineAt: options.deadlineAt,
       deadlineReserveMs: options.deadlineReserveMs,
-      env: minimalCommandEnvironment(),
+      env: minimalCommandEnvironment(options.environment),
       failureCode: "permission_command_failed",
       forceKillGraceMs: PERMISSION_FORCE_KILL_GRACE_MS,
       label: "Permission command",
@@ -144,11 +145,11 @@ async function windowsAclSnapshot(target, host, label = "protected path", option
     "[pscustomobject]@{owner=$owner;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
   const bound = assertFreshNamedPath(target, host, label, options);
-  const output = await run(
-    powershell,
-    ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, target],
-    options,
-  );
+  const command = powershellCommand(script, [target]);
+  const output = await run(powershell, command.args, {
+    ...options,
+    environment: command.environment,
+  });
   assertFreshNamedPath(target, host, label, {
     ...options,
     expectedIdentity: options.expectedIdentity ?? pathIdentity(bound),
@@ -249,9 +250,8 @@ async function windowsDriveType(root) {
     "$drive=[System.IO.DriveInfo]::new($args[0])",
     "$drive.DriveType.ToString()",
   ].join(";");
-  return (
-    await run(powershell, ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, root])
-  ).trim();
+  const command = powershellCommand(script, [root]);
+  return (await run(powershell, command.args, { environment: command.environment })).trim();
 }
 
 export async function preflightExternalProtectedDirectory(target, host, options = {}) {

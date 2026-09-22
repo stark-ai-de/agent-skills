@@ -2,12 +2,18 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { chmod, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import fsPromises from "node:fs/promises";
+import { chmod, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { remoteCommand } from "../../../skills/engineering-workflows/hetzner-inference-setup/scripts/lib/remote.mjs";
+import {
+  secureCurrentUserDirectory,
+  verifyCurrentUserFileAsync,
+} from "../../../skills/engineering-workflows/hetzner-inference-setup/assets/templates/protected-file.mjs";
 
 const ADMIN = "fixture-management-secret";
 const CLIENT = "fixture-inference-secret";
@@ -43,7 +49,12 @@ function existing(overrides = {}) {
   };
 }
 async function fixture(t, overrides = {}) {
-  const dir = await mkdtemp(join(tmpdir(), "hetzner-remote-"));
+  const temporaryRoot = process.platform === "win32" ? process.env.LOCALAPPDATA : tmpdir();
+  assert.ok(temporaryRoot, "Native Windows remote fixtures require LOCALAPPDATA");
+  // Native macOS and Windows temp paths can contain aliases; bind the owned canonical path.
+  const dir = await realpath(await mkdtemp(join(temporaryRoot, "hetzner-remote-")));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  if (process.platform === "win32") secureCurrentUserDirectory(dir);
   const state = { rows: [], calls: [], schema: schema(), ...overrides };
   const server = createServer(async (request, response) => {
     let raw = "";
@@ -109,7 +120,6 @@ async function fixture(t, overrides = {}) {
   t.after(async () => {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
-    await rm(dir, { recursive: true, force: true });
   });
   const origin = `http://127.0.0.1:${server.address().port}`;
   const options = {
@@ -164,6 +174,7 @@ test("remote creation preserves URL prefixes, binds readback and separates infer
   const { receipt, result } = await applied(options);
   assert.equal(result.status, "created");
   assert.equal(result.proof.inference, "not-run");
+  await verifyCurrentUserFileAsync(options["attempt-file"]);
   assert.equal(state.rows[0].model_info.id, receipt.modelId);
   assert.equal(
     state.calls.find((entry) => entry.path.endsWith("/model/new")).body.litellm_params.api_key,
@@ -178,6 +189,10 @@ test("remote creation preserves URL prefixes, binds readback and separates infer
   });
   assert.equal(checked.proof.inference, "passed");
   assert.equal(checked.proof.clients, "not-tested");
+  assert.equal(
+    state.calls.find((entry) => entry.path.endsWith("/chat/completions")).body.max_tokens,
+    1024,
+  );
   noSecrets(checked);
 });
 
@@ -431,6 +446,85 @@ test("concurrent identical apply admits at most one creation attempt", async (t)
   );
   assert.ok(results.some((result) => result.ok));
   assert.equal(state.calls.filter((entry) => entry.path.endsWith("/model/new")).length, 1);
+});
+
+for (const drift of ["removed", "replaced"]) {
+  test(`journal ${drift} during the final close is refused before remote creation`, async (t) => {
+    const { options, state } = await fixture(t);
+    const plan = await planned(options);
+    const originalOpen = fsPromises.open;
+    let drifted = false;
+    const openMock = t.mock.method(fsPromises, "open", async (...args) => {
+      const handle = await originalOpen(...args);
+      if (args[0] === options["attempt-file"]) {
+        const close = handle.close.bind(handle);
+        handle.close = async () => {
+          await close();
+          // Rename preserves the original inode, so replacement cannot reuse its identity.
+          await fsPromises.rename(args[0], `${args[0]}.retained`);
+          if (drift === "replaced") await writeFile(args[0], "replacement", { mode: 0o600 });
+          drifted = true;
+        };
+      }
+      return handle;
+    });
+    syncBuiltinESMExports();
+    let result;
+    try {
+      result = await remoteCommand("apply", { ...options, plan, approve: plan.id });
+    } finally {
+      openMock.mock.restore();
+      syncBuiltinESMExports();
+    }
+    assert.equal(drifted, true, "The journal must change during its final asynchronous close");
+    assert.equal(result.error.code, "attempt_journal_unavailable");
+    assert.equal(
+      state.calls.some((entry) => entry.method === "POST"),
+      false,
+    );
+  });
+}
+
+test("unsafe attempt-directory permissions fail before reading the provider source or writing remotely", async (t) => {
+  const { options, dir, state } = await fixture(t);
+  delete options["provider-env"];
+  options["provider-key-file"] = join(dir, "missing-provider");
+  const plan = await planned(options);
+  if (process.platform === "win32") {
+    const icacls = join(process.env.SystemRoot, "System32", "icacls.exe");
+    const changed = spawnSync(icacls, [dir, "/grant", "*S-1-1-0:(R)"], {
+      encoding: "utf8",
+      timeout: 10_000,
+      windowsHide: true,
+    });
+    assert.equal(changed.status, 0, "The test directory ACL must be deliberately broadened");
+  } else {
+    await chmod(dir, 0o777);
+  }
+  const result = await remoteCommand("apply", { ...options, plan, approve: plan.id });
+  assert.equal(result.error.code, "unsafe_attempt_directory");
+  assert.equal(
+    state.calls.some((entry) => entry.method === "POST"),
+    false,
+  );
+  await assert.rejects(readFile(options["attempt-file"]), { code: "ENOENT" });
+});
+
+test("redirected attempt directories are refused before the provider source is read", async (t) => {
+  const { options, dir, state } = await fixture(t);
+  const redirected = join(dir, "redirected-parent");
+  await symlink(dir, redirected, process.platform === "win32" ? "junction" : "dir");
+  delete options["provider-env"];
+  options["provider-key-file"] = join(dir, "missing-provider");
+  options["attempt-file"] = join(redirected, "attempt.json");
+  const plan = await planned(options);
+  const result = await remoteCommand("apply", { ...options, plan, approve: plan.id });
+  assert.equal(result.error.code, "unsafe_attempt_directory");
+  assert.equal(
+    state.calls.some((entry) => entry.method === "POST"),
+    false,
+  );
+  await assert.rejects(readFile(join(dir, "attempt.json")), { code: "ENOENT" });
 });
 
 test("readback rejects lost ownership or changed settings and never auto-deletes a created route", async (t) => {

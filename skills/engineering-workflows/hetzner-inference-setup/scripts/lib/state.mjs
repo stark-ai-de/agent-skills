@@ -132,7 +132,131 @@ export function assertCurrentHostStorageBoundaries(paths, host) {
   assertWslSameEnvironmentPath(paths.codexProfile, host, "Codex profile");
 }
 
+const RECEIPT_PUBLICATION_TIMEOUT_MS = 3_000;
+const RECEIPT_PUBLICATION_POLL_MS = 25;
+
+function isReceiptPublicationPath(target, paths, manifest) {
+  if (path.dirname(target) !== path.dirname(paths.processReceipt)) return false;
+  const prefix = `.${path.basename(paths.processReceipt)}.${manifest.process.runnerPid}.`;
+  const name = path.basename(target);
+  if (!name.startsWith(prefix)) return false;
+  return /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\.(?:tmp|quarantine)$/u.test(
+    name.slice(prefix.length),
+  );
+}
+
+async function receiptPublicationEntries(paths, host, manifest) {
+  assertCurrentHostStorageBoundaries(paths, host);
+  const directory = path.dirname(paths.processReceipt);
+  let names;
+  try {
+    names = await fsPromises.readdir(directory);
+  } catch (error) {
+    if (error.code === "ENOENT") return { paths: [], unsafe: false };
+    throw error;
+  }
+  const publications = [];
+  let unsafe = false;
+  for (const name of names) {
+    const target = path.join(directory, name);
+    if (!isReceiptPublicationPath(target, paths, manifest)) continue;
+    publications.push(target);
+    assertCurrentHostStorageBoundaries(paths, host);
+    try {
+      const stat = await fsPromises.lstat(target);
+      if (!stat.isFile() || stat.isSymbolicLink()) unsafe = true;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+  return { paths: publications, unsafe };
+}
+
+async function receiptConsistentSnapshot(paths, options, read, classify) {
+  const { host, manifest } = options;
+  if (!host || !validManifestProcess(manifest?.process) || manifest.process.status !== "ready")
+    return await read();
+  let deadline = null;
+  let retried = false;
+  for (;;) {
+    const before = await receiptPublicationEntries(paths, host, manifest);
+    let result;
+    let disappeared = false;
+    try {
+      result = await read();
+    } catch (error) {
+      if (
+        error.code !== "ENOENT" ||
+        typeof error.path !== "string" ||
+        !isReceiptPublicationPath(error.path, paths, manifest)
+      )
+        throw error;
+      disappeared = true;
+    }
+    const after = await receiptPublicationEntries(paths, host, manifest);
+    const state = disappeared ? { transient: true, unsafe: false } : classify(result, manifest);
+    invariant(
+      !before.unsafe && !after.unsafe,
+      "unexpected_managed_entry",
+      "Unsafe entry observed during process receipt publication",
+    );
+    if (state.unsafe) return result;
+    if (state.receiptAbsent && !before.paths.length && !after.paths.length && !state.transient) {
+      const current = await readProcessReceipt(paths, host);
+      // Preserve the ordinary missing-receipt observation when no publication was seen.
+      if (!current && !retried) return result;
+      invariant(current, "process_receipt_missing", "Owned receipt disappeared across publication");
+      state.transient = true;
+    }
+    if (!before.paths.length && !after.paths.length && !state.transient) {
+      if (retried) {
+        const receipt = await readProcessReceipt(paths, host);
+        invariant(
+          receipt && processReceiptFresh(receipt),
+          "process_identity_stale",
+          "Receipt publication requires a fresh protected owned heartbeat after a clean snapshot",
+        );
+        const findings = await processIdentityFindings(receipt, manifest, paths, { host });
+        invariant(
+          findings.length === 0,
+          "process_identity_mismatch",
+          "Process identity changed across receipt publication",
+          { findings },
+        );
+      }
+      return result;
+    }
+    deadline ??= Date.now() + RECEIPT_PUBLICATION_TIMEOUT_MS;
+    invariant(
+      Date.now() < deadline,
+      "unexpected_managed_entry",
+      "Process receipt publication did not settle; preserve its recovery files",
+    );
+    retried = true;
+    await (
+      options.receiptPublicationDelay ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)))
+    )(RECEIPT_PUBLICATION_POLL_MS);
+  }
+}
+
 export async function managedNamespaceFindings(paths, options = {}) {
+  return await receiptConsistentSnapshot(
+    paths,
+    options,
+    () => scanManagedNamespace(paths, options),
+    (findings, manifest) => ({
+      transient: findings.length > 0,
+      unsafe: findings.some(
+        (finding) =>
+          !["unexpected_managed_entry", "managed_quarantine_recovery_required"].includes(
+            finding.code,
+          ) || !isReceiptPublicationPath(finding.path, paths, manifest),
+      ),
+    }),
+  );
+}
+
+async function scanManagedNamespace(paths, options = {}) {
   assertCurrentHostStorageBoundaries(paths, options.host);
   const policy = namespacePolicy(paths, options);
   const externalParentState =
@@ -951,6 +1075,27 @@ export async function offlineObservations(
   host = null,
   dependencies = {},
 ) {
+  const manifest = host ? await loadManifest(paths, { host }) : null;
+  return await receiptConsistentSnapshot(
+    paths,
+    { ...dependencies, host, manifest },
+    () => scanOfflineObservations(paths, staticTargets, host, dependencies),
+    (observations, currentManifest) => {
+      const unexpected = [...new Set([paths.configRoot, paths.stateRoot])].flatMap((root) =>
+        observations[`${root}::entries`].unexpected.map((name) => path.join(root, name)),
+      );
+      return {
+        transient: unexpected.length > 0,
+        receiptAbsent: observations[paths.processReceipt].kind === "absent",
+        unsafe: unexpected.some(
+          (target) => !isReceiptPublicationPath(target, paths, currentManifest),
+        ),
+      };
+    },
+  );
+}
+
+async function scanOfflineObservations(paths, staticTargets = [], host = null, dependencies = {}) {
   assertCurrentHostStorageBoundaries(paths, host);
   const externalParentState = await inspectExternalArtifactParents(
     paths,

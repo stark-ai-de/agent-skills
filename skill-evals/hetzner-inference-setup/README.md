@@ -35,5 +35,7 @@ Use [`rubric.md`](rubric.md). These prompts contain no live token and authorize 
 
 ## Current evidence
 
+- [Validation and live evidence](runs/2026-09-21-validation.md) — source-bound local proof and explicit remote/client/platform gaps.
+
 - [Known-expectations text exercise](runs/2026-09-21-text-evaluation.md) — response coverage only, not an executed activation benchmark.
 - Public runtime validation: `pnpm run validate:hetzner-inference`. Native/hosted skips and live evidence are reported separately.

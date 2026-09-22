@@ -18,8 +18,10 @@ import {
   inspectCurrentUserDirectoryBoundaryAsync,
   parseCurrentWslWindowsMounts,
   pathIdentity,
+  powershellCommand,
   readProtectedSecret,
   readProtectedGatewaySecret,
+  secureAndVerifyCurrentUserFileAsync,
 } from "../../../skills/engineering-workflows/hetzner-inference-setup/assets/templates/protected-file.mjs";
 
 import {
@@ -229,8 +231,9 @@ function stableCodesEmittedBy(source) {
   return codes;
 }
 
-async function temporaryDirectory(name, operation) {
-  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${name}-`));
+async function temporaryDirectory(name, operation, base = os.tmpdir()) {
+  // macOS exposes /var and /tmp through aliases; bind fixtures to their physical path first.
+  const root = await fs.promises.realpath(await fs.promises.mkdtemp(path.join(base, `${name}-`)));
   try {
     return await operation(root);
   } finally {
@@ -238,15 +241,13 @@ async function temporaryDirectory(name, operation) {
   }
 }
 
-async function runnerTemporaryDirectory(name, operation) {
-  const base = process.platform === "win32" ? process.env.LOCALAPPDATA : os.tmpdir();
+async function runnerTemporaryDirectory(
+  name,
+  operation,
+  base = process.platform === "win32" ? process.env.LOCALAPPDATA : os.tmpdir(),
+) {
   assert.ok(base, "Windows runner tests require LOCALAPPDATA");
-  const root = await fs.promises.mkdtemp(path.join(base, `${name}-`));
-  try {
-    return await operation(root);
-  } finally {
-    await fs.promises.rm(root, { recursive: true, force: true });
-  }
+  return await temporaryDirectory(name, operation, base);
 }
 
 function fakeOwnedChild(pid = 51_001) {
@@ -733,13 +734,113 @@ function replaceWindowsAclWithReadAndInheritOnlyFullControl(target) {
     "[void]$acl.AddAccessRule($inheritOnly)",
     "Set-Acl -LiteralPath $args[0] -AclObject $acl",
   ].join(";");
-  const result = spawnSync(
-    powershell,
-    ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, target],
-    { encoding: "utf8", windowsHide: true },
-  );
+  const command = powershellCommand(script, [target]);
+  const result = spawnSync(powershell, command.args, {
+    encoding: "utf8",
+    env: { ...process.env, ...command.environment },
+    windowsHide: true,
+  });
   assert.equal(result.status, 0, result.stderr);
 }
+
+test("PowerShell passes hostile filenames as data without source interpolation", () => {
+  const values = [
+    "C:\\",
+    "C:\\path with spaces\\file.txt",
+    "C:\\O'Brien;$(throw 'injected')\\[literal]`$value.txt",
+    "C:\\Unicode-ä-東京\\trailing\\",
+    "",
+  ];
+  const script = "ConvertTo-Json -InputObject @($args) -Compress";
+  const command = powershellCommand(script, values);
+  assert.deepEqual(command.args.slice(0, 4), [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-EncodedCommand",
+  ]);
+  assert.equal(command.args.length, 5, "no user values may follow the encoded command");
+  assert.deepEqual(JSON.parse(command.environment.HETZNER_POWERSHELL_ARGUMENTS), values);
+  const decoded = Buffer.from(command.args[4], "base64").toString("utf16le");
+  assert.ok(decoded.includes(script));
+  for (const value of values.filter(Boolean)) assert.equal(decoded.includes(value), false);
+  assert.deepEqual(powershellCommand(script, ["different"]).args, command.args);
+  assert.throws(() => powershellCommand(script, [null]), TypeError);
+  if (process.platform === "win32") {
+    const executable = resolveExecutable("powershell", { platform: "win32" });
+    assert.ok(executable);
+    for (const selectedValues of [values, [values[2]], [""], []]) {
+      const nativeCommand = powershellCommand(script, selectedValues);
+      const result = spawnSync(executable, nativeCommand.args, {
+        encoding: "utf8",
+        env: { ...process.env, ...nativeCommand.environment },
+        timeout: 10_000,
+        windowsHide: true,
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout.replace(/^\uFEFF/u, "")), selectedValues);
+    }
+  }
+});
+
+test("native Windows protects literal hostile filenames with both ACL helpers", async (context) => {
+  if (process.platform !== "win32") {
+    context.skip("Windows ACL mutation requires the native Windows hosted job");
+    return;
+  }
+  await runnerTemporaryDirectory("hetzner-literal-windows-path", async (root) => {
+    const host = actualHost(root);
+    const paths = managedPaths(host);
+    await protectedDirectory(paths.secretsDir, host);
+    await protectedDirectory(path.dirname(paths.codexProfile), host, { external: true });
+    const target = path.join(
+      paths.secretsDir,
+      "O'Brien;$(throw 'injected') [literal]`$value-ä-東京.txt",
+    );
+    const value = "synthetic-protected-file-value";
+    await protectedFile(target, value, host);
+    assert.equal(readProtectedSecret(target), value);
+    await secureAndVerifyCurrentUserFileAsync(target, 0o600, {
+      expectedIdentity: pathIdentity(fs.lstatSync(target, { bigint: true })),
+    });
+    assert.equal(readProtectedSecret(target), value);
+  });
+});
+
+test("temporary fixtures canonicalize aliased parents before protected-path proofs", async () => {
+  await temporaryDirectory("hetzner-canonical-temp", async (root) => {
+    const physicalParent = path.join(root, "physical");
+    const aliasParent = path.join(root, "alias");
+    await fs.promises.mkdir(physicalParent);
+    await fs.promises.symlink(
+      physicalParent,
+      aliasParent,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    await assert.rejects(assertNoLinkSegments(aliasParent));
+    for (const createDirectory of [temporaryDirectory, runnerTemporaryDirectory]) {
+      let fixtureRoot;
+      const result = await createDirectory(
+        "canonical",
+        async (directory) => {
+          fixtureRoot = directory;
+          assert.equal(directory, await fs.promises.realpath(directory));
+          assert.equal(path.dirname(directory), physicalParent);
+          await assertNoLinkSegments(directory);
+          const host = actualHost(directory);
+          const paths = managedPaths(host);
+          await protectedDirectory(paths.configRoot, host);
+          await assertNoLinkSegments(paths.configRoot);
+          return "fixture-complete";
+        },
+        aliasParent,
+      );
+      assert.equal(result, "fixture-complete");
+      assert.equal(fs.existsSync(fixtureRoot), false);
+    }
+  });
+});
 
 test("manual routing bypasses local storage and remote execution for both targets", async () => {
   const originalCodexHome = process.env.CODEX_HOME;
@@ -6489,7 +6590,7 @@ test("atomic no-replace publication rejects a last-boundary parent redirect", as
 
 test("orchestrator and standalone runner preserve atomic-publication parity", async () => {
   await runnerTemporaryDirectory("hetzner-publication-parity", async (root) => {
-    const host = actualHost(root);
+    const host = process.platform === "win32" ? detectHost() : actualHost(root);
     const implementations = [
       {
         name: "orchestrator",
@@ -10140,6 +10241,139 @@ test("rollback integration removes only owned state, preserves credentials, and 
     };
     await atomicWriteJson(paths.processReceipt, readyReceipt, { mode: 0o600 });
     await securePathPermissions(paths.processReceipt, host, 0o600);
+    const publicationManifest = {
+      ...activeManifest,
+      process: { ...activeManifest.process, runnerPid: process.pid },
+    };
+    const publicationReceipt = { ...readyReceipt, runnerPid: process.pid };
+    await protectedFile(paths.manifest, stableJson(publicationManifest), host);
+    for (const operation of ["namespace", "observations"]) {
+      for (const phase of ["temporary", "quarantine"]) {
+        await protectedFile(paths.processReceipt, stableJson(publicationReceipt), host);
+        let entered;
+        const waiting = new Promise((resolve) => {
+          entered = resolve;
+        });
+        let release;
+        const gate = new Promise((resolve) => {
+          release = resolve;
+        });
+        const write = runnerAtomicJson(
+          paths.processReceipt,
+          {
+            ...publicationReceipt,
+            heartbeatAt: new Date().toISOString(),
+          },
+          {
+            async assertBoundaryAsync(boundary) {
+              if (phase === "temporary" && boundary.phase === "after-temporary-protection") {
+                entered();
+                await gate;
+              }
+            },
+            async afterClaim() {
+              if (phase === "quarantine") {
+                entered();
+                await gate;
+              }
+            },
+          },
+        );
+        await waiting;
+        let retries = 0;
+        const dependencies = {
+          host,
+          manifest: publicationManifest,
+          receiptPublicationDelay: async () => {
+            retries += 1;
+            release();
+            await write;
+          },
+        };
+        try {
+          if (operation === "namespace") {
+            assert.deepEqual(await managedNamespaceFindings(paths, dependencies), []);
+          } else {
+            const observations = await offlineObservations(paths, [], host, dependencies);
+            assert.deepEqual(observations[paths.processReceipt], { kind: "file" });
+            assert.deepEqual(observations[`${paths.stateRoot}::entries`].unexpected, []);
+          }
+          assert.equal(retries, 1, `${operation} must re-read the entire ${phase} snapshot`);
+        } finally {
+          release();
+          await write;
+        }
+      }
+    }
+    const foreignPublication = path.join(
+      paths.stateRoot,
+      `.process-receipt.json.${process.pid + 1}.${crypto.randomUUID()}.tmp`,
+    );
+    await protectedFile(foreignPublication, "foreign-publication", host);
+    const foreignFindings = await managedNamespaceFindings(paths, {
+      host,
+      manifest: publicationManifest,
+      receiptPublicationDelay() {
+        throw new Error("foreign publication must not retry");
+      },
+    });
+    assert.ok(foreignFindings.some((finding) => finding.path === foreignPublication));
+    assert.equal(await fs.promises.readFile(foreignPublication, "utf8"), "foreign-publication");
+    await fs.promises.unlink(foreignPublication);
+    const unsafePublication = path.join(
+      paths.stateRoot,
+      `.process-receipt.json.${process.pid}.${crypto.randomUUID()}.tmp`,
+    );
+    await fs.promises.mkdir(unsafePublication);
+    await assert.rejects(
+      managedNamespaceFindings(paths, { host, manifest: publicationManifest }),
+      (error) => error.code === "unexpected_managed_entry",
+    );
+    await fs.promises.rmdir(unsafePublication);
+    if (process.platform !== "win32") {
+      await fs.promises.symlink(paths.processReceipt, unsafePublication);
+      await assert.rejects(
+        managedNamespaceFindings(paths, { host, manifest: publicationManifest }),
+        (error) => error.code === "unexpected_managed_entry",
+      );
+      assert.equal((await fs.promises.lstat(unsafePublication)).isSymbolicLink(), true);
+      await fs.promises.unlink(unsafePublication);
+    }
+    for (const [change, code] of [
+      [
+        { processToken: "b".repeat(64), heartbeatAt: new Date().toISOString() },
+        "process_identity_mismatch",
+      ],
+      [{ heartbeatAt: new Date(Date.now() - 20_000).toISOString() }, "process_identity_stale"],
+    ]) {
+      await protectedFile(unsafePublication, "synthetic-publication", host);
+      await assert.rejects(
+        managedNamespaceFindings(paths, {
+          host,
+          manifest: publicationManifest,
+          receiptPublicationDelay: async () => {
+            await fs.promises.unlink(unsafePublication);
+            await protectedFile(
+              paths.processReceipt,
+              stableJson({ ...publicationReceipt, ...change }),
+              host,
+            );
+          },
+        }),
+        (error) => error.code === code,
+      );
+    }
+    await protectedFile(paths.processReceipt, stableJson(publicationReceipt), host);
+    await protectedFile(unsafePublication, "persistent-recovery-file", host);
+    await assert.rejects(
+      managedNamespaceFindings(paths, { host, manifest: publicationManifest }),
+      (error) => error.code === "unexpected_managed_entry",
+    );
+    assert.equal(await fs.promises.readFile(unsafePublication, "utf8"), "persistent-recovery-file");
+    await fs.promises.unlink(unsafePublication);
+    await protectedFile(paths.manifest, stableJson(activeManifest), host);
+    await protectedFile(paths.processReceipt, stableJson(readyReceipt), host);
+
     const ownedStatus = await installationStatus(host, paths, now);
     assert.equal(ownedStatus.process, "owned_ready");
     let proofClock = now - 1;

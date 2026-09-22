@@ -42,6 +42,8 @@ node scripts/manage-remote-hetzner.mjs apply \
 
 Apply rechecks the approved inventory and API contract. It uses a preallocated model ID and an ownership marker, then reads back the created model and non-secret routing parameters. A local attempt journal prevents blindly retrying a create whose response was lost. Keep this journal with the plan. An uncertain result requires exact-ID reconciliation; a matching alias alone is insufficient.
 
+On native Windows, keep the plan and adjacent attempt journal in a canonical private directory below `%LOCALAPPDATA%`, or select such a journal path with `--attempt-file`. The directory must already have inheritance disabled and an explicit current-user-only ACL; the helper verifies its owner, permissions and identity before reading the provider key. It never changes an existing directory's permissions. Only the new journal file is restricted and verified before the management write. An unavailable ACL verifier or unsafe directory stops the operation; loading credentials through environment variables does not bypass journal protection.
+
 The gateway, not this skill, owns encrypted provider-key persistence. Existing remote credentials are not copied into receipts. API errors are reported without echoing raw response bodies.
 
 Verify with a distinct client credential:
@@ -73,3 +75,5 @@ The implementation targets the observed LiteLLM model-info/create/delete contrac
 The route removes only the unsupported OpenAI `reasoning_effort` hint; client effort settings are ignored and the provider model keeps its own default. Actual tools are preserved. Local setup pins LiteLLM 1.101.0, whose Responses bridge omits empty tool lists. An observed 1.97.0 gateway rejected tool-free Responses/Messages requests against Hetzner. On an older remote build, successful Chat inference does not qualify these client protocols: test them separately and give the operator an upgrade/configuration handoff when needed. Never upgrade or rewrite a foreign route automatically.
 
 The local single-provider config also uses `litellm_settings.use_chat_completions_url_for_anthropic_messages: true` to select the official Messages-to-Chat path. This is a server-wide setting, not a model CRUD field. If remote Messages responses lose visible text, give this exact setting to the operator for impact review across all providers; do not apply it through a model request or restart the shared instance.
+
+If local journal creation or protection fails before any POST, correct that local cause and prepare a fresh reviewed plan with a new journal path; a partial owned journal may remain to prevent reuse. This recovery does not apply to an uncertain API timeout: reconcile the original model ID and owner marker before planning any further create.

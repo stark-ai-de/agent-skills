@@ -280,6 +280,35 @@ export function assertNoRedirects(target, options = {}) {
   }
 }
 
+// Native -Command treats trailing values as code. Keep caller values in a child-only
+// environment entry and pass them as data to a trusted script block instead.
+export function powershellCommand(script, values) {
+  if (
+    typeof script !== "string" ||
+    !Array.isArray(values) ||
+    values.some((value) => typeof value !== "string")
+  ) {
+    throw new TypeError("PowerShell requires a trusted script and string arguments");
+  }
+  const invocation = [
+    "$ErrorActionPreference='Stop'",
+    "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)",
+    "$OutputEncoding=[Console]::OutputEncoding",
+    "[string[]]$hetznerArguments=ConvertFrom-Json -InputObject ([Environment]::GetEnvironmentVariable('HETZNER_POWERSHELL_ARGUMENTS','Process'))",
+    `& { ${script} } @hetznerArguments`,
+  ].join(";");
+  return {
+    args: [
+      "-NoLogo",
+      "-NoProfile",
+      "-NonInteractive",
+      "-EncodedCommand",
+      Buffer.from(invocation, "utf16le").toString("base64"),
+    ],
+    environment: { HETZNER_POWERSHELL_ARGUMENTS: JSON.stringify(values) },
+  };
+}
+
 function windowsAclCommand(target, timeout = 10_000) {
   const executable = path.join(
     process.env.SystemRoot || process.env.WINDIR || "C:\\Windows",
@@ -302,12 +331,14 @@ function windowsAclCommand(target, timeout = 10_000) {
     "$current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
     "[pscustomobject]@{owner=$owner;current=$current;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
+  const command = powershellCommand(script, [target]);
   return {
-    args: ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, target],
+    args: command.args,
     executable,
     options: {
       encoding: "utf8",
       env: {
+        ...command.environment,
         PATH: process.env.PATH,
         SystemRoot: process.env.SystemRoot,
         TEMP: process.env.TEMP,
@@ -409,12 +440,14 @@ function secureWindowsAclCommand(target, timeout = 2_500) {
     "})",
     "[pscustomobject]@{owner=$owner;current=$current;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
+  const command = powershellCommand(script, [target]);
   return {
-    args: ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, target],
+    args: command.args,
     executable,
     options: {
       encoding: "utf8",
       env: {
+        ...command.environment,
         PATH: process.env.PATH,
         SystemRoot: process.env.SystemRoot,
         TEMP: process.env.TEMP,

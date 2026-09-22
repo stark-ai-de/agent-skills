@@ -26,6 +26,8 @@ with opener.open(request, timeout=20) as response:
 
 ## Local proxy
 
+Native NixOS additionally needs a user-provided Python/library environment that satisfies the proxy's native dependencies, including `libstdc++.so.6`. The pip/venv instructions below do not supply or qualify that environment. Use an existing remote gateway if this prerequisite is unavailable.
+
 1. In a machine-local directory outside a repository, run `python3 -m venv hetzner-venv` (Windows: `py -3 -m venv hetzner-venv`).
 2. Run `./hetzner-venv/bin/python -m pip install "litellm[proxy]==1.101.0" "fastapi==0.136.3" "starlette==1.3.1"`. Windows uses `.\hetzner-venv\Scripts\python.exe`.
    The FastAPI/Starlette pair follows the [official LiteLLM 1.101.0 lockfile](https://github.com/BerriAI/litellm/blob/v1.101.0/uv.lock); an unbounded newer FastAPI removes an import this proxy needs. Run `./hetzner-venv/bin/python -m pip check` after installation (use the Windows Python path there).
