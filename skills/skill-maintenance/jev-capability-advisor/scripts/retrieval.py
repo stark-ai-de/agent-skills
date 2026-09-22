@@ -17,14 +17,19 @@ POLICIES = ('current', 'balanced')
 MAX_SNAPSHOT_TERMS = 200_000
 MAX_SNAPSHOT_POSTINGS = 1_000_000
 MAX_SNAPSHOT_TERM_BYTES = 4096
+_CAMEL_BOUNDARY = re.compile(r'([a-z\d])([A-Z])')
+_ACRONYM_BOUNDARY = re.compile(r'([A-Z])([A-Z][a-z])')
+_WORDS = re.compile(r'[^\W_]+', re.UNICODE)
 
 
 def tokenize(value):
-    value = re.sub(r'([a-z\d])([A-Z])', r'\1 \2', value)
-    value = re.sub(r'([A-Z])([A-Z][a-z])', r'\1 \2', value)
-    value = unicodedata.normalize('NFKD', value.casefold())
-    value = ''.join(char for char in value if not unicodedata.combining(char))
-    return re.findall(r'[^\W_]+', value, re.UNICODE)
+    value = _CAMEL_BOUNDARY.sub(r'\1 \2', value)
+    value = _ACRONYM_BOUNDARY.sub(r'\1 \2', value).casefold()
+    # ASCII has neither compatibility decomposition nor combining marks.
+    if not value.isascii():
+        value = unicodedata.normalize('NFKD', value)
+        value = ''.join(char for char in value if not unicodedata.combining(char))
+    return _WORDS.findall(value)
 
 
 def stem(word):
@@ -37,13 +42,28 @@ def stem(word):
 
 
 def terms(value):
-    words = tokenize(value)
-    return words + ['stem:' + stem(word) for word in words if len(word) >= 5]
+    return _terms_from_words(tokenize(value))
+
+
+def _terms_from_words(words, stems=None):
+    if stems is None:
+        return words + ['stem:' + stem(word) for word in words if len(word) >= 5]
+    result = list(words)
+    for word in words:
+        if len(word) >= 5:
+            if word not in stems:
+                stems[word] = 'stem:' + stem(word)
+            result.append(stems[word])
+    return result
 
 
 def grams(value):
+    return _grams_from_words(tokenize(value))
+
+
+def _grams_from_words(words):
     result = set()
-    for word in tokenize(value):
+    for word in words:
         if len(word) >= 4:
             padded = '^' + word + '$'
             result.update(padded[i:i + 3] for i in range(len(padded) - 2))
@@ -76,9 +96,10 @@ class CandidateIndex:
         self._positive = [positive_text(item) for item in self.catalog]
         if any(not isinstance(item.get('description', item.get('brief', '')), str) for item in self.catalog):
             raise ValueError('invalid_description')
-        self.name_phrases = [' '.join(tokenize(item['name'])) for item in self.catalog]
+        name_words = [tokenize(item['name']) for item in self.catalog]
+        self.name_phrases = [' '.join(words) for words in name_words]
         if snapshot is None:
-            self._build_lexical()
+            self._build_lexical(name_words)
         else:
             self._restore_snapshot(snapshot)
         self.families = defaultdict(lambda: defaultdict(list))
@@ -129,31 +150,35 @@ class CandidateIndex:
         self.aliases = {family: {alias for alias in aliases if len(alias) >= 3}
                         for family, aliases in self.aliases.items()}
 
-    def _build_lexical(self):
+    def _build_lexical(self, name_words):
         counts = []
         lengths = []
+        # Repeated catalog words share morphology only within this build.
+        stems = {}
         for i, item in enumerate(self.catalog):
-            name = item['name']
             description = item.get('description', item.get('brief', ''))
             if not isinstance(description, str):
                 raise ValueError('invalid_description')
             extra = self._positive[i]
             if extra:
                 description += ' ' + extra
-            counter = Counter(terms(name) * 3 + terms(description))
+            description_words = tokenize(description)
+            counter = Counter(_terms_from_words(name_words[i], stems) * 3 +
+                              _terms_from_words(description_words, stems))
             counts.append(counter)
             lengths.append(sum(counter.values()))
-            for gram in grams(name + ' ' + description):
+            # The space between fields is a token boundary; reuse their tokens.
+            for gram in _grams_from_words(name_words[i] + description_words):
                 self.gram_postings[gram].append(i)
         average = sum(lengths) / max(1, len(lengths)) or 1
         document_frequency = Counter(term for counter in counts for term in counter)
         count = len(self.catalog)
+        idfs = {term: math.log(1 + (count - frequency + 0.5) / (frequency + 0.5))
+                for term, frequency in document_frequency.items()}
         for i, counter in enumerate(counts):
             norm = 1.2 * (0.25 + 0.75 * lengths[i] / average)
             for term, frequency in counter.items():
-                idf = math.log(1 + (count - document_frequency[term] + 0.5) /
-                               (document_frequency[term] + 0.5))
-                self.postings[term].append((i, idf * frequency * 2.2 / (frequency + norm)))
+                self.postings[term].append((i, idfs[term] * frequency * 2.2 / (frequency + norm)))
         self.gram_weights = {gram: math.log(1 + count / len(posting))
                              for gram, posting in self.gram_postings.items()}
 

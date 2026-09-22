@@ -72,10 +72,16 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
 # Recommend using an existing local raw-key file.
 python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
   --query-file /path/to/task.txt --key-file /path/to/local-key \
-  --output /path/to/local-result.json
+  --summary --output /path/to/local-result.json
 ```
 
-Alternatively provide `TYPESAFE_API_KEY` through the existing process environment. Never put the secret in a command argument or checked-in file. `--output` writes the requested result file; otherwise the result is printed. Receipts contain the supplied task and catalog cards, so store them locally.
+Alternatively provide `TYPESAFE_API_KEY` through the existing process environment. Never put the secret in a command argument or checked-in file. `--output` writes the complete result file. Without `--summary`, the full result is also printed as before. Receipts contain the supplied task and catalog cards, so store them locally.
+
+### Compact host output
+
+For Recommend, `--summary` prints only outcomes, selected and provisional capability cards with their complete input-catalog descriptions, restrictions, coverage counts, timing, cache/usage status and receipt fingerprints. It omits the complete candidate list and raw request/response bodies. `--output` still stores the full receipt unchanged. Summary-only operation creates no receipt file implicitly. `--summary` and `--offline-candidates` are mutually exclusive: Inspect retains its complete candidate view.
+
+Reuse a current host-exported catalog directly instead of copying it into the conversation. Check relevance and coverage using the complete descriptions and applicability guidance in the summary, together with host permissions. Resolve original metadata only when fields are missing, stale or inconsistent; do not reread the same fields solely for confirmation; inspect the full receipt or use native discovery for uncovered or inconsistent advice. Do not repeat the full catalog search after every fitting recommendation. This reduces repeated host work without changing retrieval, provider requests, selection semantics, or execution authority. A formally complete selection can still be wrong; compact output does not certify correctness.
 
 ## Local decision cache
 

@@ -8,7 +8,8 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 
 - **Skills and tools together.** Compare an installed workflow with an available MCP or host tool for the task you want to accomplish.
 - **Clear outcomes.** Selection, no suitable capability, clarification and provider failures stay distinct. Prematurely stopped compound plans remain incomplete.
-- **24.7% less local preparation time in our benchmark.** The optimized default needs no cache configuration. Optional caches support repeated catalogs or complete repeated recommendations.
+- **35% less local preparation time in the latest paired benchmark.** The optimized default needs no cache configuration. Optional caches support repeated catalogs or complete repeated recommendations.
+- **Compact advice, complete selected descriptions.** Keep the full diagnostic receipt locally and return only relevant recommendations, conditions and coverage to the host.
 - **Inspect the decision boundary.** Candidate coverage, requests, timing and provider usage are recorded. Your host controls loading, permissions and execution.
 
 ## Install and use
@@ -35,16 +36,24 @@ This release candidate also prepares the skill for **Codex in stark AI Developer
 
 ## Measured local speed
 
-**The default reduces median preparation from 160 ms to 120 ms.** This is measured local catalog preparation and request construction, before contacting Jev—not native skill loading or end-to-end task speed.
+**The latest optimization reduces median preparation from 121 ms to 78 ms, with identical candidates and provider requests.** It reuses tokenization and term calculations within each index build. No shortlist, quality rule or cache validation was weakened.
 
-| Same 718-entry catalog          | Preparation + request, median |           p95 | Offline CLI, median |
-| ------------------------------- | ----------------------------: | ------------: | ------------------: |
-| Earlier implementation          |                     159.54 ms |     164.61 ms |           204.93 ms |
-| **Optimized default, no cache** |                 **120.13 ms** | **122.02 ms** |       **171.41 ms** |
-| Optional warm index             |                     115.94 ms |     117.76 ms |           166.76 ms |
-| First index creation            |                     206.60 ms |     216.65 ms |           259.77 ms |
+| Same 718-entry catalog          | Preparation + request, median |          p95 | Full measurement process, median |
+| ------------------------------- | ----------------------------: | -----------: | -------------------------------: |
+| Previous candidate, no cache    |                     120.54 ms |    123.64 ms |                        167.06 ms |
+| **Optimized default, no cache** |                  **78.41 ms** | **80.63 ms** |                    **125.20 ms** |
 
-Measured 2026-09-22: 40 fresh processes per row and measurement scope, ten fixed development queries, rotating arm order; Linux/NixOS in WSL2, Intel i9-13900K, Python 3.14.7. All 320 measured process outputs retained the same candidates and relevant payloads. No provider calls were timed here. Normal concurrent machine load and warm filesystem caches limit portability of the absolute numbers. The warm index adds only a small gain; its initial creation is slower, so index caching stays opt-in. The separate **decision cache** can avoid a fresh provider call entirely when the query and current catalog/host context match.
+Measured 2026-09-22: 40 fresh Python processes per arm, ten fixed development queries, alternating arm order; Linux/NixOS in WSL2, Intel i9-13900K, Python 3.14.7. All 40 measured pairs retained the same 240 ordered candidates and request payloads. Another 1,080 comparisons covered 270 existing tasks, two catalog variants and both retrieval policies, with exact parity. Normal machine load and warm filesystem caches limit portability of absolute timings. This measures local preparation and request construction before contacting Jev; it does not measure native loading or task completion.
+
+**Compact output reduces returned JSON by 99.3% in the archived 100-case sample:** median 287,767 to 1,901 bytes, including complete descriptions of selected capabilities. `--summary` keeps outcomes, provisional advice, restrictions, coverage and fingerprints visible; `--output` preserves the full receipt locally. This is serialized output size, not measured model-token savings or a whole-workflow speedup. Unresolved advice still needs host verification or native discovery.
+
+The earlier optimization measured 159.54 to 120.13 ms on a separate paired run. That run's warm index needed 115.94 ms and initial index creation 206.60 ms; those cache timings predate the latest optimization and are not current comparisons. Index caching stays optional. The separate decision cache can avoid a fresh provider call when the query, catalog and host context match.
+
+### What the historical sixfold result measured
+
+An early 50-task test compared selection from the same 30 candidate cards: Jev's median was **1.045 s**, versus **6.265 s** for a native language-model selector's turn, approximately **6×**. The lexical index was already built; this excluded native process startup, capability loading and task execution. Strict quality was **39/50 for Jev versus 45/50 for the native selector**, so the original quality screen failed.
+
+The implementation later expanded to 240 candidates and conditioned follow-up decisions to improve selection. A separate full-host pilot also counted catalog reads, helper execution and independent checks; its times below answer a different question. The historical sixfold figure is not a current release speed guarantee. Restoring the earlier narrow shortlist merely to improve latency would discard measured coverage improvements.
 
 ## Selection quality
 
@@ -79,6 +88,19 @@ In a small paired Codex pilot, native discovery and the advisor-assisted host bo
 
 The twelve turns used a fixed catalog and six predeclared regression tasks. The advisor arm replayed verified responses from the earlier runtime, so it included no fresh TypeSafe network latency and does not qualify the later follow-up correction. This narrow pilot supports host control; it does not establish a general advantage over native discovery. Use the advisor for deliberate inspection and evaluation, not as a mandatory step for ordinary tasks.
 
+### Workflow optimization check
+
+A later twelve-turn A/B compared the previous advisor workflow with the compact-output workflow on the same six regression tasks, using the same native model configuration and exact archived corrected Jev responses in both arms.
+
+| Advisor workflow        | Correct tasks | Helper calls, total | Native turn, median | Complete host process, median |
+| ----------------------- | ------------: | ------------------: | ------------------: | ----------------------------: |
+| Previous workflow       |           6/6 |                  12 |             25.13 s |                       26.00 s |
+| Compact-output workflow |           6/6 |               **6** |             26.53 s |                       27.55 s |
+
+The compact workflow halved helper calls and reduced median helper output per workflow from 528,722 to 1,512 bytes. Reported native input tokens across the six tasks fell from 599,882 to 487,965 (**18.7%**), including system context, repeated turns and cached input; this is not a billing estimate. **It did not establish a speed gain:** median native turn time was 5.6% higher, despite a median per-case speed ratio of 1.036. Six cases, one trial per arm and variable model latency support no general performance guarantee. Both arms excluded fresh provider latency; these are workflow times, not the historical selector-only comparison.
+
+All twelve turns read the long contract, and five of six compact-workflow turns reread selected catalog metadata that was already complete in the summary. The final instructions now remove an unconditional contract-read cue and reserve catalog rereads for missing, stale or inconsistent metadata. The A/B above predates that final instruction clarification and remains recorded as a negative timing result. Two predeclared final-workflow smoke tasks then both passed with one helper call each, using the summary and local receipt without contract or catalog rereads. They confirm workflow adherence, not a new speed benchmark.
+
 ## Features at a glance
 
 | Capability                 | Jev Capability Advisor                                                        |
@@ -88,6 +110,7 @@ The twelve turns used a fixed catalog and six predeclared regression tasks. The 
 | No match or unclear intent | Separate `none` and `clarify` outcomes                                        |
 | Provider failure           | Explicit error; never reported as a successful recommendation                 |
 | Task-specific guidance     | Optional public `use_when`, `avoid_when`, keywords and parameter descriptions |
+| Compact host response      | Selected full descriptions and safety/coverage signals; full local receipt    |
 | Offline workflow           | Candidate inspection without API access                                       |
 | Optional local caches      | Validated lexical index; bounded complete-decision cache                      |
 | Alias handling             | Consolidate copies only with matching whole-bundle proof and restrictions     |

@@ -13,7 +13,7 @@ sys.dont_write_bytecode = True
 from advisor_test_support import SCRIPTS as ROOT
 sys.path.insert(0, str(ROOT))
 import jev_advisor as advisor
-from retrieval import CandidateIndex
+from retrieval import CandidateIndex, tokenize
 
 
 
@@ -36,6 +36,37 @@ def none_response(_):
 
 
 class RetrievalBoundaryTests(unittest.TestCase):
+    def test_unicode_and_identifier_token_boundaries(self):
+        cases = [
+            ('mcp__AtlasAPI__listHTTP2Records', ['mcp', 'atlas', 'api', 'list', 'http2', 'records']),
+            ('Caf\u00e9 cafe\u0301 \u00c4nderungen A\u0308nderungen',
+             ['cafe', 'cafe', 'anderungen', 'anderungen']),
+            ('Stra\u00dfe STRASSE \u0130stanbul', ['strasse', 'strasse', 'istanbul']),
+            ('\ufb03 \uff21\uff22\uff23 \u2460', ['ffi', 'abc', '1']),
+            ('\u03a3\u03c3\u03c2 \u6771\u4eac \u041f\u0440\u0438\u0432\u0435\u0442',
+             ['\u03c3\u03c3\u03c3', '\u6771\u4eac', '\u043f\u0440\u0438\u0432\u0435\u0442']),
+            ('snake_case-dotted.ID/123\x00end', ['snake', 'case', 'dotted', 'id', '123', 'end']),
+            ('\u0301\u0308 _---', []),
+        ]
+        for value, expected in cases:
+            with self.subTest(value=value):
+                self.assertEqual(tokenize(value), expected)
+
+    def test_canonical_unicode_forms_have_identical_lexical_data(self):
+        composed = [skill(1, name='Caf\u00e9API', description='\u00c4nderungen und Stra\u00dfe')]
+        decomposed = [skill(1, name='Cafe\u0301API', description='A\u0308nderungen und Stra\u00dfe')]
+        left, right = CandidateIndex(composed), CandidateIndex(decomposed)
+        self.assertEqual(left.snapshot(), right.snapshot())
+        self.assertEqual(left._scores('cafe anderungen'), right._scores('cafe anderungen'))
+
+    def test_name_and_description_remain_separate_token_fields(self):
+        index = CandidateIndex([skill(1, name='getHTTP', description='Server Cafe\u0301')])
+        self.assertIn('http', index.postings)
+        self.assertIn('server', index.postings)
+        self.assertIn('cafe', index.postings)
+        self.assertNotIn('httpserver', index.postings)
+        self.assertNotIn('pse', index.gram_postings)
+
     def test_all_skills_survive_tool_competition_at_240_budget(self):
         skills = [skill(i) for i in range(132)]
         catalog = skills + [tool('atlas', i) for i in range(600)]

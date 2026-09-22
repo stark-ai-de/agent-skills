@@ -3016,5 +3016,406 @@
       "Native host still exposed installed skill metadata and reported description truncation.",
       "No model override; exact resolved model name was not emitted."
     ]
+  },
+  "retrieval_optimization": {
+    "date": "2026-09-22",
+    "scope": "local preparation + initial provider request construction; no provider or native timing",
+    "catalog_items": 718,
+    "development_queries": 10,
+    "fresh_processes_per_arm": 40,
+    "schedule": "alternating arm order across four rounds",
+    "measurement": {
+      "baseline": {
+        "prepare_request_ms": {
+          "p50": 120.5389555,
+          "p95": 123.64457175
+        },
+        "process_ms": {
+          "p50": 167.064062,
+          "p95": 173.25185115
+        }
+      },
+      "candidate": {
+        "prepare_request_ms": {
+          "p50": 78.410901,
+          "p95": 80.6342317
+        },
+        "process_ms": {
+          "p50": 125.2005155,
+          "p95": 129.57835
+        }
+      },
+      "samples_per_arm": 40,
+      "paired_equality": 40,
+      "provider_requests": 0,
+      "prepare_request_reduction_percent": 34.94974245068848
+    },
+    "parity": {
+      "extended_ordered_payload_pairs_equal": 1080,
+      "all_candidate_counts": 240,
+      "timed_pairs_equal": 40,
+      "freeze_unchanged": true,
+      "prior_frozen_inputs_unchanged": 6,
+      "recomputed_medians_equal": true,
+      "provider_requests": 0
+    },
+    "baseline_retrieval_sha256": "c7582d9702ec4f6c754f58bd76f845dc2c8b5f36ec71d4c2c8c0c0fc39946347",
+    "optimized_retrieval_sha256": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+    "measurement_advisor_sha256": "682f41a414d104ed3e5375ef803f4fd1a7c93c5c2fe32a63792b33e013ef9d42",
+    "limitations": [
+      "Existing regressions, not new semantic quality tests.",
+      "Measures unchanged preparation functions; compact CLI output measured separately.",
+      "No CPU pinning, cache flushing or cross-host runtime qualification.",
+      "Python 3.10 grammar checked; execution used Python 3.14.7."
+    ],
+    "percentiles": "p50 median; p95 linear interpolation of ordered samples"
+  },
+  "compact_output": {
+    "cases": 100,
+    "full_bytes_median": 287767.0,
+    "summary_bytes_median": 1901.0,
+    "all_outcomes_and_provenance_preserved": true,
+    "complete_selected_descriptions_verified": true,
+    "fresh_provider_requests": 0,
+    "advisor_sha256": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+    "reduction_percent": 99.33939610865735
+  },
+  "historical_selector_comparison": {
+    "cases": 50,
+    "candidate_limit": 30,
+    "jev_median_ms": 1044.5112859961228,
+    "native_turn_median_ms": 6265.313991003495,
+    "jev_strict_correct": 39,
+    "native_strict_correct": 45,
+    "quality_screen_passed": false,
+    "limits": [
+      "Historical prototype; not a current release comparison.",
+      "Prebuilt lexical index; excludes native process startup, capability loading and task execution.",
+      "Named provenance and raw artifacts remain local."
+    ]
+  },
+  "optimized_archived_replay": {
+    "mode": "archived hash-checked replay",
+    "cases": 100,
+    "request_payloads_and_responses": 153,
+    "phases": {
+      "initial": 100,
+      "followup": 53
+    },
+    "terminal_outcomes_equal": 100,
+    "coverage_equal": 100,
+    "ordered_candidate_maps_equal": 153,
+    "statuses": {
+      "clarify": 11,
+      "selected": 76,
+      "none": 11,
+      "error": 2
+    },
+    "fresh_provider_requests": 0,
+    "network_attempts": 0,
+    "credentials_read": 0,
+    "new_quality_claim": false,
+    "latency_claim": false,
+    "source_sha256": {
+      "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+      "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+      "jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+      "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+      "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    },
+    "source_unchanged_at_completion": true,
+    "prior_archive_hashes_verified": true,
+    "compared_terminal_fields": [
+      "status",
+      "mode",
+      "selected",
+      "selected_ids",
+      "provisional_selected",
+      "stopped_reason",
+      "error",
+      "request_count"
+    ],
+    "compared_request_fields": [
+      "attempt",
+      "phase",
+      "endpoint",
+      "request",
+      "request_sha256",
+      "request_bytes",
+      "candidate_map",
+      "response",
+      "response_sha256",
+      "response_bytes",
+      "error"
+    ],
+    "excluded_runtime_fields": [
+      "started_at",
+      "elapsed_ms",
+      "receipt_digest",
+      "requests[].at",
+      "requests[].elapsed_ms",
+      "requests[].transport_kind"
+    ]
+  },
+  "native_workflow_optimization": {
+    "scope": "Six fixed regression tasks; actual host workflows; exact archived Jev replay; zero fresh provider latency in both arms",
+    "requested_reasoning_effort": "low",
+    "resolved_backend_model": null,
+    "native_turns": 12,
+    "typesafe_calls": 0,
+    "source_hashes": {
+      "baseline": {
+        "SKILL.md": "44e8072029d27ff3c72aaff90e989ef48108edddeb8f04f833c0a76950fae9c4",
+        "references/contract.md": "077a611202d67dae91ccf08ef77ec4bacb6e21c0b372f05699fd6384ae6e3613",
+        "scripts/jev_advisor.py": "682f41a414d104ed3e5375ef803f4fd1a7c93c5c2fe32a63792b33e013ef9d42",
+        "scripts/retrieval.py": "c7582d9702ec4f6c754f58bd76f845dc2c8b5f36ec71d4c2c8c0c0fc39946347",
+        "scripts/decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+        "scripts/index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+        "scripts/routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+      },
+      "candidate": {
+        "SKILL.md": "f058ff9e7a26d71ef17e81f7dd5c7e8879e08adc64c932fac711249170797a10",
+        "references/contract.md": "b19085bbae7ff1a1743a5dabc6baa91d23a8257a2cf1756ef388a546fe1aa22b",
+        "scripts/jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+        "scripts/retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+        "scripts/decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+        "scripts/index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+        "scripts/routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+      }
+    },
+    "baseline_commit": "d0cf3246112693541f5a7b01bca9afb1d6f156bf",
+    "freeze_sha256": "494959a18e10882e2624c072117ce783e3afe0aee194fa1c183e21cfde0ec850",
+    "arms": {
+      "baseline": {
+        "n": 6,
+        "correct": 6,
+        "valid_runs": 6,
+        "turn_ms": {
+          "n": 6,
+          "p50": 25134.09125499311,
+          "p95": 29972.22523399978
+        },
+        "process_ms": {
+          "n": 6,
+          "p50": 25998.573095996107,
+          "p95": 30967.14767800586
+        },
+        "command_count": {
+          "n": 6,
+          "p50": 3.5,
+          "p95": 5
+        },
+        "helper_stdout_bytes": {
+          "n": 6,
+          "p50": 528721.5,
+          "p95": 971150
+        },
+        "tool_output_bytes": {
+          "n": 6,
+          "p50": 443503.5,
+          "p95": 796553
+        },
+        "failed_shell_commands": 0,
+        "helper_invocations": 12,
+        "native_input_tokens_total": 599882,
+        "native_input_tokens_p50": 97225.0,
+        "native_cached_input_tokens_total": 413952,
+        "contract_read_turns": 6,
+        "contract_read_commands": 8
+      },
+      "candidate": {
+        "n": 6,
+        "correct": 6,
+        "valid_runs": 6,
+        "turn_ms": {
+          "n": 6,
+          "p50": 26534.938638498716,
+          "p95": 39937.96431599185
+        },
+        "process_ms": {
+          "n": 6,
+          "p50": 27548.92632499832,
+          "p95": 40882.119992005755
+        },
+        "command_count": {
+          "n": 6,
+          "p50": 3.0,
+          "p95": 4
+        },
+        "helper_stdout_bytes": {
+          "n": 6,
+          "p50": 1511.5,
+          "p95": 2506
+        },
+        "tool_output_bytes": {
+          "n": 6,
+          "p50": 26812.5,
+          "p95": 28632
+        },
+        "failed_shell_commands": 0,
+        "helper_invocations": 6,
+        "native_input_tokens_total": 487965,
+        "native_input_tokens_p50": 84931.0,
+        "native_cached_input_tokens_total": 346496,
+        "contract_read_turns": 6,
+        "contract_read_commands": 6
+      }
+    },
+    "ratio_of_p50_turn_ms": 0.9472074383668195,
+    "median_paired_ratio": 1.03639886130432,
+    "both_correct": {
+      "n": 6,
+      "baseline_turn_ms": {
+        "n": 6,
+        "p50": 25134.09125499311,
+        "p95": 29972.22523399978
+      },
+      "candidate_turn_ms": {
+        "n": 6,
+        "p50": 26534.938638498716,
+        "p95": 39937.96431599185
+      }
+    },
+    "audit": {
+      "all_12_read_skill": true,
+      "adapter_or_replay_data_inspections": 0,
+      "failed_shell_commands": 0,
+      "remaining_process_groups": 0,
+      "candidate_selected_metadata_recheck_turns": 5,
+      "candidate_summary_metadata_mismatches": 0,
+      "additional_selected_skill_fields_on_reread": [
+        "bundle_sha256",
+        "content_sha256",
+        "skill_identity"
+      ],
+      "additional_selected_tool_fields_on_reread": [],
+      "host_context_output_truncation": "Not independently observable; raw events contain complete outputs. Do not equate stdout reduction with context-token reduction."
+    },
+    "comparison": "previous advisor workflow versus compact-output workflow, same native model configuration",
+    "instruction_revision": "before final clarification removing redundant contract/catalog reads",
+    "sixfold_workflow_speedup_established": false,
+    "token_measurement": "Reported native input tokens include system context, repeated turns and cached input; no billing inference."
+  },
+  "final_compact_workflow_smoke": {
+    "purpose": "Final-document activation/workflow smoke; no performance inference",
+    "passed": true,
+    "cases": [
+      {
+        "correct": true,
+        "valid_run": true,
+        "read_actual_skill": true,
+        "contract_read": false,
+        "catalog_reread": false,
+        "adapter_or_replay_data_inspection": false,
+        "helper_invocation_count": 1,
+        "used_summary_and_full_receipt": true,
+        "helper_stdout_bytes": 2211,
+        "helper_terminal_statuses": ["selected"],
+        "command_count": 2,
+        "failed_shell_commands": 0,
+        "process_exit_code": 0,
+        "timed_out": false,
+        "process_group_remaining": false,
+        "fresh_typesafe_calls": 0,
+        "exact_replayed_requests": 2
+      },
+      {
+        "correct": true,
+        "valid_run": true,
+        "read_actual_skill": true,
+        "contract_read": false,
+        "catalog_reread": false,
+        "adapter_or_replay_data_inspection": false,
+        "helper_invocation_count": 1,
+        "used_summary_and_full_receipt": true,
+        "helper_stdout_bytes": 1428,
+        "helper_terminal_statuses": ["selected"],
+        "command_count": 2,
+        "failed_shell_commands": 0,
+        "process_exit_code": 0,
+        "timed_out": false,
+        "process_group_remaining": false,
+        "fresh_typesafe_calls": 0,
+        "exact_replayed_requests": 1
+      }
+    ],
+    "native_turns": 2,
+    "typesafe_calls": 0,
+    "model_preflight_turns": 0,
+    "retries": 0,
+    "frozen_closure_verified": true,
+    "current_source_matches_frozen": {
+      "SKILL.md": true,
+      "references/contract.md": true,
+      "scripts/jev_advisor.py": true,
+      "scripts/retrieval.py": true,
+      "scripts/decision_cache.py": true,
+      "scripts/index_cache.py": true,
+      "scripts/routing_metadata.py": true
+    },
+    "source_hashes": {
+      "SKILL.md": "4ea16bb428f7dc059e94f264e40d4694c9e3ead1516362b8c0fde43e03cedeca",
+      "references/contract.md": "98366cd58363490a50ebc498467f571ab822c55a457da25ff37ccec48c2753d6",
+      "scripts/jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+      "scripts/retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+      "scripts/decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+      "scripts/index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+      "scripts/routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    },
+    "freeze_sha256": "6bda032d1b1b44a1181992dac68e0be5be51cdc1fc061d4cd1a0fcc245489dc1",
+    "requested_reasoning_effort": "low",
+    "resolved_backend_model": null
+  },
+  "optimized_install_and_archives": {
+    "standalone_install_exit": 0,
+    "archives": [
+      {
+        "archive": "jev-capability-advisor.zip",
+        "parent": "skills",
+        "source_equal": true,
+        "files": 10,
+        "archive_sha256": "a2e7e6aa0754ad1d36efc6fb2e222c7a5b156d2186a2229d599e871384399149"
+      },
+      {
+        "archive": "stark-ai-developer-1.3.0.zip",
+        "parent": "agent-plugins",
+        "source_equal": true,
+        "files": 10,
+        "archive_sha256": "644a761f1a796b76815b80cf04f2b97101159111e45a904d8a716ec8424b19dc"
+      },
+      {
+        "archive": "stark-ai-developer-1.3.0.zip",
+        "parent": "openai",
+        "source_equal": true,
+        "files": 10,
+        "archive_sha256": "68e9349e90e17cbacfbbb9fb50da42b0006b4f0c28728f029c3b48fb8f9047e7"
+      }
+    ],
+    "installed_file_count": 10,
+    "installed_source_equal": true,
+    "installed_help_and_inspect": {
+      "help": {
+        "exit_code": 0
+      },
+      "offline": {
+        "exit_code": 0
+      }
+    },
+    "installed_summary_with_injected_response": true,
+    "full_selected_description_preserved": true,
+    "credential_reads": 0,
+    "network_attempts": 0,
+    "source_sha256": {
+      "SKILL.md": "4ea16bb428f7dc059e94f264e40d4694c9e3ead1516362b8c0fde43e03cedeca",
+      "agents/openai.yaml": "77a14a288a82e585b303b3d2500a362afe2921cbb74add494a007e0d27a1e97a",
+      "assets/openai-icon.png": "fd2dbb93b1ac7c3df6e971eef019ca20c6ecd1a8519b6c672bc8c83a876dfe79",
+      "assets/openai-icon.svg": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0",
+      "references/contract.md": "98366cd58363490a50ebc498467f571ab822c55a457da25ff37ccec48c2753d6",
+      "scripts/decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+      "scripts/index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+      "scripts/jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+      "scripts/retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+      "scripts/routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    }
   }
 }

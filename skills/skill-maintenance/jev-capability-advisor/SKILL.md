@@ -34,11 +34,20 @@ Return a small, task-specific recommendation from the capabilities actually avai
 
 Choose **Recommend** for a concrete selection request or **Inspect** for candidate inspection. A bare invocation needs the task to be selected for.
 
-1. Export only current capability metadata into a local JSON catalog using the [catalog contract](references/contract.md). Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
+1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
-3. **Recommend:** run the helper with the catalog, query, and configured credential source. It selects one primary capability. Compound advice is experimental: distinct tasks may require conditioned follow-up decisions, up to three recommendations. Keep incomplete proposals provisional and let the host resolve uncovered work. For repeated tasks, opt in to the [local cache](references/contract.md#local-decision-cache) with a private directory and current host context.
+3. **Recommend:** run the helper once with `--summary --output /path/to/local-receipt.json`, the catalog, query, and configured credential source. The summary contains selected cards with complete descriptions, applicability guidance, restrictions, coverage, failures and provenance; the full receipt stays in the requested local file. Compound advice is experimental: distinct tasks may require conditioned follow-up decisions, up to three recommendations. Keep incomplete proposals provisional. For repeated tasks, opt in to the [local cache](references/contract.md#local-decision-cache) with a private directory and current host context.
 4. Keep `--retrieval-policy current` as the default. Use `balanced` only for an explicitly selected experiment, and disclose its bounded coverage tradeoff. Check the returned status and candidate coverage. Preserve `none`, `clarify`, and `error` as different outcomes. A request limit or incomplete selection is not a successful complete answer.
-5. Report the recommendation and its boundary. Read a recommended skill or invoke a recommended tool only when the user's underlying task already authorizes that action and the host's instructions permit it.
+5. Check relevance and coverage using the complete descriptions and applicability guidance already returned in the summary, together with current host restrictions. Resolve authoritative metadata for selected IDs only when those fields are missing, stale or inconsistent; do not reread the catalog solely to obtain the same fields again. If they fit, report them without repeating a full-catalog search. If advice is incomplete, inconsistent or does not cover the request, use the full receipt and native discovery for the unresolved part. Read a recommended skill or invoke a recommended tool only when the user's underlying task already authorizes that action and the host's instructions permit it.
+
+When the catalog and credentials are already configured, the Recommend call is:
+
+```sh
+python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
+  --query-file /path/to/task.txt --summary --output /path/to/local-receipt.json
+```
+
+Run from the skill directory, or resolve the script relative to this `SKILL.md`. Add `--key-file /path/to/local-key` when using an existing raw-key file instead of `TYPESAFE_API_KEY`. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid Recommend call. A summary is advisory and does not prove semantic correctness.
 
 ## Safety rules
 
@@ -49,7 +58,7 @@ Choose **Recommend** for a concrete selection request or **Inspect** for candida
 
 ## References
 
-Read [the contract and commands](references/contract.md) when preparing a catalog, calling the helper, or interpreting incomplete results.
+Read [the contract and commands](references/contract.md) when preparing a catalog or diagnosing incomplete results and limits. A configured Recommend call follows the command above without an additional contract read.
 
 ## Scripts
 

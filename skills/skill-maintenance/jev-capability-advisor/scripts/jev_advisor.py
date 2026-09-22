@@ -540,6 +540,42 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
     return result
 
 
+def summarize(result, catalog=()):
+    """Keep the host's decision boundary visible without repeating the full catalog.
+
+    Presentation only: the complete receipt remains available through --output.
+    Selected metadata includes complete descriptions from the current input catalog.
+    It never expands what is sent to the provider.
+    """
+    fields = ('status', 'mode', 'selected', 'provisional_selected', 'stopped_reason', 'error',
+              'request_count', 'elapsed_ms', 'usage_total', 'cache', 'index_cache',
+              'retrieval_policy', 'eligible_count', 'distinct_capability_count',
+              'deduplicated_count', 'represented_count', 'candidate_count',
+              'catalog_truncated', 'none_scope', 'candidate_digest', 'receipt_digest')
+    summary = {key: result[key] for key in fields if key in result}
+    summary['format'] = 'recommendation_summary'
+    by_id = {item['id']: item for item in result.get('candidates', [])}
+    card_fields = ('id', 'name', 'kind', 'brief', 'explicit_only', 'source_paths',
+                   'use_when', 'avoid_when', 'keywords', 'parameter_descriptions')
+    for ids, cards in (('selected', 'selected_capabilities'),
+                       ('provisional_selected', 'provisional_capabilities')):
+        summary[cards] = [{key: by_id[identifier][key] for key in card_fields
+                           if key in by_id[identifier]}
+                          for identifier in result.get(ids, []) if identifier in by_id]
+    # Provider cards are shortened for transport; host checks need the original
+    # description, including conditions beyond that shortening boundary.
+    originals = {item.get('id'): item for item in catalog
+                 if isinstance(item, dict) and isinstance(item.get('id'), str)}
+    for card in summary['selected_capabilities'] + summary['provisional_capabilities']:
+        original = originals.get(card['id'], {})
+        description = original.get('description', original.get('brief', ''))
+        if isinstance(description, str):
+            card['description'] = description
+        if isinstance(original.get('brief'), str):
+            card['brief'] = original['brief']
+    return summary
+
+
 def main(argv=None):
     # Running the CLI must not create retrieval.py bytecode cache files.
     sys.dont_write_bytecode = True
@@ -549,7 +585,9 @@ def main(argv=None):
     queries.add_argument('--query')
     queries.add_argument('--query-file', type=Path)
     parser.add_argument('--key-file', type=Path, help='File containing only the raw API key; alternatively TYPESAFE_API_KEY')
-    parser.add_argument('--output', type=Path, help='Write result JSON here')
+    parser.add_argument('--output', type=Path, help='Write the complete result JSON here, including with --summary')
+    parser.add_argument('--summary', action='store_true',
+                        help='Print recommendation, selected cards and coverage only; not for --offline-candidates')
     parser.add_argument('--index-cache-dir', type=Path, help='Opt in to bounded local index-cache reads/writes, including offline inspection')
     parser.add_argument('--retrieval-policy', choices=('current', 'balanced'), default='current',
                         help='Current selection is the default; balanced reserves tool capacity outside named providers')
@@ -558,6 +596,9 @@ def main(argv=None):
     parser.add_argument('--cache-ttl-seconds', type=float, default=3600, help='Cache age limit, 1 hour by default, at most 1 day')
     parser.add_argument('--offline-candidates', action='store_true', help='Return candidate IDs without reading a key or using the network')
     args = parser.parse_args(argv)
+    if args.summary and args.offline_candidates:
+        parser.error('--summary is for recommendations; --offline-candidates retains the full inspection view')
+    catalog = []
     try:
         catalog = json.loads(args.catalog.read_text(encoding='utf-8'))
         query = args.query if args.query is not None else args.query_file.read_text(encoding='utf-8')
@@ -579,9 +620,10 @@ def main(argv=None):
                             index_cache_dir=args.index_cache_dir, retrieval_policy=args.retrieval_policy)
     except Exception as error:
         result = {'status': 'error', 'selected': [], 'selected_ids': [], 'error': _error_code(error), 'request_count': 0}
-    rendered = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
     if args.output:
-        args.output.write_text(rendered, encoding='utf-8')
+        args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    displayed = summarize(result, catalog if isinstance(catalog, list) else []) if args.summary else result
+    rendered = json.dumps(displayed, ensure_ascii=False, indent=2) + '\n'
     print(rendered, end='')
     return 1 if result['status'] == 'error' else 0
 

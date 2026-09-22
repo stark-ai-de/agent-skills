@@ -1831,10 +1831,10 @@
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
     },
     {
-      "byteLength": 6116,
+      "byteLength": 7604,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "44e8072029d27ff3c72aaff90e989ef48108edddeb8f04f833c0a76950fae9c4"
+      "sha256": "4ea16bb428f7dc059e94f264e40d4694c9e3ead1516362b8c0fde43e03cedeca"
     },
     {
       "byteLength": 580,
@@ -1855,10 +1855,10 @@
       "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
     },
     {
-      "byteLength": 15831,
+      "byteLength": 17152,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/contract.md",
-      "sha256": "077a611202d67dae91ccf08ef77ec4bacb6e21c0b372f05699fd6384ae6e3613"
+      "sha256": "98366cd58363490a50ebc498467f571ab822c55a457da25ff37ccec48c2753d6"
     },
     {
       "byteLength": 4617,
@@ -1873,16 +1873,16 @@
       "sha256": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076"
     },
     {
-      "byteLength": 33342,
+      "byteLength": 36087,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
-      "sha256": "682f41a414d104ed3e5375ef803f4fd1a7c93c5c2fe32a63792b33e013ef9d42"
+      "sha256": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286"
     },
     {
-      "byteLength": 15877,
+      "byteLength": 16858,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/retrieval.py",
-      "sha256": "c7582d9702ec4f6c754f58bd76f845dc2c8b5f36ec71d4c2c8c0c0fc39946347"
+      "sha256": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645"
     },
     {
       "byteLength": 3418,
@@ -1897,5 +1897,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "877c1b30dd86bb39cfa92289127c0875c3d03434e3256bbf87808e585062c4f0"
+  "treeHash": "a59eb3888a2e666182fdae7087a16c744ac6c5bd0b7cc8979183ea49654ecc69"
 }
