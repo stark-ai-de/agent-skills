@@ -309,6 +309,18 @@ export function powershellCommand(script, values) {
   };
 }
 
+// Request SID rules directly: account-name round trips can fail or wait on
+// unavailable identity providers, even when the ACL already contains valid SIDs.
+export const windowsAclAccessRulesScript = [
+  "$items=@($acl.GetAccessRules($true,$true,[System.Security.Principal.SecurityIdentifier]) | ForEach-Object {",
+  "  $sid=$_.IdentityReference.Value",
+  "  $rights=([int64]$_.FileSystemRights).ToString()",
+  "  $inheritanceFlags=([int64]$_.InheritanceFlags).ToString()",
+  "  $propagationFlags=([int64]$_.PropagationFlags).ToString()",
+  "  [pscustomobject]@{sid=$sid;type=$_.AccessControlType.ToString();inherited=$_.IsInherited;rights=$rights;inheritanceFlags=$inheritanceFlags;propagationFlags=$propagationFlags}",
+  "})",
+].join(";");
+
 function windowsAclCommand(target, timeout = 10_000) {
   const executable = path.join(
     process.env.SystemRoot || process.env.WINDIR || "C:\\Windows",
@@ -321,13 +333,7 @@ function windowsAclCommand(target, timeout = 10_000) {
     "$ErrorActionPreference='Stop'",
     "$acl=Get-Acl -LiteralPath $args[0]",
     "$owner=$acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value",
-    "$items=@($acl.Access | ForEach-Object {",
-    "  $sid=$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value",
-    "  $rights=([int64]$_.FileSystemRights).ToString()",
-    "  $inheritanceFlags=([int64]$_.InheritanceFlags).ToString()",
-    "  $propagationFlags=([int64]$_.PropagationFlags).ToString()",
-    "  [pscustomobject]@{sid=$sid;type=$_.AccessControlType.ToString();inherited=$_.IsInherited;rights=$rights;inheritanceFlags=$inheritanceFlags;propagationFlags=$propagationFlags}",
-    "})",
+    windowsAclAccessRulesScript,
     "$current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
     "[pscustomobject]@{owner=$owner;current=$current;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
@@ -431,13 +437,7 @@ function secureWindowsAclCommand(target, timeout = 2_500) {
     "if($LASTEXITCODE -ne 0){throw 'icacls failed'}",
     "$acl=Get-Acl -LiteralPath $args[0]",
     "$owner=$acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value",
-    "$items=@($acl.Access | ForEach-Object {",
-    "  $sid=$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value",
-    "  $rights=([int64]$_.FileSystemRights).ToString()",
-    "  $inheritanceFlags=([int64]$_.InheritanceFlags).ToString()",
-    "  $propagationFlags=([int64]$_.PropagationFlags).ToString()",
-    "  [pscustomobject]@{sid=$sid;type=$_.AccessControlType.ToString();inherited=$_.IsInherited;rights=$rights;inheritanceFlags=$inheritanceFlags;propagationFlags=$propagationFlags}",
-    "})",
+    windowsAclAccessRulesScript,
     "[pscustomobject]@{owner=$owner;current=$current;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
   const command = powershellCommand(script, [target]);

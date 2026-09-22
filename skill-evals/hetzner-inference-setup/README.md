@@ -35,6 +35,7 @@ Use [`rubric.md`](rubric.md). These prompts contain no live token and authorize 
 
 ## Current evidence
 
+- [Windows ACL follow-up](runs/2026-09-22-windows-acl.md) — native SID regression and hosted qualification boundaries.
 - [Validation and live evidence](runs/2026-09-21-validation.md) — source-bound local proof and explicit remote/client/platform gaps.
 
 - [Known-expectations text exercise](runs/2026-09-21-text-evaluation.md) — response coverage only, not an executed activation benchmark.

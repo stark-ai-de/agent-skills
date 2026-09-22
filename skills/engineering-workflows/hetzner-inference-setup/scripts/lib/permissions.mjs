@@ -5,6 +5,7 @@ import {
   powershellCommand,
   pathSegments,
   samePathIdentity,
+  windowsAclAccessRulesScript,
 } from "../../assets/templates/protected-file.mjs";
 import { MAX_SECRET_BYTES } from "./constants.mjs";
 import { invariant } from "./errors.mjs";
@@ -135,13 +136,7 @@ async function windowsAclSnapshot(target, host, label = "protected path", option
     "$ErrorActionPreference='Stop'",
     "$acl=Get-Acl -LiteralPath $args[0]",
     "$owner=$acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value",
-    "$items=@($acl.Access | ForEach-Object {",
-    "  $sid=$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value",
-    "  $rights=([int64]$_.FileSystemRights).ToString()",
-    "  $inheritanceFlags=([int64]$_.InheritanceFlags).ToString()",
-    "  $propagationFlags=([int64]$_.PropagationFlags).ToString()",
-    "  [pscustomobject]@{sid=$sid;type=$_.AccessControlType.ToString();inherited=$_.IsInherited;rights=$rights;inheritanceFlags=$inheritanceFlags;propagationFlags=$propagationFlags}",
-    "})",
+    windowsAclAccessRulesScript,
     "[pscustomobject]@{owner=$owner;protected=$acl.AreAccessRulesProtected;access=$items} | ConvertTo-Json -Compress -Depth 4",
   ].join(";");
   const bound = assertFreshNamedPath(target, host, label, options);

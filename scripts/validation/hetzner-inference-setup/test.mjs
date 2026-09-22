@@ -22,6 +22,7 @@ import {
   readProtectedSecret,
   readProtectedGatewaySecret,
   secureAndVerifyCurrentUserFileAsync,
+  windowsAclAccessRulesScript,
 } from "../../../skills/engineering-workflows/hetzner-inference-setup/assets/templates/protected-file.mjs";
 
 import {
@@ -782,6 +783,52 @@ test("PowerShell passes hostile filenames as data without source interpolation",
       assert.deepEqual(JSON.parse(result.stdout.replace(/^\uFEFF/u, "")), selectedValues);
     }
   }
+});
+
+test("Windows ACL snapshots preserve raw SIDs and explicit or inherited rule flags", (context) => {
+  if (process.platform !== "win32") {
+    context.skip("In-memory Windows ACL rules require native Windows");
+    return;
+  }
+  const orphanSid = "S-1-5-21-4294967290-4294967291-4294967292-4294967293";
+  const script = [
+    "$acl=[System.Security.AccessControl.DirectorySecurity]::new()",
+    "$acl.SetSecurityDescriptorSddlForm($args[0])",
+    windowsAclAccessRulesScript,
+    "ConvertTo-Json -InputObject $items -Compress -Depth 4",
+  ].join(";");
+  const command = powershellCommand(script, [
+    `O:SYG:SYD:(A;OICIIO;FA;;;${orphanSid})(A;ID;FR;;;SY)`,
+  ]);
+  const executable = resolveExecutable("powershell", { platform: "win32" });
+  assert.ok(executable);
+  const result = spawnSync(executable, command.args, {
+    encoding: "utf8",
+    env: { ...process.env, ...command.environment },
+    timeout: 10_000,
+    windowsHide: true,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  const rules = JSON.parse(result.stdout.replace(/^\uFEFF/u, ""));
+  assert.deepEqual(rules, [
+    {
+      sid: orphanSid,
+      type: "Allow",
+      inherited: false,
+      rights: "2032127",
+      inheritanceFlags: "3",
+      propagationFlags: "2",
+    },
+    {
+      sid: "S-1-5-18",
+      type: "Allow",
+      inherited: true,
+      rights: "1179785",
+      inheritanceFlags: "0",
+      propagationFlags: "0",
+    },
+  ]);
 });
 
 test("native Windows protects literal hostile filenames with both ACL helpers", async (context) => {
