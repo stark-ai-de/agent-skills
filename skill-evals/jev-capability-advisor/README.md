@@ -2,6 +2,29 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
+## Current matched selector comparison, 2026-09-22
+
+The unchanged optimized runtime was compared with a native language-model selector on all 80 existing release regressions, with identical initial task/card/rule strings and frozen labels. This is regression evidence, not a fresh holdout or a host-workflow test.
+
+| Measure                     |     Jev advisor |  Native selector |
+| --------------------------- | --------------: | ---------------: |
+| Strict complete results     |           70/80 |            72/80 |
+| Single skill / single tool  |   20/20 / 18/20 |    20/20 / 18/20 |
+| No match / clarification    |   10/10 / 10/10 |    10/10 / 10/10 |
+| Compound results            |           12/20 |            14/20 |
+| Selection median / p95      | 1.216 / 3.465 s | 5.725 / 12.331 s |
+| Runtime or transport errors |               0 |                0 |
+
+The ratio of selection medians is **4.709×**; the median paired native/Jev ratio is **4.192×**, with a predeclared 10,000-resample 95% paired bootstrap interval of **3.707–4.575×**. The 70 tasks correct in both arms have medians 1.211/5.481 s (4.527×). The 20 compound tasks have medians 2.410/6.650 s (2.759×). All measured failures remain in the full-corpus timing and quality denominators; the both-correct subset is conditional on observed outcomes. These intervals describe this fixed corpus and one observation per arm/task, not deployment-wide uncertainty.
+
+Shared retrieval covered every required group on 52/60 positive tasks and 78/87 required groups. Eight tasks were therefore already constrained by missing candidates. Jev's two additional misses were compounds with sufficient candidates. Wrong or additional selections occurred in eight Jev cases versus six native cases; those counts overlap missing-capability failures. An independently implemented one-to-one scorer agrees on all 160 rows. Secondary scoring with preverified whole-bundle aliases changes no result. The earlier 72/80 Jev result below is a separate observation; it must not replace this run's 70/80.
+
+The frozen experiment used 40 German, 30 English and ten mixed-language tasks, 718 catalog records, the same 240 ordered cards per task, randomized task/arm order, concurrency one and no local decision/index cache. There were **106 Jev requests, 80 native turns, zero retries, zero unexpected tool executions and zero remaining process groups**. Sixty-one Jev tasks used one call, twelve used two and seven used three. Native reasoning effort was low; backend model resolution was not independently observable. Neither arm loaded or executed a selected capability. Jev retains conditioned follow-ups; the native adapter returns a complete set in one turn.
+
+Jev timing covers the complete advisor call, including preparation, HTTP requests and local receipt accounting. Native selection covers preparation plus the observed model turn, excluding process startup; complete process times remain separately identified in the aggregates. Provider-side caching and general service load were uncontrolled. The five runtime module hashes match the tested optimization. Input and code-map parity, request/response hashes, ledger counts, model event timings, process cleanup and frozen source closure were checked independently. All p95 values use nearest rank.
+
+A preceding 16-case pilot scored 14/16 in both arms, with medians 1.243/6.122 s (4.926× ratio of medians; 3.653× median paired ratio), 22 Jev requests and 16 native turns. All sixteen tasks were German and overlap the 80 regressions. Keep the experiments separate; their union contains 80 unique tasks. No universal sixfold speedup, full-host latency improvement or production promotion follows from these selector measurements.
+
 ## Public candidate qualification, 2026-09-22
 
 The [public guide](../../docs/skills/jev-capability-advisor/README.md) and website share the same feature and benchmark copy. [Sanitized machine-readable aggregates](benchmarks/2026-09-22.json) retain counts, latency distributions, methods and source identity without raw local catalogs, private source paths or receipts.
@@ -15,9 +38,9 @@ The [public guide](../../docs/skills/jev-capability-advisor/README.md) and websi
 - **Live evaluation before the follow-up correction:** both frozen arms score 63/80 strictly, including 20/20 single-skill, 18/20 single-tool, 10/10 no-capability and 10/10 clarification tasks, but only 5/20 compounds. Exactly 206 attempts, zero retries and zero provider/parse errors. Balanced plus metadata loses one previously correct case and gains one, with higher median latency; it stays experimental.
 - **Native/install evidence:** four bounded Codex scenarios and a separate final-document Inspect exercised real skill reads and offline CLI behavior. The standalone install smoke passed for the frozen candidate; all ten installed files matched source and all five Python modules were present. These are installation/activation observations, not fresh model-quality or native-speed comparisons.
 
-The live weakness triggered a phase-specific follow-up correction. Initial request bytes and mappings remain identical for all 80 repeated inputs; follow-up prompts intentionally change. STOP and CLARIFY stay fail-closed, and the limit remains three requests. **Fresh qualification completed:** 72/80 regression tasks (previously 63/80; nine gains, no lost strict successes) and 16/20 separately frozen fresh compound tasks. Regression compounds improve from 5/20 to 14/20. Fresh pairs score 10/10, triples 6/10; skill-only compounds 10/10, compounds involving tools 6/10. A second permutation-based scorer independently agrees on all 180 old/new rows.
+The live weakness triggered a phase-specific follow-up correction. Initial request bytes and mappings remain identical for all 80 repeated inputs; follow-up prompts intentionally change. STOP and CLARIFY stay fail-closed, and the limit remains three requests. **The earlier correction study scored:** 72/80 regression tasks (previously 63/80; nine gains, no lost strict successes) and 16/20 separately frozen fresh compound tasks. Regression compounds improve from 5/20 to 14/20. Fresh pairs score 10/10, triples 6/10; skill-only compounds 10/10, compounds involving tools 6/10. A second permutation-based scorer independently agrees on all 180 old/new rows.
 
-The corrected run made 153 requests with no retries: 107 for regression, 46 for fresh tasks. Together with the earlier 206 attempts, this used 359 of the approved 480-call ceiling. There were two inconsistent-initial-choice errors, both in the fresh set, and no HTTP/transport errors. All four fresh failures omitted a required retrieval group. Among regression failures, extra selected IDs increased from three across two cases to eight across seven cases. This remains a material limitation despite the strict-score gain.
+The corrected run made 153 requests with no retries: 107 for regression, 46 for fresh tasks. Together with the earlier 206 attempts, these two experiments made 359 requests. There were two inconsistent-initial-choice errors, both in the fresh set, and no HTTP/transport errors. All four fresh failures omitted a required retrieval group. Among regression failures, extra selected IDs increased from three across two cases to eight across seven cases. This remains a material limitation despite the strict-score gain.
 
 Median/p95 complete helper latency is 1,292.465/3,514.698 ms for regression and 2,425.975/3,641.231 ms for fresh compounds. The corrected run used concurrency one rather than two, with one trial per task; it establishes neither a causal latency improvement nor a model-variability-controlled prompt effect. The twenty new tasks are compound-only. Separate old and current results, untouched labels, source/input fingerprints and request ledgers were independently checked; raw provenance stays local.
 
@@ -38,7 +61,7 @@ The final instruction snapshot passed two predeclared native workflow smoke task
 
 Production promotion remains open until a predeclared, representative native comparison demonstrates a useful agent-quality improvement, and the remaining compound retrieval/selection limits are acceptable for the declared scope. The implementation, proposed public catalog, plugin integration and site changes can be reviewed together in a draft; they must not be described as a completed production release. Existing single-task outcomes remain useful selection evidence, not proof of added value over the native host.
 
-Maintenance ownership remains with the repository maintainers. Runtime tests require only Python's standard library, and all provider calls are explicit and separately budgeted. Recheck host catalog contracts, provider behavior and the evidence scope when changing the selection prompt, retrieval policy or supported hosts. Retire the website's New highlight with the next featured skill or the next catalog release after promotion.
+Maintenance ownership remains with the repository maintainers. Runtime tests require only Python's standard library, and provider calls follow an explicit experiment scope and recorded resource limits. Recheck host catalog contracts, provider behavior and the evidence scope when changing the selection prompt, retrieval policy or supported hosts. Retire the website's New highlight with the next featured skill or the next catalog release after promotion.
 
 ## Offline regression suite
 

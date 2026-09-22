@@ -3417,5 +3417,1074 @@
       "scripts/retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
       "scripts/routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     }
+  },
+  "matched_selector_pilot": {
+    "date": "2026-09-22",
+    "scope": "16 preselected existing regressions, all German; subset of the later 80-case comparison, not an independent holdout",
+    "task_count": 16,
+    "completed_pairs": 16,
+    "catalog_records": 718,
+    "candidate_limit": 240,
+    "typesafe_attempts": 22,
+    "native_turns": 16,
+    "retries": 0,
+    "selector_timing": "Jev complete advisor call including preparation and all HTTP calls; native preparation plus turn events, excluding process startup. Neither arm loads or executes a selected capability.",
+    "method": "Same initial query, ordered cards and routing rules; Jev conditioned calls versus native one-pass set. Randomized paired order, concurrency one, no local decision/index cache. Provider caching and backend load uncontrolled.",
+    "requested_native_reasoning_effort": "low",
+    "resolved_native_backend_model": null,
+    "arms": {
+      "jev": {
+        "correct": 14,
+        "n": 16,
+        "errors": 0,
+        "selector": {
+          "n": 16,
+          "p50_ms": 1242.7345,
+          "p95_ms": 3446.85
+        },
+        "end_to_end": {
+          "n": 16,
+          "p50_ms": 1242.744824005058,
+          "p95_ms": 3446.8699949939037
+        }
+      },
+      "native_selector": {
+        "correct": 14,
+        "n": 16,
+        "errors": 0,
+        "selector": {
+          "n": 16,
+          "p50_ms": 6121.862332503952,
+          "p95_ms": 8314.41792100668
+        },
+        "end_to_end": {
+          "n": 16,
+          "p50_ms": 6915.391411501332,
+          "p95_ms": 9071.506880995003
+        }
+      }
+    },
+    "groups": {
+      "all": {
+        "jev": {
+          "n": 16,
+          "correct": 14,
+          "p50_ms": 1242.7345,
+          "p95_ms": 3446.85
+        },
+        "native_selector": {
+          "n": 16,
+          "correct": 14,
+          "p50_ms": 6121.862332503952,
+          "p95_ms": 8314.41792100668
+        },
+        "ratio_of_p50_native_selector_over_jev": 4.926122460190774,
+        "median_paired_ratio": 3.653089313530965
+      },
+      "atomic_and_sentinels": {
+        "jev": {
+          "n": 12,
+          "correct": 11,
+          "p50_ms": 1217.875,
+          "p95_ms": 1346.293
+        },
+        "native_selector": {
+          "n": 12,
+          "correct": 11,
+          "p50_ms": 5373.755959997652,
+          "p95_ms": 7981.313166994369
+        },
+        "ratio_of_p50_native_selector_over_jev": 4.412403538949114,
+        "median_paired_ratio": 4.251905483599427
+      },
+      "compound": {
+        "jev": {
+          "n": 4,
+          "correct": 3,
+          "p50_ms": 2847.4225,
+          "p95_ms": 3446.85
+        },
+        "native_selector": {
+          "n": 4,
+          "correct": 3,
+          "p50_ms": 7462.44349200424,
+          "p95_ms": 8314.41792100668
+        },
+        "ratio_of_p50_native_selector_over_jev": 2.620771414148845,
+        "median_paired_ratio": 2.76971612950157
+      },
+      "both_correct": {
+        "jev": {
+          "n": 14,
+          "correct": 14,
+          "p50_ms": 1242.7345,
+          "p95_ms": 3446.85
+        },
+        "native_selector": {
+          "n": 14,
+          "correct": 14,
+          "p50_ms": 5736.527640001441,
+          "p95_ms": 7981.313166994369
+        },
+        "ratio_of_p50_native_selector_over_jev": 4.6160524552922935,
+        "median_paired_ratio": 3.653089313530965
+      }
+    },
+    "shared_retrieval_omissions": {
+      "tasks": 2,
+      "required_groups": 2
+    },
+    "unwanted_selected_ids": {
+      "jev": 1,
+      "native_selector": 0
+    },
+    "execution_audit": {
+      "passed": true,
+      "failed_requests": 0,
+      "failed_native_turns": 0,
+      "unexpected_tool_events": [],
+      "remaining_process_groups": 0,
+      "timeout_count": 0,
+      "initial_payload_and_map_equality_cases": 16,
+      "frozen_input_and_current_source_verified": true
+    },
+    "source_sha256": {
+      "jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+      "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+      "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+      "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+      "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    },
+    "freeze_sha256": "4ed485c873a1268cf085925694221d2e4bed0d78b719df5fcd2098006c1a5997",
+    "source_summary_sha256": "98da96a7322ff02794b99ef6588e7ba6da627e22cc6f7a7fd236ce11054a9ce8",
+    "limits": [
+      "One sample per arm/task, no universal sixfold claim.",
+      "Ratio of medians differs from median within-task ratio.",
+      "Faster selection does not establish faster host workflows or higher task quality."
+    ]
+  },
+  "matched_selector_regression": {
+    "date": "2026-09-22",
+    "runtime_commit": "311a570a58b943d7dcecf2fc23482d909045d050",
+    "scope": "All 80 existing release regressions; includes all 16 pilot tasks, not a fresh holdout or 96 unique tasks",
+    "languages": {
+      "German": 40,
+      "English": 30,
+      "mixed": 10
+    },
+    "task_count": 80,
+    "completed_pairs": 80,
+    "completed_runs": 160,
+    "catalog_records": 718,
+    "candidate_limit": 240,
+    "typesafe_attempts": 106,
+    "native_turns": 80,
+    "retries": 0,
+    "jev_reported_model": "jev-1.13.0",
+    "jev_request_count_distribution": {
+      "1": 61,
+      "3": 7,
+      "2": 12
+    },
+    "jev_request_durations": {
+      "n": 106,
+      "p50_ms": 1123.7955,
+      "p95_ms": 1284.335
+    },
+    "timing_boundaries": {
+      "selector": "Jev complete advisor call including preparation, conditioned HTTP calls and local receipt accounting; native local preparation plus observed model turn, excluding process startup.",
+      "end_to_end": "Jev same in-process advisor call; native preparation plus complete subprocess, including startup. This is not a matched CLI-startup comparison.",
+      "process": "Native subprocess wall time; not applicable to in-process Jev measurement.",
+      "turn": "Native turn.started through turn.completed event wall time; not applicable to Jev.",
+      "excluded": "Capability loading, tool execution and whole-host task completion are not measured."
+    },
+    "method": {
+      "initial_inputs": "Same query, ordered card strings, rules and cardinality criteria",
+      "interfaces": "Jev bounded conditioned follow-ups; native one-turn complete set",
+      "scoring": "Exact status, cardinality, distinct IDs, all required groups, no unwanted or forbidden ID; errors fail. Independent permutation scorer agrees.",
+      "secondary_scoring": "Preverified whole-bundle aliases only; changes no score.",
+      "order": "Randomized tasks and paired arm order",
+      "seed": 2026092204,
+      "concurrency": 1,
+      "observations_per_arm_task": 1,
+      "decision_cache": false,
+      "index_cache": false,
+      "native_reasoning_effort": "low",
+      "resolved_native_backend_model": null,
+      "provider_caching_and_service_load": "Uncontrolled",
+      "p95": "nearest rank"
+    },
+    "groups": {
+      "all": {
+        "task_denominator": 80,
+        "arms": {
+          "jev": {
+            "completed": 80,
+            "missing": 0,
+            "exact_correct": 70,
+            "alias_correct": 70,
+            "errors": 0,
+            "statuses": {
+              "selected": 59,
+              "none": 11,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 10,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 2,
+              "missing_required_capability": 10,
+              "extra_or_wrong_selection": 8
+            },
+            "requests_or_turns": 106,
+            "selector": {
+              "n": 80,
+              "p50_ms": 1215.8055,
+              "p95_ms": 3464.545
+            },
+            "end_to_end": {
+              "n": 80,
+              "p50_ms": 1215.8171545015648,
+              "p95_ms": 3464.560405991506
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 80,
+            "missing": 0,
+            "exact_correct": 72,
+            "alias_correct": 72,
+            "errors": 0,
+            "statuses": {
+              "selected": 59,
+              "none": 11,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 8,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 2,
+              "missing_required_capability": 8,
+              "extra_or_wrong_selection": 6
+            },
+            "requests_or_turns": 80,
+            "selector": {
+              "n": 80,
+              "p50_ms": 5725.198939013353,
+              "p95_ms": 12331.483899004525
+            },
+            "end_to_end": {
+              "n": 80,
+              "p50_ms": 6386.465362498711,
+              "p95_ms": 12935.073390006437
+            },
+            "process": {
+              "n": 80,
+              "p50_ms": 6308.159489992249,
+              "p95_ms": 12856.096560994047
+            },
+            "turn": {
+              "n": 80,
+              "p50_ms": 5648.3801455033245,
+              "p95_ms": 12252.514539999538
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 80,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.191975034034662,
+          "paired_bootstrap_percentile_95_ci": [3.7073405906018033, 4.574761796653627],
+          "ratio_of_arm_medians_native_over_jev": 4.708976015500303
+        },
+        "end_to_end_ratios": {
+          "paired_n": 80,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.704335753810005,
+          "paired_bootstrap_percentile_95_ci": [4.22171445500193, 5.118796969266547],
+          "ratio_of_arm_medians_native_over_jev": 5.252817283300218
+        }
+      },
+      "atomic_and_sentinels": {
+        "task_denominator": 60,
+        "arms": {
+          "jev": {
+            "completed": 60,
+            "missing": 0,
+            "exact_correct": 58,
+            "alias_correct": 58,
+            "errors": 0,
+            "statuses": {
+              "selected": 39,
+              "none": 11,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 2,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 1,
+              "missing_required_capability": 2,
+              "extra_or_wrong_selection": 1
+            },
+            "requests_or_turns": 60,
+            "selector": {
+              "n": 60,
+              "p50_ms": 1201.525,
+              "p95_ms": 1377.717
+            },
+            "end_to_end": {
+              "n": 60,
+              "p50_ms": 1201.5356855117716,
+              "p95_ms": 1377.7305600087857
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 60,
+            "missing": 0,
+            "exact_correct": 58,
+            "alias_correct": 58,
+            "errors": 0,
+            "statuses": {
+              "selected": 39,
+              "none": 11,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 2,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 1,
+              "missing_required_capability": 2,
+              "extra_or_wrong_selection": 1
+            },
+            "requests_or_turns": 60,
+            "selector": {
+              "n": 60,
+              "p50_ms": 5480.735388999165,
+              "p95_ms": 9013.167144003091
+            },
+            "end_to_end": {
+              "n": 60,
+              "p50_ms": 6138.144675504009,
+              "p95_ms": 9678.046223998535
+            },
+            "process": {
+              "n": 60,
+              "p50_ms": 6059.643655498803,
+              "p95_ms": 9600.985985991429
+            },
+            "turn": {
+              "n": 60,
+              "p50_ms": 5404.968609000207,
+              "p95_ms": 8936.113499003113
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 60,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.538651404368026,
+          "paired_bootstrap_percentile_95_ci": [4.122339225833345, 4.951523705201173],
+          "ratio_of_arm_medians_native_over_jev": 4.561482606686639
+        },
+        "end_to_end_ratios": {
+          "paired_n": 60,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 5.068121277483447,
+          "paired_bootstrap_percentile_95_ci": [4.621000407115576, 5.459506542762063],
+          "ratio_of_arm_medians_native_over_jev": 5.108582915612349
+        }
+      },
+      "compound": {
+        "task_denominator": 20,
+        "arms": {
+          "jev": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 12,
+            "alias_correct": 12,
+            "errors": 0,
+            "statuses": {
+              "selected": 20
+            },
+            "semantic_failures_without_runtime_error": 8,
+            "failure_reasons": {
+              "extra_or_wrong_selection": 7,
+              "missing_required_capability": 8,
+              "wrong_cardinality": 1
+            },
+            "requests_or_turns": 46,
+            "selector": {
+              "n": 20,
+              "p50_ms": 2410.3644999999997,
+              "p95_ms": 3581.23
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 2410.3797069910797,
+              "p95_ms": 3581.246710004052
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 14,
+            "alias_correct": 14,
+            "errors": 0,
+            "statuses": {
+              "selected": 20
+            },
+            "semantic_failures_without_runtime_error": 6,
+            "failure_reasons": {
+              "wrong_cardinality": 1,
+              "missing_required_capability": 6,
+              "extra_or_wrong_selection": 5
+            },
+            "requests_or_turns": 20,
+            "selector": {
+              "n": 20,
+              "p50_ms": 6650.189251005941,
+              "p95_ms": 13763.800152009935
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 7274.73011300026,
+              "p95_ms": 14366.015737003181
+            },
+            "process": {
+              "n": 20,
+              "p50_ms": 7198.109383491101,
+              "p95_ms": 14286.879830993712
+            },
+            "turn": {
+              "n": 20,
+              "p50_ms": 6573.576050999691,
+              "p95_ms": 13684.671893002815
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 2.1060449951360187,
+          "paired_bootstrap_percentile_95_ci": [1.9251439041153713, 2.8958007426672383],
+          "ratio_of_arm_medians_native_over_jev": 2.758997342935453
+        },
+        "end_to_end_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 2.3550137707600105,
+          "paired_bootstrap_percentile_95_ci": [2.187340627177951, 3.1481293450096963],
+          "ratio_of_arm_medians_native_over_jev": 3.018084699228337
+        }
+      },
+      "skill": {
+        "task_denominator": 20,
+        "arms": {
+          "jev": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 20,
+            "alias_correct": 20,
+            "errors": 0,
+            "statuses": {
+              "selected": 20
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 20,
+            "selector": {
+              "n": 20,
+              "p50_ms": 1200.1895,
+              "p95_ms": 1241.895
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 1200.2010174983297,
+              "p95_ms": 1241.9083290005801
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 20,
+            "alias_correct": 20,
+            "errors": 0,
+            "statuses": {
+              "selected": 20
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 20,
+            "selector": {
+              "n": 20,
+              "p50_ms": 5807.554474507924,
+              "p95_ms": 8594.466666007065
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 6486.678861503606,
+              "p95_ms": 9193.603644001996
+            },
+            "process": {
+              "n": 20,
+              "p50_ms": 6400.956621997466,
+              "p95_ms": 9122.871179002686
+            },
+            "turn": {
+              "n": 20,
+              "p50_ms": 5730.518668002333,
+              "p95_ms": 8523.741372002405
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.875008964117869,
+          "paired_bootstrap_percentile_95_ci": [4.090217939549112, 5.684536618786387],
+          "ratio_of_arm_medians_native_over_jev": 4.83886459138988
+        },
+        "end_to_end_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 5.39984375894459,
+          "paired_bootstrap_percentile_95_ci": [4.592865001002744, 6.188459652498688],
+          "ratio_of_arm_medians_native_over_jev": 5.404660358499182
+        }
+      },
+      "tool": {
+        "task_denominator": 20,
+        "arms": {
+          "jev": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 18,
+            "alias_correct": 18,
+            "errors": 0,
+            "statuses": {
+              "selected": 19,
+              "none": 1
+            },
+            "semantic_failures_without_runtime_error": 2,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 1,
+              "missing_required_capability": 2,
+              "extra_or_wrong_selection": 1
+            },
+            "requests_or_turns": 20,
+            "selector": {
+              "n": 20,
+              "p50_ms": 1200.213,
+              "p95_ms": 1377.87
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 1200.2256539999507,
+              "p95_ms": 1377.885656998842
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 20,
+            "missing": 0,
+            "exact_correct": 18,
+            "alias_correct": 18,
+            "errors": 0,
+            "statuses": {
+              "selected": 19,
+              "none": 1
+            },
+            "semantic_failures_without_runtime_error": 2,
+            "failure_reasons": {
+              "positive_task_not_selected": 1,
+              "wrong_cardinality": 1,
+              "missing_required_capability": 2,
+              "extra_or_wrong_selection": 1
+            },
+            "requests_or_turns": 20,
+            "selector": {
+              "n": 20,
+              "p50_ms": 5687.335061993508,
+              "p95_ms": 12331.483899004525
+            },
+            "end_to_end": {
+              "n": 20,
+              "p50_ms": 6301.324752996152,
+              "p95_ms": 12935.073390006437
+            },
+            "process": {
+              "n": 20,
+              "p50_ms": 6224.303296505241,
+              "p95_ms": 12856.096560994047
+            },
+            "turn": {
+              "n": 20,
+              "p50_ms": 5610.320706000493,
+              "p95_ms": 12252.514539999538
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.745772717246443,
+          "paired_bootstrap_percentile_95_ci": [4.08915649055977, 5.124079339792866],
+          "ratio_of_arm_medians_native_over_jev": 4.7386047826456705
+        },
+        "end_to_end_ratios": {
+          "paired_n": 20,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 5.248219281936949,
+          "paired_bootstrap_percentile_95_ci": [4.566084124596308, 5.609641219660556],
+          "ratio_of_arm_medians_native_over_jev": 5.250116702634995
+        }
+      },
+      "none": {
+        "task_denominator": 10,
+        "arms": {
+          "jev": {
+            "completed": 10,
+            "missing": 0,
+            "exact_correct": 10,
+            "alias_correct": 10,
+            "errors": 0,
+            "statuses": {
+              "none": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 10,
+            "selector": {
+              "n": 10,
+              "p50_ms": 1232.629,
+              "p95_ms": 1525.434
+            },
+            "end_to_end": {
+              "n": 10,
+              "p50_ms": 1232.6404484992963,
+              "p95_ms": 1525.4468870116398
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 10,
+            "missing": 0,
+            "exact_correct": 10,
+            "alias_correct": 10,
+            "errors": 0,
+            "statuses": {
+              "none": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 10,
+            "selector": {
+              "n": 10,
+              "p50_ms": 4963.633013998333,
+              "p95_ms": 8439.575587995932
+            },
+            "end_to_end": {
+              "n": 10,
+              "p50_ms": 5569.900731999951,
+              "p95_ms": 9243.988268994144
+            },
+            "process": {
+              "n": 10,
+              "p50_ms": 5490.152606995252,
+              "p95_ms": 9164.23216300609
+            },
+            "turn": {
+              "n": 10,
+              "p50_ms": 4883.892333498807,
+              "p95_ms": 8359.827036998468
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 10,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 3.9051203618574153,
+          "paired_bootstrap_percentile_95_ci": [3.1649070575471616, 5.162890898476263],
+          "ratio_of_arm_medians_native_over_jev": 4.026866976193432
+        },
+        "end_to_end_ratios": {
+          "paired_n": 10,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.417825242042454,
+          "paired_bootstrap_percentile_95_ci": [3.651430833636554, 5.787260947766218],
+          "ratio_of_arm_medians_native_over_jev": 4.518674313163374
+        }
+      },
+      "clarify": {
+        "task_denominator": 10,
+        "arms": {
+          "jev": {
+            "completed": 10,
+            "missing": 0,
+            "exact_correct": 10,
+            "alias_correct": 10,
+            "errors": 0,
+            "statuses": {
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 10,
+            "selector": {
+              "n": 10,
+              "p50_ms": 1202.0210000000002,
+              "p95_ms": 1377.717
+            },
+            "end_to_end": {
+              "n": 10,
+              "p50_ms": 1202.0333545005997,
+              "p95_ms": 1377.7305600087857
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 10,
+            "missing": 0,
+            "exact_correct": 10,
+            "alias_correct": 10,
+            "errors": 0,
+            "statuses": {
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 10,
+            "selector": {
+              "n": 10,
+              "p50_ms": 5277.730336500099,
+              "p95_ms": 6794.18169100245
+            },
+            "end_to_end": {
+              "n": 10,
+              "p50_ms": 6006.822833005572,
+              "p95_ms": 7380.227315006778
+            },
+            "process": {
+              "n": 10,
+              "p50_ms": 5922.305017003964,
+              "p95_ms": 7302.129101997707
+            },
+            "turn": {
+              "n": 10,
+              "p50_ms": 5190.311463004036,
+              "p95_ms": 6716.090019996045
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 10,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.395667649470096,
+          "paired_bootstrap_percentile_95_ci": [3.7960708183237464, 4.931478446591317],
+          "ratio_of_arm_medians_native_over_jev": 4.390713919723614
+        },
+        "end_to_end_ratios": {
+          "paired_n": 10,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.926657041980197,
+          "paired_bootstrap_percentile_95_ci": [4.302652218173151, 5.408153362527923],
+          "ratio_of_arm_medians_native_over_jev": 4.9972180975803155
+        }
+      },
+      "both_correct_exact": {
+        "task_denominator": 70,
+        "arms": {
+          "jev": {
+            "completed": 70,
+            "missing": 0,
+            "exact_correct": 70,
+            "alias_correct": 70,
+            "errors": 0,
+            "statuses": {
+              "selected": 50,
+              "none": 10,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 86,
+            "selector": {
+              "n": 70,
+              "p50_ms": 1210.662,
+              "p95_ms": 3394.385
+            },
+            "end_to_end": {
+              "n": 70,
+              "p50_ms": 1210.6805604998954,
+              "p95_ms": 3394.415430011577
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 70,
+            "missing": 0,
+            "exact_correct": 70,
+            "alias_correct": 70,
+            "errors": 0,
+            "statuses": {
+              "selected": 50,
+              "none": 10,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 70,
+            "selector": {
+              "n": 70,
+              "p50_ms": 5480.735388999165,
+              "p95_ms": 12331.483899004525
+            },
+            "end_to_end": {
+              "n": 70,
+              "p50_ms": 6138.144675504009,
+              "p95_ms": 12935.073390006437
+            },
+            "process": {
+              "n": 70,
+              "p50_ms": 6059.643655498803,
+              "p95_ms": 12856.096560994047
+            },
+            "turn": {
+              "n": 70,
+              "p50_ms": 5404.968609000207,
+              "p95_ms": 12252.514539999538
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 70,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.191975034034662,
+          "paired_bootstrap_percentile_95_ci": [3.7517057044627746, 4.711456079174768],
+          "ratio_of_arm_medians_native_over_jev": 4.527056593003798
+        },
+        "end_to_end_ratios": {
+          "paired_n": 70,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.724157415029828,
+          "paired_bootstrap_percentile_95_ci": [4.2918337381218485, 5.325543177914761],
+          "ratio_of_arm_medians_native_over_jev": 5.069995237199102
+        }
+      },
+      "both_correct_alias": {
+        "task_denominator": 70,
+        "arms": {
+          "jev": {
+            "completed": 70,
+            "missing": 0,
+            "exact_correct": 70,
+            "alias_correct": 70,
+            "errors": 0,
+            "statuses": {
+              "selected": 50,
+              "none": 10,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 86,
+            "selector": {
+              "n": 70,
+              "p50_ms": 1210.662,
+              "p95_ms": 3394.385
+            },
+            "end_to_end": {
+              "n": 70,
+              "p50_ms": 1210.6805604998954,
+              "p95_ms": 3394.415430011577
+            },
+            "process": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            },
+            "turn": {
+              "n": 0,
+              "p50_ms": null,
+              "p95_ms": null
+            }
+          },
+          "native_selector": {
+            "completed": 70,
+            "missing": 0,
+            "exact_correct": 70,
+            "alias_correct": 70,
+            "errors": 0,
+            "statuses": {
+              "selected": 50,
+              "none": 10,
+              "clarify": 10
+            },
+            "semantic_failures_without_runtime_error": 0,
+            "failure_reasons": {},
+            "requests_or_turns": 70,
+            "selector": {
+              "n": 70,
+              "p50_ms": 5480.735388999165,
+              "p95_ms": 12331.483899004525
+            },
+            "end_to_end": {
+              "n": 70,
+              "p50_ms": 6138.144675504009,
+              "p95_ms": 12935.073390006437
+            },
+            "process": {
+              "n": 70,
+              "p50_ms": 6059.643655498803,
+              "p95_ms": 12856.096560994047
+            },
+            "turn": {
+              "n": 70,
+              "p50_ms": 5404.968609000207,
+              "p95_ms": 12252.514539999538
+            }
+          }
+        },
+        "selector_ratios": {
+          "paired_n": 70,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.191975034034662,
+          "paired_bootstrap_percentile_95_ci": [3.7517057044627746, 4.711456079174768],
+          "ratio_of_arm_medians_native_over_jev": 4.527056593003798
+        },
+        "end_to_end_ratios": {
+          "paired_n": 70,
+          "omitted_pairs": 0,
+          "median_paired_native_over_jev": 4.724157415029828,
+          "paired_bootstrap_percentile_95_ci": [4.2918337381218485, 5.325543177914761],
+          "ratio_of_arm_medians_native_over_jev": 5.069995237199102
+        }
+      }
+    },
+    "bootstrap": {
+      "draws": 10000,
+      "seed": 2026092205,
+      "unit": "paired task",
+      "estimand": "median paired native/Jev ratio",
+      "scope": "fixed regression corpus only"
+    },
+    "exact_matcher_disagreement_count": 0,
+    "alias_changed_case_count": 0,
+    "shared_retrieval_coverage": {
+      "computed_before_model_calls": true,
+      "scope": "shared initial 240-card retrieval; not model accuracy",
+      "tasks": 80,
+      "positive_tasks": 60,
+      "required_groups": 87,
+      "literal_complete_tasks": 52,
+      "alias_complete_tasks": 52,
+      "literal_group_hits": 78,
+      "alias_group_hits": 78
+    },
+    "execution_audit": {
+      "frozen_inputs_unchanged": true,
+      "exact_randomized_execution_order": true,
+      "request_and_response_hashes_verified": true,
+      "contiguous_attempt_ledgers": true,
+      "owned_process_groups_remaining": 0,
+      "native_tool_execution_events": 0,
+      "primary_and_independent_exact_scores_agree": true,
+      "shared_retrieval_coverage_frozen_before_dispatch": true
+    },
+    "source_sha256": {
+      "jev_advisor.py": "ca5cbf0b9765f4e1740d967ef8885d3ad83f7d7f04bd811d61548229df048286",
+      "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+      "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+      "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+      "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    },
+    "freeze_sha256": "ba47329de95429ac79984c0048d77e7cfb48ea0ca192588e35b250992a5ee75d",
+    "protocol_sha256": "34f096bae1836cb33b745110369f175f445b664440a8cf8d6e66a9957aed81c1",
+    "scorer_sha256": "37de8638a4fd5d46a8e043d2f65e78175be3d99123e98924517662cab4bb0398",
+    "source_summary_sha256": "1147eb2103ca37c46ecdac36680df0ad1f9208e90a6a9c7531a120602d82be52",
+    "limits": [
+      "Regression tasks, one observation each; no universal sixfold claim.",
+      "Overall accuracy favors the native selector by two compound cases; speed is not quality equivalence.",
+      "Eight tasks lack a required candidate in the shared shortlist.",
+      "Both-correct subsets are conditional on observed outcomes.",
+      "Bootstrap intervals describe the median paired ratio within this fixed corpus, not the ratio of medians or deployment-wide uncertainty.",
+      "No demonstrated improvement to native whole-host workflow quality or latency; production promotion remains open."
+    ]
   }
 }

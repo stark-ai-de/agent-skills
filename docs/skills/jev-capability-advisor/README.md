@@ -8,6 +8,7 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 
 - **Skills and tools together.** Compare an installed workflow with an available MCP or host tool for the task you want to accomplish.
 - **Clear outcomes.** Selection, no suitable capability, clarification and provider failures stay distinct. Prematurely stopped compound plans remain incomplete.
+- **1.22-second median selection in the current 80-task comparison.** The native selector took 5.73 seconds: a 4.71× ratio of medians, with strict results of 70/80 and 72/80 respectively.
 - **35% less local preparation time in the latest paired benchmark.** The optimized default needs no cache configuration. Optional caches support repeated catalogs or complete repeated recommendations.
 - **Compact advice, complete selected descriptions.** Keep the full diagnostic receipt locally and return only relevant recommendations, conditions and coverage to the host.
 - **Inspect the decision boundary.** Candidate coverage, requests, timing and provider usage are recorded. Your host controls loading, permissions and execution.
@@ -34,6 +35,33 @@ The helper needs **Python 3.10+**; it has no third-party Python dependencies, ro
 
 This release candidate also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
 
+## Measured selection speed
+
+**Jev selects capabilities substantially faster in this fixed regression comparison.** Quality is tied for single-task and no-match/clarification requests; compound selection still trails the native selector.
+
+| Scope                                            | Jev advisor, median | Native selector, median | Ratio of medians | Correct tasks, Jev / native |
+| ------------------------------------------------ | ------------------: | ----------------------: | ---------------: | --------------------------: |
+| All 80 regression tasks                          |         **1.216 s** |                 5.725 s |        **4.71×** |               70/80 / 72/80 |
+| Single-task, no-match and clarification requests |         **1.202 s** |                 5.481 s |        **4.56×** |               58/60 / 58/60 |
+| Compound requests                                |         **2.410 s** |                 6.650 s |        **2.76×** |               12/20 / 14/20 |
+| Subset correct in both arms                      |         **1.211 s** |                 5.481 s |        **4.53×** |               70/70 / 70/70 |
+
+Across all 80 tasks, p95 selection time was **3.465 s for Jev** and **12.331 s for the native selector**. The median of the 80 individual native/Jev time ratios is **4.19×**, distinct from the ratio of medians above. Its 95% paired bootstrap interval is 3.71–4.57×; this describes variation within these regressions, not performance across all future tasks.
+
+**Quality remains visible.** Both arms scored 20/20 on skills, 18/20 on tools, 10/10 on no-match tasks and 10/10 on clarification. Eight tasks lacked at least one required capability in the shared shortlist. Jev also missed two compounds with sufficient candidates; wrong or additional recommendations occurred in eight Jev cases and six native cases. Every failure stays in the denominator. Verified alias equivalence changed neither score.
+
+Measured 2026-09-22 on the unchanged optimized runtime: all 80 previously used regression tasks, 40 German, 30 English and ten mixed-language; 718 catalog entries and the same 240 ordered cards per task. Task and arm order were randomized, with one sample per arm/task, no retries and no local decision/index caches. The run made 106 Jev requests and 80 native turns, with zero execution or transport errors. Jev uses up to three conditioned calls; the native selector returns its set in one turn. Labels were frozen before dispatch.
+
+Timing includes local preparation and all Jev calls, or local preparation plus the native model turn. It excludes native process startup, skill loading and task execution. Provider caches and service load were uncontrolled. **Faster selection does not establish a faster whole-host workflow**; the workflow experiments below did not demonstrate that benefit.
+
+A preceding 16-case pilot measured 1.243/6.122 s (4.93× ratio of medians; 3.65× median paired ratio), with 14/16 correct in both arms. Its all-German tasks overlap the 80-case run; these are not 96 independent tasks. The larger comparison above is the primary current result.
+
+### What the historical sixfold result measured
+
+An early 50-task test compared selection from the same 30 candidate cards: Jev's median was **1.045 s**, versus **6.265 s** for a native language-model selector's turn, approximately **6×**. The lexical index was already built; this excluded native process startup, capability loading and task execution. Strict quality was **39/50 for Jev versus 45/50 for the native selector**, so the original quality screen failed.
+
+The implementation later expanded to 240 candidates and conditioned follow-up decisions to improve selection. A separate full-host pilot also counted catalog reads, helper execution and independent checks; its times below answer a different question. The historical sixfold figure is not a current release speed guarantee. Restoring the earlier narrow shortlist merely to improve latency would discard measured coverage improvements.
+
 ## Measured local speed
 
 **The latest optimization reduces median preparation from 121 ms to 78 ms, with identical candidates and provider requests.** It reuses tokenization and term calculations within each index build. No shortlist, quality rule or cache validation was weakened.
@@ -49,15 +77,9 @@ Measured 2026-09-22: 40 fresh Python processes per arm, ten fixed development qu
 
 The earlier optimization measured 159.54 to 120.13 ms on a separate paired run. That run's warm index needed 115.94 ms and initial index creation 206.60 ms; those cache timings predate the latest optimization and are not current comparisons. Index caching stays optional. The separate decision cache can avoid a fresh provider call when the query, catalog and host context match.
 
-### What the historical sixfold result measured
+## Earlier follow-up qualification
 
-An early 50-task test compared selection from the same 30 candidate cards: Jev's median was **1.045 s**, versus **6.265 s** for a native language-model selector's turn, approximately **6×**. The lexical index was already built; this excluded native process startup, capability loading and task execution. Strict quality was **39/50 for Jev versus 45/50 for the native selector**, so the original quality screen failed.
-
-The implementation later expanded to 240 candidates and conditioned follow-up decisions to improve selection. A separate full-host pilot also counted catalog reads, helper execution and independent checks; its times below answer a different question. The historical sixfold figure is not a current release speed guarantee. Restoring the earlier narrow shortlist merely to improve latency would discard measured coverage improvements.
-
-## Selection quality
-
-**72/80 correct on the regression set; 16/20 on a fresh compound set.** A phase-specific follow-up correction addressed premature stops after the first recommendation. The 80 previously evaluated tasks now serve as regression data; the 20 independently authored new compound tasks were frozen separately before live testing.
+**The earlier correction study scored 72/80 on the regression set and 16/20 on a fresh compound set.** A phase-specific follow-up correction addressed premature stops after the first recommendation. The 80 previously evaluated tasks now serve as regression data; the 20 independently authored new compound tasks were frozen separately before live testing.
 
 | Regression task type             | Before correction | Corrected default |
 | -------------------------------- | ----------------: | ----------------: |
@@ -116,7 +138,7 @@ All twelve turns read the long contract, and five of six compact-workflow turns 
 | Alias handling             | Consolidate copies only with matching whole-bundle proof and restrictions     |
 | Activation                 | Host-owned; explicit-only restrictions retained                               |
 
-Different integrations solve different problems: this package provides an explicit, inspectable advisor for a host-supplied catalog. It does not replace native discovery or an automatic routing hook. The supported comparison is between the measured advisor configurations above; it is not a universal ranking of routing products.
+Different integrations solve different problems: this package provides an explicit, inspectable advisor for a host-supplied catalog. It does not replace native discovery or an automatic routing hook. The comparisons cover the stated selector and workflow experiments; they are not universal rankings of routing products.
 
 ## Scope that stays clear
 
