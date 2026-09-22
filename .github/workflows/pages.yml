@@ -12,6 +12,7 @@ on:
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
+      - docs/skills/**
       - incubator/**
       - skill-evals/**
       - site/**
