@@ -1,0 +1,208 @@
+---
+import { jevBenchmarks as bench } from "../lib/jev-benchmarks.mjs";
+import { repoUrl } from "../lib/skills";
+
+const number = (value: number) => value.toLocaleString("en-US");
+const speed = bench.speedRatio.toFixed(2);
+const chartMax = Math.ceil(Math.max(bench.jev.medianSeconds, bench.native.medianSeconds));
+const chartWidth = 540;
+const runs = [
+  { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
+  { label: "Live selection evaluations", count: bench.runCounts.liveSelection, detail: "160 + 100 + 32 + 160 runs" },
+  { label: "Runtime measurements", count: bench.runCounts.runtime, detail: "320 + 80 fresh-process measurements" },
+  { label: "Archived replay evaluations", count: bench.runCounts.replay, detail: "100 recorded-response replays" },
+];
+---
+
+<section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
+  <header class="jev-promo__header">
+    <div>
+      <p class="jev-promo__label">Jev, measured</p>
+      <h2 id="jev-benchmark-title">Faster capability selection.</h2>
+      <p>Find a relevant skill or tool. Give your agent a focused next step.</p>
+    </div>
+    <a class="jev-promo__source" href={repoUrl(bench.readmePath)}>Read the benchmark README</a>
+  </header>
+
+  <div class="jev-promo__comparison">
+    <div class="jev-promo__headline">
+      <p class="jev-promo__ratio">{speed}<span>×</span></p>
+      <h3>Faster median selection</h3>
+      <p>Compared with the native selector on the same {bench.tasks} regression tasks.</p>
+      <p class="jev-promo__quality"><strong>Correct results</strong><br />Jev {bench.jev.correct}/{bench.tasks} · Native {bench.native.correct}/{bench.tasks}</p>
+    </div>
+
+    <figure class="jev-promo__chart">
+      <figcaption>Time to a recommendation <span>Median · lower is better</span></figcaption>
+      <div class="jev-promo__chart-label"><strong>Jev advisor</strong><span>{bench.jev.medianSeconds.toFixed(2)} s</span></div>
+      <svg viewBox="0 0 560 56" role="img" aria-labelledby="jev-time-title jev-time-desc">
+        <title id="jev-time-title">Jev median selection: {bench.jev.medianSeconds.toFixed(2)} seconds</title>
+        <desc id="jev-time-desc">Bar starts at zero on the same zero to {chartMax} second scale as the native selector.</desc>
+        <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
+        <rect class="jev-promo__bar jev-promo__bar--jev" x="0" y="6" width={chartWidth * bench.jev.medianSeconds / chartMax} height="32" rx="5" />
+      </svg>
+      <div class="jev-promo__chart-label"><strong>Native selector</strong><span>{bench.native.medianSeconds.toFixed(2)} s</span></div>
+      <svg viewBox="0 0 560 70" role="img" aria-labelledby="native-time-title native-time-desc">
+        <title id="native-time-title">Native median selection: {bench.native.medianSeconds.toFixed(2)} seconds</title>
+        <desc id="native-time-desc">Both bars use a zero to {chartMax} second scale. Capability loading and task execution are excluded.</desc>
+        <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
+        <rect class="jev-promo__bar jev-promo__bar--native" x="0" y="6" width={chartWidth * bench.native.medianSeconds / chartMax} height="32" rx="5" />
+        {[0, chartMax / 3, chartMax * 2 / 3, chartMax].map((tick) => (
+          <text x={tick / chartMax * chartWidth} y="65" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{tick.toFixed(0)} s</text>
+        ))}
+      </svg>
+      <p class="jev-promo__caption">Selection only, including Jev calls. Excludes native startup, capability loading and task execution. A whole-task speedup has not been demonstrated.</p>
+    </figure>
+  </div>
+
+  <div class="jev-promo__stats">
+    <div>
+      <p class="jev-promo__stat">{number(Math.floor(bench.totalRuns / 1000) * 1000)}+</p>
+      <h3>Benchmark runs</h3>
+      <p>Across development iterations, including baseline and candidate variants.</p>
+      <a href="#jev-run-count">See the {number(bench.totalRuns)}-run breakdown</a>
+    </div>
+    <div>
+      <p class="jev-promo__stat">{bench.compactReduction.toFixed(1)}<span>%</span></p>
+      <h3>Less returned JSON</h3>
+      <p>Complete selected descriptions, compact advice. Measured on {bench.compactCases} archived results; bytes, not tokens.</p>
+    </div>
+    <div>
+      <p class="jev-promo__stat">{bench.preparationReduction.toFixed(0)}<span>%</span></p>
+      <h3>Less local preparation time</h3>
+      <p>Same candidates and requests. {bench.preparationPairs} paired measurements, with no cache required.</p>
+    </div>
+  </div>
+
+  <div class="jev-promo__features">
+    <div><h3>A useful recommendation.<br />An inspectable decision.</h3><p>Built for the capabilities your agent actually has available.</p></div>
+    <dl>
+      <div><dt>Skills + MCP tools</dt><dd>Compare workflows and tools in one supplied catalog.</dd></div>
+      <div><dt>Clear outcomes</dt><dd>A recommendation, no match, missing context or a provider error.</dd></div>
+      <div><dt>Offline inspection</dt><dd>Explore candidates without an API key or network call.</dd></div>
+      <div><dt>Your host stays in control</dt><dd>Loading, permissions and execution remain with your agent.</dd></div>
+    </dl>
+  </div>
+
+  <details class="jev-promo__details" id="jev-run-count">
+    <summary>What counts as {number(bench.totalRuns)} benchmark runs?</summary>
+    <div class="jev-promo__details-body">
+      <p>Completed benchmark executions across development revisions. Repeated tasks and comparison variants count as separate runs. This is not a count of unique tasks, passing tests or API requests.</p>
+      <div class="jev-promo__table-scroll" role="region" aria-label="Benchmark run breakdown" tabindex="0">
+        <table>
+          <caption>Recorded development measurements</caption>
+          <thead><tr><th scope="col">Experiment</th><th scope="col">Runs</th><th scope="col">Counted once</th></tr></thead>
+          <tbody>{runs.map((run) => <tr><th scope="row">{run.label}</th><td>{number(run.count)}</td><td>{run.detail}</td></tr>)}</tbody>
+          <tfoot><tr><th scope="row">Total</th><td>{number(bench.totalRuns)}</td><td>Warmups, rescorings and assertions excluded</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="jev-promo__details">
+    <summary>Compare quality and see the measurement conditions</summary>
+    <div class="jev-promo__details-body">
+      <div class="jev-promo__table-scroll" role="region" aria-label="Selection benchmark results" tabindex="0">
+        <table>
+          <caption>Matched selection comparison · {bench.date}</caption>
+          <thead><tr><th scope="col">Measure</th><th scope="col">Jev advisor</th><th scope="col">Native selector</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Median selection</th><td><strong>{bench.jev.medianSeconds.toFixed(3)} s</strong></td><td>{bench.native.medianSeconds.toFixed(3)} s</td></tr>
+            <tr><th scope="row">p95 selection</th><td>{bench.jev.p95Seconds.toFixed(3)} s</td><td>{bench.native.p95Seconds.toFixed(3)} s</td></tr>
+            <tr><th scope="row">Correct complete results</th><td>{bench.jev.correct}/{bench.tasks}</td><td>{bench.native.correct}/{bench.tasks}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Both selectors received the same {bench.candidates} ordered cards per task from a {bench.catalogSize}-entry catalog. Task and arm order were randomized, with one sample per arm/task, no retries and no local caches. Provider caching and service load were uncontrolled.</p>
+      <p>The headline is the ratio of medians. These are previously used synthetic regressions, not a fresh holdout. Single-task, no-match and clarification results tied at 58/60; compound results were 12/20 for Jev and 14/20 for native. All failures remain counted.</p>
+      <p>Whole-host pilots have not shown faster task completion. Automatic prompt interception is not implemented in this release candidate. The cumulative run count covers earlier revisions too; it does not expand the current comparison beyond {bench.tasks} tasks.</p>
+    </div>
+  </details>
+
+  <footer class="jev-promo__footer">
+    <span>Measured {bench.date} · Release candidate</span>
+    <div><a href={repoUrl(bench.evidencePath)}>Benchmark data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
+  </footer>
+</section>
+
+<script>
+  const promo = document.querySelector<HTMLElement>("[data-jev-promo]");
+  if (promo && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        promo.classList.add("jev-promo--animate");
+        observer.disconnect();
+      }
+    }, { threshold: 0.1 });
+    observer.observe(promo);
+  }
+  document.querySelector<HTMLAnchorElement>('a[href="#jev-run-count"]')?.addEventListener("click", () => {
+    const details = document.querySelector<HTMLDetailsElement>("#jev-run-count");
+    if (details) details.open = true;
+  });
+</script>
+
+<style>
+  .jev-promo { margin-top: 1.25rem; padding: clamp(1.25rem, 3vw, 2.5rem); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-solid); color: var(--foreground); scroll-margin-top: 7rem; }
+  .jev-promo p { line-height: 1.65; }
+  .jev-promo__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .jev-promo__label { margin: 0 0 0.5rem; color: var(--secondary); font-weight: 700; }
+  .jev-promo h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.65rem, 3vw, 2.5rem); line-height: 1.2; letter-spacing: -0.04em; }
+  .jev-promo__header p:last-child { max-width: 48ch; color: var(--muted); margin: 0.8rem 0 0; }
+  .jev-promo__source { max-width: 15ch; flex-shrink: 0; font-size: 0.82rem; line-height: 1.5; }
+  .jev-promo__comparison { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 2rem; margin-top: 2.5rem; align-items: center; }
+  .jev-promo__ratio { margin: 0; font-family: var(--font-display); font-size: clamp(4rem, 7vw, 6.5rem); font-weight: 800; line-height: 1 !important; letter-spacing: -0.065em; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .jev-promo__ratio span { font-size: 0.6em; margin-left: 0.08em; }
+  .jev-promo h3 { font-size: 1rem; margin: 0.75rem 0 0; line-height: 1.4; }
+  .jev-promo__headline > p:not(.jev-promo__ratio) { max-width: 34ch; font-size: 0.86rem; color: var(--muted); }
+  .jev-promo__quality { border-left: 2px solid var(--secondary); padding-left: 0.8rem; }
+  .jev-promo__quality strong { color: var(--foreground); }
+  .jev-promo__chart { margin: 0; padding: 1.25rem; background: var(--surface-muted); border-radius: var(--radius); }
+  .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1.5rem; }
+  .jev-promo__chart figcaption span { display: block; color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-top: 0.3rem; }
+  .jev-promo__chart-label { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; }
+  .jev-promo__chart-label span { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .jev-promo__chart svg { display: block; width: 100%; overflow: visible; margin: 0.4rem 0 1rem; }
+  .jev-promo__track { fill: var(--border); }
+  .jev-promo__bar--jev { fill: var(--primary); }
+  .jev-promo__bar--native { fill: var(--muted); }
+  .jev-promo__chart text { fill: var(--muted); font-size: 16px; font-family: var(--font-body); }
+  .jev-promo__caption { margin: 0; font-size: 0.75rem; color: var(--muted); }
+  .jev-promo--animate .jev-promo__bar { transform-origin: left; transform-box: fill-box; animation: jev-bar-reveal 950ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes jev-bar-reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .jev-promo__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 2.5rem; padding-block: 1.75rem; border-block: 1px solid var(--border); gap: 1.5rem; }
+  .jev-promo__stat { font-family: var(--font-display); font-size: clamp(2rem, 3.5vw, 3.15rem); font-weight: 750; letter-spacing: -0.05em; line-height: 1.1 !important; margin: 0; }
+  .jev-promo__stat span { font-size: 0.6em; margin-left: 0.08em; }
+  .jev-promo__stats h3 { margin-top: 0.5rem; font-size: 0.9rem; }
+  .jev-promo__stats p:not(.jev-promo__stat), .jev-promo__stats a { font-size: 0.78rem; color: var(--muted); }
+  .jev-promo__stats a { color: var(--primary); }
+  .jev-promo__features { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 2rem; margin-block: 2rem; }
+  .jev-promo__features h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.035em; margin: 0; }
+  .jev-promo__features p { font-size: 0.85rem; color: var(--muted); max-width: 32ch; }
+  .jev-promo__features dl { margin: 0; }
+  .jev-promo__features dl > div { padding-block: 0.8rem; border-bottom: 1px solid var(--border); }
+  .jev-promo__features dl > div:first-child { padding-top: 0; }
+  .jev-promo__features dt { font-weight: 650; font-size: 0.9rem; }
+  .jev-promo__features dd { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+  .jev-promo__details { border-top: 1px solid var(--border); scroll-margin-top: 7rem; }
+  .jev-promo__details summary { cursor: pointer; padding-block: 1rem; font-size: 0.87rem; font-weight: 650; }
+  .jev-promo__details-body { font-size: 0.85rem; color: var(--content-foreground); padding-bottom: 1rem; }
+  .jev-promo__table-scroll { overflow-x: auto; }
+  .jev-promo table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+  .jev-promo caption { text-align: left; color: var(--muted); padding: 0.5rem; }
+  .jev-promo th, .jev-promo td { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--border); }
+  .jev-promo td { font-variant-numeric: tabular-nums; }
+  .jev-promo__footer { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1.2rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; line-height: 1.6; }
+  .jev-promo__footer > div { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .jev-promo a:focus-visible, .jev-promo summary:focus-visible, .jev-promo__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
+  @media (max-width: 700px) {
+    .jev-promo__header, .jev-promo__footer { flex-direction: column; }
+    .jev-promo__source { max-width: none; }
+    .jev-promo__chart text { font-size: 26px; }
+    .jev-promo__comparison, .jev-promo__features { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+    .jev-promo__stats { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+    .jev-promo__stats > div + div { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+    .jev-promo__stats p:not(.jev-promo__stat) { max-width: 48ch; }
+  }
+  @media (prefers-reduced-motion: reduce) { .jev-promo--animate .jev-promo__bar { animation: none; transform: none; } }
+</style>

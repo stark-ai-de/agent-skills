@@ -21,6 +21,14 @@ const repoRoot = findRepoRoot();
 const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
   "jev-capability-advisor": "docs/skills/jev-capability-advisor/README.md",
 };
+const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly string[]>> = {
+  "jev-capability-advisor": [
+    "docs/skills/jev-capability-advisor/benchmarks/README.md",
+    "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",
+    "site/src/components/JevBenchmarkPromo.astro",
+    "site/src/lib/jev-benchmarks.mjs",
+  ],
+};
 
 marked.use({
   gfm: true,
@@ -281,9 +289,13 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     await marked.parse(normalizeSkillMarkdown(pageMarkdown, pageSourceDir)),
   );
   const { modifiedAt, publishedAt } = sourceDates(sourcePath);
-  const documentationModifiedAt = documentationPath
-    ? sourceDates(documentationPath).modifiedAt
-    : undefined;
+  const presentationSources = documentationPath
+    ? [documentationPath, ...(PUBLIC_PRESENTATION_SOURCES_BY_SKILL[name] ?? [])]
+    : [];
+  const presentationModifiedAt = presentationSources.reduce((latest, source) => {
+    const date = sourceDates(source).modifiedAt;
+    return date > latest ? date : latest;
+  }, modifiedAt);
 
   return {
     body: parsed.content,
@@ -306,10 +318,7 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     kind,
     license: asString(data.license) ?? "Unspecified",
     metadata,
-    modifiedAt:
-      documentationModifiedAt && documentationModifiedAt > modifiedAt
-        ? documentationModifiedAt
-        : modifiedAt,
+    modifiedAt: presentationModifiedAt,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
     openAiMetadataUrl: hasOpenAiMetadata ? repoUrl(openAiMetadataPath) : undefined,
