@@ -7,7 +7,7 @@ hosts an explicitly requested PR snapshot at
 
 GitHub's native Pages preview input is [not publicly available](https://github.com/actions/deploy-pages#inputs-).
 The separate repository preserves the Astro/Actions architecture from
-[ADR-0017](adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) without
+[ADR-0017](adrs/0017-use-astro-for-github-pages-skill-catalog.short.md) ([Long, canonical](adrs/0017-use-astro-for-github-pages-skill-catalog.long.md) · [Guide](adrs/0017-use-astro-for-github-pages-skill-catalog.guide.md)) without
 replacing production or weakening its environment protection.
 
 ## Refresh a preview
