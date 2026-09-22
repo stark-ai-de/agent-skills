@@ -22,3 +22,4 @@
 - Add badges after CI is active on the public repository.
 - Evaluate Claude plugin metadata only after an ADR makes it a supported publishing surface.
 - Evaluate a candidate ADR for provenance-aware assistant statements across Architecture Compass and `codex-memory-curator`: visibly label current verification, memory-derived claims that may be stale, user-provided facts, and assumptions, with timestamps or sources when freshness matters.
+- Evaluate an Architecture Compass ADR for explanatory GitHub PR comments in **Files changed**: add at least one concise change-and-reason review comment per changed file, including documentation and deleted files; use a meaningful diff line or the first available diff line for file-wide explanations, and the original (LEFT) side for deletions. Top-level PR comments do not satisfy this coverage. Recheck the current PR head, avoid duplicate comments, and verify published per-file coverage.
