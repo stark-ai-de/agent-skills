@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-06",
+  "caseDigest": "56440fe17133bcd66373e50e2fd2eaf6117801fbf06b0f9dd82729eec936d29f",
+  "arm": "host",
+  "snapshotDigest": "39a970921f4c9cbe13094b39e4c1e57212dda7f9e9dc90646e7920a11daf6499",
+  "findings": [],
+  "investigatedPaths": ["src/http.mjs", "docs/http.md", "src/mail.mjs", "docs/mail.de.md"],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 44680,
+    "modelCostUsd": null,
+    "inputTokens": 79744,
+    "outputTokens": 1140,
+    "cachedInputTokens": 51840,
+    "hostOutputTokens": 1140,
+    "hostInputTokens": 79744,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "346499bd102666a7a0d92313054a1268c56f4d95076a8544616976b53d1c06c4",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "The HTTP constant and documentation consistently specify five total attempts. Runtime enforcement cannot be verified because the fixture contains no HTTP delivery implementation or tests."
+  ]
+}

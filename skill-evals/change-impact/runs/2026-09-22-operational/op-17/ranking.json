@@ -1,0 +1,1583 @@
+{
+  "schemaVersion": 1,
+  "packetDigest": "7c106c18fdf5ad336c847488eea807d340ac846081578a3757581929b30dbdd7",
+  "snapshotDigest": "639f15975302f829ed78e474df56ff67e59e3b2939f8e53d82f02f6f42cf2c86",
+  "model": "jev-1.13.0",
+  "status": "ranked",
+  "records": [
+    {
+      "candidateId": "6fac3b72f5461e2a8dd2d285",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0.96,
+        "unrelated": 0.04
+      },
+      "confidence": 0.94,
+      "priority": 0.96
+    },
+    {
+      "candidateId": "9fcc7b1350bd55cf91d42517",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "old_assumption": 0.93,
+        "unrelated": 0.03,
+        "compatible": 0.03,
+        "uncertain": 0.01
+      },
+      "confidence": 0.91,
+      "priority": 0.935
+    },
+    {
+      "candidateId": "8bba4119fea37be73e7c5801",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "old_assumption": 0.91,
+        "unrelated": 0.02,
+        "compatible": 0.07,
+        "uncertain": 0
+      },
+      "confidence": 0.88,
+      "priority": 0.91
+    },
+    {
+      "candidateId": "d68bbe4a5af4a5d1a2e2e067",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.08,
+        "old_assumption": 0.91,
+        "compatible": 0.01
+      },
+      "confidence": 0.87,
+      "priority": 0.91
+    },
+    {
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "old_assumption": 0.8099999999999999,
+        "unrelated": 0.05,
+        "compatible": 0.12,
+        "uncertain": 0.02
+      },
+      "confidence": 0.76,
+      "priority": 0.82
+    },
+    {
+      "candidateId": "fbe7c5945198d31cad4eaee7",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "unrelated": 0.3,
+        "uncertain": 0.03,
+        "old_assumption": 0.56,
+        "compatible": 0.11
+      },
+      "confidence": 0.41,
+      "priority": 0.5750000000000001
+    },
+    {
+      "candidateId": "c54965fa2dcffd074219ca75",
+      "contractId": "lease-unit",
+      "relation": "old_assumption",
+      "probabilities": {
+        "uncertain": 0.21,
+        "unrelated": 0.03,
+        "old_assumption": 0.46,
+        "compatible": 0.3
+      },
+      "confidence": 0.28,
+      "priority": 0.5650000000000001
+    },
+    {
+      "candidateId": "473accfe894e914251cb8b29",
+      "contractId": "job-identity",
+      "relation": "old_assumption",
+      "probabilities": {
+        "unrelated": 0.09,
+        "uncertain": 0.36,
+        "old_assumption": 0.38,
+        "compatible": 0.17
+      },
+      "confidence": 0.18,
+      "priority": 0.56
+    },
+    {
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "contractId": "job-identity",
+      "relation": "old_assumption",
+      "probabilities": {
+        "old_assumption": 0.53,
+        "unrelated": 0.36,
+        "uncertain": 0.03,
+        "compatible": 0.08
+      },
+      "confidence": 0.37,
+      "priority": 0.545
+    },
+    {
+      "candidateId": "473accfe894e914251cb8b29",
+      "contractId": "lease-unit",
+      "relation": "uncertain",
+      "probabilities": {
+        "unrelated": 0.2,
+        "uncertain": 0.49,
+        "old_assumption": 0.21,
+        "compatible": 0.1
+      },
+      "confidence": 0.32,
+      "priority": 0.45499999999999996
+    },
+    {
+      "candidateId": "9fcc7b1350bd55cf91d42517",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.38,
+        "unrelated": 0.54,
+        "uncertain": 0.03,
+        "compatible": 0.05
+      },
+      "confidence": 0.4,
+      "priority": 0.395
+    },
+    {
+      "candidateId": "d68bbe4a5af4a5d1a2e2e067",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.6,
+        "old_assumption": 0.34,
+        "compatible": 0.04
+      },
+      "confidence": 0.46,
+      "priority": 0.35000000000000003
+    },
+    {
+      "candidateId": "fe7b51e093969e9adca61e7d",
+      "contractId": "job-identity",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.61,
+        "old_assumption": 0.34,
+        "unrelated": 0.05
+      },
+      "confidence": 0.47,
+      "priority": 0.34
+    },
+    {
+      "candidateId": "c54965fa2dcffd074219ca75",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.18,
+        "unrelated": 0.35,
+        "old_assumption": 0.23,
+        "compatible": 0.24
+      },
+      "confidence": 0.14,
+      "priority": 0.32
+    },
+    {
+      "candidateId": "8bba4119fea37be73e7c5801",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.22,
+        "unrelated": 0.35,
+        "uncertain": 0.18,
+        "compatible": 0.25
+      },
+      "confidence": 0.14,
+      "priority": 0.31
+    },
+    {
+      "candidateId": "d5f0ded12f10ad137b7e33d9",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.73,
+        "uncertain": 0.01,
+        "old_assumption": 0.24,
+        "compatible": 0.02
+      },
+      "confidence": 0.63,
+      "priority": 0.245
+    },
+    {
+      "candidateId": "7dc70b66a5a4f60de0e0a64c",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.05,
+        "unrelated": 0.45,
+        "old_assumption": 0.21,
+        "compatible": 0.29
+      },
+      "confidence": 0.27,
+      "priority": 0.235
+    },
+    {
+      "candidateId": "0798b028a0ca83e95285efed",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.66,
+        "compatible": 0.11,
+        "old_assumption": 0.21
+      },
+      "confidence": 0.55,
+      "priority": 0.22
+    },
+    {
+      "candidateId": "fe7b51e093969e9adca61e7d",
+      "contractId": "lease-unit",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.22,
+        "compatible": 0.73,
+        "unrelated": 0.05,
+        "uncertain": 0
+      },
+      "confidence": 0.63,
+      "priority": 0.22
+    },
+    {
+      "candidateId": "983f63184b30c249766f3268",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.76,
+        "uncertain": 0.01,
+        "old_assumption": 0.21,
+        "compatible": 0.02
+      },
+      "confidence": 0.67,
+      "priority": 0.215
+    },
+    {
+      "candidateId": "5aa51946c9fd727d067cf318",
+      "contractId": "job-identity",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.16,
+        "unrelated": 0.1,
+        "uncertain": 0.07,
+        "compatible": 0.67
+      },
+      "confidence": 0.56,
+      "priority": 0.195
+    },
+    {
+      "candidateId": "c5e8819dba35977b8f095355",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.79,
+        "uncertain": 0.02,
+        "old_assumption": 0.17,
+        "compatible": 0.02
+      },
+      "confidence": 0.73,
+      "priority": 0.18000000000000002
+    },
+    {
+      "candidateId": "1381e5be09fc1beb92dc9214",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.73,
+        "compatible": 0.11,
+        "old_assumption": 0.15
+      },
+      "confidence": 0.64,
+      "priority": 0.155
+    },
+    {
+      "candidateId": "44e8bd6716c5fb8931f981f5",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.76,
+        "compatible": 0.11,
+        "old_assumption": 0.12
+      },
+      "confidence": 0.68,
+      "priority": 0.125
+    },
+    {
+      "candidateId": "d5f0ded12f10ad137b7e33d9",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.82,
+        "uncertain": 0.02,
+        "old_assumption": 0.11,
+        "compatible": 0.05
+      },
+      "confidence": 0.76,
+      "priority": 0.12
+    },
+    {
+      "candidateId": "fbe7c5945198d31cad4eaee7",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.82,
+        "uncertain": 0.02,
+        "old_assumption": 0.11,
+        "compatible": 0.05
+      },
+      "confidence": 0.76,
+      "priority": 0.12
+    },
+    {
+      "candidateId": "983f63184b30c249766f3268",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.84,
+        "uncertain": 0.02,
+        "old_assumption": 0.1,
+        "compatible": 0.04
+      },
+      "confidence": 0.8,
+      "priority": 0.11
+    },
+    {
+      "candidateId": "b853fa01ca4fe5751efca038",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.09,
+        "unrelated": 0.8,
+        "old_assumption": 0.1
+      },
+      "confidence": 0.73,
+      "priority": 0.10500000000000001
+    },
+    {
+      "candidateId": "e95e68b6fbc5bd12c56d45dc",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.14,
+        "unrelated": 0.75,
+        "old_assumption": 0.1
+      },
+      "confidence": 0.67,
+      "priority": 0.10500000000000001
+    },
+    {
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "contractId": "lease-unit",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.1,
+        "unrelated": 0.01,
+        "uncertain": 0,
+        "compatible": 0.89
+      },
+      "confidence": 0.85,
+      "priority": 0.1
+    },
+    {
+      "candidateId": "486c903fa5679d0be7aaae97",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.81,
+        "compatible": 0.09,
+        "old_assumption": 0.09
+      },
+      "confidence": 0.74,
+      "priority": 0.095
+    },
+    {
+      "candidateId": "491a05e72a4176951c161507",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.85,
+        "compatible": 0.05,
+        "old_assumption": 0.09
+      },
+      "confidence": 0.8,
+      "priority": 0.095
+    },
+    {
+      "candidateId": "6293eb1596ce05d54b9e51f7",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.89,
+        "uncertain": 0.01,
+        "old_assumption": 0.09,
+        "compatible": 0.01
+      },
+      "confidence": 0.85,
+      "priority": 0.095
+    },
+    {
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "contractId": "job-identity",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.09,
+        "unrelated": 0.19,
+        "uncertain": 0.01,
+        "compatible": 0.71
+      },
+      "confidence": 0.6,
+      "priority": 0.095
+    },
+    {
+      "candidateId": "9f7bf7e5ef8effb9aa7acf72",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.07,
+        "uncertain": 0.02,
+        "old_assumption": 0.08,
+        "unrelated": 0.83
+      },
+      "confidence": 0.77,
+      "priority": 0.09
+    },
+    {
+      "candidateId": "5aa51946c9fd727d067cf318",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.08,
+        "unrelated": 0.7,
+        "compatible": 0.21,
+        "uncertain": 0.01
+      },
+      "confidence": 0.6,
+      "priority": 0.085
+    },
+    {
+      "candidateId": "6293eb1596ce05d54b9e51f7",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.88,
+        "old_assumption": 0.08,
+        "compatible": 0.03
+      },
+      "confidence": 0.85,
+      "priority": 0.085
+    },
+    {
+      "candidateId": "7dc70b66a5a4f60de0e0a64c",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.67,
+        "old_assumption": 0.08,
+        "compatible": 0.24
+      },
+      "confidence": 0.55,
+      "priority": 0.085
+    },
+    {
+      "candidateId": "f2be24fe60d681d8ea310ddd",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.86,
+        "compatible": 0.05,
+        "old_assumption": 0.08
+      },
+      "confidence": 0.82,
+      "priority": 0.085
+    },
+    {
+      "candidateId": "6fac3b72f5461e2a8dd2d285",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.07,
+        "compatible": 0.02,
+        "unrelated": 0.89,
+        "uncertain": 0.02
+      },
+      "confidence": 0.85,
+      "priority": 0.08
+    },
+    {
+      "candidateId": "a9229a25379510d8aefa3d34",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.86,
+        "old_assumption": 0.07,
+        "compatible": 0.05
+      },
+      "confidence": 0.82,
+      "priority": 0.08
+    },
+    {
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "contractId": "job-identity",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0.05,
+        "unrelated": 0.08,
+        "old_assumption": 0.05,
+        "compatible": 0.82
+      },
+      "confidence": 0.76,
+      "priority": 0.07500000000000001
+    },
+    {
+      "candidateId": "42af2cf017a572e35373b22f",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.05,
+        "uncertain": 0.01,
+        "old_assumption": 0.07,
+        "unrelated": 0.87
+      },
+      "confidence": 0.84,
+      "priority": 0.07500000000000001
+    },
+    {
+      "candidateId": "7c83c6d4123f6cb08cb194a6",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.86,
+        "uncertain": 0.01,
+        "old_assumption": 0.07,
+        "compatible": 0.06
+      },
+      "confidence": 0.82,
+      "priority": 0.07500000000000001
+    },
+    {
+      "candidateId": "61da097385ccc90305bbc2af",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.06,
+        "unrelated": 0.91,
+        "compatible": 0.02,
+        "uncertain": 0.01
+      },
+      "confidence": 0.88,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "8ac8d6e8f8d74864bbd8a195",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.06,
+        "unrelated": 0.91,
+        "uncertain": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.88,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "9f7bf7e5ef8effb9aa7acf72",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.03,
+        "uncertain": 0.01,
+        "old_assumption": 0.06,
+        "unrelated": 0.9
+      },
+      "confidence": 0.87,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "b1ae61dea712c7dc182b88c3",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.04,
+        "uncertain": 0.01,
+        "old_assumption": 0.06,
+        "unrelated": 0.89
+      },
+      "confidence": 0.85,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "c30daf55c9ccb3cdfe04fccd",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.06,
+        "unrelated": 0.91,
+        "uncertain": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.89,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "c5e8819dba35977b8f095355",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.9,
+        "uncertain": 0.01,
+        "old_assumption": 0.06,
+        "compatible": 0.03
+      },
+      "confidence": 0.86,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "3c412db8dab936ed997fc1c8",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.1,
+        "uncertain": 0,
+        "old_assumption": 0.06,
+        "unrelated": 0.84
+      },
+      "confidence": 0.78,
+      "priority": 0.06
+    },
+    {
+      "candidateId": "7a21db06247a6900df06b303",
+      "contractId": "job-identity",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.03,
+        "compatible": 0.91,
+        "old_assumption": 0.06
+      },
+      "confidence": 0.88,
+      "priority": 0.06
+    },
+    {
+      "candidateId": "1381e5be09fc1beb92dc9214",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.89,
+        "compatible": 0.05,
+        "old_assumption": 0.05
+      },
+      "confidence": 0.86,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "21014c9ffbc735daa8ad7d72",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.85,
+        "compatible": 0.09,
+        "old_assumption": 0.05
+      },
+      "confidence": 0.8,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "contractId": "lease-unit",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0.03,
+        "unrelated": 0.45,
+        "old_assumption": 0.04,
+        "compatible": 0.48
+      },
+      "confidence": 0.31,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "24e0130e37af4b0c8eccef87",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.01,
+        "old_assumption": 0.05,
+        "unrelated": 0.93
+      },
+      "confidence": 0.91,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "37f89f81be8ade33c8a924cb",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.05,
+        "unrelated": 0.89,
+        "uncertain": 0.01,
+        "compatible": 0.05
+      },
+      "confidence": 0.86,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "61da097385ccc90305bbc2af",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.05,
+        "unrelated": 0.91,
+        "uncertain": 0.01,
+        "compatible": 0.03
+      },
+      "confidence": 0.88,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.04,
+        "uncertain": 0.01,
+        "old_assumption": 0.05,
+        "unrelated": 0.9
+      },
+      "confidence": 0.87,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "9d9e92aa574f6bd74d2e10fb",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.05,
+        "unrelated": 0.91,
+        "uncertain": 0.01,
+        "compatible": 0.03
+      },
+      "confidence": 0.87,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "bf38fa7c0a31e6bb2c997ea0",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.09,
+        "unrelated": 0.85,
+        "old_assumption": 0.05
+      },
+      "confidence": 0.79,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "0798b028a0ca83e95285efed",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.87,
+        "compatible": 0.07,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.82,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "5504c30e98d3ff8e9f80aa84",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.85,
+        "old_assumption": 0.04,
+        "compatible": 0.09
+      },
+      "confidence": 0.8,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "100d9b2c74528fe5c026efdf",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.06,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.89
+      },
+      "confidence": 0.86,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "14a3648b62fd835814feb8a8",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.03,
+        "unrelated": 0.89,
+        "uncertain": 0.03,
+        "compatible": 0.05
+      },
+      "confidence": 0.86,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "1f8ff63516a534d8001cd8b9",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.92,
+        "uncertain": 0.01,
+        "compatible": 0.03
+      },
+      "confidence": 0.9,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "206749ef4ebc7dee83041cfb",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.04,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.91
+      },
+      "confidence": 0.88,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "7a21db06247a6900df06b303",
+      "contractId": "lease-unit",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.12,
+        "compatible": 0.83,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.78,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "7c83c6d4123f6cb08cb194a6",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.06,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.89
+      },
+      "confidence": 0.85,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "8024f1cc9a6032cc1141a943",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.91,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "compatible": 0.04
+      },
+      "confidence": 0.88,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.1,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.85
+      },
+      "confidence": 0.8,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "8ac8d6e8f8d74864bbd8a195",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.93,
+        "uncertain": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.9,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "b1ae61dea712c7dc182b88c3",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.06,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.89
+      },
+      "confidence": 0.86,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "bf38fa7c0a31e6bb2c997ea0",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.89,
+        "compatible": 0.06,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.87,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "42af2cf017a572e35373b22f",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.03,
+        "uncertain": 0,
+        "old_assumption": 0.04,
+        "unrelated": 0.93
+      },
+      "confidence": 0.9,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "45ddc086dc3f8c559ef1c7f6",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.05,
+        "uncertain": 0,
+        "old_assumption": 0.04,
+        "unrelated": 0.91
+      },
+      "confidence": 0.88,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "9d9e92aa574f6bd74d2e10fb",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.95,
+        "uncertain": 0,
+        "compatible": 0.01
+      },
+      "confidence": 0.92,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "b853fa01ca4fe5751efca038",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.93,
+        "compatible": 0.03,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.89,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "c30b9da24301672fd7a02a27",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.89,
+        "old_assumption": 0.03,
+        "compatible": 0.06
+      },
+      "confidence": 0.86,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "21014c9ffbc735daa8ad7d72",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.05,
+        "uncertain": 0.01,
+        "old_assumption": 0.03,
+        "unrelated": 0.91
+      },
+      "confidence": 0.89,
+      "priority": 0.034999999999999996
+    },
+    {
+      "candidateId": "486c903fa5679d0be7aaae97",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.91,
+        "compatible": 0.05,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.89,
+      "priority": 0.034999999999999996
+    },
+    {
+      "candidateId": "1f8ff63516a534d8001cd8b9",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.03,
+        "unrelated": 0.96,
+        "compatible": 0.01,
+        "uncertain": 0
+      },
+      "confidence": 0.94,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "37f89f81be8ade33c8a924cb",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.03,
+        "unrelated": 0.96,
+        "uncertain": 0,
+        "compatible": 0.01
+      },
+      "confidence": 0.94,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "f2be24fe60d681d8ea310ddd",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.9400000000000001,
+        "compatible": 0.03,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.91,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "100d9b2c74528fe5c026efdf",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.03,
+        "uncertain": 0.01,
+        "old_assumption": 0.02,
+        "unrelated": 0.94
+      },
+      "confidence": 0.92,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "24e0130e37af4b0c8eccef87",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0,
+        "old_assumption": 0.02,
+        "unrelated": 0.97
+      },
+      "confidence": 0.96,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "257bf9bbc2bb6f6145d20d53",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.95,
+        "old_assumption": 0.02,
+        "compatible": 0.02
+      },
+      "confidence": 0.93,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "44e8bd6716c5fb8931f981f5",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.05,
+        "unrelated": 0.92,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.89,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "6017024ec075b245368ff44a",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.02,
+        "unrelated": 0.95,
+        "compatible": 0.02,
+        "uncertain": 0.01
+      },
+      "confidence": 0.95,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "3635fd6d8c2650ba2019784f",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0.02,
+        "unrelated": 0.98
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "3c412db8dab936ed997fc1c8",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.95,
+        "uncertain": 0,
+        "old_assumption": 0.02,
+        "compatible": 0.03
+      },
+      "confidence": 0.93,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "6f7bf9aaf7c829d10454e082",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0.02,
+        "unrelated": 0.98
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "94463955418a0095491defd9",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0,
+        "uncertain": 0,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "e95e68b6fbc5bd12c56d45dc",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.92,
+        "compatible": 0.06,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.89,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "14a3648b62fd835814feb8a8",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.97,
+        "old_assumption": 0.01,
+        "compatible": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "257bf9bbc2bb6f6145d20d53",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.96,
+        "old_assumption": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.94,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "5dcbf5bd9706dcaeff2be330",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.96,
+        "old_assumption": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.94,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "a9229a25379510d8aefa3d34",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.97,
+        "old_assumption": 0.01,
+        "compatible": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "c30b9da24301672fd7a02a27",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "unrelated": 0.96,
+        "uncertain": 0.01,
+        "compatible": 0.02
+      },
+      "confidence": 0.95,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "c30daf55c9ccb3cdfe04fccd",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0,
+        "unrelated": 0.98,
+        "uncertain": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "e97a699f1d54ae9391fcfcef",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.97,
+        "old_assumption": 0.01,
+        "compatible": 0.01
+      },
+      "confidence": 0.95,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "206749ef4ebc7dee83041cfb",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.02,
+        "uncertain": 0,
+        "old_assumption": 0.01,
+        "unrelated": 0.97
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "3ccfb3631d69e847f0c2d0e0",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0.01,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "491a05e72a4176951c161507",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.97,
+        "compatible": 0.02,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.96,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "5504c30e98d3ff8e9f80aa84",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.98,
+        "old_assumption": 0.01,
+        "compatible": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "6017024ec075b245368ff44a",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "unrelated": 0.99,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "8024f1cc9a6032cc1141a943",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01,
+        "unrelated": 0.98
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "82c9866bc8400072ce8ca9fb",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0.01,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "ae322640cda619aee968e180",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.99,
+        "compatible": 0,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "ae322640cda619aee968e180",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "3635fd6d8c2650ba2019784f",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0,
+        "unrelated": 1
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "3ccfb3631d69e847f0c2d0e0",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0,
+        "unrelated": 1
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "45ddc086dc3f8c559ef1c7f6",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "5dcbf5bd9706dcaeff2be330",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 1,
+        "old_assumption": 0,
+        "compatible": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "6f7bf9aaf7c829d10454e082",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0,
+        "unrelated": 1
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "82c9866bc8400072ce8ca9fb",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0,
+        "unrelated": 1
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "94463955418a0095491defd9",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "compatible": 0,
+        "unrelated": 1,
+        "uncertain": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "c68006279ca5d69afc62900a",
+      "contractId": "job-identity",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "compatible": 0,
+        "unrelated": 1,
+        "uncertain": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "c68006279ca5d69afc62900a",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 1,
+        "compatible": 0,
+        "old_assumption": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "e97a699f1d54ae9391fcfcef",
+      "contractId": "lease-unit",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "old_assumption": 0,
+        "compatible": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0
+    }
+  ],
+  "errors": [],
+  "coverage": {
+    "plannedPairs": 120,
+    "evaluatedPairs": 120,
+    "pendingPairs": 0
+  },
+  "usage": {
+    "attempts": 6,
+    "inputTokens": 37330,
+    "outputTokens": 6678,
+    "estimatedCostUsd": 0.0015678600000000001,
+    "costComplete": true,
+    "elapsedMs": 3399
+  }
+}

@@ -1,0 +1,816 @@
+{
+  "schemaVersion": 1,
+  "packetDigest": "266df416ea1afd50ad11d3663d446023fbb906b41d4482e950c19ab342b88543",
+  "snapshotDigest": "944a44cc55e89c43f95dfcf797cc9db2602b5acfd5ea03e7664b5dfd92cfdfad",
+  "model": "jev-1.13.0",
+  "status": "ranked",
+  "records": [
+    {
+      "candidateId": "b29eab3757288a220cd98801",
+      "contractId": "export-lifetime",
+      "relation": "old_assumption",
+      "probabilities": {
+        "old_assumption": 0.48,
+        "unrelated": 0.01,
+        "compatible": 0.47,
+        "uncertain": 0.04
+      },
+      "confidence": 0.31,
+      "priority": 0.5
+    },
+    {
+      "candidateId": "f6214282b5497a6766ef08d4",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.16,
+        "unrelated": 0.83,
+        "compatible": 0.01,
+        "uncertain": 0
+      },
+      "confidence": 0.78,
+      "priority": 0.16
+    },
+    {
+      "candidateId": "4b44f40a727d54b342a6db4d",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.07,
+        "unrelated": 0.79,
+        "compatible": 0.05,
+        "uncertain": 0.09
+      },
+      "confidence": 0.71,
+      "priority": 0.115
+    },
+    {
+      "candidateId": "589bc0ef69bcf8f3bdff1558",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "unrelated": 0.03,
+        "compatible": 0.86,
+        "uncertain": 0.06,
+        "old_assumption": 0.05
+      },
+      "confidence": 0.8,
+      "priority": 0.08
+    },
+    {
+      "candidateId": "14ca0a2fc3d70c40409bc09a",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.07,
+        "unrelated": 0,
+        "compatible": 0.93,
+        "uncertain": 0
+      },
+      "confidence": 0.9,
+      "priority": 0.07
+    },
+    {
+      "candidateId": "7244cad4a03560f3fec2af69",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "unrelated": 0.01,
+        "compatible": 0.92,
+        "uncertain": 0.02,
+        "old_assumption": 0.05
+      },
+      "confidence": 0.9,
+      "priority": 0.060000000000000005
+    },
+    {
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.89,
+        "compatible": 0.06,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.85,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "d5f0ded12f10ad137b7e33d9",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.92,
+        "compatible": 0.04,
+        "uncertain": 0.01,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.9,
+      "priority": 0.034999999999999996
+    },
+    {
+      "candidateId": "7c83c6d4123f6cb08cb194a6",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.95,
+        "compatible": 0.02,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.92,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "7dc70b66a5a4f60de0e0a64c",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.95,
+        "compatible": 0.02,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.93,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "83bdd74cd5a4e2539b43b30f",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.86,
+        "compatible": 0.11,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.82,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "0b32b938c892bbd37db7acc9",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0.01,
+        "unrelated": 0.01,
+        "compatible": 0.96,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.95,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "c5e8819dba35977b8f095355",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.95,
+        "compatible": 0.02,
+        "uncertain": 0.01,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.94,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "42af2cf017a572e35373b22f",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.97,
+        "compatible": 0.01,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "cb82dc9b4de5c9b9b719ae76",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "unrelated": 0.01,
+        "compatible": 0.96,
+        "uncertain": 0.02
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "ee8652ec1bbc94ce145add99",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "unrelated": 0.01,
+        "compatible": 0.97,
+        "uncertain": 0,
+        "old_assumption": 0.02
+      },
+      "confidence": 0.96,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "983f63184b30c249766f3268",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.97,
+        "compatible": 0.01,
+        "uncertain": 0.01,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.96,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "100d9b2c74528fe5c026efdf",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "14a3648b62fd835814feb8a8",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "206749ef4ebc7dee83041cfb",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.97,
+        "compatible": 0.02,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.95,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "3c412db8dab936ed997fc1c8",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.97,
+        "compatible": 0.02,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "3fa83896c90372235eeb9ea4",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "44e8bd6716c5fb8931f981f5",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.96,
+        "compatible": 0.03,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.94,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "6293eb1596ce05d54b9e51f7",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "97261e6e1a716a26a84427f5",
+      "contractId": "export-lifetime",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "unrelated": 0,
+        "compatible": 0.99,
+        "uncertain": 0
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "9f7bf7e5ef8effb9aa7acf72",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "b1ae61dea712c7dc182b88c3",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "bf38fa7c0a31e6bb2c997ea0",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.93,
+        "compatible": 0.06,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.9,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "c30b9da24301672fd7a02a27",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "fbe7c5945198d31cad4eaee7",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.98,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0.01
+      },
+      "confidence": 0.98,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "0798b028a0ca83e95285efed",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "1381e5be09fc1beb92dc9214",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "1f8ff63516a534d8001cd8b9",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "21014c9ffbc735daa8ad7d72",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.98,
+        "compatible": 0.02,
+        "old_assumption": 0
+      },
+      "confidence": 0.97,
+      "priority": 0
+    },
+    {
+      "candidateId": "24e0130e37af4b0c8eccef87",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "257bf9bbc2bb6f6145d20d53",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "3635fd6d8c2650ba2019784f",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "37f89f81be8ade33c8a924cb",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "3ccfb3631d69e847f0c2d0e0",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "45ddc086dc3f8c559ef1c7f6",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "486c903fa5679d0be7aaae97",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "491a05e72a4176951c161507",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "5504c30e98d3ff8e9f80aa84",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0,
+        "old_assumption": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "5dcbf5bd9706dcaeff2be330",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0,
+        "old_assumption": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "6017024ec075b245368ff44a",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "61da097385ccc90305bbc2af",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "6f7bf9aaf7c829d10454e082",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "8024f1cc9a6032cc1141a943",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "old_assumption": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "82c9866bc8400072ce8ca9fb",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "8ac8d6e8f8d74864bbd8a195",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "94463955418a0095491defd9",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "9d9e92aa574f6bd74d2e10fb",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "uncertain": 0,
+        "compatible": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "a9229a25379510d8aefa3d34",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "ae322640cda619aee968e180",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "b853fa01ca4fe5751efca038",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "c30daf55c9ccb3cdfe04fccd",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "c4e79fe927c0073be4c73070",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "c68006279ca5d69afc62900a",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "e95e68b6fbc5bd12c56d45dc",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0,
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0
+      },
+      "confidence": 1,
+      "priority": 0
+    },
+    {
+      "candidateId": "e97a699f1d54ae9391fcfcef",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 1,
+        "compatible": 0,
+        "uncertain": 0,
+        "old_assumption": 0
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "f2be24fe60d681d8ea310ddd",
+      "contractId": "export-lifetime",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "unrelated": 0.99,
+        "compatible": 0.01,
+        "old_assumption": 0
+      },
+      "confidence": 0.98,
+      "priority": 0
+    }
+  ],
+  "errors": [],
+  "coverage": {
+    "plannedPairs": 61,
+    "evaluatedPairs": 61,
+    "pendingPairs": 0
+  },
+  "usage": {
+    "attempts": 3,
+    "inputTokens": 17961,
+    "outputTokens": 3383,
+    "estimatedCostUsd": 0.0007543620000000001,
+    "costComplete": true,
+    "elapsedMs": 2079
+  }
+}

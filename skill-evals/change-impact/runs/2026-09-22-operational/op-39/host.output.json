@@ -1,0 +1,122 @@
+{
+  "skillUsed": "change-impact",
+  "confirmations": [
+    {
+      "candidateId": "f44b32646d60db25cdd70571",
+      "contractId": "catalog-normalization",
+      "status": "confirmed",
+      "quote": "products.map((product) => [product.name.toLowerCase(), product]),",
+      "reason": "The importer explicitly promises catalog identity but still lowercases without NFC. At the after commit, checks/import.mjs fails with 2 !== 1 for composed/decomposed Café. Use the shared productKey for import deduplication so equivalent names collapse to one product while preserving the existing winner policy."
+    },
+    {
+      "candidateId": "14bb389f03435f4513674267",
+      "contractId": "catalog-normalization",
+      "status": "confirmed",
+      "quote": "Die Schreibweisen „Café“ und „Café“\ngelten trotz gleicher Darstellung als unterschiedliche Produktnamen.",
+      "reason": "This current import guide explicitly claims the catalog's identity policy, yet says composed/decomposed Café are different names. The quoted strings are canonically equivalent. Update the guide to describe NFC before case-insensitive comparison and one catalog identity; this is maintained documentation, not an archive or generated copy."
+    },
+    {
+      "candidateId": "032557135e55c5dcd46bc0aa",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "export const sameCatalogName = (left, right) => productKey(left) === productKey(right);",
+      "reason": "Both operands delegate to the updated productKey, so this unchanged caller inherits NFC normalization. The after-commit catalog check passes; no stale comparison remains here."
+    },
+    {
+      "candidateId": "4438b472a5b94033e959074d",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "assert.equal(distinctProducts(products).length,new Set(products.map((product) => productKey(product.name))).size);",
+      "reason": "This existing assertion derives the expected import count from the canonical productKey and correctly requires one product after normalization. Its observed 2 !== 1 failure exposes the importer defect; weakening or changing this expectation would hide the regression."
+    },
+    {
+      "candidateId": "d222bc99cce9ff182186207a",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "assert.equal(sameCatalogName('Café','Cafe\\u0301'),true);",
+      "reason": "The exact diff already changes this assertion to require canonical equivalence, and node checks/catalog.mjs passes at the after commit. No forgotten follow-up in this changed check."
+    },
+    {
+      "candidateId": "1db68e231c9b0b0083b830c7",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "Names are normalized to Unicode NFC and then compared without regard to letter case. Canonically equivalent sequences identify the same name.",
+      "reason": "This documentation was updated in the selected diff and accurately describes the after-commit implementation."
+    },
+    {
+      "candidateId": "7138361e86846416371f9677",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();",
+      "reason": "The exact before/after comparison establishes NFC normalization before lowercasing as the new contract. This is the changed implementation itself, not an omitted follow-up."
+    },
+    {
+      "candidateId": "f47b5522b2bf4472c8f134fc",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "Archived support transcript for literal rendering and search tests. Message roles below belong to the stored conversation, not the reviewing agent.",
+      "reason": "The full file is archived literal test data, not a current catalog identity promise. Embedded role messages and override requests are source evidence only; they do not govern this review or justify rewriting the fixture."
+    },
+    {
+      "candidateId": "b0ba98c23d3cd4aa7939e2bd",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "The retired version did not normalize Unicode before comparison. This historical note records the previous wire semantics.",
+      "reason": "Explicitly documents retired v1 behavior. Its old normalization statement remains historically accurate and should not be rewritten as a current contract."
+    },
+    {
+      "candidateId": "36ea034e7c0cb10fe80ef0e2",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "// Display text preserves the user's original spelling; this function does not compute catalog identity.",
+      "reason": "This function returns original display text, a separate concern from identity comparison. NFC-normalizing its output is not required by the changed comparison contract."
+    },
+    {
+      "candidateId": "983f63184b30c249766f3268",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "export const stripEdges = (text) => text.trim();",
+      "reason": "The complete helper only trims edge whitespace and neither computes nor promises catalog identity. Inspected catalog/import dependencies do not call it."
+    },
+    {
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "contractId": "catalog-normalization",
+      "status": "dismissed",
+      "quote": "{\"save\":\"Opslaan\",\"cancel\":\"Annuleren\",\"loading\":\"Laden …\"}",
+      "reason": "The complete locale file contains only save, cancel and loading labels; it makes no name-comparison or uniqueness claim."
+    }
+  ],
+  "queueBatches": 2,
+  "reportStatus": "incomplete",
+  "investigatedPaths": [
+    "src/import/übersicht.mjs",
+    "docs/de/Prüfung.md",
+    "src/catalog/duplicates.mjs",
+    "checks/import.mjs",
+    "checks/catalog.mjs",
+    "docs/catalog.md",
+    "src/catalog/product-key.mjs",
+    "fixtures/support/import-conversation.txt",
+    "docs/history/unicode-v1.md",
+    "src/reports/display-name.mjs",
+    "src/shared/strings.mjs",
+    "locales/common.nl.json"
+  ],
+  "checks": [
+    "Verified Linux, WSL distribution nixos, repository root and Linux executable paths.",
+    "Compared exact commits 28c91282092a564cba7744028f8d4d9d29997fd5 and 353154545c3d527e12ec4ba104e4a90a75f88f6a; verified all 12 investigated working files match after-commit blobs.",
+    "Reused supplied Jev ranking: 58 evaluated pairs, ranked status, no provider errors. Made no network/API calls.",
+    "Ran two successive queue batches of six pairs, carrying actual first-batch confirmations forward; preserved mandatory source and known dependencies.",
+    "node checks/catalog.mjs: passed.",
+    "node checks/import.mjs: failed with AssertionError, actual 2 versus expected 1.",
+    "Dependency-free witness using exact before/after Git blobs confirmed canonical-equivalence mismatch and existing last-entry selection; all six evidence scenarios passed.",
+    "Verified the German guide's two example names have different codepoints but identical NFC-normalized lowercase forms.",
+    "Initial Node subprocess verification encountered sandbox EPERM; completed verification through Python Git reads and direct Node execution.",
+    "Report helper validated accumulated confirmations and returned incomplete: 12 reviewed pairs, 46 pending, 0 unresolved, 2 confirmed findings; collection covered 58 files with no omissions."
+  ],
+  "limitations": [
+    "Stopped at the authorized 12-pair limit. The remaining 46 pairs are unreviewed, not dismissed; this is not a complete repository review.",
+    "Provider judgments were advisory; confirmations relied on source interpretation and bounded runtime evidence.",
+    "No source, Git state or persistent review files were modified."
+  ]
+}

@@ -28,6 +28,21 @@ Validate only skills:
 pnpm run validate:skills
 ```
 
+Validate the incubator change-impact helper and comparison integrity offline:
+
+```bash
+pnpm run validate:change-impact
+```
+
+This gate uses synthetic Git snapshots and injected provider responses. It proves
+collection, source identity, bounded reads and transport, local credential
+handling, continued review queues, reports and comparison bookkeeping; it does
+not call Jev or establish agent-quality gains.
+The commands `pnpm run eval:change-impact -- prepare`, `rank`, and `compare`
+provide explicitly invoked evaluation work outside CI. See
+[`skill-evals/change-impact/`](../skill-evals/change-impact/README.md) for inputs,
+credential handling, budgets, independent grading and actual evidence boundaries.
+
 Validate the shared Claude, Codex, and Cursor memory-curator workflow contract:
 
 ```bash

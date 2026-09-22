@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-07",
+  "caseDigest": "a77dc1a1bcc31c8c827155127686e7e9a7ee0b6192b621b239a5d87e88161c08",
+  "arm": "jev",
+  "snapshotDigest": "2bace25fab5d6123bba4cf2c0dc5cca4408ad9af40a4a164aec295dd91a6b4df",
+  "findings": [],
+  "investigatedPaths": [
+    "src/invitations.mjs",
+    "docs/fixture-history.md",
+    "templates/invite-help.txt",
+    "generated/invite-help.txt"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 39085,
+    "modelCostUsd": null,
+    "inputTokens": 88540,
+    "outputTokens": 1793,
+    "cachedInputTokens": 54784,
+    "hostOutputTokens": 912,
+    "hostInputTokens": 83819,
+    "providerInputTokens": 4721,
+    "providerOutputTokens": 881
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "788465374cfec103a19fab8a1e686a078c479fd6407be20d3efbbf4740bfafd5",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review only: the fixture contains no invitation-validation implementation or executable tests to verify runtime expiration."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "2bace25fab5d6123bba4cf2c0dc5cca4408ad9af40a4a164aec295dd91a6b4df",
+    "packetDigest": "f1e623b5eb747a8e8c58d8f207297ef22f9d7d35c640a13c452e9ade19f839d0",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4721,
+      "outputTokens": 881,
+      "estimatedCostUsd": 0.000198282,
+      "costComplete": true,
+      "elapsedMs": 424
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

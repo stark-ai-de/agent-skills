@@ -1,0 +1,121 @@
+{
+  "skillUsed": "change-impact",
+  "confirmations": [
+    {
+      "candidateId": "b29eab3757288a220cd98801",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "assert.equal(exportResponse(1000).expiresAt, 1801000);",
+      "reason": "Already updated in the diff: 1000 + 30 * 60000 = 1801000. node checks/export-response.mjs passes against files verified equal to the exact after commit; the advisory old_assumption label is incorrect."
+    },
+    {
+      "candidateId": "4b44f40a727d54b342a6db4d",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "assert.equal(generated, exportHelp());",
+      "reason": "This unchanged check compares generated text with its canonical generator and contains no obsolete lifetime assertion. node checks/generated-help.mjs passes with the new 30-minute policy."
+    },
+    {
+      "candidateId": "589bc0ef69bcf8f3bdff1558",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "export const exportResponse = (nowMs) => ({kind:'export-download',expiresAt:expiresAt(nowMs)});",
+      "reason": "The response imports expiresAt from the changed export policy, so it inherits the 30-minute lifetime without a follow-up edit; the response check passes."
+    },
+    {
+      "candidateId": "7244cad4a03560f3fec2af69",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "export const exportHelp = () => `Export downloads remain available for ${EXPORT_DOWNLOAD_TTL_MINUTES} minutes.\\n`;",
+      "reason": "The canonical generator interpolates the imported policy constant, so it emits 30 minutes automatically. The generated-help check passes; no stale hardcoded value remains here."
+    },
+    {
+      "candidateId": "0b32b938c892bbd37db7acc9",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "Export downloads remain available for 30 minutes.",
+      "reason": "The generated artifact was updated in the diff and matches src/exports/help.mjs, whose value comes from src/exports/link-policy.mjs. Its ownership is explicit and its consistency check passes."
+    },
+    {
+      "candidateId": "cb82dc9b4de5c9b9b719ae76",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "{\"endpoint\":\"export-download\",\"ttlMinutes\":30}",
+      "reason": "The export-download example already specifies the new 30-minute lifetime and was updated in the exact diff."
+    },
+    {
+      "candidateId": "ee8652ec1bbc94ce145add99",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;",
+      "reason": "The exact after commit implements the new 30-minute policy; expiresAt converts minutes to milliseconds with * 60000, and the response check passes."
+    },
+    {
+      "candidateId": "97261e6e1a716a26a84427f5",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "Ein Download-Link für einen Export ist 30 Minuten gültig.",
+      "reason": "The current German export guide already states the new 30-minute lifetime and was updated in the exact diff."
+    },
+    {
+      "candidateId": "3fa83896c90372235eeb9ea4",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "// Preview URLs use their own endpoint and policy, independent of export downloads.\nexport const PREVIEW_TTL_MINUTES = 15;",
+      "reason": "Preview URLs explicitly own a separate policy. Their unchanged 15-minute lifetime is not contradicted by the export-download change."
+    },
+    {
+      "candidateId": "f6214282b5497a6766ef08d4",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "{\"endpoint\":\"asset-preview\",\"ttlMinutes\":15}",
+      "reason": "This example targets asset-preview, not export-download, and matches the independent 15-minute policy in src/previews/link-policy.mjs."
+    },
+    {
+      "candidateId": "14ca0a2fc3d70c40409bc09a",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "That release introduced export-download links with a 15-minute lifetime. This page records the retired release, not current usage guidance.",
+      "reason": "The surrounding heading identifies the 2025 release archive, and the text explicitly records retired behavior. Preserving its historical 15-minute lifetime is correct."
+    },
+    {
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "contractId": "export-lifetime",
+      "status": "dismissed",
+      "quote": "{\"save\":\"Opslaan\",\"cancel\":\"Annuleren\",\"loading\":\"Laden …\"}",
+      "reason": "The complete excerpt contains only generic save, cancel, and loading translations; it makes no export-download lifetime claim."
+    }
+  ],
+  "queueBatches": 2,
+  "reportStatus": "incomplete",
+  "investigatedPaths": [
+    "checks/export-response.mjs",
+    "checks/generated-help.mjs",
+    "src/exports/response.mjs",
+    "src/exports/help.mjs",
+    "generated/export-help.txt",
+    "config/exports.example.json",
+    "src/exports/link-policy.mjs",
+    "docs/exports.de.md",
+    "src/previews/link-policy.mjs",
+    "config/preview.example.json",
+    "docs/history/exports-2025.md",
+    "locales/common.nl.json"
+  ],
+  "checks": [
+    "Verified Linux/nixos environment, repository root, Linux executable paths, Node v24.20.0 and Git 2.54.0.",
+    "Compared exact commits 526c8da951dde2883758eb90e2b18529c98bd0e4 and 4d99a9eb02fa300841f95c309456560ae470a991 without using a Git index.",
+    "Verified eight required export source, check, documentation and configuration files match exact after-commit blobs; confirmed Git index absent.",
+    "Searched exact-head dependency paths for link-policy, exportResponse and exportHelp.",
+    "node checks/export-response.mjs: passed.",
+    "node checks/generated-help.mjs: passed.",
+    "Executed two offline queue batches of six pairs, carrying all six first-batch confirmations into the second batch.",
+    "Offline report validated the supplied packet/ranking and all 12 confirmations; returned incomplete with no findings.",
+    "Reused supplied Jev ranking: 61 evaluated pairs, three prior API attempts, no provider errors. Made no additional network/API calls or source/Git edits."
+  ],
+  "limitations": [
+    "No necessary follow-up was confirmed within the investigated pairs. This bounded review does not establish repository-wide completeness.",
+    "Actual report coverage: enumeratedFiles=61, collectedFiles=61, candidates=61, bytes=12923, omissions=[], reviewedPairs=12, pendingPairs=49, unresolvedPairs=0.",
+    "Stopped at the authorized 12-pair limit; 49 unseen pairs remain pending and were not dismissed."
+  ]
+}

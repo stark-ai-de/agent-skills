@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "complete": true,
+  "additionalAttempts": 2,
+  "reason": "Two case-03 qualification calls were rejected by the original strict probability-sum check. Eight accepted requests are represented in the retained Jev captures. No automatic HTTP retries occurred.",
+  "totalObservedAttempts": 10,
+  "additionalKnownInputTokens": 4846,
+  "additionalKnownInputCostUsd": 0.000203532,
+  "additionalCostComplete": false,
+  "qualificationBoundary": "One failed response did not retain usage. Do not interpret recorded zero known tokens in its receipt as zero billed usage."
+}

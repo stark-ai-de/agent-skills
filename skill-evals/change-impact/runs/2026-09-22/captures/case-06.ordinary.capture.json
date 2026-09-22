@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-06",
+  "caseDigest": "56440fe17133bcd66373e50e2fd2eaf6117801fbf06b0f9dd82729eec936d29f",
+  "arm": "ordinary",
+  "snapshotDigest": "39a970921f4c9cbe13094b39e4c1e57212dda7f9e9dc90646e7920a11daf6499",
+  "findings": [],
+  "investigatedPaths": [
+    "src/http.mjs",
+    "docs/http.md",
+    "src/mail.mjs",
+    "docs/mail.de.md",
+    "docs/translations.md",
+    "docs/health.md",
+    "docs/logging.md"
+  ],
+  "reviewedCandidates": 7,
+  "metrics": {
+    "elapsedMs": 61640,
+    "modelCostUsd": null,
+    "inputTokens": 145148,
+    "outputTokens": 1528,
+    "cachedInputTokens": 118528,
+    "hostOutputTokens": 1528,
+    "hostInputTokens": 145148,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "The fixture contains the HTTP attempt-limit constant but no delivery implementation or tests, so runtime retry behavior could not be verified."
+  ]
+}

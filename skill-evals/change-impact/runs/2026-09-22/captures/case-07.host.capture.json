@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-07",
+  "caseDigest": "a77dc1a1bcc31c8c827155127686e7e9a7ee0b6192b621b239a5d87e88161c08",
+  "arm": "host",
+  "snapshotDigest": "2bace25fab5d6123bba4cf2c0dc5cca4408ad9af40a4a164aec295dd91a6b4df",
+  "findings": [],
+  "investigatedPaths": [
+    "src/invitations.mjs",
+    "templates/invite-help.txt",
+    "generated/invite-help.txt",
+    "docs/fixture-history.md"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 34556,
+    "modelCostUsd": null,
+    "inputTokens": 79950,
+    "outputTokens": 925,
+    "cachedInputTokens": 52096,
+    "hostOutputTokens": 925,
+    "hostInputTokens": 79950,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "788465374cfec103a19fab8a1e686a078c479fd6407be20d3efbbf4740bfafd5",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "The diff confirms consistent 48-hour values in the constant, template, and generated help. The remaining 24-hour reference is explicitly historical. The fixture contains no expiration-enforcement implementation or tests to verify runtime behavior."
+  ]
+}
