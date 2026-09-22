@@ -44,7 +44,7 @@ const installContext = !targetRuntime
       { name: skill.title },
     ]}
   />
-  <p class="eyebrow">{skill.kind === "public" ? "Promoted public skill" : "Incubator candidate"}</p>
+  <p class="eyebrow">{skill.releaseCandidate ? "Release candidate" : skill.kind === "public" ? "Promoted public skill" : "Incubator candidate"}</p>
   <h1>{skill.title}</h1>
   <p>{skill.description}</p>
   <ul class="meta-pills" aria-label={`${skill.name} metadata`}>
@@ -65,9 +65,17 @@ const installContext = !targetRuntime
       <p>{skill.sourcePath}</p>
       <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Open on GitHub</a>
     </section>
+    {skill.documentationUrl && (
+      <section>
+        <h2>Guide</h2>
+        <p>Usage, examples, and evaluation notes.</p>
+        <a href={skill.documentationUrl} rel="noreferrer" target="_blank">Read the guide on GitHub</a>
+      </section>
+    )}
     <section class="detail-panel__command">
       <h2>{installSectionTitle}</h2>
       <p>{installContext}</p>
+      {skill.releaseCandidate && <p>Proposed catalog addition. These install commands apply after publication; production promotion is still pending.</p>}
       {
         skill.installCommands.map(({ command, host }) => {
           const hostLabel = installHostLabel(host);

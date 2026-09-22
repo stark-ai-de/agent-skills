@@ -1,0 +1,109 @@
+# Jev capability advisor evaluation
+
+This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
+
+## Public candidate qualification, 2026-09-22
+
+The [public guide](../../docs/skills/jev-capability-advisor/README.md) and website share the same feature and benchmark copy. [Sanitized machine-readable aggregates](benchmarks/2026-09-22.json) retain counts, latency distributions, methods and source identity without raw local catalogs, private source paths or receipts.
+
+- **72 offline tests pass** on Python 3.14.7/Linux. The latest regressions retain incomplete follow-up advice as provisional, preserve the remaining capability under reversed choice order, safely fall back from an overflowing cached timestamp, and preserve uncached advice when secure POSIX cache primitives are unavailable.
+- **270 retrieval cases in four frozen arms:** 50 development, 140 regression and 80 fresh cases. Balanced allocation gains four required groups with no losses overall; metadata provides no additional required-group recall on this set. Current/raw reproduces 140/140 earlier initial payloads, code maps and candidate order. Retrieval presence is not semantic selection quality.
+- **320 local performance measurements:** 40 fresh processes per configuration and measurement scope. Median complete preparation improves 159.54 to 120.13 ms without caching; validated warm index 115.94 ms; first index creation 206.60 ms. All measured candidates and relevant payloads match the baseline. This measures the final runtime including the follow-up correction and cache timestamp fix; it does not measure a provider or native loading.
+- **Live evaluation before the follow-up correction:** both frozen arms score 63/80 strictly, including 20/20 single-skill, 18/20 single-tool, 10/10 no-capability and 10/10 clarification tasks, but only 5/20 compounds. Exactly 206 attempts, zero retries and zero provider/parse errors. Balanced plus metadata loses one previously correct case and gains one, with higher median latency; it stays experimental.
+- **Native/install evidence:** four bounded Codex scenarios and a separate final-document Inspect exercised real skill reads and offline CLI behavior. The standalone install smoke passed for the frozen candidate; all ten installed files matched source and all five Python modules were present. These are installation/activation observations, not fresh model-quality or native-speed comparisons.
+
+The live weakness triggered a phase-specific follow-up correction. Initial request bytes and mappings remain identical for all 80 repeated inputs; follow-up prompts intentionally change. STOP and CLARIFY stay fail-closed, and the limit remains three requests. **Fresh qualification completed:** 72/80 regression tasks (previously 63/80; nine gains, no lost strict successes) and 16/20 separately frozen fresh compound tasks. Regression compounds improve from 5/20 to 14/20. Fresh pairs score 10/10, triples 6/10; skill-only compounds 10/10, compounds involving tools 6/10. A second permutation-based scorer independently agrees on all 180 old/new rows.
+
+The corrected run made 153 requests with no retries: 107 for regression, 46 for fresh tasks. Together with the earlier 206 attempts, this used 359 of the approved 480-call ceiling. There were two inconsistent-initial-choice errors, both in the fresh set, and no HTTP/transport errors. All four fresh failures omitted a required retrieval group. Among regression failures, extra selected IDs increased from three across two cases to eight across seven cases. This remains a material limitation despite the strict-score gain.
+
+Median/p95 complete helper latency is 1,292.465/3,514.698 ms for regression and 2,425.975/3,641.231 ms for fresh compounds. The corrected run used concurrency one rather than two, with one trial per task; it establishes neither a causal latency improvement nor a model-variability-controlled prompt effect. The twenty new tasks are compound-only. Separate old and current results, untouched labels, source/input fingerprints and request ledgers were independently checked; raw provenance stays local.
+
+A final native Inspect turn on the current ten-file skill closure read both instructions and contract and executed the real offline CLI. Three enabled candidates were returned, the disabled entry was excluded, all six commands passed, zero TypeSafe requests occurred and no owned process remained. This qualifies the current Inspect workflow only.
+
+Final standalone installation passed again for the current ten-file skill closure, with byte-for-byte equality, all five Python modules present, installed help and offline inspection working, and zero network attempts. The repository smoke also passed its seven installations and exact eleven-skill listing. The overall snapshot includes earlier documentation and is not presented as the final commit identity.
+The standalone format is portable; native behavior is currently qualified in Codex only. The OpenAI plugin routes this skill to CODEX, not CHAT. The maintained runtime needs Python 3.10+ and no third-party Python packages; actual minimum-version execution and other native hosts remain unqualified. The repository gate is `pnpm run validate:jev`, included in the release aggregate. Optional POSIX caches fall back to uncached execution when their secure primitives are unavailable.
+
+## Promotion gate
+
+**Release preparation is not production promotion.** [ADR-0008](../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.short.md) ([Long, canonical](../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md) · [Guide](../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.guide.md)) requires demonstrated agent-quality improvement, correct activation, practical utility and acceptable maintenance cost. Technical packaging and passing fixtures alone do not satisfy it.
+
+The native utility pilot compared six predeclared regression tasks in twelve paired Codex turns. Both native discovery and the host using archived advisor responses achieved 6/6 strict results and 9/9 required groups, without extra selections. Median process time was 15.64 s natively and 20.47 s with advice; command counts were 12 and 20. The host repaired both incomplete archived compound suggestions. All six replays were hash-verified; no TypeSafe calls occurred. This is evidence of retained host control, but **no measured quality improvement or workflow speed gain**. The pilot is small, uses existing tasks, excludes fresh provider latency, and predates the follow-up correction.
+
+Production promotion remains open until a predeclared, representative native comparison demonstrates a useful agent-quality improvement, and the remaining compound retrieval/selection limits are acceptable for the declared scope. The implementation, proposed public catalog, plugin integration and site changes can be reviewed together in a draft; they must not be described as a completed production release. Existing single-task outcomes remain useful selection evidence, not proof of added value over the native host.
+
+Maintenance ownership remains with the repository maintainers. Runtime tests require only Python's standard library, and all provider calls are explicit and separately budgeted. Recheck host catalog contracts, provider behavior and the evidence scope when changing the selection prompt, retrieval policy or supported hosts. Retire the website's New highlight with the next featured skill or the next catalog release after promotion.
+
+## Offline regression suite
+
+Run from the repository root with Python 3.10 or newer:
+
+```sh
+python3 -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_*.py' -v
+```
+
+The original 44 tests use synthetic capability catalogs and injected responses. They exercise complete single/pair/triple recommendations, conditioned follow-ups, premature stop, distinct none/clarify/error outcomes, malformed replies, bounded requests, alias identity, shared candidate context, disabled records, retrieval capacity, provider fairness, deterministic order, credential-free receipts, HTTP failures, and offline CLI isolation. Cache tests cover full-query/context/catalog/model/rules invalidation, persistence through the real CLI without a key, expiry, corruption including deeply nested JSON, private files, bounded eviction, zero fresh usage on hits, and exclusion of errors/incomplete plans. Alias tests cover complete bundle proof, explicit original IDs, shared-name copies, differing restrictions, and tools that must remain distinct. Confidence tests preserve advisory semantics and reject nonfinite response data. They do not test model judgment.
+
+## Runtime extension, 2026-09-22
+
+This earlier runtime revision had 68 offline tests. The original 44 checks remain, with public-skill-first path resolution and complete runtime-module copying in isolated CLI fixtures. New checks cover the singleton alias fastpath, exact legacy request digests without routing fields, positive/negative metadata separation, model-card bounds and provenance exclusion, explicit balanced allocation, both cache identities, validated lexical snapshots, corruption with recomputed digests, invalid types/ranges/duplicates/nonfinite values, file ownership and symlink protection, directory/write fallback, bounded eviction, real concurrent processes, query-specific alias representatives, and opt-in offline index I/O. The new index-cache tests are explicitly skipped where POSIX primitives are unavailable; uncached behavior has a separate fallback check. The complete suite was executed on Linux only.
+
+All 68 tests passed for that revision in the Linux development environment. A separate offline roundtrip used the existing 718-entry catalog and three generic queries under each policy. Cold, warm and uncached candidate lists, order and model request bytes matched exactly. No provider request, API key, or new held-out labels were used for this runtime check. It establishes mechanical parity, not semantic accuracy or a performance gain. The historical live results below do not qualify this extended implementation; current policy remains the default pending independent quality and live gates.
+
+## Cache and alias revision, 2026-09-22
+
+All 44 repository tests pass. A separate evaluator ran 32 fresh synthetic checks against the integrated files, covering compound-cache invalidation, changed host/metadata scope, original alias selection, large duplicate catalogs, corrupt cache entries, and credential-lazy CLI behavior. Those checks made zero API calls. Independent code review found a shared-display-name ambiguity; the fix and regression tests were verified before live testing.
+
+Three previously evaluated skill tasks were replayed live against a frozen 718-entry catalog enriched with locally verified whole-package fingerprints. Four duplicate entries consolidated into 714 distinct capabilities. The 240 retrieved representatives covered 244 original IDs. All three live recommendations were correct and each used one API request. The real CLI then repeated all three with a nonexistent key-file path: all were cache hits, preserved the selected ID, and made zero requests with no new provider usage.
+
+An independent offline comparison of all 75 positive regression tasks found unchanged retrieval coverage: 71/75 complete cases and 87/91 required groups, with no previously covered cases or groups lost. Four requests still lack a required candidate. Both representative-only and alias-inclusive accounting give the same result; this is candidate coverage, not new semantic-selection accuracy.
+
+| Observation, three regression tasks | Median   |
+| ----------------------------------- | -------- |
+| Fresh recommendation                | 1,344 ms |
+| Cached recommendation               | 180 ms   |
+
+These are helper-selection times; Python process startup, catalog/query file loading and host loading are not included. Cached calls still rebuild local retrieval to validate the current candidate context. The three selected regression cases do not establish overall accuracy or a universal latency gain. This revision has **not** rerun the full 100-case semantic evaluation; the earlier 96/100 result below belongs to the earlier code. No confidence threshold was lowered or calibrated.
+
+Frozen runtime SHA-256: advisor `fa12f2802c8873d791b1370063c4abff983cc0eb98e7cbb4a57fbddcd45522c8`, retrieval `77f84b5a6c98f75c3c8e8a9c256f11ee53dedf8a061fe4424094a2ae745ffbb7`, cache `19d8204cfffeca483c782d503bfc59e3735841b09ebd1c15a44d04294e834c11`. Raw provider receipts, source/package manifests and independent audit details remain local under ADR-0030. These three attempts exhausted the remaining previously approved API budget; no additional live evaluation or retry occurred.
+
+## Earlier routing baseline — historical evidence
+
+The local comparison uses 50 development cases and 100 independently authored and reviewed held-out cases. The new set contains 30 skill requests, 30 tool requests, 15 compound requests, 15 requests needing no capability, and 10 ambiguous requests. Language coverage is 45 German, 45 English, and 10 mixed cases. Labels were reviewed and frozen before the optimized implementation inspected them.
+
+The snapshot contains 718 available capabilities, including 132 skills. Local catalogs, synthetic queries tied to that inventory, and raw provider receipts stay outside the repository. This follows ADR-0030's separation between portable tests and local runtime evidence. Independent held-out labels have SHA-256 `1dc1131be140e2b71460e57f55b251b5825003f8638ef41f48e9d659c5bbd992`.
+
+### Offline observation, 2026-09-22
+
+| Set                               | Earlier 30-card retrieval: all required groups available | Revised 240-card retrieval: all required groups available |
+| --------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| Development: 45 positive requests | 42/45                                                    | 45/45                                                     |
+| Held out: 75 positive requests    | 65/75                                                    | 71/75                                                     |
+
+Held-out required-group coverage improved from 81/91 to 87/91. Seven requests gained complete candidate coverage; one previously covered request lost it. Four requests remain incomplete. The larger shortlist is a quality/resource tradeoff, not a faster lexical search: median held-out search time was about 1.24 ms before and 3.93 ms after, with indexes already built. The CLI also builds an index on each invocation.
+
+These are retrieval results only. Candidate presence does not prove Jev selects the right result or avoids unnecessary recommendations. No-capability and clarification quality require semantic evaluation and are excluded from these positive-retrieval denominators.
+
+### Live comparison, 2026-09-22
+
+Both versions ran on all 100 new cases after explicit authorization for the metadata transfer. The 90 cases supported by both versions form the direct comparison; the 10 clarification cases exercise a new output state and are reported separately.
+
+| Metric                                    | Previous version | Revised version |
+| ----------------------------------------- | ---------------- | --------------- |
+| Exact result, 90 shared-contract cases    | 71/90 (78.9%)    | 86/90 (95.6%)   |
+| Unnecessary selected IDs, same 90 cases   | 14               | 2               |
+| No-capability cases correctly recognized  | 15/15            | 15/15           |
+| Median recommendation time, same 90 cases | 1.02 s           | 1.34 s          |
+| Clarification cases                       | Unsupported      | 10/10           |
+| Exact result, revised extended contract   | Not comparable   | 96/100          |
+
+The revised pipeline improves exact selection by 16.7 percentage points on the common contract, at approximately 31% greater median recommendation latency. Its four held-out failures coincide with missing required candidates. Two cases return an incomplete clarification outcome; two select an incorrect alternative. None is counted as success. The new pipeline eliminates duplicate rank decisions structurally, but semantic equivalence still depends on model judgment and host review.
+
+On the original development set, exact selection increased from 39/50 to 49/50. Those results are development evidence, not an independent comparison. Neither this improvement nor the held-out result proves native skill-loading or MCP-startup speed. The test set is synthetic and often names providers explicitly; ordinary user tasks may be harder.
+
+The comparison used 271 HTTP attempts: 55 for development, 116 for revised held-out selection, and 100 for the previous version. One additional smoke test invoked the actual packaged CLI with a local key file and native HTTPS transport; it returned the expected recommendation successfully. Total usage was 272 attempts within the approved 320-attempt ceiling. All returned without API/parse errors; no automatic retries occurred. Revised held-out usage was 2,781,800 input tokens versus 1,117,505 for the previous version. The larger candidate context and conditional follow-ups trade additional cost and latency for quality. Both held-out arms ran with concurrency two, sequentially by arm; this is a single-run timing observation, not a randomized latency study.
+
+The engine was frozen at SHA-256 `688ea5a97c6cf29a11075c613592ea910618ee9455bb3b7520ed5a85e0e46678` and retrieval at `77f84b5a6c98f75c3c8e8a9c256f11ee53dedf8a061fe4424094a2ae745ffbb7`. The only code change after initial freezing added offline CLI coverage fields; it did not change retrieval or model requests. No held-out labels or selection logic changed after evaluation. The original live benchmark remains unchanged.
+
+## Historical repository checks
+
+All 44 Python tests, the skill-creator validator, the repository skill validator, and invocation-token checks pass for the cache revision. The documented repository validation scripts ran directly through the existing Bun runtime. The `pnpm run validate:skills` wrapper produced no output and was interrupted; it is not counted as a passing command. No dependencies or toolchains were installed. The complete repository aggregate is outside this internal skill's changed contract.

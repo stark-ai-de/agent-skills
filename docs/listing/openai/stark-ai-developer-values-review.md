@@ -1,6 +1,6 @@
 # stark AI Developer listing values review
 
-Status: Phase 6 listing live. Directory identity is a continuous
+Status: plugin 1.3.0 release candidate prepared; the existing 1.2.0 portal observation remains historical evidence. Directory identity is a continuous
 `verify:openai-directory` gate (`DIR-001` document, `DIR-002` category catalog).
 
 The machine-readable source of truth is
@@ -8,6 +8,10 @@ The machine-readable source of truth is
 submission worksheets must be derived from that file. Portal and product-surface
 observations after the first listing live in
 [`stark-ai-developer-first-publication.md`](stark-ai-developer-first-publication.md).
+
+## Candidate addition
+
+Jev Capability Advisor adds a seventh, Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. No updated portal submission, approval, or publication is asserted by this candidate.
 
 ## Recommended values
 
@@ -26,7 +30,7 @@ observations after the first listing live in
 | Composer icon          | `site/public/logo-dark.png`                                            | Official stark-ai.de dark square mark (2048 PNG); copied into the packaged OpenAI archive as `assets/composer-icon.png` without rewriting.                                                                                                                                                                                                                 |
 | ChatGPT plugin page    | `https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e` | Public ChatGPT plugin linkout for the shared ChatGPT/Codex catalog. Public listing id parsed from the URL: `plugins_6a85d98a7bc48191879aedd91610271e`. That token is also the Platform plugin ID; the portal submission ID is `appsub_6a85d98ac104819182577e9e918db23d`. Catalog website, privacy, terms, support, and security URLs stay on GitHub Pages. |
 
-The six capabilities, three starter prompts, URLs, release notes, routing
+The capabilities, three starter prompts, URLs, release notes, routing
 policies, and skills-only boundary are maintained in the JSON source. The
 `animated-readme-logo` capability is deliberately framed as developer
 documentation and repository presentation so the skill has a coherent place in
@@ -41,9 +45,9 @@ directory check. Do not write them into `agents/openai.yaml`.
 
 ## Boundary and legal review
 
-The package is skills-only. It has no backend, MCP server, connectors,
-authentication, telemetry, analytics, hidden network calls, or runtime
-downloads. Host, workspace, repository, and tool processing remain subject to
+The package is skills-only. It has no shared backend, bundled MCP server,
+telemetry or analytics. Jev uses an optional, declared TypeSafe connection with
+the user's own API key; offline inspection needs neither network nor credentials. Host, workspace, repository, and tool processing remain subject to
 the installing client's policies and are not promises made by this package.
 
 Public routes on the existing GitHub Pages site:

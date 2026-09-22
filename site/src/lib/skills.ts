@@ -16,6 +16,9 @@ const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
 const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
 
 const repoRoot = findRepoRoot();
+const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
+  "jev-capability-advisor": "docs/skills/jev-capability-advisor/README.md",
+};
 
 marked.use({
   gfm: true,
@@ -99,9 +102,13 @@ export interface CatalogSkill {
   compatibility?: string;
   defaultInstallHost: SkillInstallHost;
   description: string;
+  documentationPath?: string;
+  documentationUrl?: string;
   evalPath?: string;
   evalUrl?: string;
   fileTree: SkillTreeNode;
+  featured: boolean;
+  releaseCandidate: boolean;
   hasOpenAiMetadata: boolean;
   html: string;
   installCommands: SkillInstallCommand[];
@@ -263,10 +270,18 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
   const hasOpenAiMetadata = existsSync(path.join(repoRoot, openAiMetadataPath));
   const evalPath = publicEvalPath(name);
+  const documentationPath = kind === "public" ? PUBLIC_DOCUMENTATION_BY_SKILL[name] : undefined;
+  const pageMarkdown = documentationPath
+    ? await readFile(path.join(repoRoot, documentationPath), "utf8")
+    : parsed.content;
+  const pageSourceDir = documentationPath ? path.dirname(documentationPath) : skillDir;
   const html = sanitizeSkillHtml(
-    await marked.parse(normalizeSkillMarkdown(parsed.content, skillDir)),
+    await marked.parse(normalizeSkillMarkdown(pageMarkdown, pageSourceDir)),
   );
   const { modifiedAt, publishedAt } = sourceDates(sourcePath);
+  const documentationModifiedAt = documentationPath
+    ? sourceDates(documentationPath).modifiedAt
+    : undefined;
 
   return {
     body: parsed.content,
@@ -275,16 +290,24 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     compatibility,
     defaultInstallHost,
     description,
+    documentationPath,
+    documentationUrl: documentationPath ? repoUrl(documentationPath) : undefined,
     evalPath,
     evalUrl: evalPath ? repoUrl(evalPath) : undefined,
     fileTree,
+    featured: kind === "public" && name === "jev-capability-advisor",
+    // Keep preparation visible without implying the ADR-0008 promotion gate has passed.
+    releaseCandidate: kind === "public" && name === "jev-capability-advisor",
     hasOpenAiMetadata,
     html,
     installCommands: installCommandsFor(kind, name, defaultInstallHost, supportedInstallHosts),
     kind,
     license: asString(data.license) ?? "Unspecified",
     metadata,
-    modifiedAt,
+    modifiedAt:
+      documentationModifiedAt && documentationModifiedAt > modifiedAt
+        ? documentationModifiedAt
+        : modifiedAt,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
     openAiMetadataUrl: hasOpenAiMetadata ? repoUrl(openAiMetadataPath) : undefined,

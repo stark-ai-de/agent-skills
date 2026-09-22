@@ -31,6 +31,7 @@ const contractLabel = targetRuntime ? `Target contract: ${targetRuntime}` : "Por
 >
   <div class="skill-card__topline">
     <span>{collectionLabel(skill.kind)}</span>
+    {skill.featured && <span>{skill.releaseCandidate ? "New · Candidate" : "New"}</span>}
     <OperationBadge
       label={skill.categoryLabel}
       multiAgent={skill.category === "engineering-workflows"}

@@ -96,7 +96,7 @@
       "const": "skills-only"
     },
     "publicListingStrategy": {
-      "const": "single-plugin-six-bundled-skills"
+      "enum": ["single-plugin-six-bundled-skills", "single-plugin-bundled-skills"]
     },
     "outputs": {
       "type": "object",

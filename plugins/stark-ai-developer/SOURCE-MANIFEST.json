@@ -27,10 +27,14 @@
       {
         "name": "drawio-diagrams",
         "source": "skills/engineering-workflows/drawio-diagrams"
+      },
+      {
+        "name": "jev-capability-advisor",
+        "source": "skills/skill-maintenance/jev-capability-advisor"
       }
     ]
   },
-  "bundleHash": "b2d496e49651069e45a85ce812f8289bcffb7a7e519a3f2f3894bbcccf84ec1d",
+  "bundleHash": "95c343362fa847c56593d88ff87e56abdab91dddcc96224201ec81ee1b98141f",
   "files": [
     {
       "byteLength": 10271,
@@ -39,16 +43,16 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 658,
+      "byteLength": 788,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "5692cd2079d09874a4926eecc437ea7c29a9f63736b19c07614f3a73bf5fd8d0"
+      "sha256": "caec8199236ed995fd3b6454b054ed8831cc3e17b79a7d3158cb8111e346447e"
     },
     {
-      "byteLength": 1486,
+      "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "07b79ae328833529ed7ba0157065c6395d018d5da7db2bd41ecea91da064bac4"
+      "sha256": "d0b84d75d93b6b680980db29c79f6a4edb857dff3c2a8be32f9cb5ae36310995"
     },
     {
       "byteLength": 12772,
@@ -1825,13 +1829,73 @@
       "mode": "0755",
       "path": "skills/drawio-diagrams/scripts/validate_drawio.py",
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
+    },
+    {
+      "byteLength": 6116,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/SKILL.md",
+      "sha256": "44e8072029d27ff3c72aaff90e989ef48108edddeb8f04f833c0a76950fae9c4"
+    },
+    {
+      "byteLength": 580,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/agents/openai.yaml",
+      "sha256": "77a14a288a82e585b303b3d2500a362afe2921cbb74add494a007e0d27a1e97a"
+    },
+    {
+      "byteLength": 15526,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.png",
+      "sha256": "fd2dbb93b1ac7c3df6e971eef019ca20c6ecd1a8519b6c672bc8c83a876dfe79"
+    },
+    {
+      "byteLength": 504,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.svg",
+      "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
+    },
+    {
+      "byteLength": 15831,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/contract.md",
+      "sha256": "077a611202d67dae91ccf08ef77ec4bacb6e21c0b372f05699fd6384ae6e3613"
+    },
+    {
+      "byteLength": 4617,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/decision_cache.py",
+      "sha256": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa"
+    },
+    {
+      "byteLength": 8421,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/index_cache.py",
+      "sha256": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076"
+    },
+    {
+      "byteLength": 33342,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
+      "sha256": "682f41a414d104ed3e5375ef803f4fd1a7c93c5c2fe32a63792b33e013ef9d42"
+    },
+    {
+      "byteLength": 15877,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/retrieval.py",
+      "sha256": "c7582d9702ec4f6c754f58bd76f845dc2c8b5f36ec71d4c2c8c0c0fc39946347"
+    },
+    {
+      "byteLength": 3418,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/routing_metadata.py",
+      "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     }
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8bb3edcf753821f46bdf9f7c37bfa09ac20b0b9ee90649af154a9645c8ae374b"
+  "treeHash": "877c1b30dd86bb39cfa92289127c0875c3d03434e3256bbf87808e585062c4f0"
 }

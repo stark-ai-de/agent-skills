@@ -1,0 +1,67 @@
+---
+import type { CatalogSkill } from "../lib/skills";
+import { withBase } from "../lib/site";
+
+interface Props {
+  skill: CatalogSkill;
+}
+
+const { skill } = Astro.props;
+---
+
+<aside class="featured-skill" aria-label={`Featured skill: ${skill.title}`}>
+  <div class="featured-skill__copy">
+    <p class="eyebrow">{skill.releaseCandidate ? "New · Release candidate" : "New in the catalog"}</p>
+    <h2>{skill.title}</h2>
+    <p>{skill.summary}</p>
+  </div>
+  <a class="button button--secondary" href={withBase(`/skills/${skill.name}/`)}>
+    Explore the advisor <span aria-hidden="true">→</span>
+  </a>
+</aside>
+
+<style>
+  .featured-skill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-block: 1.5rem 2rem;
+    border: 1px solid var(--border);
+    border-inline-start: 3px solid var(--primary);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 1.25rem;
+  }
+
+  .featured-skill__copy {
+    min-width: 0;
+  }
+
+  .featured-skill h2 {
+    margin: 0.35rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 2vw, 1.4rem);
+    overflow-wrap: anywhere;
+  }
+
+  .featured-skill p {
+    margin: 0;
+  }
+
+  .featured-skill__copy > p:last-child {
+    color: var(--content-foreground);
+    line-height: 1.6;
+  }
+
+  .featured-skill > a {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .featured-skill {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>

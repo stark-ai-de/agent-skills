@@ -4,6 +4,7 @@ import CategoryNav from "../components/CategoryNav.astro";
 import ChatGptLink from "../components/ChatGptLink.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import ContextTooltip from "../components/ContextTooltip.astro";
+import FeaturedSkill from "../components/FeaturedSkill.astro";
 import HeroLogo from "../components/HeroLogo.astro";
 import ProductHuntBadge from "../components/ProductHuntBadge.astro";
 import SkillCard from "../components/SkillCard.astro";
@@ -36,6 +37,7 @@ const [publicSkills, incubatorSkills] = await Promise.all([
   getIncubatorSkills(),
 ]);
 const pluginListing = getStarkAiDeveloperListing();
+const featuredSkill = publicSkills.find((skill) => skill.featured);
 const publicGroups = groupByCategory(publicSkills);
 const incubatorGroups = groupByCategory(incubatorSkills);
 const canonicalUrl = absoluteSiteUrl("/");
@@ -135,6 +137,8 @@ const structuredData = [
     </aside>
   </section>
 
+  {featuredSkill && <FeaturedSkill skill={featuredSkill} />}
+
   <section class="catalog-band">
     <header class="section-heading">
       <p>Promoted catalog</p>
@@ -195,8 +199,9 @@ const structuredData = [
       structural findings, editable diagrams, repository docs, and agent
       memory. The skills come from daily work, not a store catalog. Open it in
       ChatGPT from the plugin page, or install it with Codex plugin commands.
-      Do not use the skills CLI for the plugin. The package has no backend, MCP
-      server, or telemetry.
+      Do not use the skills CLI for the plugin. The package has no publisher-operated backend,
+      MCP server, or telemetry. Host support varies by skill: Jev Capability Advisor runs in
+      Codex and offers an optional TypeSafe API connection using your key.
     </p>
   </section>
 

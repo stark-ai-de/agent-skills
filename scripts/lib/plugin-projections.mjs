@@ -272,9 +272,11 @@ function generatedReadme({ kind, bundle, root }) {
 
 ${projectionName} generated from the explicit \`${PLUGIN_SOURCE_PATH}\` allowlist.
 
-This harness-first package contains ${bundle.skills.length} developer workflows and has no backend, MCP
-server, connectors, authentication, telemetry, analytics, hidden network calls,
-or runtime downloads. Canonical skill content remains maintained under
+This harness-first package contains ${bundle.skills.length} developer workflows and has no shared backend,
+bundled MCP server, telemetry or analytics. Jev Capability Advisor optionally
+sends supplied task text and public capability cards to TypeSafe using your own
+API key; offline candidate inspection needs no network or credentials.
+Canonical skill content remains maintained under
 \`skills/<category>/<skill>/\`; this ${kind} copy is generated and must not be edited
 as a source.
 

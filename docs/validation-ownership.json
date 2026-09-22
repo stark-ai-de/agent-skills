@@ -98,6 +98,13 @@
       "owner": ".github/actions/verify-openai-directory/action.yml",
       "proof": "Hosted directory identity and catalog membership",
       "cadence": "scheduled/manual post-publication"
+    },
+    {
+      "id": "jev-capability-advisor",
+      "command": "pnpm run validate:jev",
+      "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
+      "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
+      "cadence": "every aggregate run"
     }
   ]
 }

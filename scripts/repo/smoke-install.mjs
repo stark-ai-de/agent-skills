@@ -71,6 +71,11 @@ const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"
 const installCases = [
   {
     agent: "codex",
+    destination: path.join(".agents", "skills", "jev-capability-advisor"),
+    skill: "jev-capability-advisor",
+  },
+  {
+    agent: "codex",
     destination: path.join(".agents", "skills", "codex-spec-interviewer"),
     skill: "codex-spec-interviewer",
   },

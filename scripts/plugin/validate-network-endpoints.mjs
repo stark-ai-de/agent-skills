@@ -26,8 +26,14 @@ const DECLARED_ENDPOINT_PREFIXES = [
 ];
 const ENDPOINT_PATTERN = /https?:\/\/[^\s"'`<>()[\]{}]+/gi;
 
-function endpointIsDeclared(endpoint) {
-  return DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix));
+function endpointIsDeclared(endpoint, relative) {
+  const advisorTransport =
+    /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/jev_advisor\.py$/.test(relative);
+  // The opt-in advisor has one reviewed provider endpoint; other skills do not inherit it.
+  return (
+    DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix)) ||
+    (advisorTransport && endpoint === "https://api.typesafe.ai/v1/systemone")
+  );
 }
 
 function scanFile(absolute, relative, errors) {
@@ -41,7 +47,7 @@ function scanFile(absolute, relative, errors) {
   }
   for (const match of text.matchAll(ENDPOINT_PATTERN)) {
     const endpoint = match[0].replace(/[),.;:]+$/, "");
-    if (!endpointIsDeclared(endpoint)) {
+    if (!endpointIsDeclared(endpoint, relative)) {
       errors.push(`${relative} contains an undeclared network endpoint: ${endpoint}`);
     }
   }
