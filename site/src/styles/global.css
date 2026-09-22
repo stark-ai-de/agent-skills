@@ -3414,3 +3414,23 @@ main {
     text-shadow: none !important;
   }
 }
+
+.preview-banner {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  padding: 0.7rem 1.25rem;
+  color: var(--foreground);
+  background: var(--surface-solid);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 0.875rem;
+}
+
+.preview-banner a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

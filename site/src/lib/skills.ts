@@ -8,12 +8,14 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
+import { siteConfig } from "../../site-config.mjs";
+
 import { pluginMarketplaceSource } from "./plugin-listing";
 
 const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
-const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
-const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
+const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/${siteConfig.sourceRef}`;
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/${siteConfig.sourceRef}`;
 
 const repoRoot = findRepoRoot();
 const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
