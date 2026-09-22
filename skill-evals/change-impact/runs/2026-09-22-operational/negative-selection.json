@@ -1,0 +1,52 @@
+[
+  {
+    "caseId": "format-only",
+    "receipt": {
+      "caseId": "format-only",
+      "exitCode": 0,
+      "model": "gpt-6-astra",
+      "reasoningEffort": "ultra",
+      "elapsedMs": 11049,
+      "prompt": "Review this proposed JavaScript formatting-only edit: before `export const square=(n)=>n*n;`, after `export const square = (n) => n * n;`. State whether behavior changes or follow-up edits are needed. Do not edit files or make network requests. Include any skills actually used in the output schema.",
+      "usage": {
+        "input_tokens": 22710,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 209,
+        "reasoning_output_tokens": 164
+      },
+      "eventsSha256": "1cf8847f3a5b7fcceea8770dc1976590e842fc6fbcc985e8d24b58345a2da21b"
+    },
+    "output": {
+      "skillsUsed": [],
+      "reason": "Only whitespace changes; JavaScript tokens and semantics remain identical.",
+      "response": "Behavior is unchanged. No follow-up edits are needed."
+    },
+    "completedCommandCount": 0
+  },
+  {
+    "caseId": "mechanical-rename",
+    "receipt": {
+      "caseId": "mechanical-rename",
+      "exitCode": 0,
+      "model": "gpt-6-astra",
+      "reasoningEffort": "ultra",
+      "elapsedMs": 14259,
+      "prompt": "Review this complete local JavaScript identifier rename: before `function doubled(x) { return x * 2; } export const answer = doubled(21);`, after `function twice(x) { return x * 2; } export const answer = twice(21);`. The function is module-private and these are its only definition and reference. State whether behavior changes or further edits are needed. Do not edit files or make network requests. Include any skills actually used in the output schema.",
+      "usage": {
+        "input_tokens": 22742,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 306,
+        "reasoning_output_tokens": 242
+      },
+      "eventsSha256": "0547120a1a179029818b85c2ebc3e3c64f688fe82bb18d63ceee6a0a7a96a777"
+    },
+    "output": {
+      "skillsUsed": [],
+      "reason": "This self-contained mechanical rename does not require a skill.",
+      "response": "No behavior changes: `answer` remains `42`. The module-private function’s definition and only reference were both renamed consistently. No further edits are needed."
+    },
+    "completedCommandCount": 0
+  }
+]

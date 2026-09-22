@@ -1,0 +1,15 @@
+{
+  "caseId": "op-17",
+  "exitCode": 0,
+  "model": "gpt-6-astra",
+  "reasoningEffort": "ultra",
+  "elapsedMs": 399142,
+  "usage": {
+    "input_tokens": 539271,
+    "cached_input_tokens": 446976,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 9813,
+    "reasoning_output_tokens": 2443
+  },
+  "context": "fresh; installed skill; read-only; no provider credential; precomputed live ranking"
+}

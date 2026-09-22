@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-01",
+  "caseDigest": "6295ec5dc6ce147d4638915b2fc624c4dd1ea54d49e7ce604148cf5e11ff1e5d",
+  "arm": "jev",
+  "snapshotDigest": "550e4f5c9df724baac00a8f786bf64fab46b8316a75648bafd2939577956a559",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "tools/import.mjs",
+      "quote": "return [...new Map(rows.map((row) => [row.name, row])).values()];",
+      "rationale": "Import deduplication still identifies projects by name alone. A bounded check with north/demo and south/demo preserved only south/demo, although the updated sameProject identifies them as distinct projects. Deduplication must account for both organization and name."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "docs/onboarding.de.md",
+      "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+      "rationale": "Current onboarding guidance requires choosing a name unused by other organizations. This contradicts organization-scoped project identity. Update the guidance to scope name uniqueness to the project's own organization."
+    }
+  ],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "tools/import.mjs",
+    "docs/onboarding.de.md",
+    "checks/smoke.mjs",
+    "docs/import-format.md",
+    "docs/translations.md",
+    "docs/profile.de.md"
+  ],
+  "reviewedCandidates": 7,
+  "metrics": {
+    "elapsedMs": 61900,
+    "modelCostUsd": null,
+    "inputTokens": 118245,
+    "outputTokens": null,
+    "cachedInputTokens": 83712,
+    "hostOutputTokens": 1528,
+    "hostInputTokens": 113507,
+    "providerInputTokens": 4738,
+    "providerOutputTokens": null
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "5e17e4c9d5b2a5e798849687122ba388ddfc707e2fe9c0c9dab4596be6de811f",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Seven artifacts were deeply investigated; remaining candidates received inventory screening only. Import-format, translation, and profile guidance produced no confirmed contradictions.",
+    "The existing smoke check passes but exercises only matching projects within one organization."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "550e4f5c9df724baac00a8f786bf64fab46b8316a75648bafd2939577956a559",
+    "packetDigest": "61a25088ab29864d4504eef5a452e3c730c73abcc6551037600ba56e5979dd42",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4738,
+      "estimatedCostUsd": 0.000198996,
+      "costComplete": true,
+      "elapsedMs": 1091
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

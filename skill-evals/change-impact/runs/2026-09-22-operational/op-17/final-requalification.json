@@ -1,0 +1,11 @@
+{
+  "caseId": "op-17",
+  "recollectedPacketIdentical": true,
+  "storedLiveRankingAccepted": true,
+  "confirmedFindings": 4,
+  "reviewedPairs": 12,
+  "pendingPairs": 108,
+  "continuationExcludesResolved": true,
+  "indexAbsent": true,
+  "liveProviderCalls": 0
+}

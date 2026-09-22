@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-08",
+  "caseDigest": "511687d90ef24e368808026f9c61dd6e5b9854bf9472520c0144bad874a56889",
+  "arm": "jev",
+  "snapshotDigest": "0b4e842a00e1d999371af6af83dbf4c64d4ede38c408b5326ee406ee07d19a12",
+  "findings": [],
+  "investigatedPaths": [
+    "src/pages.mjs",
+    "checks/pages.mjs",
+    "docs/results.de.md",
+    "docs/search.md",
+    "ui/layout.css",
+    "docs/translations.md"
+  ],
+  "reviewedCandidates": 6,
+  "metrics": {
+    "elapsedMs": 38825,
+    "modelCostUsd": null,
+    "inputTokens": 88837,
+    "outputTokens": 1884,
+    "cachedInputTokens": 75648,
+    "hostOutputTokens": 1001,
+    "hostInputTokens": 84192,
+    "providerInputTokens": 4645,
+    "providerOutputTokens": 883
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "2a579d07bfc57055ec6099e4517cea14d8fb3b770ebf274611b4661d9b8af4b5",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review only. The constant, assertion, and results documentation consistently specify 40; the fixture contains no results-page rendering implementation for end-to-end verification."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "0b4e842a00e1d999371af6af83dbf4c64d4ede38c408b5326ee406ee07d19a12",
+    "packetDigest": "1bf829bf0491d563450d70a04823e374105c9cb8e4b4ad1f69f91e71d356ea5e",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4645,
+      "outputTokens": 883,
+      "estimatedCostUsd": 0.00019509,
+      "costComplete": true,
+      "elapsedMs": 457
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

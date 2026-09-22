@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-03",
+  "caseDigest": "8c921bd5b39bf70a710dac507c78b622f44f2b18d17ce4a25b9a1894df858ed7",
+  "arm": "host",
+  "snapshotDigest": "b0d2e977254acc440769d583101aec258e523d19ce69d589d62640828eaaae5f",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "checks/preferences.mjs",
+      "quote": "assert.equal(emailEnabled({}), false);",
+      "rationale": "This assertion retains the old default and fails against the after commit: actual true, expected false. Change the expectation to true; retain the explicit-false assertion, which still matches the intended behavior."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "ui/preferences.de.txt",
+      "quote": "E-Mail-Benachrichtigungen sind ausgeschaltet, bis Sie sie aktivieren.",
+      "rationale": "The current UI text says email notifications remain disabled until activated. This contradicts the verified default for recipients without a saved preference. Update the wording to describe enabled-by-default behavior while preserving explicit opt-out."
+    }
+  ],
+  "investigatedPaths": [
+    "src/notifications.mjs",
+    "checks/preferences.mjs",
+    "ui/preferences.de.txt",
+    "docs/security.md"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 43940,
+    "modelCostUsd": null,
+    "inputTokens": 106701,
+    "outputTokens": 1125,
+    "cachedInputTokens": 78720,
+    "hostOutputTokens": 1125,
+    "hostInputTokens": 106701,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "8e6f3a583e30a67338310e44db34b701680f1a316ed85b34a18687276d0399c5",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Deep investigation covered four artifacts. Security incident messages explicitly use a separate mandatory channel and were dismissed as unrelated."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-05",
+  "caseDigest": "b0b96c9b2a091ebb2a63ba30927e942fdc1829cb307f0fbe6871c99cfab5cb80",
+  "arm": "ordinary",
+  "snapshotDigest": "76b203e19312594c8fe6bd0dc95c17ef28bccb7fe5f24b7e3f94dcdb7b3f8afc",
+  "findings": [],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "checks/projects.mjs",
+    "docs/projects.de.md",
+    "docs/history/v1.md",
+    "docs/import-format.md",
+    "docs/search.md",
+    "docs/navigation.de.md",
+    "docs/profile.de.md",
+    "docs/translations.md",
+    "docs/backups.md"
+  ],
+  "reviewedCandidates": 10,
+  "metrics": {
+    "elapsedMs": 65199,
+    "modelCostUsd": null,
+    "inputTokens": 145715,
+    "outputTokens": 1502,
+    "cachedInputTokens": 118912,
+    "hostOutputTokens": 1502,
+    "hostInputTokens": 145715,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Deep investigation was limited to the ten listed artifacts. No concrete follow-up omissions were found.",
+    "The global naming requirement in docs/history/v1.md explicitly describes the retired version. Other dismissed documents describe unrelated features."
+  ]
+}

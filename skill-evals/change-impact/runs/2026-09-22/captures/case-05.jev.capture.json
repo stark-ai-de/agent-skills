@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-05",
+  "caseDigest": "b0b96c9b2a091ebb2a63ba30927e942fdc1829cb307f0fbe6871c99cfab5cb80",
+  "arm": "jev",
+  "snapshotDigest": "76b203e19312594c8fe6bd0dc95c17ef28bccb7fe5f24b7e3f94dcdb7b3f8afc",
+  "findings": [],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "checks/projects.mjs",
+    "docs/projects.de.md",
+    "docs/history/v1.md",
+    "docs/profile.de.md",
+    "docs/downloads.md"
+  ],
+  "reviewedCandidates": 6,
+  "metrics": {
+    "elapsedMs": 74803,
+    "modelCostUsd": null,
+    "inputTokens": 119639,
+    "outputTokens": 2924,
+    "cachedInputTokens": 109824,
+    "hostOutputTokens": 2043,
+    "hostInputTokens": 114920,
+    "providerInputTokens": 4719,
+    "providerOutputTokens": 881
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "4ff668f631b67f96080db4ca5054c6360e43e834822c98886dcecae38f0d86cd",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Six artifacts were deeply investigated; remaining candidates were screened only. Version-1 documentation is explicitly historical; profile names and download filenames concern separate domains.",
+    "Validation covered the existing regression check and four organization/name equality combinations; all passed."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "76b203e19312594c8fe6bd0dc95c17ef28bccb7fe5f24b7e3f94dcdb7b3f8afc",
+    "packetDigest": "9816318803cb81e5109dd3721e85d23b0449dd3da625f6405232f236765386f2",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4719,
+      "outputTokens": 881,
+      "estimatedCostUsd": 0.00019819800000000002,
+      "costComplete": true,
+      "elapsedMs": 411
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

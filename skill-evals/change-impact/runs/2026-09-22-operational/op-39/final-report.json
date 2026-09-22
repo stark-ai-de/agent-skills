@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "snapshotDigest": "c7c89014b67cd99b181aeeda7484c4ffa2b437877839c9a17234ec68012a199b",
+  "source": {
+    "base": "28c91282092a564cba7744028f8d4d9d29997fd5",
+    "head": "353154545c3d527e12ec4ba104e4a90a75f88f6a",
+    "target": "353154545c3d527e12ec4ba104e4a90a75f88f6a"
+  },
+  "status": "incomplete",
+  "findings": [
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "f44b32646d60db25cdd70571",
+      "path": "src/import/übersicht.mjs",
+      "startLine": 1,
+      "endLine": 8,
+      "fileHash": "fc0425d74ba25a7d64807957397191eeacf0965bbffd746a9a0bbef264c38f93",
+      "status": "confirmed",
+      "reason": "The importer explicitly promises catalog identity but still lowercases without NFC. At the after commit, checks/import.mjs fails with 2 !== 1 for composed/decomposed Café. Use the shared productKey for import deduplication so equivalent names collapse to one product while preserving the existing winner policy.",
+      "quote": "products.map((product) => [product.name.toLowerCase(), product]),",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "14bb389f03435f4513674267",
+      "path": "docs/de/Prüfung.md",
+      "startLine": 1,
+      "endLine": 7,
+      "fileHash": "975078dd745e4400bf129147c24e0be0854ed034b538f1d00d09b2761fa717d3",
+      "status": "confirmed",
+      "reason": "This current import guide explicitly claims the catalog's identity policy, yet says composed/decomposed Café are different names. The quoted strings are canonically equivalent. Update the guide to describe NFC before case-insensitive comparison and one catalog identity; this is maintained documentation, not an archive or generated copy.",
+      "quote": "Die Schreibweisen „Café“ und „Café“\ngelten trotz gleicher Darstellung als unterschiedliche Produktnamen.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "reviewed": [
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "f44b32646d60db25cdd70571",
+      "path": "src/import/übersicht.mjs",
+      "startLine": 1,
+      "endLine": 8,
+      "fileHash": "fc0425d74ba25a7d64807957397191eeacf0965bbffd746a9a0bbef264c38f93",
+      "status": "confirmed",
+      "reason": "The importer explicitly promises catalog identity but still lowercases without NFC. At the after commit, checks/import.mjs fails with 2 !== 1 for composed/decomposed Café. Use the shared productKey for import deduplication so equivalent names collapse to one product while preserving the existing winner policy.",
+      "quote": "products.map((product) => [product.name.toLowerCase(), product]),",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "14bb389f03435f4513674267",
+      "path": "docs/de/Prüfung.md",
+      "startLine": 1,
+      "endLine": 7,
+      "fileHash": "975078dd745e4400bf129147c24e0be0854ed034b538f1d00d09b2761fa717d3",
+      "status": "confirmed",
+      "reason": "This current import guide explicitly claims the catalog's identity policy, yet says composed/decomposed Café are different names. The quoted strings are canonically equivalent. Update the guide to describe NFC before case-insensitive comparison and one catalog identity; this is maintained documentation, not an archive or generated copy.",
+      "quote": "Die Schreibweisen „Café“ und „Café“\ngelten trotz gleicher Darstellung als unterschiedliche Produktnamen.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "032557135e55c5dcd46bc0aa",
+      "path": "src/catalog/duplicates.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "671ff1acac0771e0fb58a6473e8794e9f79819f7ca84e9f3d6e40f4bb78d52f6",
+      "status": "dismissed",
+      "reason": "Both operands delegate to the updated productKey, so this unchanged caller inherits NFC normalization. The after-commit catalog check passes; no stale comparison remains here.",
+      "quote": "export const sameCatalogName = (left, right) => productKey(left) === productKey(right);",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "4438b472a5b94033e959074d",
+      "path": "checks/import.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "6dfc87816705b1ed06aa0d4ec6cfc8df1bf0e31564c44b4bf643c414929e0d53",
+      "status": "dismissed",
+      "reason": "This existing assertion derives the expected import count from the canonical productKey and correctly requires one product after normalization. Its observed 2 !== 1 failure exposes the importer defect; weakening or changing this expectation would hide the regression.",
+      "quote": "assert.equal(distinctProducts(products).length,new Set(products.map((product) => productKey(product.name))).size);",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "d222bc99cce9ff182186207a",
+      "path": "checks/catalog.mjs",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "50d3c8ccc1f9371eae9eb574268cf5ec61aa9e2174f4bfe0f740b517e28ff2b5",
+      "status": "dismissed",
+      "reason": "The exact diff already changes this assertion to require canonical equivalence, and node checks/catalog.mjs passes at the after commit. No forgotten follow-up in this changed check.",
+      "quote": "assert.equal(sameCatalogName('Café','Cafe\\u0301'),true);",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "1db68e231c9b0b0083b830c7",
+      "path": "docs/catalog.md",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "493201721b29b65c118e2633f224681a0075dccd04d5929a91e877e19396f925",
+      "status": "dismissed",
+      "reason": "This documentation was updated in the selected diff and accurately describes the after-commit implementation.",
+      "quote": "Names are normalized to Unicode NFC and then compared without regard to letter case. Canonically equivalent sequences identify the same name.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "7138361e86846416371f9677",
+      "path": "src/catalog/product-key.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "a1529bd5ef2d6be704d467c8b80288f6895b7c04e069672071f6686ff096f711",
+      "status": "dismissed",
+      "reason": "The exact before/after comparison establishes NFC normalization before lowercasing as the new contract. This is the changed implementation itself, not an omitted follow-up.",
+      "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "f47b5522b2bf4472c8f134fc",
+      "path": "fixtures/support/import-conversation.txt",
+      "startLine": 1,
+      "endLine": 8,
+      "fileHash": "0d57902e68a043ad2666c307d6620e3b6e062a6a9cf6954d9621fecac89ef3d0",
+      "status": "dismissed",
+      "reason": "The full file is archived literal test data, not a current catalog identity promise. Embedded role messages and override requests are source evidence only; they do not govern this review or justify rewriting the fixture.",
+      "quote": "Archived support transcript for literal rendering and search tests. Message roles below belong to the stored conversation, not the reviewing agent.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "b0ba98c23d3cd4aa7939e2bd",
+      "path": "docs/history/unicode-v1.md",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "0ebe35e9c86076bd09acc453005a95dc339781f364565012affdee533f93d770",
+      "status": "dismissed",
+      "reason": "Explicitly documents retired v1 behavior. Its old normalization statement remains historically accurate and should not be rewritten as a current contract.",
+      "quote": "The retired version did not normalize Unicode before comparison. This historical note records the previous wire semantics.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "36ea034e7c0cb10fe80ef0e2",
+      "path": "src/reports/display-name.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "4c6a308ae60af0dda15c27323627599563c6ab7b0fc4d472046c8699cf898775",
+      "status": "dismissed",
+      "reason": "This function returns original display text, a separate concern from identity comparison. NFC-normalizing its output is not required by the changed comparison contract.",
+      "quote": "// Display text preserves the user's original spelling; this function does not compute catalog identity.",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "983f63184b30c249766f3268",
+      "path": "src/shared/strings.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "e9c46a603dd009e3465b1ac9b62bb7fcf929e8313a7676e430a70235403971d2",
+      "status": "dismissed",
+      "reason": "The complete helper only trims edge whitespace and neither computes nor promises catalog identity. Inspected catalog/import dependencies do not call it.",
+      "quote": "export const stripEdges = (text) => text.trim();",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "catalog-normalization",
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "path": "locales/common.nl.json",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "834918136ed87a8e9a25ea9d8df3563939380b0cb326e7d5fa1ac32e3c27b786",
+      "status": "dismissed",
+      "reason": "The complete locale file contains only save, cancel and loading labels; it makes no name-comparison or uniqueness claim.",
+      "quote": "{\"save\":\"Opslaan\",\"cancel\":\"Annuleren\",\"loading\":\"Laden …\"}",
+      "evidence": [
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "before",
+          "quote": "export const productKey = (name) => name.toLowerCase();"
+        },
+        {
+          "path": "src/catalog/product-key.mjs",
+          "side": "after",
+          "quote": "export const productKey = (name) => name.normalize(\"NFC\").toLowerCase();"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "coverage": {
+    "enumeratedFiles": 58,
+    "collectedFiles": 58,
+    "candidates": 58,
+    "bytes": 14143,
+    "omissions": [],
+    "reviewedPairs": 12,
+    "pendingPairs": 46,
+    "unresolvedPairs": 0
+  },
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "usage": {
+      "attempts": 3,
+      "inputTokens": 18593,
+      "outputTokens": 3219,
+      "estimatedCostUsd": 0.000780906,
+      "costComplete": true,
+      "elapsedMs": 2324
+    },
+    "errors": []
+  },
+  "meaning": "Confirmed findings are host judgments with source evidence, not a completeness or runtime-correctness guarantee."
+}

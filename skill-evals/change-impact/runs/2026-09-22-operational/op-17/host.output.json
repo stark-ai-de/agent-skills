@@ -1,0 +1,118 @@
+{
+  "skillUsed": "change-impact",
+  "confirmations": [
+    {
+      "candidateId": "6fac3b72f5461e2a8dd2d285",
+      "contractId": "lease-unit",
+      "status": "confirmed",
+      "quote": "Die Dauer in leaseDuration wird in Millisekunden angegeben.",
+      "reason": "docs/de/leases.md is current guidance for the shared queue policy and still specifies milliseconds. Update it to seconds to match the new input contract."
+    },
+    {
+      "candidateId": "9fcc7b1350bd55cf91d42517",
+      "contractId": "lease-unit",
+      "status": "confirmed",
+      "quote": "\"leaseDuration\": 60000,",
+      "reason": "config/queue.example.json promises a one-minute lease but retains the millisecond value. Exact-revision execution now produces 60000000 ms (16 h 40 min), instead of 60000 ms. Change the example value to 60 seconds."
+    },
+    {
+      "candidateId": "d68bbe4a5af4a5d1a2e2e067",
+      "contractId": "lease-unit",
+      "status": "confirmed",
+      "quote": "const expiry = record.acquiredAt + policy.leaseDuration;",
+      "reason": "src/workers/recovery.mjs explicitly consumes the allocator's shared policy but adds seconds directly to a millisecond timestamp. With the new default it permits recovery at 60 ms while the allocator expires at 60000 ms. Reuse leaseExpiresAt or convert seconds to milliseconds; retain the existing recovery assertions."
+    },
+    {
+      "candidateId": "473accfe894e914251cb8b29",
+      "contractId": "job-identity",
+      "status": "confirmed",
+      "quote": "return [...new Map(jobs.map((job) => [job.idempotencyKey, job])).values()];",
+      "reason": "src/tools/replay.mjs promises allocator identity semantics but deduplicates globally by idempotencyKey. Exact-revision execution returns one replay job for two queues sharing a key, although jobKey now identifies two logical jobs. Deduplicate with the shared jobKey and verify cross-queue replay."
+    },
+    {
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "contractId": "job-identity",
+      "status": "dismissed",
+      "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);",
+      "reason": "src/queue/identity.mjs implements the new queue-scoped key. Exact-revision execution confirms equal keys in different queues are distinct and equal keys within one queue remain equal."
+    },
+    {
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "contractId": "lease-unit",
+      "status": "dismissed",
+      "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);",
+      "reason": "src/queue/identity.mjs only constructs job identity; it neither consumes leaseDuration nor computes timestamps."
+    },
+    {
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "contractId": "lease-unit",
+      "status": "dismissed",
+      "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;",
+      "reason": "src/queue/lease.mjs correctly converts seconds to milliseconds. Exact-revision execution with the changed default preserves the one-minute expiry."
+    },
+    {
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "contractId": "job-identity",
+      "status": "dismissed",
+      "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;",
+      "reason": "src/queue/lease.mjs computes expiry only and makes no assumption about queue or idempotency-key identity."
+    },
+    {
+      "candidateId": "8bba4119fea37be73e7c5801",
+      "contractId": "lease-unit",
+      "status": "dismissed",
+      "quote": "assert.equal(leaseExpiresAt(1000, DEFAULT_POLICY), 61000);",
+      "reason": "checks/allocator.mjs correctly asserts a millisecond timestamp after a one-minute lease. The default changed to 60 seconds and the allocator converts it; the unchanged check passes at both exact revisions."
+    },
+    {
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "contractId": "lease-unit",
+      "status": "dismissed",
+      "quote": "assert.equal(mayRecover({acquiredAt:0}, DEFAULT_POLICY, 1000), false);",
+      "reason": "checks/recovery.mjs correctly requires a one-minute lease to remain active at 1000 ms and expire at 60000 ms. It passes before and fails after because of the recovery implementation's missing conversion. Fix the worker, not these assertions."
+    },
+    {
+      "candidateId": "c54965fa2dcffd074219ca75",
+      "contractId": "lease-unit",
+      "status": "dismissed",
+      "quote": "export const DEFAULT_POLICY = {leaseDuration: 60};",
+      "reason": "src/queue/default-policy.mjs was correctly updated from 60000 milliseconds to 60 seconds. Execution with the updated allocator preserves a 60000 ms lease; the provider's old-assumption judgment is unsupported."
+    },
+    {
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "contractId": "job-identity",
+      "status": "dismissed",
+      "quote": "assert.equal(mayRecover({acquiredAt:0}, DEFAULT_POLICY, 60000), true);",
+      "reason": "checks/recovery.mjs tests lease timing with acquiredAt and the shared policy; it contains no queue identity or idempotency-key assumptions."
+    }
+  ],
+  "queueBatches": 2,
+  "reportStatus": "incomplete",
+  "investigatedPaths": [
+    "checks/allocator.mjs",
+    "checks/recovery.mjs",
+    "config/queue.example.json",
+    "docs/de/leases.md",
+    "docs/queue-identity.md",
+    "src/queue/default-policy.mjs",
+    "src/queue/identity.mjs",
+    "src/queue/lease.mjs",
+    "src/tools/replay.mjs",
+    "src/workers/recovery.mjs"
+  ],
+  "checks": [
+    "Verified Linux, WSL distribution nixos, repository root, Linux executable paths, and Node v24.20.0.",
+    "Compared exact commits 7d9d68f4c292eb9fd9ed22e6d36957db641a0c0f and 3778413ecfd54ad32cacd1e507878298ca1a5b0c; searched committed dependency paths without using the Git index.",
+    "Ran two helper queue batches of six pairs; carried all six first-batch confirmations into the second. Preserved mandatory source and known dependencies.",
+    "Queue and report helpers validated the supplied packet, source snapshot, ranking, and confirmation quotes. Reused supplied Jev ranking; made no network/API calls.",
+    "Dependency-free execution of exact Git blobs confirmed preserved default expiry, changed queue identity, oversized example duration, premature recovery, and cross-queue replay loss.",
+    "Executed exact-revision check sources through in-memory module imports: allocator passed before and after; recovery passed before and failed after with actual true versus expected false.",
+    "Report helper exited successfully: four findings, eight dismissals, 12 reviewed pairs, 108 pending pairs, zero unresolved pairs, and no collection omissions."
+  ],
+  "limitations": [
+    "Review remains incomplete: 108 of 120 collected pairs remain pending, including 12 mandatory pairs. No unseen candidates were dismissed.",
+    "Historical records, checks/replay.mjs, and generated ownership outside the reviewed excerpts remain unassessed.",
+    "Initial Node child_process Git invocation failed with EPERM; the witnesses subsequently completed using Python-fed exact Git blobs.",
+    "Validation was bounded; no full repository test suite was run. Source files and Git state were not edited."
+  ]
+}

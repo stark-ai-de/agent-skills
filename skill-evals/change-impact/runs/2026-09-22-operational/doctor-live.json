@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "status": "connected",
+  "runtime": {
+    "node": "24.20.0",
+    "bun": null,
+    "nodeSupported": true,
+    "gitAvailable": true
+  },
+  "credential": {
+    "configured": true,
+    "source": "file",
+    "reason": null
+  },
+  "model": "jev-1.13.0",
+  "networkAttempted": true,
+  "meaning": "Synthetic connection check only; project data authority and repository review remain separate.",
+  "probe": {
+    "schemaVersion": 1,
+    "model": "jev-1.13.0",
+    "status": "ready",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 510,
+      "outputTokens": 56,
+      "estimatedCostUsd": 2.142e-5,
+      "costComplete": true,
+      "elapsedMs": 783
+    },
+    "errors": []
+  }
+}

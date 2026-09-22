@@ -1,0 +1,747 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "case-01",
+      "split": "pilot",
+      "task": "Review the project naming change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Project names identify projects across all organizations.",
+          "after": "A project name identifies a project only within its organization.",
+          "evidence": [
+            {
+              "path": "src/projects.mjs",
+              "side": "before",
+              "quote": "export const sameProject = (a, b) => a.name === b.name;"
+            },
+            {
+              "path": "src/projects.mjs",
+              "side": "after",
+              "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/projects.mjs": "export const sameProject = (a, b) => a.name === b.name;\n",
+        "tools/import.mjs": "// Input rows contain org and name. Preserve one row per distinct project.\nexport function distinctProjects(rows) {\n  return [...new Map(rows.map((row) => [row.name, row])).values()];\n}\n",
+        "docs/onboarding.de.md": "# Projekte anlegen\nWählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { sameProject } from '../src/projects.mjs';\nassert.equal(sameProject({org:'north',name:'demo'}, {org:'north',name:'demo'}), true);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/projects.mjs": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;\n",
+        "tools/import.mjs": "// Input rows contain org and name. Preserve one row per distinct project.\nexport function distinctProjects(rows) {\n  return [...new Map(rows.map((row) => [row.name, row])).values()];\n}\n",
+        "docs/onboarding.de.md": "# Projekte anlegen\nWählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { sameProject } from '../src/projects.mjs';\nassert.equal(sameProject({org:'north',name:'demo'}, {org:'north',name:'demo'}), true);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-02",
+      "split": "pilot",
+      "task": "Review the retention input change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "The retention input is a duration in milliseconds.",
+          "after": "The retention input is a duration in seconds.",
+          "evidence": [
+            {
+              "path": "src/retention.mjs",
+              "side": "before",
+              "quote": "export const cutoff = (nowMs, retention) => nowMs - retention;"
+            },
+            {
+              "path": "src/retention.mjs",
+              "side": "after",
+              "quote": "export const cutoff = (nowMs, retention) => nowMs - retention * 1000;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/retention.mjs": "export const cutoff = (nowMs, retention) => nowMs - retention;\n",
+        "config/cleanup.example.json": "{\n  \"retention\": 2592000000,\n  \"description\": \"Keep records for thirty days\"\n}\n",
+        "docs/cleanup.de.md": "# Bereinigung\nDer Wert retention wird in Millisekunden angegeben.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { cutoff } from '../src/retention.mjs';\nassert.equal(cutoff(10000, 0), 10000);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/retention.mjs": "export const cutoff = (nowMs, retention) => nowMs - retention * 1000;\n",
+        "config/cleanup.example.json": "{\n  \"retention\": 2592000000,\n  \"description\": \"Keep records for thirty days\"\n}\n",
+        "docs/cleanup.de.md": "# Bereinigung\nDer Wert retention wird in Millisekunden angegeben.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { cutoff } from '../src/retention.mjs';\nassert.equal(cutoff(10000, 0), 10000);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-03",
+      "split": "pilot",
+      "task": "Review the notification preference change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Email notifications are disabled when the recipient has no saved preference.",
+          "after": "Email notifications are enabled when the recipient has no saved preference; explicit false remains disabled.",
+          "evidence": [
+            {
+              "path": "src/notifications.mjs",
+              "side": "before",
+              "quote": "export const emailEnabled = (preferences) => preferences.email ?? false;"
+            },
+            {
+              "path": "src/notifications.mjs",
+              "side": "after",
+              "quote": "export const emailEnabled = (preferences) => preferences.email ?? true;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/notifications.mjs": "export const emailEnabled = (preferences) => preferences.email ?? false;\n",
+        "checks/preferences.mjs": "import assert from 'node:assert/strict';\nimport { emailEnabled } from '../src/notifications.mjs';\nassert.equal(emailEnabled({}), false);\nassert.equal(emailEnabled({email:false}), false);\n",
+        "ui/preferences.de.txt": "E-Mail-Benachrichtigungen sind ausgeschaltet, bis Sie sie aktivieren.\n",
+        "docs/security.md": "Security incident messages use a separate mandatory channel.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/notifications.mjs": "export const emailEnabled = (preferences) => preferences.email ?? true;\n",
+        "checks/preferences.mjs": "import assert from 'node:assert/strict';\nimport { emailEnabled } from '../src/notifications.mjs';\nassert.equal(emailEnabled({}), false);\nassert.equal(emailEnabled({email:false}), false);\n",
+        "ui/preferences.de.txt": "E-Mail-Benachrichtigungen sind ausgeschaltet, bis Sie sie aktivieren.\n",
+        "docs/security.md": "Security incident messages use a separate mandatory channel.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-04",
+      "split": "pilot",
+      "task": "Review the order cancellation change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Only unpaid orders can be cancelled.",
+          "after": "Unpaid and paid orders can be cancelled; shipped orders cannot.",
+          "evidence": [
+            {
+              "path": "src/orders.mjs",
+              "side": "before",
+              "quote": "export const mayCancel = (order) => order.phase === 'unpaid';"
+            },
+            {
+              "path": "src/orders.mjs",
+              "side": "after",
+              "quote": "export const mayCancel = (order) => ['unpaid', 'paid'].includes(order.phase);"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/orders.mjs": "export const mayCancel = (order) => order.phase === 'unpaid';\n",
+        "ui/order-help.de.txt": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { mayCancel } from '../src/orders.mjs';\nassert.equal(mayCancel({phase:'unpaid'}), true);\nassert.equal(mayCancel({phase:'shipped'}), false);\n",
+        "docs/shipping.md": "Shipment tracking becomes available when the order is shipped.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/orders.mjs": "export const mayCancel = (order) => ['unpaid', 'paid'].includes(order.phase);\n",
+        "ui/order-help.de.txt": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { mayCancel } from '../src/orders.mjs';\nassert.equal(mayCancel({phase:'unpaid'}), true);\nassert.equal(mayCancel({phase:'shipped'}), false);\n",
+        "docs/shipping.md": "Shipment tracking becomes available when the order is shipped.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-05",
+      "split": "pilot",
+      "task": "Review the project naming change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Project names identify projects across all organizations.",
+          "after": "A project name identifies a project only within its organization.",
+          "evidence": [
+            {
+              "path": "src/projects.mjs",
+              "side": "before",
+              "quote": "export const sameProject = (a, b) => a.name === b.name;"
+            },
+            {
+              "path": "src/projects.mjs",
+              "side": "after",
+              "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/projects.mjs": "export const sameProject = (a, b) => a.name === b.name;\n",
+        "docs/history/v1.md": "# Version 1 release record (historical)\nIn version 1, project names were unique across every organization. This describes the retired version only.\n",
+        "docs/projects.de.md": "# Aktuelle Projektnamen\nProjektnamen müssen über alle Organisationen hinweg eindeutig sein.\n",
+        "checks/projects.mjs": "import assert from 'node:assert/strict';\nimport { sameProject } from '../src/projects.mjs';\nassert.equal(sameProject({org:'a',name:'demo'},{org:'b',name:'demo'}), true);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/projects.mjs": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;\n",
+        "docs/history/v1.md": "# Version 1 release record (historical)\nIn version 1, project names were unique across every organization. This describes the retired version only.\n",
+        "docs/projects.de.md": "# Aktuelle Projektnamen\nProjektnamen müssen nur innerhalb ihrer Organisation eindeutig sein.\n",
+        "checks/projects.mjs": "import assert from 'node:assert/strict';\nimport { sameProject } from '../src/projects.mjs';\nassert.equal(sameProject({org:'a',name:'demo'},{org:'b',name:'demo'}), false);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-06",
+      "split": "pilot",
+      "task": "Review the HTTP retry change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "HTTP deliveries allow at most three total attempts.",
+          "after": "HTTP deliveries allow at most five total attempts.",
+          "evidence": [
+            {
+              "path": "src/http.mjs",
+              "side": "before",
+              "quote": "export const HTTP_MAX_ATTEMPTS = 3;"
+            },
+            {
+              "path": "src/http.mjs",
+              "side": "after",
+              "quote": "export const HTTP_MAX_ATTEMPTS = 5;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/http.mjs": "export const HTTP_MAX_ATTEMPTS = 3;\n",
+        "src/mail.mjs": "// Independent mail transport policy; this module does not deliver HTTP requests.\nexport const MAIL_MAX_ATTEMPTS = 3;\n",
+        "docs/mail.de.md": "# Mailversand\nSMTP-Nachrichten werden höchstens dreimal versucht.\n",
+        "docs/http.md": "HTTP deliveries allow at most three total attempts.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/http.mjs": "export const HTTP_MAX_ATTEMPTS = 5;\n",
+        "src/mail.mjs": "// Independent mail transport policy; this module does not deliver HTTP requests.\nexport const MAIL_MAX_ATTEMPTS = 3;\n",
+        "docs/mail.de.md": "# Mailversand\nSMTP-Nachrichten werden höchstens dreimal versucht.\n",
+        "docs/http.md": "HTTP deliveries allow at most five total attempts.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-07",
+      "split": "pilot",
+      "task": "Review the invitation lifetime change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Invitations remain usable for 24 hours.",
+          "after": "Invitations remain usable for 48 hours.",
+          "evidence": [
+            {
+              "path": "src/invitations.mjs",
+              "side": "before",
+              "quote": "export const INVITE_HOURS = 24;"
+            },
+            {
+              "path": "src/invitations.mjs",
+              "side": "after",
+              "quote": "export const INVITE_HOURS = 48;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/invitations.mjs": "export const INVITE_HOURS = 24;\n",
+        "templates/invite-help.txt": "Invitations are valid for 24 hours.\n",
+        "generated/invite-help.txt": "GENERATED from templates/invite-help.txt; edit that source.\nInvitations are valid for 24 hours.\n",
+        "docs/fixture-history.md": "# Archived generator fixture\nThe old 24-hour invitation fixture was retired when the lifetime changed. This is an audit record, not user guidance.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/invitations.mjs": "export const INVITE_HOURS = 48;\n",
+        "templates/invite-help.txt": "Invitations are valid for 48 hours.\n",
+        "generated/invite-help.txt": "GENERATED from templates/invite-help.txt; edit that source.\nInvitations are valid for 48 hours.\n",
+        "docs/fixture-history.md": "# Archived generator fixture\nThe old 24-hour invitation fixture was retired when the lifetime changed. This is an audit record, not user guidance.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-08",
+      "split": "pilot",
+      "task": "Review the page-size change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "The results page contains at most twenty records.",
+          "after": "The results page contains at most forty records.",
+          "evidence": [
+            {
+              "path": "src/pages.mjs",
+              "side": "before",
+              "quote": "export const PAGE_SIZE = 20;"
+            },
+            {
+              "path": "src/pages.mjs",
+              "side": "after",
+              "quote": "export const PAGE_SIZE = 40;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/pages.mjs": "export const PAGE_SIZE = 20;\n",
+        "docs/results.de.md": "Pro Ergebnisseite werden höchstens 20 Datensätze angezeigt.\n",
+        "checks/pages.mjs": "import assert from 'node:assert/strict';\nimport { PAGE_SIZE } from '../src/pages.mjs';\nassert.equal(PAGE_SIZE, 20);\n",
+        "ui/layout.css": ".results { padding: 20px; }\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/pages.mjs": "export const PAGE_SIZE = 40;\n",
+        "docs/results.de.md": "Pro Ergebnisseite werden höchstens 40 Datensätze angezeigt.\n",
+        "checks/pages.mjs": "import assert from 'node:assert/strict';\nimport { PAGE_SIZE } from '../src/pages.mjs';\nassert.equal(PAGE_SIZE, 40);\n",
+        "ui/layout.css": ".results { padding: 20px; }\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-09",
+      "split": "holdout",
+      "task": "Review the credential expiry change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "A credential expires after its expiry timestamp.",
+          "after": "A credential expires at its expiry timestamp, including equality.",
+          "evidence": [
+            {
+              "path": "src/expiry.mjs",
+              "side": "before",
+              "quote": "export const expired = (now, expiresAt) => now > expiresAt;"
+            },
+            {
+              "path": "src/expiry.mjs",
+              "side": "after",
+              "quote": "export const expired = (now, expiresAt) => now >= expiresAt;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/expiry.mjs": "export const expired = (now, expiresAt) => now > expiresAt;\n",
+        "checks/expiry.mjs": "import assert from 'node:assert/strict';\nimport { expired } from '../src/expiry.mjs';\nassert.equal(expired(1000, 1000), false);\nassert.equal(expired(999, 1000), false);\nassert.equal(expired(1001, 1000), true);\n",
+        "docs/expiry.de.md": "Ein Zugang ist nach seinem Ablaufzeitpunkt ungültig.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/expiry.mjs": "export const expired = (now, expiresAt) => now >= expiresAt;\n",
+        "checks/expiry.mjs": "import assert from 'node:assert/strict';\nimport { expired } from '../src/expiry.mjs';\nassert.equal(expired(1000, 1000), false);\nassert.equal(expired(999, 1000), false);\nassert.equal(expired(1001, 1000), true);\n",
+        "docs/expiry.de.md": "Ein Zugang ist ab seinem Ablaufzeitpunkt ungültig, auch bei exakt gleichem Zeitwert.\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-10",
+      "split": "holdout",
+      "task": "Review the payment amount input change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "The payment.total field is denominated in euros.",
+          "after": "The payment.total field is denominated in integer euro cents.",
+          "evidence": [
+            {
+              "path": "src/payments.mjs",
+              "side": "before",
+              "quote": "// This service and its CSV exporter receive the same payment.total field.\nexport const displayTotal = (payment) => Number(payment.total).toFixed(2);"
+            },
+            {
+              "path": "src/payments.mjs",
+              "side": "after",
+              "quote": "// This service and its CSV exporter receive the same payment.total field.\nexport const displayTotal = (payment) => (Number(payment.total) / 100).toFixed(2);"
+            },
+            {
+              "path": "docs/payments.de.md",
+              "side": "before",
+              "quote": "Beträge im Feld payment.total werden in Euro angeliefert."
+            },
+            {
+              "path": "docs/payments.de.md",
+              "side": "after",
+              "quote": "Beträge im Feld payment.total werden als ganzzahlige Eurocent angeliefert."
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/payments.mjs": "// This service and its CSV exporter receive the same payment.total field.\nexport const displayTotal = (payment) => Number(payment.total).toFixed(2);\n",
+        "tools/export.mjs": "// CSV output amounts are denominated in euros with two decimal places.\n// Export the payment.total field received by the payment service.\nexport const csvTotal = (payment) => Number(payment.total).toFixed(2);\n",
+        "docs/payments.de.md": "Beträge im Feld payment.total werden in Euro angeliefert.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { displayTotal } from '../src/payments.mjs';\nassert.equal(displayTotal({total:0}), '0.00');\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/payments.mjs": "// This service and its CSV exporter receive the same payment.total field.\nexport const displayTotal = (payment) => (Number(payment.total) / 100).toFixed(2);\n",
+        "tools/export.mjs": "// CSV output amounts are denominated in euros with two decimal places.\n// Export the payment.total field received by the payment service.\nexport const csvTotal = (payment) => Number(payment.total).toFixed(2);\n",
+        "docs/payments.de.md": "Beträge im Feld payment.total werden als ganzzahlige Eurocent angeliefert.\n",
+        "checks/smoke.mjs": "import assert from 'node:assert/strict';\nimport { displayTotal } from '../src/payments.mjs';\nassert.equal(displayTotal({total:0}), '0.00');\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-11",
+      "split": "holdout",
+      "task": "Review the request limit change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "An API request may include at most fifty items.",
+          "after": "An API request may include at most one hundred items.",
+          "evidence": [
+            {
+              "path": "src/api.mjs",
+              "side": "before",
+              "quote": "export const MAX_REQUEST_ITEMS = 50;"
+            },
+            {
+              "path": "src/api.mjs",
+              "side": "after",
+              "quote": "export const MAX_REQUEST_ITEMS = 100;"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/api.mjs": "export const MAX_REQUEST_ITEMS = 50;\n",
+        "config/client.example.json": "{\"requestItems\":50}\n",
+        "docs/api.de.md": "Eine Anfrage darf höchstens 50 Elemente enthalten.\n",
+        "src/chart.mjs": "// The chart renders local records; its frame size is independent of API request limits.\nexport const CHART_FRAME_ITEMS = 50;\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/api.mjs": "export const MAX_REQUEST_ITEMS = 100;\n",
+        "config/client.example.json": "{\"requestItems\":100}\n",
+        "docs/api.de.md": "Eine Anfrage darf höchstens 100 Elemente enthalten.\n",
+        "src/chart.mjs": "// The chart renders local records; its frame size is independent of API request limits.\nexport const CHART_FRAME_ITEMS = 50;\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    },
+    {
+      "id": "case-12",
+      "split": "holdout",
+      "task": "Review the project archival permission change and identify any necessary follow-up work.",
+      "contracts": [
+        {
+          "id": "behavior-1",
+          "before": "Only administrators may archive projects.",
+          "after": "Administrators and editors may archive projects.",
+          "evidence": [
+            {
+              "path": "src/archive.mjs",
+              "side": "before",
+              "quote": "export const canArchive = (role) => role === 'admin';"
+            },
+            {
+              "path": "src/archive.mjs",
+              "side": "after",
+              "quote": "export const canArchive = (role) => ['admin', 'editor'].includes(role);"
+            }
+          ]
+        }
+      ],
+      "beforeFiles": {
+        "src/archive.mjs": "export const canArchive = (role) => role === 'admin';\n",
+        "src/audit.mjs": "// Independent permission for downloading the audit log.\nexport const canDownloadAudit = (role) => role === 'admin';\n",
+        "docs/audit.de.md": "Nur Administratoren dürfen das Prüfprotokoll herunterladen.\n",
+        "docs/archive.md": "Only administrators may archive projects.\n",
+        "checks/archive.mjs": "import assert from 'node:assert/strict';\nimport { canArchive } from '../src/archive.mjs';\nassert.equal(canArchive('editor'), false);\nassert.equal(canArchive('viewer'), false);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "afterFiles": {
+        "src/archive.mjs": "export const canArchive = (role) => ['admin', 'editor'].includes(role);\n",
+        "src/audit.mjs": "// Independent permission for downloading the audit log.\nexport const canDownloadAudit = (role) => role === 'admin';\n",
+        "docs/audit.de.md": "Nur Administratoren dürfen das Prüfprotokoll herunterladen.\n",
+        "docs/archive.md": "Administrators and editors may archive projects.\n",
+        "checks/archive.mjs": "import assert from 'node:assert/strict';\nimport { canArchive } from '../src/archive.mjs';\nassert.equal(canArchive('editor'), true);\nassert.equal(canArchive('viewer'), false);\n",
+        "docs/accessibility.md": "# Keyboard navigation\nAll interactive controls must expose a visible focus indicator. Use the Escape key to dismiss temporary overlays.\n",
+        "docs/import-format.md": "# Import format\nImport files use UTF-8 and a header row. Surround fields containing commas with double quotes. Blank rows are ignored.\n",
+        "docs/logging.md": "# Application logs\nLog entries carry a request identifier and a severity. Never include authorization headers in error reports.\n",
+        "docs/search.md": "# Search\nSearch compares normalized text without regard to letter case. Filter selection persists while moving between result pages.\n",
+        "docs/backups.md": "# Backups\nThe backup service records a completion marker after each successful upload. Operators verify restoration using a disposable destination.\n",
+        "docs/profile.de.md": "# Profil\nDer Anzeigename erscheint neben Kommentaren. Änderungen am Profilbild werden erst nach dem Speichern übernommen.\n",
+        "docs/time-zones.de.md": "# Zeitzonen\nZeitstempel werden intern in UTC gespeichert. Die Oberfläche zeigt sie in der ausgewählten Zeitzone an.\n",
+        "docs/downloads.md": "# Downloads\nExports include a content type and an attachment filename. Filenames cannot contain directory separators.\n",
+        "docs/themes.md": "# Themes\nThe interface follows the operating-system color preference unless the user selects a theme. The selection is stored locally.\n",
+        "docs/navigation.de.md": "# Navigation\nDie Seitenleiste enthält die zuletzt geöffneten Bereiche. Ein Klick auf das Logo öffnet die Startseite.\n",
+        "docs/health.md": "# Health endpoint\nReadiness succeeds only after required local initialization finishes. Liveness reports whether the process can serve a response.\n",
+        "docs/translations.md": "# Translations\nTranslation keys remain stable when wording changes. Missing localized strings use the default-language text.\n"
+      },
+      "scope": ["."]
+    }
+  ]
+}

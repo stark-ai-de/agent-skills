@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-07",
+  "caseDigest": "a77dc1a1bcc31c8c827155127686e7e9a7ee0b6192b621b239a5d87e88161c08",
+  "arm": "ordinary",
+  "snapshotDigest": "2bace25fab5d6123bba4cf2c0dc5cca4408ad9af40a4a164aec295dd91a6b4df",
+  "findings": [],
+  "investigatedPaths": [
+    "src/invitations.mjs",
+    "templates/invite-help.txt",
+    "generated/invite-help.txt",
+    "docs/fixture-history.md",
+    "docs/translations.md",
+    "docs/navigation.de.md",
+    "docs/profile.de.md",
+    "docs/time-zones.de.md",
+    "docs/downloads.md",
+    "docs/backups.md"
+  ],
+  "reviewedCandidates": 10,
+  "metrics": {
+    "elapsedMs": 66939,
+    "modelCostUsd": null,
+    "inputTokens": 145521,
+    "outputTokens": 1563,
+    "cachedInputTokens": 118912,
+    "hostOutputTokens": 1563,
+    "hostInputTokens": 145521,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review covered the exact commit diff and ten deeply investigated artifacts; other files were only scanned.",
+    "The 24-hour reference explicitly describes a retired historical fixture. The unrelated documentation inspected establishes no conflicting invitation lifetime."
+  ]
+}

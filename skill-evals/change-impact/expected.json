@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "case-01",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "tools/import.mjs",
+          "quote": "[row.name, row]",
+          "rationale": "The importer merges distinct projects in different organizations when their names match."
+        },
+        {
+          "contractId": "behavior-1",
+          "path": "docs/onboarding.de.md",
+          "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+          "rationale": "Current onboarding still requires cross-organization uniqueness."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "case-02",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "config/cleanup.example.json",
+          "quote": "\"retention\": 2592000000",
+          "rationale": "The thirty-day example is still expressed in milliseconds; interpreting it as seconds increases retention by a factor of 1000."
+        },
+        {
+          "contractId": "behavior-1",
+          "path": "docs/cleanup.de.md",
+          "quote": "Der Wert retention wird in Millisekunden angegeben.",
+          "rationale": "Current documentation states the old input unit."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "case-03",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "checks/preferences.mjs",
+          "quote": "assert.equal(emailEnabled({}), false);",
+          "rationale": "The test retains the old default for a recipient without a saved preference."
+        },
+        {
+          "contractId": "behavior-1",
+          "path": "ui/preferences.de.txt",
+          "quote": "E-Mail-Benachrichtigungen sind ausgeschaltet, bis Sie sie aktivieren.",
+          "rationale": "The preference explanation still describes opt-in behavior."
+        }
+      ],
+      "excluded": [
+        {
+          "path": "docs/security.md",
+          "reason": "Mandatory incident messaging is explicitly a separate channel and is outside the changed preference."
+        }
+      ]
+    },
+    {
+      "id": "case-04",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "ui/order-help.de.txt",
+          "quote": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.",
+          "rationale": "The user-facing text denies cancellation for paid orders, which are now cancellable."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "case-05",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "docs/history/v1.md",
+          "reason": "The dated release record explicitly describes a retired version; rewriting it would erase history."
+        }
+      ]
+    },
+    {
+      "id": "case-06",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "src/mail.mjs",
+          "reason": "The unchanged constant owns an independent SMTP transport policy."
+        },
+        {
+          "path": "docs/mail.de.md",
+          "reason": "The three attempts describe SMTP, not HTTP deliveries."
+        }
+      ]
+    },
+    {
+      "id": "case-07",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "generated/invite-help.txt",
+          "reason": "Generated output and its canonical template already agree with the changed lifetime; any future correction belongs in the template."
+        },
+        {
+          "path": "docs/fixture-history.md",
+          "reason": "The old duration is explicitly a retired fixture description, not the active contract."
+        }
+      ]
+    },
+    {
+      "id": "case-08",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "ui/layout.css",
+          "reason": "Twenty pixels is a visual spacing value, not the number of records on a page."
+        }
+      ]
+    },
+    {
+      "id": "case-09",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "checks/expiry.mjs",
+          "quote": "assert.equal(expired(1000, 1000), false);",
+          "rationale": "The equality boundary assertion expects the old behavior."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "case-10",
+      "findings": [
+        {
+          "contractId": "behavior-1",
+          "path": "tools/export.mjs",
+          "quote": "Number(payment.total).toFixed(2)",
+          "rationale": "The CSV exporter receives the same cents field but formats it as euros without dividing by 100."
+        }
+      ],
+      "excluded": []
+    },
+    {
+      "id": "case-11",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "src/chart.mjs",
+          "reason": "The chart owns a separate render frame limit and does not build API requests."
+        }
+      ]
+    },
+    {
+      "id": "case-12",
+      "findings": [],
+      "excluded": [
+        {
+          "path": "src/audit.mjs",
+          "reason": "Audit download is a separate capability whose administrator-only permission did not change."
+        },
+        {
+          "path": "docs/audit.de.md",
+          "reason": "This sentence concerns audit-log access, not project archival."
+        }
+      ]
+    }
+  ]
+}

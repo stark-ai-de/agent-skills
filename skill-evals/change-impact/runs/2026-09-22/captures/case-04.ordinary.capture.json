@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-04",
+  "caseDigest": "09ae8c71d8aa240780ee1c01fbde104c4a09c1093b3767ac0888f843fc6b313d",
+  "arm": "ordinary",
+  "snapshotDigest": "0c1ab6d3a7890d8fd7752e9ef74fa0e54c1252e60c2e04430f68071332c0e71c",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "ui/order-help.de.txt",
+      "quote": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.",
+      "rationale": "Update this help text: it says cancellation is impossible after payment, but src/orders.mjs now explicitly allows paid orders: \"export const mayCancel = (order) => ['unpaid', 'paid'].includes(order.phase);\" This is current user-facing guidance, with no indication that it describes historical behavior."
+    }
+  ],
+  "investigatedPaths": [
+    "src/orders.mjs",
+    "checks/smoke.mjs",
+    "ui/order-help.de.txt",
+    "docs/shipping.md",
+    "docs/translations.md"
+  ],
+  "reviewedCandidates": 5,
+  "metrics": {
+    "elapsedMs": 52113,
+    "modelCostUsd": null,
+    "inputTokens": 119484,
+    "outputTokens": 1327,
+    "cachedInputTokens": 93824,
+    "hostOutputTokens": 1327,
+    "hostInputTokens": 119484,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Source-only review; tests were not run. Existing smoke assertions cover unpaid and shipped orders but do not verify the newly permitted paid case."
+  ]
+}

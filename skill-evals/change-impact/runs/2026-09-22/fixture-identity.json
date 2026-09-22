@@ -1,0 +1,10 @@
+{
+  "cases.json": {
+    "fileSha256": "a42d1724370688c25163bbfbe6be62933da6188b759c0125a8caf83dc496b48f",
+    "semanticSha256": "c90058b1db8dd40d73a850956c04dcb79244105bc49bc67a97192d3356b2b0b9"
+  },
+  "expected.json": {
+    "fileSha256": "91385fc7abc506d7ab9b8b7aef0ed6ca2f3d9ff6599f2975fa4088be2efb6cfb",
+    "semanticSha256": "a63ebdc4beec4cae9d8fbaf5a63b06ec60577be28d46b06421f023c9caf360a7"
+  }
+}

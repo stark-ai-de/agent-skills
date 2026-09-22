@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 1,
+  "snapshotDigest": "639f15975302f829ed78e474df56ff67e59e3b2939f8e53d82f02f6f42cf2c86",
+  "source": {
+    "base": "7d9d68f4c292eb9fd9ed22e6d36957db641a0c0f",
+    "head": "3778413ecfd54ad32cacd1e507878298ca1a5b0c",
+    "target": "3778413ecfd54ad32cacd1e507878298ca1a5b0c"
+  },
+  "status": "incomplete",
+  "findings": [
+    {
+      "contractId": "lease-unit",
+      "candidateId": "6fac3b72f5461e2a8dd2d285",
+      "path": "docs/de/leases.md",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "c55c956b7f5db5d7c7d3c38586665fa0143c1aaa1ff74a02bd0edc253278ab8d",
+      "status": "confirmed",
+      "reason": "docs/de/leases.md is current guidance for the shared queue policy and still specifies milliseconds. Update it to seconds to match the new input contract.",
+      "quote": "Die Dauer in leaseDuration wird in Millisekunden angegeben.",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "9fcc7b1350bd55cf91d42517",
+      "path": "config/queue.example.json",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "aa56f6660b919ebca2815d19a426666b759175ae351e30919cbad2a94006742a",
+      "status": "confirmed",
+      "reason": "config/queue.example.json promises a one-minute lease but retains the millisecond value. Exact-revision execution now produces 60000000 ms (16 h 40 min), instead of 60000 ms. Change the example value to 60 seconds.",
+      "quote": "\"leaseDuration\": 60000,",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "d68bbe4a5af4a5d1a2e2e067",
+      "path": "src/workers/recovery.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "bb9686d3cbaa9c9c35918a9b34713f4a9c761b9c643af64e842e2cb60221d660",
+      "status": "confirmed",
+      "reason": "src/workers/recovery.mjs explicitly consumes the allocator's shared policy but adds seconds directly to a millisecond timestamp. With the new default it permits recovery at 60 ms while the allocator expires at 60000 ms. Reuse leaseExpiresAt or convert seconds to milliseconds; retain the existing recovery assertions.",
+      "quote": "const expiry = record.acquiredAt + policy.leaseDuration;",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "job-identity",
+      "candidateId": "473accfe894e914251cb8b29",
+      "path": "src/tools/replay.mjs",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "2a4c3dc10cffff922142d53ccace281f88582a885680f10e54dd3f65f9e58faf",
+      "status": "confirmed",
+      "reason": "src/tools/replay.mjs promises allocator identity semantics but deduplicates globally by idempotencyKey. Exact-revision execution returns one replay job for two queues sharing a key, although jobKey now identifies two logical jobs. Deduplicate with the shared jobKey and verify cross-queue replay.",
+      "quote": "return [...new Map(jobs.map((job) => [job.idempotencyKey, job])).values()];",
+      "evidence": [
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "before",
+          "quote": "export const jobKey = (job) => job.idempotencyKey;"
+        },
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "after",
+          "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "reviewed": [
+    {
+      "contractId": "lease-unit",
+      "candidateId": "6fac3b72f5461e2a8dd2d285",
+      "path": "docs/de/leases.md",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "c55c956b7f5db5d7c7d3c38586665fa0143c1aaa1ff74a02bd0edc253278ab8d",
+      "status": "confirmed",
+      "reason": "docs/de/leases.md is current guidance for the shared queue policy and still specifies milliseconds. Update it to seconds to match the new input contract.",
+      "quote": "Die Dauer in leaseDuration wird in Millisekunden angegeben.",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "9fcc7b1350bd55cf91d42517",
+      "path": "config/queue.example.json",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "aa56f6660b919ebca2815d19a426666b759175ae351e30919cbad2a94006742a",
+      "status": "confirmed",
+      "reason": "config/queue.example.json promises a one-minute lease but retains the millisecond value. Exact-revision execution now produces 60000000 ms (16 h 40 min), instead of 60000 ms. Change the example value to 60 seconds.",
+      "quote": "\"leaseDuration\": 60000,",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "d68bbe4a5af4a5d1a2e2e067",
+      "path": "src/workers/recovery.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "bb9686d3cbaa9c9c35918a9b34713f4a9c761b9c643af64e842e2cb60221d660",
+      "status": "confirmed",
+      "reason": "src/workers/recovery.mjs explicitly consumes the allocator's shared policy but adds seconds directly to a millisecond timestamp. With the new default it permits recovery at 60 ms while the allocator expires at 60000 ms. Reuse leaseExpiresAt or convert seconds to milliseconds; retain the existing recovery assertions.",
+      "quote": "const expiry = record.acquiredAt + policy.leaseDuration;",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "job-identity",
+      "candidateId": "473accfe894e914251cb8b29",
+      "path": "src/tools/replay.mjs",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "2a4c3dc10cffff922142d53ccace281f88582a885680f10e54dd3f65f9e58faf",
+      "status": "confirmed",
+      "reason": "src/tools/replay.mjs promises allocator identity semantics but deduplicates globally by idempotencyKey. Exact-revision execution returns one replay job for two queues sharing a key, although jobKey now identifies two logical jobs. Deduplicate with the shared jobKey and verify cross-queue replay.",
+      "quote": "return [...new Map(jobs.map((job) => [job.idempotencyKey, job])).values()];",
+      "evidence": [
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "before",
+          "quote": "export const jobKey = (job) => job.idempotencyKey;"
+        },
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "after",
+          "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "job-identity",
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "path": "src/queue/identity.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "53e252531711858f00b40d7a1eccdeae8160277d68cae2468b73d4b35c73d843",
+      "status": "dismissed",
+      "reason": "src/queue/identity.mjs implements the new queue-scoped key. Exact-revision execution confirms equal keys in different queues are distinct and equal keys within one queue remain equal.",
+      "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);",
+      "evidence": [
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "before",
+          "quote": "export const jobKey = (job) => job.idempotencyKey;"
+        },
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "after",
+          "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "2223f2573c3a2dce600dfe9a",
+      "path": "src/queue/identity.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "53e252531711858f00b40d7a1eccdeae8160277d68cae2468b73d4b35c73d843",
+      "status": "dismissed",
+      "reason": "src/queue/identity.mjs only constructs job identity; it neither consumes leaseDuration nor computes timestamps.",
+      "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "path": "src/queue/lease.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "840da73f37b2dde1a9d0fa058d029608986577500aad042da862d405ffdb2106",
+      "status": "dismissed",
+      "reason": "src/queue/lease.mjs correctly converts seconds to milliseconds. Exact-revision execution with the changed default preserves the one-minute expiry.",
+      "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "job-identity",
+      "candidateId": "96b355c3fa22ea00105b9e6f",
+      "path": "src/queue/lease.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "840da73f37b2dde1a9d0fa058d029608986577500aad042da862d405ffdb2106",
+      "status": "dismissed",
+      "reason": "src/queue/lease.mjs computes expiry only and makes no assumption about queue or idempotency-key identity.",
+      "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;",
+      "evidence": [
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "before",
+          "quote": "export const jobKey = (job) => job.idempotencyKey;"
+        },
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "after",
+          "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "8bba4119fea37be73e7c5801",
+      "path": "checks/allocator.mjs",
+      "startLine": 1,
+      "endLine": 5,
+      "fileHash": "7cc7186360e8da611dd01c31cd1259a63569e8e526657bdb1209e62dfc87cffb",
+      "status": "dismissed",
+      "reason": "checks/allocator.mjs correctly asserts a millisecond timestamp after a one-minute lease. The default changed to 60 seconds and the allocator converts it; the unchanged check passes at both exact revisions.",
+      "quote": "assert.equal(leaseExpiresAt(1000, DEFAULT_POLICY), 61000);",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "path": "checks/recovery.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "d52b11c21dfa79a67009952550b98add09b5c6b46af4943388e27a432b1ee3fd",
+      "status": "dismissed",
+      "reason": "checks/recovery.mjs correctly requires a one-minute lease to remain active at 1000 ms and expire at 60000 ms. It passes before and fails after because of the recovery implementation's missing conversion. Fix the worker, not these assertions.",
+      "quote": "assert.equal(mayRecover({acquiredAt:0}, DEFAULT_POLICY, 1000), false);",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "lease-unit",
+      "candidateId": "c54965fa2dcffd074219ca75",
+      "path": "src/queue/default-policy.mjs",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "c6365c90919d1952c372c27890201a3c5ebe69b1e818603c45fdaf1ce0bb7755",
+      "status": "dismissed",
+      "reason": "src/queue/default-policy.mjs was correctly updated from 60000 milliseconds to 60 seconds. Execution with the updated allocator preserves a 60000 ms lease; the provider's old-assumption judgment is unsupported.",
+      "quote": "export const DEFAULT_POLICY = {leaseDuration: 60};",
+      "evidence": [
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "before",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration;"
+        },
+        {
+          "path": "src/queue/lease.mjs",
+          "side": "after",
+          "quote": "export const leaseExpiresAt = (acquiredAt, policy) => acquiredAt + policy.leaseDuration * 1000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "job-identity",
+      "candidateId": "abc1539cb57cfd60f1840a52",
+      "path": "checks/recovery.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "d52b11c21dfa79a67009952550b98add09b5c6b46af4943388e27a432b1ee3fd",
+      "status": "dismissed",
+      "reason": "checks/recovery.mjs tests lease timing with acquiredAt and the shared policy; it contains no queue identity or idempotency-key assumptions.",
+      "quote": "assert.equal(mayRecover({acquiredAt:0}, DEFAULT_POLICY, 60000), true);",
+      "evidence": [
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "before",
+          "quote": "export const jobKey = (job) => job.idempotencyKey;"
+        },
+        {
+          "path": "src/queue/identity.mjs",
+          "side": "after",
+          "quote": "export const jobKey = (job) => JSON.stringify([job.queueId, job.idempotencyKey]);"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "coverage": {
+    "enumeratedFiles": 60,
+    "collectedFiles": 60,
+    "candidates": 60,
+    "bytes": 13721,
+    "omissions": [],
+    "reviewedPairs": 12,
+    "pendingPairs": 108,
+    "unresolvedPairs": 0
+  },
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "usage": {
+      "attempts": 6,
+      "inputTokens": 37330,
+      "outputTokens": 6678,
+      "estimatedCostUsd": 0.0015678600000000001,
+      "costComplete": true,
+      "elapsedMs": 3399
+    },
+    "errors": []
+  },
+  "meaning": "Confirmed findings are host judgments with source evidence, not a completeness or runtime-correctness guarantee."
+}

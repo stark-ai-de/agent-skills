@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-02",
+  "caseDigest": "1ea82ec87abf0e9a395477af7287b6debfe6963e0d32715292834f2a6b977403",
+  "arm": "jev",
+  "snapshotDigest": "c4c62feb378fa4e95d67dd0ab97286513a956c5575975708ce4f4e3e5374e8a1",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "docs/cleanup.de.md",
+      "quote": "Der Wert retention wird in Millisekunden angegeben.",
+      "rationale": "The current documentation still specifies milliseconds, contradicting the verified change to seconds. Update the documented unit to Sekunden."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "config/cleanup.example.json",
+      "quote": "{\n  \"retention\": 2592000000,\n  \"description\": \"Keep records for thirty days\"\n}",
+      "rationale": "With retention interpreted as seconds, this value represents 30,000 days, contradicting the thirty-day description. Change retention to 2592000."
+    }
+  ],
+  "investigatedPaths": [
+    "src/retention.mjs",
+    "docs/cleanup.de.md",
+    "config/cleanup.example.json",
+    "checks/smoke.mjs"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 50070,
+    "modelCostUsd": null,
+    "inputTokens": 88653,
+    "outputTokens": null,
+    "cachedInputTokens": 54784,
+    "hostOutputTokens": 1227,
+    "hostInputTokens": 83953,
+    "providerInputTokens": 4700,
+    "providerOutputTokens": null
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "91e2f3a528a463f455e3a6e969aeb6e0fc4dd0180d3eb74c91e0b03fe4ec74b9",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review only; no tests were executed. The smoke assertion uses zero, which remains valid under both unit conventions and therefore does not verify the conversion.",
+    "The fixture contains no configuration loader, so runtime consumption of the example could not be verified."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "c4c62feb378fa4e95d67dd0ab97286513a956c5575975708ce4f4e3e5374e8a1",
+    "packetDigest": "5246def2ade41b381f2b313c64207ddec8600d39e614da62ffe4dff3f44e21e7",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4700,
+      "estimatedCostUsd": 0.0001974,
+      "costComplete": true,
+      "elapsedMs": 854
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

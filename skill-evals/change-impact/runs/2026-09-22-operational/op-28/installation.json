@@ -1,0 +1,20 @@
+{
+  "caseId": "op-28",
+  "cli": "skills@1.5.23",
+  "agent": "codex",
+  "exitCode": 0,
+  "copiedFiles": 10,
+  "byteIdentical": true,
+  "files": {
+    "SKILL.md": "aa5ab6f679f797f49fd4a5242d2db59becf2a304eb6fc44d12b15729112c638a",
+    "references/finding-criteria.md": "99565be693a2c5b9a6259111a1a6e39045d710e06d6c861656fb5e6573106939",
+    "references/setup.md": "e618d453619cf252c093b45c165368d97f9330d0fbc4e6d4e34f91fea6763e41",
+    "references/helper-contract.md": "de344df7b0f914da900f5bc3af0bc3a42ce3b77812578efd1345506f06ba402e",
+    "agents/openai.yaml": "ea3384e765815f0b2ac716614b949ace1be40c491ad2207b9a3b6876d1fc3b76",
+    "scripts/change-impact.mjs": "2e484234da70a3057a31b689bcb0fc08e9d577eead0c85bc9370fb2a5ea521fe",
+    "scripts/credentials.mjs": "3399855a073f76f2dde82c9ebe59287e6ffd7e7a2d65964c751dec8d5da82e23",
+    "scripts/collect.mjs": "81ca9581126a3641f2ad7937ec05521acd3f37c1d1bf6e00e98df0cd2748af7f",
+    "scripts/rank.mjs": "ea4d2788b14d8c19d78e65d8142bad8df2238db45064727d40756cfc09cb9269",
+    "scripts/review.mjs": "ece4bfb1a287ba6402cdb6574f3d2a8617502def7f865c34bd4832613c4fad99"
+  }
+}

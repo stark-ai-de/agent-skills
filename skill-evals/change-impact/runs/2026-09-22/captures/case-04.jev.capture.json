@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-04",
+  "caseDigest": "09ae8c71d8aa240780ee1c01fbde104c4a09c1093b3767ac0888f843fc6b313d",
+  "arm": "jev",
+  "snapshotDigest": "0c1ab6d3a7890d8fd7752e9ef74fa0e54c1252e60c2e04430f68071332c0e71c",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "ui/order-help.de.txt",
+      "quote": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.",
+      "rationale": "The current help says orders cannot be cancelled after payment, contradicting the verified change allowing paid orders to be cancelled. Update the wording to allow cancellation for unpaid and paid orders while excluding shipped orders."
+    }
+  ],
+  "investigatedPaths": [
+    "src/orders.mjs",
+    "ui/order-help.de.txt",
+    "checks/smoke.mjs",
+    "docs/translations.md",
+    "docs/shipping.md"
+  ],
+  "reviewedCandidates": 5,
+  "metrics": {
+    "elapsedMs": 63230,
+    "modelCostUsd": null,
+    "inputTokens": 117975,
+    "outputTokens": 2393,
+    "cachedInputTokens": 83584,
+    "hostOutputTokens": 1502,
+    "hostInputTokens": 113264,
+    "providerInputTokens": 4711,
+    "providerOutputTokens": 891
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "bd30e759cd29aae9f18b2ed582f12bb7c5e9de3b40b72c1d002d5a13c670d99a",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Five artifacts were investigated deeply; remaining inventory entries were screened only.",
+    "Existing smoke assertions remain valid but omit paid orders. Both the smoke check and a separate unpaid/paid/shipped check passed.",
+    "Translation guidance and shipment-tracking documentation contain no contradictory cancellation rule."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "0c1ab6d3a7890d8fd7752e9ef74fa0e54c1252e60c2e04430f68071332c0e71c",
+    "packetDigest": "9546e60132f4a4d8db6435d7b5fd8b2b0752a0731bbb46513b4a62f96f92b265",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4711,
+      "outputTokens": 891,
+      "estimatedCostUsd": 0.000197862,
+      "costComplete": true,
+      "elapsedMs": 777
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

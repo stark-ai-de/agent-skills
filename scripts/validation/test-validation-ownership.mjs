@@ -28,6 +28,7 @@ const requiredIds = new Set([
   "actions",
   "scripts",
   "hosted-directory",
+  "change-impact",
 ]);
 assert.deepEqual(
   new Set(ids),

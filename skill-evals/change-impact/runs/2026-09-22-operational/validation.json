@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-22",
+  "commands": [
+    {
+      "command": "pnpm run validate:change-impact",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/validation/change-impact/validate.mjs",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm exec oxlint --threads=1 --config oxlint.json scripts/validation/change-impact incubator/skills/engineering-workflows/change-impact/scripts",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run validate:scripts",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run validate:skills",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run validate:ownership",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run validate:runtime-matrix",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run format:check",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "execution": "Nix-managed Linux runtimes; repository-pinned pnpm selected explicitly. Native Node child-process fixtures required execution outside the sandbox after spawnSync git EPERM. No live provider calls in validation gates.",
+  "changedSourceHashes": {
+    "scripts/validation/change-impact/hardening.test.mjs": "440486a394bc727f8d27294608688a46028f130bf588364bac6cccdff1be0e58",
+    "scripts/validation/change-impact/evaluate.mjs": "a039b18c2c07075a7127983f37d9f5741808089ea064fe33f9674894b60beb03",
+    "scripts/validation/change-impact/real-repository-witness.mjs": "0773e8990f7700a64bf732e7b3eddd36cb98fe0e4320fcde5ebb35df31e31ede",
+    "scripts/validation/change-impact/validate.mjs": "bd3dd04be1d99a389c763ad48fe258cbf66ce81945c3d88792c7646006d658a2",
+    "scripts/validation/change-impact/operations.test.mjs": "58790e538d3451ba37dbfb220f5c8155dc1e07e633afc0aa23a0e8e4bbce411e",
+    "incubator/skills/engineering-workflows/change-impact/scripts/change-impact.mjs": "2e484234da70a3057a31b689bcb0fc08e9d577eead0c85bc9370fb2a5ea521fe",
+    "incubator/skills/engineering-workflows/change-impact/scripts/credentials.mjs": "d92fbfa0537e875f0b44050f0a2b347ed3d3e7e201eaeee352db94bdffd8f9a1",
+    "incubator/skills/engineering-workflows/change-impact/scripts/collect.mjs": "fbfde73ec032c250178df0c58b949c09d970c65047d91ccf49d1e33ea906a2ec",
+    "incubator/skills/engineering-workflows/change-impact/scripts/rank.mjs": "ea4d2788b14d8c19d78e65d8142bad8df2238db45064727d40756cfc09cb9269",
+    "incubator/skills/engineering-workflows/change-impact/scripts/review.mjs": "5a7752e1cf755e8353bf73b97a94f268b7ec20460e5de2b3f12080ebd63abcb2",
+    "package.json": "3bc189b0e558ce4c009fa249705eaacb978ce145adfba1b463814ce6091bf03f",
+    "docs/validation-ownership.json": "76ea49dfc9d9cf43b44bb2001a227fb321ea3769b89f61be07ef81e99a15a7b4",
+    "scripts/validation/test-validation-ownership.mjs": "b1b0689696eb4e7027ae9b55771eb8183b4b4a1224a22284f4266f75be89e510"
+  },
+  "aggregateValidateRun": false,
+  "selectionReason": "Owning helper, runtime, skill, validation plan, JavaScript and formatting boundaries; no release intent or public promotion."
+}

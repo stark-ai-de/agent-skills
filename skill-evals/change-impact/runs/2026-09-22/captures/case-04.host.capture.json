@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-04",
+  "caseDigest": "09ae8c71d8aa240780ee1c01fbde104c4a09c1093b3767ac0888f843fc6b313d",
+  "arm": "host",
+  "snapshotDigest": "0c1ab6d3a7890d8fd7752e9ef74fa0e54c1252e60c2e04430f68071332c0e71c",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "ui/order-help.de.txt",
+      "quote": "Nach Eingang der Zahlung kann die Bestellung nicht mehr storniert werden.",
+      "rationale": "This current help text says orders cannot be cancelled after payment. The verified commit diff changes mayCancel to allow both unpaid and paid orders while rejecting shipped orders. Update the help text to describe shipment as the cancellation cutoff."
+    }
+  ],
+  "investigatedPaths": [
+    "src/orders.mjs",
+    "ui/order-help.de.txt",
+    "checks/smoke.mjs",
+    "docs/shipping.md"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 37018,
+    "modelCostUsd": null,
+    "inputTokens": 79396,
+    "outputTokens": 970,
+    "cachedInputTokens": 51968,
+    "hostOutputTokens": 970,
+    "hostInputTokens": 79396,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "bd30e759cd29aae9f18b2ed582f12bb7c5e9de3b40b72c1d002d5a13c670d99a",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review only; smoke checks were inspected but not executed. Their existing assertions remain consistent with the change. Shipping documentation describes the separate tracking feature and does not contradict cancellation behavior."
+  ]
+}

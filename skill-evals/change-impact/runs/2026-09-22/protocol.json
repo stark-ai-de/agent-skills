@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "runner": "codex exec --ephemeral --sandbox read-only",
+  "model": "gpt-6-astra",
+  "reasoningEffort": "ultra",
+  "maxInvestigations": 10,
+  "context": "fresh per case and arm",
+  "tools": "local read-only shell; configured MCP servers disabled identically",
+  "order": "rotate ordinary/host/jev by case; four concurrent processes",
+  "cost": "unknown full workflow USD; token usage from turn.completed",
+  "ordinary": "task and exact revisions; usual review",
+  "host": "source-backed contracts and full unranked inventory; host prioritization",
+  "jev": "same contracts and inventory plus complete Jev ranking; host confirms",
+  "warmup": "one ordinary case-01 smoke run excluded from formal evidence"
+}

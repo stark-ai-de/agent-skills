@@ -98,6 +98,13 @@
       "owner": ".github/actions/verify-openai-directory/action.yml",
       "proof": "Hosted directory identity and catalog membership",
       "cadence": "scheduled/manual post-publication"
+    },
+    {
+      "id": "change-impact",
+      "command": "pnpm run validate:change-impact",
+      "owner": "scripts/validation/change-impact/validate.mjs",
+      "proof": "Offline change-impact collection, API failure handling, source provenance, and comparison integrity",
+      "cadence": "every aggregate run"
     }
   ]
 }

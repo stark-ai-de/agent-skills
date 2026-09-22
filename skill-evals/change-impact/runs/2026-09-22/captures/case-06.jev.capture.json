@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-06",
+  "caseDigest": "56440fe17133bcd66373e50e2fd2eaf6117801fbf06b0f9dd82729eec936d29f",
+  "arm": "jev",
+  "snapshotDigest": "39a970921f4c9cbe13094b39e4c1e57212dda7f9e9dc90646e7920a11daf6499",
+  "findings": [],
+  "investigatedPaths": ["src/http.mjs", "docs/http.md", "docs/mail.de.md", "src/mail.mjs"],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 36321,
+    "modelCostUsd": null,
+    "inputTokens": 88520,
+    "outputTokens": 1792,
+    "cachedInputTokens": 54656,
+    "hostOutputTokens": 907,
+    "hostInputTokens": 83884,
+    "providerInputTokens": 4636,
+    "providerOutputTokens": 885
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "346499bd102666a7a0d92313054a1268c56f4d95076a8544616976b53d1c06c4",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "The fixture contains policy constants and documentation, but no HTTP delivery implementation or tests; runtime attempt counts could not be verified."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "39a970921f4c9cbe13094b39e4c1e57212dda7f9e9dc90646e7920a11daf6499",
+    "packetDigest": "c3481fdeec0151ba11e88754ed62942da04091d25827b5ab6bab88c0a027b7a4",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4636,
+      "outputTokens": 885,
+      "estimatedCostUsd": 0.00019471200000000002,
+      "costComplete": true,
+      "elapsedMs": 460
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

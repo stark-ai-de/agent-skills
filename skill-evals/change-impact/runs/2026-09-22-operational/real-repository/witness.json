@@ -1,0 +1,8 @@
+{
+  "base": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+  "head": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+  "sourcePath": "scripts/lib/release-management.mjs",
+  "status": "passed",
+  "assertions": 8,
+  "proof": "Pure historical containment-validator behavior; no network or publication."
+}

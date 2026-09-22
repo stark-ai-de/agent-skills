@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-02",
+  "caseDigest": "1ea82ec87abf0e9a395477af7287b6debfe6963e0d32715292834f2a6b977403",
+  "arm": "ordinary",
+  "snapshotDigest": "c4c62feb378fa4e95d67dd0ab97286513a956c5575975708ce4f4e3e5374e8a1",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "config/cleanup.example.json",
+      "quote": "\"retention\": 2592000000,\n  \"description\": \"Keep records for thirty days\"",
+      "rationale": "The changed cutoff function now interprets retention as seconds. This example therefore retains records for 30,000 days instead of the stated thirty days. Change the value to 2592000."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "docs/cleanup.de.md",
+      "quote": "Der Wert retention wird in Millisekunden angegeben.",
+      "rationale": "This current cleanup documentation still specifies milliseconds, contradicting the new seconds input. Update it to specify seconds; following the existing guidance produces a retention period 1,000 times too long."
+    }
+  ],
+  "investigatedPaths": [
+    "src/retention.mjs",
+    "config/cleanup.example.json",
+    "checks/smoke.mjs",
+    "docs/cleanup.de.md",
+    "docs/backups.md",
+    "docs/import-format.md",
+    "docs/logging.md",
+    "docs/time-zones.de.md"
+  ],
+  "reviewedCandidates": 8,
+  "metrics": {
+    "elapsedMs": 61498,
+    "modelCostUsd": null,
+    "inputTokens": 119808,
+    "outputTokens": 1468,
+    "cachedInputTokens": 93952,
+    "hostOutputTokens": 1468,
+    "hostInputTokens": 119808,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review only; no checks were executed. The existing smoke assertion uses zero retention, which cannot distinguish the old and new units."
+  ]
+}

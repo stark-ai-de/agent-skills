@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "grade": "pass-for-bounded-operational-protocol",
+  "independentlyGraded": true,
+  "casesSemanticDigest": "ae6deb8e5f7c1836e78814110d399bc53c2333b3f754629af0d2c77047e3c7a5",
+  "expectedSemanticDigest": "787d184f60c42b578162155e8e5021f1268a459d97e0e3b304fef35432824952",
+  "totals": {
+    "truePositives": 6,
+    "falsePositives": 0,
+    "falseNegatives": 0,
+    "reviewedPairs": 36,
+    "pendingPairs": 203
+  },
+  "cases": [
+    {
+      "caseId": "op-17",
+      "truePositives": 4,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "queueBatches": 2,
+      "batchSizes": [6, 6],
+      "secondBatchResolvedPairs": 6,
+      "reviewedPairs": 12,
+      "pendingPairs": 108,
+      "unresolvedPairs": 0,
+      "reportStatus": "incomplete",
+      "sourceFilesUnchanged": true,
+      "indexAbsent": true,
+      "headMatchesAfter": true,
+      "installedPayloadMatchesReceipt": true,
+      "hostOutputSha256": "55e1c9f088bd602f04a2f6ee744e2f4211f040bd83c8eff2781d452d6e51b7c6",
+      "eventsSha256": "f283644af9c98abc285523ac8d6cf7ca6934ecf24a72758a46e4ab1989ad5fa2"
+    },
+    {
+      "caseId": "op-28",
+      "truePositives": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "queueBatches": 2,
+      "batchSizes": [6, 6],
+      "secondBatchResolvedPairs": 6,
+      "reviewedPairs": 12,
+      "pendingPairs": 49,
+      "unresolvedPairs": 0,
+      "reportStatus": "incomplete",
+      "sourceFilesUnchanged": true,
+      "indexAbsent": true,
+      "headMatchesAfter": true,
+      "installedPayloadMatchesReceipt": true,
+      "hostOutputSha256": "484dcc906a55834c2c90ad08a326789aad3dedd20503d53d59f498b3d7221083",
+      "eventsSha256": "4d50e6bbf21b0a03aed0707c1829bff03a89c9659139e7b25e0fd275eb39c129"
+    },
+    {
+      "caseId": "op-39",
+      "truePositives": 2,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "queueBatches": 2,
+      "batchSizes": [6, 6],
+      "secondBatchResolvedPairs": 6,
+      "reviewedPairs": 12,
+      "pendingPairs": 46,
+      "unresolvedPairs": 0,
+      "reportStatus": "incomplete",
+      "sourceFilesUnchanged": true,
+      "indexAbsent": true,
+      "headMatchesAfter": true,
+      "installedPayloadMatchesReceipt": true,
+      "hostOutputSha256": "4e831fa5de0e9c83f69eba86d96346d61dbf5341aec3d7560dcac622d6f616b4",
+      "eventsSha256": "155f94d85fa675fbfcabada5056f5f3958b622d690cc8181ea84dae18cc53038"
+    }
+  ],
+  "semanticAdjudications": [
+    {
+      "caseId": "op-39",
+      "path": "src/import/übersicht.mjs",
+      "decision": "accepted",
+      "reason": "The exact quote is shorter than the frozen reference anchor, but directly shows the missing NFC normalization and is supported by the observed 2-versus-1 runtime failure."
+    }
+  ],
+  "limitations": [
+    "Positive selection was assisted by a prompt requesting an installed skill and prescribing queue/report steps, without naming the skill.",
+    "Hosts reused precomputed live rankings; they did not receive credentials or call TypeSafe.",
+    "203 pairs remain pending; this is not a completeness or production release guarantee.",
+    "Host events bind the initial installed payload; final requalification is recorded separately.",
+    "No comparative efficacy or full-workflow cost advantage is demonstrated."
+  ]
+}

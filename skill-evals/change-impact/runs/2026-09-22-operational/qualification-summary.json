@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-22",
+  "disposition": "Qualified for opt-in bounded local review on the tested Linux/WSL stack; public promotion remains pending.",
+  "runtime": {
+    "os": "Linux",
+    "environment": "NixOS WSL2",
+    "node": "24.20.0",
+    "bun": "1.4.2",
+    "git": "2.54.0",
+    "packageManager": "pnpm@11.24.0",
+    "installer": "skills@1.5.23",
+    "provider": "jev-1.13.0"
+  },
+  "offlineChecks": {
+    "node": 51,
+    "bun": 51,
+    "providerCalls": 0
+  },
+  "freshPositiveHostRuns": 3,
+  "assistedSkillSelection": 3,
+  "knownFindingsConfirmed": 6,
+  "falsePositives": 0,
+  "unreviewedSyntheticPairs": 203,
+  "publicRepository": {
+    "files": 10,
+    "revisions": 2,
+    "verifiedPublicBlobs": 20,
+    "collectedPairs": 80,
+    "reviewedPairs": 8,
+    "confirmedFindings": 0,
+    "unresolvedPairs": 1,
+    "pendingPairs": 72,
+    "behaviorAssertionsPassed": 8
+  },
+  "provider": {
+    "priorPilotAttempts": 10,
+    "qualificationAttempts": 25,
+    "totalTaskAttempts": 35,
+    "taskLimit": 100,
+    "qualificationEstimatedCostUsd": 0.005718636,
+    "fullWorkflowCostUsd": null
+  },
+  "promotionEvidence": {
+    "comparativeBenefitEstablished": false,
+    "heldoutAgentRunsStarted": false
+  },
+  "limits": [
+    "No unattended correctness or release guarantee.",
+    "Positive selection used guided workflow prompts; negative selection is a separate check.",
+    "Host token receipts are retained, but a full workflow monetary comparison is unavailable.",
+    "No hosted CI, global installation, public catalog, plugin bundle or release publication was performed."
+  ],
+  "freshNegativeSelectionRuns": 2,
+  "unwantedNegativeActivations": 0
+}

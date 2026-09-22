@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-05",
+  "caseDigest": "b0b96c9b2a091ebb2a63ba30927e942fdc1829cb307f0fbe6871c99cfab5cb80",
+  "arm": "host",
+  "snapshotDigest": "76b203e19312594c8fe6bd0dc95c17ef28bccb7fe5f24b7e3f94dcdb7b3f8afc",
+  "findings": [],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "checks/projects.mjs",
+    "docs/projects.de.md",
+    "docs/history/v1.md",
+    "docs/profile.de.md",
+    "docs/translations.md"
+  ],
+  "reviewedCandidates": 6,
+  "metrics": {
+    "elapsedMs": 50410,
+    "modelCostUsd": null,
+    "inputTokens": 80662,
+    "outputTokens": 1292,
+    "cachedInputTokens": 73088,
+    "hostOutputTokens": 1292,
+    "hostInputTokens": 80662,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "4ff668f631b67f96080db4ca5054c6360e43e834822c98886dcecae38f0d86cd",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": []
+}

@@ -1,0 +1,187 @@
+{
+  "unauthenticatedRead": true,
+  "verifiedFiles": 20,
+  "allPublicAndIdentical": true,
+  "files": [
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "scripts/lib/release-management.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/scripts/lib/release-management.mjs",
+      "httpStatus": 200,
+      "publicSha256": "6bcde5b5f93e537ae5e580c1352196ead2bd49fc0ebdcd9040fd3f96899e55ba",
+      "localSha256": "6bcde5b5f93e537ae5e580c1352196ead2bd49fc0ebdcd9040fd3f96899e55ba",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "scripts/validation/test-release-management.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/scripts/validation/test-release-management.mjs",
+      "httpStatus": 200,
+      "publicSha256": "99d6551129c502651060d6acea591cbe217f1f4499e84c7bb283e6bfffb8bdc9",
+      "localSha256": "99d6551129c502651060d6acea591cbe217f1f4499e84c7bb283e6bfffb8bdc9",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "scripts/release/verify-main-release-candidate.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/scripts/release/verify-main-release-candidate.mjs",
+      "httpStatus": 200,
+      "publicSha256": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+      "localSha256": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "scripts/release/manage-release.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/scripts/release/manage-release.mjs",
+      "httpStatus": 200,
+      "publicSha256": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+      "localSha256": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "docs/publishing.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/docs/publishing.md",
+      "httpStatus": 200,
+      "publicSha256": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+      "localSha256": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+      "httpStatus": 200,
+      "publicSha256": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7",
+      "localSha256": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+      "httpStatus": 200,
+      "publicSha256": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad",
+      "localSha256": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+      "httpStatus": 200,
+      "publicSha256": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+      "localSha256": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": ".github/workflows/publish-release.yml",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/.github/workflows/publish-release.yml",
+      "httpStatus": 200,
+      "publicSha256": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+      "localSha256": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+      "identical": true
+    },
+    {
+      "revision": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+      "path": ".github/workflows/post-release-evidence.yml",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/7b7962a912b5f4b086c0ad0c889f40395c51518a/.github/workflows/post-release-evidence.yml",
+      "httpStatus": 200,
+      "publicSha256": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb",
+      "localSha256": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "scripts/lib/release-management.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/scripts/lib/release-management.mjs",
+      "httpStatus": 200,
+      "publicSha256": "4e66b9da5ee8e386a03f8b590f788b46a701e530cefa29ea49864eb1af89af90",
+      "localSha256": "4e66b9da5ee8e386a03f8b590f788b46a701e530cefa29ea49864eb1af89af90",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "scripts/validation/test-release-management.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/scripts/validation/test-release-management.mjs",
+      "httpStatus": 200,
+      "publicSha256": "c5e3ec3c5674c9f2285378c75026aa68ec5cc3bd6f9ebbfc773ae32710484457",
+      "localSha256": "c5e3ec3c5674c9f2285378c75026aa68ec5cc3bd6f9ebbfc773ae32710484457",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "scripts/release/verify-main-release-candidate.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/scripts/release/verify-main-release-candidate.mjs",
+      "httpStatus": 200,
+      "publicSha256": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+      "localSha256": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "scripts/release/manage-release.mjs",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/scripts/release/manage-release.mjs",
+      "httpStatus": 200,
+      "publicSha256": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+      "localSha256": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "docs/publishing.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/docs/publishing.md",
+      "httpStatus": 200,
+      "publicSha256": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+      "localSha256": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+      "httpStatus": 200,
+      "publicSha256": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7",
+      "localSha256": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+      "httpStatus": 200,
+      "publicSha256": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad",
+      "localSha256": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+      "httpStatus": 200,
+      "publicSha256": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+      "localSha256": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": ".github/workflows/publish-release.yml",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/.github/workflows/publish-release.yml",
+      "httpStatus": 200,
+      "publicSha256": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+      "localSha256": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+      "identical": true
+    },
+    {
+      "revision": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+      "path": ".github/workflows/post-release-evidence.yml",
+      "url": "https://raw.githubusercontent.com/stark-ai-de/agent-skills/c08079fe29df7c9ced3d86f1f7d8df3dcd67c586/.github/workflows/post-release-evidence.yml",
+      "httpStatus": 200,
+      "publicSha256": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb",
+      "localSha256": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb",
+      "identical": true
+    }
+  ]
+}

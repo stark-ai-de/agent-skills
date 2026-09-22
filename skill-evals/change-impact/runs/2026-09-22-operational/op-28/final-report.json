@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "snapshotDigest": "944a44cc55e89c43f95dfcf797cc9db2602b5acfd5ea03e7664b5dfd92cfdfad",
+  "source": {
+    "base": "526c8da951dde2883758eb90e2b18529c98bd0e4",
+    "head": "4d99a9eb02fa300841f95c309456560ae470a991",
+    "target": "4d99a9eb02fa300841f95c309456560ae470a991"
+  },
+  "status": "incomplete",
+  "findings": [],
+  "reviewed": [
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "b29eab3757288a220cd98801",
+      "path": "checks/export-response.mjs",
+      "startLine": 1,
+      "endLine": 4,
+      "fileHash": "4c154b26edabb0990682c0d5f721726ed4ed4c27dfb452b8579362820babfdf5",
+      "status": "dismissed",
+      "reason": "Already updated in the diff: 1000 + 30 * 60000 = 1801000. node checks/export-response.mjs passes against files verified equal to the exact after commit; the advisory old_assumption label is incorrect.",
+      "quote": "assert.equal(exportResponse(1000).expiresAt, 1801000);",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "4b44f40a727d54b342a6db4d",
+      "path": "checks/generated-help.mjs",
+      "startLine": 1,
+      "endLine": 6,
+      "fileHash": "28ee2bb164f8aedeb589ed40f4aef4d8bb80663d494a15253434de22227d198f",
+      "status": "dismissed",
+      "reason": "This unchanged check compares generated text with its canonical generator and contains no obsolete lifetime assertion. node checks/generated-help.mjs passes with the new 30-minute policy.",
+      "quote": "assert.equal(generated, exportHelp());",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "589bc0ef69bcf8f3bdff1558",
+      "path": "src/exports/response.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "88eabb80b0a477c75a8ac37fd44c48e87ac1b6cc5d917c81d2928cdbdbd2900e",
+      "status": "dismissed",
+      "reason": "The response imports expiresAt from the changed export policy, so it inherits the 30-minute lifetime without a follow-up edit; the response check passes.",
+      "quote": "export const exportResponse = (nowMs) => ({kind:'export-download',expiresAt:expiresAt(nowMs)});",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "7244cad4a03560f3fec2af69",
+      "path": "src/exports/help.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "ad437a0790ba0ca1b547808b934b36044d0c091b02a7e21dc53f34b7dd52ce7a",
+      "status": "dismissed",
+      "reason": "The canonical generator interpolates the imported policy constant, so it emits 30 minutes automatically. The generated-help check passes; no stale hardcoded value remains here.",
+      "quote": "export const exportHelp = () => `Export downloads remain available for ${EXPORT_DOWNLOAD_TTL_MINUTES} minutes.\\n`;",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "0b32b938c892bbd37db7acc9",
+      "path": "generated/export-help.txt",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "d3fe3346527c02fa3e5fcac59a7f5545011e83360fe0dfb6ffa05081dbd870d0",
+      "status": "dismissed",
+      "reason": "The generated artifact was updated in the diff and matches src/exports/help.mjs, whose value comes from src/exports/link-policy.mjs. Its ownership is explicit and its consistency check passes.",
+      "quote": "Export downloads remain available for 30 minutes.",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "cb82dc9b4de5c9b9b719ae76",
+      "path": "config/exports.example.json",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "1b19a20420efaa3ad4e454d68c46ba2cdf75659777243276d4456c0d92834d53",
+      "status": "dismissed",
+      "reason": "The export-download example already specifies the new 30-minute lifetime and was updated in the exact diff.",
+      "quote": "{\"endpoint\":\"export-download\",\"ttlMinutes\":30}",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "ee8652ec1bbc94ce145add99",
+      "path": "src/exports/link-policy.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "6c21c102c7cc1e47d2d46b85cdaad233440c1635e3cef87559f206a9db6a2e80",
+      "status": "dismissed",
+      "reason": "The exact after commit implements the new 30-minute policy; expiresAt converts minutes to milliseconds with * 60000, and the response check passes.",
+      "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "97261e6e1a716a26a84427f5",
+      "path": "docs/exports.de.md",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "6867af54446f3906555c530773b852ff2d20390e634c777a102008b14df580e6",
+      "status": "dismissed",
+      "reason": "The current German export guide already states the new 30-minute lifetime and was updated in the exact diff.",
+      "quote": "Ein Download-Link für einen Export ist 30 Minuten gültig.",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "3fa83896c90372235eeb9ea4",
+      "path": "src/previews/link-policy.mjs",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "5681ae73cbb47b573611859e161b2964dd79d24de9dcf921533972ffc310b68d",
+      "status": "dismissed",
+      "reason": "Preview URLs explicitly own a separate policy. Their unchanged 15-minute lifetime is not contradicted by the export-download change.",
+      "quote": "// Preview URLs use their own endpoint and policy, independent of export downloads.\nexport const PREVIEW_TTL_MINUTES = 15;",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "f6214282b5497a6766ef08d4",
+      "path": "config/preview.example.json",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "6c697331a9f9cc2e99e94908f03b6a1a2a037f94d148127d411430df061594c1",
+      "status": "dismissed",
+      "reason": "This example targets asset-preview, not export-download, and matches the independent 15-minute policy in src/previews/link-policy.mjs.",
+      "quote": "{\"endpoint\":\"asset-preview\",\"ttlMinutes\":15}",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "14ca0a2fc3d70c40409bc09a",
+      "path": "docs/history/exports-2025.md",
+      "startLine": 1,
+      "endLine": 3,
+      "fileHash": "cefa3c7a2e05aee4984180cdf5d58e11e0a8a43035c3306de7188d5d2f81779b",
+      "status": "dismissed",
+      "reason": "The surrounding heading identifies the 2025 release archive, and the text explicitly records retired behavior. Preserving its historical 15-minute lifetime is correct.",
+      "quote": "That release introduced export-download links with a 15-minute lifetime. This page records the retired release, not current usage guidance.",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "export-lifetime",
+      "candidateId": "830eda152e14a5005d3a9ec2",
+      "path": "locales/common.nl.json",
+      "startLine": 1,
+      "endLine": 2,
+      "fileHash": "834918136ed87a8e9a25ea9d8df3563939380b0cb326e7d5fa1ac32e3c27b786",
+      "status": "dismissed",
+      "reason": "The complete excerpt contains only generic save, cancel, and loading translations; it makes no export-download lifetime claim.",
+      "quote": "{\"save\":\"Opslaan\",\"cancel\":\"Annuleren\",\"loading\":\"Laden …\"}",
+      "evidence": [
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "before",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 15;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        },
+        {
+          "path": "src/exports/link-policy.mjs",
+          "side": "after",
+          "quote": "export const EXPORT_DOWNLOAD_TTL_MINUTES = 30;\nexport const expiresAt = (nowMs) => nowMs + EXPORT_DOWNLOAD_TTL_MINUTES * 60000;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "coverage": {
+    "enumeratedFiles": 61,
+    "collectedFiles": 61,
+    "candidates": 61,
+    "bytes": 12923,
+    "omissions": [],
+    "reviewedPairs": 12,
+    "pendingPairs": 49,
+    "unresolvedPairs": 0
+  },
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "usage": {
+      "attempts": 3,
+      "inputTokens": 17961,
+      "outputTokens": 3383,
+      "estimatedCostUsd": 0.0007543620000000001,
+      "costComplete": true,
+      "elapsedMs": 2079
+    },
+    "errors": []
+  },
+  "meaning": "Confirmed findings are host judgments with source evidence, not a completeness or runtime-correctness guarantee."
+}

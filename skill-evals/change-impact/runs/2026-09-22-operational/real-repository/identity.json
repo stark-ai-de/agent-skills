@@ -1,0 +1,78 @@
+{
+  "snapshot": {
+    "base": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+    "head": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+    "target": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+    "digest": "40db518d325bc98bb2bc644f6a2b8f319f1b1c5e6cea5e5e3015a771399444fd",
+    "manifest": [
+      {
+        "path": ".github/workflows/post-release-evidence.yml",
+        "before": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb",
+        "after": "78df244ee9dee37fa600d2e3c9593fc4aae1b006a6584e90e3ffc6b8d13100bb"
+      },
+      {
+        "path": ".github/workflows/publish-release.yml",
+        "before": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+        "after": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d"
+      },
+      {
+        "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+        "before": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+        "after": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5"
+      },
+      {
+        "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+        "before": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7",
+        "after": "839f58443644dc7194375747f7565e6f82aa8f44a18f2067ccc2db6c95f8eaa7"
+      },
+      {
+        "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+        "before": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad",
+        "after": "d41035f9826a7ec239d67f584e0ffda41faf97734cd1e91f7da199b3c5c0daad"
+      },
+      {
+        "path": "docs/publishing.md",
+        "before": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+        "after": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d"
+      },
+      {
+        "path": "scripts/lib/release-management.mjs",
+        "before": "6bcde5b5f93e537ae5e580c1352196ead2bd49fc0ebdcd9040fd3f96899e55ba",
+        "after": "4e66b9da5ee8e386a03f8b590f788b46a701e530cefa29ea49864eb1af89af90"
+      },
+      {
+        "path": "scripts/release/manage-release.mjs",
+        "before": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+        "after": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54"
+      },
+      {
+        "path": "scripts/release/verify-main-release-candidate.mjs",
+        "before": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+        "after": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb"
+      },
+      {
+        "path": "scripts/validation/test-release-management.mjs",
+        "before": "99d6551129c502651060d6acea591cbe217f1f4499e84c7bb283e6bfffb8bdc9",
+        "after": "c5e3ec3c5674c9f2285378c75026aa68ec5cc3bd6f9ebbfc773ae32710484457"
+      }
+    ]
+  },
+  "coverage": {
+    "enumeratedFiles": 10,
+    "collectedFiles": 10,
+    "candidates": 80,
+    "bytes": 256296,
+    "omissions": []
+  },
+  "source": "https://github.com/stark-ai-de/agent-skills",
+  "selection": "One historical public change chosen for executable before/after regression witnesses; not a blind benchmark or random repository sample.",
+  "reviewProvenance": "Independent read-only source reviewer; eight selected pairs with surrounding exact-revision source, no known answer key or assumed finding.",
+  "finalQueueCoverage": {
+    "totalPairs": 80,
+    "resolvedPairs": 7,
+    "pendingPairs": 73,
+    "remainingAfterBatch": 63,
+    "mandatoryPendingPairs": 0,
+    "collectionOmissions": []
+  }
+}
