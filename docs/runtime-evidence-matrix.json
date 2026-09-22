@@ -352,6 +352,28 @@
       "rationale": "The existing SkillOpt setup validator explicitly launches Python helpers. This newly discovered inventory entry records source-level ownership only; it does not claim a new SkillOpt execution result.",
       "fallbackOrder": ["python3"],
       "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
+    },
+    {
+      "id": "pages-preview-python",
+      "surfaces": ["ci:pages-preview:python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "hostedUbuntuPreview": "pass",
+            "localCompleteWorkflow": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        ".github/workflows/pages-preview.yml",
+        "https://github.com/stark-ai-de/agent-skills-preview/actions/runs/35744378838"
+      ],
+      "rationale": "The preview workflow explicitly uses Python 3 standard-library helpers for PR identity verification and static artifact staging. The cited Ubuntu preview run qualifies that hosted scope; complete local workflow and cross-platform execution remain unqualified.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Requalify after helper changes or a GitHub runner Python change. Missing Python must fail the workflow rather than silently substitute another runtime."
     }
   ]
 }
