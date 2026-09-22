@@ -83,6 +83,12 @@ For Recommend, `--summary` prints only outcomes, selected and provisional capabi
 
 Reuse a current host-exported catalog directly instead of copying it into the conversation. Check relevance and coverage using the complete descriptions and applicability guidance in the summary, together with host permissions. Resolve original metadata only when fields are missing, stale or inconsistent; do not reread the same fields solely for confirmation; inspect the full receipt or use native discovery for uncovered or inconsistent advice. Do not repeat the full catalog search after every fitting recommendation. This reduces repeated host work without changing retrieval, provider requests, selection semantics, or execution authority. A formally complete selection can still be wrong; compact output does not certify correctness.
 
+## Repeated recommendations
+
+A single CLI recommendation reuses one verified HTTPS connection for its conditioned follow-up calls and closes it afterward. Separate CLI processes start with separate connections. The optional [owner-process session interface](session-integration.md) keeps a healthy connection across distinct tasks while requiring a fresh host catalog every time; it does not cache decisions or inventory.
+
+The direct transport retains TLS certificate/hostname verification, bounds body size and I/O time, and never automatically replays a POST after failure. A stale connection fails the current request; native discovery can continue, and the next distinct request may establish a new connection. Configured proxy environments use the standard urllib fallback without pooling, including environments containing only a `NO_PROXY` entry. Native DNS and certificate-store calls remain subject to platform blocking behavior; a host needing a strict wall-clock cutoff owns an outer process deadline.
+
 ## Local decision cache
 
 Caching is off by default. Opt in with a dedicated local directory outside the repository and a non-secret context label representing the current host, workspace and connected accounts:

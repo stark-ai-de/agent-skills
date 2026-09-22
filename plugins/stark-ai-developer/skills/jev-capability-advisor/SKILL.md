@@ -1,6 +1,6 @@
 ---
 name: jev-capability-advisor
-description: Recommend relevant available skills or MCP tools for a supplied task using TypeSafe Jev. Use when the user asks which installed capabilities fit a task or wants to compare capability-selection quality. Ordinary task execution continues through the client's own discovery.
+description: Recommend relevant available skills or MCP tools for a supplied task using TypeSafe Jev. Use when the user asks which installed capabilities fit a task, compares selection quality, or integrates reusable capability advice into a host. Ordinary task execution continues through the client's own discovery.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
@@ -18,11 +18,12 @@ Return a small, task-specific recommendation from the capabilities actually avai
 
 - The user asks which installed skill or available MCP tool fits a concrete task.
 - The user wants to inspect the candidate set or evaluate selection quality.
+- The user wants to integrate repeated advice into a host that supplies current eligible capabilities.
 
 ## When not to use
 
 - A normal task already has a clear skill or tool; use the client's normal selection.
-- The user requests automatic prompt interception, client configuration changes, or installation. Those are separate implementation tasks.
+- A plain skill installation is expected to intercept every prompt. Automatic interception requires a separately qualified, explicitly enabled host adapter.
 
 ## Inputs to inspect
 
@@ -32,7 +33,9 @@ Return a small, task-specific recommendation from the capabilities actually avai
 
 ## Workflow
 
-Choose **Recommend** for a concrete selection request or **Inspect** for candidate inspection. A bare invocation needs the task to be selected for.
+Choose **Recommend** for a concrete selection request, **Inspect** for candidate inspection, or **Integrate** for a requested host integration. On a bare invocation, ask whether the user wants Recommend, Inspect or Integrate; request the selection task or target host only if it is missing.
+
+**Integrate:** follow the [session integration contract](references/session-integration.md). Use one owner process with a fresh eligible catalog per request and a reusable HTTPS client. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
 
 1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
@@ -67,6 +70,8 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 - `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
 - `scripts/index_cache.py`: optional private lexical-index cache with validated snapshots, bounded storage and fresh-index fallback.
 - `scripts/routing_metadata.py`: validates optional public applicability guidance and creates bounded model-card text.
+- `scripts/https_transport.py`: verified HTTPS with session-scoped connection reuse, bounded responses, proxy fallback and no automatic request replay.
+- `scripts/jev_session.py`: optional owner-process Python/NDJSON interface; reads each task and catalog from its caller and writes bounded advisory IDs to stdout. No inventory cache, listener or host configuration changes.
 
 ## Output format
 
@@ -74,7 +79,7 @@ Return status, selected capability names/IDs, why the selection fits the request
 
 ## Completion criteria
 
-The user receives a concrete recommendation, a legitimate no-capability answer, or a specific clarification need. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
+Recommend/Inspect ends with a concrete recommendation, a scoped no-capability answer, candidate inspection or a specific clarification need. Integrate ends with a reviewed host integration and its activation/inventory/delivery evidence, or a precise unsupported-host gap with native fallback; a session helper alone is not a qualified automatic integration. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
 
 ## Failure modes
 

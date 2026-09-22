@@ -3,10 +3,11 @@ import { jevBenchmarks as bench } from "../lib/jev-benchmarks.mjs";
 import { repoUrl } from "../lib/skills";
 
 const number = (value: number) => value.toLocaleString("en-US");
-const speed = bench.speedRatio.toFixed(2);
-const chartMax = Math.ceil(Math.max(bench.jev.medianSeconds, bench.native.medianSeconds));
+const speed = bench.session.speedRatio.toFixed(2);
+const chartMax = Math.ceil(Math.max(bench.session.medianSeconds, bench.session.coldMedianSeconds));
 const chartWidth = 540;
 const runs = [
+  { label: "Session and selector development", count: bench.runCounts.sessionDevelopment, detail: "37 completed experiments, including 384 fresh-task comparisons" },
   { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
   { label: "Live selection evaluations", count: bench.runCounts.liveSelection, detail: "160 + 100 + 32 + 160 runs" },
   { label: "Runtime measurements", count: bench.runCounts.runtime, detail: "320 + 80 fresh-process measurements" },
@@ -27,31 +28,31 @@ const runs = [
   <div class="jev-promo__comparison">
     <div class="jev-promo__headline">
       <p class="jev-promo__ratio">{speed}<span>×</span></p>
-      <h3>Faster median selection</h3>
-      <p>Compared with the native selector on the same {bench.tasks} regression tasks.</p>
-      <p class="jev-promo__quality"><strong>Correct results</strong><br />Jev {bench.jev.correct}/{bench.tasks} · Native {bench.native.correct}/{bench.tasks}</p>
+      <h3>Faster with a reusable session</h3>
+      <p>Compared with our fresh-connection path. {bench.session.tasks} previously untested tasks, each repeated twice.</p>
+      <p class="jev-promo__quality"><strong>Correct results</strong><br />Both Jev paths {bench.session.correct}/{bench.session.observations}</p>
     </div>
 
     <figure class="jev-promo__chart">
-      <figcaption>Time to a recommendation <span>Median · lower is better</span></figcaption>
-      <div class="jev-promo__chart-label"><strong>Jev advisor</strong><span>{bench.jev.medianSeconds.toFixed(2)} s</span></div>
+      <figcaption>Time to a skill recommendation <span>Median · lower is better</span></figcaption>
+      <div class="jev-promo__chart-label"><strong>Jev session</strong><span>{bench.session.medianSeconds.toFixed(2)} s</span></div>
       <svg viewBox="0 0 560 56" role="img" aria-labelledby="jev-time-title jev-time-desc">
-        <title id="jev-time-title">Jev median selection: {bench.jev.medianSeconds.toFixed(2)} seconds</title>
-        <desc id="jev-time-desc">Bar starts at zero on the same zero to {chartMax} second scale as the native selector.</desc>
+        <title id="jev-time-title">Jev median selection: {bench.session.medianSeconds.toFixed(2)} seconds</title>
+        <desc id="jev-time-desc">Bar starts at zero on the same zero to {chartMax} second scale as the fresh-connection path.</desc>
         <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
-        <rect class="jev-promo__bar jev-promo__bar--jev" x="0" y="6" width={chartWidth * bench.jev.medianSeconds / chartMax} height="32" rx="5" />
+        <rect class="jev-promo__bar jev-promo__bar--jev" x="0" y="6" width={chartWidth * bench.session.medianSeconds / chartMax} height="32" rx="5" />
       </svg>
-      <div class="jev-promo__chart-label"><strong>Native selector</strong><span>{bench.native.medianSeconds.toFixed(2)} s</span></div>
-      <svg viewBox="0 0 560 70" role="img" aria-labelledby="native-time-title native-time-desc">
-        <title id="native-time-title">Native median selection: {bench.native.medianSeconds.toFixed(2)} seconds</title>
-        <desc id="native-time-desc">Both bars use a zero to {chartMax} second scale. Capability loading and task execution are excluded.</desc>
+      <div class="jev-promo__chart-label"><strong>Jev fresh connection</strong><span>{bench.session.coldMedianSeconds.toFixed(2)} s</span></div>
+      <svg viewBox="0 0 560 70" role="img" aria-labelledby="cold-time-title cold-time-desc">
+        <title id="cold-time-title">Jev fresh-connection median selection: {bench.session.coldMedianSeconds.toFixed(2)} seconds</title>
+        <desc id="cold-time-desc">Both bars use a zero to {chartMax} second scale. Capability loading and task execution are excluded.</desc>
         <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
-        <rect class="jev-promo__bar jev-promo__bar--native" x="0" y="6" width={chartWidth * bench.native.medianSeconds / chartMax} height="32" rx="5" />
-        {[0, chartMax / 3, chartMax * 2 / 3, chartMax].map((tick) => (
-          <text x={tick / chartMax * chartWidth} y="65" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{tick.toFixed(0)} s</text>
+        <rect class="jev-promo__bar jev-promo__bar--native" x="0" y="6" width={chartWidth * bench.session.coldMedianSeconds / chartMax} height="32" rx="5" />
+        {[0, chartMax / 4, chartMax / 2, chartMax * 3 / 4, chartMax].map((tick) => (
+          <text x={tick / chartMax * chartWidth} y="65" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(1)} s</text>
         ))}
       </svg>
-      <p class="jev-promo__caption">Selection only, including Jev calls. Excludes native startup, capability loading and task execution. A whole-task speedup has not been demonstrated.</p>
+      <p class="jev-promo__caption">{bench.session.reductionPercent.toFixed(0)}% less median wait across {bench.session.skillObservations} single-skill observations. First cold calls included; no result cache. Imports, process startup, capability loading and task execution excluded. Direct HTTPS in a retained session; proxies use an unpooled fallback.</p>
     </figure>
   </div>
 
@@ -79,10 +80,22 @@ const runs = [
     <dl>
       <div><dt>Skills + MCP tools</dt><dd>Compare workflows and tools in one supplied catalog.</dd></div>
       <div><dt>Clear outcomes</dt><dd>A recommendation, no match, missing context or a provider error.</dd></div>
+      <div><dt>Reusable sessions</dt><dd>Keep the HTTPS connection; supply a fresh eligible catalog for each task.</dd></div>
       <div><dt>Offline inspection</dt><dd>Explore candidates without an API key or network call.</dd></div>
       <div><dt>Your host stays in control</dt><dd>Loading, permissions and execution remain with your agent.</dd></div>
     </dl>
   </div>
+
+  <details class="jev-promo__details">
+    <summary>Fresh-task results and session requirements</summary>
+    <div class="jev-promo__details-body">
+      <p>Forty single-skill tasks and eight no-match tasks, balanced between German and English, were withheld until the runtime was frozen. Both Jev paths scored 80/80 on skill decisions and 16/16 on no-match decisions. Median timing above uses the skill decisions. This holdout does not cover fresh MCP, compound or clarification tasks.</p>
+      <p>The actual session API received a fresh catalog every time. Session construction, validation, preparation, API calls and evidence recording were timed. Two initial cold requests and 94 reused connections are included; no prewarming, result/index cache or retry was used. Provider service load and caching were uncontrolled.</p>
+      <p>The median paired saving was 376 ms, with a 95% task-cluster bootstrap interval of 365–384 ms. All 384 scheduled observations in the four-variant experiment were retained; this panel displays the 192 observations from our two connection lifecycles.</p>
+      <p>A host must retain the session and supply authoritative current inventory. Skill/plugin installation does not install an automatic hook. A whole-task speedup has not been demonstrated. The older native comparison below is a separate study; its timings cannot be combined with this one.</p>
+      <a href={repoUrl(bench.session.evidencePath)}>Read the session evidence</a>
+    </div>
+  </details>
 
   <details class="jev-promo__details" id="jev-run-count">
     <summary>What counts as {number(bench.totalRuns)} benchmark runs?</summary>
@@ -100,11 +113,11 @@ const runs = [
   </details>
 
   <details class="jev-promo__details">
-    <summary>Compare quality and see the measurement conditions</summary>
+    <summary>Earlier native comparison: {bench.speedRatio.toFixed(2)}× faster median selection</summary>
     <div class="jev-promo__details-body">
       <div class="jev-promo__table-scroll" role="region" aria-label="Selection benchmark results" tabindex="0">
         <table>
-          <caption>Matched selection comparison · {bench.date}</caption>
+          <caption>Earlier pre-session selection comparison · {bench.date}</caption>
           <thead><tr><th scope="col">Measure</th><th scope="col">Jev advisor</th><th scope="col">Native selector</th></tr></thead>
           <tbody>
             <tr><th scope="row">Median selection</th><td><strong>{bench.jev.medianSeconds.toFixed(3)} s</strong></td><td>{bench.native.medianSeconds.toFixed(3)} s</td></tr>
@@ -115,13 +128,13 @@ const runs = [
       </div>
       <p>Both selectors received the same {bench.candidates} ordered cards per task from a {bench.catalogSize}-entry catalog. Task and arm order were randomized, with one sample per arm/task, no retries and no local caches. Provider caching and service load were uncontrolled.</p>
       <p>The headline is the ratio of medians. These are previously used synthetic regressions, not a fresh holdout. Single-task, no-match and clarification results tied at 58/60; compound results were 12/20 for Jev and 14/20 for native. All failures remain counted.</p>
-      <p>Whole-host pilots have not shown faster task completion. Automatic prompt interception is not implemented in this release candidate. The cumulative run count covers earlier revisions too; it does not expand the current comparison beyond {bench.tasks} tasks.</p>
+      <p>Whole-host pilots have not shown faster task completion. Automatic prompt interception remains unqualified; the new session API is an integration building block. The cumulative run count covers earlier revisions too; it does not expand this earlier comparison beyond {bench.tasks} tasks.</p>
     </div>
   </details>
 
   <footer class="jev-promo__footer">
     <span>Measured {bench.date} · Release candidate</span>
-    <div><a href={repoUrl(bench.evidencePath)}>Benchmark data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
+    <div><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
   </footer>
 </section>
 

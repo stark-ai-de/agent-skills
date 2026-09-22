@@ -4,11 +4,30 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
-## 4.71× faster median selection
+## New: 1.51× faster with a reusable session
+
+**0.73 seconds with a Jev session. 1.11 seconds with a fresh connection.**
+
+Keeping the HTTPS connection open reduced median skill-selection latency by **34%** in the fresh-task comparison. The actual session API received a fresh catalog with every task; it did not reuse recommendations or skip validation.
+
+| Fresh tasks · 2026-09-22 | Jev session | Jev fresh connection |
+| ------------------------ | ----------: | -------------------: |
+| Median skill selection   | **0.733 s** |              1.108 s |
+| p95 skill selection      | **0.798 s** |              1.167 s |
+| Correct skill results    |   **80/80** |                80/80 |
+| Correct no-match results |   **16/16** |                16/16 |
+
+There were 48 previously untested tasks, each repeated twice: 40 single-skill tasks and eight no-match tasks, balanced between German and English. Both Jev paths achieved **96/96 correct results**. The first connection in each repetition is included; no prewarming, result cache or retry was used. The paired median saving was 376 ms, with a task-cluster bootstrap 95% interval of 365–384 ms. This study did not test fresh MCP, compound or clarification tasks.
+
+[Session benchmark data](../../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json).
+
+[Use a reusable session](../../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md) in a host that supplies its current eligible catalog. This benefit requires a retained process/session and a direct HTTPS connection; proxy environments use the existing unpooled fallback. It does not establish automatic native activation or a whole-task speedup. The older native comparison below uses a different corpus and revision; its timings must not be combined with these results.
+
+## Earlier native comparison: 4.71× faster median selection
 
 **1.22 seconds with Jev. 5.73 seconds with the native selector.**
 
-Both received the same inputs in the 80-task regression comparison. Correct complete results were **70/80 for Jev and 72/80 for native**. The headline is the ratio of medians and measures selection only; a whole-task speedup has not been demonstrated.
+Both received the same inputs in the earlier, pre-session 80-task regression comparison. Correct complete results were **70/80 for Jev and 72/80 for native**. The headline is the ratio of medians and measures selection only; a whole-task speedup has not been demonstrated.
 
 | Measured on 2026-09-22   | Jev advisor | Native selector |
 | ------------------------ | ----------: | --------------: |
@@ -18,19 +37,20 @@ Both received the same inputs in the 80-task regression comparison. Correct comp
 
 Timing includes local preparation and Jev calls, but excludes native process startup, capability loading and task execution. Compound selection remains experimental.
 
-## 2,000+ benchmark runs
+## 6,000+ benchmark runs
 
-**2,032 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 2,032 unique tasks or passing tests.
+**6,450 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 6,450 unique tasks or passing tests.
 
-| Included experiments        |      Runs | Counting rule                                             |
-| --------------------------- | --------: | --------------------------------------------------------- |
-| Retrieval evaluations       |     1,080 | 270 tasks × four configurations                           |
-| Live selection evaluations  |       452 | 160 initial + 100 corrected + 32 pilot + 160 matched runs |
-| Runtime measurements        |       400 | 320 earlier + 80 optimized fresh-process measurements     |
-| Archived replay evaluations |       100 | 100 recorded-response replays                             |
-| **Total**                   | **2,032** | Completed executions, counted once per experiment         |
+| Included experiments             |      Runs | Counting rule                                                  |
+| -------------------------------- | --------: | -------------------------------------------------------------- |
+| Retrieval evaluations            |     1,080 | 270 tasks × four configurations                                |
+| Live selection evaluations       |       452 | 160 initial + 100 corrected + 32 pilot + 160 matched runs      |
+| Runtime measurements             |       400 | 320 earlier + 80 optimized fresh-process measurements          |
+| Archived replay evaluations      |       100 | 100 recorded-response replays                                  |
+| Session and selector development |     4,418 | 37 completed experiments, including 384 fresh-task comparisons |
+| **Total**                        | **6,450** | Completed executions, counted once per experiment              |
 
-Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. This cumulative count does not expand the current speed comparison beyond its 80 tasks.
+Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. The additional 4,418 executions include two HTTP timeouts; every scheduled observation in the 37 listed experiments is retained. This is an audited selection of completed experiments, not every exploratory call. The cumulative count does not expand either speed study beyond its own task set. See the [count ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json).
 
 ## Less output. Less preparation.
 
@@ -44,10 +64,11 @@ Repeated tasks across configurations and revisions count as separate runs. Subgr
 | **Skills + MCP tools** | Compare available workflows and tools in one supplied catalog.                |
 | **Clear outcomes**     | Distinguish a recommendation, no match, missing context and provider failure. |
 | **Compact advice**     | Return relevant descriptions and safety signals; retain a full local receipt. |
+| **Reusable sessions**  | Reuse the connection while refreshing the task and eligible catalog.          |
 | **Offline inspection** | Explore candidates without a key or network call.                             |
 | **Host control**       | Preserve activation restrictions, permissions and execution ownership.        |
 
-The skill is a release candidate. It does not automatically intercept ordinary prompts. Native runtime behavior is currently qualified in Codex only; installing on another host does not establish runtime qualification.
+The skill is a release candidate. Earlier explicit on-demand use was qualified in Codex. The new reusable session interface supports integration by a host with authoritative inventory; skill/plugin installation does not install automatic prompt interception. Native hooks still require separate qualification.
 
 <details>
 <summary>Measurement conditions and remaining limits</summary>

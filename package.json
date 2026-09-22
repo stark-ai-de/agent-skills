@@ -73,7 +73,7 @@
     "validate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs --check",
     "validate:projections": "bun exec \"bun --bun scripts/plugin/sync-agent-plugin.mjs --check && bun --bun scripts/plugin/validate-agent-plugin.mjs && bun --bun scripts/validation/test-plugin-projections.mjs\"",
     "validate:archives": "bun --bun scripts/release/validate-archives.mjs",
-    "validate:network-endpoints": "bun --bun scripts/plugin/validate-network-endpoints.mjs",
+    "validate:network-endpoints": "bun exec \"bun --bun scripts/plugin/validate-network-endpoints.mjs && bun --bun scripts/validation/test-network-endpoints.mjs\"",
     "validate:release-proof": "bun exec \"pnpm run validate:archives && pnpm run verify:release-reproducibility && pnpm run validate:network-endpoints && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run verify:supply-chain\"",
     "sync:agent-plugin": "bun --bun scripts/plugin/sync-agent-plugin.mjs",
     "sync:openai-plugin": "bun --bun scripts/plugin/sync-openai-plugin.mjs",

@@ -15,7 +15,6 @@ import re
 import sys
 import time
 import urllib.error
-import urllib.request
 if __name__ == '__main__':
     sys.dont_write_bytecode = True
 from routing_metadata import guidance, selection_text
@@ -266,46 +265,10 @@ def build_request(query, candidates, catalog_by_id=None, *, selected=None, phase
     return payload, candidate_map
 
 
-class NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
-
-
 def make_transport(key):
-    """Create HTTPS transport; the bearer key lives only in this closure."""
-    if not isinstance(key, str) or not key.strip() or '\n' in key or '\r' in key:
-        raise ValueError('invalid_api_key')
-    opener = urllib.request.build_opener(NoRedirect())
-
-    def transport(payload):
-        body = encode(payload)
-        if len(body) > MAX_REQUEST_BYTES:
-            raise ValueError('request_budget_exceeded')
-        deadline = time.monotonic() + TIMEOUT_SECONDS
-        request = urllib.request.Request(ENDPOINT, data=body, method='POST', headers={
-            'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
-        with opener.open(request, timeout=TIMEOUT_SECONDS) as response:
-            chunks, size = [], 0
-            while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError('request_timeout')
-                sock = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
-                if sock is not None:
-                    sock.settimeout(remaining)
-                chunk = response.read1(min(65536, MAX_RESPONSE_BYTES + 1 - size))
-                if not chunk:
-                    break
-                chunks.append(chunk)
-                size += len(chunk)
-                if size > MAX_RESPONSE_BYTES:
-                    raise ValueError('response_too_large')
-            if time.monotonic() > deadline:
-                raise TimeoutError('request_timeout')
-        return json.loads(b''.join(chunks).decode('utf-8'))
-
-    transport.transport_kind = 'https'
-    return transport
+    """Own one verified HTTPS connection; callers close it after their session."""
+    from https_transport import JsonClient
+    return JsonClient(key, timeout_seconds=TIMEOUT_SECONDS)
 
 
 def _choice(response, key, permitted):
@@ -338,13 +301,18 @@ def parse_response(response, candidate_map, phase='initial'):
 def _error_code(error):
     # Exception strings can contain secrets or server echoes; never store them.
     if isinstance(error, urllib.error.HTTPError):
-        return 'http_%s' % error.code
+        code = 'http_%s' % error.code
+        try:
+            error.close()
+        except Exception:
+            pass  # Error reporting never includes stream cleanup exceptions.
+        return code
     if isinstance(error, (TimeoutError,)): return 'request_timeout'
     if isinstance(error, urllib.error.URLError): return 'network_error'
     known = {'invalid_query', 'invalid_catalog_item', 'duplicate_candidate_id', 'invalid_description',
              'criteria_state_budget_exceeded', 'request_budget_exceeded', 'choice_budget_exceeded',
              'malformed_answers', 'malformed_choice', 'unknown_choice', 'inconsistent_initial_choices',
-             'response_too_large', 'invalid_api_key', 'missing_api_key', 'invalid_catalog',
+             'response_too_large', 'invalid_response_json', 'invalid_api_key', 'missing_api_key', 'invalid_catalog',
              'invalid_cache_scope', 'invalid_cache_ttl', 'invalid_routing_metadata', 'invalid_retrieval_policy'}
     if isinstance(error, ValueError) and str(error) in known: return str(error)
     if isinstance(error, (json.JSONDecodeError, UnicodeError)): return 'invalid_response_json'
@@ -396,7 +364,7 @@ def offline_candidates(query, catalog, *, index_cache_dir=None, retrieval_policy
 def _cache_key(query, catalog, scope, transport, retrieval_policy='current'):
     root = Path(__file__).resolve().parent
     implementation = {name: hashlib.sha256((root / name).read_bytes()).hexdigest()
-                      for name in ('jev_advisor.py', 'retrieval.py', 'decision_cache.py', 'routing_metadata.py', 'index_cache.py')}
+                      for name in ('jev_advisor.py', 'retrieval.py', 'decision_cache.py', 'routing_metadata.py', 'index_cache.py', 'https_transport.py')}
     return digest({'query': query, 'catalog': sorted(catalog, key=lambda item: item['id']),
                    'retrieval_policy': retrieval_policy, 'scope': scope, 'endpoint': ENDPOINT, 'model': MODEL, 'rules': RULES,
                    'mode_criteria': MODE_CRITERIA, 'implementation': implementation,
@@ -439,6 +407,7 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
               'cache': {'status': 'disabled'}}
     selected = []
     cache, cache_key = None, None
+    owned_transport = None
     try:
         candidates, metadata = _prepare_candidates(query, catalog, index_cache_dir=index_cache_dir,
                                                    retrieval_policy=retrieval_policy)
@@ -473,6 +442,7 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
             key = os.environ.get('TYPESAFE_API_KEY')
             if not key: raise ValueError('missing_api_key')
             transport = make_transport(key)
+            owned_transport = transport
         by_id = {item['id']: item for item in candidates}
         planned_count = None
         while len(result['requests']) < MAX_REQUESTS:
@@ -528,6 +498,8 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
     except Exception as error:
         result.update(status='error', selected=[], selected_ids=[], stopped_reason='error', error=_error_code(error))
     finally:
+        if owned_transport is not None and callable(getattr(owned_transport, 'close', None)):
+            owned_transport.close()
         if result['status'] != 'selected': result['provisional_selected'] = list(selected)
         result['request_count'] = len(result['requests'])
         result['receipt_digest'] = digest(result['requests'])
@@ -599,6 +571,7 @@ def main(argv=None):
     if args.summary and args.offline_candidates:
         parser.error('--summary is for recommendations; --offline-candidates retains the full inspection view')
     catalog = []
+    key_transport = None
     try:
         catalog = json.loads(args.catalog.read_text(encoding='utf-8'))
         query = args.query if args.query is not None else args.query_file.read_text(encoding='utf-8')
@@ -613,13 +586,19 @@ def main(argv=None):
             transport = None
             if args.key_file:
                 def transport(payload):
-                    return make_transport(args.key_file.read_text(encoding='utf-8').strip())(payload)
+                    nonlocal key_transport
+                    if key_transport is None:
+                        key_transport = make_transport(args.key_file.read_text(encoding='utf-8').strip())
+                    return key_transport(payload)
                 transport.transport_kind = 'https'
             result = advise(query, catalog, transport=transport, cache_dir=args.cache_dir,
                             cache_scope=args.cache_scope, cache_ttl_seconds=args.cache_ttl_seconds,
                             index_cache_dir=args.index_cache_dir, retrieval_policy=args.retrieval_policy)
     except Exception as error:
         result = {'status': 'error', 'selected': [], 'selected_ids': [], 'error': _error_code(error), 'request_count': 0}
+    finally:
+        if key_transport is not None and callable(getattr(key_transport, 'close', None)):
+            key_transport.close()
     if args.output:
         args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     displayed = summarize(result, catalog if isinstance(catalog, list) else []) if args.summary else result

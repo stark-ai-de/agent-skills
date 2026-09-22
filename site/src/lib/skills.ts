@@ -25,6 +25,8 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
   "jev-capability-advisor": [
     "docs/skills/jev-capability-advisor/benchmarks/README.md",
     "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",
+    "skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json",
+    "skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json",
     "site/src/components/JevBenchmarkPromo.astro",
     "site/src/lib/jev-benchmarks.mjs",
   ],

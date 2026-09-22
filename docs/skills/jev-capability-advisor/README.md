@@ -9,6 +9,7 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 - **Skills and tools together.** Compare an installed workflow with an available MCP or host tool for the task you want to accomplish.
 - **Clear outcomes.** Selection, no suitable capability, clarification and provider failures stay distinct. Prematurely stopped compound plans remain incomplete.
 - **Compact advice, complete selected descriptions.** Keep the full diagnostic receipt locally and return only relevant recommendations, conditions and coverage to the host.
+- **Reuse connections across tasks.** An optional owner-process interface keeps HTTPS ready while each task brings a fresh host catalog.
 - **Inspect the decision boundary.** Candidate coverage, requests, timing and provider usage are recorded. Your host controls loading, permissions and execution.
 
 ## Install and use
@@ -19,7 +20,7 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 npx skills@latest add stark-ai-de/agent-skills --skill jev-capability-advisor -g -a codex
 ```
 
-The standalone package uses the portable Agent Skills format and can also be installed with `-a cursor` or `-a claude-code`. **Native activation is currently qualified in Codex only**; installation on another host is not runtime qualification.
+The standalone package uses the portable Agent Skills format and can also be installed with `-a cursor` or `-a claude-code`. **Earlier Codex qualification covered explicit on-demand invocation** of the pre-session candidate, not automatic interception. The new session runtime and other hosts need their own qualification; installation alone is not runtime evidence.
 
 Then ask:
 
@@ -33,9 +34,15 @@ The helper needs **Python 3.10+**; it has no third-party Python dependencies, ro
 
 This release candidate also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
 
+## Repeated advice and automatic integration
+
+For a host integration, use the [Python/NDJSON session interface](../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md). It reuses a healthy HTTPS connection across different tasks, keeps credentials local and accepts fresh eligible capabilities with every request. Single CLI invocations also reuse their connection for compound follow-ups.
+
+**Automatic interception still needs host qualification.** The session runtime supplies the integration building block; installing the skill or plugin does not install a pre-prompt hook. Current Codex discovery interfaces do not expose every effective skill and tool eligibility restriction. A host must supply authoritative inventory, demonstrate the callback and advice delivery, and retain native fallback before automatic use is claimed.
+
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 2,000+ recorded benchmark runs across development iterations. The website presents these in a separate visual section below this guide.
+**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 6,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
 
 ## Scope
 

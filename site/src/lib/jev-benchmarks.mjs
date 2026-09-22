@@ -1,3 +1,5 @@
+import session from "../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json" with { type: "json" };
+import development from "../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json" with { type: "json" };
 import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json" with { type: "json" };
 
 const sum = (values) => values.reduce((total, value) => total + value, 0);
@@ -15,6 +17,7 @@ const runCounts = {
     sum(Object.values(evidence.matched_selector_pilot.arms).map((arm) => arm.n)) +
     comparison.completed_runs,
   replay: evidence.optimized_archived_replay.cases,
+  sessionDevelopment: development.recorded_executions,
 };
 
 export const jevBenchmarks = {
@@ -22,7 +25,27 @@ export const jevBenchmarks = {
   evidencePath: "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",
   readmePath: "docs/skills/jev-capability-advisor/benchmarks/README.md",
   methodsPath: "skill-evals/jev-capability-advisor/README.md",
+  session: {
+    evidence: session,
+    evidencePath: "skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json",
+    tasks: session.experiment.unique_tasks,
+    skillObservations: session.groups.primary_positive.arms.jev_session.n,
+    correct: session.groups.all.arms.jev_session.correct,
+    observations: session.groups.all.arms.jev_session.n,
+    medianSeconds: session.groups.primary_positive.arms.jev_session.median_ms / 1000,
+    coldMedianSeconds: session.groups.primary_positive.arms.jev_cold.median_ms / 1000,
+    speedRatio:
+      session.groups.primary_positive.arms.jev_cold.median_ms /
+      session.groups.primary_positive.arms.jev_session.median_ms,
+    reductionPercent:
+      (1 -
+        session.groups.primary_positive.arms.jev_session.median_ms /
+          session.groups.primary_positive.arms.jev_cold.median_ms) *
+      100,
+  },
+  countsPath: "skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json",
   runCounts,
+  development,
   totalRuns: sum(Object.values(runCounts)),
   tasks: comparison.task_count,
   catalogSize: comparison.catalog_records,

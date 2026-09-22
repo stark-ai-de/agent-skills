@@ -1,0 +1,66 @@
+# Reusable host sessions
+
+Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. Only the HTTPS connection is reused: previous tasks, inventory and recommendations are not cached.
+
+## Python interface
+
+Resolve these modules relative to the installed skill's `scripts/` directory:
+
+```python
+from jev_session import AdvisorSession
+
+with AdvisorSession(key_file=credential_path, total_budget_seconds=8) as session:
+    advice = session.recommend({
+        "id": "task-1",
+        "query": current_task,
+        "catalog": current_eligible_catalog,
+    })
+```
+
+Call `recommend` again for subsequent tasks with refreshed host metadata. Each session instance owns its credential and connection. Close and recreate it when the owning host, credential or account scope changes. The key is read lazily on the first necessary API call; empty or disabled catalogs need no key. Errors discard the connection and never replay a POST.
+
+## NDJSON interface
+
+Start one child process and retain its stdin/stdout for the owning host session:
+
+```sh
+python3 scripts/jev_session.py --key-file /path/to/local-key \
+  --total-budget-seconds 8
+```
+
+Send one JSON object per line, with exactly `id`, `query` and `catalog`:
+
+```json
+{
+  "id": "task-1",
+  "query": "Review this diff",
+  "catalog": [
+    {
+      "id": "skill:review",
+      "name": "review",
+      "kind": "skill",
+      "description": "Review a supplied code diff for correctness."
+    }
+  ]
+}
+```
+
+The child returns one JSON line with status, selected/provisional IDs, request counts, timing, candidate/eligible/represented counts, `catalog_truncated`, `none_scope` and a safe error code. Unknown coverage is `null` on early failures. It omits task text, descriptions, paths, raw provider receipts and credentials. IDs refer to the current input catalog; the host resolves them locally. This is a process protocol, not an MCP server or background service. No listener is opened and no host configuration is changed.
+
+Frames are limited to 2,000,000 bytes before decoding, including a newline when present. Task IDs use 1–80 ASCII letters, digits, `_`, `.`, `:` or `-`, beginning with a letter or digit. Queries are nonblank and at most 16,000 characters. Catalogs contain at most 4096 records using the [catalog fields](contract.md#catalog); names are at most 256 characters, descriptions/briefs at most 32,768, and capability IDs at most 256 safe ASCII characters. Unknown fields, duplicate IDs/JSON keys, invalid flags and nonfinite JSON values are rejected.
+
+An oversized frame returns `frame_too_large` and terminates without draining the input. Other malformed frames return a safe error and permit a subsequent valid frame with a fresh connection. EOF, broken output and cancellation close the session. `request_count` counts advisor attempts; `transport_call_count` counts client invocations, not confirmed server receipt.
+
+## Host responsibilities
+
+1. Enable data processing explicitly: the supplied task and bounded capability descriptions go to TypeSafe. Reuse existing authorization for the actual scope; synthetic benchmark permission does not cover unrelated future private content.
+2. Obtain the active session's eligible capabilities and preserve disabled, explicit-only and account restrictions. Files on disk or another client's catalog do not prove availability. Do not retain a catalog across turns without a host freshness check.
+3. If automatic advice is wanted, qualify the real pre-task callback, eligible inventory, delivery before the model action, and actual adoption independently for that host. Keep explicit user choices and native fallback. Skill/plugin installation alone proves none of these steps.
+4. Enforce an outer deadline for the complete active callback, including IPC and serialization. The default inner eight-second budget covers recommendation validation, preparation, credential/client setup and API calls. Input waiting/JSON decoding and output serialization/flushing are outside that inner budget. Native DNS/certificate-store calls are not forcibly interruptible; terminate the owned process when a hard cutoff is required.
+5. Validate returned IDs against the current catalog and interpret `none`, `clarify`, incomplete proposals and `error` separately. Check the coverage fields: `none_scope: retrieved_candidates` covers only the considered shortlist. If `catalog_truncated` is true or unknown, use native discovery for unresolved work and never treat NONE as proof that no capability exists in the full catalog. Advice grants no execution authority. The host owns loading, permissions and tool execution; unavailable or stale integration falls back to native discovery.
+
+## Current qualification boundary
+
+The reusable Python/NDJSON interface is implemented. Automatic Codex, Claude Code and OpenAI-plugin interception remains separately unqualified. In Codex 0.154.0, hooks expose prompt/session/turn context, but no complete eligible capability snapshot. Thread-scoped MCP status and cwd-scoped skill discovery are useful inventory signals; they do not export every effective activation and prepared-call permission restriction. Do not silently turn those declarations into a fully eligible catalog.
+
+A controlled host can supply its authoritative eligible snapshot directly. For native integration, require an appropriate host export before claiming automatic routing. Recheck version-sensitive interfaces in the [official hook reference](https://learn.chatgpt.com/docs/hooks) and [app-server reference](https://learn.chatgpt.com/docs/app-server). Selector/session benchmarks do not prove installed-hook activation or whole-task acceleration.

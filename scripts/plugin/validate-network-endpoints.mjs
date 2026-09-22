@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { scanNetworkSource } from "../lib/network-endpoint-policy.mjs";
+
 import { loadValidatedBundle } from "../lib/bundle-contract.mjs";
 import {
   enumerateTree,
@@ -11,46 +13,9 @@ import {
 import { pluginIdentity } from "../lib/release-descriptor.mjs";
 
 const CODE_EXTENSIONS = new Set([".cjs", ".js", ".mjs", ".py", ".sh", ".ts"]);
-const NETWORK_CALL_PATTERNS = [
-  /\b(?:fetch|axios|got|request)\s*\(/,
-  /\b(?:http|https)\.request\s*\(/,
-  /\bnew\s+WebSocket\s*\(/,
-  /\b(?:dns|net|tls)\.(?:connect|createConnection|lookup)\s*\(/,
-  /\b(?:curl|wget)\s+/,
-];
-const DECLARED_ENDPOINT_PREFIXES = [
-  "http://www.w3.org/",
-  "https://www.w3.org/",
-  "https://app.diagrams.net/",
-  "https://mcp.draw.io/mcp",
-];
-const ENDPOINT_PATTERN = /https?:\/\/[^\s"'`<>()[\]{}]+/gi;
-
-function endpointIsDeclared(endpoint, relative) {
-  const advisorTransport =
-    /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/jev_advisor\.py$/.test(relative);
-  // The opt-in advisor has one reviewed provider endpoint; other skills do not inherit it.
-  return (
-    DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix)) ||
-    (advisorTransport && endpoint === "https://api.typesafe.ai/v1/systemone")
-  );
-}
-
 function scanFile(absolute, relative, errors) {
   if (!CODE_EXTENSIONS.has(path.extname(relative))) return;
-  const text = fs.readFileSync(absolute, "utf8");
-  for (const pattern of NETWORK_CALL_PATTERNS) {
-    if (pattern.test(text)) {
-      errors.push(`${relative} contains an undeclared network API: ${pattern}`);
-    }
-    pattern.lastIndex = 0;
-  }
-  for (const match of text.matchAll(ENDPOINT_PATTERN)) {
-    const endpoint = match[0].replace(/[),.;:]+$/, "");
-    if (!endpointIsDeclared(endpoint, relative)) {
-      errors.push(`${relative} contains an undeclared network endpoint: ${endpoint}`);
-    }
-  }
+  errors.push(...scanNetworkSource(fs.readFileSync(absolute, "utf8"), relative));
 }
 
 function scanTrackedSkill(root, entry, label, errors) {

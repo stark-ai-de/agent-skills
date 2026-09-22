@@ -129,6 +129,45 @@ class SummaryTests(unittest.TestCase):
         self.assertTrue(result['error'])
         self.assertNotIn('synthetic-test-value', json.dumps(result))
 
+    def test_key_file_reuses_and_closes_owned_client_on_compound_success_or_error(self):
+        key = self.root / 'key'
+        key.write_text('synthetic-test-value')
+        for second, expected_status in [(answer(next='c000'), 'selected'),
+                                         (answer(next='unknown'), 'error')]:
+            class Client:
+                def __init__(self):
+                    self.replies = iter([answer(mode='PAIR', primary='c000'), second])
+                    self.calls = self.closes = 0
+
+                def __call__(self, payload):
+                    self.calls += 1
+                    return next(self.replies)
+
+                def close(self):
+                    self.closes += 1
+
+            client, stdout = Client(), io.StringIO()
+            with patch.object(advisor, 'make_transport', return_value=client) as factory, redirect_stdout(stdout):
+                advisor.main(['--catalog', str(self.catalog), '--query', 'Review and read a resource',
+                              '--key-file', str(key), '--summary'])
+            self.assertEqual(json.loads(stdout.getvalue())['status'], expected_status)
+            self.assertEqual((factory.call_count, client.calls, client.closes), (1, 2, 1))
+
+    def test_injected_transport_remains_owned_by_its_caller(self):
+        class Client:
+            closed = False
+
+            def __call__(self, payload):
+                return answer(mode='NONE', primary='NONE')
+
+            def close(self):
+                self.closed = True
+
+        client = Client()
+        result = advisor.advise('Conversation only', json.loads(self.catalog.read_text()), client)
+        self.assertEqual(result['status'], 'none')
+        self.assertFalse(client.closed)
+
     def test_offline_inspection_requires_its_full_candidate_view(self):
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()), \
                 self.assertRaises(SystemExit) as error:
