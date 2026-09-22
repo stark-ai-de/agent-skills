@@ -22,3 +22,5 @@
 - Add badges after CI is active on the public repository.
 - Evaluate Claude plugin metadata only after an ADR makes it a supported publishing surface.
 - Evaluate a candidate ADR for provenance-aware assistant statements across Architecture Compass and `codex-memory-curator`: visibly label current verification, memory-derived claims that may be stale, user-provided facts, and assumptions, with timestamps or sources when freshness matters.
+- Evaluate a provider-neutral LiteLLM setup skill for OpenAI-compatible endpoints, local proxies and existing remote gateways, with autonomous or manual operation and optional clients. See [IDEA-016](skill-ideas.md#idea-016-provider-neutral-litellm-setup). Consider plugin inclusion only after its own runtime/privacy review.
+- Keep the SkillOpt Codex-exec gateway until a bounded comparison proves a replacement preserves the needed authentication, isolation, response/streaming and cancellation contracts. LiteLLM's Codex launcher makes Codex a client; it does not replace a Codex subprocess backend.

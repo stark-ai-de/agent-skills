@@ -475,16 +475,19 @@ function validatePortableInstallSets(text, rel) {
     );
 
   for (const host of ["codex", "cursor", "claude-code"]) {
-    const hasCompleteSet = commands.some((words) => {
-      const parsed = parseInstallCommandOptions(words);
-      if (!parsed?.hosts.includes(host)) return false;
-
-      return portableSkillNames.every((name) => parsed.skills.includes(name));
-    });
+    // Independently published skills may intentionally sit outside the recommended
+    // plugin bundle. The documented commands must together cover every public skill.
+    const documentedSkills = new Set(
+      commands.flatMap((words) => {
+        const parsed = parseInstallCommandOptions(words);
+        return parsed?.hosts.includes(host) ? parsed.skills : [];
+      }),
+    );
+    const hasCompleteSet = portableSkillNames.every((name) => documentedSkills.has(name));
 
     if (!hasCompleteSet) {
       errors.push(
-        `${rel}: ${host} install set must include one command with every portable skill as a --skill operand: ${portableSkillNames.join(", ")}`,
+        `${rel}: ${host} install commands must cover every portable skill as a --skill operand: ${portableSkillNames.join(", ")}`,
       );
     }
   }

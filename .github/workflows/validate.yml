@@ -229,3 +229,22 @@ jobs:
           title: Cross-platform archive comparison
           success: All platform archive identities match; continue with release readiness.
           failure: Open the platform identity artifacts and fix the cross-platform mismatch.
+
+  hetzner-compatibility:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          install: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+      - name: Verify Hetzner helper compatibility without credentials
+        run: pnpm run validate:hetzner-inference

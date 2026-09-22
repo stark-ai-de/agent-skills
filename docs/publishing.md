@@ -54,6 +54,14 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor
 ```
 
+Install the independent Hetzner skill for the selected client; it is outside the plugin bundle:
+
+```bash
+npx skills@latest add stark-ai-de/agent-skills --skill hetzner-inference-setup -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill hetzner-inference-setup -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill hetzner-inference-setup -g -a claude-code -y
+```
+
 The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai-developer.source.json`](../plugins/stark-ai-developer.source.json); category membership and directory discovery do not add skills implicitly. The standalone commands above remain individually scoped so runtime-specific skills are never selected by inference.
 
 Install Claude Code public skills project-locally or globally with the skills CLI:

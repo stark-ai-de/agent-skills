@@ -386,3 +386,28 @@ Users may want the `stark-ai-de/agent-skills` workflow available in a project or
 - Should this be a public skill, or a repo-local helper for maintainers and Stark AI projects only?
 - Should it install only promoted public skills, or also support incubator skills behind an explicit internal flag?
 - How should it avoid confusing this repository's public catalog with ignored `.agents/skills/` helper installs?
+
+## IDEA-016: Provider-neutral LiteLLM Setup
+
+- **Status:** Idea
+- **Possible category:** `engineering-workflows`
+- **Related current skill:** `hetzner-inference-setup`
+
+### Problem
+
+Users need a repeatable way to test and connect arbitrary OpenAI-compatible providers to a local LiteLLM proxy or an existing deployed gateway. The public Hetzner skill deliberately retains a provider-specific name and contract for discovery.
+
+### Candidate Behavior
+
+- Select local versus existing remote setup and autonomous execution versus a manual CLI/UI guide.
+- Keep provider, management and client credentials distinct; respect API/database versus declarative model ownership.
+- Verify provider, gateway and selected coding clients separately.
+- Consider future plugin membership through a dedicated runtime/privacy and publication review.
+
+### Existing gateway assessment
+
+The SkillOpt helper `codex-local-openai-chat-gateway.mjs` serves Chat Completions by invoking `codex exec` with existing CLI login and restrictive per-request filesystem, tool, network and environment isolation. It rejects tool calls and emits buffered SSE after completion. Its probe helper and readiness checks are validators, not alternative gateway servers.
+
+LiteLLM routes to HTTP model providers. Its [`lite codex` launcher](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/client/cli/commands/agents.py) runs Codex as a gateway client; the [`chatgpt/` provider](https://docs.litellm.ai/docs/providers/chatgpt) uses its own HTTP/OAuth flow. Neither currently proves an equivalent replacement for the Codex subprocess contract.
+
+Before replacement, compare a pinned LiteLLM candidate against actual required text generation, authentication ownership, streaming/errors, isolation, timeout/disconnect cleanup, redaction and operational cost. Keep the existing SkillOpt implementation until that evidence supports a separately approved migration. ADR-0028's second-consumer and isolation gate still applies to shared gateway extraction; a Hetzner HTTP provider is not a second consumer of the Codex subprocess backend.

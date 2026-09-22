@@ -8,6 +8,10 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const errors = [];
 const nativeRootScripts = new Set(["format", "format:check", "lint", "lint:fix"]);
 const internalNodeOwners = new Map([
+  [
+    "scripts/validation/hetzner-inference-setup/validate.mjs",
+    "internal:validate-hetzner:node-children",
+  ],
   ["scripts/repo/validate-scripts.mjs", "internal:validate-scripts:syntax-check"],
   [
     "scripts/validation/drawio-diagrams/validate-fixtures.mjs",
@@ -500,8 +504,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 11,
-  `current runtime-selection inventory must discover 11 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 12,
+  `current runtime-selection inventory must discover 12 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -509,8 +513,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 11,
-  `current runtime evidence matrix must define 11 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 12,
+  `current runtime evidence matrix must define 12 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());

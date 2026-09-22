@@ -1,189 +1,103 @@
 ---
-title: "Cross-platform Hetzner Inference setup skill"
+title: "Public Hetzner Inference setup skill"
 slug: "hetzner-inference-setup-skill"
 artifact_path: "docs/specs/hetzner-inference-setup-skill-spec.md"
-mode: "standard"
-status: "proposed"
+mode: "deep"
+status: "approved"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-08-21"
-updated: "2026-08-26"
-source_request: "Specify a public skill that connects Hetzner Inference to Codex CLI, Claude Code, and Cursor on Windows, macOS, Linux, and WSL."
+updated: "2026-09-21"
+source_request: "Finish the public standalone Hetzner skill with local and existing remote LiteLLM setup, autonomous and manual modes, client adapters, live proof, and reviewed PR delivery."
 ---
 
-# Cross-platform Hetzner Inference setup skill
+# Public Hetzner Inference setup skill
 
-## Goal
+## Goal and approved scope
 
-Implement one incubator Agent Skill, `hetzner-inference-setup`, for diagnosing, planning, configuring, verifying, operating, repairing, rotating, and rolling back a local Hetzner Inference connection.
+Deliver `hetzner-inference-setup` as a public standalone Agent Skill. The maintainer approved this specification on 2026-09-21, including accepting the revised Proposed ADR-0047 through ADR-0049 before implementation. Complete the existing candidate and promotion in one PR; public promotion follows current evidence rather than a separate incubation release.
 
-```text
-Codex CLI ─────────── Responses ────────┐
-Claude Code ───────── Messages ─────────┼─> LiteLLM on 127.0.0.1 ─> Hetzner Chat Completions
-Cursor standard chat ─ verified BYOK ───┘
-```
+The skill connects Hetzner Inference through the official LiteLLM Proxy to optional Codex CLI, Claude Code, and Cursor standard-chat clients. It owns configuration and verification, not protocol translation. Keep the Hetzner name and discovery triggers. Do not bundle the skill into the existing plugin.
 
-LiteLLM owns protocol adaptation and the local alias. The skill owns safe installation, client adapters, lifecycle, credentials, evidence, and rollback. It does not implement a custom gateway.
+## Architectural decisions
 
-## ADR gate
+- [ADR-0047](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.short.md) ([Long, canonical](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.long.md) · [Guide](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.guide.md)): official LiteLLM, local or existing remote target, explicit ownership, separate proof.
+- [ADR-0048](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.short.md) ([Long, canonical](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.long.md) · [Guide](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.guide.md)): one portable skill, separate adapters, finite workflows, evidence before promotion.
+- [ADR-0049](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.short.md) ([Long, canonical](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.long.md) · [Guide](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.guide.md)): provider, management, and client credential boundaries.
 
-- [ADR-0047](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.short.md) ([Long, canonical](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.long.md) · [Guide](../adrs/0047-use-a-local-litellm-gateway-for-hetzner-coding-clients.guide.md))
-- [ADR-0048](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.short.md) ([Long, canonical](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.long.md) · [Guide](../adrs/0048-implement-one-portable-hetzner-setup-skill-with-client-adapters.guide.md))
-- [ADR-0049](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.short.md) ([Long, canonical](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.long.md) · [Guide](../adrs/0049-separate-hetzner-provider-and-local-gateway-credentials.guide.md))
+ADR gate: required, approved. These three records were Proposed and unlocked; revise and accept them, add decision locks and update their index. Preserve unrelated Accepted decisions, especially ADR-0006, ADR-0008, ADR-0028, ADR-0029, ADR-0038 and ADR-0041.
 
-All three remain Proposed. This planning PR does not implement or promote the skill and performs no live Hetzner request.
+## Entry and finite workflows
 
-## Verified design basis
+Ask only for missing material choices: `target=local|remote`, `mode=autonomous|manual`, selected clients, endpoint/model alias, and credential sources. Carry clear user intent and existing authorization forward. Explain the selected workflow without repeating an already satisfied approval conversation.
 
-- Hetzner remains experimental; `/v1/models` is authoritative and `/v1/chat/completions` is the upstream surface.
-- Codex custom providers use Responses and support command-backed auth plus `${CODEX_HOME}/<name>.config.toml` profile overlays.
-- Claude Code supports an Anthropic Messages gateway.
-- Cursor BYOK is limited to standard chat; custom base-URL behavior is version- and UI-gated.
-- LiteLLM virtual keys require database-backed key management. The database-free workstation baseline therefore uses one disclosed administrative master key.
-- Windows uses machine-local `%LOCALAPPDATA%`, not roaming AppData.
+Expose setup/add clients, diagnose, selected compatibility checks, local lifecycle, local repair/rotation, and owned-artifact rollback. Target and execution mode are separate options. Remote server installation, restart, upgrades, and infrastructure administration are outside the skill.
 
-Re-check official contracts in the implementation review and whenever a relevant version changes.
+Manual mode reads no credentials, contacts no target endpoint, installs nothing, and writes no configuration. Return numbered commands or UI instructions with placeholders, expected outcomes, and validation steps. Users enter credentials themselves. Unknown model IDs remain placeholders until the user performs discovery.
 
-## Scope
+## Local contract
 
-In scope:
+Reuse the candidate's dependency-free Node helpers, owned per-user virtual environment, exactly reviewed LiteLLM version, loopback listener, stable `hetzner-default` alias, isolated credential storage and process identity. Preserve existing installations and unrelated client settings. Never silently switch ports or stop another process.
 
-- one concise `SKKILL.md` with dependency-free Node.js `.mjs` orchestration;
-- Windows, macOS, Linux, and WSL host adapters;
-- Codex CLI, Claude Code, and Cursor standard-chat adapters;
-- live model discovery and bounded provider probes;
-- an owned per-user Python virtual environment with an exact reviewed LiteLLM pin;
-- loopback-only proxy, stable alias `hetzner-default`, and owned process lifecycle;
-- separate protected provider and administrative gateway credentials;
-- versioned plans and evidence, locks, atomic writes, backups for non-secret artifacts, idempotence, drift protection, and rollback;
-- hosted helper tests, WSL fixtures, mocks, opt-in live proof, and skill evals.
+Keep local `diagnose`, `plan`, and `status` offline and free of secret reads. Explicit checks may read selected credentials and call selected endpoints. Every local mutation consumes an unexpired hash-bound plan, takes an owned lock, revalidates state, and produces an ownership/rollback receipt. Identical apply is a no-op; stale or user-modified state fails closed. Ordinary rollback preserves credentials.
 
-Non-goals:
+Maintain native Windows, macOS, Linux and WSL adapters. Use machine-local roots, verified Unix modes or Windows ACLs, and same-environment clients by default. Do not install system-wide Python packages or silently add startup services.
 
-- remote hosting, containers, Kubernetes, PostgreSQL, virtual keys, multi-user routing, budgets, HA, TLS termination, or network exposure;
-- a production-readiness claim or custom protocol server;
-- Claude.ai or Claude Desktop routing;
-- Cursor specialized features or opaque-state mutation;
-- a hardcoded model catalog, global Python install, service install, login startup, or shell-profile mutation;
-- secrets in generated config, global environments, roaming profiles, command arguments, or repositories.
+## Remote contract
 
-## Finite workflows
+Use a separate adapter for an existing LiteLLM management URL and inference URL; preserve reverse-proxy path prefixes. Use authenticated read-only inspection to prepare a bounded remote plan. The local offline-plan promise does not imply that remote inspection is offline. Explicitly authorized management access may read model inventory and API/version capabilities.
 
-1. **Setup or add clients:** diagnose, discover, select, plan, approve, apply, optionally start, and check.
-2. **Diagnose:** inspect host, clients, dependencies, ports, ownership, and drift without secrets, writes, or network.
-3. **Compatibility check:** run explicitly selected non-mutating provider, gateway, and client probes.
-4. **Lifecycle:** start, stop, and report only the owned gateway process.
-5. **Repair or rotate:** create and apply a new approved plan for attributable drift or one credential.
-6. **Rollback:** restore or remove owned artifacts; preserve credentials unless deletion is separately approved.
+Remote setup inventories model ownership, creates an API/database-managed Hetzner route, reuses a matching route, or reports a conflicting alias. Do not overwrite a foreign or config-owned route. A GitOps/config-owned route receives a concrete patch and owner-run instructions. Missing database/model-storage prerequisites receive an actionable handoff; do not migrate infrastructure.
 
-Bare or ambiguous invocation must select a workflow before mutation.
+Use a selected live Hetzner model ID with LiteLLM's OpenAI-compatible provider and the provider's documented base URL. Keep model IDs out of the hardcoded catalog. Recheck the deployed API contract instead of assuming the newest upstream CRUD routes work on every version.
 
-## Helper contract
+Remote writes consume a current approved plan, recheck state, and read back the returned model ID and non-secret routing properties. An ambiguous timeout requires inventory reconciliation before another create. Masked provider keys are not proof of equality. Remote rollback removes only an attributable created model whose identity/configuration still matches the receipt; reused models are not owned by this run.
 
-```text
-setup-hetzner-inference.mjs diagnose|plan|apply|check|start|stop|status|repair|rotate|rollback
-```
+Separate configuration success from successful inference using a client credential. Transport, streaming, tools and client E2E remain independent evidence. Do not start or stop remote server processes.
 
-- `diagnose`, `plan`, and `status` are offline and non-mutating.
-- `check`is non-mutating but may read only selected credentials and call only approved endpoints.
-- Every mutation consumes a persisted, schema-versioned, hash-bound, time-bounded plan.
-- Apply rejects stale state, takes a single-writer lock, and revalidates before every write or process action.
-- `install-manifest.json` records owned paths, hashes, non-secret backups, permissions, process identity, and rollback actions.
-- Reapplying an identical current plan is a no-op.
-- User-modified files, unexpected filesystem entries, and process-identity mismatches fail closed.
-- PID alone never authorizes stop or rollback.
-- JSON output is deterministic and redacted.
+## Credentials and optional clients
 
-## Adapter contracts
+Distinguish the Hetzner provider token, local administrative master key, remote management credential, and remote inference/client credential. Accept protected source references rather than literal keys in command arguments. Resolve remote environment-secret references on the remote server; local availability does not prove remote availability. Sending a provider credential to the selected remote gateway requires the selected workflow's authority and authenticated encrypted transport.
 
-### Host and gateway
+Never print secrets or persist them in plans, receipts, public evidence, client configs or backups. Authenticate clients with the local administrative loopback key or an appropriate remote inference credential, never with the remote management key. Remote provider storage belongs to the selected remote system. Preserve credentials on ordinary rollback.
 
-- Linux/WSL use XDG roots; macOS uses Application Support; Windows uses `%LOCALAPPDATA%`.
-- Resolve and record executable paths and versions; reject changes between plan and apply.
-- Install LiteLLM only into an owned virtual environment using an exact implementation-reviewed pin.
-- Bind to `127.0.0.1:4000`; never silently change ports or kill an unknown listener.
-- Generate `openai/<live-model-id>` with `use_chat_completions_api: true`.
-- Disable body logging and verbose environment diagnostics by default.
-- Prefer foreground/manual startup; an optional wrapper may stop only its own identity-checked process.
-- WSL runs gateway and client in the same environment by default; cross-boundary routes require explicit reachability proof.
+Provide optional Codex Responses, Claude Code Messages and guided Cursor standard-chat adapters for both targets. Preserve unrelated configuration. Version-gate undocumented or changed client behavior. A configured client is not E2E-verified until its exact installed version completes a disposable coding flow; Cursor limitations must remain visible.
 
-### Codex CLI
+## Public integration and roadmap
 
-- Create `${CODEX_HOME}/hetzner.config.toml` and invoke `codex --profile hetzner`.
-- Use `wire_api = "responses"`, loopback `/v1`, the stable alias, and command-backed local auth.
-- Preserve user, system, project, MCP, plugin, sandbox, approval, and unrelated model layers.
-- Start with a minimal tool surface, then prove streaming, tool calls/results, file read, shell, edit/patch, diff, cancellation, errors, context growth, and compaction in a disposable repository.
-- Unsupported required fields or tool namespaces block compatibility; never hide failures by stripping tools.
+Publish the proved candidate under `skills/engineering-workflows/hetzner-inference-setup/` with a concise entrypoint, referenced operational guides, canonical `agents/openai.yaml`, updated catalog and independent eval evidence. Keep maintainer tests outside the installed payload. Preserve the existing plugin membership, version and runtime policy.
 
-### Claude Code
+Record a provider-neutral local/remote LiteLLM setup candidate in the existing roadmap/skill-ideas documentation. Evaluate the existing SkillOpt gateway without changing it: its backend is `codex exec`, whereas LiteLLM's Codex launcher makes Codex a client. Keep authentication ownership, isolation, error/streaming semantics and process cancellation as future migration criteria. ADR-0028's shared-gateway extraction gate remains applicable.
 
-- Use the documented LLM gateway contract through an owned launcher or supported `apiKeyHelper`.
-- Preserve unrelated settings, MCP, hooks, and permissions.
-- Prove Messages streaming, tools/results, repository read, terminal, edit, diff, multi-turn state, cancellation, and errors.
-- Disclose the third-party gateway, non-Anthropic model, and administrative local key.
+## Validation and acceptance
 
-### Cursor standard chat
+- Exercise all four target/mode combinations, ambiguous and clear routing, and no-key manual operation.
+- Cover secret redaction, protected source reads, wrong key role, remote-secret mismatch, API prerequisites, GitOps ownership, equivalent route reuse, alias conflicts, stale plans, concurrent local writes, ambiguous create outcomes and attributable rollback.
+- Retain local lifecycle and credential regressions. Add observed-failure regressions rather than assertions that only mirror source text.
+- Perform real bounded local LiteLLM-to-Hetzner and existing remote-gateway-to-Hetzner runs with maintainer-controlled credentials. Use an attributable temporary remote alias and clean it up. Keep private paths, hostnames and secrets out of public evidence.
+- Exercise available client flows and actual UI guidance. Collect economical cross-platform evidence using existing host/CI capabilities. Report remaining combinations and the cost/value of a next test to the maintainer; never count skips as passes.
+- Register `pnpm run validate:hetzner-inference` in the owning validation contract and CI. Run focused tests during development and the required local `pnpm run validate`, `pnpm run format:check`, `pnpm run lint`, catalog discovery, install proof and mandatory hosted checks for public readiness.
+- Independently review utility/maintainability, then Spec and Standards correctness. Fix findings and rerun affected checks/reviews on the resulting candidate.
 
-- Target only documented standard-chat BYOK.
-- Treat custom base URL as a current-version UI capability, not a durable machine-readable contract.
-- Provide guided values only when the installed UI exposes compatible controls; warn when an override is global.
-- Require manual Verify and return `blocked` when unsupported.
-- Never mutate editor databases or opaque state.
-- Keep proof at `transport_verified` unless that exact version proves the corresponding tool/repository flow without hidden routing.
+## Delivery and done when
 
-## Credentials
+Work in an assigned isolated worktree from current main, preserving the historical uncommitted candidate. Complete specification/ADR persistence before implementation. Create a focused PR, attach it to the task, and tie review/test evidence to its final commit. Read every changed file on GitHub and add concise German `Änderung` / `Warum nötig` comments per logical change, avoiding duplicates and reading published comments back.
 
-Use two secrets:
+Done means actionable review findings are resolved, mandatory checks pass, the promised local/remote flows have current evidence, and remaining platform decisions are explicitly reported. Missing credentials or unavailable environments are reported as evidence gaps, not substituted with mock success. The task ends with the reviewed PR; merging and publication follow the existing release workflow.
 
-```text
-HETZNER_INFERENCE_API_KEY  upstream provider token
-LITELLM_MASTER_KEY         administrative key for the loopback proxy
-```
+## Source challenge and limitations
 
-- Store them separately under protected machine-local per-user roots.
-- Generate the local `sk-` key with a cryptographically secure source.
-- Never describe the database-free key as scoped or least-privilege.
-- Verify POSIX ownership/modes or Windows ACLs and reject symlinks, reparse redirects, malformed values, and concurrent changes.
-- Inject only the minimum child environment; never place values in arguments, logs, manifests, backups, or generated config.
-- Cursor may receive only the local key after explicit user action; no client receives the provider token.
-- Rotation replaces only the selected value without persisting an automatic old-secret backup.
-- Ordinary rollback preserves credentials. Deletion is separately approved.
-- Non-loopback binding is blocked without a separate TLS and network-security decision.
+Reviewed 2026-09-21 against repository source and official contracts:
 
-## Proof model
+- [Agent Skills specification](https://agentskills.io/specification)
+- [Hetzner Inference](https://experiments.hetzner.com/docs/inference): current full documentation requires account access; runtime discovery is authoritative.
+- [LiteLLM model management](https://docs.litellm.ai/docs/proxy/model_management): database versus config ownership, storage prerequisites and masked key readback.
+- [LiteLLM OpenAI-compatible providers](https://docs.litellm.ai/docs/providers/openai_compatible)
+- [LiteLLM proxy management CLI](https://docs.litellm.ai/docs/proxy/management_cli)
+- [LiteLLM Codex launcher source](https://github.com/BerriAI/litellm/blob/main/litellm/proxy/client/cli/commands/agents.py)
 
-Report `provider`, `gateway`, `codex`, `claude-code`, and `cursor` independently as:
+Recheck version-sensitive client configuration and LiteLLM behavior during implementation. Historical pins and successful test counts are starting evidence only. No general Kubernetes operator, new hosted gateway, generic provider framework, automatic remote infrastructure migration, or SkillOpt backend replacement is included.
 
-`planned`, `configured`, `transport_verified`, `tools_verified`, `client_e2e_verified`, `verification_required`, `blocked`, or `rolled_back`.
+## Current evidence boundary
 
-Text is not tool proof; a function call is not a tool-result loop; one client cannot prove another; mocks are not live proof; manual evidence remains labeled manual. Evidence expires when its model, gateway, client, executable, configuration, or host boundary changes.
-
-## Acceptance criteria
-
-- [ ] Offline workflows read no secrets, write nothing, start or stop nothing, and make no provider request.
-- [ ] Checks are bounded, selected, and non-mutating.
-- [ ] Every mutation has a current plan, approval, lock, state revalidation, atomic write, ownership hash, applicable non-secret backup, and rollback action.
-- [ ] Secrets remain separate, machine-local, redacted, and absent from artifacts and arguments.
-- [ ] The local key is correctly generated and disclosed as administrative.
-- [ ] LiteLLM is isolated and exactly pinned; Python and resolved packages are recorded.
-- [ ] The gateway is authenticated, loopback-only, identity-checked, and never silently changes ports or kills processes.
-- [ ] Codex and Claude Code pass disposable repository workflows before `client_e2e_verified`.
-- [ ] Cursor remains guided, standard-chat-only, conservative, and opaque-state-free.
-- [ ] Stale plans, concurrent writers, drift, unexpected entries, and process mismatches fail closed.
-- [ ] Rollback preserves credentials and cannot stop an unknown process after PID reuse.
-- [ ] Hosted tests, WSL fixtures, mocks, opt-in live proof, and skill evals cover the contract.
-- [ ] The candidate remains internal until promotion evidence is reviewed.
-
-## Validation
-
-```bash
-pnpm format:check
-pnpm validate:adrs
-git diff --check
-```
-
-The hosted PR workflow runs `pnpm validate`. Live provider and client checks are opt-in, use user-controlled credentials, and run only in disposable workspaces.
-
-## Done when
-
-The spec is indexed; ADR-0047 through ADR-0049 are Proposed triplets in the correct categories; Short and Long decisions match; no stale Hetzner ADR-0044 through ADR-0046 references remain; Windows uses `%LOCALAPPDATA%`; the database-free key is administrative rather than scoped; and all required validation passes.
+Native NixOS is not qualified by Linux-container evidence. The current venv runner does not inherit dynamic-loader overrides; a missing native wheel library requires an explicit packaging adapter or the remote/manual alternative. Keep this limitation visible in the public skill and final release review.
