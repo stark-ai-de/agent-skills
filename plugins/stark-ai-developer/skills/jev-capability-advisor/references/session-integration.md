@@ -1,6 +1,6 @@
 # Reusable host sessions
 
-Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. Only the HTTPS connection is reused: previous tasks, inventory and recommendations are not cached.
+Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. HTTPS and a bounded derived search index are reused. Previous tasks and recommendations are not cached; the host must supply and validate current inventory on every request.
 
 ## Python interface
 
@@ -18,6 +18,16 @@ with AdvisorSession(key_file=credential_path, total_budget_seconds=8) as session
 ```
 
 Call `recommend` again for subsequent tasks with refreshed host metadata. Each session instance owns its credential and connection. Close and recreate it when the owning host, credential or account scope changes. The key is read lazily on the first necessary API call; empty or disabled catalogs need no key. Errors discard the connection and never replay a POST.
+
+## Derived index reuse
+
+- **Same selection inputs.** Every frame validates its current catalog, resolves aliases and searches for the current query. Initial descriptions retain their 200-character budget; follow-ups retain 240 characters.
+- **Less repeated work.** An unchanged catalog can reuse its lexical index. The key includes full metadata, ordered alias representatives, retrieval policy, runtime source fingerprints and Python/Unicode versions. Returned records always come from the current frame.
+- **Bounded ownership.** Each session retains at most one index, with a 2,000,000-byte catalog input limit and a 16-MiB retained-object limit (not a peak-process-memory limit). Changed inputs rebuild it; oversized or unavailable reuse falls back to fresh retrieval. Empty input, errors, reset and close clear it. No disk cache is enabled.
+- **Fresh model decisions.** An index hit saves local preparation only. It still calls Jev and preserves current activation restrictions. A first or short-lived session pays index construction and retention-check costs.
+- **Opt out.** Use `AdvisorSession(reuse_index=False)` or NDJSON `--no-index-reuse`. HTTPS reuse remains enabled. An injected custom advisor keeps its existing three-argument interface and receives no implicit index memo.
+
+Raw advisor receipts expose `index_cache.backend: session_memory`, hit/miss/bypass status and retained size. The compact Session reply remains unchanged. Do not retain sessions across host, credential or account ownership changes.
 
 ## NDJSON interface
 

@@ -1,0 +1,2150 @@
+{
+  "schema": "jev-session-index-qualification/v1",
+  "exporter_sha256": "3848b04c2935cecb8647ec22cfed8a05874ae6364f7a03d8dcc9693b30a9fc10",
+  "export_config_sha256": "24fb9b5a11edf748227c8ca319d89914775a99f8e9d7c4a27198775a4d027898",
+  "candidate_under_evaluation": "jev_candidate",
+  "production_candidate_decision": null,
+  "completed_health_checks": 0,
+  "benchmark_totals": {
+    "planned_executions": 880,
+    "completed_executions": 880,
+    "missing_executions": 0,
+    "recorded_api_attempts": 1094,
+    "confirmed_dispatched_requests": 1094,
+    "attempts_not_dispatched": 0,
+    "attempts_with_unknown_dispatch": 0
+  },
+  "health_totals": {
+    "planned_executions": 0,
+    "completed_executions": 0,
+    "missing_executions": 0,
+    "recorded_api_attempts": 0,
+    "confirmed_dispatched_requests": 0,
+    "attempts_not_dispatched": 0,
+    "attempts_with_unknown_dispatch": 0
+  },
+  "all_provider_usage_totals": {
+    "planned_executions": 880,
+    "completed_executions": 880,
+    "missing_executions": 0,
+    "recorded_api_attempts": 1094,
+    "confirmed_dispatched_requests": 1094,
+    "attempts_not_dispatched": 0,
+    "attempts_with_unknown_dispatch": 0
+  },
+  "valid_comparison_totals": {
+    "planned_executions": 880,
+    "completed_executions": 880,
+    "missing_executions": 0,
+    "recorded_api_attempts": 1094,
+    "confirmed_dispatched_requests": 1094,
+    "attempts_not_dispatched": 0,
+    "attempts_with_unknown_dispatch": 0
+  },
+  "invalid_comparison_totals": {
+    "planned_executions": 0,
+    "completed_executions": 0,
+    "missing_executions": 0,
+    "recorded_api_attempts": 0,
+    "confirmed_dispatched_requests": 0,
+    "attempts_not_dispatched": 0,
+    "attempts_with_unknown_dispatch": 0
+  },
+  "counting_rule": "One completed execution is one recorded scheduled task x arm x repetition. Missing slots, follow-up calls, offline fixtures and categories add no executions. Health is separately accounted and excluded from benchmark totals. Prior historical reports are unchanged and not recounted here.",
+  "timing_scope": "Selection invocation only: preparation, actual Session wrapper, lazy TLS setup and calls. Imports, credential read, process startup, task execution and skill loading are excluded. Cold Jev resets per observation but reuses transport within follow-up calls; pooled clients reset per repetition. First cold observations retained. Candidate may reuse one bounded Session-owned lexical index; each frame validates the current catalog and each query is searched anew. No decision or disk-index cache.",
+  "instrumentation": "Durable wire/receipt writes and fsync occur inside every arm timer; this overhead is not subtracted. Hussi selection return latency and worker drain are separate.",
+  "hussi_scope": "Pinned published chooser, confidence 0.8 and timeout 1.2 seconds. Original uses fresh pinned transport; session control changes transport to pooled HTTPS. Whole-product hooks, fallback models and automatic host activation are not measured.",
+  "limits": [
+    "Synthetic tasks and fixed catalogs; selection latency is not full-agent task speed.",
+    "Complete cohorts retain wrong answers and isolated timeout/transport errors in all scheduled timing and quality distributions. Provider-stopped, incomplete and invariant-failed cohorts have no comparative latency or quality claims; completed failures remain counted.",
+    "Development CPU overlap is disclosed per study; development timings are not isolated release measurements.",
+    "Provider token counts are reported usage, not billing verification or an independently resolved backend revision.",
+    "Candidate naming is explicit experiment metadata, not a promotion decision. Native measurement is not joined by this exporter.",
+    "Index telemetry validates reported state and lifecycle, not private cache-key equality. Retained bytes estimate retained Python objects; they are not measured process RSS. Missing telemetry remains separate. An empty eligible inventory can return without an API call."
+  ],
+  "excluded_preparations": [],
+  "method_notes": [
+    "These two cohorts contribute 880 planned TypeSafe observations. Earlier reports remain archived separately and are not recounted.",
+    "The 676-case offline replay is a separate correctness check and contributes zero additional benchmark observations.",
+    "Candidate pooled and cold arms run their normal default Session with one bounded lexical index. No model decisions or disk indexes are cached.",
+    "The separately frozen Native supplement contributes 96 observations only after independent audit and an explicit matching-task/catalog/runtime join. It is outside this report."
+  ],
+  "studies": [
+    {
+      "study_id": "memo-matched48",
+      "title": "Five-arm matched comparison with bounded Session-index reuse",
+      "scope": "matched_comparison_existing_tasks",
+      "role": "matched",
+      "classification": "complete_valid_comparison",
+      "comparison_valid": true,
+      "cpu_overlap_disclosed": false,
+      "notes": [],
+      "task_count": 48,
+      "repetitions": 2,
+      "arms": [
+        "jev_baseline",
+        "jev_candidate",
+        "jev_candidate_cold",
+        "hussi_original",
+        "hussi_session_control"
+      ],
+      "category_counts": {
+        "skill": 40,
+        "none": 8
+      },
+      "language_counts": {
+        "de": 24,
+        "en": 24
+      },
+      "catalog_records": 132,
+      "normalized_catalog_kind_counts": {
+        "skill": 132
+      },
+      "planned_executions": 480,
+      "completed_executions": 480,
+      "missing_executions": 0,
+      "recorded_api_attempts": 482,
+      "confirmed_dispatched_requests": 482,
+      "attempts_not_dispatched": 0,
+      "attempts_with_unknown_dispatch": 0,
+      "orphan_attempts_without_completed_observation": 0,
+      "orphan_attempts_by_arm": {
+        "jev_baseline": 0,
+        "jev_candidate": 0,
+        "jev_candidate_cold": 0,
+        "hussi_original": 0,
+        "hussi_session_control": 0
+      },
+      "unverified_orphan_response_files": 0,
+      "harness_retries": 0,
+      "halt_reason": null,
+      "provider_http_status_counts": {
+        "200": 482
+      },
+      "error_codes": {},
+      "session_budget_seconds": 8,
+      "requested_model": "jev-1.13.0",
+      "response_reported_models": {
+        "jev-1.13.0": 482
+      },
+      "resolved_provider_backend_revision": null,
+      "arm_source": {
+        "jev_baseline": "baseline",
+        "jev_candidate": "candidate",
+        "jev_candidate_cold": "candidate"
+      },
+      "arm_connection_lifetime": {
+        "jev_baseline": "one repetition",
+        "jev_candidate": "one repetition",
+        "jev_candidate_cold": "one observation; within-task reuse retained",
+        "hussi_original": "one observation; within-task reuse retained",
+        "hussi_session_control": "one repetition"
+      },
+      "model_limits_by_source": {
+        "baseline": {
+          "MODEL": "jev-1.13.0",
+          "MAX_CANDIDATES": 240,
+          "MAX_QUERY_CHARS": 16000,
+          "MAX_REQUESTS": 3,
+          "TIMEOUT_SECONDS": 30
+        },
+        "candidate": {
+          "MODEL": "jev-1.13.0",
+          "MAX_CANDIDATES": 240,
+          "MAX_QUERY_CHARS": 16000,
+          "MAX_REQUESTS": 3,
+          "TIMEOUT_SECONDS": 30
+        }
+      },
+      "session_memory_index_enabled_by_arm": {
+        "jev_baseline": false,
+        "jev_candidate": true,
+        "jev_candidate_cold": true,
+        "hussi_original": false,
+        "hussi_session_control": false
+      },
+      "groups": {
+        "all": {
+          "jev_baseline": {
+            "n": 96,
+            "completed": 96,
+            "missing": 0,
+            "correct": 96,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 96,
+            "median_ms": 427.5111289898632,
+            "p95_ms": 523.9439659926575,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 96,
+              "reported_observations": 96,
+              "status_counts": {
+                "disabled": 96
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 96,
+            "confirmed_dispatched_requests": 96,
+            "request_bytes_per_attempt": {
+              "n": 96,
+              "median": 36815.0,
+              "p95": 36877,
+              "total": 3533500
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 96,
+              "median": 11058.0,
+              "p95": 11091,
+              "total": 1061884
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 96,
+            "completed": 96,
+            "missing": 0,
+            "correct": 95,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 96,
+            "median_ms": 446.29542948678136,
+            "p95_ms": 582.2221679845825,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 96,
+              "reported_observations": 96,
+              "status_counts": {
+                "miss": 2,
+                "hit": 94
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.9791666666666666,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 96,
+                "median": 2013556.0,
+                "p95": 2013560,
+                "total": 193301376
+              },
+              "peak_retained_index_bytes": 2013560,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 97,
+            "confirmed_dispatched_requests": 97,
+            "request_bytes_per_attempt": {
+              "n": 97,
+              "median": 36817,
+              "p95": 36881,
+              "total": 3576861
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 97,
+              "median": 11059,
+              "p95": 11092,
+              "total": 1074275
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate_cold": {
+            "n": 96,
+            "completed": 96,
+            "missing": 0,
+            "correct": 95,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 96,
+            "median_ms": 506.52828949387185,
+            "p95_ms": 670.5413229938131,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 96,
+              "reported_observations": 96,
+              "status_counts": {
+                "miss": 96
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 96,
+                "median": 2013424.0,
+                "p95": 2013528,
+                "total": 193289928
+              },
+              "peak_retained_index_bytes": 2013560,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 97,
+            "confirmed_dispatched_requests": 97,
+            "request_bytes_per_attempt": {
+              "n": 97,
+              "median": 36817,
+              "p95": 36881,
+              "total": 3576861
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 97,
+              "median": 11059,
+              "p95": 11092,
+              "total": 1074275
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "hussi_original": {
+            "n": 96,
+            "completed": 96,
+            "missing": 0,
+            "correct": 92,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 96,
+            "median_ms": 449.4199659966398,
+            "p95_ms": 555.8082209900022,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 96,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 96
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 96,
+            "confirmed_dispatched_requests": 96,
+            "request_bytes_per_attempt": {
+              "n": 96,
+              "median": 32672.0,
+              "p95": 32734,
+              "total": 3135772
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 96,
+              "median": 8999.0,
+              "p95": 9032,
+              "total": 864220
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 96,
+              "median": 0.0024650071281939745,
+              "p95": 0.003322027623653412,
+              "total": 0.2452401677146554
+            },
+            "end_to_end_ms": {
+              "n": 96,
+              "median": 449.42264749261085,
+              "p95": 555.8108719997108,
+              "total": 44160.896591987694
+            }
+          },
+          "hussi_session_control": {
+            "n": 96,
+            "completed": 96,
+            "missing": 0,
+            "correct": 96,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 96,
+            "median_ms": 406.9850849919021,
+            "p95_ms": 564.2615529941395,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 96,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 96
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 96,
+            "confirmed_dispatched_requests": 96,
+            "request_bytes_per_attempt": {
+              "n": 96,
+              "median": 32373.0,
+              "p95": 32435,
+              "total": 3107068
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 96,
+              "median": 8999.0,
+              "p95": 9032,
+              "total": 864220
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 96,
+              "median": 0.002371016307733953,
+              "p95": 0.0035669945646077394,
+              "total": 0.27690298156812787
+            },
+            "end_to_end_ms": {
+              "n": 96,
+              "median": 406.98753800825216,
+              "p95": 564.2639489960857,
+              "total": 40163.86601299746
+            }
+          }
+        },
+        "none": {
+          "jev_baseline": {
+            "n": 16,
+            "completed": 16,
+            "missing": 0,
+            "correct": 16,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 16,
+            "median_ms": 431.4542800129857,
+            "p95_ms": 523.9439659926575,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 16,
+              "reported_observations": 16,
+              "status_counts": {
+                "disabled": 16
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 16,
+            "confirmed_dispatched_requests": 16,
+            "request_bytes_per_attempt": {
+              "n": 16,
+              "median": 36730.5,
+              "p95": 36786,
+              "total": 587614
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 16,
+              "median": 11045.0,
+              "p95": 11062,
+              "total": 176746
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 16,
+            "completed": 16,
+            "missing": 0,
+            "correct": 16,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 16,
+            "median_ms": 470.43509149807505,
+            "p95_ms": 1754.2158490105066,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 16,
+              "reported_observations": 16,
+              "status_counts": {
+                "miss": 1,
+                "hit": 15
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.9375,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 16,
+                "median": 2013556.0,
+                "p95": 2013560,
+                "total": 32216896
+              },
+              "peak_retained_index_bytes": 2013560,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 16,
+            "confirmed_dispatched_requests": 16,
+            "request_bytes_per_attempt": {
+              "n": 16,
+              "median": 36730.5,
+              "p95": 36786,
+              "total": 587614
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 16,
+              "median": 11045.0,
+              "p95": 11062,
+              "total": 176746
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate_cold": {
+            "n": 16,
+            "completed": 16,
+            "missing": 0,
+            "correct": 16,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 16,
+            "median_ms": 499.94230551237706,
+            "p95_ms": 1010.9123539878055,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 16,
+              "reported_observations": 16,
+              "status_counts": {
+                "miss": 16
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 16,
+                "median": 2013424.0,
+                "p95": 2013560,
+                "total": 32215368
+              },
+              "peak_retained_index_bytes": 2013560,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 16,
+            "confirmed_dispatched_requests": 16,
+            "request_bytes_per_attempt": {
+              "n": 16,
+              "median": 36730.5,
+              "p95": 36786,
+              "total": 587614
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 16,
+              "median": 11045.0,
+              "p95": 11062,
+              "total": 176746
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "hussi_original": {
+            "n": 16,
+            "completed": 16,
+            "missing": 0,
+            "correct": 16,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 16,
+            "median_ms": 458.34582099632826,
+            "p95_ms": 580.4162509739399,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 16,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 16
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 16,
+            "confirmed_dispatched_requests": 16,
+            "request_bytes_per_attempt": {
+              "n": 16,
+              "median": 32587.5,
+              "p95": 32643,
+              "total": 521326
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 16,
+              "median": 8986.0,
+              "p95": 9003,
+              "total": 143802
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 16,
+              "median": 0.002525004674680531,
+              "p95": 0.0036530254874378443,
+              "total": 0.04235506639815867
+            },
+            "end_to_end_ms": {
+              "n": 16,
+              "median": 458.34848149388563,
+              "p95": 580.4199039994273,
+              "total": 7463.430214003893
+            }
+          },
+          "hussi_session_control": {
+            "n": 16,
+            "completed": 16,
+            "missing": 0,
+            "correct": 16,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 16,
+            "median_ms": 406.6639815137023,
+            "p95_ms": 653.1380719970912,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 16,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 16
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 16,
+            "confirmed_dispatched_requests": 16,
+            "request_bytes_per_attempt": {
+              "n": 16,
+              "median": 32288.5,
+              "p95": 32344,
+              "total": 516542
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 16,
+              "median": 8986.0,
+              "p95": 9003,
+              "total": 143802
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 16,
+              "median": 0.0023875036276876926,
+              "p95": 0.0037789868656545877,
+              "total": 0.04133302718400955
+            },
+            "end_to_end_ms": {
+              "n": 16,
+              "median": 406.6662555123912,
+              "p95": 653.1403379922267,
+              "total": 6871.478070068406
+            }
+          }
+        },
+        "skill": {
+          "jev_baseline": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 80,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 427.5111289898632,
+            "p95_ms": 507.5224449974485,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 80,
+              "reported_observations": 80,
+              "status_counts": {
+                "disabled": 80
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 80,
+            "confirmed_dispatched_requests": 80,
+            "request_bytes_per_attempt": {
+              "n": 80,
+              "median": 36824.5,
+              "p95": 36877,
+              "total": 2945886
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 80,
+              "median": 11066.0,
+              "p95": 11091,
+              "total": 885138
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 79,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 442.7338840032462,
+            "p95_ms": 530.5705369974021,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 80,
+              "reported_observations": 80,
+              "status_counts": {
+                "hit": 79,
+                "miss": 1
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.9875,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 80,
+                "median": 2013556.0,
+                "p95": 2013560,
+                "total": 161084480
+              },
+              "peak_retained_index_bytes": 2013560,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 81,
+            "confirmed_dispatched_requests": 81,
+            "request_bytes_per_attempt": {
+              "n": 81,
+              "median": 36825,
+              "p95": 36881,
+              "total": 2989247
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 81,
+              "median": 11067,
+              "p95": 11092,
+              "total": 897529
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate_cold": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 79,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 508.59370999387465,
+            "p95_ms": 611.6825180070009,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 80,
+              "reported_observations": 80,
+              "status_counts": {
+                "miss": 80
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 80,
+                "median": 2013424.0,
+                "p95": 2013488,
+                "total": 161074560
+              },
+              "peak_retained_index_bytes": 2013536,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 81,
+            "confirmed_dispatched_requests": 81,
+            "request_bytes_per_attempt": {
+              "n": 81,
+              "median": 36825,
+              "p95": 36881,
+              "total": 2989247
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 81,
+              "median": 11067,
+              "p95": 11092,
+              "total": 897529
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "hussi_original": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 76,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 449.4199659966398,
+            "p95_ms": 543.8180259952787,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 80,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 80
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 80,
+            "confirmed_dispatched_requests": 80,
+            "request_bytes_per_attempt": {
+              "n": 80,
+              "median": 32681.5,
+              "p95": 32734,
+              "total": 2614446
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 80,
+              "median": 9007.0,
+              "p95": 9032,
+              "total": 720418
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 80,
+              "median": 0.002453001798130572,
+              "p95": 0.0033079995773732662,
+              "total": 0.20288510131649673
+            },
+            "end_to_end_ms": {
+              "n": 80,
+              "median": 449.42264749261085,
+              "p95": 543.8204199890606,
+              "total": 36697.4663779838
+            }
+          },
+          "hussi_session_control": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 80,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 407.0041464874521,
+            "p95_ms": 499.36560599599034,
+            "index_reuse": {
+              "applicable": false,
+              "completed_observations": 80,
+              "reported_observations": 0,
+              "status_counts": {
+                "not_applicable": 80
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": null,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 80,
+            "confirmed_dispatched_requests": 80,
+            "request_bytes_per_attempt": {
+              "n": 80,
+              "median": 32382.5,
+              "p95": 32435,
+              "total": 2590526
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 80,
+              "median": 9007.0,
+              "p95": 9032,
+              "total": 720418
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0,
+            "worker_drain_ms": {
+              "n": 80,
+              "median": 0.002364511601626873,
+              "p95": 0.003396999090909958,
+              "total": 0.23556995438411832
+            },
+            "end_to_end_ms": {
+              "n": 80,
+              "median": 407.0067325083073,
+              "p95": 499.3688429822214,
+              "total": 33292.387942929054
+            }
+          }
+        }
+      },
+      "changes_vs_concurrent_baseline": {
+        "jev_candidate": {
+          "reference": "jev_baseline",
+          "lost_correct_observations": [
+            {
+              "case_id": "h008",
+              "repetition": 0,
+              "category": "skill"
+            }
+          ],
+          "gained_correct_observations": []
+        },
+        "jev_candidate_cold": {
+          "reference": "jev_baseline",
+          "lost_correct_observations": [
+            {
+              "case_id": "h008",
+              "repetition": 1,
+              "category": "skill"
+            }
+          ],
+          "gained_correct_observations": []
+        },
+        "hussi_original": {
+          "reference": "jev_baseline",
+          "lost_correct_observations": [
+            {
+              "case_id": "h017",
+              "repetition": 0,
+              "category": "skill"
+            },
+            {
+              "case_id": "h017",
+              "repetition": 1,
+              "category": "skill"
+            },
+            {
+              "case_id": "h018",
+              "repetition": 0,
+              "category": "skill"
+            },
+            {
+              "case_id": "h018",
+              "repetition": 1,
+              "category": "skill"
+            }
+          ],
+          "gained_correct_observations": []
+        },
+        "hussi_session_control": {
+          "reference": "jev_baseline",
+          "lost_correct_observations": [],
+          "gained_correct_observations": []
+        }
+      },
+      "matched_pairwise_comparisons": {
+        "all": {
+          "jev_candidate__vs__jev_baseline": {
+            "candidate": "jev_candidate",
+            "reference": "jev_baseline",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -16.459628997836262,
+            "median_paired_reference_over_candidate": 0.9617888749817208,
+            "ratio_of_medians_reference_over_candidate": 0.9579106142347924,
+            "task_cluster_bootstrap_95_ci_ms": [-26.117388013517484, 3.6483773368672465],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2269647838,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__jev_baseline": {
+            "candidate": "jev_candidate_cold",
+            "reference": "jev_baseline",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -89.74599347857293,
+            "median_paired_reference_over_candidate": 0.8278179859736097,
+            "ratio_of_medians_reference_over_candidate": 0.8440024730248268,
+            "task_cluster_bootstrap_95_ci_ms": [-97.64810001070146, -70.69101351407922],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2561425239,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_original__vs__jev_baseline": {
+            "candidate": "hussi_original",
+            "reference": "jev_baseline",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -34.61304550000932,
+            "median_paired_reference_over_candidate": 0.9252618007452327,
+            "ratio_of_medians_reference_over_candidate": 0.9512508596315002,
+            "task_cluster_bootstrap_95_ci_ms": [-41.421127010835335, -16.213074966799468],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 1243678916,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_session_control__vs__jev_baseline": {
+            "candidate": "hussi_session_control",
+            "reference": "jev_baseline",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 19.270140983280726,
+            "median_paired_reference_over_candidate": 1.046831792792596,
+            "ratio_of_medians_reference_over_candidate": 1.0504343887648107,
+            "task_cluster_bootstrap_95_ci_ms": [-1.929097983520478, 38.200400478672236],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3954973160,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_baseline__vs__hussi_original": {
+            "candidate": "jev_baseline",
+            "reference": "hussi_original",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 34.61304550000932,
+            "median_paired_reference_over_candidate": 1.0807789106273082,
+            "ratio_of_medians_reference_over_candidate": 1.051247407426664,
+            "task_cluster_bootstrap_95_ci_ms": [17.91398929417483, 41.26863650162704],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2037736874,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate__vs__hussi_original": {
+            "candidate": "jev_candidate",
+            "reference": "hussi_original",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 16.056626496720128,
+            "median_paired_reference_over_candidate": 1.0401610602893174,
+            "ratio_of_medians_reference_over_candidate": 1.0070010497608086,
+            "task_cluster_bootstrap_95_ci_ms": [-9.068687249964569, 33.456525969086215],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3448594645,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__hussi_original": {
+            "candidate": "jev_candidate_cold",
+            "reference": "hussi_original",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -48.16566150111612,
+            "median_paired_reference_over_candidate": 0.9124902166401074,
+            "ratio_of_medians_reference_over_candidate": 0.887255411629042,
+            "task_cluster_bootstrap_95_ci_ms": [-73.58132099034265, -28.73403500416316],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 950152960,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_session_control__vs__hussi_original": {
+            "candidate": "hussi_session_control",
+            "reference": "hussi_original",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 50.38650850474369,
+            "median_paired_reference_over_candidate": 1.122558844177215,
+            "ratio_of_medians_reference_over_candidate": 1.1042664278608196,
+            "task_cluster_bootstrap_95_ci_ms": [27.16256200801581, 63.366015965584666],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2409267852,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_baseline__vs__hussi_session_control": {
+            "candidate": "jev_baseline",
+            "reference": "hussi_session_control",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -19.270140983280726,
+            "median_paired_reference_over_candidate": 0.9552635707221235,
+            "ratio_of_medians_reference_over_candidate": 0.9519871118993775,
+            "task_cluster_bootstrap_95_ci_ms": [-38.20337459183065, 2.107644992065616],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 4021345849,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate__vs__hussi_session_control": {
+            "candidate": "jev_candidate",
+            "reference": "hussi_session_control",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -36.331407507532276,
+            "median_paired_reference_over_candidate": 0.919792746766483,
+            "ratio_of_medians_reference_over_candidate": 0.9119185591031387,
+            "task_cluster_bootstrap_95_ci_ms": [-46.125222476621275, -20.403906783394685],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3994319331,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__hussi_session_control": {
+            "candidate": "jev_candidate_cold",
+            "reference": "hussi_session_control",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -98.00964599708095,
+            "median_paired_reference_over_candidate": 0.805979135924751,
+            "ratio_of_medians_reference_over_candidate": 0.8034794767308371,
+            "task_cluster_bootstrap_95_ci_ms": [-113.0042559816502, -80.3487730154302],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 742920000,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_original__vs__hussi_session_control": {
+            "candidate": "hussi_original",
+            "reference": "hussi_session_control",
+            "paired_observations": 96,
+            "unique_tasks": 48,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -50.38650850474369,
+            "median_paired_reference_over_candidate": 0.8908826964877483,
+            "ratio_of_medians_reference_over_candidate": 0.905578558552392,
+            "task_cluster_bootstrap_95_ci_ms": [-62.681363616502495, -26.517877500737086],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2075529044,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          }
+        },
+        "skill": {
+          "jev_candidate__vs__jev_baseline": {
+            "candidate": "jev_candidate",
+            "reference": "jev_baseline",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -11.695964494720101,
+            "median_paired_reference_over_candidate": 0.9744735764090033,
+            "ratio_of_medians_reference_over_candidate": 0.9656164672201341,
+            "task_cluster_bootstrap_95_ci_ms": [-28.609932916879185, 5.07530098548159],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3803855123,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__jev_baseline": {
+            "candidate": "jev_candidate_cold",
+            "reference": "jev_baseline",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -90.94640349212568,
+            "median_paired_reference_over_candidate": 0.8247908968877123,
+            "ratio_of_medians_reference_over_candidate": 0.840574943396394,
+            "task_cluster_bootstrap_95_ci_ms": [-99.97710901370738, -61.958014499396086],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 4172931528,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_original__vs__jev_baseline": {
+            "candidate": "hussi_original",
+            "reference": "jev_baseline",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -34.61304550000932,
+            "median_paired_reference_over_candidate": 0.9252618007452327,
+            "ratio_of_medians_reference_over_candidate": 0.9512508596315002,
+            "task_cluster_bootstrap_95_ci_ms": [-41.9548400095664, -16.213074966799468],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3896467887,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_session_control__vs__jev_baseline": {
+            "candidate": "hussi_session_control",
+            "reference": "jev_baseline",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 17.822014502598904,
+            "median_paired_reference_over_candidate": 1.045798549463176,
+            "ratio_of_medians_reference_over_candidate": 1.0503851930733177,
+            "task_cluster_bootstrap_95_ci_ms": [-1.929097983520478, 33.630260499194264],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3118380390,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_baseline__vs__hussi_original": {
+            "candidate": "jev_baseline",
+            "reference": "hussi_original",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 34.61304550000932,
+            "median_paired_reference_over_candidate": 1.0807789106273082,
+            "ratio_of_medians_reference_over_candidate": 1.051247407426664,
+            "task_cluster_bootstrap_95_ci_ms": [16.213074966799468, 41.687983510200866],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 4229725284,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate__vs__hussi_original": {
+            "candidate": "jev_candidate",
+            "reference": "hussi_original",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 16.056626496720128,
+            "median_paired_reference_over_candidate": 1.0401610602893174,
+            "ratio_of_medians_reference_over_candidate": 1.0151018077336602,
+            "task_cluster_bootstrap_95_ci_ms": [-10.361636494053528, 36.830769502557814],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 81512021,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__hussi_original": {
+            "candidate": "jev_candidate_cold",
+            "reference": "hussi_original",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -60.090924496762455,
+            "median_paired_reference_over_candidate": 0.8836156434395176,
+            "ratio_of_medians_reference_over_candidate": 0.883652229993274,
+            "task_cluster_bootstrap_95_ci_ms": [-79.94212498306297, -28.98955999989994],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2322841088,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_session_control__vs__hussi_original": {
+            "candidate": "hussi_session_control",
+            "reference": "hussi_original",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 50.38650850474369,
+            "median_paired_reference_over_candidate": 1.122558844177215,
+            "ratio_of_medians_reference_over_candidate": 1.104214711017681,
+            "task_cluster_bootstrap_95_ci_ms": [25.87319299345836, 64.1011199913919],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 553839509,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_baseline__vs__hussi_session_control": {
+            "candidate": "jev_baseline",
+            "reference": "hussi_session_control",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -17.822014502598904,
+            "median_paired_reference_over_candidate": 0.9562073056784346,
+            "ratio_of_medians_reference_over_candidate": 0.9520316990323371,
+            "task_cluster_bootstrap_95_ci_ms": [-33.88805051508825, 1.929097983520478],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3430011123,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate__vs__hussi_session_control": {
+            "candidate": "jev_candidate",
+            "reference": "hussi_session_control",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -29.50073851388879,
+            "median_paired_reference_over_candidate": 0.9272676514765472,
+            "ratio_of_medians_reference_over_candidate": 0.9192974859011872,
+            "task_cluster_bootstrap_95_ci_ms": [-43.726645002607256, -14.719862505444326],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 3781254793,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "jev_candidate_cold__vs__hussi_session_control": {
+            "candidate": "jev_candidate_cold",
+            "reference": "hussi_session_control",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -100.59468550025485,
+            "median_paired_reference_over_candidate": 0.7972947889930009,
+            "ratio_of_medians_reference_over_candidate": 0.8002539915256796,
+            "task_cluster_bootstrap_95_ci_ms": [-112.72235549404286, -84.84782499726862],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 1934523499,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          },
+          "hussi_original__vs__hussi_session_control": {
+            "candidate": "hussi_original",
+            "reference": "hussi_session_control",
+            "paired_observations": 80,
+            "unique_tasks": 40,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": -50.38650850474369,
+            "median_paired_reference_over_candidate": 0.8908826964877483,
+            "ratio_of_medians_reference_over_candidate": 0.9056209721009484,
+            "task_cluster_bootstrap_95_ci_ms": [-63.366015965584666, -25.87319299345836],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 153675084,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          }
+        }
+      },
+      "all_recorded_invariants_passed": true,
+      "window": {
+        "started_at": "2026-09-23T17:10:46.794683+00:00",
+        "last_attempt_recorded_at": "2026-09-23T17:14:37.799508+00:00",
+        "summary_written_at": "2026-09-23T17:14:38.595530+00:00",
+        "end_basis": "Summary modification time approximates completion; attempt timestamps precede dispatch."
+      },
+      "authoring_provenance": null,
+      "provenance": {
+        "freeze_sha256": "c52f07a579a05f3252f12363f3ee5b5774a2e62f14c2f3181ac2e35274eaade7",
+        "runner_sha256": "c0d41148dcb56146cee07d0ac1d7a373d898773ef7454576f24bc6770eafffe4",
+        "runner_family": "default_session_memory_index",
+        "tasks_sha256": "70298b7ce131f85d22684b48763a45679d34eef4179a6e8ce2d2e2d69164edf4",
+        "original_catalog_sha256": "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
+        "normalized_catalog_sha256": "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
+        "runtime_sha256": {
+          "baseline": {
+            "jev_advisor.py": "c0487ad6b207a83df2e759574815422a2f03630cc3bdbc1dbe242535489b779d",
+            "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "bcc5fc9a42af9b68d7a22e0568fc3123ffb091f77aa2f3caf0bda9ddf9e5088f"
+          },
+          "candidate": {
+            "jev_advisor.py": "17b570a8c71a156d4d9fe9c1301a1c577f07dc46bdcf2a8ae41b956d63314a78",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          }
+        },
+        "product_support_sha256": "bbe02f9d9b8bb95260efc3d9bc392b74ce599fa1cdc7ca4c4e157afa6ec8df4e",
+        "compare_support_sha256": "5ab2f8d62d9629f8c21fd2e4683fc1fe42b183b79f449b3f73401608003fe6b1",
+        "results_sha256": "b75f5db4c59935f65425865bda587e0ea5626d1d9ffe89017d267b79fc94119f",
+        "ledger_sha256": "25be340791e017b1bfa9a7e26e6baa61ed34dfd8a086459383a25146993937d2",
+        "summary_sha256": "fece5b28631e9efebe352c6930fcb531416771b416298d99f947c44cf318633b",
+        "hussi_revision": "652953a0cbb423d4bb7f62de83db15ad4ca9b16e"
+      }
+    },
+    {
+      "study_id": "memo-mixed100",
+      "title": "Session-index regression on 100 mixed tasks",
+      "scope": "existing_task_regression",
+      "role": "qualification",
+      "classification": "complete_valid_comparison",
+      "comparison_valid": true,
+      "cpu_overlap_disclosed": false,
+      "notes": [],
+      "task_count": 100,
+      "repetitions": 2,
+      "arms": ["jev_baseline", "jev_candidate"],
+      "category_counts": {
+        "skill": 20,
+        "tool": 20,
+        "compound": 40,
+        "none": 10,
+        "clarify": 10
+      },
+      "language_counts": {
+        "de": 50,
+        "en": 40,
+        "mixed": 10
+      },
+      "catalog_records": 718,
+      "normalized_catalog_kind_counts": {
+        "tool": 586,
+        "skill": 132
+      },
+      "planned_executions": 400,
+      "completed_executions": 400,
+      "missing_executions": 0,
+      "recorded_api_attempts": 612,
+      "confirmed_dispatched_requests": 612,
+      "attempts_not_dispatched": 0,
+      "attempts_with_unknown_dispatch": 0,
+      "orphan_attempts_without_completed_observation": 0,
+      "orphan_attempts_by_arm": {
+        "jev_baseline": 0,
+        "jev_candidate": 0
+      },
+      "unverified_orphan_response_files": 0,
+      "harness_retries": 0,
+      "halt_reason": null,
+      "provider_http_status_counts": {
+        "200": 612
+      },
+      "error_codes": {
+        "inconsistent_initial_choices": 7
+      },
+      "session_budget_seconds": 8,
+      "requested_model": "jev-1.13.0",
+      "response_reported_models": {
+        "jev-1.13.0": 612
+      },
+      "resolved_provider_backend_revision": null,
+      "arm_source": {
+        "jev_baseline": "baseline",
+        "jev_candidate": "candidate"
+      },
+      "arm_connection_lifetime": {
+        "jev_baseline": "one repetition",
+        "jev_candidate": "one repetition"
+      },
+      "model_limits_by_source": {
+        "baseline": {
+          "MODEL": "jev-1.13.0",
+          "MAX_CANDIDATES": 240,
+          "MAX_QUERY_CHARS": 16000,
+          "MAX_REQUESTS": 3,
+          "TIMEOUT_SECONDS": 30
+        },
+        "candidate": {
+          "MODEL": "jev-1.13.0",
+          "MAX_CANDIDATES": 240,
+          "MAX_QUERY_CHARS": 16000,
+          "MAX_REQUESTS": 3,
+          "TIMEOUT_SECONDS": 30
+        }
+      },
+      "session_memory_index_enabled_by_arm": {
+        "jev_baseline": false,
+        "jev_candidate": true
+      },
+      "groups": {
+        "all": {
+          "jev_baseline": {
+            "n": 200,
+            "completed": 200,
+            "missing": 0,
+            "correct": 174,
+            "errors": 4,
+            "invariant_failures": 0,
+            "timed_observations": 200,
+            "median_ms": 666.4879964955617,
+            "p95_ms": 1734.8820839833934,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 200,
+              "reported_observations": 200,
+              "status_counts": {
+                "disabled": 200
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 305,
+            "confirmed_dispatched_requests": 305,
+            "request_bytes_per_attempt": {
+              "n": 305,
+              "median": 66507,
+              "p95": 81669,
+              "total": 21387798
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 305,
+              "median": 20255,
+              "p95": 23567,
+              "total": 6421907
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 200,
+            "completed": 200,
+            "missing": 0,
+            "correct": 173,
+            "errors": 3,
+            "invariant_failures": 0,
+            "timed_observations": 200,
+            "median_ms": 575.9659570030635,
+            "p95_ms": 1623.2852380198892,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 200,
+              "reported_observations": 200,
+              "status_counts": {
+                "miss": 5,
+                "hit": 195
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.975,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 200,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 1361858872
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 307,
+            "confirmed_dispatched_requests": 307,
+            "request_bytes_per_attempt": {
+              "n": 307,
+              "median": 66507,
+              "p95": 81669,
+              "total": 21551091
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 307,
+              "median": 20255,
+              "p95": 23567,
+              "total": 6468816
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        },
+        "clarify": {
+          "jev_baseline": {
+            "n": 20,
+            "completed": 20,
+            "missing": 0,
+            "correct": 20,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 20,
+            "median_ms": 631.8192885082681,
+            "p95_ms": 794.8496940080076,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 20,
+              "reported_observations": 20,
+              "status_counts": {
+                "disabled": 20
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 20,
+            "confirmed_dispatched_requests": 20,
+            "request_bytes_per_attempt": {
+              "n": 20,
+              "median": 66225.5,
+              "p95": 67253,
+              "total": 1318388
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 20,
+              "median": 20163.0,
+              "p95": 20464,
+              "total": 402994
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 20,
+            "completed": 20,
+            "missing": 0,
+            "correct": 20,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 20,
+            "median_ms": 523.9873824903043,
+            "p95_ms": 618.8209600222763,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 20,
+              "reported_observations": 20,
+              "status_counts": {
+                "hit": 19,
+                "miss": 1
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.95,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 20,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 136185904
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 20,
+            "confirmed_dispatched_requests": 20,
+            "request_bytes_per_attempt": {
+              "n": 20,
+              "median": 66225.5,
+              "p95": 67253,
+              "total": 1318388
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 20,
+              "median": 20163.0,
+              "p95": 20464,
+              "total": 402994
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        },
+        "compound": {
+          "jev_baseline": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 58,
+            "errors": 4,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 1232.8701414953684,
+            "p95_ms": 1804.9073639849667,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 80,
+              "reported_observations": 80,
+              "status_counts": {
+                "disabled": 80
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 185,
+            "confirmed_dispatched_requests": 185,
+            "request_bytes_per_attempt": {
+              "n": 185,
+              "median": 77284,
+              "p95": 81684,
+              "total": 13610018
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 185,
+              "median": 22729,
+              "p95": 23600,
+              "total": 4031471
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 80,
+            "completed": 80,
+            "missing": 0,
+            "correct": 57,
+            "errors": 3,
+            "invariant_failures": 0,
+            "timed_observations": 80,
+            "median_ms": 1132.1426775102736,
+            "p95_ms": 1782.5668879959267,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 80,
+              "reported_observations": 80,
+              "status_counts": {
+                "miss": 4,
+                "hit": 76
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.95,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 80,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 544743568
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 187,
+            "confirmed_dispatched_requests": 187,
+            "request_bytes_per_attempt": {
+              "n": 187,
+              "median": 77301,
+              "p95": 81684,
+              "total": 13773311
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 187,
+              "median": 22738,
+              "p95": 23600,
+              "total": 4078380
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        },
+        "none": {
+          "jev_baseline": {
+            "n": 20,
+            "completed": 20,
+            "missing": 0,
+            "correct": 20,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 20,
+            "median_ms": 617.9174580029212,
+            "p95_ms": 741.605355986394,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 20,
+              "reported_observations": 20,
+              "status_counts": {
+                "disabled": 20
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 20,
+            "confirmed_dispatched_requests": 20,
+            "request_bytes_per_attempt": {
+              "n": 20,
+              "median": 65779.0,
+              "p95": 67544,
+              "total": 1303786
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 20,
+              "median": 20106.5,
+              "p95": 20463,
+              "total": 399644
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 20,
+            "completed": 20,
+            "missing": 0,
+            "correct": 20,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 20,
+            "median_ms": 511.34800200816244,
+            "p95_ms": 679.537388990866,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 20,
+              "reported_observations": 20,
+              "status_counts": {
+                "hit": 20
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 1.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 20,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 136185872
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 20,
+            "confirmed_dispatched_requests": 20,
+            "request_bytes_per_attempt": {
+              "n": 20,
+              "median": 65779.0,
+              "p95": 67544,
+              "total": 1303786
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 20,
+              "median": 20106.5,
+              "p95": 20463,
+              "total": 399644
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        },
+        "skill": {
+          "jev_baseline": {
+            "n": 40,
+            "completed": 40,
+            "missing": 0,
+            "correct": 40,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 40,
+            "median_ms": 584.0914374857675,
+            "p95_ms": 713.3028059906792,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 40,
+              "reported_observations": 40,
+              "status_counts": {
+                "disabled": 40
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 40,
+            "confirmed_dispatched_requests": 40,
+            "request_bytes_per_attempt": {
+              "n": 40,
+              "median": 64057.0,
+              "p95": 66786,
+              "total": 2550274
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 40,
+              "median": 19791.5,
+              "p95": 20285,
+              "total": 789976
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 40,
+            "completed": 40,
+            "missing": 0,
+            "correct": 40,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 40,
+            "median_ms": 521.0626419866458,
+            "p95_ms": 698.5806989832781,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 40,
+              "reported_observations": 40,
+              "status_counts": {
+                "hit": 40
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 1.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 40,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 272371768
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 40,
+            "confirmed_dispatched_requests": 40,
+            "request_bytes_per_attempt": {
+              "n": 40,
+              "median": 64057.0,
+              "p95": 66786,
+              "total": 2550274
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 40,
+              "median": 19791.5,
+              "p95": 20285,
+              "total": 789976
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        },
+        "tool": {
+          "jev_baseline": {
+            "n": 40,
+            "completed": 40,
+            "missing": 0,
+            "correct": 36,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 40,
+            "median_ms": 593.9902620011708,
+            "p95_ms": 689.2506250005681,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 40,
+              "reported_observations": 40,
+              "status_counts": {
+                "disabled": 40
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 0.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 0,
+                "median": null,
+                "p95": null,
+                "total": 0
+              },
+              "peak_retained_index_bytes": null,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 40,
+            "confirmed_dispatched_requests": 40,
+            "request_bytes_per_attempt": {
+              "n": 40,
+              "median": 65720.5,
+              "p95": 67461,
+              "total": 2605332
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 40,
+              "median": 20026.0,
+              "p95": 20453,
+              "total": 797822
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          },
+          "jev_candidate": {
+            "n": 40,
+            "completed": 40,
+            "missing": 0,
+            "correct": 36,
+            "errors": 0,
+            "invariant_failures": 0,
+            "timed_observations": 40,
+            "median_ms": 509.5098720048554,
+            "p95_ms": 607.4386349937413,
+            "index_reuse": {
+              "applicable": true,
+              "completed_observations": 40,
+              "reported_observations": 40,
+              "status_counts": {
+                "hit": 40
+              },
+              "bypass_reason_counts": {},
+              "hit_fraction_of_completed_observations": 1.0,
+              "retained_index_bytes_per_reported_memory_observation": {
+                "n": 40,
+                "median": 6809296.0,
+                "p95": 6809308,
+                "total": 272371760
+              },
+              "peak_retained_index_bytes": 6809308,
+              "retained_size_scope": "Estimated retained Python object graph, not process RSS. Status counts include all completed outcomes; missing telemetry is not a miss."
+            },
+            "attempt_metric_scope": "completed_observations_only",
+            "orphan_recorded_api_attempts": 0,
+            "recorded_api_attempts": 40,
+            "confirmed_dispatched_requests": 40,
+            "request_bytes_per_attempt": {
+              "n": 40,
+              "median": 65720.5,
+              "p95": 67461,
+              "total": 2605332
+            },
+            "provider_input_tokens_per_reported_attempt": {
+              "n": 40,
+              "median": 20026.0,
+              "p95": 20453,
+              "total": 797822
+            },
+            "attempts_without_reported_input_tokens": 0,
+            "provider_failure_observations": 0
+          }
+        }
+      },
+      "changes_vs_concurrent_baseline": {
+        "jev_candidate": {
+          "reference": "jev_baseline",
+          "lost_correct_observations": [
+            {
+              "case_id": "r058",
+              "repetition": 1,
+              "category": "compound"
+            }
+          ],
+          "gained_correct_observations": []
+        }
+      },
+      "matched_pairwise_comparisons": {
+        "all": {
+          "jev_candidate__vs__jev_baseline": {
+            "candidate": "jev_candidate",
+            "reference": "jev_baseline",
+            "paired_observations": 200,
+            "unique_tasks": 100,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 80.73285347199999,
+            "median_paired_reference_over_candidate": 1.1192677295700173,
+            "ratio_of_medians_reference_over_candidate": 1.1571656074319279,
+            "task_cluster_bootstrap_95_ci_ms": [61.62930399295874, 89.2682774378045],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 2804471608,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          }
+        },
+        "skill": {
+          "jev_candidate__vs__jev_baseline": {
+            "candidate": "jev_candidate",
+            "reference": "jev_baseline",
+            "paired_observations": 40,
+            "unique_tasks": 20,
+            "scope": "All paired outcomes, including errors and wrong selections; no both-correct filter.",
+            "median_reference_minus_candidate_ms": 69.43319698621053,
+            "median_paired_reference_over_candidate": 1.1399640177411654,
+            "ratio_of_medians_reference_over_candidate": 1.1209620310886481,
+            "task_cluster_bootstrap_95_ci_ms": [47.53367434204847, 93.13509651110508],
+            "bootstrap_draws": 2000,
+            "bootstrap_seed": 4004621938,
+            "bootstrap_method": "Resample tasks with replacement, retain all repetitions, median paired difference; linear percentile endpoints."
+          }
+        }
+      },
+      "all_recorded_invariants_passed": true,
+      "window": {
+        "started_at": "2026-09-23T17:14:51.340399+00:00",
+        "last_attempt_recorded_at": "2026-09-23T17:20:42.653471+00:00",
+        "summary_written_at": "2026-09-23T17:20:44.020199+00:00",
+        "end_basis": "Summary modification time approximates completion; attempt timestamps precede dispatch."
+      },
+      "authoring_provenance": null,
+      "provenance": {
+        "freeze_sha256": "e0a2881001d4d8ded265475bf343b4b3b5773c004670c6a4fa212d6b87c11c2d",
+        "runner_sha256": "c0d41148dcb56146cee07d0ac1d7a373d898773ef7454576f24bc6770eafffe4",
+        "runner_family": "default_session_memory_index",
+        "tasks_sha256": "f55b258b3353e61af3a8ab3fdc7067d32dc9cfbafc82dbf85a2beac387df822b",
+        "original_catalog_sha256": "1c462890032404a9c64b9481299ca7c33af82b1ca33e0d83ae8db26eb9fac940",
+        "normalized_catalog_sha256": "45e7fecf7c8cf562ec0bd47c36aab353b093642c1c96e3a446f8ffb1e356388e",
+        "runtime_sha256": {
+          "baseline": {
+            "jev_advisor.py": "c0487ad6b207a83df2e759574815422a2f03630cc3bdbc1dbe242535489b779d",
+            "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "bcc5fc9a42af9b68d7a22e0568fc3123ffb091f77aa2f3caf0bda9ddf9e5088f"
+          },
+          "candidate": {
+            "jev_advisor.py": "17b570a8c71a156d4d9fe9c1301a1c577f07dc46bdcf2a8ae41b956d63314a78",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          }
+        },
+        "product_support_sha256": "bbe02f9d9b8bb95260efc3d9bc392b74ce599fa1cdc7ca4c4e157afa6ec8df4e",
+        "compare_support_sha256": "5ab2f8d62d9629f8c21fd2e4683fc1fe42b183b79f449b3f73401608003fe6b1",
+        "results_sha256": "a780f956710001430c161440b892695478a83c9d1c5ddf3ee9554bb45c185a69",
+        "ledger_sha256": "a31b31ba655bfbd1547519cde85f6e26f6abb8b648c412779a872cefb8ced285",
+        "summary_sha256": "a027a690bb7ac6ccc7aba43c568d228ea2571a053076e75a464126c43862adda",
+        "hussi_revision": null
+      }
+    }
+  ]
+}

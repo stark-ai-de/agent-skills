@@ -9,7 +9,7 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 - **Skills and tools together.** Compare an installed workflow with an available MCP or host tool for the task you want to accomplish.
 - **Clear outcomes.** Selection, no suitable capability, clarification and provider failures stay distinct. Prematurely stopped compound plans remain incomplete.
 - **Compact advice, complete selected descriptions.** Keep the full diagnostic receipt locally and return only relevant recommendations, conditions and coverage to the host.
-- **Reuse connections across tasks.** An optional owner-process interface keeps HTTPS ready while each task brings a fresh host catalog.
+- **Reuse preparation across tasks.** An owner-process interface keeps HTTPS ready and reuses a bounded search index while each task brings a fresh host catalog.
 - **Inspect the decision boundary.** Candidate coverage, requests, timing and provider usage are recorded. Your host controls loading, permissions and execution.
 
 ## Install and use
@@ -36,13 +36,13 @@ This release candidate also prepares the skill for **Codex in stark AI Developer
 
 ## Repeated advice and automatic integration
 
-For a host integration, use the [Python/NDJSON session interface](../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md). It reuses a healthy HTTPS connection across different tasks, keeps credentials local and accepts fresh eligible capabilities with every request. Single CLI invocations also reuse their connection for compound follow-ups.
+For a host integration, use the [Python/NDJSON session interface](../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md). It reuses a healthy HTTPS connection and an unchanged catalog’s derived search index across tasks, keeps credentials local and validates fresh eligible capabilities with every request. It does not cache model decisions. Single CLI invocations also reuse their connection for compound follow-ups.
 
 **Automatic interception still needs host qualification.** The session runtime supplies the integration building block; installing the skill or plugin does not install a pre-prompt hook. Current Codex discovery interfaces do not expose every effective skill and tool eligibility restriction. A host must supply authoritative inventory, demonstrate the callback and advice delivery, and retain native fallback before automatic use is claimed.
 
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 7,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
+**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 11,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
 
 **[Why routing speeds differ](benchmarks/README.md#why-routing-speeds-differ):** a short technical table compares Hussi9, Jev Fresh Connection and reusable Jev sessions, including confidence thresholds and connection reuse.
 
@@ -62,7 +62,7 @@ Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-a
 | stark AI Developer     | `1.3.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
 | Catalog                | Next generated minor after `0.22.0` | Release Please owns the final version and changelog; no manual root version bump |
 
-The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection reuse needs a retained process.
+The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection and index reuse need a retained process.
 
 ### Maintainer steps
 
@@ -74,6 +74,6 @@ The source allowlist, generated portable copy, OpenAI listing and submission wor
 
 ### Release-note draft
 
-> Adds Jev Capability Advisor 0.1.0 to the public catalog and stark AI Developer 1.3.0. It recommends available skills and MCP tools, supports local inspection and provides a reusable session interface for host integrations. The compact initial request selected in 406 ms versus 433 ms for our previous format in an interleaved single-skill comparison, with 80/80 correct accepted selections. An earlier revision measured 0.733 s versus 4.314 s for the native GPT-6 Astra low selector in separate runs. These are separate selection studies, not end-to-end task timings. Hosts retain activation, permissions and execution; automatic interception needs separate qualification and compound advice remains experimental.
+> Adds Jev Capability Advisor 0.1.0 to the catalog and stark AI Developer 1.3.0. It recommends available skills and MCP tools and provides a reusable host-session interface. Bounded index reuse reduced median selection time by 13.6% in the 718-entry mixed catalog; the smaller skill cohort was 3.6% slower, so this is a workload-specific gain. Current Session selection measured 0.443 s versus 4.226 s for native GPT-6 Astra low in separate runs. All observed failures remain reported. Hosts retain permissions and execution; automatic interception and whole-task utility need separate qualification.
 
 Use this draft after promotion is approved. The exact version, changelog and release subjects come from the reviewed generated release candidate; the [publishing runbook](../../publishing.md#release-artifacts) owns packaging and publication procedures.

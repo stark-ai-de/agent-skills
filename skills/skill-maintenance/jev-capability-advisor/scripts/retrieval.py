@@ -61,12 +61,20 @@ def grams(value):
     return _grams_from_words(tokenize(value))
 
 
-def _grams_from_words(words):
+def _grams_from_words(words, word_grams=None):
     result = set()
-    for word in words:
+    for word in set(words):
         if len(word) >= 4:
-            padded = '^' + word + '$'
-            result.update(padded[i:i + 3] for i in range(len(padded) - 2))
+            if word_grams is None:
+                padded = '^' + word + '$'
+                result.update(padded[i:i + 3] for i in range(len(padded) - 2))
+            else:
+                cached = word_grams.get(word)
+                if cached is None:
+                    padded = '^' + word + '$'
+                    cached = tuple(padded[i:i + 3] for i in range(len(padded) - 2))
+                    word_grams[word] = cached
+                result.update(cached)
     return result
 
 
@@ -155,6 +163,7 @@ class CandidateIndex:
         lengths = []
         # Repeated catalog words share morphology only within this build.
         stems = {}
+        word_grams = {}
         for i, item in enumerate(self.catalog):
             description = item.get('description', item.get('brief', ''))
             if not isinstance(description, str):
@@ -168,7 +177,7 @@ class CandidateIndex:
             counts.append(counter)
             lengths.append(sum(counter.values()))
             # The space between fields is a token boundary; reuse their tokens.
-            for gram in _grams_from_words(name_words[i] + description_words):
+            for gram in _grams_from_words(name_words[i] + description_words, word_grams):
                 self.gram_postings[gram].append(i)
         average = sum(lengths) / max(1, len(lengths)) or 1
         document_frequency = Counter(term for counter in counts for term in counter)
@@ -267,18 +276,19 @@ class CandidateIndex:
         self.gram_postings = restored_grams
         self.gram_weights = dict(weights)
 
-    def _scores(self, query):
+    def _scores(self, query, *, query_tokens=None):
+        query_tokens = tokenize(query) if query_tokens is None else query_tokens
         scores = [0.0] * len(self.catalog)
-        for term in sorted(set(terms(query))):
+        for term in sorted(set(_terms_from_words(query_tokens))):
             for i, score in self.postings.get(term, ()):
                 scores[i] += score
-        query_grams = grams(query)
+        query_grams = _grams_from_words(query_tokens)
         denominator = max(1, len(query_grams)) ** 0.5
         for gram in sorted(query_grams):
             contribution = 0.22 * self.gram_weights.get(gram, 0) / denominator
             for i in self.gram_postings.get(gram, ()):
                 scores[i] += contribution
-        normalized_query = ' ' + ' '.join(tokenize(query)) + ' '
+        normalized_query = ' ' + ' '.join(query_tokens) + ' '
         for i, identifier in enumerate(self.name_phrases):
             if identifier and ' ' + identifier + ' ' in normalized_query:
                 scores[i] += 25
@@ -290,14 +300,15 @@ class CandidateIndex:
         limit = min(MAX_CANDIDATES, max(0, int(limit)), len(self.catalog))
         if not limit:
             return []
-        scores = self._scores(query)
+        query_tokens = tokenize(query)
+        scores = self._scores(query, query_tokens=query_tokens)
         key = lambda i: (-scores[i], self.catalog[i]['id'])
         selected = sorted(self.skills, key=key)[:limit]
         selected_set = set(selected)
         capacity = limit - len(selected)
         tool_capacity = capacity
         if self.policy == 'balanced' and capacity:
-            normalized = ' ' + ' '.join(tokenize(query)) + ' '
+            normalized = ' ' + ' '.join(query_tokens) + ' '
             # Explicit full host IDs/names take precedence over provider quotas.
             exact = [i for i in self.tools if any(
                 ' ' + ' '.join(tokenize(self.catalog[i][field])) + ' ' in normalized
@@ -306,8 +317,8 @@ class CandidateIndex:
                 selected.append(i)
                 selected_set.add(i)
                 capacity -= 1
-        normalized_query = ' ' + ' '.join(tokenize(query)) + ' '
-        query_words = set(tokenize(query))
+        normalized_query = ' ' + ' '.join(query_tokens) + ' '
+        query_words = set(query_tokens)
         matching = []
         for family, aliases in self.aliases.items():
             if any((' ' + alias + ' ' in normalized_query or alias in query_words)

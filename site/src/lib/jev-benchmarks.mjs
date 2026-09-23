@@ -1,3 +1,5 @@
+import { sessionComparison } from "./jev-session-benchmarks.mjs";
+import resumedEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json" with { type: "json" };
 import session from "../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json" with { type: "json" };
 import development from "../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json" with { type: "json" };
 import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json" with { type: "json" };
@@ -22,6 +24,7 @@ const runCounts = {
   sessionDevelopment: development.recorded_executions,
   nativeSupplement: current.experiment.new_observations,
   compactDevelopment: compactEvidence.completed_executions,
+  resumedQualification: resumedEvidence.benchmark_totals.completed_executions,
 };
 
 // This later interleaved comparison has no native arm. Never reuse its timings in the old ratios.
@@ -124,7 +127,7 @@ const rows = Object.entries(rowLabels)
   })
   .sort((left, right) => left.medianSeconds - right.medianSeconds);
 
-export const jevBenchmarks = {
+const benchmarkHistory = {
   compact,
   current: {
     evidence: current,
@@ -248,4 +251,16 @@ export const jevBenchmarks = {
   compactCases: evidence.compact_output.cases,
   preparationReduction: optimization.prepare_request_reduction_percent,
   preparationPairs: optimization.samples_per_arm,
+};
+
+const latest = sessionComparison(benchmarkHistory.current);
+runCounts.sessionIndexQualification = latest.evidence.benchmark_totals.completed_executions;
+runCounts.nativeIndexSupplement = latest.nativeEvidence.observations;
+export const jevBenchmarks = {
+  ...benchmarkHistory,
+  archived: benchmarkHistory.current,
+  current: latest,
+  resumed: resumedEvidence,
+  resumedPath: "skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json",
+  totalRuns: sum(Object.values(runCounts)),
 };

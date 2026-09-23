@@ -35,7 +35,7 @@ Return a small, task-specific recommendation from the capabilities actually avai
 
 Choose **Recommend** for a concrete selection request, **Inspect** for candidate inspection, or **Integrate** for a requested host integration. On a bare invocation, ask whether the user wants Recommend, Inspect or Integrate; request the selection task or target host only if it is missing.
 
-**Integrate:** follow the [session integration contract](references/session-integration.md). Use one owner process with a fresh eligible catalog per request and a reusable HTTPS client. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
+**Integrate:** follow the [session integration contract](references/session-integration.md). Use one owner process with a fresh eligible catalog per request, reusable HTTPS and a bounded derived search index. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
 
 1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
@@ -68,10 +68,10 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 - `scripts/jev_advisor.py`: recommendation client; network access only for a fresh requested recommendation. `--output` writes the requested local result file; `--cache-dir` opts in to decision-cache writes; `--index-cache-dir` separately enables local index-cache writes, including during offline inspection.
 - `scripts/retrieval.py`: deterministic candidate retrieval, used by the client. No network or installation.
 - `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
-- `scripts/index_cache.py`: optional private lexical-index cache with validated snapshots, bounded storage and fresh-index fallback.
+- `scripts/index_cache.py`: bounded session-owned lexical-index reuse plus an optional private disk cache; fresh-index fallback on unavailable reuse.
 - `scripts/routing_metadata.py`: validates optional public applicability guidance and creates bounded model-card text.
 - `scripts/https_transport.py`: verified HTTPS with session-scoped connection reuse, bounded responses, proxy fallback and no automatic request replay.
-- `scripts/jev_session.py`: optional owner-process Python/NDJSON interface; reads each task and catalog from its caller and writes bounded advisory IDs to stdout. No inventory cache, listener or host configuration changes.
+- `scripts/jev_session.py`: optional owner-process Python/NDJSON interface; reads each task and catalog from its caller and writes bounded advisory IDs to stdout. Requires fresh inventory; caches derived search data, never decisions or inventory authority. No listener or host configuration changes.
 
 ## Output format
 

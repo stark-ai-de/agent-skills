@@ -2,7 +2,50 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
-## Compact initial selection, 2026-09-23
+## Current bounded Session index, 2026-09-23
+
+The current candidate retains one bounded derived lexical index per owner Session. Every frame supplies and validates current capabilities; alias selection, query search and Jev decisions remain fresh. It keeps the full 200-character initial and 240-character follow-up budgets. `reuse_index=False` / `--no-index-reuse` disables only the index reuse.
+
+| Evidence                                                                         | Complete observations | Result                                                                                                                                                                        |
+| -------------------------------------------------------------------------------- | --------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Five-arm matched skill comparison](benchmarks/session-index-2026-09-23.json)    |                   480 | Session 443 ms, 79/80 skills; previous preparation 428 ms, 80/80. Fresh 509 ms, 79/80; Hussi 449 ms, 76/80; our Hussi transport control 407 ms, 80/80. Every arm: 16/16 NONE. |
+| Mixed 718-entry catalog, 100 tasks × two repetitions × two arms                  |                   400 | Session 576 vs baseline 666 ms, **13.6% lower median**; 173/200 vs 174/200 complete correct results, three vs four model-consistency errors.                                  |
+| [Separate Native supplement](benchmarks/native-index-2026-09-23.json)            |                    96 | GPT-6 Astra low: 4,226 ms, 80/80 skills and 16/16 NONE; zero errors/timeouts/missing timings. **9.54×** ratio of Native to Session medians.                                   |
+| [Recorded-response equivalence](benchmarks/session-index-parity-2026-09-23.json) |   676 offline replays | All 868 request payloads and maps unchanged; all outcomes, including five model errors, retained. Not new live observations.                                                  |
+
+**Adoption decision:** retain the memo as a local-preparation optimization with a workload-dependent total benefit. Local preparation medians fell from 18.89 to 5.99 ms in the small catalog and 72.95 to 15.61 ms in the mixed catalog. Retention is one entry, bounded by 2,000,000 input bytes and 16 MiB of retained Python objects; that is not a peak-memory bound. Cold Session construction includes copying and measuring its index. No decision or disk-index cache is enabled.
+
+**Tradeoffs remain visible:** the small skill cohort is 3.6% slower overall and both live correctness totals are slightly lower. The differing selections use identical payloads/maps; this is consistent with provider variability, not proof of universal accuracy non-regression. The two small-catalog misses select PAIR then STOP for a single task; the mixed miss chooses a different sidebar tool. These remain failed observations. The 676 replay results establish deterministic implementation equivalence, not additional model-quality successes. The four withheld Hussi suggestions named the expected skills but did not reach its 0.8 route threshold.
+
+Fixed-seed, task-cluster bootstrap intervals use 2,000 draws, retaining errors and all repetitions. Paired median time saved versus baseline: mixed 80.73 ms (95% interval 61.63–89.27); small catalog −11.70 ms (−28.61–5.08). The small comparison therefore does not establish a speed gain. Relative to published Hussi the interval also crosses zero; the modified Hussi control remains faster. No worldwide or unqualified fastest claim is supported.
+
+Protocol: 48 existing skill/NONE tasks × two repetitions with randomized task and arm order; the mixed suite is a separate 100-task regression. Every Jev frame validates a fresh catalog. Pooled clients reset per repetition; cold Sessions reset per observation; first connections and first index builds remain included. No warmup, retries or result-conditioned exclusions. The measured default Session path preserves its normal deadline/cleanup behavior. Durable wire/receipt writes remain inside all TypeSafe arm timers.
+
+Native uses the original full-200 baseline preparation plus its model turn, with byte-identical cards and selection rules proven for all 48 inputs and 96 prompts. It runs separately from TypeSafe; process start, capability loading and task execution are excluded. The requested model is `gpt-6-astra`, reasoning `low`; resolved backend identity is not independently visible. Native CLI turns are not a physical HTTP-request count.
+
+Native reported provider-side cached input tokens in 51/96 turns (659,328 of 2,075,371 input tokens). This is prefix-cache usage, not reused decisions; service caching was uncontrolled. Each turn emitted the same pre-turn experimental-feature warning for the isolation flag. The audit separates these warnings from model/selection failures and verifies all 96 event streams.
+
+The current runtime also passed the full repository aggregate and 149 offline tests. Standalone, portable-plugin and OpenAI-plugin archives contain the same 13 canonical skill files. Extracted-package help, offline retrieval, disabled exclusion, two NDJSON frames and EOF cleanup passed with network blocked. Archive validation and two isolated reproducibility builds passed; packaging does not close host-activation or production-utility gates. Exact archive and skill-file hashes are in the [qualification receipt](benchmarks/session-index-parity-2026-09-23.json).
+
+The refreshed-key campaign adds **3,516 completed live benchmark executions**: 2,540 resumed + 880 memo + 96 Native. Its TypeSafe measurements used 4,342 API attempts, plus one separately counted health call. There are zero missing scheduled observations. The cumulative documented ledger is **11,308 completed executions**; 676 replay checks and 149 offline unit tests do not increase this increment. Earlier studies below retain their original scope, dates and source hashes. Current seven-file runtime identity is pinned in the memo study and the parity receipt; site validation rejects drift.
+
+The [production promotion gate](#promotion-gate) and real-host automatic integration qualification remain open. This preparation improvement does not demonstrate faster complete agent tasks.
+
+## Resumed full qualification, 2026-09-23
+
+The refreshed credential completed **2,540 additional benchmark executions and 3,248 API attempts**, with no missing scheduled observations. The separate one-call health probe is excluded from the benchmark count. [All eleven records, source hashes, errors and paired comparisons](benchmarks/resumed-2026-09-23.json) preserve development and qualification separately.
+
+| Experiment                                           | Executions | Result / decision                                                                                |
+| ---------------------------------------------------- | ---------: | ------------------------------------------------------------------------------------------------ |
+| Initial description lengths, 30 tasks × 2 × 5 arms   |        300 | Development only; brief CPU profiling overlapped.                                                |
+| Global 96-character descriptions, 100 tasks × 2 arms |        200 | Reject: 84/100 versus baseline 87/100.                                                           |
+| Rank-dependent descriptions, 100 tasks × 4 arms      |        400 | Rank-16 candidate advances to qualification, not production.                                     |
+| Five-arm skill comparison, 48 tasks × 2 × 5 arms     |        480 | Reject rank-16: 79/80 versus baseline 80/80 skills; 383 versus 382 ms median.                    |
+| Six broader suites, two arms × two repetitions       |      1,160 | Mixed skills/tools, compounds, challenge, restrictions and long context; every failure retained. |
+
+The six suites contain 100, 14, 64, 16, 32 and 64 tasks. The final independently authored 64-task set scored 125/128 for rank-16 versus 126/128 for baseline. Candidate truncation is therefore **not adopted**. Existing reused sets are regressions; new authoring manifests and measurement windows are recorded separately. This report does not add a Native arm or transfer old Native timings into a newer ratio.
+
+## Archived compact initial selection, 2026-09-23
 
 The [eight-cohort evidence](benchmarks/compact-initial-2026-09-23.json) records **1,246 new completed executions / 1,469 API attempts**, raising the audited development total from 6,546 to **7,792**. Seven cohorts have usable comparisons (1,096 executions); all 150 observations in the final cohort received HTTP 402 and are excluded from latency and quality comparisons. Counts include unsuccessful experiments, not just passing tests.
 
@@ -27,7 +70,7 @@ The skill comparison reuses 48 tasks twice with three arms: 80 skill and 16 NONE
 - **Provider rejection:** all 150 later attempts were dispatched once and returned HTTP 402: 120 advisor `http_402` outcomes and 30 Hussi `upstream_error` outcomes. No returned model answers. Their timing/quality fields are null, not zero-performance scores. The status alone does not establish the account-side cause. Further live tests stopped; an authored 32-task follow-up holdout remains unexecuted and uncounted.
 - **Scope:** `jev-1.13.0`, synthetic fixed catalogs, one sequential process, first cold calls included. Provider load/caching and hidden backend revisions remain uncontrolled. Absolute timings are not directly comparable to earlier measurement windows, and no new native speed factor is calculated. Selection qualification does not close the whole-task [promotion gate](#promotion-gate).
 
-The current runtime hash is frozen in `first-hussi48` under `provenance.runtime_sha256.compact_first`. Offline tests additionally pin unchanged follow-up payloads and exercise 240 candidates with full-length Unicode context, activation flags and negative guidance.
+That revision’s runtime hash is frozen in `first-hussi48` under `provenance.runtime_sha256.compact_first`. Offline tests additionally pin unchanged follow-up payloads and exercise 240 candidates with full-length Unicode context, activation flags and negative guidance.
 
 ## Release package qualification after compaction, 2026-09-23
 

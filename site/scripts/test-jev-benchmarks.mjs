@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { jevBenchmarks as bench } from "../src/lib/jev-benchmarks.mjs";
 
@@ -14,8 +13,11 @@ assert.deepEqual(bench.runCounts, {
   sessionDevelopment: 4418,
   nativeSupplement: 96,
   compactDevelopment: 1246,
+  resumedQualification: 2540,
+  sessionIndexQualification: 880,
+  nativeIndexSupplement: 96,
 });
-assert.equal(bench.totalRuns, 7792);
+assert.equal(bench.totalRuns, 11308);
 assert.equal(bench.development.experiment_count, 37);
 assert.equal(
   bench.development.experiments.reduce((n, run) => n + run.recorded_executions, 0),
@@ -25,7 +27,7 @@ assert.equal(
   bench.development.cumulative_recorded_executions +
     bench.runCounts.nativeSupplement +
     bench.runCounts.compactDevelopment,
-  bench.totalRuns,
+  7792,
 );
 assert.equal(new Set(bench.development.experiments.map((run) => run.freeze_sha256)).size, 37);
 assert.equal(bench.tasks, 80);
@@ -47,7 +49,7 @@ const sessionCount = bench.development.experiments.find(
 );
 assert.equal(sessionCount?.recorded_executions, 384);
 
-const current = bench.current;
+const current = bench.archived;
 const data = current.evidence;
 assert.equal(current.defaultId, "jev_session");
 assert.equal(current.baselineId, "native");
@@ -80,10 +82,7 @@ assert.equal(
   bench.development.cumulative_recorded_executions,
 );
 assert.equal(data.count_ledger.new_completed_executions, bench.runCounts.nativeSupplement);
-assert.equal(
-  data.count_ledger.cumulative_recorded_executions,
-  bench.totalRuns - bench.runCounts.compactDevelopment,
-);
+assert.equal(data.count_ledger.cumulative_recorded_executions, 6546);
 assert.deepEqual(data.measurement_dates, ["2026-09-22", "2026-09-23"]);
 assert.equal(data.provenance.dataset_sha256, bench.session.evidence.provenance.dataset_sha256);
 assert.equal(data.provenance.catalog_sha256, bench.session.evidence.provenance.catalog_sha256);
@@ -316,20 +315,7 @@ for (const studyId of [
   assert.deepEqual(changes.lost_correct_observations, []);
   assert.deepEqual(changes.gained_correct_observations, []);
 }
-// Packaging or future refactors must not silently claim this frozen runtime's qualification.
-for (const [file, hash] of Object.entries(compact.study.provenance.runtime_sha256.compact_first)) {
-  const bytes = readFileSync(
-    new URL(
-      `../../skills/skill-maintenance/jev-capability-advisor/scripts/${file}`,
-      import.meta.url,
-    ),
-  );
-  assert.equal(
-    createHash("sha256").update(bytes).digest("hex"),
-    hash,
-    `Compact benchmark revision drift: ${file}`,
-  );
-}
+// This archived runtime is immutable evidence; current source identity is checked in the Session-index suite.
 assert.ok(!("native" in compact.study.groups.all));
 assert.equal(compact.study.completed_executions, 288);
 assert.equal(compact.study.actual_api_attempts, 289);
@@ -346,6 +332,6 @@ for (const row of compact.rows) {
 for (const note of compact.notes) assert.ok(readme.includes(`**${note.title}.** ${note.text}`));
 assert.ok(readme.includes("150-observation cohort received only HTTP 402"));
 assert.ok(readme.includes("historical timings stay separate"));
-console.log(
-  "Compact qualification matches all eight cohorts, exact runtime, failures and documentation.",
-);
+console.log("Compact archive matches all eight cohorts, failures and documentation.");
+
+await import("./test-jev-session-benchmarks.mjs");

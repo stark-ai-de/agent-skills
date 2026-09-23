@@ -5,11 +5,14 @@ import ContextTooltip from "./ContextTooltip.astro";
 
 const number = (value: number) => value.toLocaleString("en-US");
 const comparison = bench.current;
-const compact = bench.compact;
+const optimization = comparison.optimization;
 const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
 const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
 const chartWidth = 540;
 const runs = [
+  { label: "Resumed qualification", count: bench.runCounts.resumedQualification, detail: "10 cohorts; rejected shorter-description variants retained; health probe excluded" },
+  { label: "Session index qualification", count: bench.runCounts.sessionIndexQualification, detail: "480 matched + 400 mixed observations; offline replay excluded" },
+  { label: "Current Native supplement", count: bench.runCounts.nativeIndexSupplement, detail: "48 identical tasks × 2 new Native observations" },
   { label: "Compact selection development", count: bench.runCounts.compactDevelopment, detail: "8 cohorts; includes 150 HTTP 402 rejections, excluded from speed and quality comparisons" },
   { label: "Session and selector development", count: bench.runCounts.sessionDevelopment, detail: "37 completed experiments, including 384 fresh-task comparisons" },
   { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
@@ -95,29 +98,29 @@ const runs = [
         ))}
       </svg>
       <p class="jev-promo__models">Native: {comparison.nativeModel} · reasoning {comparison.nativeReasoning}<br />Jev + Hussi9: {comparison.jevModel}</p>
-      <p class="jev-promo__caption"><strong>Archived comparison · before initial-request compaction.</strong> {comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
+      <p class="jev-promo__caption"><strong>Current Session comparison.</strong> {comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
     </figure>
   </div>
 
   <section class="jev-promo__technical jev-promo__compact" aria-labelledby="jev-compact-title">
     <p class="jev-promo__label">Latest optimization · 2026-09-23</p>
-    <h3 id="jev-compact-title">{compact.title}</h3>
-    <p><strong>{compact.reductionPercent.toFixed(1)}% lower median selection time</strong> than our previous format in the same interleaved run. Both use reusable HTTPS; the compact advisor accepted 80/80 correct skill selections.</p>
-    <div class="jev-promo__table-scroll" role="region" aria-label="Compact initial selection results" tabindex="0">
+    <h3 id="jev-compact-title">{optimization.title}</h3>
+    <p><strong>{optimization.reductionPercent.toFixed(1)}% lower median selection time</strong> across skills, MCP tools, clarification, no match and compound tasks in a {optimization.catalogRecords}-entry catalog. Same inputs and selection rules, reusable HTTPS in both variants.</p>
+    <div class="jev-promo__table-scroll" role="region" aria-label="Session index results" tabindex="0">
       <table>
-        <caption>Skill selection · median · lower is better · 80 observations per variant</caption>
-        <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">Correct accepted selections</th><th scope="col">No match correct</th></tr></thead>
-        <tbody>{compact.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.median_ms.toFixed(0)} ms</td><td>{row.correct}/{row.n}</td><td>{row.none.correct}/{row.none.n}</td></tr>)}</tbody>
+        <caption>Mixed selection · median · lower is better · 200 observations per variant</caption>
+        <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">Complete correct results</th><th scope="col">Errors</th></tr></thead>
+        <tbody>{optimization.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.median_ms.toFixed(0)} ms</td><td>{row.correct}/{row.n}</td><td>{row.errors}</td></tr>)}</tbody>
       </table>
     </div>
     <dl class="jev-promo__technical-mobile">
-      {compact.rows.map((row) => (
-        <div><dt>{row.label}</dt><dd><strong>{row.median_ms.toFixed(0)} ms</strong>Median selection</dd><dd><strong>{row.correct}/{row.n} correct</strong>{row.none.correct}/{row.none.n} no match</dd></div>
+      {optimization.rows.map((row) => (
+        <div><dt>{row.label}</dt><dd><strong>{row.median_ms.toFixed(0)} ms</strong>Median selection</dd><dd><strong>{row.correct}/{row.n} correct</strong>{row.errors} errors retained</dd></div>
       ))}
     </dl>
-    <ul>{compact.notes.map((note) => <li><strong>{note.title}.</strong> {note.text}</li>)}</ul>
-    <p>Our Hussi transport experiment is still {compact.remainingGapMs.toFixed(0)} ms faster here. Same 48 reused tasks × two repetitions, same catalog, randomized task and variant order; {compact.study.requested_model}. No retries or result cache. These later timings do not update the archived native factor.</p>
-    <p class="jev-promo__technical-source"><a href={repoUrl(compact.evidencePath)}>All eight cohorts and failures</a> · <a href={repoUrl(bench.readmePath) + "#smaller-first-choice-full-follow-up-checks"}>Optimization and qualification</a></p>
+    <ul>{optimization.notes.map((note) => <li><strong>{note.title}.</strong> {note.text}</li>)}</ul>
+    <p>The smaller skill-only catalog did not show the same total-speed benefit: Session was {optimization.smallCatalogChangePercent.toFixed(1)}% slower than our previous preparation, with 79/80 versus 80/80 accepted choices. Local preparation fell, while request time increased. These measurements do not establish the fastest skill overall.</p>
+    <p class="jev-promo__technical-source"><a href={repoUrl(comparison.evidencePath)}>Both complete cohorts and paired intervals</a> · <a href={repoUrl(comparison.parityPath)}>Recorded-response equivalence</a></p>
   </section>
 
   <div class="jev-promo__stats">
@@ -133,9 +136,9 @@ const runs = [
       <p>Complete selected descriptions, compact advice. Measured on {bench.compactCases} archived results; bytes, not tokens.</p>
     </div>
     <div>
-      <p class="jev-promo__stat">{bench.preparationReduction.toFixed(0)}<span>%</span></p>
-      <h3>Less local preparation time</h3>
-      <p>Same candidates and requests. {bench.preparationPairs} paired measurements, with no cache required.</p>
+      <p class="jev-promo__stat">{optimization.preparationReductionPercent.toFixed(1)}<span>%</span></p>
+      <h3>Less repeated preparation</h3>
+      <p>Median local preparation in the {optimization.catalogRecords}-entry mixed catalog. Same inputs; first index builds included.</p>
     </div>
   </div>
 
@@ -167,7 +170,7 @@ const runs = [
     <dl>
       <div><dt>Skills + MCP tools</dt><dd>Compare workflows and tools in one supplied catalog.</dd></div>
       <div><dt>Clear outcomes</dt><dd>A recommendation, no match, missing context or a provider error.</dd></div>
-      <div><dt>Reusable sessions</dt><dd>Keep the HTTPS connection; supply a fresh eligible catalog for each task.</dd></div>
+      <div><dt>Reusable sessions</dt><dd>Keep HTTPS and a bounded search index; validate a fresh catalog for each task.</dd></div>
       <div><dt>Offline inspection</dt><dd>Explore candidates without an API key or network call.</dd></div>
       <div><dt>Your host stays in control</dt><dd>Loading, permissions and execution remain with your agent.</dd></div>
     </dl>
@@ -176,17 +179,17 @@ const runs = [
   <details class="jev-promo__details">
     <summary>Results, comparison sources and session requirements</summary>
     <div class="jev-promo__details-body">
-      <p>Forty single-skill tasks and eight no-match tasks, balanced between German and English, each ran twice. The four Jev-based variants, including our experimental adapter, reuse the frozen session study; only the native arm was added later. All skill observations contribute to the median, including incorrect selections. Provider load and caching were uncontrolled; this is a comparison across separate measurement runs.</p>
+      <p>Forty single-skill tasks and eight no-match tasks, balanced between German and English, each ran twice. The four displayed Jev-based variants and our previous preparation ran together in randomized order; Native ran later with identical cards and rules. The previous preparation appears in the evidence, not as an extra headline bar. All skill observations contribute to the median, including incorrect selections. Provider load and caching were uncontrolled; this is a comparison across separate measurement runs.</p>
       <div class="jev-promo__table-scroll" role="region" aria-label="Five-variant selection results" tabindex="0">
         <table>
-          <caption>Same 48 tasks · two observations per variant and task · {comparison.displayedObservations} reused or new observations</caption>
+          <caption>Same 48 tasks · two observations per variant and task · {comparison.displayedObservations} observations</caption>
           <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">p95</th><th scope="col">Correct accepted selections</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
           <tbody>{comparison.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.medianSeconds.toFixed(3)} s</td><td>{row.p95Seconds.toFixed(3)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
         </table>
       </div>
-      <p><a href={comparison.hussiSource}>Hussi9's published Jev selection component</a> uses its original 1.2-second timeout and 0.8 confidence gate. We measured selection, not its complete router, hooks or fallback workflow. The first row shows our modified transport experiment, not a published Hussi9 release. Its 96 archived observations are already counted in the development ledger; displaying them adds no benchmark runs. These results do not establish an overall fastest product.</p>
-      <p>The actual Jev session API received a fresh catalog every time. Session construction, validation, preparation, API calls and evidence recording were timed. Two first cold calls and 94 reused connections are included; no prewarming, result/index cache or retry was used. Native timing includes preparation and the model turn, with CLI startup recorded separately. Native was requested as {comparison.nativeModel} with reasoning {comparison.nativeReasoning}; its resolved backend identity was not independently observable.</p>
-      <p>A host must retain the session and supply authoritative current inventory. Proxies use an unpooled fallback. Skill/plugin installation does not install an automatic hook; a whole-task speedup has not been demonstrated. This task set contains no fresh MCP, compound or clarification cases. The older 80-task comparison below remains separate.</p>
+      <p><a href={comparison.hussiSource}>Hussi9's published Jev selection component</a> uses its original 1.2-second timeout and 0.8 confidence gate. We measured selection, not its complete router, hooks or fallback workflow. The experimental row shows our modified transport adapter, not a published Hussi9 release. Each completed observation is counted once; rendering it again adds no runs. These results do not establish an overall fastest product.</p>
+      <p>The actual Jev session API received a fresh catalog every time. Session construction, validation, preparation, API calls and evidence recording were timed. The first cold call in each repetition is included; no prewarming, result cache, disk index cache or retry was used. Session reuses one bounded derived index; Fresh constructs and closes a real Session every time, including its initial index retention checks. Native timing includes the unchanged baseline preparation and model turn, with CLI startup recorded separately. Native was requested as {comparison.nativeModel} with reasoning {comparison.nativeReasoning}; its resolved backend identity was not independently observable. Native reported provider-side prefix-cache use in 51/96 turns; this is not a decision cache.</p>
+      <p>A host must retain the session and supply authoritative current inventory. Proxies use an unpooled fallback. Skill/plugin installation does not install an automatic hook; a whole-task speedup has not been demonstrated. The headline task set contains skills and no-match cases; the separate 100-task mixed suite covers MCP, compound and clarification outcomes. The older 80-task comparison below remains separate.</p>
       <a href={repoUrl(comparison.evidencePath)}>Read the comparison evidence</a>
     </div>
   </details>
@@ -228,7 +231,7 @@ const runs = [
 
   <footer class="jev-promo__footer">
     <span>Measured {comparison.dateLabel} · Release candidate</span>
-    <div><a href={repoUrl(compact.evidencePath)}>Latest optimization</a><a href={repoUrl(comparison.evidencePath)}>Comparison data</a><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Earlier count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
+    <div><a href={repoUrl(comparison.evidencePath)}>Latest optimization</a><a href={repoUrl(comparison.nativeEvidencePath)}>Native data</a><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Earlier count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
   </footer>
 </section>
 

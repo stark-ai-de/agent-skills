@@ -302,11 +302,19 @@ class SessionTests(unittest.TestCase):
             with session_module.AdvisorSession() as owner:
                 self.assertEqual(owner.recommend(frame())['status'], 'selected')
         stream = io.BytesIO((KEY + '\n').encode())
-        with patch.object(Path, 'open', return_value=stream) as opener:
+        original_open = Path.open
+        key_reads = []
+        def open_fixture_or_source(path, *args, **kwargs):
+            if path == Path('synthetic-key-fixture'):
+                key_reads.append((args, kwargs))
+                return stream
+            return original_open(path, *args, **kwargs)
+        # Runtime fingerprints read source files too; intercept only the key.
+        with patch.object(Path, 'open', autospec=True, side_effect=open_fixture_or_source):
             with session_module.AdvisorSession(key_file=Path('synthetic-key-fixture')) as owner:
                 self.assertEqual(owner.recommend(frame())['status'], 'selected')
                 self.assertEqual(owner.recommend(frame())['status'], 'selected')
-                opener.assert_called_once_with('rb')
+                self.assertEqual(key_reads, [(('rb',), {})])
         with patch.object(Path, 'open', return_value=io.BytesIO(b'x' * 8193)):
             self.assertRaises(session_module.SessionError, session_module._load_key, Path('synthetic-key-fixture'))
 

@@ -4,6 +4,7 @@ No catalog authority, queries, credentials, pickle, or dynamic object state is
 stored. Only explicit validated lexical snapshots are restored by retrieval.py.
 """
 from contextlib import contextmanager
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -193,3 +194,99 @@ def get_or_build(catalog, *, directory=None, full_catalog=None, policy='current'
     index = CandidateIndex(catalog, policy=policy)
     receipt['write_status'] = cache.store(key, index.snapshot())
     return index, receipt
+
+
+# This owner-process memo never enables the optional disk cache. Bound both the
+# identity input and the retained Python container graph; one entry alone would
+# not bound retained memory for large direct-Python catalogs.
+MAX_MEMORY_CATALOG_BYTES = 2_000_000
+MAX_MEMORY_INDEX_BYTES = 16 * 1024 * 1024
+_LEXICAL_FIELDS = ('id', 'name', 'kind', 'description', 'brief',
+                   'use_when', 'keywords', 'parameter_descriptions')
+
+
+def _retained_size(index, ceiling):
+    """Count the private retained container graph, conservatively including keys.
+
+    Runtime classes/functions are shared implementation, not memo-owned state.
+    CandidateIndex owns ordinary containers and scalar lexical values only.
+    """
+    pending, seen, size = [index.__dict__], set(), sys.getsizeof(index)
+    while pending:
+        value = pending.pop()
+        identity = id(value)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        size += sys.getsizeof(value)
+        if size > ceiling:
+            return None
+        if isinstance(value, dict):
+            pending.extend(value.keys())
+            pending.extend(value.values())
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            pending.extend(value)
+    return size
+
+
+class MemoryIndex:
+    """One private derived index for one owner session; never catalog authority.
+
+    The caller validates the current full inventory and consolidates aliases for
+    each query before calling search. Only detached lexical data is retained.
+    Returned records always come from the current caller inventory. Not shared
+    across threads/sessions; AdvisorSession's existing lock owns this instance.
+    """
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self._key = None
+        self._index = None
+        self._index_type = None
+        self._retained_bytes = 0
+
+    def search(self, query, catalog, *, full_catalog, policy='current', limit=240):
+        from retrieval import CandidateIndex
+        receipt = {'backend': 'session_memory', 'status': 'miss',
+                   'retained_entries': 0, 'retained_bytes': 0}
+        if not catalog:
+            self.clear()
+            receipt['status'] = 'empty'
+            return [], receipt
+        try:
+            if len(encode(full_catalog)) > MAX_MEMORY_CATALOG_BYTES:
+                self.clear()
+                receipt['status'] = 'bypass'
+                receipt['reason'] = 'catalog_too_large'
+                return CandidateIndex(catalog, policy=policy).search(query, limit=limit), receipt
+            # Full metadata, ordered query-specific representatives, policy and
+            # implementation/Python/Unicode identity use the existing complete key.
+            key = cache_key(catalog, full_catalog, policy)
+        except (OSError, ValueError, TypeError, UnicodeError, RecursionError, OverflowError):
+            self.clear()
+            receipt['status'] = 'unavailable'
+            return CandidateIndex(catalog, policy=policy).search(query, limit=limit), receipt
+        if self._key == key and self._index_type is CandidateIndex:
+            index = self._index
+            receipt['status'] = 'hit'
+        else:
+            self.clear()
+            # Do not retain caller-owned dictionaries or restrictions/provenance.
+            # Their entire values still participate in the identity above.
+            detached = deepcopy([{field: item[field] for field in _LEXICAL_FIELDS if field in item}
+                                 for item in catalog])
+            index = CandidateIndex(detached, policy=policy)
+            retained_bytes = _retained_size(index, MAX_MEMORY_INDEX_BYTES - sys.getsizeof(key))
+            if retained_bytes is None:
+                receipt.update(status='bypass', reason='index_too_large')
+            else:
+                self._key, self._index, self._index_type = key, index, CandidateIndex
+                self._retained_bytes = retained_bytes + sys.getsizeof(key)
+        # Scores, requested-provider expansion and the query are always fresh.
+        # Never return the private indexed records: current flags, alias identity
+        # and provenance must flow from the freshly validated input objects.
+        current = {item['id']: item for item in catalog}
+        selected = [current[item['id']] for item in index.search(query, limit=limit)]
+        receipt.update(retained_entries=int(self._index is not None), retained_bytes=self._retained_bytes)
+        return selected, receipt

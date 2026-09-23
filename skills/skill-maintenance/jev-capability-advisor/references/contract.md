@@ -85,7 +85,7 @@ Reuse a current host-exported catalog directly instead of copying it into the co
 
 ## Repeated recommendations
 
-A single CLI recommendation reuses one verified HTTPS connection for its conditioned follow-up calls and closes it afterward. Separate CLI processes start with separate connections. The optional [owner-process session interface](session-integration.md) keeps a healthy connection across distinct tasks while requiring a fresh host catalog every time; it does not cache decisions or inventory.
+A single CLI recommendation reuses one verified HTTPS connection for its conditioned follow-up calls and closes it afterward. Separate CLI processes start with separate connections. The optional [owner-process session interface](session-integration.md) keeps a healthy connection across distinct tasks while requiring a fresh host catalog every time; it reuses bounded derived search data, never decisions or inventory authority.
 
 The direct transport retains TLS certificate/hostname verification, bounds body size and I/O time, and never automatically replays a POST after failure. A stale connection fails the current request; native discovery can continue, and the next distinct request may establish a new connection. Configured proxy environments use the standard urllib fallback without pooling, including environments containing only a `NO_PROXY` entry. Native DNS and certificate-store calls remain subject to platform blocking behavior; a host needing a strict wall-clock cutoff owns an outer process deadline.
 
@@ -110,9 +110,13 @@ The helper creates a private POSIX directory (0700) and atomic owner-only files 
 
 On a hit, `cache.status` is `hit`, `request_count` is zero, `requests` and `usage` are empty, and `usage_total` is empty. `elapsed_ms` measures the current call, including retrieval and cache work; original receipt identity/time is under `cache.source_receipt_digest` and `cache.source_started_at`. It is not counted as new provider usage. Cold results expose cache lookup and write status separately. A hit can return without reading an API key; a miss still needs the configured credential.
 
+## Session-owned index reuse
+
+`AdvisorSession` reuses one bounded in-memory lexical index by default; direct `advise` calls do not. The [session contract](session-integration.md#derived-index-reuse) defines identity, invalidation, memory bounds and opt-out. Every valid recommendation validates current metadata and resolves aliases; a nonempty eligible selection calls Jev. Empty or invalid inputs need no model request. This is independent from the explicitly enabled disk and decision caches below; it stores neither decisions nor query text. The internal `memory_index=` and `index_cache_dir=` options are mutually exclusive.
+
 ## Optional local index cache
 
-The lexical index cache is independent from the decision cache and off by default. Explicitly enable it for local inspection or fresh recommendations:
+The on-disk lexical index cache is independent from the decision cache and off by default. Explicitly enable it for local inspection or fresh recommendations:
 
 ```sh
 python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
@@ -120,7 +124,7 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
   --index-cache-dir /path/to/private/jev-index
 ```
 
-Without that option there are no index-cache reads, directory creation, or writes. `--cache-dir` does not implicitly enable it. The Python API accepts `index_cache_dir=` and `retrieval_policy=` on `advise`, `offline_candidates`, and candidate preparation; the default policy is `current`.
+Without that option there are no on-disk index-cache reads, directory creation, or writes. `--cache-dir` does not implicitly enable it. The Python API accepts `index_cache_dir=` and `retrieval_policy=` on `advise`, `offline_candidates`, and candidate preparation; the default policy is `current`.
 
 A cache identity binds the complete host catalog, actual query-specific alias representatives, policy, schema, runtime source fingerprints, and Python/Unicode versions. The persisted JSON contains explicit lexical postings and weights, not queries, credentials, source paths, model decisions, provider groups, or permission state. Supply only public selection metadata: an index can retain tokens from the descriptions it indexes. Current cards and restrictions always come from the supplied catalog.
 

@@ -67,6 +67,36 @@ class RetrievalBoundaryTests(unittest.TestCase):
         self.assertNotIn('httpserver', index.postings)
         self.assertNotIn('pse', index.gram_postings)
 
+    def test_repeated_normalized_words_keep_document_frequency(self):
+        catalog = [skill(1, name='x', description='Café café cafe\u0301'),
+                   skill(2, name='y', description='cafe records')]
+        index = CandidateIndex(catalog)
+        for gram in ('^ca', 'caf', 'afe', 'fe$'):
+            self.assertEqual(index.gram_postings[gram], [0, 1])
+        self.assertEqual(index.gram_postings['rec'], [1])
+        # Ngram membership is unique, but BM25 still sees repeated terms.
+        self.assertGreater(index._scores('cafe')[0], index._scores('cafe')[1])
+        self.assertEqual(index._scores('cafe'), index._scores('Café cafe\u0301 café'))
+
+    def test_successive_queries_and_snapshot_restore_keep_identical_ranking(self):
+        catalog = [skill(1, description='Inspect café records'),
+                   skill(2, description='Analyze shipment reports'),
+                   tool('atlas', 1), tool('boreal', 1)]
+        queries = ['Atlas records', 'Boreal shipments',
+                   'Café ' * 1500 + 'mcp__boreal__boreal_operation_001',
+                   '', 'Atlas records']
+        for policy in ('current', 'balanced'):
+            index = CandidateIndex(catalog, policy=policy)
+            snapshot = index.snapshot()
+            restored = CandidateIndex.from_snapshot(catalog, snapshot, policy=policy)
+            for query in queries:
+                with self.subTest(policy=policy, query_length=len(query)):
+                    fresh = CandidateIndex(catalog, policy=policy)
+                    self.assertEqual(index._scores(query), fresh._scores(query))
+                    self.assertEqual(index.search(query, limit=3), fresh.search(query, limit=3))
+                    self.assertEqual(restored.search(query, limit=3), fresh.search(query, limit=3))
+            self.assertEqual(index.snapshot(), snapshot)
+
     def test_all_skills_survive_tool_competition_at_240_budget(self):
         skills = [skill(i) for i in range(132)]
         catalog = skills + [tool('atlas', i) for i in range(600)]

@@ -205,9 +205,11 @@ class AdvisorTests(unittest.TestCase):
 
     def test_initial_compaction_keeps_negative_guidance_and_followup_detail(self):
         catalog = [item('done'), item('remaining', brief='a' * 220 + ' UNIQUE FOLLOWUP DETAIL',
-                                     explicit_only=True),
-                   item('guarded', use_when='Read public reports. ' * 100,
-                        avoid_when='Never delete records. ' * 100)]
+                                     explicit_only=True)]
+        catalog += [item('filler-' + str(i)) for i in range(15)]
+        # Negative guidance must survive even in a compact, lower-ranked card.
+        catalog += [item('guarded', use_when='Read public reports. ' * 100,
+                         avoid_when='Never delete records. ' * 100)]
         initial, mapping = advisor.build_request('Read reports and use remaining independently.', catalog)
         guarded = next(key for key, identifier in mapping.items() if identifier == 'guarded')
         self.assertIn('avoid_when: Never delete', initial['state']['available_capabilities'][guarded])
@@ -218,6 +220,7 @@ class AdvisorTests(unittest.TestCase):
         self.assertIn('UNIQUE FOLLOWUP', following['state']['available_capabilities'][key])
         self.assertEqual(following['questions']['next']['criteria'][key], 'remaining (skill)')
         self.assertEqual(following['state']['already_selected'][0]['name'], 'done')
+
 
 
 if __name__ == '__main__':

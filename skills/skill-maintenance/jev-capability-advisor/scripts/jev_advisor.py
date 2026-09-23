@@ -321,7 +321,8 @@ def _error_code(error):
              'criteria_state_budget_exceeded', 'request_budget_exceeded', 'choice_budget_exceeded',
              'malformed_answers', 'malformed_choice', 'unknown_choice', 'inconsistent_initial_choices',
              'response_too_large', 'invalid_response_json', 'invalid_api_key', 'missing_api_key', 'invalid_catalog',
-             'invalid_cache_scope', 'invalid_cache_ttl', 'invalid_routing_metadata', 'invalid_retrieval_policy'}
+             'invalid_cache_scope', 'invalid_cache_ttl', 'invalid_routing_metadata', 'invalid_retrieval_policy',
+             'invalid_index_cache_configuration'}
     if isinstance(error, ValueError) and str(error) in known: return str(error)
     if isinstance(error, (json.JSONDecodeError, UnicodeError)): return 'invalid_response_json'
     return type(error).__name__
@@ -337,7 +338,7 @@ def local_card(item):
     return result
 
 
-def _prepare_candidates(query, catalog, *, index_cache_dir=None, retrieval_policy='current'):
+def _prepare_candidates(query, catalog, *, index_cache_dir=None, retrieval_policy='current', memory_index=None):
     if not isinstance(query, str) or not query.strip() or len(query) > MAX_QUERY_CHARS:
         raise ValueError('invalid_query')
     if not isinstance(catalog, list): raise ValueError('invalid_catalog')
@@ -347,7 +348,12 @@ def _prepare_candidates(query, catalog, *, index_cache_dir=None, retrieval_polic
     eligible = _items(catalog)
     distinct, aliases = _consolidate(query, eligible)
     index_receipt = {'status': 'disabled'}
-    if distinct and index_cache_dir is not None:
+    if memory_index is not None and index_cache_dir is not None:
+        raise ValueError('invalid_index_cache_configuration')
+    if memory_index is not None:
+        candidates, index_receipt = memory_index.search(query, distinct, full_catalog=catalog,
+                                                       policy=retrieval_policy, limit=MAX_CANDIDATES)
+    elif distinct and index_cache_dir is not None:
         from index_cache import get_or_build
         index, index_receipt = get_or_build(distinct, directory=index_cache_dir,
                                             full_catalog=catalog, policy=retrieval_policy)
@@ -401,7 +407,7 @@ def _valid_decision(value, candidate_ids):
 
 
 def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, cache_ttl_seconds=3600,
-           index_cache_dir=None, retrieval_policy='current'):
+           index_cache_dir=None, retrieval_policy='current', memory_index=None):
     """Recommend only. Any malformed response fails closed with empty selected IDs.
 
     Pair/triple modes are conditioned sequentially on prior selections. An early
@@ -418,7 +424,7 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
     owned_transport = None
     try:
         candidates, metadata = _prepare_candidates(query, catalog, index_cache_dir=index_cache_dir,
-                                                   retrieval_policy=retrieval_policy)
+                                                   retrieval_policy=retrieval_policy, memory_index=memory_index)
         result.update(metadata)
         result['none_scope'] = 'retrieved_candidates'
         result['candidates'] = [local_card(item) for item in candidates]

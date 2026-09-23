@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Owner-process Jev session: fresh host inventory per NDJSON frame, HTTPS reuse only.
+"""Owner-process Jev session: fresh host inventory, HTTPS and derived lexical-index reuse.
 
-No discovery, result/inventory cache, background daemon, listener, installation
+No discovery, decision cache or inventory authority, background daemon, listener, installation
 or authorization inference. The host owns inventory eligibility, data-sharing
 authority, interpreting recommendations and any forced process deadline.
 """
@@ -18,6 +18,7 @@ import time
 sys.dont_write_bytecode = True
 import jev_advisor
 from https_transport import JsonClient
+from index_cache import MemoryIndex
 from routing_metadata import guidance
 
 MAX_FRAME_BYTES = 2_000_000
@@ -187,14 +188,17 @@ def _summary(result, frame, elapsed, calls):
 class AdvisorSession:
     """One owner-process session; the host supplies an eligible inventory each time."""
     def __init__(self, *, key_file=None, total_budget_seconds=8, client_factory=JsonClient,
-                 key_loader=None, advisor=None):
+                 key_loader=None, advisor=None, reuse_index=True):
         if (isinstance(total_budget_seconds, bool) or not isinstance(total_budget_seconds, (int, float))
                 or not math.isfinite(total_budget_seconds) or not 0 < total_budget_seconds <= 300):
             raise ValueError('invalid_total_budget')
+        if not isinstance(reuse_index, bool):
+            raise ValueError('invalid_index_reuse')
         self._key_file = key_file
         self._key_loader = key_loader
         self._client_factory = client_factory
-        self._advisor = advisor or jev_advisor.advise
+        self._advisor = advisor
+        self._memory_index = MemoryIndex() if reuse_index and advisor is None else None
         self.total_budget_seconds = float(total_budget_seconds)
         self._client = None
         self._closed = False
@@ -209,6 +213,8 @@ class AdvisorSession:
         self.close()
 
     def _drop_client(self):
+        if self._memory_index is not None:
+            self._memory_index.clear()
         client, self._client = self._client, None
         if client is not None:
             try:
@@ -260,7 +266,12 @@ class AdvisorSession:
                     transport_problem = error.code
                     raise
             transport.transport_kind = 'https'
-            result = self._advisor(frame['query'], frame['catalog'], transport)
+            if self._advisor is None:
+                result = jev_advisor.advise(frame['query'], frame['catalog'], transport,
+                                            memory_index=self._memory_index)
+            else:
+                # Preserve the established three-argument injection contract.
+                result = self._advisor(frame['query'], frame['catalog'], transport)
             _remaining(deadline)
             reply = _summary(result, frame, (time.monotonic() - started) * 1000, calls)
             if reply['status'] == 'error':
@@ -333,9 +344,12 @@ def main(argv=None):
     parser.add_argument('--key-file', type=Path, help='Optional local key file; otherwise TYPESAFE_API_KEY. Read lazily.')
     parser.add_argument('--total-budget-seconds', type=float, default=8,
                         help='One budget for validation/preparation and all recommendation calls; default 8 seconds.')
+    parser.add_argument('--no-index-reuse', action='store_true',
+                        help='Disable the owner-session lexical memo; HTTPS reuse and fresh model calls remain enabled.')
     args = parser.parse_args(argv)
     try:
-        session = AdvisorSession(key_file=args.key_file, total_budget_seconds=args.total_budget_seconds)
+        session = AdvisorSession(key_file=args.key_file, total_budget_seconds=args.total_budget_seconds,
+                                 reuse_index=not args.no_index_reuse)
     except ValueError:
         print('Invalid session configuration.', file=sys.stderr)
         return 2

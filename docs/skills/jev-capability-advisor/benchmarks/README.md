@@ -4,6 +4,84 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
+## Current Session comparison: 9.54× the native selector's speed
+
+**443 ms median skill selection.** Same tasks and catalog; the Jev-based variants ran interleaved, Native separately. All 80 skill-selection observations per variant remain in the timing distributions, including wrong or withheld recommendations. The 16 no-match observations are separate.
+
+| Variant              | Skill-selection median |     p95 | Correct accepted selections | No match correct | Errors |
+| -------------------- | ---------------------: | ------: | --------------------------: | ---------------: | -----: |
+| Hussi9 + our HTTPS   |                0.407 s | 0.499 s |                       80/80 |            16/16 |      0 |
+| Jev Session          |                0.443 s | 0.531 s |                       79/80 |            16/16 |      0 |
+| Hussi9               |                0.449 s | 0.544 s |                       76/80 |            16/16 |      0 |
+| Jev Fresh Connection |                0.509 s | 0.612 s |                       79/80 |            16/16 |      0 |
+| Native               |                4.226 s | 6.090 s |                       80/80 |            16/16 |      0 |
+
+Native: **gpt-6-astra, reasoning low** (requested model; resolved backend not independently observable). Jev and Hussi9: **jev-1.13.0**. Factors use unrounded medians. Native uses baseline preparation plus its model turn; input equivalence is proven for all 48 tasks. Process startup, skill loading and task execution are excluded. Measurement windows are recorded separately in the evidence. Native reported provider-side prefix-cache use in 51/96 turns; this is not a decision cache. Provider caching and service load were uncontrolled.
+
+Session reuses HTTPS and one bounded derived index, while each frame validates the current catalog. First connections and first index builds are included. Fresh creates and closes a real Session for every task, including index retention checks. No retries, warmup, result cache or disk index cache. This is selection speed, not whole-agent task speed or a market-wide ranking.
+
+[Current five-arm TypeSafe evidence](../../../../skill-evals/jev-capability-advisor/benchmarks/session-index-2026-09-23.json) · [Native supplement](../../../../skill-evals/jev-capability-advisor/benchmarks/native-index-2026-09-23.json) · [Input equivalence and replay](../../../../skill-evals/jev-capability-advisor/benchmarks/session-index-parity-2026-09-23.json).
+
+### Larger catalogs. Less repeated preparation.
+
+**13.6% lower median selection time in the 718-entry mixed catalog.** The 100 tasks ran twice per variant, covering skills, MCP tools, clarification, no match and compounds.
+
+| Variant                            | Median | Complete correct results | Errors |
+| ---------------------------------- | -----: | -----------------------: | -----: |
+| Jev Session · previous preparation | 666 ms |                  174/200 |      4 |
+| Jev Session · reusable index       | 576 ms |                  173/200 |      3 |
+
+- **Less repeated preparation.** Reuse a matching derived index; rebuild when catalog or representative identity changes. Search and validate current metadata again for every task; reuse HTTPS in the same process.
+- **No information removed.** Keep 200-character initial descriptions, 240-character follow-ups, long task context, MCP tools, activation restrictions and strict answer checks. Shorter descriptions failed qualification and were rejected.
+- **Equivalent recorded decisions.** 676/676 recorded observations and 868 request payloads reproduced unchanged. This is an offline equivalence check, not additional live model testing.
+
+**Tradeoff:** the smaller skill-only cohort was 3.6% slower overall (443 versus 428 ms), with 79/80 versus 80/80 accepted choices. The mixed cohort scored 173/200 versus 174/200: its sole additional mistake was a different response on byte-identical initial and follow-up inputs. These remain observed failures; replay does not turn them into passing live results. Compound advice remains experimental.
+
+Local preparation fell from 18.89 to 5.99 ms for the skill catalog, and 72.95 to 15.61 ms for the mixed catalog. Those medians do not add to overall medians; request time also includes network, provider work and evidence recording. First-use retention checking adds cold cost. Use `reuse_index=False` or `--no-index-reuse` to disable index reuse while retaining HTTPS reuse.
+
+### Why routing speeds differ
+
+Same Jev model. Different selection work. Session reuses HTTPS and a bounded search index; Fresh pays their first-use costs for every task.
+
+| Difference   | Hussi9 chooser                                                          | Jev advisor                                                                                                 |
+| ------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Candidates   | Eligible skill index; split into domain and process choices.            | Validate, deduplicate and locally rank skills + MCP tools; up to 240 candidates.                            |
+| Questions    | Domain, process and task type in one request.                           | Selection mode + first capability; up to two follow-up calls for compound tasks.                            |
+| Task context | Task truncated to 600 characters; short candidate summaries.            | Tasks up to 16,000 characters; candidate descriptions bounded by a request-size budget.                     |
+| Acceptance   | Validate returned IDs; confidence ≥ 0.8 to route, ≥ 0.5 to suggest.     | Validate returned IDs and answer consistency; explicit no-match / clarify outcomes, no confidence gate.     |
+| Reuse        | Published chooser: fresh HTTPS here. Our internal control reuses HTTPS. | Session: HTTPS + one bounded lexical index. Fresh: rebuild and reconnect. Fresh catalog validation in both. |
+
+- **Why Session saves work.** Matching catalog and alias-representative identities avoid rebuilding lexical postings. No recommendation is cached: eligible routing requests still call Jev. Changed metadata invalidates the index.
+- **Why Fresh has more work.** The full advisor validates skills and tools, resolves aliases, ranks candidates and checks answer consistency. A new Session also measures and bounds its index; that cost is retained in the timing.
+- **How to read Hussi9.** Correct accepted selections require its original 0.8 confidence threshold. An abstention is not necessarily a wrong raw guess. Payload, transport and provider effects were not individually isolated.
+
+### What our Hussi experiment tells us
+
+- **Same transport, different chooser.** Our internal control combines the pinned Hussi chooser with our persistent HTTPS client and compact JSON. It is not a published Hussi9 upgrade.
+- **A measured comparison.** The current bars use the same 48 tasks and catalog. The four Jev-based display variants ran interleaved; Native ran separately. Differences of a few milliseconds need the paired uncertainty intervals in the evidence.
+- **Keep the broader contract.** Our advisor additionally qualifies MCP tools, clarification, compound outcomes and long context. The Hussi transport control was only tested on skills and no-match tasks here.
+
+Pinned [Hussi9 chooser source](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py); its original 0.8 route threshold and 1.2-second timeout remain. The modified control is our experiment. Four withheld original-Hussi suggestions named the expected skills but fell below its confidence gate; its full fallback workflow is not measured.
+
+### Current evidence ledger
+
+**11,308 completed benchmark executions across development iterations**, including baseline and candidate variants. This counts neither unique tasks nor only passing tests.
+
+| Group                          | Additional completed executions | Scope                                                        |
+| ------------------------------ | ------------------------------: | ------------------------------------------------------------ |
+| Earlier documented development |                           7,792 | Includes historical failed-provider cohorts; preserved below |
+| Resumed full qualification     |                           2,540 | Ten cohorts, including rejected description reductions       |
+| Session-index comparison       |                             880 | 480 skill comparison + 400 mixed observations                |
+| New Native supplement          |                              96 | 48 identical tasks × two repetitions                         |
+| **Total**                      |                      **11,308** | Each execution counted once                                  |
+
+**676 recorded-response replays**, 149 offline unit tests, the health check and bootstrap draws are additional verification, excluded from this new live-execution increment. Earlier offline measurements retain their original ledger classification. API follow-ups are not extra benchmark executions. The larger count does not enlarge the 48-task headline sample.
+
+Shorter-description experiments remain rejected: rank-16 scored 79/80 versus 80/80 skills and 125/128 versus 126/128 on the new 64-task set. [All resumed cohorts and failures](../../../../skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json) remain separate from the current memo study. The adopted preparation optimization keeps the original full candidate-card budgets.
+
+<details>
+<summary>Earlier measurements and feature comparisons (archived)</summary>
+
 ## Smaller first choice. Full follow-up checks.
 
 **406 ms median selection, with 80/80 correct accepted skill choices.** Our compact initial request lowers median selection time by **6.3%** versus our previous format in the same interleaved run.
@@ -153,3 +231,5 @@ Earlier studies include a sixfold selector result with lower Jev accuracy and a 
 [Full methods, historical results and qualification](../../../../skill-evals/jev-capability-advisor/README.md) · [Machine-readable benchmark data](../../../../skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json)
 
 The website renders these highlights in a separate Astro component with an accessible SVG comparison. Its numerical summary is derived from the same benchmark data; a build check keeps this README's headline figures aligned.
+
+</details>
