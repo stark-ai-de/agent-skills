@@ -49,7 +49,7 @@ assert.equal(current.defaultId, "jev_session");
 assert.equal(current.baselineId, "native");
 assert.deepEqual(
   current.rows.map((row) => row.id),
-  ["jev_session", "hussi_original", "jev_cold", "native"],
+  ["hussi_control", "jev_session", "hussi_original", "jev_cold", "native"],
 );
 assert.ok(
   current.rows.every(
@@ -64,7 +64,7 @@ assert.equal(
 assert.ok(
   current.rows.filter((row) => row.id !== "hussi_original").every((row) => row.sourceUrl === null),
 );
-assert.equal(new Set(current.rows.map((row) => row.id)).size, 4);
+assert.equal(new Set(current.rows.map((row) => row.id)).size, 5);
 assert.equal(data.experiment.unique_tasks, 48);
 assert.equal(data.experiment.repetitions_per_task, 2);
 assert.equal(data.experiment.reused_observations, 288);
@@ -92,9 +92,9 @@ assert.ok(current.hussiSource.includes("/652953a0cbb423d4bb7f62de83db15ad4ca9b16
 const baseline = current.rows.find((row) => row.id === current.baselineId);
 let previousReadmeRow = -1;
 for (const row of current.rows) {
-  const positive = data.groups.primary_positive.arms[row.id];
-  const none = data.groups.none.arms[row.id];
-  const all = data.groups.all.arms[row.id];
+  const positive = current.groups.primary_positive.arms[row.id];
+  const none = current.groups.none.arms[row.id];
+  const all = current.groups.all.arms[row.id];
   assert.equal(row.observations, 80);
   assert.equal(row.noneObservations, 16);
   assert.equal(all.n, positive.n + none.n);
@@ -128,6 +128,43 @@ for (const id of ["jev_session", "jev_cold"]) {
 assert.equal(data.groups.primary_positive.arms.hussi_original.correct, 76);
 assert.equal(data.groups.primary_positive.arms.hussi_original.median_ms, 883.8034854925354);
 assert.equal(current.rows.at(-1).factor, null);
+
+// Displaying a previously archived control must not create new measurement claims.
+const control = current.rows.find((row) => row.id === "hussi_control");
+const controlAudit = data.modified_control.projection_audit;
+assert.equal(control.factor.toFixed(2), "8.52");
+assert.equal(current.rows.find((row) => row.id === current.defaultId).factor.toFixed(2), "5.89");
+assert.equal(control.experimental, true);
+assert.equal(control.correct, 80);
+assert.equal(control.noneCorrect, 16);
+assert.ok(control.description.includes("not a released skill"));
+assert.ok(control.announcement.includes("our internal experiment"));
+assert.ok(current.rows.filter((row) => row.id !== control.id).every((row) => !row.experimental));
+assert.equal(current.displayedObservations, 480);
+assert.equal(
+  current.displayedObservations,
+  data.experiment.displayed_observations + data.modified_control.all.n,
+);
+assert.equal(controlAudit.freeze_sha256, sessionCount.freeze_sha256);
+assert.equal(controlAudit.results_sha256, data.technical_audit.source_results_sha256);
+assert.equal(controlAudit.runner_sha256, data.technical_audit.instrumentation_sha256);
+assert.equal(controlAudit.frozen_files_verified, 197);
+assert.equal(controlAudit.new_api_calls, 0);
+assert.equal(controlAudit.additional_benchmark_executions, 0);
+assert.equal(controlAudit.api_requests, data.modified_control.all.n);
+assert.equal(controlAudit.cold_calls + controlAudit.reused_calls, controlAudit.api_requests);
+for (const name of ["primary_positive", "none", "all"]) {
+  assert.equal(current.groups[name].arms.hussi_control, data.modified_control[name]);
+  assert.equal(data.modified_control[name].missing_timing, 0);
+  assert.equal(Object.keys(data.groups[name].arms).length, 4, "Preserve historical supplement");
+}
+assert.ok(readme.includes(`### ${current.experiment.title}`));
+for (const note of current.experiment.notes) {
+  assert.ok(
+    readme.includes(`**${note.title}.** ${note.text}`),
+    `Experiment note differs: ${note.title}`,
+  );
+}
 
 // Keep the visible technical comparison and repository documentation in agreement.
 const technical = current.technical;
@@ -169,7 +206,7 @@ for (const note of technical.notes) {
 }
 
 for (const claim of [
-  `${current.rows[0].factor.toFixed(2)}× the native selector's speed`,
+  `${current.rows.find((row) => row.id === current.defaultId).factor.toFixed(2)}× the native selector's speed`,
   `${bench.session.speedRatio.toFixed(2)}× faster with a reusable session`,
   `${bench.speedRatio.toFixed(2)}× faster median selection`,
   `${bench.jev.medianSeconds.toFixed(2)} seconds`,
@@ -201,4 +238,4 @@ for (const boundary of [
 ])
   assert.ok(readme.includes(boundary), `Missing claim boundary: ${boundary}`);
 
-console.log("Jev four-variant claims match counts, provenance, timings, models and scope.");
+console.log("Jev five-variant claims match counts, provenance, timings, models and scope.");

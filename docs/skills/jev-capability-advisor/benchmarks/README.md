@@ -14,16 +14,19 @@ The website adds technical info popovers beside each bar and a GitHub link besid
 
 | Variant              | Median skill selection | p95 skill selection | Correct accepted selections | No match correct | Errors |
 | -------------------- | ---------------------: | ------------------: | --------------------------: | ---------------: | -----: |
+| Hussi9 + our HTTPS   |                0.506 s |             0.577 s |                       80/80 |            16/16 |      0 |
 | Jev Session          |                0.733 s |             0.798 s |                       80/80 |            16/16 |      0 |
 | Hussi9               |                0.884 s |             0.936 s |                       76/80 |            16/16 |      0 |
 | Jev Fresh Connection |                1.108 s |             1.167 s |                       80/80 |            16/16 |      0 |
 | Native               |                4.314 s |             6.323 s |                       80/80 |            16/16 |      0 |
 
+**Hussi9 + our HTTPS is our internal experiment**, built on the Hussi chooser; it is not a published Hussi9 release. Selecting its bar shows **8.52×** relative to native. The initial headline stays with our Jev Session API at **5.89×**.
+
 **Native:** `gpt-6-astra`, reasoning `low`, Codex CLI 0.154.0. **Jev and Hussi9:** `jev-1.13.0`. The native model is the requested configuration; its resolved backend identity was not independently observable. Environment: Linux/NixOS in WSL2, Intel Core i9-13900K, Python 3.14.7, concurrency one. Provider load and caching were uncontrolled.
 
-The same 48 frozen tasks ran twice: 40 single-skill and eight no-match tasks, balanced between German and English. Every variant uses the same 132-skill catalog; native receives the same 128 ordered Jev candidate cards, task and routing rules. Hussi9 keeps its published request format. Incorrect selections stay in timing distributions and quality denominators. No-match timings are separate from the headline. We reused the three existing Jev-based arms and added only 96 native observations, with no new Jev requests.
+The same 48 frozen tasks ran twice: 40 single-skill and eight no-match tasks, balanced between German and English. Every variant uses the same 132-skill catalog; native receives the same 128 ordered Jev candidate cards, task and routing rules. Hussi9 keeps its published request format. Incorrect selections stay in timing distributions and quality denominators. No-match timings are separate from the headline. The original four-variant supplement reused three Jev-based arms and added only 96 native observations. The fifth bar now also displays 96 archived observations from our modified control: 480 observations across the chart, with no new Jev requests or additions to the execution ledger.
 
-[Hussi9's published Jev selection component](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its 1.2-second timeout and 0.8 confidence threshold. This measures the chooser, not the complete router, hooks or fallback workflow. A **modified persistent-transport control** scored 80/80 with a 0.506 s positive-task median; it is faster here, but is not the published implementation. This comparison does not establish an overall fastest product.
+[Hussi9's published Jev selection component](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its 1.2-second timeout and 0.8 confidence threshold. This measures the chooser, not the complete router, hooks or fallback workflow. The **modified persistent-transport control** in the first row retains that chooser, timeout and confidence threshold; our adapter replaces its transport. It scored 80/80 without removing the gate. This comparison does not establish an overall fastest product.
 
 ### Why routing speeds differ
 
@@ -43,6 +46,14 @@ Same Jev model. Different selection work. Fresh Connection is already our optimi
 
 [Our selection implementation](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_advisor.py) · [Hussi9's pinned implementation](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) · [Post-hoc audit and measurement limits](../../../../skill-evals/jev-capability-advisor/README.md#technical-differences-audit).
 
+### Why the faster experiment is not the default yet
+
+- **Our experiment, built on Hussi9.** The Hussi chooser uses our reusable HTTPS client and compact JSON serialization. Jev Session already uses the same client. This is our internal adapter, not a published Hussi9 upgrade.
+- **Faster here, equally correct.** 0.506 s and 80/80 accepted skill choices, plus 16/16 no-match decisions. Smaller requests and less preparation accompany the gain; their individual effects were not isolated.
+- **A candidate for our next optimization.** The experiment has not been integrated or qualified for our MCP, clarification, compound and long-context contract. No quality disadvantage was measured here, and it has not been rejected as an approach.
+
+The control's median local preparation was 0.535 ms versus 21.324 ms for Jev Session; median serialized requests were 32,382.5 versus 46,108.5 bytes. Both already reuse the same HTTPS client. These measurements do not attribute the entire latency difference to local preparation or request size. The control keeps Hussi's 600-character task limit and domain/process/type selection protocol. Adopting a compact path requires preserving and testing our host IDs, activation restrictions, tool and compound outcomes.
+
 ### 1.51× faster with a reusable session
 
 Fresh Connection already uses our optimized advisor. Session additionally keeps its HTTPS connection: **0.73 seconds with a Jev session; 1.11 seconds with a fresh connection**, a **34%** reduction in median wait. Both Jev paths achieved **96/96 correct results**, including **80/80** skill choices and **16/16** no-match decisions. Each task still supplies a fresh catalog and receives full validation.
@@ -53,7 +64,7 @@ The first connection in each repetition is included: two cold session calls and 
 
 Native timing includes selection preparation and the model turn. Jev timing includes preparation, API requests, session validation and evidence recording. The comparison excludes native process startup, capability loading and task execution. The older native comparison below uses a different corpus and revision; its timings must not be combined with these results.
 
-[Four-variant data and count supplement](../../../../skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json) · [Original session data](../../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json).
+[Comparison data, archived control and count supplement](../../../../skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json) · [Original session data](../../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json).
 
 ## Earlier native comparison: 4.71× faster median selection
 

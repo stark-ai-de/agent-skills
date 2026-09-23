@@ -24,18 +24,29 @@ The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 
 
 | Variant              | Skill median | Skill p95 | Correct accepted selections | NONE correct | Errors |
 | -------------------- | -----------: | --------: | --------------------------: | -----------: | -----: |
+| Hussi9 + our HTTPS   |      0.506 s |   0.577 s |                       80/80 |        16/16 |      0 |
 | Jev Session          |      0.733 s |   0.798 s |                       80/80 |        16/16 |      0 |
 | Hussi9               |      0.884 s |   0.936 s |                       76/80 |        16/16 |      0 |
 | Jev Fresh Connection |      1.108 s |   1.167 s |                       80/80 |        16/16 |      0 |
 | Native               |      4.314 s |   6.323 s |                       80/80 |        16/16 |      0 |
 
-Primary statistics include every one of the 80 positive observations per arm, not only correct selections; the 16 NONE observations are secondary. P95 uses nearest rank. The default website factor is 5.89×, the ratio of native and session medians. These are **separate measurement runs**, not a contemporaneous randomized four-arm experiment or causal latency estimate. Provider caching/load are uncontrolled. The modified Hussi persistent-transport control from the original experiment remains disclosed in the data and benchmark README; no universal speed ranking is claimed.
+Primary statistics include every one of the 80 positive observations per arm, not only correct selections; the 16 NONE observations are secondary. P95 uses nearest rank. The default website factor is 5.89×, the ratio of native and session medians. These are **separate measurement runs**, not a contemporaneous randomized four-arm experiment or causal latency estimate. Provider caching/load are uncontrolled. The first row now also displays our archived modified Hussi control as a fifth variant. It is our internal experiment, not a published Hussi9 release. Selecting it shows 8.52× relative to native; no universal speed ranking is claimed.
 
 Native requested `gpt-6-astra`, reasoning `low`, using Codex CLI 0.154.0. Its resolved backend identity was not independently observable. Jev-based variants used `jev-1.13.0`. The unchanged native adapter measures local selection preparation plus `turn.started` to `turn.completed`; CLI process startup is retained separately. Native ran sequentially with a 90-second deadline, no tools/plugins/skills/memory/user configuration and no harness retries. CLI-internal transport behavior is not equated with a physical HTTP-request count. All failures, timeouts and missing timings remain explicit in the evidence.
 
 Independent audits verify the 197 original and 211 native frozen files, exact payload/prompt parity, schedule, strict scoring, timing events and complete ledgers. The [published Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its original payload, 1.2-second timeout and 0.8 confidence gate; this does not measure its full router, hooks or fallback execution.
 
 The cumulative development count is now **6,546 executions**: historical 6,450 plus these 96 native observations. The 288 reused observations were already counted and are not added twice. Counts describe recorded executions, not unique tasks, passing tests or calls. Original evidence below is preserved with its original date and scope.
+
+### Archived control displayed as a fifth variant
+
+The original four-variant supplement above retains its 384-observation metadata. The current chart adds the 96 control observations already present in the original session freeze: **480 displayed observations, zero new API calls and zero additional executions**. The cumulative total remains **6,546**. All 197 original frozen artifacts were verified again; the control's 80 skill and 16 NONE aggregates were recomputed from every scheduled result, with no missing timings or errors. Source digests and timing counts are in `modified_control.projection_audit` and its group summaries.
+
+- **Our implementation work:** the unchanged Hussi chooser receives our persistent `JsonClient`, including compact sorted JSON serialization. Two cold calls and 94 reused calls are included; all 96 observations made one API request. This is not an isolated HTTPS-only experiment.
+- **Same transport as Jev Session:** the control's positive-task median local preparation is 0.535 ms versus 21.324 ms; median request size is 32,382.5 versus 46,108.5 bytes. No controlled ablation assigns the entire latency gap to these differences.
+- **No measured quality penalty:** the control scored 80/80 skills and 16/16 NONE, retaining Hussi's 0.8 confidence gate. It has not been integrated or qualified for our MCP, clarification, compound, long-context or host contract. It remains an optimization candidate; there is no documented rejection based on worse quality.
+
+See the [concise explanation shared with the website](../../docs/skills/jev-capability-advisor/benchmarks/README.md#why-the-faster-experiment-is-not-the-default-yet). The public comparator remains the pinned, unmodified Hussi chooser. Its MIT source and the provenance of our adaptation are distinct from a released product or a complete market comparison.
 
 ### Technical differences audit
 

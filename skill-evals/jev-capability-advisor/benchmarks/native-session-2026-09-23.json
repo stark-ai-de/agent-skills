@@ -214,14 +214,47 @@
       "correct": 80,
       "errors": 0,
       "median_ms": 506.2145569972927,
-      "p95_ms": 577.4191030068323
+      "p95_ms": 577.4191030068323,
+      "timed_observations": 80,
+      "missing_timing": 0
     },
     "all": {
       "n": 96,
       "correct": 96,
       "errors": 0,
       "median_ms": 504.90196399914566,
-      "p95_ms": 579.1328250052175
+      "p95_ms": 579.1328250052175,
+      "timed_observations": 96,
+      "missing_timing": 0
+    },
+    "none": {
+      "n": 16,
+      "correct": 16,
+      "errors": 0,
+      "timed_observations": 16,
+      "missing_timing": 0,
+      "median_ms": 500.9413755033165,
+      "p95_ms": 607.7200440049637
+    },
+    "projection_audit": {
+      "kind": "post_hoc_reuse_of_original_control_observations",
+      "date": "2026-09-23",
+      "new_api_calls": 0,
+      "additional_benchmark_executions": 0,
+      "frozen_files_verified": 197,
+      "source_arm": "hussi_session_control",
+      "freeze_sha256": "16aa90c884807f2c15f7918170582f092ab71551ef6d0bf78597e31a26278cec",
+      "results_sha256": "76fbcfa8cb010d2c89a392f736307e6a4134d5013cd67f14394f7d825866da10",
+      "summary_sha256": "95ae268fbfaa87105d92275381646950fff18673b3d0c578922a922c2d5ea080",
+      "runner_sha256": "ff36007298389ac0a423c5dc0891f4b7057e0c5c0e9d95a4eba1b9d8ce318374",
+      "config_sha256": "32b703d55c2eaed26a1cdaab253a82cc2cc034c713d55625e9aea3c57c7a4770",
+      "api_requests": 96,
+      "cold_calls": 2,
+      "reused_calls": 94,
+      "median_positive_local_prep_ms": 0.5351284999051131,
+      "median_positive_wire_request_bytes": 32382.5,
+      "scope": "Our experimental adapter injects the same persistent JsonClient used by Jev Session into the unchanged Hussi chooser. Compact sorted JSON serialization also changes; this does not isolate an HTTPS-only effect.",
+      "qualification": "80/80 skills and 16/16 NONE; no measured quality disadvantage here. Not integrated or qualified for the current MCP, compound, clarification, long-context or host contract."
     }
   },
   "technical_audit": {

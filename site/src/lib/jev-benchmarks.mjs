@@ -22,14 +22,24 @@ const runCounts = {
   nativeSupplement: current.experiment.new_observations,
 };
 
-const positive = current.groups.primary_positive.arms;
+// Keep the original four-arm supplement immutable; reuse its archived control for display.
+const groups = Object.fromEntries(
+  Object.entries(current.groups).map(([name, group]) => [
+    name,
+    { ...group, arms: { ...group.arms, hussi_control: current.modified_control[name] } },
+  ]),
+);
+const positive = groups.primary_positive.arms;
 const rowLabels = {
+  hussi_control: "Hussi9 + our HTTPS",
   jev_session: "Jev Session",
   jev_cold: "Jev Fresh Connection",
   hussi_original: "Hussi9",
   native: "Native",
 };
 const rowNotes = {
+  hussi_control:
+    "Our experimental adapter: Hussi chooser + our reusable HTTPS client and compact JSON. 80/80 here. Not yet integrated or qualified for our MCP, clarification and compound contract. An optimization candidate, not an upstream release.",
   jev_session:
     "Same candidate ranking and answer checks as Fresh Connection. Reuses HTTPS in a retained process, avoiding repeated setup; a host-supplied catalog is validated for every task. No result cache in this benchmark.",
   jev_cold:
@@ -41,7 +51,7 @@ const rowNotes = {
 const rows = Object.entries(rowLabels)
   .map(([id, label]) => {
     const result = positive[id];
-    const none = current.groups.none.arms[id];
+    const none = groups.none.arms[id];
     const factor = id === "native" ? null : positive.native.median_ms / result.median_ms;
     const relation =
       factor === null ? "Native baseline" : `${factor.toFixed(2)} times the native selection speed`;
@@ -49,6 +59,7 @@ const rows = Object.entries(rowLabels)
       id,
       label,
       info: rowNotes[id],
+      experimental: id === "hussi_control",
       sourceUrl: id === "hussi_original" ? current.sources.hussi.url.split("/blob/")[0] : null,
       factor,
       medianSeconds: result.median_ms / 1000,
@@ -57,12 +68,14 @@ const rows = Object.entries(rowLabels)
       observations: result.n,
       noneCorrect: none.correct,
       noneObservations: none.n,
-      errors: current.groups.all.arms[id].errors,
+      errors: groups.all.arms[id].errors,
       description:
-        factor === null
-          ? "The reference model chooses from the same candidate cards."
-          : "Median skill-selection speed compared with the native model selector.",
-      announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct accepted selections.`,
+        id === "hussi_control"
+          ? "Our internal transport experiment; not a released skill."
+          : factor === null
+            ? "The reference model chooses from the same candidate cards."
+            : "Median skill-selection speed compared with the native model selector.",
+      announcement: `${label}${id === "hussi_control" ? " (our internal experiment)" : ""}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct accepted selections.`,
     };
   })
   .sort((left, right) => left.medianSeconds - right.medianSeconds);
@@ -72,6 +85,8 @@ export const jevBenchmarks = {
     evidence: current,
     evidencePath: "skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json",
     rows,
+    groups,
+    displayedObservations: sum(Object.values(groups.all.arms).map((arm) => arm.n)),
     defaultId: "jev_session",
     baselineId: "native",
     skillObservations: positive.native.n,
@@ -80,7 +95,23 @@ export const jevBenchmarks = {
     nativeReasoning: current.models.native.reasoning,
     jevModel: current.models.jev,
     hussiSource: current.sources.hussi.url,
-    controlMedianSeconds: current.modified_control.primary_positive.median_ms / 1000,
+    experiment: {
+      title: "Why the faster experiment is not the default yet",
+      notes: [
+        {
+          title: "Our experiment, built on Hussi9",
+          text: "The Hussi chooser uses our reusable HTTPS client and compact JSON serialization. Jev Session already uses the same client. This is our internal adapter, not a published Hussi9 upgrade.",
+        },
+        {
+          title: "Faster here, equally correct",
+          text: "0.506 s and 80/80 accepted skill choices, plus 16/16 no-match decisions. Smaller requests and less preparation accompany the gain; their individual effects were not isolated.",
+        },
+        {
+          title: "A candidate for our next optimization",
+          text: "The experiment has not been integrated or qualified for our MCP, clarification, compound and long-context contract. No quality disadvantage was measured here, and it has not been rejected as an approach.",
+        },
+      ],
+    },
     technical: {
       title: "Why routing speeds differ",
       introduction:
