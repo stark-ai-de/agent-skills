@@ -9,8 +9,8 @@ The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 
 | Variant              | Skill median | Skill p95 | Correct accepted selections | NONE correct | Errors |
 | -------------------- | -----------: | --------: | --------------------------: | -----------: | -----: |
 | Jev Session          |      0.733 s |   0.798 s |                       80/80 |        16/16 |      0 |
-| Jev Fresh Connection |      1.108 s |   1.167 s |                       80/80 |        16/16 |      0 |
 | Hussi9               |      0.884 s |   0.936 s |                       76/80 |        16/16 |      0 |
+| Jev Fresh Connection |      1.108 s |   1.167 s |                       80/80 |        16/16 |      0 |
 | Native               |      4.314 s |   6.323 s |                       80/80 |        16/16 |      0 |
 
 Primary statistics include every one of the 80 positive observations per arm, not only correct selections; the 16 NONE observations are secondary. P95 uses nearest rank. The default website factor is 5.89×, the ratio of native and session medians. These are **separate measurement runs**, not a contemporaneous randomized four-arm experiment or causal latency estimate. Provider caching/load are uncontrolled. The modified Hussi persistent-transport control from the original experiment remains disclosed in the data and benchmark README; no universal speed ranking is claimed.

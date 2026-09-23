@@ -8,13 +8,13 @@ Jev Capability Advisor helps your agent find a relevant skill or tool from its a
 
 **Jev Session chooses a skill in 0.73 seconds; the native model selector takes 4.31 seconds.**
 
-Skill selection · median · lower is better. The factor is the ratio of medians across **80 skill-selection observations per variant**: same tasks and catalog, separate measurement runs on 2026-09-22 and 2026-09-23. It measures selection, not complete agent-task speed.
+Skill selection · median · lower is better. Variants are ordered from fastest to slowest. The website adds technical info popovers beside each bar and a GitHub link beside Hussi9. Hover or focus the info button; tap to toggle, press Escape or tap outside to dismiss. The factor is the ratio of medians across **80 skill-selection observations per variant**: same tasks and catalog, separate measurement runs on 2026-09-22 and 2026-09-23. It measures selection, not complete agent-task speed.
 
 | Variant              | Median skill selection | p95 skill selection | Correct accepted selections | No match correct | Errors |
 | -------------------- | ---------------------: | ------------------: | --------------------------: | ---------------: | -----: |
 | Jev Session          |                0.733 s |             0.798 s |                       80/80 |            16/16 |      0 |
-| Jev Fresh Connection |                1.108 s |             1.167 s |                       80/80 |            16/16 |      0 |
 | Hussi9               |                0.884 s |             0.936 s |                       76/80 |            16/16 |      0 |
+| Jev Fresh Connection |                1.108 s |             1.167 s |                       80/80 |            16/16 |      0 |
 | Native               |                4.314 s |             6.323 s |                       80/80 |            16/16 |      0 |
 
 **Native:** `gpt-6-astra`, reasoning `low`, Codex CLI 0.154.0. **Jev and Hussi9:** `jev-1.13.0`. The native model is the requested configuration; its resolved backend identity was not independently observable. Environment: Linux/NixOS in WSL2, Intel Core i9-13900K, Python 3.14.7, concurrency one. Provider load and caching were uncontrolled.

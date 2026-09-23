@@ -1,6 +1,7 @@
 ---
 import { jevBenchmarks as bench } from "../lib/jev-benchmarks.mjs";
 import { repoUrl } from "../lib/skills";
+import ContextTooltip from "./ContextTooltip.astro";
 
 const number = (value: number) => value.toLocaleString("en-US");
 const comparison = bench.current;
@@ -37,20 +38,32 @@ const runs = [
     </div>
 
     <figure class="jev-promo__chart" data-jev-chart>
-      <figcaption>Skill selection · median · lower is better<span>Hover, focus or tap a row to compare with native.</span></figcaption>
+      <figcaption>Skill selection · median · lower is better<span>Fastest first. Hover, focus or tap a row to compare; use the info buttons for technical details.</span></figcaption>
       <div class="jev-promo__rows">
         {comparison.rows.map((row) => (
-          <button type="button" class="jev-promo__row" data-jev-row={row.id}
-            data-factor={row.factor === null ? "" : row.factor.toFixed(2)} data-label={row.label}
-            data-description={row.description} data-quality={`${row.correct}/${row.observations}`}
-            data-announcement={row.announcement} aria-label={row.announcement}
-            aria-pressed={row.id === comparison.defaultId}>
-            <span class="jev-promo__chart-label"><strong>{row.label}</strong><span>{row.medianSeconds.toFixed(2)} s</span></span>
-            <svg viewBox="0 0 540 26" aria-hidden="true">
-              <rect class="jev-promo__track" x="0" y="3" width={chartWidth} height="20" rx="4" />
-              <rect class={`jev-promo__bar jev-promo__bar--${row.id}`} x="0" y="3" width={chartWidth * row.medianSeconds / chartMax} height="20" rx="4" />
-            </svg>
-          </button>
+          <div class="jev-promo__entry" data-jev-entry={row.id}>
+            <div class="jev-promo__chart-label">
+              <span class="jev-promo__chart-name"><strong>{row.label}</strong>{row.sourceUrl && (
+                <a class="jev-promo__github" href={row.sourceUrl} target="_blank" rel="noreferrer" aria-label="Open Hussi9 skill-router on GitHub (new tab)">
+                  <span aria-hidden="true">(</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
+                  <span aria-hidden="true">)</span>
+                </a>
+              )}</span>
+              <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s</span>
+              <ContextTooltip id={`jev-info-${row.id}`} label={row.label} text={row.info} align="end" />
+            </div>
+            <button type="button" class="jev-promo__row" data-jev-row={row.id}
+              data-factor={row.factor === null ? "" : row.factor.toFixed(2)} data-label={row.label}
+              data-description={row.description} data-quality={`${row.correct}/${row.observations}`}
+              data-announcement={row.announcement} aria-label={row.announcement}
+              aria-pressed={row.id === comparison.defaultId}>
+              <svg viewBox="0 0 540 26" aria-hidden="true">
+                <rect class="jev-promo__track" x="0" y="3" width={chartWidth} height="20" rx="4" />
+                <rect class={`jev-promo__bar jev-promo__bar--${row.id}`} x="0" y="3" width={chartWidth * row.medianSeconds / chartMax} height="20" rx="4" />
+              </svg>
+            </button>
+          </div>
         ))}
       </div>
       <svg class="jev-promo__axis" viewBox="0 0 540 30" aria-hidden="true">
@@ -197,14 +210,25 @@ const runs = [
       rows.forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
     };
     rows.forEach((row) => {
-      row.addEventListener("pointerenter", (event) => {
+      const entry = row.closest<HTMLElement>("[data-jev-entry]")!;
+      entry.addEventListener("pointerenter", (event) => {
         if (event.pointerType !== "touch") select(row);
       });
-      row.addEventListener("focus", () => {
-        focusedRow = row.matches(":focus-visible") ? row : null;
+      entry.addEventListener("focusin", (event) => {
+        focusedRow = event.target instanceof Element && event.target.matches(":focus-visible") ? row : null;
         select(row);
       });
-      row.addEventListener("click", () => select(row));
+      entry.addEventListener("click", () => select(row));
+    });
+    chart.querySelectorAll<HTMLElement>(".context-tip").forEach((tip) => {
+      const card = tip.querySelector<HTMLElement>(".context-tip__card")!;
+      const position = () => {
+        const trigger = tip.getBoundingClientRect();
+        tip.dataset.side = trigger.bottom + card.offsetHeight + 12 > window.innerHeight && trigger.top > card.offsetHeight + 16 ? "above" : "below";
+      };
+      tip.addEventListener("pointerenter", position);
+      tip.addEventListener("focusin", position);
+      tip.addEventListener("pointerdown", position);
     });
     chart.addEventListener("pointerleave", (event) => {
       if (event.pointerType !== "touch") select(focusedRow ?? defaultRow);
@@ -222,6 +246,14 @@ const runs = [
       }
     });
     document.addEventListener("pointerdown", (event) => {
+      // Outside taps also dismiss a tooltip whose trigger retains touch focus.
+      chart.querySelectorAll<HTMLElement>(".context-tip[data-open='true'], .context-tip:focus-within, .context-tip:hover").forEach((tip) => {
+        if (event.target instanceof Node && !tip.contains(event.target)) {
+          tip.dataset.dismissed = "true";
+          delete tip.dataset.open;
+          tip.querySelector("[data-context-tip-trigger]")?.setAttribute("aria-expanded", "false");
+        }
+      });
       if (event.target instanceof Node && !chart.contains(event.target)) {
         focusedRow = null;
         select(defaultRow);
@@ -269,14 +301,27 @@ const runs = [
   .jev-promo__chart { margin: 0; padding: 1.25rem; background: var(--surface-muted); border-radius: var(--radius); }
   .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1rem; }
   .jev-promo__chart figcaption span { display: block; color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-top: 0.3rem; }
-  .jev-promo__chart-label { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.82rem; }
-  .jev-promo__chart-label span { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .jev-promo__chart-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+  .jev-promo__chart-name { display: flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; min-width: 0; }
+  .jev-promo__time { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 650; }
+  .jev-promo__github { display: inline-flex; align-items: center; justify-content: center; gap: 0.15rem; min-width: 32px; min-height: 32px; }
+  .jev-promo__github svg { width: 15px; height: 15px; }
   .jev-promo__rows { display: grid; gap: 0.25rem; }
-  .jev-promo__row { display: block; width: 100%; min-height: 56px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: inherit; padding: 0.5rem; text-align: left; font: inherit; cursor: pointer; }
-  .jev-promo__row[aria-pressed="true"] { border-color: var(--primary); background: var(--surface-solid); }
-  .jev-promo__row:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-  .jev-promo__chart svg { display: block; width: 100%; overflow: visible; margin: 0.25rem 0 0; }
-  .jev-promo__chart .jev-promo__axis { width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
+  .jev-promo__entry { position: relative; z-index: 0; min-width: 0; border: 1px solid transparent; border-radius: 6px; padding: 0.35rem 0.5rem; }
+  .jev-promo__entry:has(.jev-promo__row[aria-pressed="true"]) { border-color: var(--primary); background: var(--surface-solid); }
+  .jev-promo__entry:hover, .jev-promo__entry:focus-within, .jev-promo__entry:has(.context-tip[data-open="true"]) { z-index: 2; }
+  .jev-promo__row { display: block; width: 100%; min-height: 32px; border: 0; border-radius: 4px; background: transparent; color: inherit; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+  .jev-promo__row:focus-visible, .jev-promo__chart :global(.context-tip__trigger:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .jev-promo__row svg { display: block; width: 100%; overflow: visible; }
+  .jev-promo__chart :global(.context-tip) { flex-shrink: 0; }
+  .jev-promo__chart :global(.context-tip__trigger) { width: 32px; height: 32px; }
+  .jev-promo__chart :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
+  .jev-promo__chart :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
+  /* Keep the hover target continuous between the trigger and its card. */
+  .jev-promo__chart :global(.context-tip__card)::before { content: ""; position: absolute; bottom: 100%; left: 0; right: 0; height: 0.65rem; }
+  .jev-promo__chart :global(.context-tip[data-side="above"] .context-tip__card) { top: auto; bottom: calc(100% + 0.6rem); }
+  .jev-promo__chart :global(.context-tip[data-side="above"] .context-tip__card)::before { bottom: auto; top: 100%; }
+  .jev-promo__chart .jev-promo__axis { display: block; overflow: visible; width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
   .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
   .jev-promo__track { fill: var(--border); }
   .jev-promo__bar--jev_session { fill: var(--primary); }
@@ -338,5 +383,8 @@ const runs = [
     .jev-promo__stats > div + div { border-top: 1px solid var(--border); padding-top: 1.25rem; }
     .jev-promo__stats p:not(.jev-promo__stat) { max-width: 48ch; }
   }
-  @media (prefers-reduced-motion: reduce) { .jev-promo--animate .jev-promo__bar { animation: none; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .jev-promo--animate .jev-promo__bar { animation: none; transform: none; }
+    .jev-promo__chart :global(.context-tip__card) { transition: none; }
+  }
 </style>

@@ -49,7 +49,20 @@ assert.equal(current.defaultId, "jev_session");
 assert.equal(current.baselineId, "native");
 assert.deepEqual(
   current.rows.map((row) => row.id),
-  ["jev_session", "jev_cold", "hussi_original", "native"],
+  ["jev_session", "hussi_original", "jev_cold", "native"],
+);
+assert.ok(
+  current.rows.every(
+    (row, index) => index === 0 || current.rows[index - 1].medianSeconds <= row.medianSeconds,
+  ),
+);
+assert.ok(current.rows.every((row) => typeof row.info === "string" && row.info.length > 0));
+assert.equal(
+  current.rows.find((row) => row.id === "hussi_original").sourceUrl,
+  "https://github.com/hussi9/skill-router",
+);
+assert.ok(
+  current.rows.filter((row) => row.id !== "hussi_original").every((row) => row.sourceUrl === null),
 );
 assert.equal(new Set(current.rows.map((row) => row.id)).size, 4);
 assert.equal(data.experiment.unique_tasks, 48);
@@ -77,6 +90,7 @@ assert.equal(current.jevModel, "jev-1.13.0");
 assert.ok(current.hussiSource.includes("/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/"));
 
 const baseline = current.rows.find((row) => row.id === current.baselineId);
+let previousReadmeRow = -1;
 for (const row of current.rows) {
   const positive = data.groups.primary_positive.arms[row.id];
   const none = data.groups.none.arms[row.id];
@@ -100,7 +114,9 @@ for (const row of current.rows) {
   if (row.id === "native") assert.equal(row.factor, null);
   else assert.ok(Math.abs(row.factor - baseline.medianSeconds / row.medianSeconds) < 1e-12);
   const expectedRow = `| ${row.label} | ${row.medianSeconds.toFixed(3)} s | ${row.p95Seconds.toFixed(3)} s | ${row.correct}/${row.observations} | ${row.noneCorrect}/${row.noneObservations} | ${row.errors} |`;
-  assert.ok(readme.replace(/\s+/g, " ").includes(expectedRow), `README row differs: ${row.label}`);
+  const readmeRow = readme.replace(/\s+/g, " ").indexOf(expectedRow);
+  assert.ok(readmeRow > previousReadmeRow, `README row missing or out of time order: ${row.label}`);
+  previousReadmeRow = readmeRow;
 }
 for (const id of ["jev_session", "jev_cold"]) {
   assert.equal(

@@ -29,30 +29,43 @@ const rowLabels = {
   hussi_original: "Hussi9",
   native: "Native",
 };
-const rows = Object.entries(rowLabels).map(([id, label]) => {
-  const result = positive[id];
-  const none = current.groups.none.arms[id];
-  const factor = id === "native" ? null : positive.native.median_ms / result.median_ms;
-  const relation =
-    factor === null ? "Native baseline" : `${factor.toFixed(2)} times the native selection speed`;
-  return {
-    id,
-    label,
-    factor,
-    medianSeconds: result.median_ms / 1000,
-    p95Seconds: result.p95_ms / 1000,
-    correct: result.correct,
-    observations: result.n,
-    noneCorrect: none.correct,
-    noneObservations: none.n,
-    errors: current.groups.all.arms[id].errors,
-    description:
-      factor === null
-        ? "The reference model chooses from the same candidate cards."
-        : "Median skill-selection speed compared with the native model selector.",
-    announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct accepted selections.`,
-  };
-});
+const rowNotes = {
+  jev_session:
+    "Same candidate ranking and answer checks as Fresh Connection. Reuses HTTPS in a retained process, avoiding repeated setup; a host-supplied catalog is validated for every task. No result cache in this benchmark.",
+  jev_cold:
+    "Validates, deduplicates and ranks skills + MCP tools, then checks selected IDs and answer consistency. Opens new HTTPS for each selection. One API call per observation here; compound tasks can need follow-ups.",
+  hussi_original:
+    "Uses Jev for domain, process and task-type choices. Smaller requests and less local preparation than Fresh here; their latency effects were not isolated. Its 0.8 confidence gate withheld four correct suggestions.",
+  native: `${current.models.native.requested}, reasoning ${current.models.native.reasoning}, selects from the same Jev candidate cards. Timing includes preparation and the model turn; excludes process startup, skill loading and task execution. Measured in a separate run.`,
+};
+const rows = Object.entries(rowLabels)
+  .map(([id, label]) => {
+    const result = positive[id];
+    const none = current.groups.none.arms[id];
+    const factor = id === "native" ? null : positive.native.median_ms / result.median_ms;
+    const relation =
+      factor === null ? "Native baseline" : `${factor.toFixed(2)} times the native selection speed`;
+    return {
+      id,
+      label,
+      info: rowNotes[id],
+      sourceUrl: id === "hussi_original" ? current.sources.hussi.url.split("/blob/")[0] : null,
+      factor,
+      medianSeconds: result.median_ms / 1000,
+      p95Seconds: result.p95_ms / 1000,
+      correct: result.correct,
+      observations: result.n,
+      noneCorrect: none.correct,
+      noneObservations: none.n,
+      errors: current.groups.all.arms[id].errors,
+      description:
+        factor === null
+          ? "The reference model chooses from the same candidate cards."
+          : "Median skill-selection speed compared with the native model selector.",
+      announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct accepted selections.`,
+    };
+  })
+  .sort((left, right) => left.medianSeconds - right.medianSeconds);
 
 export const jevBenchmarks = {
   current: {
