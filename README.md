@@ -135,7 +135,7 @@ The icons follow the reviewed glyph choices prepared for the [stark AI Developer
 
 ## New release candidate: Jev Capability Advisor
 
-Find relevant available skills and tools for a supplied task, with optional local caching and inspectable recommendations. Read the [usage guide](docs/skills/jev-capability-advisor/README.md) or explore [benchmarks and benefits](docs/skills/jev-capability-advisor/benchmarks/README.md), backed by 6,000+ recorded benchmark executions across development iterations.
+Find relevant available skills and tools for a supplied task, with optional local caching and inspectable recommendations. Read the [usage guide](docs/skills/jev-capability-advisor/README.md) or explore [benchmarks and benefits](docs/skills/jev-capability-advisor/benchmarks/README.md), backed by 6,000+ recorded benchmark executions across development iterations. Maintainers: see the [release handoff](docs/skills/jev-capability-advisor/README.md#release-handoff) for package versions, remaining gates and publication steps.
 
 ## How the catalog works
 

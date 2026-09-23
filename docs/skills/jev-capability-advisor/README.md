@@ -51,3 +51,29 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 The agent supplies the current catalog and controls loading, permissions and execution. This release candidate does not automatically intercept ordinary prompts. Compound advice remains experimental, and omitted candidates can limit results.
 
 Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-advisor/SKILL.md) for the operational workflow and [evaluation record](../../../skill-evals/jev-capability-advisor/README.md) for qualification and known limits.
+
+## Release handoff
+
+**Prepared for review; production promotion is still open.** The [promotion gate](../../../skill-evals/jev-capability-advisor/README.md#promotion-gate) requires representative native workflow benefit. The selector benchmark does not establish faster complete agent tasks. Plugin inclusion and a green build do not replace that decision.
+
+| Component              | Prepared version                    | Distribution                                                                     |
+| ---------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
+| Jev Capability Advisor | `0.1.0`                             | Standalone Agent Skill; optional `dist/skills/jev-capability-advisor.zip`        |
+| stark AI Developer     | `1.3.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
+| Catalog                | Next generated minor after `0.22.0` | Release Please owns the final version and changelog; no manual root version bump |
+
+The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection reuse needs a retained process.
+
+### Maintainer steps
+
+1. **Close the promotion gate, then merge the feature PR.** Review the [evaluation record](../../../skill-evals/jev-capability-advisor/README.md), supported scope and exact-head checks. Do not merge the proposed public promotion while the gate remains open. Review and resolve the explanatory PR threads.
+2. **Review the generated release PR.** After the feature merge, let Release Please refresh its draft and confirm the Jev change is included. It owns exactly `package.json`, `.release-please-manifest.json` and `CHANGELOG.md`. If no draft exists, use `pnpm run release:manage -- release-pr --confirm` from protected `main`. Merge the reviewed, passing release PR.
+3. **Approve GitHub publication.** Inspect the automatically started Publish Release readiness job, then approve its waiting `release` environment deployment. Wait for publication and exact-tag Post-release Evidence to pass. Check the production Pages deployment separately. The release preserves `openai.zip`, `portable.zip` and `release-subject.json` as direct assets.
+4. **Update the existing OpenAI plugin.** Run `pnpm run release:manage -- openai-handoff --tag <ACTUAL_TAG>` and upload that release's exact `openai.zip`. Follow the [seven-skill update checklist](../../listing/openai/stark-ai-developer-first-publication.md#jev-update-handoff). A local ZIP is preparation proof, not the portal upload source. Complete portal review and publication manually.
+5. **Verify public installation, then announce.** Test the standalone command above and an eligible Codex plugin install/update. Confirm Jev's instructions, scripts and allowed invocation work; verify directory identity and the live benchmark page. Record sanitized lifecycle evidence using the [publishing runbook](../../publishing.md#post-release-evidence-and-lifecycle-lanes). Publish the launch post only after the distribution it advertises is available.
+
+### Release-note draft
+
+> Adds Jev Capability Advisor 0.1.0 to the public catalog and stark AI Developer 1.3.0. It recommends available skills and MCP tools, supports local inspection and provides a reusable session interface for host integrations. In the recorded single-skill benchmark, Session selected in 0.733 s versus 4.314 s for the native GPT-6 Astra low selector, with 80/80 correct accepted selections. These are selection medians from separate runs, not end-to-end task timings. Hosts retain activation, permissions and execution; automatic interception needs separate qualification and compound advice remains experimental.
+
+Use this draft after promotion is approved. The exact version, changelog and release subjects come from the reviewed generated release candidate; the [publishing runbook](../../publishing.md#release-artifacts) owns packaging and publication procedures.

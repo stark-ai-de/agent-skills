@@ -2,6 +2,22 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
+## Release package qualification, 2026-09-23
+
+The current 13-file Jev skill closure was rebuilt as standalone, portable-plugin and OpenAI-plugin packages. All 13 canonical files, including `agents/openai.yaml`, match byte for byte in all three archives. The canonical runtime remains the measured revision; release-handoff documentation does not change the skill payload.
+
+| Local preparation artifact                        |   Bytes | SHA-256                                                            |
+| ------------------------------------------------- | ------: | ------------------------------------------------------------------ |
+| `dist/skills/jev-capability-advisor.zip`          |  150650 | `e9b783675bfa7b0c91b5943f7f3f411d9495450d752b7d42a9c19d7b0406a3f0` |
+| `dist/agent-plugins/stark-ai-developer-1.3.0.zip` | 2668992 | `f2cbae18b23b8b3d341fc55bf65ca49e8b20af329e915b4e506be4b2f56fc339` |
+| `dist/openai/stark-ai-developer-1.3.0.zip`        | 2882198 | `58d3cf0d145c4f334cd2c2c76c11fb0319d3659fcb3269b616d353b35bfe7fd8` |
+
+Each extracted skill passed CLI help, offline candidate selection with disabled-capability exclusion, and two sequential NDJSON frames (empty and disabled inventory), followed by clean EOF. A Python audit hook rejected any socket operation: all runs completed with zero network attempts and no credentials supplied. Python was 3.14.7 on Linux; this is not minimum-version or other-host runtime qualification. Archives contain no private drafts or marketing assets.
+
+Repository installation smoke separately discovered exactly 11 public skills and passed seven disposable project-local installations, including Jev for Codex. Projection, archive validation, deterministic two-build reproducibility, endpoint policy, descriptor, contract-snapshot and supply-chain checks passed. These checks add no benchmark executions and do not close the [promotion gate](#promotion-gate).
+
+The artifact digests above identify local preparation bytes, **not published release subjects**. The actual release workflow supplies the final `openai.zip`, `portable.zip` and source-bound `release-subject.json`; the portal must receive the exact published OpenAI asset. Follow the [release handoff](../../docs/skills/jev-capability-advisor/README.md#release-handoff) for remaining steps.
+
 ## Native supplement and public comparison, 2026-09-23
 
 The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 288 existing Jev Session, Jev Fresh Connection and published Hussi chooser observations with **96 new native turns**. All use the same 48 frozen tasks (40 skill, eight NONE), twice, and byte-identical 132-entry catalog. The native adapter receives the same 128 physical candidate cards, task and routing rules as Jev. Golden labels are excluded. The seven current runtime source hashes still match the original freeze; no Jev calls were repeated.

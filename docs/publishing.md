@@ -367,7 +367,7 @@ pnpm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `pnpm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.2.0.zip` is the local OpenAI-native
+`dist/openai/stark-ai-developer-1.3.0.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
 package time. The normal portal handoff source is the direct `openai.zip` asset
 from the verified GitHub Release; its bytes came unchanged from successful
@@ -503,9 +503,9 @@ promotion gates.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.2.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
+   `1.3.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
-3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
+3. Inspect all seven canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
 4. Run focused and aggregate validation, inspect the ZIP listing, and confirm
    two-build checksum equality.
