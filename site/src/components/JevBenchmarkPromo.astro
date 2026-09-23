@@ -33,14 +33,33 @@ const runs = [
       <p class="jev-promo__ratio" data-jev-ratio aria-hidden="true"><b data-jev-factor>{initial.factor!.toFixed(2)}</b><span>×</span></p>
       <h3 class="jev-promo__comparison-title"><span data-jev-comparison-label>{initial.label} vs native</span></h3>
       <p class="jev-promo__description"><span data-jev-comparison-description>{initial.description}</span></p>
-      <p class="jev-promo__quality"><strong>Correct accepted selections</strong><br /><span data-jev-quality>{initial.correct}/{initial.observations}</span></p>
+      <p class="jev-promo__quality"><strong>Correct accepted selections</strong><br />
+        <span class="jev-promo__score" data-jev-score data-perfect={String(initial.observations > 0 && initial.correct === initial.observations)}>
+          <span data-jev-quality>{initial.correct}/{initial.observations}</span>
+          <span class="jev-promo__sparkles" aria-hidden="true">
+            {[0, 1, 2].map((star) => (
+              <svg class={`jev-promo__star jev-promo__star--${star}`} viewBox="0 0 32 32" focusable="false">
+                <defs><linearGradient id={`jev-star-gold-${star}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff9da" /><stop offset="0.35" stop-color="#ffe58a" /><stop offset="0.65" stop-color="#e9ae24" /><stop offset="1" stop-color="#a56a08" /></linearGradient></defs>
+                <path d="m16 2 4.3 8.9 9.7 1.4-7 6.8 1.6 9.7-8.6-4.6-8.6 4.6 1.6-9.7-7-6.8 9.7-1.4Z" fill={`url(#jev-star-gold-${star})`} stroke="#bc861b" stroke-width="0.7" stroke-linejoin="round" />
+                <path d="M16 2v14l-4.3-5.1Z" fill="#fffdf0" opacity="0.9" />
+                <path d="M30 12.3 16 16l4.3-5.1Z" fill="#fff2b0" />
+                <path d="m24.6 28.8-8.6-12.8 7 3.1Z" fill="#a86c0c" opacity="0.75" />
+                <path d="m7.4 28.8 8.6-12.8v8.2Z" fill="#ffd35c" />
+                <path d="m13 10 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z" fill="#fff" opacity="0.85" />
+              </svg>
+            ))}
+          </span>
+        </span>
+      </p>
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-jev-announcement>{initial.announcement}</p>
     </div>
 
     <figure class="jev-promo__chart" data-jev-chart>
-      <figcaption>Skill selection · median · lower is better<span>Fastest first. Hover, focus or tap a row to compare; use the info buttons for technical details.</span></figcaption>
+      <figcaption>Skill selection · median · lower is better<span>Fastest first. Compare the selectors; Native restores Jev Session. Use the info buttons for technical details.</span></figcaption>
       <div class="jev-promo__rows">
-        {comparison.rows.map((row) => (
+        {comparison.rows.map((row) => {
+          const Row = row.id === comparison.baselineId ? "div" : "button";
+          return (
           <div class="jev-promo__entry" data-jev-entry={row.id}>
             <div class="jev-promo__chart-label">
               <span class="jev-promo__chart-name"><strong>{row.label}</strong>{row.sourceUrl && (
@@ -53,18 +72,20 @@ const runs = [
               <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s</span>
               <ContextTooltip id={`jev-info-${row.id}`} label={row.label} text={row.info} align="end" />
             </div>
-            <button type="button" class="jev-promo__row" data-jev-row={row.id}
+            <Row type={row.id === comparison.baselineId ? undefined : "button"} role={row.id === comparison.baselineId ? "img" : undefined} class="jev-promo__row" data-jev-row={row.id}
               data-factor={row.factor === null ? "" : row.factor.toFixed(2)} data-label={row.label}
               data-description={row.description} data-quality={`${row.correct}/${row.observations}`}
+              data-perfect={String(row.observations > 0 && row.correct === row.observations)}
               data-announcement={row.announcement} aria-label={row.announcement}
-              aria-pressed={row.id === comparison.defaultId}>
+              aria-pressed={row.id === comparison.baselineId ? undefined : row.id === comparison.defaultId}>
               <svg viewBox="0 0 540 26" aria-hidden="true">
                 <rect class="jev-promo__track" x="0" y="3" width={chartWidth} height="20" rx="4" />
                 <rect class={`jev-promo__bar jev-promo__bar--${row.id}`} x="0" y="3" width={chartWidth * row.medianSeconds / chartMax} height="20" rx="4" />
               </svg>
-            </button>
+            </Row>
           </div>
-        ))}
+          );
+        })}
       </div>
       <svg class="jev-promo__axis" viewBox="0 0 540 30" aria-hidden="true">
         {[0, chartMax / 4, chartMax / 2, chartMax * 3 / 4, chartMax].map((tick) => (
@@ -189,25 +210,39 @@ const runs = [
 <script>
   const promo = document.querySelector<HTMLElement>("[data-jev-promo]");
   const chart = promo?.querySelector<HTMLElement>("[data-jev-chart]");
-  const rows = Array.from(chart?.querySelectorAll<HTMLButtonElement>("[data-jev-row]") ?? []);
+  const rows = Array.from(chart?.querySelectorAll<HTMLElement>("[data-jev-row]") ?? []);
   const defaultRow = rows.find((row) => row.dataset.jevRow === "jev_session");
   if (promo && chart && defaultRow) {
-    const ratio = promo.querySelector<HTMLElement>("[data-jev-ratio]")!;
     const factor = promo.querySelector<HTMLElement>("[data-jev-factor]")!;
     const label = promo.querySelector<HTMLElement>("[data-jev-comparison-label]")!;
     const description = promo.querySelector<HTMLElement>("[data-jev-comparison-description]")!;
     const quality = promo.querySelector<HTMLElement>("[data-jev-quality]")!;
+    const score = promo.querySelector<HTMLElement>("[data-jev-score]")!;
     const announcement = promo.querySelector<HTMLElement>("[data-jev-announcement]")!;
-    let focusedRow: HTMLButtonElement | null = null;
-    const select = (row: HTMLButtonElement) => {
-      const baseline = row.dataset.factor === "";
+    if ("IntersectionObserver" in window) {
+      const revealScore = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
+          score.dataset.revealed = "true";
+          revealScore.disconnect();
+        }
+      }, { threshold: 0.75 });
+      revealScore.observe(score);
+    }
+    let focusedRow: HTMLElement | null = null;
+    let selectedRow = defaultRow;
+    const select = (requested: HTMLElement) => {
+      const baseline = requested.dataset.factor === "";
+      if (baseline) focusedRow = null;
+      const row = baseline ? defaultRow : requested;
+      if (row === selectedRow) return;
+      selectedRow = row;
       factor.textContent = row.dataset.factor ?? "";
-      ratio.style.visibility = baseline ? "hidden" : "visible";
-      label.textContent = baseline ? "Native baseline" : `${row.dataset.label} vs native`;
+      label.textContent = `${row.dataset.label} vs native`;
       description.textContent = row.dataset.description ?? "";
       quality.textContent = row.dataset.quality ?? "";
+      score.dataset.perfect = row.dataset.perfect;
       announcement.textContent = row.dataset.announcement ?? "";
-      rows.forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
+      rows.filter((item) => item instanceof HTMLButtonElement).forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
     };
     rows.forEach((row) => {
       const entry = row.closest<HTMLElement>("[data-jev-entry]")!;
@@ -298,6 +333,19 @@ const runs = [
   .jev-promo__description::after { content: "Median skill-selection speed compared with the native model selector."; visibility: hidden; }
   .jev-promo__quality { border-left: 2px solid var(--secondary); padding-left: 0.8rem; }
   .jev-promo__quality strong { color: var(--foreground); }
+  .jev-promo__score { position: relative; display: inline-block; margin-top: 0.2rem; color: var(--foreground); font-size: 1.05rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .jev-promo__sparkles { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+  .jev-promo__score[data-perfect="true"] .jev-promo__sparkles { visibility: visible; }
+  .jev-promo__star { position: absolute; overflow: visible; filter: drop-shadow(0 1px 0.7px rgb(139 86 4 / 24%)); transform: rotate(var(--star-angle)); }
+  .jev-promo__star--0 { width: 17px; height: 17px; right: -19px; top: -5px; --star-angle: 14deg; --star-delay: 0ms; }
+  .jev-promo__star--1 { width: 11px; height: 11px; left: -10px; bottom: -2px; --star-angle: -16deg; --star-delay: 100ms; }
+  .jev-promo__star--2 { width: 8px; height: 8px; right: -9px; bottom: -6px; --star-angle: 8deg; --star-delay: 180ms; }
+  .jev-promo__score[data-revealed="true"][data-perfect="true"] .jev-promo__star { animation: jev-star-burst 850ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--star-delay) both; }
+  @keyframes jev-star-burst {
+    0% { opacity: 0; transform: translateY(7px) scale(0.25) rotate(-30deg); }
+    60% { opacity: 1; transform: translateY(-2px) scale(1.15) rotate(var(--star-angle)); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(var(--star-angle)); }
+  }
   .jev-promo__chart { margin: 0; padding: 1.25rem; background: var(--surface-muted); border-radius: var(--radius); }
   .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1rem; }
   .jev-promo__chart figcaption span { display: block; color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-top: 0.3rem; }
@@ -311,6 +359,7 @@ const runs = [
   .jev-promo__entry:has(.jev-promo__row[aria-pressed="true"]) { border-color: var(--primary); background: var(--surface-solid); }
   .jev-promo__entry:hover, .jev-promo__entry:focus-within, .jev-promo__entry:has(.context-tip[data-open="true"]) { z-index: 2; }
   .jev-promo__row { display: block; width: 100%; min-height: 32px; border: 0; border-radius: 4px; background: transparent; color: inherit; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+  .jev-promo__row[data-jev-row="native"] { cursor: default; }
   .jev-promo__row:focus-visible, .jev-promo__chart :global(.context-tip__trigger:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
   .jev-promo__row svg { display: block; width: 100%; overflow: visible; }
   .jev-promo__chart :global(.context-tip) { flex-shrink: 0; }
@@ -385,6 +434,7 @@ const runs = [
   }
   @media (prefers-reduced-motion: reduce) {
     .jev-promo--animate .jev-promo__bar { animation: none; transform: none; }
+    .jev-promo__score[data-revealed="true"][data-perfect="true"] .jev-promo__star { animation: none; }
     .jev-promo__chart :global(.context-tip__card) { transition: none; }
   }
 </style>
