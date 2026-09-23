@@ -3,14 +3,16 @@ import { jevBenchmarks as bench } from "../lib/jev-benchmarks.mjs";
 import { repoUrl } from "../lib/skills";
 
 const number = (value: number) => value.toLocaleString("en-US");
-const speed = bench.session.speedRatio.toFixed(2);
-const chartMax = Math.ceil(Math.max(bench.session.medianSeconds, bench.session.coldMedianSeconds));
+const comparison = bench.current;
+const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
+const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
 const chartWidth = 540;
 const runs = [
   { label: "Session and selector development", count: bench.runCounts.sessionDevelopment, detail: "37 completed experiments, including 384 fresh-task comparisons" },
   { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
   { label: "Live selection evaluations", count: bench.runCounts.liveSelection, detail: "160 + 100 + 32 + 160 runs" },
   { label: "Runtime measurements", count: bench.runCounts.runtime, detail: "320 + 80 fresh-process measurements" },
+  { label: "Native supplement", count: bench.runCounts.nativeSupplement, detail: "48 existing holdout tasks × 2 native observations" },
   { label: "Archived replay evaluations", count: bench.runCounts.replay, detail: "100 recorded-response replays" },
 ];
 ---
@@ -27,32 +29,37 @@ const runs = [
 
   <div class="jev-promo__comparison">
     <div class="jev-promo__headline">
-      <p class="jev-promo__ratio">{speed}<span>×</span></p>
-      <h3>Faster with a reusable session</h3>
-      <p>Compared with our fresh-connection path. {bench.session.tasks} previously untested tasks, each repeated twice.</p>
-      <p class="jev-promo__quality"><strong>Correct results</strong><br />Both Jev paths {bench.session.correct}/{bench.session.observations}</p>
+      <p class="jev-promo__ratio" data-jev-ratio aria-hidden="true"><b data-jev-factor>{initial.factor!.toFixed(2)}</b><span>×</span></p>
+      <h3 class="jev-promo__comparison-title"><span data-jev-comparison-label>{initial.label} vs native</span></h3>
+      <p class="jev-promo__description"><span data-jev-comparison-description>{initial.description}</span></p>
+      <p class="jev-promo__quality"><strong>Correct skill selections</strong><br /><span data-jev-quality>{initial.correct}/{initial.observations}</span></p>
+      <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-jev-announcement>{initial.announcement}</p>
     </div>
 
-    <figure class="jev-promo__chart">
-      <figcaption>Time to a skill recommendation <span>Median · lower is better</span></figcaption>
-      <div class="jev-promo__chart-label"><strong>Jev session</strong><span>{bench.session.medianSeconds.toFixed(2)} s</span></div>
-      <svg viewBox="0 0 560 56" role="img" aria-labelledby="jev-time-title jev-time-desc">
-        <title id="jev-time-title">Jev median selection: {bench.session.medianSeconds.toFixed(2)} seconds</title>
-        <desc id="jev-time-desc">Bar starts at zero on the same zero to {chartMax} second scale as the fresh-connection path.</desc>
-        <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
-        <rect class="jev-promo__bar jev-promo__bar--jev" x="0" y="6" width={chartWidth * bench.session.medianSeconds / chartMax} height="32" rx="5" />
-      </svg>
-      <div class="jev-promo__chart-label"><strong>Jev fresh connection</strong><span>{bench.session.coldMedianSeconds.toFixed(2)} s</span></div>
-      <svg viewBox="0 0 560 70" role="img" aria-labelledby="cold-time-title cold-time-desc">
-        <title id="cold-time-title">Jev fresh-connection median selection: {bench.session.coldMedianSeconds.toFixed(2)} seconds</title>
-        <desc id="cold-time-desc">Both bars use a zero to {chartMax} second scale. Capability loading and task execution are excluded.</desc>
-        <rect class="jev-promo__track" x="0" y="6" width={chartWidth} height="32" rx="5" />
-        <rect class="jev-promo__bar jev-promo__bar--native" x="0" y="6" width={chartWidth * bench.session.coldMedianSeconds / chartMax} height="32" rx="5" />
+    <figure class="jev-promo__chart" data-jev-chart>
+      <figcaption>Skill selection · median · lower is better<span>Hover, focus or tap a row to compare with native.</span></figcaption>
+      <div class="jev-promo__rows">
+        {comparison.rows.map((row) => (
+          <button type="button" class="jev-promo__row" data-jev-row={row.id}
+            data-factor={row.factor === null ? "" : row.factor.toFixed(2)} data-label={row.label}
+            data-description={row.description} data-quality={`${row.correct}/${row.observations}`}
+            data-announcement={row.announcement} aria-label={row.announcement}
+            aria-pressed={row.id === comparison.defaultId}>
+            <span class="jev-promo__chart-label"><strong>{row.label}</strong><span>{row.medianSeconds.toFixed(2)} s</span></span>
+            <svg viewBox="0 0 540 26" aria-hidden="true">
+              <rect class="jev-promo__track" x="0" y="3" width={chartWidth} height="20" rx="4" />
+              <rect class={`jev-promo__bar jev-promo__bar--${row.id}`} x="0" y="3" width={chartWidth * row.medianSeconds / chartMax} height="20" rx="4" />
+            </svg>
+          </button>
+        ))}
+      </div>
+      <svg class="jev-promo__axis" viewBox="0 0 540 30" aria-hidden="true">
         {[0, chartMax / 4, chartMax / 2, chartMax * 3 / 4, chartMax].map((tick) => (
-          <text x={tick / chartMax * chartWidth} y="65" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(1)} s</text>
+          <text x={tick / chartMax * chartWidth} y="22" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(2)} s</text>
         ))}
       </svg>
-      <p class="jev-promo__caption">{bench.session.reductionPercent.toFixed(0)}% less median wait across {bench.session.skillObservations} single-skill observations. First cold calls included; no result cache. Imports, process startup, capability loading and task execution excluded. Direct HTTPS in a retained session; proxies use an unpooled fallback.</p>
+      <p class="jev-promo__models">Native: {comparison.nativeModel} · reasoning {comparison.nativeReasoning}<br />Jev + Hussi9: {comparison.jevModel}</p>
+      <p class="jev-promo__caption">{comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
     </figure>
   </div>
 
@@ -87,13 +94,20 @@ const runs = [
   </div>
 
   <details class="jev-promo__details">
-    <summary>Fresh-task results and session requirements</summary>
+    <summary>Results, comparison sources and session requirements</summary>
     <div class="jev-promo__details-body">
-      <p>Forty single-skill tasks and eight no-match tasks, balanced between German and English, were withheld until the runtime was frozen. Both Jev paths scored 80/80 on skill decisions and 16/16 on no-match decisions. Median timing above uses the skill decisions. This holdout does not cover fresh MCP, compound or clarification tasks.</p>
-      <p>The actual session API received a fresh catalog every time. Session construction, validation, preparation, API calls and evidence recording were timed. Two initial cold requests and 94 reused connections are included; no prewarming, result/index cache or retry was used. Provider service load and caching were uncontrolled.</p>
-      <p>The median paired saving was 376 ms, with a 95% task-cluster bootstrap interval of 365–384 ms. All 384 scheduled observations in the four-variant experiment were retained; this panel displays the 192 observations from our two connection lifecycles.</p>
-      <p>A host must retain the session and supply authoritative current inventory. Skill/plugin installation does not install an automatic hook. A whole-task speedup has not been demonstrated. The older native comparison below is a separate study; its timings cannot be combined with this one.</p>
-      <a href={repoUrl(bench.session.evidencePath)}>Read the session evidence</a>
+      <p>Forty single-skill tasks and eight no-match tasks, balanced between German and English, each ran twice. The three Jev-based variants reuse the frozen session study; only the native arm was added later. All skill observations contribute to the median, including incorrect selections. Provider load and caching were uncontrolled; this is a comparison across separate measurement runs.</p>
+      <div class="jev-promo__table-scroll" role="region" aria-label="Four-variant selection results" tabindex="0">
+        <table>
+          <caption>Same 48 tasks · two observations per variant and task</caption>
+          <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">p95</th><th scope="col">Skills correct</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
+          <tbody>{comparison.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.medianSeconds.toFixed(3)} s</td><td>{row.p95Seconds.toFixed(3)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p><a href={comparison.hussiSource}>Hussi9's published Jev selection component</a> uses its original 1.2-second timeout and 0.8 confidence gate. We measured selection, not its complete router, hooks or fallback workflow. A modified control using our persistent transport was faster still ({comparison.controlMedianSeconds.toFixed(3)} s median); it is not the published comparator. These results do not establish an overall fastest product.</p>
+      <p>The actual Jev session API received a fresh catalog every time. Session construction, validation, preparation, API calls and evidence recording were timed. Two first cold calls and 94 reused connections are included; no prewarming, result/index cache or retry was used. Native timing includes preparation and the model turn, with CLI startup recorded separately. Native was requested as {comparison.nativeModel} with reasoning {comparison.nativeReasoning}; its resolved backend identity was not independently observable.</p>
+      <p>A host must retain the session and supply authoritative current inventory. Proxies use an unpooled fallback. Skill/plugin installation does not install an automatic hook; a whole-task speedup has not been demonstrated. This task set contains no fresh MCP, compound or clarification cases. The older 80-task comparison below remains separate.</p>
+      <a href={repoUrl(comparison.evidencePath)}>Read the four-variant evidence</a>
     </div>
   </details>
 
@@ -133,13 +147,66 @@ const runs = [
   </details>
 
   <footer class="jev-promo__footer">
-    <span>Measured {bench.date} · Release candidate</span>
-    <div><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
+    <span>Measured {comparison.dateLabel} · Release candidate</span>
+    <div><a href={repoUrl(comparison.evidencePath)}>Comparison data</a><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
   </footer>
 </section>
 
 <script>
   const promo = document.querySelector<HTMLElement>("[data-jev-promo]");
+  const chart = promo?.querySelector<HTMLElement>("[data-jev-chart]");
+  const rows = Array.from(chart?.querySelectorAll<HTMLButtonElement>("[data-jev-row]") ?? []);
+  const defaultRow = rows.find((row) => row.dataset.jevRow === "jev_session");
+  if (promo && chart && defaultRow) {
+    const ratio = promo.querySelector<HTMLElement>("[data-jev-ratio]")!;
+    const factor = promo.querySelector<HTMLElement>("[data-jev-factor]")!;
+    const label = promo.querySelector<HTMLElement>("[data-jev-comparison-label]")!;
+    const description = promo.querySelector<HTMLElement>("[data-jev-comparison-description]")!;
+    const quality = promo.querySelector<HTMLElement>("[data-jev-quality]")!;
+    const announcement = promo.querySelector<HTMLElement>("[data-jev-announcement]")!;
+    let focusedRow: HTMLButtonElement | null = null;
+    const select = (row: HTMLButtonElement) => {
+      const baseline = row.dataset.factor === "";
+      factor.textContent = row.dataset.factor ?? "";
+      ratio.style.visibility = baseline ? "hidden" : "visible";
+      label.textContent = baseline ? "Native baseline" : `${row.dataset.label} vs native`;
+      description.textContent = row.dataset.description ?? "";
+      quality.textContent = row.dataset.quality ?? "";
+      announcement.textContent = row.dataset.announcement ?? "";
+      rows.forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
+    };
+    rows.forEach((row) => {
+      row.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") select(row);
+      });
+      row.addEventListener("focus", () => {
+        focusedRow = row.matches(":focus-visible") ? row : null;
+        select(row);
+      });
+      row.addEventListener("click", () => select(row));
+    });
+    chart.addEventListener("pointerleave", (event) => {
+      if (event.pointerType !== "touch") select(focusedRow ?? defaultRow);
+    });
+    chart.addEventListener("focusout", (event) => {
+      if (!(event.relatedTarget instanceof Node) || !chart.contains(event.relatedTarget)) {
+        focusedRow = null;
+        select(defaultRow);
+      }
+    });
+    chart.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        focusedRow = null;
+        select(defaultRow);
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Node && !chart.contains(event.target)) {
+        focusedRow = null;
+        select(defaultRow);
+      }
+    });
+  }
   if (promo && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
@@ -165,19 +232,35 @@ const runs = [
   .jev-promo__source { max-width: 15ch; flex-shrink: 0; font-size: 0.82rem; line-height: 1.5; }
   .jev-promo__comparison { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 2rem; margin-top: 2.5rem; align-items: center; }
   .jev-promo__ratio { margin: 0; font-family: var(--font-display); font-size: clamp(4rem, 7vw, 6.5rem); font-weight: 800; line-height: 1 !important; letter-spacing: -0.065em; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .jev-promo__ratio { min-height: 1em; }
+  .jev-promo__ratio b { font: inherit; }
   .jev-promo__ratio span { font-size: 0.6em; margin-left: 0.08em; }
   .jev-promo h3 { font-size: 1rem; margin: 0.75rem 0 0; line-height: 1.4; }
   .jev-promo__headline > p:not(.jev-promo__ratio) { max-width: 34ch; font-size: 0.86rem; color: var(--muted); }
+  .jev-promo__comparison-title, .jev-promo__description { display: grid; }
+  .jev-promo__comparison-title > span, .jev-promo__description > span,
+  .jev-promo__comparison-title::after, .jev-promo__description::after { grid-area: 1 / 1; }
+  /* Reserve the longest label at the current width without a fixed-height mobile gap. */
+  .jev-promo__comparison-title::after { content: "Jev Fresh Connection vs native"; visibility: hidden; }
+  .jev-promo__description::after { content: "Median skill-selection speed compared with the native model selector."; visibility: hidden; }
   .jev-promo__quality { border-left: 2px solid var(--secondary); padding-left: 0.8rem; }
   .jev-promo__quality strong { color: var(--foreground); }
   .jev-promo__chart { margin: 0; padding: 1.25rem; background: var(--surface-muted); border-radius: var(--radius); }
-  .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1.5rem; }
+  .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1rem; }
   .jev-promo__chart figcaption span { display: block; color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-top: 0.3rem; }
-  .jev-promo__chart-label { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; }
+  .jev-promo__chart-label { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.82rem; }
   .jev-promo__chart-label span { font-variant-numeric: tabular-nums; font-weight: 650; }
-  .jev-promo__chart svg { display: block; width: 100%; overflow: visible; margin: 0.4rem 0 1rem; }
+  .jev-promo__rows { display: grid; gap: 0.25rem; }
+  .jev-promo__row { display: block; width: 100%; min-height: 56px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: inherit; padding: 0.5rem; text-align: left; font: inherit; cursor: pointer; }
+  .jev-promo__row[aria-pressed="true"] { border-color: var(--primary); background: var(--surface-solid); }
+  .jev-promo__row:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .jev-promo__chart svg { display: block; width: 100%; overflow: visible; margin: 0.25rem 0 0; }
+  .jev-promo__chart .jev-promo__axis { width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
+  .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
   .jev-promo__track { fill: var(--border); }
-  .jev-promo__bar--jev { fill: var(--primary); }
+  .jev-promo__bar--jev_session { fill: var(--primary); }
+  .jev-promo__bar--jev_cold { fill: var(--secondary); }
+  .jev-promo__bar--hussi_original { fill: var(--foreground); opacity: 0.65; }
   .jev-promo__bar--native { fill: var(--muted); }
   .jev-promo__chart text { fill: var(--muted); font-size: 16px; font-family: var(--font-body); }
   .jev-promo__caption { margin: 0; font-size: 0.75rem; color: var(--muted); }

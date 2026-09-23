@@ -2,6 +2,25 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
+## Native supplement and public comparison, 2026-09-23
+
+The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 288 existing Jev Session, Jev Fresh Connection and published Hussi chooser observations with **96 new native turns**. All use the same 48 frozen tasks (40 skill, eight NONE), twice, and byte-identical 132-entry catalog. The native adapter receives the same 128 physical candidate cards, task and routing rules as Jev. Golden labels are excluded. The seven current runtime source hashes still match the original freeze; no Jev calls were repeated.
+
+| Variant              | Skill median | Skill p95 | Skills correct | NONE correct | Errors |
+| -------------------- | -----------: | --------: | -------------: | -----------: | -----: |
+| Jev Session          |      0.733 s |   0.798 s |          80/80 |        16/16 |      0 |
+| Jev Fresh Connection |      1.108 s |   1.167 s |          80/80 |        16/16 |      0 |
+| Hussi9               |      0.884 s |   0.936 s |          76/80 |        16/16 |      0 |
+| Native               |      4.314 s |   6.323 s |          80/80 |        16/16 |      0 |
+
+Primary statistics include every one of the 80 positive observations per arm, not only correct selections; the 16 NONE observations are secondary. P95 uses nearest rank. The default website factor is 5.89×, the ratio of native and session medians. These are **separate measurement runs**, not a contemporaneous randomized four-arm experiment or causal latency estimate. Provider caching/load are uncontrolled. The modified Hussi persistent-transport control from the original experiment remains disclosed in the data and benchmark README; no universal speed ranking is claimed.
+
+Native requested `gpt-6-astra`, reasoning `low`, using Codex CLI 0.154.0. Its resolved backend identity was not independently observable. Jev-based variants used `jev-1.13.0`. The unchanged native adapter measures local selection preparation plus `turn.started` to `turn.completed`; CLI process startup is retained separately. Native ran sequentially with a 90-second deadline, no tools/plugins/skills/memory/user configuration and no harness retries. CLI-internal transport behavior is not equated with a physical HTTP-request count. All failures, timeouts and missing timings remain explicit in the evidence.
+
+Independent audits verify the 197 original and 211 native frozen files, exact payload/prompt parity, schedule, strict scoring, timing events and complete ledgers. The [published Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its original payload, 1.2-second timeout and 0.8 confidence gate; this does not measure its full router, hooks or fallback execution.
+
+The cumulative development count is now **6,546 executions**: historical 6,450 plus these 96 native observations. The 288 reused observations were already counted and are not added twice. Counts describe recorded executions, not unique tasks, passing tests or calls. Original evidence below is preserved with its original date and scope.
+
 ## Reusable session qualification, 2026-09-22
 
 The actual `AdvisorSession.recommend` API was frozen before 48 previously unused tasks were dispatched. Forty single-skill and eight no-match tasks, balanced between German and English, ran twice per variant in randomized order. The complete four-variant study contains 384 observations; [this public projection](benchmarks/session-2026-09-22.json) presents the 192 observations from our own fresh-connection and reusable-session paths.

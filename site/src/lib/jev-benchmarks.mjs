@@ -1,6 +1,7 @@
 import session from "../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json" with { type: "json" };
 import development from "../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json" with { type: "json" };
 import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json" with { type: "json" };
+import current from "../../../skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json" with { type: "json" };
 
 const sum = (values) => values.reduce((total, value) => total + value, 0);
 const comparison = evidence.matched_selector_regression;
@@ -18,9 +19,56 @@ const runCounts = {
     comparison.completed_runs,
   replay: evidence.optimized_archived_replay.cases,
   sessionDevelopment: development.recorded_executions,
+  nativeSupplement: current.experiment.new_observations,
 };
 
+const positive = current.groups.primary_positive.arms;
+const rowLabels = {
+  jev_session: "Jev Session",
+  jev_cold: "Jev Fresh Connection",
+  hussi_original: "Hussi9",
+  native: "Native",
+};
+const rows = Object.entries(rowLabels).map(([id, label]) => {
+  const result = positive[id];
+  const none = current.groups.none.arms[id];
+  const factor = id === "native" ? null : positive.native.median_ms / result.median_ms;
+  const relation =
+    factor === null ? "Native baseline" : `${factor.toFixed(2)} times the native selection speed`;
+  return {
+    id,
+    label,
+    factor,
+    medianSeconds: result.median_ms / 1000,
+    p95Seconds: result.p95_ms / 1000,
+    correct: result.correct,
+    observations: result.n,
+    noneCorrect: none.correct,
+    noneObservations: none.n,
+    errors: current.groups.all.arms[id].errors,
+    description:
+      factor === null
+        ? "The reference model chooses from the same candidate cards."
+        : "Median skill-selection speed compared with the native model selector.",
+    announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct skill selections.`,
+  };
+});
+
 export const jevBenchmarks = {
+  current: {
+    evidence: current,
+    evidencePath: "skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json",
+    rows,
+    defaultId: "jev_session",
+    baselineId: "native",
+    skillObservations: positive.native.n,
+    dateLabel: current.measurement_dates.join(" / "),
+    nativeModel: current.models.native.requested,
+    nativeReasoning: current.models.native.reasoning,
+    jevModel: current.models.jev,
+    hussiSource: current.sources.hussi.url,
+    controlMedianSeconds: current.modified_control.primary_positive.median_ms / 1000,
+  },
   date: comparison.date,
   evidencePath: "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",
   readmePath: "docs/skills/jev-capability-advisor/benchmarks/README.md",

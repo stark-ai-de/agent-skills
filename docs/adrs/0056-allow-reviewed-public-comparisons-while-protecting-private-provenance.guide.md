@@ -2,7 +2,7 @@
 
 ID: ADR-0056
 Title: Allow reviewed public comparisons while protecting private provenance
-Status: Proposed
+Status: Accepted
 Date: 2026-09-22
 Owner: stark-ai-de
 Scope: repository
@@ -12,9 +12,9 @@ Applies when: Publishing skill comparisons and promotional benchmark claims.
 Adoptable: false
 Variant: Guide
 Canonical variant: Long
-Supersedes: None
+Supersedes: ADR-0030
 Superseded by: None
-Guide verified: 2026-09-22
+Guide verified: 2026-09-23
 Gist: Permit sourced public comparisons while keeping private provenance local and preserving material measurement limits.
 
 Variants: [Short](0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.short.md) · [Long, canonical](0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md) · **Guide**
@@ -33,7 +33,7 @@ Keep a canonical public Markdown comparison and render the same content on the s
 
 ## Current references
 
-- [Current ADR-0030](0030-separate-public-contracts-from-private-provenance.long.md).
+- [Superseded ADR-0030](0030-separate-public-contracts-from-private-provenance.long.md).
 - [Promotion requirements](0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md).
 
 ## Revisit

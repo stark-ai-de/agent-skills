@@ -2,7 +2,7 @@
 
 ID: ADR-0056
 Title: Allow reviewed public comparisons while protecting private provenance
-Status: Proposed
+Status: Accepted
 Date: 2026-09-22
 Owner: stark-ai-de
 Scope: repository
@@ -12,9 +12,9 @@ Applies when: Publishing skill comparisons and promotional benchmark claims.
 Adoptable: false
 Variant: Long
 Canonical variant: Long
-Supersedes: None
+Supersedes: ADR-0030
 Superseded by: None
-Guide verified: 2026-09-22
+Guide verified: 2026-09-23
 Gist: Permit sourced public comparisons while keeping private provenance local and preserving material measurement limits.
 
 Variants: [Short](0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.short.md) · **Long, canonical** · [Guide](0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.guide.md)
@@ -25,7 +25,7 @@ Public artifacts retain official sources, schemas, setup and probe instructions,
 
 Non-public maintainer repositories and paths, private mappings and identifying raw artifacts remain local. Publish only sanitized, non-identifying benchmark summaries or deliberately public fixtures with enough method information to interpret the claim. Unknown and unmeasured cells must not be represented as absent capabilities or zero latency. Every tracked public artifact remains subject to the release privacy and claim review.
 
-This record proposes replacing ADR-0030 upon explicit maintainer acceptance. Until that acceptance and reciprocal supersession metadata are recorded, ADR-0030 remains binding and named comparative content stays local.
+This record supersedes ADR-0030 following explicit maintainer acceptance. Reviewed public comparisons may be published under the boundaries above.
 
 ## Why
 
@@ -45,4 +45,4 @@ Users requested useful public feature and benchmark comparisons. Public-source p
 
 ## Follow-up
 
-On acceptance, set this record Accepted and Supersedes ADR-0030, set ADR-0030 Superseded and Superseded by ADR-0056 without changing its decision, add the new immutable decision digest, and update both indexes. Preserve historical receipts.
+Acceptance was recorded on 2026-09-23 with reciprocal ADR-0030 supersession, a new immutable decision digest and updated policy navigation. Preserve historical receipts and the superseded decision text.

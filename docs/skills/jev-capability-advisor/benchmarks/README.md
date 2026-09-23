@@ -4,24 +4,36 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
-## New: 1.51× faster with a reusable session
+## 5.89× the native selector's speed
 
-**0.73 seconds with a Jev session. 1.11 seconds with a fresh connection.**
+**Jev Session chooses a skill in 0.73 seconds; the native model selector takes 4.31 seconds.**
 
-Keeping the HTTPS connection open reduced median skill-selection latency by **34%** in the fresh-task comparison. The actual session API received a fresh catalog with every task; it did not reuse recommendations or skip validation.
+Skill selection · median · lower is better. The factor is the ratio of medians across **80 skill-selection observations per variant**: same tasks and catalog, separate measurement runs on 2026-09-22 and 2026-09-23. It measures selection, not complete agent-task speed.
 
-| Fresh tasks · 2026-09-22 | Jev session | Jev fresh connection |
-| ------------------------ | ----------: | -------------------: |
-| Median skill selection   | **0.733 s** |              1.108 s |
-| p95 skill selection      | **0.798 s** |              1.167 s |
-| Correct skill results    |   **80/80** |                80/80 |
-| Correct no-match results |   **16/16** |                16/16 |
+| Variant              | Median skill selection | p95 skill selection | Skills correct | No match correct | Errors |
+| -------------------- | ---------------------: | ------------------: | -------------: | ---------------: | -----: |
+| Jev Session          |                0.733 s |             0.798 s |          80/80 |            16/16 |      0 |
+| Jev Fresh Connection |                1.108 s |             1.167 s |          80/80 |            16/16 |      0 |
+| Hussi9               |                0.884 s |             0.936 s |          76/80 |            16/16 |      0 |
+| Native               |                4.314 s |             6.323 s |          80/80 |            16/16 |      0 |
 
-There were 48 previously untested tasks, each repeated twice: 40 single-skill tasks and eight no-match tasks, balanced between German and English. Both Jev paths achieved **96/96 correct results**. The first connection in each repetition is included; no prewarming, result cache or retry was used. The paired median saving was 376 ms, with a task-cluster bootstrap 95% interval of 365–384 ms. This study did not test fresh MCP, compound or clarification tasks.
+**Native:** `gpt-6-astra`, reasoning `low`, Codex CLI 0.154.0. **Jev and Hussi9:** `jev-1.13.0`. The native model is the requested configuration; its resolved backend identity was not independently observable. Environment: Linux/NixOS in WSL2, Intel Core i9-13900K, Python 3.14.7, concurrency one. Provider load and caching were uncontrolled.
 
-[Session benchmark data](../../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json).
+The same 48 frozen tasks ran twice: 40 single-skill and eight no-match tasks, balanced between German and English. Every variant uses the same 132-skill catalog; native receives the same 128 ordered Jev candidate cards, task and routing rules. Hussi9 keeps its published request format. Incorrect selections stay in timing distributions and quality denominators. No-match timings are separate from the headline. We reused the three existing Jev-based arms and added only 96 native observations, with no new Jev requests.
 
-[Use a reusable session](../../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md) in a host that supplies its current eligible catalog. This benefit requires a retained process/session and a direct HTTPS connection; proxy environments use the existing unpooled fallback. It does not establish automatic native activation or a whole-task speedup. The older native comparison below uses a different corpus and revision; its timings must not be combined with these results.
+[Hussi9's published Jev selection component](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its 1.2-second timeout and 0.8 confidence threshold. This measures the chooser, not the complete router, hooks or fallback workflow. A **modified persistent-transport control** scored 80/80 with a 0.506 s positive-task median; it is faster here, but is not the published implementation. This comparison does not establish an overall fastest product.
+
+### 1.51× faster with a reusable session
+
+Fresh Connection already uses our optimized advisor. Session additionally keeps its HTTPS connection: **0.73 seconds with a Jev session; 1.11 seconds with a fresh connection**, a **34%** reduction in median wait. Both Jev paths achieved **96/96 correct results**, including **80/80** skill choices and **16/16** no-match decisions. Each task still supplies a fresh catalog and receives full validation.
+
+The first connection in each repetition is included: two cold session calls and 94 reused connections. No prewarming, result/index cache or harness retry was used. The paired median saving within the original session study was 376 ms, with a task-cluster bootstrap 95% interval of 365–384 ms. These tasks were withheld from runtime tuning; the native supplement reuses them. This study did not test fresh MCP, compound or clarification tasks.
+
+[Use a reusable session](../../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md) in a host that supplies its current eligible catalog. The benefit requires a retained process/session and direct HTTPS; proxy environments use the existing unpooled fallback. Installation does not install an automatic native hook, and a whole-task speedup has not been demonstrated.
+
+Native timing includes selection preparation and the model turn. Jev timing includes preparation, API requests, session validation and evidence recording. The comparison excludes native process startup, capability loading and task execution. The older native comparison below uses a different corpus and revision; its timings must not be combined with these results.
+
+[Four-variant data and count supplement](../../../../skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json) · [Original session data](../../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json).
 
 ## Earlier native comparison: 4.71× faster median selection
 
@@ -39,7 +51,7 @@ Timing includes local preparation and Jev calls, but excludes native process sta
 
 ## 6,000+ benchmark runs
 
-**6,450 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 6,450 unique tasks or passing tests.
+**6,546 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 6,546 unique tasks or passing tests.
 
 | Included experiments             |      Runs | Counting rule                                                  |
 | -------------------------------- | --------: | -------------------------------------------------------------- |
@@ -48,9 +60,10 @@ Timing includes local preparation and Jev calls, but excludes native process sta
 | Runtime measurements             |       400 | 320 earlier + 80 optimized fresh-process measurements          |
 | Archived replay evaluations      |       100 | 100 recorded-response replays                                  |
 | Session and selector development |     4,418 | 37 completed experiments, including 384 fresh-task comparisons |
-| **Total**                        | **6,450** | Completed executions, counted once per experiment              |
+| Native supplement                |        96 | Same 48 frozen tasks × two native observations                 |
+| **Total**                        | **6,546** | Completed executions, counted once per experiment              |
 
-Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. The additional 4,418 executions include two HTTP timeouts; every scheduled observation in the 37 listed experiments is retained. This is an audited selection of completed experiments, not every exploratory call. The cumulative count does not expand either speed study beyond its own task set. See the [count ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json).
+Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. The additional 4,418 executions include two HTTP timeouts; every scheduled observation in the 37 listed experiments is retained. This is an audited selection of completed experiments, not every exploratory call. The native supplement adds 96 completed executions once to the existing 6,450; reused Jev and Hussi observations are not counted again. The cumulative count does not expand any speed study beyond its own task set. See the [count ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json).
 
 ## Less output. Less preparation.
 

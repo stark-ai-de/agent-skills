@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "kind": "jev_native_session_comparison",
+  "measurement_dates": ["2026-09-22", "2026-09-23"],
+  "experiment": {
+    "unique_tasks": 48,
+    "positive_unique_tasks": 40,
+    "none_unique_tasks": 8,
+    "repetitions_per_task": 2,
+    "catalog_records": 132,
+    "candidate_cards": 128,
+    "displayed_variants": ["jev_session", "jev_cold", "hussi_original", "native"],
+    "reused_observations": 288,
+    "new_observations": 96,
+    "displayed_observations": 384,
+    "concurrent_four_arm_run": false,
+    "new_jev_api_calls": 0,
+    "native_turns": 96,
+    "harness_retries": 0
+  },
+  "models": {
+    "native": {
+      "requested": "gpt-6-astra",
+      "reasoning": "low",
+      "resolved": null,
+      "cli_version": "codex-cli 0.154.0"
+    },
+    "jev": "jev-1.13.0"
+  },
+  "environment": {
+    "os": "Linux / NixOS in WSL2",
+    "processor": "Intel Core i9-13900K",
+    "python": "3.14.7",
+    "concurrency": 1,
+    "provider_load_controlled": false
+  },
+  "groups": {
+    "all": {
+      "unique_tasks": 48,
+      "arms": {
+        "jev_session": {
+          "n": 96,
+          "correct": 96,
+          "errors": 0,
+          "median_ms": 730.2405805021408,
+          "p95_ms": 798.0637870059581,
+          "timed_observations": 96
+        },
+        "jev_cold": {
+          "n": 96,
+          "correct": 96,
+          "errors": 0,
+          "median_ms": 1103.9208914953633,
+          "p95_ms": 1168.8075639976887,
+          "timed_observations": 96
+        },
+        "hussi_original": {
+          "n": 96,
+          "correct": 92,
+          "errors": 0,
+          "median_ms": 883.5125849946053,
+          "p95_ms": 951.6199799982132,
+          "timed_observations": 96
+        },
+        "native": {
+          "n": 96,
+          "correct": 96,
+          "errors": 0,
+          "timed_observations": 96,
+          "median_ms": 4421.282612995128,
+          "p95_ms": 6435.272836009972,
+          "timeouts": 0,
+          "missing_timing": 0
+        }
+      }
+    },
+    "primary_positive": {
+      "unique_tasks": 40,
+      "arms": {
+        "jev_session": {
+          "n": 80,
+          "correct": 80,
+          "errors": 0,
+          "median_ms": 732.7213765092893,
+          "p95_ms": 798.0637870059581,
+          "timed_observations": 80
+        },
+        "jev_cold": {
+          "n": 80,
+          "correct": 80,
+          "errors": 0,
+          "median_ms": 1108.2040690089343,
+          "p95_ms": 1167.1510090091033,
+          "timed_observations": 80
+        },
+        "hussi_original": {
+          "n": 80,
+          "correct": 76,
+          "errors": 0,
+          "median_ms": 883.8034854925354,
+          "p95_ms": 936.1528820008971,
+          "timed_observations": 80
+        },
+        "native": {
+          "n": 80,
+          "correct": 80,
+          "errors": 0,
+          "timed_observations": 80,
+          "median_ms": 4313.583519004169,
+          "p95_ms": 6322.817868000129,
+          "timeouts": 0,
+          "missing_timing": 0
+        }
+      }
+    },
+    "none": {
+      "unique_tasks": 8,
+      "arms": {
+        "jev_session": {
+          "n": 16,
+          "correct": 16,
+          "errors": 0,
+          "median_ms": 726.6512385103852,
+          "p95_ms": 780.3645019885153,
+          "timed_observations": 16
+        },
+        "jev_cold": {
+          "n": 16,
+          "correct": 16,
+          "errors": 0,
+          "median_ms": 1096.2205744945095,
+          "p95_ms": 1190.05993900646,
+          "timed_observations": 16
+        },
+        "hussi_original": {
+          "n": 16,
+          "correct": 16,
+          "errors": 0,
+          "median_ms": 881.3397455014638,
+          "p95_ms": 1005.3669689950766,
+          "timed_observations": 16
+        },
+        "native": {
+          "n": 16,
+          "correct": 16,
+          "errors": 0,
+          "timed_observations": 16,
+          "median_ms": 4800.482179503888,
+          "p95_ms": 9878.394337982172,
+          "timeouts": 0,
+          "missing_timing": 0
+        }
+      }
+    }
+  },
+  "sources": {
+    "jev_based": {
+      "date": "2026-09-22",
+      "evidence": "session-2026-09-22.json",
+      "runtime_sources_sha256": {
+        "jev_advisor.py": "6371aad58e4dba669167710f97c3e3b8abb7f21e31ce48df11f09ab499db91b9",
+        "retrieval.py": "17f3fa38ed692de999bb9ad9c0df1ab16c9ec3fced2edc0816b20cc90a723645",
+        "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+        "index_cache.py": "6516e545a9e30dd8bf721a8dcfe87766bd1666f950390d846622d7bf0a3de076",
+        "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+        "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+        "jev_session.py": "bcc5fc9a42af9b68d7a22e0568fc3123ffb091f77aa2f3caf0bda9ddf9e5088f"
+      }
+    },
+    "native": {
+      "started_at": "2026-09-23T07:16:32.521338+00:00",
+      "completed_at": "2026-09-23T07:25:05.914133+00:00",
+      "adapter_sha256": "962fedd4de3c616ee3f588a273e079c20f34a7b3982a858a19f6ec9d8a50380d",
+      "schema_sha256": "21e89d6c153d0b920a1891badde8c67fd78c47d763d47daa3f02e472015a7099",
+      "freeze_sha256": "778489f49381b43fb5a4e4dd1f9a5bf521fcb6d95fe3249200722f004f8d0dc0",
+      "results_sha256": "67d5ee0a99b3bf31c45d6b8a92d26231f9b1347de4437f65f54790293126676e",
+      "input_proof_sha256": "93691295e4fb9d2a775bb79aebedfadea2923ff311dfb217a44762f19e99c12d",
+      "summary_sha256": "84c0fdac886edcb1a24157e6e11fe875bd4e4c958c742c0c9cf4d1792ab489b0",
+      "evidence_manifest_sha256": "35934b3b57b8b9648b971dbeb999e2b9a3f13c989d3cf652bbc427eac988fb43"
+    },
+    "hussi": {
+      "url": "https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py",
+      "commit": "652953a0cbb423d4bb7f62de83db15ad4ca9b16e",
+      "component": "Published Jev chooser; not the full router, hooks or fallback workflow",
+      "timeout_seconds": 1.2,
+      "confidence_threshold": 0.8,
+      "source_sha256": "b2f94a5957c436eb380e07fc5034563816defde1942eb1dd17ff8e9bdb0f7af3"
+    }
+  },
+  "provenance": {
+    "dataset_sha256": "70298b7ce131f85d22684b48763a45679d34eef4179a6e8ce2d2e2d69164edf4",
+    "catalog_sha256": "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
+    "reused_freeze_sha256": "16aa90c884807f2c15f7918170582f092ab71551ef6d0bf78597e31a26278cec",
+    "reused_auditor_sha256": "22830faca0f081cbf14a5ec12cca68a24d634f438fe7346a8574a1e46daffb34"
+  },
+  "validation": {
+    "independent_audit_passed": true,
+    "payloads_matched": 48,
+    "prepared_native_prompts": 96,
+    "reused_frozen_files_verified": 197,
+    "native_frozen_files_verified": 211,
+    "all_scheduled_outcomes_retained": true,
+    "native_raw_files_verified": 288,
+    "native_turn_timings_reconstructed": 96,
+    "native_outcomes_independently_scored": 96,
+    "unexpected_tools": 0,
+    "remaining_benchmark_processes": 0,
+    "native_final_manifest_files_verified": 601
+  },
+  "modified_control": {
+    "label": "Hussi chooser with our persistent transport (modified control, not upstream)",
+    "primary_positive": {
+      "n": 80,
+      "correct": 80,
+      "errors": 0,
+      "median_ms": 506.2145569972927,
+      "p95_ms": 577.4191030068323
+    },
+    "all": {
+      "n": 96,
+      "correct": 96,
+      "errors": 0,
+      "median_ms": 504.90196399914566,
+      "p95_ms": 579.1328250052175
+    }
+  },
+  "count_ledger": {
+    "previous_recorded_executions": 6450,
+    "new_completed_executions": 96,
+    "cumulative_recorded_executions": 6546,
+    "rule": "Reused observations already counted in development-counts-2026-09-22.json are not added again. Only 96 new native turns are added; not unique tasks, successful tests or physical HTTP request count."
+  },
+  "method": [
+    "Primary chart uses all 80 positive observations per arm, including incorrect selections. The 16 NONE observations are reported separately. Median is statistics.median; p95 is nearest rank.",
+    "The same 48 frozen tasks and byte-identical 132-record catalog are used. Native receives the exact 128 ordered physical Jev cards, task and routing rules; golden labels never enter prompts. Hussi retains its published payload format on the same catalog.",
+    "Three Jev-based arms are reused from the frozen randomized session study; the native arm was measured sequentially in a later window. This is not a contemporaneous four-arm experiment or a causal effect estimate.",
+    "Jev session timing includes actual SDK construction, fresh inventory, validation, preparation, selection, summary and per-call evidence recording. Two first cold calls and 94 reused connections are retained.",
+    "Fresh connection uses our optimized advisor with new HTTPS per task. Hussi uses its original selection protocol, confidence gate and timeout.",
+    "Native timing includes local preparation and turn.started through turn.completed; CLI process startup is excluded and archived separately. No tools, plugins, skills, memory or user instructions are loaded. Requested model and reasoning are recorded; resolved backend is unobservable.",
+    "No prewarming, result/index cache or harness retry. Errors and timeouts stay in denominators. Native CLI internal transport behavior is not equated with physical HTTP attempt counts."
+  ],
+  "limits": [
+    "Separate measurement windows; provider load and caching are uncontrolled. Factors are ratios of medians from these samples, not whole-task speedups.",
+    "Retained sessions require a long-lived host with authoritative current inventory and direct HTTPS. Proxies use an unpooled fallback. Installation does not install automatic native hooks.",
+    "Only single-skill and NONE outcomes; no fresh MCP, compound or clarification tasks. The earlier 80-task native study is not combined with this comparison.",
+    "The modified Hussi persistent-transport control is faster than Jev Session here. It is not the published comparator; no universal fastest-product claim is supported."
+  ]
+}
