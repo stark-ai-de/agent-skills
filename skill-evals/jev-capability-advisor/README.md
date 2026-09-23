@@ -2,25 +2,52 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
-## Release package qualification, 2026-09-23
+## Compact initial selection, 2026-09-23
 
-The current 13-file Jev skill closure was rebuilt as standalone, portable-plugin and OpenAI-plugin packages. All 13 canonical files, including `agents/openai.yaml`, match byte for byte in all three archives. The canonical runtime remains the measured revision; release-handoff documentation does not change the skill payload.
+The [eight-cohort evidence](benchmarks/compact-initial-2026-09-23.json) records **1,246 new completed executions / 1,469 API attempts**, raising the audited development total from 6,546 to **7,792**. Seven cohorts have usable comparisons (1,096 executions); all 150 observations in the final cohort received HTTP 402 and are excluded from latency and quality comparisons. Counts include unsuccessful experiments, not just passing tests.
+
+The adopted `compact_first` runtime changes only the initial request: refer to shared candidate codes, omit false activation flags with an explicit default rule, and use a 200-character description/guidance budget. Explicit-only flags, disabled filtering, full task context up to 16,000 characters, stable host IDs, strict answer parsing, NONE/CLARIFY and compound follow-ups remain. Follow-up payloads retain the original format and 240-character description/guidance budget. Changed request fingerprints prevent old decision-cache entries from matching the new initial request.
+
+| Cohort                                | Completed executions |  Baseline correct | Candidate correct |  Baseline / candidate median | Decision                                      |
+| ------------------------------------- | -------------------: | ----------------: | ----------------: | ---------------------------: | --------------------------------------------- |
+| Six-format development                |                  180 |             30/30 |        30/30 each | 430 / 381 ms for compact-200 | Explore; no promotion                         |
+| Broad follow-up compaction            |                  240 |             72/80 |        71/80 each | 584 / 544 ms for compact-200 | Reject global compaction: lost r058           |
+| Initial-only mixed regression         |                  200 |            87/100 |            87/100 |                 661 / 588 ms | Same correctly solved cases; r058 recovered   |
+| Existing challenge                    |                   28 |             13/14 |             13/14 |                 355 / 355 ms | Same correct cases; no material speed gain    |
+| Fresh independently authored holdout  |                  128 |             59/64 |             59/64 |                 567 / 549 ms | Same correct cases                            |
+| Activation/guidance restriction cases |                   32 |             15/16 |             15/16 |                 409 / 335 ms | Same correct cases; s015 fails in both        |
+| Three-arm skill comparison            |                  288 |      79/80 skills |      80/80 skills |   433 / 406 ms, skill subset | Hussi transport control: 373 ms, 80/80        |
+| Shorter-initial development           |                  150 | No usable answers | No usable answers |     Not comparable: HTTP 402 | No promotion of 160/120/96-character variants |
+
+The skill comparison reuses 48 tasks twice with three arms: 80 skill and 16 NONE observations per arm. Every arm got 16/16 NONE; all three had zero errors. The candidate's p95 is 465 ms versus 520 ms for baseline and 482 ms for the Hussi control. Skill medians improve by 6.3%; Hussi remains 32.605 ms faster. The paired skill saving over baseline is 20.644 ms (task-cluster bootstrap 95% interval 12.317–37.823 ms). These statistics are different from a ratio or difference of arm medians.
+
+- **Protocol:** randomized task and arm order; actual `AdvisorSession` validation, local preparation, lazy first HTTPS connection and all follow-ups timed. Same persistent client for the pinned Hussi chooser; its original 0.8 gate and 1.2-second timeout remain. No warmup, retries, result/index cache or discarded wrong selections. Wire receipts and durable writes are inside every arm's timer; instrumentation overhead was not separately quantified.
+- **Frozen sources:** runtime, tasks, catalog, harness, schedule and ledgers are hash-bound before each experiment. Exported provenance records every study window, model configuration, normalization and source digest. The seven valid studies and the provider rejection cohort were independently audited against all observations and wire ledgers. Raw tasks and local receipts remain local; the checked-in export contains aggregate metrics, case IDs and hashes.
+- **Quality limits:** the regression retained three baseline and two candidate `inconsistent_initial_choices` errors as failures. Fresh compound results tie at 8/12, and the 100-task regression's compound results tie at 29/40. Long-context fresh cases tie at 8/8. The small restriction corpus checks explicit/disabled policies, guidance and a plainly marked injection case; it is not comprehensive adversarial proof.
+- **Provider rejection:** all 150 later attempts were dispatched once and returned HTTP 402: 120 advisor `http_402` outcomes and 30 Hussi `upstream_error` outcomes. No returned model answers. Their timing/quality fields are null, not zero-performance scores. The status alone does not establish the account-side cause. Further live tests stopped; an authored 32-task follow-up holdout remains unexecuted and uncounted.
+- **Scope:** `jev-1.13.0`, synthetic fixed catalogs, one sequential process, first cold calls included. Provider load/caching and hidden backend revisions remain uncontrolled. Absolute timings are not directly comparable to earlier measurement windows, and no new native speed factor is calculated. Selection qualification does not close the whole-task [promotion gate](#promotion-gate).
+
+The current runtime hash is frozen in `first-hussi48` under `provenance.runtime_sha256.compact_first`. Offline tests additionally pin unchanged follow-up payloads and exercise 240 candidates with full-length Unicode context, activation flags and negative guidance.
+
+## Release package qualification after compaction, 2026-09-23
+
+The compact initial-request revision was rebuilt as standalone, portable-plugin and OpenAI-plugin packages. All 13 canonical skill files, including `agents/openai.yaml`, match byte for byte in all three archives. The measured advisor SHA-256 is `c0487ad6b207a83df2e759574815422a2f03630cc3bdbc1dbe242535489b779d`; the package smoke also verified every other skill file. All 135 offline unit tests passed without skips.
 
 | Local preparation artifact                        |   Bytes | SHA-256                                                            |
 | ------------------------------------------------- | ------: | ------------------------------------------------------------------ |
-| `dist/skills/jev-capability-advisor.zip`          |  150650 | `e9b783675bfa7b0c91b5943f7f3f411d9495450d752b7d42a9c19d7b0406a3f0` |
-| `dist/agent-plugins/stark-ai-developer-1.3.0.zip` | 2668992 | `f2cbae18b23b8b3d341fc55bf65ca49e8b20af329e915b4e506be4b2f56fc339` |
-| `dist/openai/stark-ai-developer-1.3.0.zip`        | 2882198 | `58d3cf0d145c4f334cd2c2c76c11fb0319d3659fcb3269b616d353b35bfe7fd8` |
+| `dist/skills/jev-capability-advisor.zip`          |  151879 | `16045a45954abcb3d491b9bf9b42fba77ac9b0a7e642ee4fab20bdc864a7c61a` |
+| `dist/agent-plugins/stark-ai-developer-1.3.0.zip` | 2670221 | `fb6b9a1111913663abfba21a40d9699d5239ecaa4b10d64f85fdd385673110ee` |
+| `dist/openai/stark-ai-developer-1.3.0.zip`        | 2883427 | `6aaa37b4f3b48026b144e3d70cfa27ce6f8bce61b1638fa739b2ab5a19505d86` |
 
 Each extracted skill passed CLI help, offline candidate selection with disabled-capability exclusion, and two sequential NDJSON frames (empty and disabled inventory), followed by clean EOF. A Python audit hook rejected any socket operation: all runs completed with zero network attempts and no credentials supplied. Python was 3.14.7 on Linux; this is not minimum-version or other-host runtime qualification. Archives contain no private drafts or marketing assets.
 
-Repository installation smoke separately discovered exactly 11 public skills and passed seven disposable project-local installations, including Jev for Codex. Projection, archive validation, deterministic two-build reproducibility, endpoint policy, descriptor, contract-snapshot and supply-chain checks passed. These checks add no benchmark executions and do not close the [promotion gate](#promotion-gate).
+Earlier repository installation smoke discovered exactly 11 public skills and passed seven disposable project-local installations, including Jev for Codex; it was not rerun for this compaction. The extracted current archives were smoke-tested as described above. Projection, archive validation, deterministic two-build reproducibility, endpoint policy, descriptor, contract-snapshot and supply-chain checks passed. These checks add no benchmark executions and do not close the [promotion gate](#promotion-gate).
 
 The artifact digests above identify local preparation bytes, **not published release subjects**. The actual release workflow supplies the final `openai.zip`, `portable.zip` and source-bound `release-subject.json`; the portal must receive the exact published OpenAI asset. Follow the [release handoff](../../docs/skills/jev-capability-advisor/README.md#release-handoff) for remaining steps.
 
 ## Native supplement and public comparison, 2026-09-23
 
-The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 288 existing Jev Session, Jev Fresh Connection and published Hussi chooser observations with **96 new native turns**. All use the same 48 frozen tasks (40 skill, eight NONE), twice, and byte-identical 132-entry catalog. The native adapter receives the same 128 physical candidate cards, task and routing rules as Jev. Golden labels are excluded. The seven current runtime source hashes still match the original freeze; no Jev calls were repeated.
+The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 288 existing Jev Session, Jev Fresh Connection and published Hussi chooser observations with **96 new native turns**. All use the same 48 frozen tasks (40 skill, eight NONE), twice, and byte-identical 132-entry catalog. The native adapter receives the same 128 physical candidate cards, task and routing rules as Jev. Golden labels are excluded. The seven runtime source hashes at the time matched the original freeze; no Jev calls were repeated for that supplement. Initial-request compaction above is a later revision.
 
 | Variant              | Skill median | Skill p95 | Correct accepted selections | NONE correct | Errors |
 | -------------------- | -----------: | --------: | --------------------------: | -----------: | -----: |
@@ -36,11 +63,11 @@ Native requested `gpt-6-astra`, reasoning `low`, using Codex CLI 0.154.0. Its re
 
 Independent audits verify the 197 original and 211 native frozen files, exact payload/prompt parity, schedule, strict scoring, timing events and complete ledgers. The [published Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its original payload, 1.2-second timeout and 0.8 confidence gate; this does not measure its full router, hooks or fallback execution.
 
-The cumulative development count is now **6,546 executions**: historical 6,450 plus these 96 native observations. The 288 reused observations were already counted and are not added twice. Counts describe recorded executions, not unique tasks, passing tests or calls. Original evidence below is preserved with its original date and scope.
+The cumulative development count at that point was **6,546 executions**: historical 6,450 plus these 96 native observations. The 288 reused observations were already counted and are not added twice. Counts describe recorded executions, not unique tasks, passing tests or calls. Original evidence below is preserved with its original date and scope.
 
 ### Archived control displayed as a fifth variant
 
-The original four-variant supplement above retains its 384-observation metadata. The current chart adds the 96 control observations already present in the original session freeze: **480 displayed observations, zero new API calls and zero additional executions**. The cumulative total remains **6,546**. All 197 original frozen artifacts were verified again; the control's 80 skill and 16 NONE aggregates were recomputed from every scheduled result, with no missing timings or errors. Source digests and timing counts are in `modified_control.projection_audit` and its group summaries.
+The original four-variant supplement above retains its 384-observation metadata. The current chart adds the 96 control observations already present in the original session freeze: **480 displayed observations, zero new API calls and zero additional executions**. At that point, the cumulative total remained **6,546**; displaying the control added no executions. All 197 original frozen artifacts were verified again; the control's 80 skill and 16 NONE aggregates were recomputed from every scheduled result, with no missing timings or errors. Source digests and timing counts are in `modified_control.projection_audit` and its group summaries.
 
 - **Our implementation work:** the unchanged Hussi chooser receives our persistent `JsonClient`, including compact sorted JSON serialization. Two cold calls and 94 reused calls are included; all 96 observations made one API request. This is not an isolated HTTPS-only experiment.
 - **Same transport as Jev Session:** the control's positive-task median local preparation is 0.535 ms versus 21.324 ms; median request size is 32,382.5 versus 46,108.5 bytes. No controlled ablation assigns the entire latency gap to these differences.

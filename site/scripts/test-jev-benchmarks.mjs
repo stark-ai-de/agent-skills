@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { jevBenchmarks as bench } from "../src/lib/jev-benchmarks.mjs";
 
@@ -12,15 +13,18 @@ assert.deepEqual(bench.runCounts, {
   replay: 100,
   sessionDevelopment: 4418,
   nativeSupplement: 96,
+  compactDevelopment: 1246,
 });
-assert.equal(bench.totalRuns, 6546);
+assert.equal(bench.totalRuns, 7792);
 assert.equal(bench.development.experiment_count, 37);
 assert.equal(
   bench.development.experiments.reduce((n, run) => n + run.recorded_executions, 0),
   bench.runCounts.sessionDevelopment,
 );
 assert.equal(
-  bench.development.cumulative_recorded_executions + bench.runCounts.nativeSupplement,
+  bench.development.cumulative_recorded_executions +
+    bench.runCounts.nativeSupplement +
+    bench.runCounts.compactDevelopment,
   bench.totalRuns,
 );
 assert.equal(new Set(bench.development.experiments.map((run) => run.freeze_sha256)).size, 37);
@@ -76,7 +80,10 @@ assert.equal(
   bench.development.cumulative_recorded_executions,
 );
 assert.equal(data.count_ledger.new_completed_executions, bench.runCounts.nativeSupplement);
-assert.equal(data.count_ledger.cumulative_recorded_executions, bench.totalRuns);
+assert.equal(
+  data.count_ledger.cumulative_recorded_executions,
+  bench.totalRuns - bench.runCounts.compactDevelopment,
+);
 assert.deepEqual(data.measurement_dates, ["2026-09-22", "2026-09-23"]);
 assert.equal(data.provenance.dataset_sha256, bench.session.evidence.provenance.dataset_sha256);
 assert.equal(data.provenance.catalog_sha256, bench.session.evidence.provenance.catalog_sha256);
@@ -231,7 +238,7 @@ for (const boundary of [
   "proxy environments use the existing unpooled fallback",
   "its timings must not be combined with these results",
   "baseline and candidate variants",
-  "not 6,546 unique tasks or passing tests",
+  "not 7,792 unique tasks or passing tests",
   "excludes native process startup, capability loading and task execution",
   "a whole-task speedup has not been demonstrated",
   "modified persistent-transport control",
@@ -239,3 +246,106 @@ for (const boundary of [
   assert.ok(readme.includes(boundary), `Missing claim boundary: ${boundary}`);
 
 console.log("Jev five-variant claims match counts, provenance, timings, models and scope.");
+
+// Keep the later experiment separate from archived native ratios and retain every failed cohort.
+const compact = bench.compact;
+const compactData = compact.evidence;
+assert.equal(compactData.schema, "jev-compact-qualification/v2");
+assert.equal(compactData.studies.length, 8);
+assert.equal(new Set(compactData.studies.map((study) => study.provenance.freeze_sha256)).size, 8);
+assert.equal(
+  compactData.studies.reduce((n, study) => n + study.completed_executions, 0),
+  1246,
+);
+assert.equal(
+  compactData.studies.reduce((n, study) => n + study.actual_api_attempts, 0),
+  1469,
+);
+assert.equal(compactData.completed_executions, bench.runCounts.compactDevelopment);
+assert.equal(
+  compactData.qualified_comparison_executions + compactData.invalid_provider_failure_executions,
+  compactData.completed_executions,
+);
+for (const study of compactData.studies) {
+  assert.equal(study.completed_executions, study.planned_executions);
+  assert.equal(
+    study.completed_executions,
+    study.task_count * study.repetitions * study.arms.length,
+  );
+  assert.equal(study.harness_retries, 0);
+  assert.equal(study.all_invariants_passed, true);
+  assert.equal(
+    Object.values(study.groups.all).reduce((n, arm) => n + arm.n, 0),
+    study.completed_executions,
+  );
+  assert.equal(
+    Object.values(study.groups.all).reduce((n, arm) => n + arm.actual_api_attempts, 0),
+    study.actual_api_attempts,
+  );
+  for (const group of Object.values(study.groups))
+    for (const arm of Object.values(group)) {
+      assert.equal(arm.missing, 0);
+      assert.equal(arm.completed, arm.n);
+      if (study.comparison_valid === false) {
+        assert.equal(arm.correct, null);
+        assert.equal(arm.median_ms, null);
+        assert.equal(arm.p95_ms, null);
+        assert.equal(arm.errors, arm.n);
+      } else {
+        assert.equal(arm.timed_observations, arm.n);
+        assert.ok(arm.correct + arm.errors <= arm.n);
+        assert.ok(arm.median_ms > 0 && arm.p95_ms >= arm.median_ms);
+      }
+    }
+}
+const rejected = compactData.studies.find((study) => study.study_id === "first-small-dev");
+assert.equal(rejected.comparison_valid, false);
+assert.deepEqual(rejected.provider_http_status_counts, { 402: 150 });
+assert.equal(rejected.usable_model_answers, 0);
+assert.deepEqual(rejected.matched_pairwise_comparisons, {});
+assert.equal(compactData.production_candidate_decision.shorter_variants_adopted, false);
+for (const studyId of [
+  "first-regression100",
+  "first-challenge14",
+  "first-fresh64",
+  "first-restrictions16",
+]) {
+  const study = compactData.studies.find((entry) => entry.study_id === studyId);
+  assert.equal(study.groups.all.jev_baseline.correct, study.groups.all.jev_compact_first.correct);
+  const changes = study.changes_vs_concurrent_baseline.jev_compact_first;
+  assert.deepEqual(changes.lost_correct_observations, []);
+  assert.deepEqual(changes.gained_correct_observations, []);
+}
+// Packaging or future refactors must not silently claim this frozen runtime's qualification.
+for (const [file, hash] of Object.entries(compact.study.provenance.runtime_sha256.compact_first)) {
+  const bytes = readFileSync(
+    new URL(
+      `../../skills/skill-maintenance/jev-capability-advisor/scripts/${file}`,
+      import.meta.url,
+    ),
+  );
+  assert.equal(
+    createHash("sha256").update(bytes).digest("hex"),
+    hash,
+    `Compact benchmark revision drift: ${file}`,
+  );
+}
+assert.ok(!("native" in compact.study.groups.all));
+assert.equal(compact.study.completed_executions, 288);
+assert.equal(compact.study.actual_api_attempts, 289);
+assert.equal(compact.reductionPercent.toFixed(1), "6.3");
+assert.equal(compact.remainingGapMs.toFixed(0), "33");
+for (const row of compact.rows) {
+  assert.equal(row.n, 80);
+  assert.equal(row.none.n, 16);
+  assert.equal(row.none.correct, 16);
+  assert.equal(row.errors, 0);
+  const text = `| ${row.label} | ${row.median_ms.toFixed(0)} ms | ${row.correct}/${row.n} | ${row.none.correct}/${row.none.n} |`;
+  assert.ok(readme.replace(/\s+/g, " ").includes(text), `Compact README mismatch: ${row.id}`);
+}
+for (const note of compact.notes) assert.ok(readme.includes(`**${note.title}.** ${note.text}`));
+assert.ok(readme.includes("150-observation cohort received only HTTP 402"));
+assert.ok(readme.includes("historical timings stay separate"));
+console.log(
+  "Compact qualification matches all eight cohorts, exact runtime, failures and documentation.",
+);

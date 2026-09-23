@@ -2,6 +2,7 @@ import session from "../../../skill-evals/jev-capability-advisor/benchmarks/sess
 import development from "../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json" with { type: "json" };
 import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json" with { type: "json" };
 import current from "../../../skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json" with { type: "json" };
+import compactEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/compact-initial-2026-09-23.json" with { type: "json" };
 
 const sum = (values) => values.reduce((total, value) => total + value, 0);
 const comparison = evidence.matched_selector_regression;
@@ -20,6 +21,49 @@ const runCounts = {
   replay: evidence.optimized_archived_replay.cases,
   sessionDevelopment: development.recorded_executions,
   nativeSupplement: current.experiment.new_observations,
+  compactDevelopment: compactEvidence.completed_executions,
+};
+
+// This later interleaved comparison has no native arm. Never reuse its timings in the old ratios.
+const compactStudy = compactEvidence.studies.find((study) => study.study_id === "first-hussi48");
+const compactPositive = compactStudy.groups.skill;
+const compactLabels = {
+  hussi_session_control: "Hussi9 + our HTTPS",
+  jev_compact_first: "Jev Session · compact initial choice",
+  jev_baseline: "Jev Session · previous format",
+};
+const compact = {
+  evidence: compactEvidence,
+  evidencePath: "skill-evals/jev-capability-advisor/benchmarks/compact-initial-2026-09-23.json",
+  study: compactStudy,
+  title: "Smaller first choice. Full follow-up checks.",
+  reductionPercent:
+    (1 - compactPositive.jev_compact_first.median_ms / compactPositive.jev_baseline.median_ms) *
+    100,
+  remainingGapMs:
+    compactPositive.jev_compact_first.median_ms - compactPositive.hussi_session_control.median_ms,
+  rows: Object.entries(compactLabels)
+    .map(([id, label]) => ({
+      id,
+      label,
+      ...compactPositive[id],
+      none: compactStudy.groups.none[id],
+    }))
+    .sort((left, right) => left.median_ms - right.median_ms),
+  notes: [
+    {
+      title: "Less repetition",
+      text: "The first request uses candidate codes instead of repeating names, omits false activation flags and budgets 200 characters for descriptions and guidance.",
+    },
+    {
+      title: "Features retained",
+      text: "Explicit activation flags, the full task up to 16,000 characters, MCP tools and strict answer checks stay. Follow-up requests keep their original 240-character description/guidance budget.",
+    },
+    {
+      title: "Checked beyond skills",
+      text: "Candidate and baseline solve the same 87/100 mixed regressions, 59/64 fresh tasks, 13/14 challenge tasks and 15/16 restriction cases. Compound selection remains experimental.",
+    },
+  ],
 };
 
 // Keep the original four-arm supplement immutable; reuse its archived control for display.
@@ -81,6 +125,7 @@ const rows = Object.entries(rowLabels)
   .sort((left, right) => left.medianSeconds - right.medianSeconds);
 
 export const jevBenchmarks = {
+  compact,
   current: {
     evidence: current,
     evidencePath: "skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json",
@@ -107,8 +152,8 @@ export const jevBenchmarks = {
           text: "0.506 s and 80/80 accepted skill choices, plus 16/16 no-match decisions. Smaller requests and less preparation accompany the gain; their individual effects were not isolated.",
         },
         {
-          title: "A candidate for our next optimization",
-          text: "The experiment has not been integrated or qualified for our MCP, clarification, compound and long-context contract. No quality disadvantage was measured here, and it has not been rejected as an approach.",
+          title: "Compact selection, now in our advisor",
+          text: "The separate, newer comparison qualifies a smaller initial request in our full advisor. The Hussi adapter itself remains a skill-only experiment; its MCP, clarification, compound and long-context behavior is not qualified.",
         },
       ],
     },

@@ -5,10 +5,12 @@ import ContextTooltip from "./ContextTooltip.astro";
 
 const number = (value: number) => value.toLocaleString("en-US");
 const comparison = bench.current;
+const compact = bench.compact;
 const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
 const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
 const chartWidth = 540;
 const runs = [
+  { label: "Compact selection development", count: bench.runCounts.compactDevelopment, detail: "8 cohorts; includes 150 HTTP 402 rejections, excluded from speed and quality comparisons" },
   { label: "Session and selector development", count: bench.runCounts.sessionDevelopment, detail: "37 completed experiments, including 384 fresh-task comparisons" },
   { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
   { label: "Live selection evaluations", count: bench.runCounts.liveSelection, detail: "160 + 100 + 32 + 160 runs" },
@@ -93,9 +95,30 @@ const runs = [
         ))}
       </svg>
       <p class="jev-promo__models">Native: {comparison.nativeModel} · reasoning {comparison.nativeReasoning}<br />Jev + Hussi9: {comparison.jevModel}</p>
-      <p class="jev-promo__caption">{comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
+      <p class="jev-promo__caption"><strong>Archived comparison · before initial-request compaction.</strong> {comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
     </figure>
   </div>
+
+  <section class="jev-promo__technical jev-promo__compact" aria-labelledby="jev-compact-title">
+    <p class="jev-promo__label">Latest optimization · 2026-09-23</p>
+    <h3 id="jev-compact-title">{compact.title}</h3>
+    <p><strong>{compact.reductionPercent.toFixed(1)}% lower median selection time</strong> than our previous format in the same interleaved run. Both use reusable HTTPS; the compact advisor accepted 80/80 correct skill selections.</p>
+    <div class="jev-promo__table-scroll" role="region" aria-label="Compact initial selection results" tabindex="0">
+      <table>
+        <caption>Skill selection · median · lower is better · 80 observations per variant</caption>
+        <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">Correct accepted selections</th><th scope="col">No match correct</th></tr></thead>
+        <tbody>{compact.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.median_ms.toFixed(0)} ms</td><td>{row.correct}/{row.n}</td><td>{row.none.correct}/{row.none.n}</td></tr>)}</tbody>
+      </table>
+    </div>
+    <dl class="jev-promo__technical-mobile">
+      {compact.rows.map((row) => (
+        <div><dt>{row.label}</dt><dd><strong>{row.median_ms.toFixed(0)} ms</strong>Median selection</dd><dd><strong>{row.correct}/{row.n} correct</strong>{row.none.correct}/{row.none.n} no match</dd></div>
+      ))}
+    </dl>
+    <ul>{compact.notes.map((note) => <li><strong>{note.title}.</strong> {note.text}</li>)}</ul>
+    <p>Our Hussi transport experiment is still {compact.remainingGapMs.toFixed(0)} ms faster here. Same 48 reused tasks × two repetitions, same catalog, randomized task and variant order; {compact.study.requested_model}. No retries or result cache. These later timings do not update the archived native factor.</p>
+    <p class="jev-promo__technical-source"><a href={repoUrl(compact.evidencePath)}>All eight cohorts and failures</a> · <a href={repoUrl(bench.readmePath) + "#smaller-first-choice-full-follow-up-checks"}>Optimization and qualification</a></p>
+  </section>
 
   <div class="jev-promo__stats">
     <div>
@@ -205,7 +228,7 @@ const runs = [
 
   <footer class="jev-promo__footer">
     <span>Measured {comparison.dateLabel} · Release candidate</span>
-    <div><a href={repoUrl(comparison.evidencePath)}>Comparison data</a><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
+    <div><a href={repoUrl(compact.evidencePath)}>Latest optimization</a><a href={repoUrl(comparison.evidencePath)}>Comparison data</a><a href={repoUrl(bench.session.evidencePath)}>Session data</a><a href={repoUrl(bench.countsPath)}>Earlier count ledger</a><a href={repoUrl(bench.evidencePath)}>Earlier data</a><a href={repoUrl(bench.methodsPath)}>Full methods and results</a></div>
   </footer>
 </section>
 

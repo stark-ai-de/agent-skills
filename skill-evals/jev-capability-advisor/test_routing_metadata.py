@@ -25,15 +25,16 @@ def tool(provider, number):
 
 
 class RoutingMetadataTests(unittest.TestCase):
-    def test_legacy_initial_payload_bytes_are_unchanged(self):
-        # Golden digests from the pre-metadata advisor; payload equality covers
-        # cards, instructions, criteria, state shape, and deterministic mapping.
+    def test_compact_initial_and_legacy_followup_formats_are_stable(self):
+        # The compact initial wire format intentionally replaces the old golden.
+        # Conditioned follow-ups retain the pre-compaction format byte for byte.
         catalog = [dict(id='skill:alpha', name='alpha', kind='skill', description='Review a provided diff.'),
                    dict(id='tool:beta', name='beta', kind='mcp_tool', description='Read records.')]
         initial, _ = advisor.build_request('Review alpha.', catalog)
         following, _ = advisor.build_request('Review alpha.', catalog, selected=[catalog[0]],
                                              phase='followup', planned_count=2)
-        self.assertEqual(advisor.digest(initial), '8617a464e5970f8006363c9287dc90024cb0ffc6dddc20661f95411856556d5b')
+        self.assertEqual(advisor.digest(initial), '9a1d95184df0933ad92bb39fec3be34f1e190606e19300fde30830230b1a2f03')
+        self.assertEqual(advisor.digest(following), '4783bea687641d200c83c46bf3dd326535fa8e8d67567f5b654640627a156d9b')
         self.assertEqual(following['questions']['next']['instructions'], advisor.FOLLOWUP_RULES)
         self.assertEqual(following['state']['already_selected'][0]['name'], 'alpha')
         self.assertEqual(list(following['state']['available_capabilities']), ['c000'])

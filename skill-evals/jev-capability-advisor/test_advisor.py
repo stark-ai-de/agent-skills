@@ -33,8 +33,8 @@ class Scripted:
 
 def code(payload, name):
     question = payload['questions'].get('primary') or payload['questions']['next']
-    return next(key for key, value in question['criteria'].items()
-                if key.startswith('c') and value == name + ' (skill)')
+    return next(key for key, value in payload['state']['available_capabilities'].items()
+                if key in question['criteria'] and value.startswith('skill | ' + name + ' |'))
 
 
 class AdvisorTests(unittest.TestCase):
@@ -184,6 +184,40 @@ class AdvisorTests(unittest.TestCase):
         self.assertLessEqual(len(advisor.encode(payload)), advisor.MAX_REQUEST_BYTES)
         self.assertLessEqual(advisor._criteria_state_bytes(payload), advisor.MAX_CRITERIA_STATE_BYTES)
         self.assertTrue(all(len(q['criteria']) <= 255 for q in payload['questions'].values()))
+
+    def test_compaction_preserves_late_intent_under_full_catalog_pressure(self):
+        catalog = [item(str(i), name='Capability ' + str(i), brief='Detailed task guidance. ' * 20,
+                        explicit_only=i % 7 == 0) for i in range(240)]
+        for ending in ('Use Capability 0.', 'Use Capability 239.'):
+            query = 'ä' * (advisor.MAX_QUERY_CHARS - len(ending)) + ending
+            for phase in ('initial', 'followup'):
+                prior = [catalog[1]] if phase == 'followup' else []
+                payload, mapping = advisor.build_request(query, catalog, selected=prior,
+                                                         phase=phase, planned_count=2)
+                self.assertEqual(payload['state']['query'], query)
+                self.assertEqual(set(mapping.values()), {str(i) for i in range(240)} -
+                                 ({'1'} if prior else set()))
+                self.assertLessEqual(len(advisor.encode(payload)), advisor.MAX_REQUEST_BYTES)
+                self.assertLessEqual(advisor._criteria_state_bytes(payload), advisor.MAX_CRITERIA_STATE_BYTES)
+                for key, identifier in mapping.items():
+                    if int(identifier) % 7 == 0:
+                        self.assertIn('explicit_only=true', payload['state']['available_capabilities'][key])
+
+    def test_initial_compaction_keeps_negative_guidance_and_followup_detail(self):
+        catalog = [item('done'), item('remaining', brief='a' * 220 + ' UNIQUE FOLLOWUP DETAIL',
+                                     explicit_only=True),
+                   item('guarded', use_when='Read public reports. ' * 100,
+                        avoid_when='Never delete records. ' * 100)]
+        initial, mapping = advisor.build_request('Read reports and use remaining independently.', catalog)
+        guarded = next(key for key, identifier in mapping.items() if identifier == 'guarded')
+        self.assertIn('avoid_when: Never delete', initial['state']['available_capabilities'][guarded])
+        self.assertIn('explicit_only=true', initial['state']['available_capabilities']['c001'])
+        following, mapping = advisor.build_request('Read reports and use remaining independently.', catalog,
+                                                   selected=[catalog[0]], phase='followup', planned_count=2)
+        key = next(key for key, identifier in mapping.items() if identifier == 'remaining')
+        self.assertIn('UNIQUE FOLLOWUP', following['state']['available_capabilities'][key])
+        self.assertEqual(following['questions']['next']['criteria'][key], 'remaining (skill)')
+        self.assertEqual(following['state']['already_selected'][0]['name'], 'done')
 
 
 if __name__ == '__main__':

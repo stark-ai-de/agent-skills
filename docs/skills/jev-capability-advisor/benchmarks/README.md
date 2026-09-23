@@ -4,7 +4,29 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
-## 5.89× the native selector's speed
+## Smaller first choice. Full follow-up checks.
+
+**406 ms median selection, with 80/80 correct accepted skill choices.** Our compact initial request lowers median selection time by **6.3%** versus our previous format in the same interleaved run.
+
+| Variant                              | Median skill selection | Correct accepted selections | No match correct |
+| ------------------------------------ | ---------------------: | --------------------------: | ---------------: |
+| Hussi9 + our HTTPS                   |                 373 ms |                       80/80 |            16/16 |
+| Jev Session · compact initial choice |                 406 ms |                       80/80 |            16/16 |
+| Jev Session · previous format        |                 433 ms |                       79/80 |            16/16 |
+
+- **Less repetition.** The first request uses candidate codes instead of repeating names, omits false activation flags and budgets 200 characters for descriptions and guidance.
+- **Features retained.** Explicit activation flags, the full task up to 16,000 characters, MCP tools and strict answer checks stay. Follow-up requests keep their original 240-character description/guidance budget.
+- **Checked beyond skills.** Candidate and baseline solve the same 87/100 mixed regressions, 59/64 fresh tasks, 13/14 challenge tasks and 15/16 restriction cases. Compound selection remains experimental.
+
+Our internal Hussi transport experiment is still **33 ms faster** on these skill tasks. All three variants use reusable HTTPS and the same catalog. The 48 reused tasks ran twice with randomized task and variant order on 2026-09-23, using `jev-1.13.0`; all 288 observations and 289 API attempts remain counted. The 80 positive observations determine the skill medians; the 16 NONE observations are separate. No retries, warmup or result/index cache; the first cold connection is included. All three variants had zero errors in this comparison.
+
+The 100-task regression median fell from 661 to 588 ms, while the 14-task challenge was effectively tied at 355 ms. Compaction in follow-ups lost one compound result during development, so the adopted version compacts only the first request. A later 150-observation cohort received only HTTP 402 responses: it counts as attempted testing, with no usable speed or quality comparison. Still shorter variants remain unqualified.
+
+[All eight cohorts, paired comparisons and source hashes](../../../../skill-evals/jev-capability-advisor/benchmarks/compact-initial-2026-09-23.json) · [Methods and remaining limits](../../../../skill-evals/jev-capability-advisor/README.md#compact-initial-selection-2026-09-23).
+
+## Archived comparison: 5.89× the native selector's speed
+
+**Before initial-request compaction.** These historical timings stay separate from the newer study above; they do not measure the new request format.
 
 **Jev Session chooses a skill in 0.73 seconds; the native model selector takes 4.31 seconds.**
 
@@ -50,7 +72,7 @@ Same Jev model. Different selection work. Fresh Connection is already our optimi
 
 - **Our experiment, built on Hussi9.** The Hussi chooser uses our reusable HTTPS client and compact JSON serialization. Jev Session already uses the same client. This is our internal adapter, not a published Hussi9 upgrade.
 - **Faster here, equally correct.** 0.506 s and 80/80 accepted skill choices, plus 16/16 no-match decisions. Smaller requests and less preparation accompany the gain; their individual effects were not isolated.
-- **A candidate for our next optimization.** The experiment has not been integrated or qualified for our MCP, clarification, compound and long-context contract. No quality disadvantage was measured here, and it has not been rejected as an approach.
+- **Compact selection, now in our advisor.** The separate, newer comparison qualifies a smaller initial request in our full advisor. The Hussi adapter itself remains a skill-only experiment; its MCP, clarification, compound and long-context behavior is not qualified.
 
 The control's median local preparation was 0.535 ms versus 21.324 ms for Jev Session; median serialized requests were 32,382.5 versus 46,108.5 bytes. Both already reuse the same HTTPS client. These measurements do not attribute the entire latency difference to local preparation or request size. The control keeps Hussi's 600-character task limit and domain/process/type selection protocol. Adopting a compact path requires preserving and testing our host IDs, activation restrictions, tool and compound outcomes.
 
@@ -80,9 +102,9 @@ Both received the same inputs in the earlier, pre-session 80-task regression com
 
 Timing includes local preparation and Jev calls, but excludes native process startup, capability loading and task execution. Compound selection remains experimental.
 
-## 6,000+ benchmark runs
+## 7,000+ benchmark runs
 
-**6,546 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 6,546 unique tasks or passing tests.
+**7,792 completed benchmark executions across development iterations**, including baseline and candidate variants. This records development effort, not 7,792 unique tasks or passing tests.
 
 | Included experiments             |      Runs | Counting rule                                                  |
 | -------------------------------- | --------: | -------------------------------------------------------------- |
@@ -92,9 +114,10 @@ Timing includes local preparation and Jev calls, but excludes native process sta
 | Archived replay evaluations      |       100 | 100 recorded-response replays                                  |
 | Session and selector development |     4,418 | 37 completed experiments, including 384 fresh-task comparisons |
 | Native supplement                |        96 | Same 48 frozen tasks × two native observations                 |
-| **Total**                        | **6,546** | Completed executions, counted once per experiment              |
+| Compact selection development    |     1,246 | Eight cohorts; includes 150 provider rejections                |
+| **Total**                        | **7,792** | Completed executions, counted once per experiment              |
 
-Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. The additional 4,418 executions include two HTTP timeouts; every scheduled observation in the 37 listed experiments is retained. This is an audited selection of completed experiments, not every exploratory call. The native supplement adds 96 completed executions once to the existing 6,450; reused Jev and Hussi observations are not counted again. The cumulative count does not expand any speed study beyond its own task set. See the [count ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json).
+Repeated tasks across configurations and revisions count as separate runs. Subgroup summaries, warmups, re-scoring, API follow-ups, bootstrap draws and unit assertions are excluded. The additional 4,418 executions include two HTTP timeouts; every scheduled observation in the 37 listed experiments is retained. This is an audited selection of completed experiments, not every exploratory call. The native supplement adds 96 completed executions once to the existing 6,450; reused Jev and Hussi observations are not counted again. Compact selection adds 1,246 executions once, including 150 HTTP 402 rejections excluded from speed and model-quality comparisons; its 1,469 API attempts include follow-ups and are not extra executions. The cumulative count does not expand any speed study beyond its own task set. See the [earlier count ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json) and [compact-study ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/compact-initial-2026-09-23.json).
 
 ## Less output. Less preparation.
 

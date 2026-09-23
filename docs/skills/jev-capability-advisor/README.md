@@ -42,7 +42,7 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 6,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
+**[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 7,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
 
 **[Why routing speeds differ](benchmarks/README.md#why-routing-speeds-differ):** a short technical table compares Hussi9, Jev Fresh Connection and reusable Jev sessions, including confidence thresholds and connection reuse.
 
@@ -74,6 +74,6 @@ The source allowlist, generated portable copy, OpenAI listing and submission wor
 
 ### Release-note draft
 
-> Adds Jev Capability Advisor 0.1.0 to the public catalog and stark AI Developer 1.3.0. It recommends available skills and MCP tools, supports local inspection and provides a reusable session interface for host integrations. In the recorded single-skill benchmark, Session selected in 0.733 s versus 4.314 s for the native GPT-6 Astra low selector, with 80/80 correct accepted selections. These are selection medians from separate runs, not end-to-end task timings. Hosts retain activation, permissions and execution; automatic interception needs separate qualification and compound advice remains experimental.
+> Adds Jev Capability Advisor 0.1.0 to the public catalog and stark AI Developer 1.3.0. It recommends available skills and MCP tools, supports local inspection and provides a reusable session interface for host integrations. The compact initial request selected in 406 ms versus 433 ms for our previous format in an interleaved single-skill comparison, with 80/80 correct accepted selections. An earlier revision measured 0.733 s versus 4.314 s for the native GPT-6 Astra low selector in separate runs. These are separate selection studies, not end-to-end task timings. Hosts retain activation, permissions and execution; automatic interception needs separate qualification and compound advice remains experimental.
 
 Use this draft after promotion is approved. The exact version, changelog and release subjects come from the reviewed generated release candidate; the [publishing runbook](../../publishing.md#release-artifacts) owns packaging and publication procedures.
