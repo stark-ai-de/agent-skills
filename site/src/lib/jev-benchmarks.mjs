@@ -50,7 +50,7 @@ const rows = Object.entries(rowLabels).map(([id, label]) => {
       factor === null
         ? "The reference model chooses from the same candidate cards."
         : "Median skill-selection speed compared with the native model selector.",
-    announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct skill selections.`,
+    announcement: `${label}: ${(result.median_ms / 1000).toFixed(2)} seconds median. ${relation}. ${result.correct} of ${result.n} correct accepted selections.`,
   };
 });
 
@@ -68,6 +68,52 @@ export const jevBenchmarks = {
     jevModel: current.models.jev,
     hussiSource: current.sources.hussi.url,
     controlMedianSeconds: current.modified_control.primary_positive.median_ms / 1000,
+    technical: {
+      title: "Why routing speeds differ",
+      introduction:
+        "Same Jev model. Different selection work. Fresh Connection is already our optimized advisor; Session adds connection reuse.",
+      rows: [
+        {
+          topic: "Candidates",
+          hussi: "Eligible skill index; split into domain and process choices.",
+          jev: "Validate, deduplicate and locally rank skills + MCP tools; up to 240 candidates.",
+        },
+        {
+          topic: "Questions",
+          hussi: "Domain, process and task type in one request.",
+          jev: "Selection mode + first capability; up to two follow-up calls for compound tasks.",
+        },
+        {
+          topic: "Task context",
+          hussi: "Task truncated to 600 characters; short candidate summaries.",
+          jev: "Tasks up to 16,000 characters; candidate descriptions bounded by a request-size budget.",
+        },
+        {
+          topic: "Acceptance",
+          hussi: "Validate returned IDs; confidence ≥ 0.8 to route, ≥ 0.5 to suggest.",
+          jev: "Validate returned IDs and answer consistency; explicit no-match / clarify outcomes, no confidence gate.",
+        },
+        {
+          topic: "Connection",
+          hussi: "Fresh HTTPS for each measured selection.",
+          jev: "Fresh: new HTTPS. Session: reuse HTTPS in a retained process; same selection policy.",
+        },
+      ],
+      notes: [
+        {
+          title: "Why Session is faster",
+          text: "Reusing HTTPS avoids repeated connection setup. The host supplies a catalog for each request; it is validated each time. This benchmark used no result cache.",
+        },
+        {
+          title: "Why Hussi9 beats Fresh here",
+          text: "Its measured requests were smaller and local preparation shorter. Both made one API call per observation. The effects of payload size, preparation, transport and provider load were not isolated.",
+        },
+        {
+          title: "What 76/80 means",
+          text: "Four correct Hussi9 suggestions fell below its 0.8 route threshold. These are withheld recommendations, not four wrong skill guesses. We measured the chooser, not its full fallback workflow.",
+        },
+      ],
+    },
   },
   date: comparison.date,
   evidencePath: "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",

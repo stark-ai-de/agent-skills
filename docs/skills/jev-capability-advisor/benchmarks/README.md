@@ -10,18 +10,36 @@ Jev Capability Advisor helps your agent find a relevant skill or tool from its a
 
 Skill selection · median · lower is better. The factor is the ratio of medians across **80 skill-selection observations per variant**: same tasks and catalog, separate measurement runs on 2026-09-22 and 2026-09-23. It measures selection, not complete agent-task speed.
 
-| Variant              | Median skill selection | p95 skill selection | Skills correct | No match correct | Errors |
-| -------------------- | ---------------------: | ------------------: | -------------: | ---------------: | -----: |
-| Jev Session          |                0.733 s |             0.798 s |          80/80 |            16/16 |      0 |
-| Jev Fresh Connection |                1.108 s |             1.167 s |          80/80 |            16/16 |      0 |
-| Hussi9               |                0.884 s |             0.936 s |          76/80 |            16/16 |      0 |
-| Native               |                4.314 s |             6.323 s |          80/80 |            16/16 |      0 |
+| Variant              | Median skill selection | p95 skill selection | Correct accepted selections | No match correct | Errors |
+| -------------------- | ---------------------: | ------------------: | --------------------------: | ---------------: | -----: |
+| Jev Session          |                0.733 s |             0.798 s |                       80/80 |            16/16 |      0 |
+| Jev Fresh Connection |                1.108 s |             1.167 s |                       80/80 |            16/16 |      0 |
+| Hussi9               |                0.884 s |             0.936 s |                       76/80 |            16/16 |      0 |
+| Native               |                4.314 s |             6.323 s |                       80/80 |            16/16 |      0 |
 
 **Native:** `gpt-6-astra`, reasoning `low`, Codex CLI 0.154.0. **Jev and Hussi9:** `jev-1.13.0`. The native model is the requested configuration; its resolved backend identity was not independently observable. Environment: Linux/NixOS in WSL2, Intel Core i9-13900K, Python 3.14.7, concurrency one. Provider load and caching were uncontrolled.
 
 The same 48 frozen tasks ran twice: 40 single-skill and eight no-match tasks, balanced between German and English. Every variant uses the same 132-skill catalog; native receives the same 128 ordered Jev candidate cards, task and routing rules. Hussi9 keeps its published request format. Incorrect selections stay in timing distributions and quality denominators. No-match timings are separate from the headline. We reused the three existing Jev-based arms and added only 96 native observations, with no new Jev requests.
 
 [Hussi9's published Jev selection component](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its 1.2-second timeout and 0.8 confidence threshold. This measures the chooser, not the complete router, hooks or fallback workflow. A **modified persistent-transport control** scored 80/80 with a 0.506 s positive-task median; it is faster here, but is not the published implementation. This comparison does not establish an overall fastest product.
+
+### Why routing speeds differ
+
+Same Jev model. Different selection work. Fresh Connection is already our optimized advisor; Session adds connection reuse.
+
+| Difference   | Hussi9 chooser                                                      | Jev advisor                                                                                             |
+| ------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Candidates   | Eligible skill index; split into domain and process choices.        | Validate, deduplicate and locally rank skills + MCP tools; up to 240 candidates.                        |
+| Questions    | Domain, process and task type in one request.                       | Selection mode + first capability; up to two follow-up calls for compound tasks.                        |
+| Task context | Task truncated to 600 characters; short candidate summaries.        | Tasks up to 16,000 characters; candidate descriptions bounded by a request-size budget.                 |
+| Acceptance   | Validate returned IDs; confidence ≥ 0.8 to route, ≥ 0.5 to suggest. | Validate returned IDs and answer consistency; explicit no-match / clarify outcomes, no confidence gate. |
+| Connection   | Fresh HTTPS for each measured selection.                            | Fresh: new HTTPS. Session: reuse HTTPS in a retained process; same selection policy.                    |
+
+- **Why Session is faster.** Reusing HTTPS avoids repeated connection setup. The host supplies a catalog for each request; it is validated each time. This benchmark used no result cache.
+- **Why Hussi9 beats Fresh here.** Its measured requests were smaller and local preparation shorter. Both made one API call per observation. The effects of payload size, preparation, transport and provider load were not isolated.
+- **What 76/80 means.** Four correct Hussi9 suggestions fell below its 0.8 route threshold. These are withheld recommendations, not four wrong skill guesses. We measured the chooser, not its full fallback workflow.
+
+[Our selection implementation](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_advisor.py) · [Hussi9's pinned implementation](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) · [Post-hoc audit and measurement limits](../../../../skill-evals/jev-capability-advisor/README.md#technical-differences-audit).
 
 ### 1.51× faster with a reusable session
 

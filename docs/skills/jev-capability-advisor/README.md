@@ -44,6 +44,8 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 
 **[Explore the benchmarks](benchmarks/README.md)** for the selection-speed comparison, feature overview and 6,000+ recorded benchmark executions across development iterations. The website presents these in a separate visual section below this guide.
 
+**[Why routing speeds differ](benchmarks/README.md#why-routing-speeds-differ):** a short technical table compares Hussi9, Jev Fresh Connection and reusable Jev sessions, including confidence thresholds and connection reuse.
+
 ## Scope
 
 The agent supplies the current catalog and controls loading, permissions and execution. This release candidate does not automatically intercept ordinary prompts. Compound advice remains experimental, and omitted candidates can limit results.

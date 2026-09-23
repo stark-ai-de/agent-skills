@@ -32,7 +32,7 @@ const runs = [
       <p class="jev-promo__ratio" data-jev-ratio aria-hidden="true"><b data-jev-factor>{initial.factor!.toFixed(2)}</b><span>×</span></p>
       <h3 class="jev-promo__comparison-title"><span data-jev-comparison-label>{initial.label} vs native</span></h3>
       <p class="jev-promo__description"><span data-jev-comparison-description>{initial.description}</span></p>
-      <p class="jev-promo__quality"><strong>Correct skill selections</strong><br /><span data-jev-quality>{initial.correct}/{initial.observations}</span></p>
+      <p class="jev-promo__quality"><strong>Correct accepted selections</strong><br /><span data-jev-quality>{initial.correct}/{initial.observations}</span></p>
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-jev-announcement>{initial.announcement}</p>
     </div>
 
@@ -82,6 +82,27 @@ const runs = [
     </div>
   </div>
 
+  <section class="jev-promo__technical" aria-labelledby="jev-technical-title">
+    <h3 id="jev-technical-title">{comparison.technical.title}</h3>
+    <p>{comparison.technical.introduction}</p>
+    <div class="jev-promo__table-scroll" role="region" aria-label="Technical routing comparison" tabindex="0">
+      <table>
+        <caption class="sr-only">Published Hussi9 chooser compared with Jev Capability Advisor</caption>
+        <thead><tr><th scope="col">Difference</th><th scope="col">Hussi9 chooser</th><th scope="col">Jev advisor</th></tr></thead>
+        <tbody>{comparison.technical.rows.map((row) => (
+          <tr><th scope="row">{row.topic}</th><td>{row.hussi}</td><td>{row.jev}</td></tr>
+        ))}</tbody>
+      </table>
+    </div>
+    <dl class="jev-promo__technical-mobile">
+      {comparison.technical.rows.map((row) => (
+        <div><dt>{row.topic}</dt><dd><strong>Hussi9</strong>{row.hussi}</dd><dd><strong>Jev advisor</strong>{row.jev}</dd></div>
+      ))}
+    </dl>
+    <ul>{comparison.technical.notes.map((note) => <li><strong>{note.title}.</strong> {note.text}</li>)}</ul>
+    <p class="jev-promo__technical-source"><a href={comparison.hussiSource}>Pinned Hussi9 source</a> · <a href={repoUrl(bench.readmePath) + "#why-routing-speeds-differ"}>Technical notes and evidence</a></p>
+  </section>
+
   <div class="jev-promo__features">
     <div><h3>A useful recommendation.<br />An inspectable decision.</h3><p>Built for the capabilities your agent actually has available.</p></div>
     <dl>
@@ -100,7 +121,7 @@ const runs = [
       <div class="jev-promo__table-scroll" role="region" aria-label="Four-variant selection results" tabindex="0">
         <table>
           <caption>Same 48 tasks · two observations per variant and task</caption>
-          <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">p95</th><th scope="col">Skills correct</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
+          <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">p95</th><th scope="col">Correct accepted selections</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
           <tbody>{comparison.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.medianSeconds.toFixed(3)} s</td><td>{row.p95Seconds.toFixed(3)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
         </table>
       </div>
@@ -272,6 +293,17 @@ const runs = [
   .jev-promo__stats h3 { margin-top: 0.5rem; font-size: 0.9rem; }
   .jev-promo__stats p:not(.jev-promo__stat), .jev-promo__stats a { font-size: 0.78rem; color: var(--muted); }
   .jev-promo__stats a { color: var(--primary); }
+  .jev-promo__technical { margin-block: 2rem; }
+  .jev-promo__technical h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.035em; scroll-margin-top: 7rem; }
+  .jev-promo__technical > p, .jev-promo__technical li { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+  .jev-promo__technical th, .jev-promo__technical td { vertical-align: top; }
+  .jev-promo__technical th:first-child { width: 18%; }
+  .jev-promo__technical td { width: 41%; }
+  .jev-promo__technical ul { padding-left: 1.25rem; margin-top: 1.25rem; }
+  .jev-promo__technical li + li { margin-top: 0.6rem; }
+  .jev-promo__technical strong { color: var(--foreground); }
+  .jev-promo__technical .jev-promo__technical-source { font-size: 0.75rem; }
+  .jev-promo__technical-mobile { display: none; }
   .jev-promo__features { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 2rem; margin-block: 2rem; }
   .jev-promo__features h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.035em; margin: 0; }
   .jev-promo__features p { font-size: 0.85rem; color: var(--muted); max-width: 32ch; }
@@ -292,6 +324,12 @@ const runs = [
   .jev-promo__footer > div { display: flex; gap: 1rem; flex-wrap: wrap; }
   .jev-promo a:focus-visible, .jev-promo summary:focus-visible, .jev-promo__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
   @media (max-width: 700px) {
+    .jev-promo__technical > .jev-promo__table-scroll { display: none; }
+    .jev-promo__technical-mobile { display: block; font-size: 0.8rem; line-height: 1.6; }
+    .jev-promo__technical-mobile > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem 1rem; padding-block: 1rem; border-bottom: 1px solid var(--border); }
+    .jev-promo__technical-mobile dt { grid-column: 1 / -1; font-weight: 700; }
+    .jev-promo__technical-mobile dd { margin: 0; color: var(--muted); }
+    .jev-promo__technical-mobile strong { display: block; margin-bottom: 0.25rem; }
     .jev-promo__header, .jev-promo__footer { flex-direction: column; }
     .jev-promo__source { max-width: none; }
     .jev-promo__chart text { font-size: 26px; }

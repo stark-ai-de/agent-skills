@@ -6,12 +6,12 @@ This evaluation records the public release candidate and clearly separates curre
 
 The [four-variant evidence](benchmarks/native-session-2026-09-23.json) combines 288 existing Jev Session, Jev Fresh Connection and published Hussi chooser observations with **96 new native turns**. All use the same 48 frozen tasks (40 skill, eight NONE), twice, and byte-identical 132-entry catalog. The native adapter receives the same 128 physical candidate cards, task and routing rules as Jev. Golden labels are excluded. The seven current runtime source hashes still match the original freeze; no Jev calls were repeated.
 
-| Variant              | Skill median | Skill p95 | Skills correct | NONE correct | Errors |
-| -------------------- | -----------: | --------: | -------------: | -----------: | -----: |
-| Jev Session          |      0.733 s |   0.798 s |          80/80 |        16/16 |      0 |
-| Jev Fresh Connection |      1.108 s |   1.167 s |          80/80 |        16/16 |      0 |
-| Hussi9               |      0.884 s |   0.936 s |          76/80 |        16/16 |      0 |
-| Native               |      4.314 s |   6.323 s |          80/80 |        16/16 |      0 |
+| Variant              | Skill median | Skill p95 | Correct accepted selections | NONE correct | Errors |
+| -------------------- | -----------: | --------: | --------------------------: | -----------: | -----: |
+| Jev Session          |      0.733 s |   0.798 s |                       80/80 |        16/16 |      0 |
+| Jev Fresh Connection |      1.108 s |   1.167 s |                       80/80 |        16/16 |      0 |
+| Hussi9               |      0.884 s |   0.936 s |                       76/80 |        16/16 |      0 |
+| Native               |      4.314 s |   6.323 s |                       80/80 |        16/16 |      0 |
 
 Primary statistics include every one of the 80 positive observations per arm, not only correct selections; the 16 NONE observations are secondary. P95 uses nearest rank. The default website factor is 5.89×, the ratio of native and session medians. These are **separate measurement runs**, not a contemporaneous randomized four-arm experiment or causal latency estimate. Provider caching/load are uncontrolled. The modified Hussi persistent-transport control from the original experiment remains disclosed in the data and benchmark README; no universal speed ranking is claimed.
 
@@ -20,6 +20,16 @@ Native requested `gpt-6-astra`, reasoning `low`, using Codex CLI 0.154.0. Its re
 Independent audits verify the 197 original and 211 native frozen files, exact payload/prompt parity, schedule, strict scoring, timing events and complete ledgers. The [published Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py) retains its original payload, 1.2-second timeout and 0.8 confidence gate; this does not measure its full router, hooks or fallback execution.
 
 The cumulative development count is now **6,546 executions**: historical 6,450 plus these 96 native observations. The 288 reused observations were already counted and are not added twice. Counts describe recorded executions, not unique tasks, passing tests or calls. Original evidence below is preserved with its original date and scope.
+
+### Technical differences audit
+
+The [short technical comparison](../../docs/skills/jev-capability-advisor/benchmarks/README.md#why-routing-speeds-differ) is shared with the Astro page. A post-hoc audit of the original frozen observations clarifies its scope:
+
+- **One call each:** all 96 observations in each of the Hussi9, Jev Fresh Connection and Jev Session arms used exactly one API call. Optional compound follow-ups do not explain this study's timing difference.
+- **Smaller requests, less local preparation:** the published Hussi chooser had lower medians for both on the 80 positive observations. Request timing also includes network/TLS, provider processing, decoding and evidence writing; it is not pure model latency. No controlled ablation isolates each contribution to the overall gap.
+- **Four abstentions:** Hussi9's raw choices matched the expected skills, but confidence values of 0.71, 0.75, 0.77 and 0.78 were below its 0.8 routing threshold. Two tasks each repeated twice account for the four withheld suggestions. The published 76/80 counts correct accepted selections, not raw skill recognition; its downstream fallback was not measured.
+
+The audit is recorded in the [comparison data](benchmarks/native-session-2026-09-23.json). It reuses archived observations, makes no new API calls and adds nothing to the benchmark execution count. Both implementations validate returned option IDs. Jev additionally checks consistency across its mode and selection answers; removing a confidence gate alone does not establish better recognition or general routing quality.
 
 ## Reusable session qualification, 2026-09-22
 

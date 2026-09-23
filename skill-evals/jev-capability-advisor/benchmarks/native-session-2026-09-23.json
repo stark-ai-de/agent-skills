@@ -224,6 +224,59 @@
       "p95_ms": 579.1328250052175
     }
   },
+  "technical_audit": {
+    "kind": "post_hoc_analysis_of_existing_observations",
+    "new_api_calls": 0,
+    "additional_benchmark_executions": 0,
+    "source_results_sha256": "76fbcfa8cb010d2c89a392f736307e6a4134d5013cd67f14394f7d825866da10",
+    "task_set_sha256": "70298b7ce131f85d22684b48763a45679d34eef4179a6e8ce2d2e2d69164edf4",
+    "instrumentation_sha256": "ff36007298389ac0a423c5dc0891f4b7057e0c5c0e9d95a4eba1b9d8ce318374",
+    "filter": "All 40 tasks with category skill, both repetitions and every outcome retained; 80 observations per arm.",
+    "statistic": "statistics.median over local_prep_ms and the first wire_receipt wire_request_bytes / elapsed_ms.",
+    "metric_scopes": {
+      "local_prep_ms": "Selector start to first instrumented request entry.",
+      "wire_request_bytes": "Serialized UTF-8 request byte count.",
+      "instrumented_request_ms": "Delegate request including transport, provider work, decoding, response evidence write and hashes; excludes subsequent receipt-file write. Not pure model latency."
+    },
+    "arms": {
+      "hussi_original": {
+        "observations": 80,
+        "all_observations": 96,
+        "one_request_observations": 96,
+        "median_local_prep_ms": 0.5314590016496368,
+        "median_wire_request_bytes": 32681.5,
+        "median_instrumented_request_ms": 864.4718514988199
+      },
+      "jev_cold": {
+        "observations": 80,
+        "all_observations": 96,
+        "one_request_observations": 96,
+        "median_local_prep_ms": 21.070707502076402,
+        "median_wire_request_bytes": 46108.5,
+        "median_instrumented_request_ms": 1065.5982394891907
+      },
+      "jev_session": {
+        "observations": 80,
+        "all_observations": 96,
+        "one_request_observations": 96,
+        "median_local_prep_ms": 21.324248489690945,
+        "median_wire_request_bytes": 46108.5,
+        "median_instrumented_request_ms": 687.4276239977917
+      }
+    },
+    "hussi_positive_outcomes": {
+      "correct_accepted": 76,
+      "correct_suggestions_below_route_threshold": 4,
+      "wrong_raw_skill_choices": 0,
+      "withheld_confidences": [0.71, 0.75, 0.77, 0.78],
+      "route_threshold": 0.8,
+      "full_fallback_measured": false
+    },
+    "limits": [
+      "Effects of payload size, preparation, transport and provider load were not isolated by controlled ablation.",
+      "Different acceptance policies mean correct accepted selections are not a comparison of raw skill recognition."
+    ]
+  },
   "count_ledger": {
     "previous_recorded_executions": 6450,
     "new_completed_executions": 96,

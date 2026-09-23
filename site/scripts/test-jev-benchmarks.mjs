@@ -113,6 +113,45 @@ assert.equal(data.groups.primary_positive.arms.hussi_original.correct, 76);
 assert.equal(data.groups.primary_positive.arms.hussi_original.median_ms, 883.8034854925354);
 assert.equal(current.rows.at(-1).factor, null);
 
+// Keep the visible technical comparison and repository documentation in agreement.
+const technical = current.technical;
+const audit = data.technical_audit;
+assert.equal(audit.new_api_calls, 0);
+assert.equal(audit.additional_benchmark_executions, 0);
+assert.equal(audit.task_set_sha256, data.provenance.dataset_sha256);
+for (const [id, arm] of Object.entries(audit.arms)) {
+  assert.equal(arm.observations, data.groups.primary_positive.arms[id].n);
+  assert.equal(arm.all_observations, data.groups.all.arms[id].n);
+  assert.equal(arm.one_request_observations, arm.all_observations);
+}
+for (const metric of ["median_local_prep_ms", "median_wire_request_bytes"]) {
+  assert.ok(audit.arms.hussi_original[metric] < audit.arms.jev_cold[metric]);
+}
+const withheld = audit.hussi_positive_outcomes;
+assert.equal(withheld.correct_accepted, data.groups.primary_positive.arms.hussi_original.correct);
+assert.equal(withheld.correct_accepted + withheld.correct_suggestions_below_route_threshold, 80);
+assert.equal(
+  withheld.withheld_confidences.length,
+  withheld.correct_suggestions_below_route_threshold,
+);
+assert.ok(withheld.withheld_confidences.every((value) => value < withheld.route_threshold));
+assert.equal(withheld.wrong_raw_skill_choices, 0);
+assert.equal(withheld.full_fallback_measured, false);
+assert.ok(readme.includes(`### ${technical.title}`));
+assert.ok(readme.includes(technical.introduction));
+for (const row of technical.rows) {
+  assert.ok(
+    readme.replace(/\s+/g, " ").includes(`| ${row.topic} | ${row.hussi} | ${row.jev} |`),
+    `Technical README row differs: ${row.topic}`,
+  );
+}
+for (const note of technical.notes) {
+  assert.ok(
+    readme.includes(`**${note.title}.** ${note.text}`),
+    `Technical note differs: ${note.title}`,
+  );
+}
+
 for (const claim of [
   `${current.rows[0].factor.toFixed(2)}× the native selector's speed`,
   `${bench.session.speedRatio.toFixed(2)}× faster with a reusable session`,
