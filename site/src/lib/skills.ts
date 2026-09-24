@@ -37,6 +37,7 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json",
     "skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json",
     "site/src/components/JevBenchmarkPromo.astro",
+    "site/src/components/JevFeatureStatus.astro",
     "site/src/components/JevNextSkillComparison.astro",
     "site/src/lib/jev-next-skill-benchmarks.mjs",
     "site/src/lib/jev-native-next-skill.mjs",

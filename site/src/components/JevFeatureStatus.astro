@@ -1,0 +1,54 @@
+---
+interface Props { id: string; status: string; }
+const { id, status } = Astro.props;
+const labels: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Unassessed or limited scope" };
+const shapes = [
+  { status: "supported", path: "m6 16 6 6L26 8" },
+  { status: "unsupported", path: "m8 8 16 16M24 8 8 24" },
+  { status: "neutral", path: "M10 10a6 6 0 0 1 12 0c0 4-6 4-6 8m0 6v.2" },
+];
+---
+
+<span class="jev-feature-status" data-jev-feature-icon data-status={status} role="img" aria-label={labels[status]}>
+  <svg viewBox="0 0 34 36" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id={id} x1="0" y1="0" x2="0.85" y2="1">
+        <stop offset="0" stop-color="white" />
+        <stop offset="0.34" stop-color="currentColor" />
+        <stop offset="1" stop-color="currentColor" />
+      </linearGradient>
+    </defs>
+    {shapes.map((shape) => (
+      <g data-feature-shape={shape.status} fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width={shape.status === "neutral" ? 5 : 6}>
+        <path d={shape.path} class="jev-feature-status__depth" transform="translate(0 2)" />
+        <path d={shape.path} stroke={`url(#${id})`} />
+        <path d={shape.path} stroke="white" stroke-width="1.2" opacity="0.48" transform="translate(-.5 -.8)" />
+      </g>
+    ))}
+  </svg>
+</span>
+
+<style>
+  .jev-feature-status { --intro-color: #168845; --settled-color: #4d95cc; display: inline-block; width: 28px; height: 30px; flex-shrink: 0; color: var(--settled-color); transform-origin: 50% 65%; }
+  .jev-feature-status[data-status="unsupported"] { --intro-color: #dc2626; --settled-color: var(--muted); }
+  .jev-feature-status[data-status="neutral"] { --intro-color: #b98316; --settled-color: var(--muted); }
+  svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 1px rgb(8 25 42 / 16%)); }
+  .jev-feature-status__depth { stroke: color-mix(in srgb, currentColor 68%, #15263a); }
+  [data-feature-shape] { display: none; }
+  [data-status="supported"] [data-feature-shape="supported"],
+  [data-status="unsupported"] [data-feature-shape="unsupported"],
+  [data-status="neutral"] [data-feature-shape="neutral"] { display: inline; }
+  .jev-feature-status[data-revealed="true"] { animation: jev-feature-pop 550ms cubic-bezier(.2, .8, .2, 1) both, jev-feature-settle 3400ms linear both; }
+  @keyframes jev-feature-pop {
+    0% { opacity: .25; transform: translateY(5px) scale(.55) rotate(-12deg); }
+    65% { opacity: 1; transform: translateY(-1px) scale(1.16) rotate(3deg); }
+    100% { opacity: 1; transform: none; }
+  }
+  @keyframes jev-feature-settle {
+    0%, 88.235% { color: var(--intro-color); }
+    100% { color: var(--settled-color); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jev-feature-status[data-revealed="true"] { animation: none; }
+  }
+</style>

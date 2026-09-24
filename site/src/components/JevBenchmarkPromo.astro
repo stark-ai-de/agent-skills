@@ -2,6 +2,7 @@
 import { jevBenchmarks as bench, getJevPromoComparison } from "../lib/jev-benchmarks.mjs";
 import { repoUrl } from "../lib/skills";
 import ContextTooltip from "./ContextTooltip.astro";
+import JevFeatureStatus from "./JevFeatureStatus.astro";
 import JevNextSkillComparison from "./JevNextSkillComparison.astro";
 import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
 
@@ -68,10 +69,14 @@ const runs = [
           </span>
         </span>
       </p>
-      <ul class="jev-promo__features" aria-label="Selected variant product features">
-        {featureRows.map((feature) => (
+      <div class="jev-promo__feature-heading">
+        <h3 id="jev-supported-features">Supported Features</h3>
+        <ContextTooltip id="jev-feature-scope" label="Supported Features" align="end" text={`Features describe each product; speed and correctness measure one next-skill choice. A check means supported, an X means not supported, and a question mark means unassessed or limited scope. Our HTTPS experiment tests a fixed skill catalog; it does not qualify MCP or the complete Hussi inventory integration. ${comparison.dateLabel} · selection speed, not full-task speed.`} />
+      </div>
+      <ul class="jev-promo__features" aria-labelledby="jev-supported-features" data-jev-features>
+        {featureRows.map((feature, index) => (
           <li data-jev-feature data-status={feature.status}>
-            <span class="jev-promo__feature-icon" data-jev-feature-icon aria-hidden="true">{feature.status === "supported" ? "✓" : "·"}</span>
+            <JevFeatureStatus id={`jev-feature-gloss-${index}`} status={feature.status} />
             <span><strong>{feature.label}</strong><span class="jev-promo__feature-values">
               <span data-jev-feature-value>{feature.value}</span>
               {feature.alternatives.map((value) => <span class="jev-promo__reserve" aria-hidden="true">{value}</span>)}
@@ -79,7 +84,6 @@ const runs = [
           </li>
         ))}
       </ul>
-      <p class="jev-promo__study">Features describe each product; speed and correctness measure one next-skill choice.<br />{comparison.dateLabel} · selection speed, not full-task speed.</p>
       <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-jev-announcement>{initial.announcement}</p>
     </div>
 
@@ -128,7 +132,7 @@ const runs = [
   </div>
 
   <div class="jev-promo__proof" aria-label="Selection input and development record">
-    <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input</h3><p>Than both tested Hussi variants.</p></div>
+    <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input</h3><p>Than the tested publicly available competitor.</p></div>
     <div><p class="jev-promo__proof-number">{number(comparison.totalRuns)}</p><h3>Benchmark runs recorded</h3><p>Across development, including unsuccessful attempts.</p></div>
   </div>
   <p class="jev-promo__proof-scope">Selection input: same independent <code>next_skill</code> confirmation, {confirmation.date}. Provider-reported input tokens, not whole-agent savings. The run count includes earlier revisions.</p>
@@ -276,6 +280,9 @@ const runs = [
     const quality = promo.querySelector<HTMLElement>("[data-jev-quality]")!;
     const score = promo.querySelector<HTMLElement>("[data-jev-score]")!;
     const features = Array.from(promo.querySelectorAll<HTMLElement>("[data-jev-feature]"));
+    const featureIcons = features.map((feature) => feature.querySelector<HTMLElement>("[data-jev-feature-icon]")!);
+    const featureStatuses: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Unassessed or limited scope" };
+    const revealFeatures = () => featureIcons.forEach((icon) => { icon.dataset.revealed = "true"; });
     const announcement = promo.querySelector<HTMLElement>("[data-jev-announcement]")!;
     if ("IntersectionObserver" in window) {
       const revealScore = new IntersectionObserver(([entry]) => {
@@ -285,6 +292,15 @@ const runs = [
         }
       }, { threshold: 0.75 });
       revealScore.observe(score);
+      const featureObserver = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          revealFeatures();
+          featureObserver.disconnect();
+        }
+      }, { threshold: 0.5 });
+      featureObserver.observe(promo.querySelector("[data-jev-features]")!);
+    } else {
+      revealFeatures();
     }
     let focusedRow: HTMLElement | null = null;
     let selectedRow = defaultRow;
@@ -305,7 +321,11 @@ const runs = [
         const selected = selectedFeatures[index];
         feature.dataset.status = selected.status;
         feature.querySelector<HTMLElement>("[data-jev-feature-value]")!.textContent = selected.value;
-        feature.querySelector<HTMLElement>("[data-jev-feature-icon]")!.textContent = selected.status === "supported" ? "✓" : "·";
+        const icon = featureIcons[index];
+        icon.dataset.status = selected.status;
+        icon.setAttribute("aria-label", featureStatuses[selected.status]);
+        // Restart the short emphasis on a new variant, including after it settled.
+        icon.getAnimations().forEach((animation) => { animation.cancel(); animation.play(); });
       });
       announcement.textContent = row.dataset.announcement ?? "";
       rows.filter((item) => item instanceof HTMLButtonElement).forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
@@ -321,7 +341,7 @@ const runs = [
       });
       entry.addEventListener("click", () => select(row));
     });
-    chart.querySelectorAll<HTMLElement>(".context-tip").forEach((tip) => {
+    promo.querySelectorAll<HTMLElement>(".context-tip").forEach((tip) => {
       const card = tip.querySelector<HTMLElement>(".context-tip__card")!;
       const position = () => {
         const trigger = tip.getBoundingClientRect();
@@ -348,7 +368,7 @@ const runs = [
     });
     document.addEventListener("pointerdown", (event) => {
       // Outside taps also dismiss a tooltip whose trigger retains touch focus.
-      chart.querySelectorAll<HTMLElement>(".context-tip[data-open='true'], .context-tip:focus-within, .context-tip:hover").forEach((tip) => {
+      promo.querySelectorAll<HTMLElement>(".context-tip[data-open='true'], .context-tip:focus-within, .context-tip:hover").forEach((tip) => {
         if (event.target instanceof Node && !tip.contains(event.target)) {
           tip.dataset.dismissed = "true";
           delete tip.dataset.open;
@@ -399,13 +419,14 @@ const runs = [
   .jev-promo__reserve { visibility: hidden; pointer-events: none; }
   .jev-promo__secondary { margin: .6rem 0; font-size: .75rem !important; }
   .jev-promo__secondary strong { color: var(--foreground); }
-  .jev-promo__features { list-style: none; padding: .75rem 0 0; margin: .8rem 0; border-top: 1px solid var(--border); display: grid; gap: .6rem; }
-  .jev-promo__features li { display: grid; grid-template-columns: 1rem minmax(0, 1fr); gap: .4rem; font-size: .77rem; line-height: 1.4; }
+  .jev-promo__feature-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; position: relative; z-index: 3; border-top: 1px solid var(--border); padding-top: .65rem; margin-top: .8rem; }
+  .jev-promo__feature-heading h3 { margin: 0; font-size: .82rem; }
+  .jev-promo__feature-heading :global(.context-tip) { position: static; }
+  .jev-promo__features { list-style: none; padding: 0; margin: .6rem 0 0; display: grid; gap: .6rem; }
+  .jev-promo__features li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: .55rem; align-items: center; font-size: .77rem; line-height: 1.4; }
   .jev-promo__features strong { display: block; font-weight: 600; }
   .jev-promo__feature-values { display: grid; color: var(--muted); }
   .jev-promo__feature-values > span { grid-area: 1 / 1; }
-  .jev-promo__feature-icon { color: var(--primary); font-weight: 700; }
-  .jev-promo__features [data-status="neutral"] .jev-promo__feature-icon { color: var(--muted); }
   .jev-promo__quality { border-left: 2px solid var(--secondary); padding-left: 0.8rem; }
   .jev-promo__quality strong { color: var(--foreground); }
   .jev-promo__score { position: relative; display: inline-block; margin-top: 0.2rem; color: var(--foreground); font-size: 1.05rem; font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -435,16 +456,19 @@ const runs = [
   .jev-promo__entry:hover, .jev-promo__entry:focus-within, .jev-promo__entry:has(.context-tip[data-open="true"]) { z-index: 2; }
   .jev-promo__row { display: block; width: 100%; min-height: 32px; border: 0; border-radius: 4px; background: transparent; color: inherit; padding: 0; text-align: left; font: inherit; cursor: pointer; }
   .jev-promo__row[data-jev-row="native"] { cursor: default; }
-  .jev-promo__row:focus-visible, .jev-promo__chart :global(.context-tip__trigger:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .jev-promo__row:focus-visible, .jev-promo :global(.context-tip__trigger:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
   .jev-promo__row svg { display: block; width: 100%; overflow: visible; }
-  .jev-promo__chart :global(.context-tip) { flex-shrink: 0; }
-  .jev-promo__chart :global(.context-tip__trigger) { width: 32px; height: 32px; }
-  .jev-promo__chart :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
-  .jev-promo__chart :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
+  .jev-promo :global(.context-tip) { flex-shrink: 0; }
+  .jev-promo :global(.context-tip__trigger) { width: 32px; height: 32px; }
+  .jev-promo :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
+  .jev-promo__feature-heading :global(.context-tip__card) { width: min(19rem, 100%); }
+  .jev-promo :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
   /* Keep the hover target continuous between the trigger and its card. */
-  .jev-promo__chart :global(.context-tip__card)::before { content: ""; position: absolute; bottom: 100%; left: 0; right: 0; height: 0.65rem; }
-  .jev-promo__chart :global(.context-tip[data-side="above"] .context-tip__card) { top: auto; bottom: calc(100% + 0.6rem); }
-  .jev-promo__chart :global(.context-tip[data-side="above"] .context-tip__card)::before { bottom: auto; top: 100%; }
+  .jev-promo :global(.context-tip__card)::before { content: ""; position: absolute; bottom: 100%; left: 0; right: 0; height: 0.65rem; }
+  .jev-promo :global(.context-tip[data-side="above"] .context-tip__card) { top: auto; bottom: calc(100% + 0.6rem); }
+  .jev-promo :global(.context-tip[data-side="above"] .context-tip__card)::before { bottom: auto; top: 100%; }
+  /* The feature card anchors to its padded heading, so bridge that extra gap too. */
+  .jev-promo__feature-heading :global(.context-tip[data-side="above"] .context-tip__card)::before { height: calc(1.3rem + 1px); }
   .jev-promo__chart .jev-promo__axis { display: block; overflow: visible; width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
   .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
   .jev-promo__track { fill: var(--border); }
@@ -492,7 +516,6 @@ const runs = [
     .jev-promo__comparison { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
   }
   .jev-promo__speed-label { margin: 0 0 .25rem; color: var(--foreground) !important; font-weight: 650; }
-  .jev-promo__headline > .jev-promo__study { font-size: .72rem; margin-bottom: 0; }
   .jev-promo__proof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.3rem; padding: 1.25rem 0 .8rem; border-top: 1px solid var(--border); }
   .jev-promo__proof-number { margin: 0; color: var(--primary); font-family: var(--font-display); font-size: clamp(1.9rem, 3.3vw, 2.75rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.1 !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .jev-promo__proof-number span { font-size: .6em; }
@@ -512,6 +535,6 @@ const runs = [
   @media (prefers-reduced-motion: reduce) {
     .jev-promo--animate .jev-promo__bar { animation: none; transform: none; }
     .jev-promo__score[data-revealed="true"][data-perfect="true"] .jev-promo__star { animation: none; }
-    .jev-promo__chart :global(.context-tip__card) { transition: none; }
+    .jev-promo :global(.context-tip__card) { transition: none; }
   }
 </style>
