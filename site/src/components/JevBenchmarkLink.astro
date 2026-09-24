@@ -1,0 +1,155 @@
+---
+import { withBase } from "../lib/site";
+
+interface Props {
+  placement?: "announcement" | "jump";
+  releaseCandidate?: boolean;
+}
+
+const { placement = "jump", releaseCandidate = false } = Astro.props;
+const announcement = placement === "announcement";
+const title = announcement ? "Jev Capability Advisor" : "Scroll down to Benchmark";
+const subtitle = announcement ? "Less choosing. More doing. See the benchmarks." : "Why this skill stands out";
+const href = announcement ? `${withBase("/skills/jev-capability-advisor/")}#benchmarks` : "#benchmarks";
+const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "10010 10000 01010", "01100 11111 00100"];
+---
+
+<aside class={`jev-discovery jev-discovery--${placement}`} data-jev-discovery={placement} data-state="settled" aria-label={announcement ? "Featured Jev benchmarks" : "Jump to Jev benchmarks"}>
+  <a class="jev-discovery__link" href={href} aria-label={`${title}. ${subtitle}${releaseCandidate ? " Release candidate." : ""}`}>
+    <svg class="jev-discovery__pixels" viewBox="0 0 51 15" aria-hidden="true" focusable="false">
+      {pixels.flatMap((row, y) => Array.from(row).map((pixel, x) => pixel === "1" && <rect x={x * 3} y={y * 3} width="2.4" height="2.4" style={`--pixel-delay: ${(x * 3 + y * 7) % 13 * 45}ms`} />))}
+    </svg>
+    <span class="jev-discovery__copy" aria-hidden="true">
+      {announcement && <span class="jev-discovery__extra"><span class="jev-discovery__eyebrow">New {releaseCandidate ? "· Release candidate" : "in the catalog"}</span></span>}
+      <span class="jev-discovery__title"><span class="jev-discovery__reserve">{title}</span><span data-jev-reveal>{title}</span></span>
+      <span class:list={["jev-discovery__subtitle", { "jev-discovery__extra": announcement }]}><span>{subtitle}</span></span>
+    </span>
+    <span class="jev-discovery__action" aria-hidden="true">{announcement && <span>Benchmarks</span>}<span class="jev-discovery__arrow">↘</span></span>
+  </a>
+</aside>
+
+<script>
+  // Visual inspiration: React Bits Decrypted Text.
+  // Original Astro implementation: finite glyph reveal, no React or animation dependency.
+  // https://reactbits.dev/text-animations/decrypted-text
+  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const header = document.querySelector<HTMLElement>(".site-header");
+  const measureHeader = () => {
+    if (header) document.documentElement.style.setProperty("--header-height", `${header.offsetHeight}px`);
+  };
+  measureHeader();
+  if (header && "ResizeObserver" in window) new ResizeObserver(measureHeader).observe(header);
+  else window.addEventListener("resize", measureHeader, { passive: true });
+
+  document.querySelectorAll<HTMLElement>("[data-jev-discovery]").forEach((notice) => {
+    const output = notice.querySelector<HTMLElement>("[data-jev-reveal]")!;
+    const title = output.textContent ?? "";
+    const storageKey = `jev-discovery-v1-${notice.dataset.jevDiscovery}`;
+    let seen = false;
+    try { seen = window.sessionStorage.getItem(storageKey) === "seen"; } catch { /* Storage is optional. */ }
+    let frame = 0;
+    let timer = 0;
+    let pendingSettle = false;
+    const settle = () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      output.textContent = title;
+      // Do not move a link while someone is about to click or keyboard-activate it.
+      if (!motion.matches && notice.matches(":hover, :focus-within")) {
+        pendingSettle = true;
+        return;
+      }
+      pendingSettle = false;
+      notice.dataset.state = "settled";
+    };
+    const finishPending = () => { if (pendingSettle) settle(); };
+    notice.addEventListener("pointerleave", finishPending);
+    notice.addEventListener("focusout", () => requestAnimationFrame(finishPending));
+    notice.addEventListener("click", () => {
+      pendingSettle = false;
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      output.textContent = title;
+      notice.dataset.state = "settled";
+    });
+    motion.addEventListener("change", () => { if (motion.matches) settle(); });
+    window.addEventListener("pagehide", () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      output.textContent = title;
+      notice.dataset.state = "settled";
+    }, { once: true });
+    if (motion.matches || seen || window.location.hash || window.scrollY > 72) return;
+    try { window.sessionStorage.setItem(storageKey, "seen"); } catch { /* Still reveal once on this page. */ }
+    notice.dataset.state = "intro";
+    const started = performance.now();
+    const characters = Array.from(title);
+    const glyphs = "01#.:+*░▒▓";
+    let previousTick = -1;
+    const reveal = (now: number) => {
+      const elapsed = now - started;
+      const tick = Math.floor(elapsed / 45);
+      if (tick !== previousTick) {
+        previousTick = tick;
+        const revealed = Math.floor(Math.min(1, elapsed / 1100) * characters.length);
+        output.textContent = characters.map((character, index) => index < revealed || character === " " ? character : glyphs[(index + tick) % glyphs.length]).join("");
+      }
+      if (elapsed < 1100) frame = requestAnimationFrame(reveal);
+      else output.textContent = title;
+    };
+    frame = requestAnimationFrame(reveal);
+    timer = window.setTimeout(settle, 3800);
+    const onScroll = () => {
+      if (window.scrollY > 72) {
+        settle();
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+  });
+</script>
+
+<style>
+  /* Reserve anchor clearance without JS; the measured inline value takes priority. */
+  :global(html:has(.jev-discovery--announcement)) { --header-height: 9rem; }
+  .jev-discovery { color: var(--foreground); }
+  .jev-discovery--announcement { max-width: 1240px; margin: 0 auto .6rem; }
+  .jev-discovery--jump { width: min(1440px, calc(100% - 1.5rem)); margin: 1.5rem auto 0; }
+  .jev-discovery__link { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; gap: .9rem; padding: .65rem 1rem; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-solid); color: inherit; text-decoration: none; transition: padding 450ms ease, grid-template-columns 450ms ease, border-color 180ms ease; }
+  .jev-discovery__link::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 0% 50%, color-mix(in srgb, var(--primary) 15%, transparent), transparent 70%); opacity: .45; transition: opacity 450ms ease; }
+  .jev-discovery__link::after { content: ""; position: absolute; inset: -100% 0; z-index: -1; background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--secondary) 20%, transparent) 50%, transparent 65%); opacity: 0; pointer-events: none; }
+  .jev-discovery__link:hover { border-color: var(--primary); }
+  .jev-discovery__link:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+  .jev-discovery__pixels { display: block; width: 100%; fill: var(--primary); overflow: visible; }
+  .jev-discovery__copy { min-width: 0; }
+  .jev-discovery__title { display: grid; font: 650 .88rem/1.4 var(--font-mono, ui-monospace, monospace); transition: font-size 450ms ease; }
+  .jev-discovery__title > span { grid-area: 1 / 1; overflow-wrap: anywhere; }
+  .jev-discovery__reserve { visibility: hidden; }
+  .jev-discovery__extra { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 450ms ease, opacity 250ms ease; }
+  .jev-discovery__extra > span { overflow: hidden; min-height: 0; }
+  .jev-discovery__eyebrow { color: var(--secondary); font-size: .68rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+  .jev-discovery__subtitle { color: var(--muted); font-size: .82rem; line-height: 1.55; }
+  .jev-discovery__action { display: flex; align-items: center; gap: .75rem; font-size: .73rem; font-weight: 650; color: var(--primary); }
+  .jev-discovery__arrow { font-size: 1.35rem; line-height: 1; }
+  .jev-discovery--jump .jev-discovery__link { grid-template-columns: 3.5rem minmax(0, 1fr) auto; padding: 1.25rem; border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); }
+  .jev-discovery--jump .jev-discovery__title { font-size: clamp(.95rem, 2vw, 1.2rem); margin-bottom: .2rem; }
+  .jev-discovery--announcement[data-state="intro"] .jev-discovery__link { grid-template-columns: 4rem minmax(0, 1fr) auto; padding: 1.2rem 1.5rem; }
+  .jev-discovery--announcement[data-state="intro"] .jev-discovery__title { font-size: clamp(1rem, 2vw, 1.35rem); }
+  [data-state="intro"] .jev-discovery__extra { grid-template-rows: 1fr; opacity: 1; }
+  [data-state="intro"] .jev-discovery__link { border-color: var(--primary); }
+  [data-state="intro"] .jev-discovery__link::before { opacity: 1; }
+  [data-state="intro"] .jev-discovery__link::after { animation: jev-discovery-sweep 1600ms ease-out both; }
+  [data-state="intro"] .jev-discovery__pixels rect { transform-box: fill-box; transform-origin: center; animation: jev-pixel-in 600ms steps(4, end) var(--pixel-delay) both; }
+  @keyframes jev-discovery-sweep { 0% { opacity: 0; transform: translateX(-100%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(100%); } }
+  @keyframes jev-pixel-in { 0% { opacity: 0; transform: scale(.25); } 60% { opacity: .5; } 100% { opacity: 1; transform: scale(1); } }
+  @media (max-width: 600px) {
+    .jev-discovery__link { gap: .6rem; padding-inline: .7rem; grid-template-columns: 1.75rem minmax(0, 1fr) auto; }
+    .jev-discovery__title { font-size: .75rem; }
+    .jev-discovery__action > span:first-child:not(.jev-discovery__arrow) { display: none; }
+    .jev-discovery--announcement[data-state="intro"] .jev-discovery__link { grid-template-columns: 2.5rem minmax(0, 1fr) auto; padding: 1rem .75rem; }
+    .jev-discovery--jump .jev-discovery__link { grid-template-columns: 2.5rem minmax(0, 1fr) auto; padding: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jev-discovery *, .jev-discovery *::before, .jev-discovery *::after { animation: none !important; transition: none !important; }
+  }
+</style>

@@ -5,6 +5,7 @@ import ChatGptLink from "../components/ChatGptLink.astro";
 import CommandBlock from "../components/CommandBlock.astro";
 import ContextTooltip from "../components/ContextTooltip.astro";
 import FeaturedSkill from "../components/FeaturedSkill.astro";
+import JevBenchmarkLink from "../components/JevBenchmarkLink.astro";
 import HeroLogo from "../components/HeroLogo.astro";
 import ProductHuntBadge from "../components/ProductHuntBadge.astro";
 import SkillCard from "../components/SkillCard.astro";
@@ -58,6 +59,9 @@ const structuredData = [
   canonicalPath="/"
   structuredData={structuredData}
 >
+  <Fragment slot="announcement">
+    {featuredSkill?.name === "jev-capability-advisor" && <JevBenchmarkLink placement="announcement" releaseCandidate={featuredSkill.releaseCandidate} />}
+  </Fragment>
   <section class="hero-section">
     <div class="hero-copy" data-reveal>
       <p class="eyebrow">stark-ai-de/agent-skills</p>
@@ -137,7 +141,7 @@ const structuredData = [
     </aside>
   </section>
 
-  {featuredSkill && <FeaturedSkill skill={featuredSkill} />}
+  {featuredSkill && featuredSkill.name !== "jev-capability-advisor" && <FeaturedSkill skill={featuredSkill} />}
 
   <section class="catalog-band">
     <header class="section-heading">

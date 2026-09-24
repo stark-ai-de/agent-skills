@@ -135,11 +135,11 @@ const runs = [
         ))}
       </svg>
       <p class="jev-promo__models">Native: {comparison.nativeModel} · reasoning {comparison.nativeReasoning}<br />Jev + Hussi9: {comparison.jevModel}</p>
-      <p class="jev-promo__caption">{comparison.skillObservations} skill choices per variant · same tasks and catalog, separate runs. Session needs a running process. Our unpublished experiment remains in the full results. <a href="#jev-speed-method" data-jev-disclosure="jev-speed-details">Method &amp; scope</a></p>
+      <p class="jev-promo__caption">{comparison.skillObservations} skill choices per variant · {comparison.dateLabel} · same tasks and catalog, separate runs. Session needs a running process. Our unpublished experiment remains in the full results. <a href="#jev-speed-method" data-jev-disclosure="jev-speed-details">Method &amp; scope</a></p>
     </figure>
   </div>
 
-  <div class="jev-promo__proof" aria-label="Selection input and development record">
+  <div class="jev-promo__proof" role="group" aria-label="Selection input and development record">
     <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input</h3><p>Than the tested publicly available competitor.</p></div>
     <div><p class="jev-promo__proof-number">{number(comparison.totalRuns)}</p><h3>Benchmark runs recorded</h3><p>Across development, including unsuccessful attempts.</p></div>
   </div>

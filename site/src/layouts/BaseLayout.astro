@@ -208,6 +208,7 @@ const tracingMode =
       </aside>
     )}
     <header class="site-header">
+      <slot name="announcement" />
       <nav class="topbar" aria-label="Primary navigation">
         <a class="brand-link" href={withBase("/")} aria-current={isCatalogHome ? "page" : undefined}>
           <picture>

@@ -4,6 +4,7 @@ import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
 import JevBenchmarkPromo from "./JevBenchmarkPromo.astro";
+import JevBenchmarkLink from "./JevBenchmarkLink.astro";
 import type { CatalogSkill } from "../lib/skills";
 import { collectionLabel, installHostLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
@@ -37,6 +38,8 @@ const installContext = !targetRuntime
     ? `The ${targetRuntime} target contract stays unchanged when installed into another supported execution host.`
     : `This ${targetRuntime} target contract currently supports installation into ${defaultInstallHost} only.`;
 ---
+
+{hasJevBenchmarks && <JevBenchmarkLink />}
 
 <section class="skill-hero" data-reveal data-tracing-hero>
   <Breadcrumbs
