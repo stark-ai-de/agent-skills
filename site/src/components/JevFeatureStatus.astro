@@ -1,7 +1,7 @@
 ---
 interface Props { id: string; status: string; }
 const { id, status } = Astro.props;
-const labels: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Unassessed or limited scope" };
+const labels: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Not checked or not used here" };
 const shapes = [
   { status: "supported", path: "m6 16 6 6L26 8" },
   { status: "unsupported", path: "m8 8 16 16M24 8 8 24" },

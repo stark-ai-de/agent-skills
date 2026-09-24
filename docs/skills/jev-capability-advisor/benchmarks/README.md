@@ -22,7 +22,7 @@ The independent confirmation uses **32 tasks × two repetitions**: **48 skill ob
 - **Timing:** preparation plus model turn. Process startup, skill loading and task execution are excluded. Session requires a retained process to reuse HTTPS and its search index. No harness retries, warmup or decision cache.
 - **Precision:** medians and factors use full raw timing values. All four p95 values use **nearest rank**. The original Native handoff used linear interpolation and rounded summaries; those source summaries and their hash remain in the normalized evidence.
 
-**The internal experiment remains visible for review.** It is our unpublished transport modification, not a Hussi9 release or an integrated advisor. Removing its entry from the central visible-variant list hides only its bar; the full results remain available. Stars mark every complete score equally, including the experiment. Hover, focus or tap updates factor, correctness and product features together; Native restores the Jev default.
+**The internal experiment remains visible for review.** It is our unpublished transport modification, not a Hussi9 release or an integrated advisor. Removing its entry from the central visible-variant list hides only its bar; the full results remain available. Stars mark every complete score equally, including the experiment. Hover, focus or tap updates factor, correctness and product features together. The selection stays while reading the text, opening a popover or leaving the chart; another bar changes it. Native or Escape restores the Jev default.
 
 **15,164 completed benchmark executions:** the previous 15,100 plus exactly **64 new Native observations**. The 192 reused Jev/Hussi observations were already counted. UI tests, audits and re-rendering add no benchmark executions.
 
@@ -32,17 +32,22 @@ The independent confirmation uses **32 tasks × two repetitions**: **48 skill ob
 
 **One fast next-skill choice, plus a broader advisor when needed.** Jev Session selects the next eligible skill in the explicit `next_skill` mode. Its `general` mode also supports MCP tools and other outcomes. The feature table describes each product; the timing and correctness results measure the pinned selection paths, not every product feature.
 
-| Product feature       | Jev Capability Advisor  | Hussi9 skill-router          |
-| --------------------- | ----------------------- | ---------------------------- |
-| Skills & MCP          | Yes · general mode      | Yes · Codex variant          |
-| Task text sent to Jev | Up to 16,000 characters | Up to 600 characters         |
-| Reuse                 | HTTPS + search index    | Index + saved decisions      |
-| Capability source     | Current host catalog    | Local index + inventory scan |
+| Product feature            | Jev Capability Advisor                  | Hussi9 skill-router                      |
+| -------------------------- | --------------------------------------- | ---------------------------------------- |
+| Skill recommendations      | ✓ Chooses from your available skills    | ✓ Available in Claude and Codex variants |
+| MCP tool recommendations   | ✓ Available in general mode             | ✓ Available in the Codex variant         |
+| 16k task characters to Jev | ✓ Sends up to 16,000 task characters    | ✕ Only up to 600 task characters         |
+| HTTPS connection reuse     | ✓ Keeps the connection open in Session  | ✕ Fresh connection in the tested chooser |
+| Search index reuse         | ✓ Keeps catalog search ready in Session | ✓ Reuses its local skill index           |
+
+**Read the icons:** ✓ supports the named feature; ✕ does not support that feature in the stated path; ? means not checked or not used in the experiment. Task-text limits describe the text sent to Jev. Host integration depends on the client.
+
+**Catalog sources:** Jev accepts the current inventory supplied by the host. Hussi accepts its local skill index **or supplied entries**. The experiment used a frozen benchmark catalog.
 
 - **Why Jev avoids work:** a retained Session reuses HTTPS and its bounded search index. Each request still validates current inventory and checks the answer. The measured `next_skill` path uses no saved decisions.
 - **Why the published Hussi chooser takes longer here:** it opens fresh HTTPS in the measured path. Transport, payload and provider effects were not isolated individually; this does not time its complete router or cached routes.
 - **What the text limits mean:** task characters sent to Jev, not whole-product input limits. For tasks of 15 words or fewer, Hussi can additionally send up to 300 characters from the previous assistant message. It also supports MCP tools, offline inspection and other routing paths outside the measured chooser.
-- **What the internal experiment proves:** adding our reusable HTTPS client and compact JSON to Hussi's chooser is slightly faster in this task set. This unpublished adapter was qualified for skills/no-match only; its other workflows are unassessed.
+- **What the internal experiment proves:** we connected Hussi's selection function to our reusable HTTPS client and compact JSON, using a fixed skill list. We did not integrate its inventory scan or MCP routing. Those features were not removed from Hussi; they are outside this experiment. It is slightly faster in this task set, but its MCP support is unassessed and its search-index path was not used.
 
 Sources: [our advisor](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_advisor.py), [our session](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_session.py), [pinned Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py), [Hussi router sources at the same revision](https://github.com/hussi9/skill-router/tree/652953a0cbb423d4bb7f62de83db15ad4ca9b16e).
 

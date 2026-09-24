@@ -237,7 +237,37 @@ assert.equal(four.displayedObservations, 256);
 assert.equal(three.displayedObservations, 192);
 assert.equal(four.hussiFactor.toFixed(2), "1.78");
 assert.equal(four.inputSaving.toFixed(1), "6.3");
-assert.ok(four.rows.every((row) => row.observations === 48 && row.features.length === 4));
+assert.ok(four.rows.every((row) => row.observations === 48 && row.features.length === 5));
+const ours = four.rows.find((row) => row.id === "jev_session");
+const hussi = four.rows.find((row) => row.id === "hussi_original");
+const experiment = four.rows.find((row) => row.id === "hussi_control");
+for (const row of four.rows) {
+  assert.deepEqual(
+    row.features.map((item) => item.label),
+    ours.features.map((item) => item.label),
+  );
+}
+assert.ok(ours.features.every((item) => item.status === "supported"));
+assert.deepEqual(
+  hussi.features.map((item) => item.status),
+  ["supported", "supported", "unsupported", "unsupported", "supported"],
+);
+assert.deepEqual(
+  experiment.features.map((item) => item.status),
+  ["supported", "neutral", "unsupported", "supported", "neutral"],
+);
+// Tie the advertised task-text allowance to the actual runtime, not a marketing target.
+const advisor = readFileSync(
+  new URL(
+    "../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_advisor.py",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const taskLimit = Number(advisor.match(/^MAX_QUERY_CHARS = ([\d_]+)$/m)[1].replaceAll("_", ""));
+assert.equal(taskLimit, 16000);
+assert.ok(ours.features[2].value.includes(taskLimit.toLocaleString("en-US")));
+assert.ok(hussi.features[2].value.includes("600"));
 assert.equal(four.rows.find((row) => row.id === "hussi_original").correct, 46);
 assert.equal(
   four.rows.find((row) => row.id === "jev_session").sourcePath,
@@ -296,6 +326,20 @@ const readme = readFileSync(
 const currentReadme = readme
   .split("## Current next-skill comparison\n")[1]
   .split("\n## Product features")[0];
+const productReadme = readme
+  .split("## Product features and measured selection\n")[1]
+  .split("\n## Next-skill input efficiency")[0]
+  .replace(/\s+/g, " ");
+for (let index = 0; index < ours.features.length; index++) {
+  const left = ours.features[index];
+  const right = hussi.features[index];
+  assert.ok(
+    productReadme.includes(
+      `| ${left.label} | ✓ ${left.value} | ${right.status === "supported" ? "✓" : "✕"} ${right.value} |`,
+    ),
+    `Product README differs: ${left.label}`,
+  );
+}
 for (const row of actual.allRows) {
   const expected = `| ${row.label}${row.experimental ? " (internal, unpublished)" : ""} | ${row.medianSeconds.toFixed(6)} s | ${row.p95Seconds.toFixed(6)} s | ${row.factor === null ? "Baseline" : row.factor.toFixed(2) + "×"} | ${row.correct}/${row.observations} | ${row.noneCorrect}/${row.noneObservations} | ${row.errors} |`;
   assert.ok(

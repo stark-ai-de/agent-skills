@@ -8,28 +8,32 @@ export const visibleVariantIds = ["jev_session", "hussi_original", "hussi_contro
 const feature = (label, value, status = "supported") => ({ label, value, status });
 const productFeatures = {
   jev_session: [
-    feature("Skills & MCP", "Yes · general mode"),
-    feature("Task text sent to Jev", "Up to 16,000 characters"),
-    feature("Reuse", "HTTPS + search index"),
-    feature("Capability source", "Current host catalog"),
+    feature("Skill recommendations", "Chooses from your available skills"),
+    feature("MCP tool recommendations", "Available in general mode"),
+    feature("16k task characters to Jev", "Sends up to 16,000 task characters"),
+    feature("HTTPS connection reuse", "Keeps the connection open in Session"),
+    feature("Search index reuse", "Keeps catalog search ready in Session"),
   ],
   hussi_original: [
-    feature("Skills & MCP", "Yes · Codex variant"),
-    feature("Task text sent to Jev", "Up to 600 characters"),
-    feature("Reuse", "Index + saved decisions"),
-    feature("Capability source", "Local index + inventory scan"),
+    feature("Skill recommendations", "Available in Claude and Codex variants"),
+    feature("MCP tool recommendations", "Available in the Codex variant"),
+    feature("16k task characters to Jev", "Only up to 600 task characters", "unsupported"),
+    feature("HTTPS connection reuse", "Fresh connection in the tested chooser", "unsupported"),
+    feature("Search index reuse", "Reuses its local skill index"),
   ],
   hussi_control: [
-    feature("Skills & MCP", "Skills tested; MCP unassessed", "neutral"),
-    feature("Task text sent to Jev", "Up to 600 characters"),
-    feature("Reuse", "Our HTTPS client"),
-    feature("Capability source", "Frozen benchmark catalog", "neutral"),
+    feature("Skill recommendations", "Tested with the fixed skill catalog"),
+    feature("MCP tool recommendations", "Not tested in this experiment", "neutral"),
+    feature("16k task characters to Jev", "Only up to 600 task characters", "unsupported"),
+    feature("HTTPS connection reuse", "Added by our benchmark adapter"),
+    feature("Search index reuse", "Not used · fixed candidate list", "neutral"),
   ],
   native: [
-    feature("Skills & MCP", "Depends on the host", "neutral"),
-    feature("Task text sent to Jev", "No Jev request", "neutral"),
-    feature("Reuse", "Depends on the host", "neutral"),
-    feature("Capability source", "Host inventory", "neutral"),
+    feature("Skill recommendations", "Depends on the host", "neutral"),
+    feature("MCP tool recommendations", "Depends on the host", "neutral"),
+    feature("16k task characters to Jev", "No Jev request", "neutral"),
+    feature("HTTPS connection reuse", "Depends on the host", "neutral"),
+    feature("Search index reuse", "Depends on the host", "neutral"),
   ],
 };
 
@@ -55,7 +59,7 @@ const definitions = [
     label: "Hussi9 + our HTTPS",
     experimental: true,
     description: "Our internal experiment · not a published skill.",
-    info: "Our internal modification of the Hussi chooser: reusable HTTPS and compact JSON, with its selection policy retained. About 8 ms faster than Jev here, with 48/48 accepted choices. It is not an upstream release or an integrated advisor. Skills and no-match outcomes were tested; MCP and other workflows were not qualified.",
+    info: "We tested Hussi’s selection function with our reusable HTTPS client and compact JSON. We did not integrate the rest of its router, such as inventory discovery and MCP routing. Those features were not removed from Hussi; they are outside this experiment. It was about 8 ms faster than Jev here, with 48/48 accepted skill choices. Internal and unpublished.",
   },
   {
     id: "native",

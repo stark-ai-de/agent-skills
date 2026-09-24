@@ -71,7 +71,15 @@ const runs = [
       </p>
       <div class="jev-promo__feature-heading">
         <h3 id="jev-supported-features">Supported Features</h3>
-        <ContextTooltip id="jev-feature-scope" label="Supported Features" align="end" text={`Features describe each product; speed and correctness measure one next-skill choice. A check means supported, an X means not supported, and a question mark means unassessed or limited scope. Our HTTPS experiment tests a fixed skill catalog; it does not qualify MCP or the complete Hussi inventory integration. ${comparison.dateLabel} · selection speed, not full-task speed.`} />
+        <ContextTooltip id="jev-feature-scope" label="Supported Features" align="end" text={[
+          "Skills: recommends a saved workflow.",
+          "MCP tools: recommends a connected tool.",
+          "16k characters: how much task text can reach Jev.",
+          "HTTPS reuse: keeps the connection open for the next request.",
+          "Index reuse: keeps catalog search data ready.",
+          "✓ Available · × Not supported · ? Not checked or not used here.",
+          "These are product features. The bars time skill selection only.",
+        ].join("\n\n")} />
       </div>
       <ul class="jev-promo__features" aria-labelledby="jev-supported-features" data-jev-features>
         {featureRows.map((feature, index) => (
@@ -88,7 +96,7 @@ const runs = [
     </div>
 
     <figure class="jev-promo__chart" data-jev-chart>
-      <figcaption>Skill selection · median · lower is better<span>Hover or tap to compare. Use the info buttons for the why.</span></figcaption>
+      <figcaption>Skill selection · median · lower is better<span>Hover or tap a bar. Your selection stays while you read.</span></figcaption>
       <div class="jev-promo__rows">
         {comparison.rows.map((row) => {
           const Row = row.id === comparison.baselineId ? "div" : "button";
@@ -152,8 +160,9 @@ const runs = [
         <li><strong>Less connection setup:</strong> a retained Jev Session reuses HTTPS. The published Hussi chooser opens a fresh connection in this measured path. Transport and provider effects were not isolated individually.</li>
         <li><strong>More task text:</strong> Jev permits 16,000 task characters. Hussi’s Jev chooser sends at most 600, plus up to 300 characters from the previous assistant message for tasks of 15 words or fewer. This is a request allowance, not the complete router’s input limit.</li>
         <li><strong>Different reuse:</strong> our measured path reuses transport and a derived search index, without cached answers. Hussi’s full router has a local index and saved decisions; those shortcuts and its fallback workflow are outside the chooser measurement.</li>
-        <li><strong>The experiment:</strong> our modified Hussi transport is slightly faster in this cohort. It is internal and qualified only for this skill/no-match comparison; it is not the complete advisor or a published Hussi9 release.</li>
+        <li><strong>The experiment:</strong> we connected Hussi’s selection function to our reusable HTTPS client and tested it with a fixed skill list. We did not integrate its inventory scan or MCP routing. The question marks mean “not checked or not used here”, not “Hussi cannot do this”. It is internal, unpublished and slightly faster in this cohort.</li>
       </ul>
+      <p>Catalogs: Jev accepts the current inventory supplied by the host. Hussi can use its local index or supplied skill entries. The experiment used only the frozen benchmark entries.</p>
       <p><a href={comparison.hussiSource}>Pinned Hussi chooser source</a> · <a href={repoUrl(bench.readmePath) + "#product-features-and-measured-selection"}>Product-source references and technical notes</a></p>
 
       <p>Use <code>general</code> for skills, tools and experimental compound recommendations. Choose <code>next_skill</code> explicitly for one skill to load next; the rest of the task remains unassessed. Installing the skill does not install an automatic prompt hook.</p>
@@ -281,7 +290,7 @@ const runs = [
     const score = promo.querySelector<HTMLElement>("[data-jev-score]")!;
     const features = Array.from(promo.querySelectorAll<HTMLElement>("[data-jev-feature]"));
     const featureIcons = features.map((feature) => feature.querySelector<HTMLElement>("[data-jev-feature-icon]")!);
-    const featureStatuses: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Unassessed or limited scope" };
+    const featureStatuses: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Not checked or not used here" };
     const revealFeatures = () => featureIcons.forEach((icon) => { icon.dataset.revealed = "true"; });
     const announcement = promo.querySelector<HTMLElement>("[data-jev-announcement]")!;
     if ("IntersectionObserver" in window) {
@@ -302,11 +311,9 @@ const runs = [
     } else {
       revealFeatures();
     }
-    let focusedRow: HTMLElement | null = null;
     let selectedRow = defaultRow;
     const select = (requested: HTMLElement) => {
       const baseline = requested.dataset.factor === "";
-      if (baseline) focusedRow = null;
       const row = baseline ? defaultRow : requested;
       if (row === selectedRow) return;
       selectedRow = row;
@@ -335,10 +342,7 @@ const runs = [
       entry.addEventListener("pointerenter", (event) => {
         if (event.pointerType !== "touch") select(row);
       });
-      entry.addEventListener("focusin", (event) => {
-        focusedRow = event.target instanceof Element && event.target.matches(":focus-visible") ? row : null;
-        select(row);
-      });
+      entry.addEventListener("focusin", () => select(row));
       entry.addEventListener("click", () => select(row));
     });
     promo.querySelectorAll<HTMLElement>(".context-tip").forEach((tip) => {
@@ -351,18 +355,10 @@ const runs = [
       tip.addEventListener("focusin", position);
       tip.addEventListener("pointerdown", position);
     });
-    chart.addEventListener("pointerleave", (event) => {
-      if (event.pointerType !== "touch") select(focusedRow ?? defaultRow);
-    });
-    chart.addEventListener("focusout", (event) => {
-      if (!(event.relatedTarget instanceof Node) || !chart.contains(event.relatedTarget)) {
-        focusedRow = null;
-        select(defaultRow);
-      }
-    });
-    chart.addEventListener("keydown", (event) => {
+    // Keep the last choice while visitors read its details or open a popover.
+    // Another bar selects a variant; Native and Escape explicitly reset to Jev.
+    document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        focusedRow = null;
         select(defaultRow);
       }
     });
@@ -375,10 +371,6 @@ const runs = [
           tip.querySelector("[data-context-tip-trigger]")?.setAttribute("aria-expanded", "false");
         }
       });
-      if (event.target instanceof Node && !chart.contains(event.target)) {
-        focusedRow = null;
-        select(defaultRow);
-      }
     });
   }
   if (promo && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
@@ -462,6 +454,7 @@ const runs = [
   .jev-promo :global(.context-tip__trigger) { width: 32px; height: 32px; }
   .jev-promo :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
   .jev-promo__feature-heading :global(.context-tip__card) { width: min(19rem, 100%); }
+  .jev-promo__feature-heading :global(.context-tip__card > span) { white-space: pre-line; }
   .jev-promo :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
   /* Keep the hover target continuous between the trigger and its card. */
   .jev-promo :global(.context-tip__card)::before { content: ""; position: absolute; bottom: 100%; left: 0; right: 0; height: 0.65rem; }
