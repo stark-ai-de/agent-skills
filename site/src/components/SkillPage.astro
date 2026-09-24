@@ -4,6 +4,7 @@ import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
 import JevBenchmarkPromo from "./JevBenchmarkPromo.astro";
+import JevNextSkillComparison from "./JevNextSkillComparison.astro";
 import type { CatalogSkill } from "../lib/skills";
 import { collectionLabel, installHostLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
@@ -133,7 +134,7 @@ const installContext = !targetRuntime
     <article class="skill-content">
       <div class="markdown" set:html={skill.html} />
     </article>
-    {hasJevBenchmarks && <JevBenchmarkPromo />}
+    {hasJevBenchmarks && <><JevNextSkillComparison /><JevBenchmarkPromo /></>}
   </div>
 </div>
 

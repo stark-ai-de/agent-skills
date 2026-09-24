@@ -16,8 +16,10 @@ assert.deepEqual(bench.runCounts, {
   resumedQualification: 2540,
   sessionIndexQualification: 880,
   nativeIndexSupplement: 96,
+  nextSkillDevelopment: 3303,
+  nextSkillQualification: 489,
 });
-assert.equal(bench.totalRuns, 11308);
+assert.equal(bench.totalRuns, 15100);
 assert.equal(bench.development.experiment_count, 37);
 assert.equal(
   bench.development.experiments.reduce((n, run) => n + run.recorded_executions, 0),
@@ -315,7 +317,7 @@ for (const studyId of [
   assert.deepEqual(changes.lost_correct_observations, []);
   assert.deepEqual(changes.gained_correct_observations, []);
 }
-// This archived runtime is immutable evidence; current source identity is checked in the Session-index suite.
+// This archived runtime is immutable evidence; current source identity is checked in the next-skill suite.
 assert.ok(!("native" in compact.study.groups.all));
 assert.equal(compact.study.completed_executions, 288);
 assert.equal(compact.study.actual_api_attempts, 289);
@@ -335,3 +337,5 @@ assert.ok(readme.includes("historical timings stay separate"));
 console.log("Compact archive matches all eight cohorts, failures and documentation.");
 
 await import("./test-jev-session-benchmarks.mjs");
+
+await import("./test-jev-next-skill-benchmarks.mjs");

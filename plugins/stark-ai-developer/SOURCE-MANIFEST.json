@@ -1831,10 +1831,10 @@
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
     },
     {
-      "byteLength": 9040,
+      "byteLength": 11118,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "83063c3d964cd20e0d256f9d0390832f3eaaff26e75936bce1ec70b882b75216"
+      "sha256": "70d02472f8d873aeba874c26ba4c70c87b718d89e8e45368b2748c341c236e8f"
     },
     {
       "byteLength": 615,
@@ -1855,16 +1855,16 @@
       "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
     },
     {
-      "byteLength": 19407,
+      "byteLength": 24689,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/contract.md",
-      "sha256": "6eee723153800511d1bdb85e24c9a9506ced0d3c741f3adf64f73aaaf143ca71"
+      "sha256": "12481698ecc4c5cce9355e872f10ca484285436d439fc69c3bd52b4cc93e9f7e"
     },
     {
-      "byteLength": 7380,
+      "byteLength": 10258,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/session-integration.md",
-      "sha256": "07fff746f81a5adf2eb7b96a39a3fcbed58a0a6b0235403d6a755cfcbb333d1b"
+      "sha256": "c21b6bf916654adcc1866f62d00a97bcc04362471051f72166d795c776a7849b"
     },
     {
       "byteLength": 4617,
@@ -1885,16 +1885,16 @@
       "sha256": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1"
     },
     {
-      "byteLength": 36329,
+      "byteLength": 45364,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
-      "sha256": "17b570a8c71a156d4d9fe9c1301a1c577f07dc46bdcf2a8ae41b956d63314a78"
+      "sha256": "f431ba4fa0bbddc9d7a7d3835a2f8a08580c3a155794337c9260ee408b4c04e5"
     },
     {
-      "byteLength": 16962,
+      "byteLength": 19499,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_session.py",
-      "sha256": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+      "sha256": "154d0040f456deb6f8b5303348a9ee10695a8bbfb33972f3f3a9870f2e5f3efa"
     },
     {
       "byteLength": 17467,
@@ -1915,5 +1915,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "8dc49cafe116367894aedd3be788069ddc862a0e5005122d4a7f736587635e9b"
+  "treeHash": "be819106a199be456498fa6aa72735a3b03f3b03ebde994155acb9a69ac3e8fb"
 }

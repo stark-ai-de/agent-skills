@@ -10,6 +10,8 @@ const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
 const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
 const chartWidth = 540;
 const runs = [
+  { label: "Next-skill qualification", count: bench.runCounts.nextSkillQualification, detail: "480 paired comparison observations + 9 development checks; no offline replays or diagnostic calls" },
+  { label: "Optimization development", count: bench.runCounts.nextSkillDevelopment, detail: "Earlier rejected candidates retained, including one HTTP 402 refusal; 107 unexecuted slots excluded" },
   { label: "Resumed qualification", count: bench.runCounts.resumedQualification, detail: "10 cohorts; rejected shorter-description variants retained; health probe excluded" },
   { label: "Session index qualification", count: bench.runCounts.sessionIndexQualification, detail: "480 matched + 400 mixed observations; offline replay excluded" },
   { label: "Current Native supplement", count: bench.runCounts.nativeIndexSupplement, detail: "48 identical tasks × 2 new Native observations" },
@@ -23,11 +25,11 @@ const runs = [
 ];
 ---
 
-<section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
+<section class="jev-promo" id="selection-speed" aria-labelledby="jev-benchmark-title" data-jev-promo>
   <header class="jev-promo__header">
     <div>
-      <p class="jev-promo__label">Jev, measured</p>
-      <h2 id="jev-benchmark-title">Faster capability selection.</h2>
+      <p class="jev-promo__label">General profile · study from 2026-09-23</p>
+      <h2 id="jev-benchmark-title">Selection speed, measured.</h2>
       <p>Find a relevant skill or tool. Give your agent a focused next step.</p>
     </div>
     <a class="jev-promo__source" href={repoUrl(bench.readmePath)}>Read the benchmark README</a>
@@ -98,12 +100,12 @@ const runs = [
         ))}
       </svg>
       <p class="jev-promo__models">Native: {comparison.nativeModel} · reasoning {comparison.nativeReasoning}<br />Jev + Hussi9: {comparison.jevModel}</p>
-      <p class="jev-promo__caption"><strong>Current Session comparison.</strong> {comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
+      <p class="jev-promo__caption"><strong>Historical general-profile comparison.</strong> {comparison.skillObservations} observations per variant · same tasks and catalog, separate measurement runs ({comparison.dateLabel}). Ratios of medians; selection only. These timings do not measure the new next-skill profile. Session requires a retained process. Process startup, skill loading and task execution excluded.</p>
     </figure>
   </div>
 
   <section class="jev-promo__technical jev-promo__compact" aria-labelledby="jev-compact-title">
-    <p class="jev-promo__label">Latest optimization · 2026-09-23</p>
+    <p class="jev-promo__label">Earlier optimization · 2026-09-23</p>
     <h3 id="jev-compact-title">{optimization.title}</h3>
     <p><strong>{optimization.reductionPercent.toFixed(1)}% lower median selection time</strong> across skills, MCP tools, clarification, no match and compound tasks in a {optimization.catalogRecords}-entry catalog. Same inputs and selection rules, reusable HTTPS in both variants.</p>
     <div class="jev-promo__table-scroll" role="region" aria-label="Session index results" tabindex="0">

@@ -2,6 +2,21 @@
 
 This is an on-demand capability advisor. Native client discovery and permissions remain in control. A recommendation identifies a next step; it does not load a skill, start an MCP server, or execute a tool.
 
+## Explicit selection profiles
+
+| Profile                 | Eligible inventory                          | Successful result                                                           | Provider-call limit                     |
+| ----------------------- | ------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------- |
+| `general` (default)     | Skills and MCP/host tools                   | `selected`: a complete recommendation of one to three capabilities          | Three, including conditioned follow-ups |
+| `next_skill` (explicit) | Every enabled catalog entry must be a skill | `next_skill`: exactly one skill to consider next; remaining work unassessed | One; no conditioned follow-up           |
+
+Choose `next_skill` only for an explicit one-next-skill goal. It is not a faster automatic replacement for `general`. The host must not infer the profile from individual prompt wording, benchmark cases or apparent task complexity. Several independent deliverables may still have a sensible first skill, but this profile does not assess whether that skill covers the other deliverables. Material uncertainty about the next step returns `clarify`.
+
+Set `selection_profile="next_skill"` in `advise`, or pass `--selection-profile next_skill` to either CLI. A session owner selects it in the constructor; request frames cannot override it. Omission keeps `general`. Unknown profiles fail validation.
+
+The complete input catalog is validated before retrieval, cache reuse or credential/transport creation. An enabled tool produces `next_skill_requires_skill_catalog`; a tool omitted by retrieval still triggers this guard. Disabled tools may remain in the catalog. Do not remove active tools from authoritative inventory to make this profile eligible; use `general` for that inventory.
+
+Every next-skill receipt, compact summary, cache-hit response and Session reply includes `selection_profile: next_skill` and `additional_work: unassessed`, including no-match, clarification and error outcomes. A successful next-skill reply uses `status: next_skill`, `mode: NEXT_SKILL`, one selected ID and `stopped_reason: next_skill_identified`. It must never be relabeled as a complete `selected` plan. The default profile keeps its existing result semantics.
+
 ## Catalog
 
 Supply a JSON array exported from the current host's available capabilities. Do not infer availability from files installed on disk. Use stable host IDs and preserve invocation restrictions:
@@ -46,7 +61,9 @@ The host may supply public, source-backed applicability guidance in these option
 
 `use_when`, `avoid_when`, and `keywords` accept a string or a list of at most 64 strings. `parameter_descriptions` accepts a map of at most 64 parameter names to description strings. Each field's combined normalized text is limited to 8192 characters. Invalid types, nested values, and nonfinite numbers are rejected. These are descriptions, not argument values, executable schemas, permissions, or proof that a service is configured.
 
-Only `use_when`, `keywords`, and parameter descriptions contribute positive lexical relevance. `avoid_when` never enters positive retrieval terms. Jev sees explicitly labeled, compact guidance within the existing card budget; long values are shortened. Known local source paths are removed before card truncation. Other provenance metadata stays local. The compact initial request replaces the previous provider wire format: cards omit the default `explicit_only=false`, while `explicit_only=true` remains explicit; option descriptions reference their shared card codes instead of repeating names. Initial descriptions and guidance share a 200-character budget per card. Conditioned follow-ups preserve the established 240-character description/guidance budget, explicit flags, named options and instructions so closely related remaining tools retain their fuller context. Both budgets may shrink further to satisfy the existing byte ceilings; queries are never shortened. A premature STOP is still incomplete, not success. Host output and permission semantics are unchanged, and source fingerprints invalidate decisions cached by an older implementation.
+Only `use_when`, `keywords`, and parameter descriptions contribute positive lexical relevance. `avoid_when` never enters positive retrieval terms. Jev sees explicitly labeled, compact guidance within the existing card budget; long values are shortened. Known local source paths are removed before card truncation. Other provenance metadata stays local. In the general profile, the compact initial request uses the established provider wire format: cards omit the default `explicit_only=false`, while `explicit_only=true` remains explicit; option descriptions reference their shared card codes instead of repeating names. Initial descriptions and guidance share a 200-character budget per card. Conditioned follow-ups preserve the established 240-character description/guidance budget, explicit flags, named options and instructions so closely related remaining tools retain their fuller context. Both general-profile budgets may shrink further to satisfy the existing byte ceilings; queries are never shortened. A premature STOP is still incomplete, not success. Host output and permission semantics are unchanged, and source fingerprints invalidate decisions cached by an older implementation.
+
+The explicit next-skill profile asks one `next_skill` choice question with ordered numeric codes, shared skill-kind context and compact JSON catalog framing. It retains a 200-character description/guidance budget per card and can enrich the first eight retrieved cards to 350 characters when budgets permit. It falls back to object framing before shortening cards for escaping overhead. Existing byte ceilings still apply; this is bounded selection context, not the complete skill documentation. Returned selected-card summaries retain the complete original input descriptions. General requests and follow-ups retain their established framing and rules.
 
 The helper does not invent, translate, fetch, or verify this guidance. The host owns its public source evidence and freshness. Disabled and explicit-only restrictions remain authoritative; semantic applicability is advisory. Full catalog metadata, including these fields and local provenance, participates in both cache identities.
 
@@ -73,6 +90,11 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
 python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
   --query-file /path/to/task.txt --key-file /path/to/local-key \
   --summary --output /path/to/local-result.json
+
+# Explicitly choose one next skill; no enabled tools may be present.
+python3 scripts/jev_advisor.py --catalog /path/to/skill-catalog.json \
+  --query-file /path/to/task.txt --key-file /path/to/local-key \
+  --selection-profile next_skill --summary --output /path/to/next-skill-result.json
 ```
 
 Alternatively provide `TYPESAFE_API_KEY` through the existing process environment. Never put the secret in a command argument or checked-in file. `--output` writes the complete result file. Without `--summary`, the full result is also printed as before. Receipts contain the supplied task and catalog cards, so store them locally.
@@ -102,9 +124,9 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
 
 Use a different scope when connection/account context changes. Supply current availability and activation restrictions every time. Relevant conversation context must be part of the supplied query; the helper cannot invalidate hidden state it never receives. Cached advice never replaces the host's authorization checks.
 
-The cache key binds the **complete query**, complete current catalog including alias/source/restriction metadata, scope, endpoint/model, rules, implementation files, retrieval policy and limits. Native HTTPS and injected test transports use separate cache namespaces. Candidates and their availability are recomputed before reuse. Catalog order alone does not invalidate a result.
+The cache key binds the **selection profile**, complete query, complete current catalog including alias/source/restriction metadata, scope, endpoint/model, rules, implementation files, retrieval policy and limits. General and next-skill decisions cannot be reused across profiles. A next-skill cache record must carry the matching profile and its allowed status, mode, cardinality and stop reason; a hit retains `additional_work: unassessed`. Native HTTPS and injected test transports use separate cache namespaces. Candidates and their availability are recomputed before reuse. Catalog order alone does not invalidate a result.
 
-`--cache-ttl-seconds` defaults to 3600 and must be positive, at most 86400. Expired, malformed, oversized, incompatible or unavailable entries are misses; no stale fallback is served. Only complete `selected`, model `none`, and initial model `clarify` outcomes can be cached. Errors and incomplete compound plans cannot. Cache failure does not invalidate a successful fresh recommendation.
+`--cache-ttl-seconds` defaults to 3600 and must be positive, at most 86400. Expired, malformed, oversized, incompatible or unavailable entries are misses; no stale fallback is served. Within the matching profile, complete general `selected`, explicit one-step `next_skill`, model `none`, and initial model `clarify` outcomes can be cached. A cached `next_skill` remains one-step advice, not complete task coverage. Errors and incomplete compound plans cannot be cached. Cache failure does not invalidate a successful fresh recommendation.
 
 The helper creates a private POSIX directory (0700) and atomic owner-only files (0600), rejects shared/symlinked cache locations, and keeps at most 256 of its own entries by evicting the oldest. Cache files contain decision IDs and source receipt identity, not task text, full responses, credentials or source paths. They are local metadata, not encrypted storage. `--offline-candidates` ignores decision-cache options and performs no credential I/O. It accesses an index cache only when `--index-cache-dir` is explicitly supplied. On platforms without the required private-file primitives, caching is unavailable and fresh uncached operation continues.
 
@@ -137,8 +159,10 @@ Private POSIX directories and files require the current owner, reject symlinks, 
 ## Selection and limits
 
 1. Local retrieval keeps all distinct skill representatives when they fit within the 240-card budget. Remaining space goes to tools ranked by identifiers, description terms, character trigrams, and named-provider coverage. Positive optional routing guidance also contributes. There is no translation model in local retrieval. The default `--retrieval-policy current` retains existing allocation. Experimental `--retrieval-policy balanced` reserves exact requested tool IDs/names first, allocates up to 80% of tool capacity fairly across named providers and their transports, then prioritizes relevant outside-provider tools before global fill. Exact requests override the allocation budget. Both policies preserve the 240-card limit and skill coverage when all representatives fit; balanced is not automatically selected or claimed superior.
-2. Jev selects a cardinality and one primary capability. Both questions receive the candidate context. Separate explicit tasks can require a pair or triple; later workflow dependencies do not justify extra recommendations.
-3. Follow-up decisions receive the previous selections and choose only the next necessary capability. The helper excludes selected IDs and verified aliases. At most three API calls and three final IDs are possible.
+2. In `general`, Jev selects a cardinality and one primary capability. Both questions receive the candidate context. Separate explicit tasks can require a pair or triple; later workflow dependencies do not justify extra recommendations.
+3. General-profile follow-up decisions receive the previous selections and choose only the next necessary capability. The helper excludes selected IDs and verified aliases. At most three API calls and three final IDs are possible.
+
+The explicit `next_skill` profile instead returns exactly one eligible skill, `NONE` or `CLARIFY` from one choice question. It accepts only the expected `next_skill` answer key and a known candidate code or sentinel; unknown codes, extra answer questions, malformed types and nonfinite JSON fail closed. It does not predict cardinality, perform follow-ups or certify coverage of remaining work. Empty/invalid input and valid decision-cache hits need no provider call; other valid uncached next-skill selections make at most one call.
 
 Retrieval is bounded, so omitted tools can still be relevant. If more than 240 skills exist, even skill coverage is partial. Check the receipt's candidate coverage and let native discovery handle unresolved cases. `none` describes the supplied candidate set, not proof that no suitable capability exists anywhere.
 
@@ -148,11 +172,14 @@ The fixed endpoint is `https://api.typesafe.ai/v1/systemone`, using `jev-1.13.0`
 
 | Status       | Meaning                                                                               | Host action                                                                   |
 | ------------ | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `selected`   | A complete recommendation of one to three IDs                                         | Verify availability and restrictions, then follow the user's authorized task  |
+| `selected`   | General profile: a complete recommendation of one to three IDs                        | Verify availability and restrictions, then follow the user's authorized task  |
+| `next_skill` | Explicit next-skill profile: one ID; additional work remains unassessed               | Check the recommendation and restrictions; retain the unresolved task scope   |
 | `none`       | No candidate needed or suitable in the supplied subset                                | Continue without one or use native discovery if coverage is incomplete        |
-| `clarify`    | Ambiguity, too many first steps, or an incomplete cardinality plan                    | Resolve the missing intent; provisional IDs are not a complete recommendation |
+| `clarify`    | Material ambiguity; general can also report too many steps or an incomplete plan      | Resolve the missing intent; provisional IDs are not a complete recommendation |
 | `error`      | Invalid input, malformed provider response, missing credentials, or transport failure | Report the failure; offline inspection can still help                         |
 | `candidates` | Offline retrieval only                                                                | Do not describe this as a semantic selection                                  |
+
+In `next_skill`, `none` means no suitable supplied next skill, not that no tool could help or that the task is complete. Clear multiple deliverables alone are not an error in this deliberately partial profile; unclear next-step priority may require clarification. The host still enforces explicit-only activation, availability and permissions independently.
 
 Live receipts record candidate IDs, request/response hashes, raw payloads without authentication headers, usage, timing, and errors. Usage and latency are observations, not a quality guarantee. Network failure never becomes a successful no-capability answer.
 
@@ -161,5 +188,7 @@ Provider confidence is retained as raw observation and does not gate this adviso
 ## Evaluation boundary
 
 Use independent labeled queries and report exact selection quality, unnecessary selections, retrieval misses, ambiguous/no-capability outcomes, API errors, and latency separately. Freeze code and labels before held-out evaluation. Development-set gains alone do not qualify this skill for public promotion.
+
+Evaluate each profile against its stated task. A next-skill benchmark must score one eligible next skill or its explicit no-match/clarification outcome; never reuse complete compound-plan labels as passing one-skill labels. Keep previous general-profile measurements, deterministic recorded-response parity, and new live next-skill results separate. No next-skill token or timing benefit is implied by the interface or request encoding.
 
 This helper measures recommendation time. It does not measure native tool discovery, skill loading, MCP startup, execution success, or end-to-end task speed. Native selection remains the default.

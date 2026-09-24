@@ -4,7 +4,76 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
-## Current Session comparison: 9.54× the native selector's speed
+## Next-skill input efficiency
+
+**6.3% less selection input than both measured Hussi variants, confirmed on an independent task set.** Choose the explicit `next_skill` profile when the host needs one eligible skill to load next. Additional work remains unassessed; the default `general` profile still handles skills, tools and compound advice.
+
+The KPI is **provider-reported input tokens for skill selection**. It does not measure total agent tokens, price, loading time or complete-task speed. Both the median and aggregate input must improve, with every candidate skill and no-match case correct, before the comparison qualifies.
+
+### Matched tasks
+
+**6.4% less total skill-selection input** than each Hussi variant. Median input is shown separately.
+
+| Variant                                | Median input tokens | Total skill input | Skills correct | No match correct | Median selection |
+| -------------------------------------- | ------------------: | ----------------: | -------------: | ---------------: | ---------------: |
+| Our Jev · next skill                   |               8,433 |           674,614 |          80/80 |            16/16 |          0.474 s |
+| Published Hussi9 chooser               |               9,007 |           720,418 |          76/80 |            16/16 |          0.866 s |
+| Hussi9 + our HTTPS client (experiment) |               9,007 |           720,418 |          80/80 |            16/16 |          0.472 s |
+
+No-match input (median / total), kept outside the skill-input headline:
+
+- **Our Jev:** 8,411.5 / 134,596 input tokens.
+- **Published Hussi9:** 8,986 / 143,802 input tokens.
+- **Pooled Hussi9 control:** 8,986 / 143,802 input tokens.
+
+### Independent confirmation
+
+**6.3% less total skill-selection input** than each Hussi variant. Median input is shown separately.
+
+| Variant                                | Median input tokens | Total skill input | Skills correct | No match correct | Median selection |
+| -------------------------------------- | ------------------: | ----------------: | -------------: | ---------------: | ---------------: |
+| Our Jev · next skill                   |             8,430.5 |           404,678 |          48/48 |            16/16 |          0.487 s |
+| Published Hussi9 chooser               |             8,996.5 |           431,896 |          46/48 |            16/16 |          0.866 s |
+| Hussi9 + our HTTPS client (experiment) |             8,996.5 |           431,896 |          48/48 |            16/16 |          0.479 s |
+
+No-match input (median / total), kept outside the skill-input headline:
+
+- **Our Jev:** 8,401 / 134,528 input tokens.
+- **Published Hussi9:** 8,981 / 143,686 input tokens.
+- **Pooled Hussi9 control:** 8,981 / 143,686 input tokens.
+
+### Why the next-skill profile uses less input
+
+| Technical difference     | Our explicit next-skill profile                                                    | Pinned Hussi9 chooser                                                   |
+| ------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Selection question       | One next-skill choice; at most one provider call                                   | Domain, process and task-path choices in one request                    |
+| Candidate representation | Shared bounded cards, compact numeric codes and no repeated option descriptions    | Published domain/process option layout                                  |
+| Coverage                 | One skill; remaining work explicitly unassessed                                    | Published skill-routing chooser contract                                |
+| Connection               | Persistent HTTPS within a retained session                                         | Published chooser: fresh connection; our control: persistent HTTPS      |
+| Checks retained          | Current catalog, activation restrictions, valid host IDs and strict answer parsing | Original returned-ID checks, 0.8 route threshold and 1.2-second timeout |
+
+**The pooled Hussi control remains slightly faster.** Our winning KPI is lower selection input, with 128/128 skill choices and 32/32 no-match decisions correct across the two confirmation cohorts. Input savings are observed for the complete format; the individual effects of encoding and question count were not isolated. Withheld Hussi recommendations count against accepted-selection accuracy and can still contain the correct raw guess.
+
+Both cohorts used the same **132-skill catalog** and **`jev-1.13.0`** on 2026-09-24, with randomized task/variant order and two repetitions. There were 48 matched tasks and 32 independently authored confirmation tasks: **80 unique tasks / 480 comparison observations**. The confirmation author knew earlier diagnostic themes, but these tasks were not executed before the candidate was frozen. No retries, warmup or decision cache; first connections are included. Every scheduled observation and provider call is retained, with no errors, missing results or unknown input usage in the qualified cohorts. Timing includes selection preparation and response handling, excluding process startup, skill loading and task execution. Provider load and caching were uncontrolled.
+
+Hussi9 here means its [pinned published Jev chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py), not its complete router, hooks or fallback workflow. The pooled control is our unpublished modification. No new Native comparison or universal speed ranking follows from this study.
+
+[Audited observations, source hashes and qualification gates](../../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json) · [Earlier optimization attempts and provider interruption](../../../../skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json) · [Evaluation details and limitations](../../../../skill-evals/jev-capability-advisor/README.md#explicit-next-skill-qualification-2026-09-24).
+
+### 15,100 completed benchmark executions
+
+| Contribution                                   | Completed executions | What counts                                                 |
+| ---------------------------------------------- | -------------------: | ----------------------------------------------------------- |
+| Historical documented total through 2026-09-23 |               11,308 | Earlier studies remain separately documented below          |
+| Subsequent optimization development            |                3,303 | Includes rejected candidates and one provider refusal       |
+| Next-skill qualification                       |                  489 | 9 development + 288 matched + 192 confirmation observations |
+| **Cumulative total**                           |           **15,100** | Each completed execution counted once                       |
+
+This records development effort, not unique tasks or only passing tests. The latest campaign used 4,362 benchmark API attempts; two diagnostic calls are separate. The 107 observations left unexecuted after the earlier provider interruption do not count. Offline unit tests, 232 recorded-response replays and subgroup summaries add no new executions. The replay preserves 29 incorrect baseline outcomes, including two errors; it establishes unchanged general behavior, not new quality wins.
+
+An additional scope audit retains one inherited alias limitation: a trailing period after an explicitly named qualified skill ID can prefer an equivalent unqualified alias. The 16-case supplementary suite passed 15 cases and reproduced that failure in both baseline and candidate; the 173 main contract tests passed. This does not establish a permission bypass, and the limitation is not represented as fixed.
+
+## Historical general-profile Session comparison: 9.54× the native selector's speed
 
 **443 ms median skill selection.** Same tasks and catalog; the Jev-based variants ran interleaved, Native separately. All 80 skill-selection observations per variant remain in the timing distributions, including wrong or withheld recommendations. The 16 no-match observations are separate.
 
@@ -63,7 +132,7 @@ Same Jev model. Different selection work. Session reuses HTTPS and a bounded sea
 
 Pinned [Hussi9 chooser source](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py); its original 0.8 route threshold and 1.2-second timeout remain. The modified control is our experiment. Four withheld original-Hussi suggestions named the expected skills but fell below its confidence gate; its full fallback workflow is not measured.
 
-### Current evidence ledger
+### Historical evidence ledger through 2026-09-23
 
 **11,308 completed benchmark executions across development iterations**, including baseline and candidate variants. This counts neither unique tasks nor only passing tests.
 

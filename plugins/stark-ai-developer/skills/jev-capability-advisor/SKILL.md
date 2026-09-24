@@ -1,6 +1,6 @@
 ---
 name: jev-capability-advisor
-description: Recommend relevant available skills or MCP tools for a supplied task using TypeSafe Jev. Use when the user asks which installed capabilities fit a task, compares selection quality, or integrates reusable capability advice into a host. Ordinary task execution continues through the client's own discovery.
+description: Recommend available skills or MCP tools using TypeSafe Jev, or explicitly choose one next skill. Use when the user requests capability advice, candidate inspection, selection evaluation, or reusable host integration. Ordinary task execution continues through the client's own discovery.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
@@ -12,11 +12,12 @@ metadata:
 
 ## Goal
 
-Return a small, task-specific recommendation from the capabilities actually available in the current client. This skill produces advice; the client retains discovery, activation, permissions, and execution.
+Return a task-specific recommendation from capabilities actually available in the current client. The default `general` profile can recommend one to three capabilities; explicit `next_skill` recommends one skill without assessing remaining work. The client retains discovery, activation, permissions, and execution.
 
 ## When to use
 
 - The user asks which installed skill or available MCP tool fits a concrete task.
+- The user explicitly wants one eligible skill to load next, rather than complete capability coverage.
 - The user wants to inspect the candidate set or evaluate selection quality.
 - The user wants to integrate repeated advice into a host that supplies current eligible capabilities.
 
@@ -33,13 +34,20 @@ Return a small, task-specific recommendation from the capabilities actually avai
 
 ## Workflow
 
-Choose **Recommend** for a concrete selection request, **Inspect** for candidate inspection, or **Integrate** for a requested host integration. On a bare invocation, ask whether the user wants Recommend, Inspect or Integrate; request the selection task or target host only if it is missing.
+| Workflow                 | Choose when                                                         | Result                                                                             |
+| ------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Recommend**            | The user wants capabilities for the supplied task                   | Default `general`: one to three skills/tools; compound advice remains experimental |
+| **Recommend next skill** | The user or configured host explicitly wants one skill to load next | Explicit `next_skill`: one skill; additional work stays unassessed                 |
+| **Inspect**              | The user wants to inspect local candidates                          | Local retrieval; no semantic recommendation                                        |
+| **Integrate**            | The user requests reusable advice in a host                         | Owner-process integration with an explicitly chosen profile                        |
 
-**Integrate:** follow the [session integration contract](references/session-integration.md). Use one owner process with a fresh eligible catalog per request, reusable HTTPS and a bounded derived search index. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
+Select and proceed when intent is clear. On a bare invocation, ask which workflow is wanted; request a task or target host only if missing. Keep `general` unless the one-next-skill goal is explicit. It requires every enabled catalog entry to be a skill; use `general` for an inventory containing enabled tools, without quietly removing them.
+
+**Integrate:** follow the [session integration contract](references/session-integration.md). The owner chooses `selection_profile` when constructing the session; frames cannot change it. Use one owner process with a fresh eligible catalog per request, reusable HTTPS and a bounded derived search index. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
 
 1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
-3. **Recommend:** run the helper once with `--summary --output /path/to/local-receipt.json`, the catalog, query, and configured credential source. The summary contains selected cards with complete descriptions, applicability guidance, restrictions, coverage, failures and provenance; the full receipt stays in the requested local file. Compound advice is experimental: distinct tasks may require conditioned follow-up decisions, up to three recommendations. Keep incomplete proposals provisional. For repeated tasks, opt in to the [local cache](references/contract.md#local-decision-cache) with a private directory and current host context.
+3. **Recommend:** run the helper once with `--summary --output /path/to/local-receipt.json`, the catalog, query, and configured credential source. **Recommend next skill:** also pass `--selection-profile next_skill`; it makes at most one provider call. Summaries retain complete selected descriptions, restrictions, coverage and provenance. General compound advice can make conditioned follow-ups for up to three recommendations; keep incomplete proposals provisional. Next-skill advice instead returns `status: next_skill` with `additional_work: unassessed`: do not present it as a complete compound plan. For repeated tasks, explicitly opt in to the [profile-isolated local cache](references/contract.md#local-decision-cache) if wanted.
 4. Keep `--retrieval-policy current` as the default. Use `balanced` only for an explicitly selected experiment, and disclose its bounded coverage tradeoff. Check the returned status and candidate coverage. Preserve `none`, `clarify`, and `error` as different outcomes. A request limit or incomplete selection is not a successful complete answer.
 5. Check relevance and coverage using the complete descriptions and applicability guidance already returned in the summary, together with current host restrictions. Resolve authoritative metadata for selected IDs only when those fields are missing, stale or inconsistent; do not reread the catalog solely to obtain the same fields again. If they fit, report them without repeating a full-catalog search. If advice is incomplete, inconsistent or does not cover the request, use the full receipt and native discovery for the unresolved part. Read a recommended skill or invoke a recommended tool only when the user's underlying task already authorizes that action and the host's instructions permit it.
 
@@ -50,7 +58,9 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
   --query-file /path/to/task.txt --summary --output /path/to/local-receipt.json
 ```
 
-Run from the skill directory, or resolve the script relative to this `SKILL.md`. Add `--key-file /path/to/local-key` when using an existing raw-key file instead of `TYPESAFE_API_KEY`. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid Recommend call. A summary is advisory and does not prove semantic correctness.
+For an explicitly requested next skill, add `--selection-profile next_skill` to that command and supply a current catalog with no enabled tools. `none`, `clarify` and `error` remain distinct; next-skill replies always leave additional work unassessed.
+
+Run from the skill directory, or resolve the script relative to this `SKILL.md`. Add `--key-file /path/to/local-key` for an existing raw-key file instead of `TYPESAFE_API_KEY`. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid recommendation. A summary is advisory and does not prove semantic correctness.
 
 ## Safety rules
 
@@ -75,11 +85,11 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 
 ## Output format
 
-Return status, selected capability names/IDs, why the selection fits the requested first step, and any unresolved ambiguity or coverage limit. Explanations must follow the catalog and request; Jev does not generate explanations. Distinguish measured selection latency from unmeasured client-loading speed.
+Return status, selected capability names/IDs, why the selection fits the requested first step, and any unresolved ambiguity or coverage limit. For `next_skill`, preserve `selection_profile: next_skill` and `additional_work: unassessed`; assess no completion beyond the one next recommendation. Explanations must follow the catalog and request; Jev does not generate explanations. Distinguish measured selection latency from unmeasured client-loading speed.
 
 ## Completion criteria
 
-Recommend/Inspect ends with a concrete recommendation, a scoped no-capability answer, candidate inspection or a specific clarification need. Integrate ends with a reviewed host integration and its activation/inventory/delivery evidence, or a precise unsupported-host gap with native fallback; a session helper alone is not a qualified automatic integration. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
+Recommend/Inspect ends with a concrete recommendation, a scoped no-capability answer, candidate inspection or a specific clarification need. Recommend next skill ends with one next skill or a distinct no-match/clarification/failure outcome, while remaining work stays unassessed. Integrate ends with a reviewed host integration and its activation/inventory/delivery evidence, or a precise unsupported-host gap with native fallback; a session helper alone is not a qualified automatic integration. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
 
 ## Failure modes
 

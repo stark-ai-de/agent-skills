@@ -41,9 +41,10 @@ SAFE_ERRORS = {
     'request_timeout', 'network_error', 'invalid_response_json', 'recommendation_budget_exhausted',
     'credential_unavailable', 'credential_invalid', 'advisor_invalid_reply', 'advisor_error',
     'session_closed', 'session_busy',
+    'invalid_selection_profile', 'invalid_selection_profile_usage', 'next_skill_requires_skill_catalog',
 }
 SAFE_REASONS = {'empty_catalog', 'model_none', 'model_clarify', 'planned_selection_complete',
-                'incomplete_cardinality_plan', 'request_capacity_reached', 'error'}
+                'incomplete_cardinality_plan', 'request_capacity_reached', 'error', 'next_skill_identified'}
 
 
 class SessionError(Exception):
@@ -61,12 +62,15 @@ def _frame_id(frame):
     return value if isinstance(value, str) and FRAME_ID.fullmatch(value) else None
 
 
-def error_reply(identifier, code):
-    return {'id': identifier, 'status': 'error', 'mode': None, 'selected': [],
+def error_reply(identifier, code, selection_profile='general'):
+    reply = {'id': identifier, 'status': 'error', 'mode': None, 'selected': [],
             'provisional_selected': [], 'request_count': 0, 'transport_call_count': 0,
             'elapsed_ms': 0.0, 'stopped_reason': 'error', 'error': _safe_error(code),
             'candidate_count': None, 'eligible_count': None, 'represented_count': None,
             'catalog_truncated': None, 'none_scope': None}
+    if selection_profile == 'next_skill':
+        reply.update(jev_advisor.NEXT_SKILL_SCOPE)
+    return reply
 
 
 def validate_frame(frame):
@@ -142,27 +146,39 @@ def _remaining(deadline):
     return remaining
 
 
-def _summary(result, frame, elapsed, calls):
-    if not isinstance(result, dict) or result.get('status') not in ('selected', 'none', 'clarify', 'error'):
+def _summary(result, frame, elapsed, calls, selection_profile='general'):
+    next_skill = selection_profile == 'next_skill'
+    success_status = 'next_skill' if next_skill else 'selected'
+    if not isinstance(result, dict) or result.get('status') not in (success_status, 'none', 'clarify', 'error'):
         raise SessionError('advisor_invalid_reply')
     status, mode = result['status'], result.get('mode')
-    if mode is not None and mode not in MODES:
+    if (mode is not None and mode not in MODES and not (next_skill and mode == 'NEXT_SKILL')):
+        raise SessionError('advisor_invalid_reply')
+    if next_skill and mode not in (None, 'NEXT_SKILL', 'NONE', 'CLARIFY'):
+        raise SessionError('advisor_invalid_reply')
+    if (result.get('selection_profile', 'general') != selection_profile
+            or (next_skill and result.get('additional_work') != 'unassessed')):
         raise SessionError('advisor_invalid_reply')
     known = {item['id'] for item in frame['catalog'] if item.get('enabled') is not False}
     selected, provisional = result.get('selected', []), result.get('provisional_selected', [])
     for identifiers in (selected, provisional):
-        if (not isinstance(identifiers, list) or len(identifiers) > 3 or
+        if (not isinstance(identifiers, list) or len(identifiers) > (1 if next_skill else 3) or
                 any(not isinstance(identifier, str) or identifier not in known for identifier in identifiers)
                 or len(set(identifiers)) != len(identifiers)):
             raise SessionError('advisor_invalid_reply')
     if ((status == 'selected' and (mode not in ('SINGLE', 'PAIR', 'TRIPLE') or len(selected) != MODES[mode]))
-            or (status != 'selected' and selected) or (status == 'selected' and provisional)
+            or (status == 'next_skill' and (mode != 'NEXT_SKILL' or len(selected) != 1))
+            or (status != success_status and selected) or (status == success_status and provisional)
+            or (next_skill and provisional) or (next_skill and status == 'clarify' and mode != 'CLARIFY')
             or (status == 'none' and mode != 'NONE') or (status != 'error' and result.get('error'))):
         raise SessionError('advisor_invalid_reply')
     count = result.get('request_count', 0)
-    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= jev_advisor.MAX_REQUESTS:
+    if (isinstance(count, bool) or not isinstance(count, int)
+            or not 0 <= count <= (1 if next_skill else jev_advisor.MAX_REQUESTS)):
         raise SessionError('advisor_invalid_reply')
     reason = result.get('stopped_reason')
+    if next_skill and status == 'next_skill' and reason != 'next_skill_identified':
+        raise SessionError('advisor_invalid_reply')
     coverage = {field: result.get(field) for field in (
         'candidate_count', 'eligible_count', 'represented_count', 'catalog_truncated', 'none_scope')}
     counts = [coverage[field] for field in ('candidate_count', 'eligible_count', 'represented_count')]
@@ -178,22 +194,28 @@ def _summary(result, frame, elapsed, calls):
         # stays explicit instead of being reported as a complete search.
         if status != 'error' or any(value is not None for value in coverage.values()):
             raise SessionError('advisor_invalid_reply')
-    return {'id': frame['id'], 'status': status, 'mode': mode, 'selected': list(selected),
+    reply = {'id': frame['id'], 'status': status, 'mode': mode, 'selected': list(selected),
             'provisional_selected': list(provisional), 'request_count': count,
             'transport_call_count': calls, 'elapsed_ms': round(elapsed, 3),
             'stopped_reason': reason if reason in SAFE_REASONS else None,
             'error': _safe_error(result.get('error')) if status == 'error' else None, **coverage}
+    if next_skill:
+        reply.update(jev_advisor.NEXT_SKILL_SCOPE)
+    return reply
 
 
 class AdvisorSession:
     """One owner-process session; the host supplies an eligible inventory each time."""
     def __init__(self, *, key_file=None, total_budget_seconds=8, client_factory=JsonClient,
-                 key_loader=None, advisor=None, reuse_index=True):
+                 key_loader=None, advisor=None, reuse_index=True, selection_profile='general'):
         if (isinstance(total_budget_seconds, bool) or not isinstance(total_budget_seconds, (int, float))
                 or not math.isfinite(total_budget_seconds) or not 0 < total_budget_seconds <= 300):
             raise ValueError('invalid_total_budget')
         if not isinstance(reuse_index, bool):
             raise ValueError('invalid_index_reuse')
+        if selection_profile not in jev_advisor.SELECTION_PROFILES:
+            raise ValueError('invalid_selection_profile')
+        self._selection_profile = selection_profile
         self._key_file = key_file
         self._key_loader = key_loader
         self._client_factory = client_factory
@@ -203,6 +225,10 @@ class AdvisorSession:
         self._client = None
         self._closed = False
         self._lock = threading.Lock()
+
+    @property
+    def selection_profile(self):
+        return self._selection_profile
 
     def __enter__(self):
         if self._closed:
@@ -239,21 +265,25 @@ class AdvisorSession:
         try:
             lock_timeout = _remaining(deadline)
         except SessionError:
-            return error_reply(identifier, 'recommendation_budget_exhausted')
+            return error_reply(identifier, 'recommendation_budget_exhausted', self.selection_profile)
         if not self._lock.acquire(timeout=lock_timeout):
-            return error_reply(identifier, 'session_busy')
+            return error_reply(identifier, 'session_busy', self.selection_profile)
         calls = 0
         transport_problem = None
         try:
             if self._closed:
                 raise SessionError('session_closed')
             validate_frame(frame)
+            if (self.selection_profile == 'next_skill'
+                    and any(item.get('enabled') is not False and item['kind'] != 'skill'
+                            for item in frame['catalog'])):
+                raise SessionError('next_skill_requires_skill_catalog')
             _remaining(deadline)
             def transport(payload):
                 nonlocal calls, transport_problem
                 try:
                     _remaining(deadline)
-                    if calls >= jev_advisor.MAX_REQUESTS:
+                    if calls >= (1 if self.selection_profile == 'next_skill' else jev_advisor.MAX_REQUESTS):
                         raise SessionError('advisor_invalid_reply')
                     if self._client is None:
                         key = self._key_loader() if self._key_loader is not None else _load_key(self._key_file)
@@ -268,12 +298,14 @@ class AdvisorSession:
             transport.transport_kind = 'https'
             if self._advisor is None:
                 result = jev_advisor.advise(frame['query'], frame['catalog'], transport,
-                                            memory_index=self._memory_index)
+                                            memory_index=self._memory_index,
+                                            selection_profile=self.selection_profile)
             else:
-                # Preserve the established three-argument injection contract.
-                result = self._advisor(frame['query'], frame['catalog'], transport)
+                # Existing general-profile injections retain their three arguments.
+                kwargs = {'selection_profile': self.selection_profile} if self.selection_profile != 'general' else {}
+                result = self._advisor(frame['query'], frame['catalog'], transport, **kwargs)
             _remaining(deadline)
-            reply = _summary(result, frame, (time.monotonic() - started) * 1000, calls)
+            reply = _summary(result, frame, (time.monotonic() - started) * 1000, calls, self.selection_profile)
             if reply['status'] == 'error':
                 if transport_problem is not None:
                     reply['error'] = _safe_error(transport_problem)
@@ -282,7 +314,7 @@ class AdvisorSession:
         except Exception as error:
             self._drop_client()
             code = error.code if isinstance(error, SessionError) else 'advisor_error'
-            reply = error_reply(identifier, code)
+            reply = error_reply(identifier, code, self.selection_profile)
             reply.update(elapsed_ms=round((time.monotonic() - started) * 1000, 3), transport_call_count=calls)
             return reply
         except BaseException:
@@ -323,14 +355,14 @@ def serve(input_stream, output_stream, session):
             stop = len(raw) > MAX_FRAME_BYTES
             if stop:
                 session.reset_transport()
-                reply = error_reply(None, 'frame_too_large')
+                reply = error_reply(None, 'frame_too_large', session.selection_profile)
             else:
                 try:
                     frame = decode_frame(raw)
                     reply = session.recommend(frame)
                 except SessionError as error:
                     session.reset_transport()
-                    reply = error_reply(None, error.code)
+                    reply = error_reply(None, error.code, session.selection_profile)
             output_stream.write((json.dumps(reply, ensure_ascii=False, allow_nan=False) + '\n').encode('utf-8'))
             output_stream.flush()
             if stop:
@@ -346,10 +378,12 @@ def main(argv=None):
                         help='One budget for validation/preparation and all recommendation calls; default 8 seconds.')
     parser.add_argument('--no-index-reuse', action='store_true',
                         help='Disable the owner-session lexical memo; HTTPS reuse and fresh model calls remain enabled.')
+    parser.add_argument('--selection-profile', choices=jev_advisor.SELECTION_PROFILES, default='general',
+                        help='Explicit next_skill identifies one next skill; it does not assess additional work')
     args = parser.parse_args(argv)
     try:
         session = AdvisorSession(key_file=args.key_file, total_budget_seconds=args.total_budget_seconds,
-                                 reuse_index=not args.no_index_reuse)
+                                 reuse_index=not args.no_index_reuse, selection_profile=args.selection_profile)
     except ValueError:
         print('Invalid session configuration.', file=sys.stderr)
         return 2

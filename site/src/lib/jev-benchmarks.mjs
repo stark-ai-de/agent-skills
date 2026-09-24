@@ -1,4 +1,6 @@
 import { sessionComparison } from "./jev-session-benchmarks.mjs";
+import nextSkillEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json" with { type: "json" };
+import optimizationDevelopment from "../../../skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json" with { type: "json" };
 import resumedEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json" with { type: "json" };
 import session from "../../../skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json" with { type: "json" };
 import development from "../../../skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json" with { type: "json" };
@@ -25,6 +27,8 @@ const runCounts = {
   nativeSupplement: current.experiment.new_observations,
   compactDevelopment: compactEvidence.completed_executions,
   resumedQualification: resumedEvidence.benchmark_totals.completed_executions,
+  nextSkillDevelopment: optimizationDevelopment.campaign.completed_executions,
+  nextSkillQualification: nextSkillEvidence.counting.completed_executions,
 };
 
 // This later interleaved comparison has no native arm. Never reuse its timings in the old ratios.
@@ -261,6 +265,8 @@ export const jevBenchmarks = {
   archived: benchmarkHistory.current,
   current: latest,
   resumed: resumedEvidence,
+  nextSkillEvidence,
+  optimizationDevelopment,
   resumedPath: "skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json",
   totalRuns: sum(Object.values(runCounts)),
 };

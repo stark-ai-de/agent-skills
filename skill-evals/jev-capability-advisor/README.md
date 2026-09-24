@@ -2,7 +2,25 @@
 
 This evaluation records the public release candidate and clearly separates current qualification from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
-## Current bounded Session index, 2026-09-23
+## Explicit next-skill qualification, 2026-09-24
+
+**Qualified KPI: lower provider-reported input for selecting one next skill.** The explicit `next_skill` profile scored 80/80 skills + 16/16 NONE on the matched cohort, and 48/48 + 16/16 on independent confirmation. Total skill-selection input fell **6.4% and 6.3%**, respectively, against both published Hussi9 and our pooled-HTTPS Hussi control. Median input also improved in each cohort. The pooled control remains slightly faster; there is no new Native arm or complete-agent speed claim.
+
+- **Frozen, separate cohorts:** 48 matched tasks and 32 independently authored, previously unexecuted confirmation tasks; two repetitions and three variants. Confirmation began only after the matched gate passed. A separate nine-observation development smoke precedes both. The confirmation author knew earlier diagnostic themes.
+- **Complete accounting:** 489/489 scheduled executions and 489 API attempts; no missing observations, errors or unknown usage in these qualified cohorts. No retries, warmup or decision cache. The report retains all outcomes, returned models, timestamps and seven runtime hashes.
+- **Comparable selection scope:** same 132-entry catalog, `jev-1.13.0`, concurrency one and randomized order. Published Hussi's pinned chooser retains its 0.8 route threshold and 1.2-second timeout. The pooled control is our unpublished transport modification; whole-router hooks and fallback are excluded.
+- **Explicit narrower contract:** one eligible skill or NONE/CLARIFY, at most one call, `status: next_skill` and `additional_work: unassessed`. Enabled tools are rejected before credentials/network; `general` remains the default. No claim that one recommendation covers a compound task.
+- **Default-path regression proof:** 116 initial payload checks, 232 historical response replays (343 requests per implementation) and 18 fixtures match the baseline. The 29 incorrect outcomes, including two errors, are preserved. This is deterministic offline parity, not additional live accuracy.
+- **Offline review:** 149 existing tests plus 24 new profile contract tests pass. An additional 16-case budget/scope audit passed 15 and reproduced one inherited trailing-period qualified-alias preference failure in baseline and candidate. Host-declared equivalent aliases were involved; no different capability or permission bypass was observed. That limitation remains open.
+- **Independent audit:** source, schedule, request/reply, scoring and token ledgers were checked; 23 negative audit cases passed. Both median and total input must beat both comparators on skills and the full cohort, while candidate quality stays perfect. No post-hoc bootstrap or significance claim was added.
+
+[Shared tables and technical differences](../../docs/skills/jev-capability-advisor/benchmarks/README.md#next-skill-input-efficiency) · [Sanitized audited observations](benchmarks/next-skill-2026-09-24.json) · [Rejected development and interruption ledger](benchmarks/optimization-development-2026-09-24.json).
+
+This campaign adds **3,792 completed benchmark executions** (3,303 development + 489 qualification) and 4,362 API attempts, plus two excluded diagnostic calls. The 107 unexecuted observations after the development provider interruption remain missing, not passes. The cumulative documented total is **15,100 executions**, including repetitions, failures and rejected variants; it is not a unique-task count. Unit tests and 232 new offline replays add no executions. Site validation binds the seven current runtime files to this qualified report; historical studies below keep their own source identity.
+
+The [production promotion gate](#promotion-gate) remains open: selector-level token efficiency does not prove native hook activation, whole-task utility or publication.
+
+## Historical bounded Session index, 2026-09-23
 
 The current candidate retains one bounded derived lexical index per owner Session. Every frame supplies and validates current capabilities; alias selection, query search and Jev decisions remain fresh. It keeps the full 200-character initial and 240-character follow-up budgets. `reuse_index=False` / `--no-index-reuse` disables only the index reuse.
 
@@ -25,9 +43,9 @@ Native uses the original full-200 baseline preparation plus its model turn, with
 
 Native reported provider-side cached input tokens in 51/96 turns (659,328 of 2,075,371 input tokens). This is prefix-cache usage, not reused decisions; service caching was uncontrolled. Each turn emitted the same pre-turn experimental-feature warning for the isolation flag. The audit separates these warnings from model/selection failures and verifies all 96 event streams.
 
-The current runtime also passed the full repository aggregate and 149 offline tests. Standalone, portable-plugin and OpenAI-plugin archives contain the same 13 canonical skill files. Extracted-package help, offline retrieval, disabled exclusion, two NDJSON frames and EOF cleanup passed with network blocked. Archive validation and two isolated reproducibility builds passed; packaging does not close host-activation or production-utility gates. Exact archive and skill-file hashes are in the [qualification receipt](benchmarks/session-index-parity-2026-09-23.json).
+That runtime revision also passed the full repository aggregate and 149 offline tests. Standalone, portable-plugin and OpenAI-plugin archives contain the same 13 canonical skill files. Extracted-package help, offline retrieval, disabled exclusion, two NDJSON frames and EOF cleanup passed with network blocked. Archive validation and two isolated reproducibility builds passed; packaging does not close host-activation or production-utility gates. Exact archive and skill-file hashes are in the [qualification receipt](benchmarks/session-index-parity-2026-09-23.json).
 
-The refreshed-key campaign adds **3,516 completed live benchmark executions**: 2,540 resumed + 880 memo + 96 Native. Its TypeSafe measurements used 4,342 API attempts, plus one separately counted health call. There are zero missing scheduled observations. The cumulative documented ledger is **11,308 completed executions**; 676 replay checks and 149 offline unit tests do not increase this increment. Earlier studies below retain their original scope, dates and source hashes. Current seven-file runtime identity is pinned in the memo study and the parity receipt; site validation rejects drift.
+The refreshed-key campaign adds **3,516 completed live benchmark executions**: 2,540 resumed + 880 memo + 96 Native. Its TypeSafe measurements used 4,342 API attempts, plus one separately counted health call. There are zero missing scheduled observations. The cumulative documented ledger is **11,308 completed executions**; 676 replay checks and 149 offline unit tests do not increase this increment. Earlier studies below retain their original scope, dates and source hashes. That historical seven-file runtime identity is pinned in the memo study and the parity receipt. The current source is guarded by the newer next-skill qualification above.
 
 The [production promotion gate](#promotion-gate) and real-host automatic integration qualification remain open. This preparation improvement does not demonstrate faster complete agent tasks.
 
