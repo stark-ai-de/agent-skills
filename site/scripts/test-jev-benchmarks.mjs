@@ -339,3 +339,4 @@ console.log("Compact archive matches all eight cohorts, failures and documentati
 await import("./test-jev-session-benchmarks.mjs");
 
 await import("./test-jev-next-skill-benchmarks.mjs");
+await import("./test-jev-promo-comparison.mjs");

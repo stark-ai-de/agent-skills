@@ -14,7 +14,6 @@ interface Props {
 
 const { skill } = Astro.props;
 const hasJevBenchmarks = skill.kind === "public" && skill.name === "jev-capability-advisor";
-const Sidebar = hasJevBenchmarks ? "details" : "aside";
 const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
 const defaultInstallHost = installHostLabel(skill.defaultInstallHost);
 const targetRuntime = skill.targetRuntime ? installHostLabel(skill.targetRuntime) : undefined;
@@ -49,22 +48,20 @@ const installContext = !targetRuntime
   />
   <p class="eyebrow">{skill.releaseCandidate ? "Release candidate" : skill.kind === "public" ? "Promoted public skill" : "Incubator candidate"}</p>
   <h1>{skill.title}</h1>
-  <p>{hasJevBenchmarks ? "Give your agent the right skill or tool for the next step." : skill.description}</p>
+  <p>{skill.description}</p>
   <ul class="meta-pills" aria-label={`${skill.name} metadata`}>
     <OperationBadge label={skill.categoryLabel} tag="li" />
     {skill.version && <li>Version {skill.version}</li>}
     <li>{skill.license}</li>
     <li>{contractLabel}</li>
-    {!hasJevBenchmarks && <li>Default install host: {defaultInstallHost}</li>}
-    {!hasJevBenchmarks && <li>{installHostLabelText}: {supportedInstallHosts}</li>}
-    {!hasJevBenchmarks && skill.hasOpenAiMetadata && <li>Codex/OpenAI metadata available</li>}
+    <li>Default install host: {defaultInstallHost}</li>
+    <li>{installHostLabelText}: {supportedInstallHosts}</li>
+    {skill.hasOpenAiMetadata && <li>Codex/OpenAI metadata available</li>}
   </ul>
-  {hasJevBenchmarks && <a class="benchmark-jump" href="#benchmarks">See the speed comparison</a>}
 </section>
 
-<div class:list={["detail-layout", { "detail-layout--jev": hasJevBenchmarks }]} data-tracing-detail>
-  <Sidebar class="detail-panel" aria-label={`${skill.name} details`} data-tracing-sidebar>
-    {hasJevBenchmarks && <summary class="jev-install-summary">Install options, source &amp; skill files</summary>}
+<div class="detail-layout" data-tracing-detail>
+  <aside class="detail-panel" aria-label={`${skill.name} details`} data-tracing-sidebar>
     <section>
       <h2>Source</h2>
       <p>{skill.sourcePath}</p>
@@ -129,44 +126,21 @@ const installContext = !targetRuntime
       )
     }
     <SkillFileTree tree={skill.fileTree} />
-  </Sidebar>
+  </aside>
 
   <div class="skill-main" data-tracing-content>
-    {hasJevBenchmarks ? (
-      <>
-        <JevBenchmarkPromo />
-        <details class="skill-guide" id="jev-usage-panel">
-          <summary>Use Jev in your agent <span>Setup, examples &amp; release notes</span></summary>
-          <article class="skill-content" id="jev-usage"><div class="markdown" set:html={skill.html} /></article>
-        </details>
-      </>
-    ) : (
-      <article class="skill-content"><div class="markdown" set:html={skill.html} /></article>
-    )}
+    <article class="skill-content" id="skill-guide">
+      <div class="markdown" set:html={skill.html} />
+    </article>
   </div>
 </div>
 
-<script>
-  document.querySelector<HTMLAnchorElement>('a[href="#jev-usage"]')?.addEventListener("click", () => {
-    const guide = document.querySelector<HTMLDetailsElement>("#jev-usage-panel");
-    if (guide) guide.open = true;
-  });
-</script>
+{hasJevBenchmarks && <div class="skill-promotion"><JevBenchmarkPromo /></div>}
 
 <style>
   .skill-main { min-width: 0; }
-  .detail-layout--jev { grid-template-columns: minmax(0, 1fr); }
-  .detail-layout--jev .skill-main { grid-row: 1; }
-  .detail-layout--jev .detail-panel { grid-row: 2; position: static; }
-  .jev-install-summary { cursor: pointer; padding: .3rem; font-weight: 650; }
-  .jev-install-summary:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
-
-  .skill-guide { margin-top: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-solid); scroll-margin-top: 7rem; }
-  .skill-guide > summary { cursor: pointer; padding: 1.1rem 1.4rem; font-weight: 650; }
-  .skill-guide > summary span { color: var(--muted); font-size: .8rem; font-weight: 400; margin-left: .5rem; }
-  .skill-guide > .skill-content { border: 0; box-shadow: none; scroll-margin-top: 7rem; }
-  @media (max-width: 600px) { .skill-guide > summary span { display: block; margin: .3rem 0 0 1rem; } }
-  .benchmark-jump { display: inline-block; margin-top: 1.1rem; font-weight: 650; }
+  .skill-promotion { width: min(1440px, calc(100% - 1.5rem)); margin: 1.25rem auto 4rem; }
+  #skill-guide { scroll-margin-top: 7rem; }
   .install-option {
     display: grid;
     gap: 0.35rem;

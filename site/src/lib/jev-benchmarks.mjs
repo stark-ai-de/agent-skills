@@ -1,4 +1,6 @@
 import { sessionComparison } from "./jev-session-benchmarks.mjs";
+import { promoComparison } from "./jev-promo-comparison.mjs";
+import nativeNextSkill from "../../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json" with { type: "json" };
 import nextSkillEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json" with { type: "json" };
 import optimizationDevelopment from "../../../skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json" with { type: "json" };
 import resumedEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json" with { type: "json" };
@@ -270,3 +272,12 @@ export const jevBenchmarks = {
   resumedPath: "skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json",
   totalRuns: sum(Object.values(runCounts)),
 };
+
+// New Native observations are added once; the reused Jev/Hussi cohort stays in its original ledger.
+export function getJevPromoComparison() {
+  const promo = promoComparison(nextSkillEvidence, nativeNextSkill);
+  return {
+    ...promo,
+    totalRuns: jevBenchmarks.totalRuns + promo.completedNativeExecutions,
+  };
+}

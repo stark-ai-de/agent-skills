@@ -4,6 +4,48 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
+## Current next-skill comparison
+
+**6.40× the native selector’s speed; 1.78× the published Hussi9 chooser’s speed.** Jev Session selects a skill in 0.487 seconds, with **48/48 correct accepted choices**. This measures selection, not complete-task speed.
+
+| Variant                                    | Skill median |  Skill p95 | Speed vs Native | Correct accepted choices | No match correct | Errors |
+| ------------------------------------------ | -----------: | ---------: | --------------: | -----------------------: | ---------------: | -----: |
+| Hussi9 + our HTTPS (internal, unpublished) |   0.478569 s | 0.672245 s |           6.51× |                    48/48 |            16/16 |      0 |
+| Jev Session                                |   0.486692 s | 0.585938 s |           6.40× |                    48/48 |            16/16 |      0 |
+| Published Hussi9 chooser                   |   0.866494 s | 0.926820 s |           3.60× |                    46/48 |            16/16 |      0 |
+| Native                                     |   3.116305 s | 5.863254 s |        Baseline |                    48/48 |            16/16 |      0 |
+
+The independent confirmation uses **32 tasks × two repetitions**: **48 skill observations and 16 NONE observations per variant**, from the same frozen 132-skill catalog. Jev and Hussi ran interleaved; the new Native supplement ran separately. Native receives Jev’s exact next-skill cards and rules; Hussi retains its published domain/process/path chooser format and 0.8 acceptance gate. Its two withheld suggestions count against accepted correctness.
+
+- **Models:** Native requests **gpt-6-luna, reasoning medium**, using Codex CLI 0.156.1. Its resolved backend identity was not independently observable. Jev and both Hussi variants use **jev-1.13.0**.
+- **Measurement windows:** Jev/Hussi 2026-09-24T10:11:43.628637+00:00 – 2026-09-24T10:13:44.394861+00:00; Native 2026-09-24T13:33:34.289325Z – 2026-09-24T13:37:59.254101Z. Provider load and caching were uncontrolled; Native reported cached input in **43/64** turns.
+- **Timing:** preparation plus model turn. Process startup, skill loading and task execution are excluded. Session requires a retained process to reuse HTTPS and its search index. No harness retries, warmup or decision cache.
+- **Precision:** medians and factors use full raw timing values. All four p95 values use **nearest rank**. The original Native handoff used linear interpolation and rounded summaries; those source summaries and their hash remain in the normalized evidence.
+
+**The internal experiment remains visible for review.** It is our unpublished transport modification, not a Hussi9 release or an integrated advisor. Removing its entry from the central visible-variant list hides only its bar; the full results remain available. Stars mark every complete score equally, including the experiment. Hover, focus or tap updates factor, correctness and product features together; Native restores the Jev default.
+
+**15,164 completed benchmark executions:** the previous 15,100 plus exactly **64 new Native observations**. The 192 reused Jev/Hussi observations were already counted. UI tests, audits and re-rendering add no benchmark executions.
+
+[Native observations, exact timings and audit bindings](../../../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json) · [Unchanged Jev/Hussi confirmation](../../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json) · [Measurement and import audit](../../../../skill-evals/jev-capability-advisor/README.md#native-next-skill-supplement-2026-09-24).
+
+## Product features and measured selection
+
+**One fast next-skill choice, plus a broader advisor when needed.** Jev Session selects the next eligible skill in the explicit `next_skill` mode. Its `general` mode also supports MCP tools and other outcomes. The feature table describes each product; the timing and correctness results measure the pinned selection paths, not every product feature.
+
+| Product feature       | Jev Capability Advisor  | Hussi9 skill-router          |
+| --------------------- | ----------------------- | ---------------------------- |
+| Skills & MCP          | Yes · general mode      | Yes · Codex variant          |
+| Task text sent to Jev | Up to 16,000 characters | Up to 600 characters         |
+| Reuse                 | HTTPS + search index    | Index + saved decisions      |
+| Capability source     | Current host catalog    | Local index + inventory scan |
+
+- **Why Jev avoids work:** a retained Session reuses HTTPS and its bounded search index. Each request still validates current inventory and checks the answer. The measured `next_skill` path uses no saved decisions.
+- **Why the published Hussi chooser takes longer here:** it opens fresh HTTPS in the measured path. Transport, payload and provider effects were not isolated individually; this does not time its complete router or cached routes.
+- **What the text limits mean:** task characters sent to Jev, not whole-product input limits. For tasks of 15 words or fewer, Hussi can additionally send up to 300 characters from the previous assistant message. It also supports MCP tools, offline inspection and other routing paths outside the measured chooser.
+- **What the internal experiment proves:** adding our reusable HTTPS client and compact JSON to Hussi's chooser is slightly faster in this task set. This unpublished adapter was qualified for skills/no-match only; its other workflows are unassessed.
+
+Sources: [our advisor](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_advisor.py), [our session](../../../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_session.py), [pinned Hussi chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py), [Hussi router sources at the same revision](https://github.com/hussi9/skill-router/tree/652953a0cbb423d4bb7f62de83db15ad4ca9b16e).
+
 ## Next-skill input efficiency
 
 **6.3% less selection input than both measured Hussi variants, confirmed on an independent task set.** Choose the explicit `next_skill` profile when the host needs one eligible skill to load next. Additional work remains unassessed; the default `general` profile still handles skills, tools and compound advice.
@@ -56,11 +98,11 @@ No-match input (median / total), kept outside the skill-input headline:
 
 Both cohorts used the same **132-skill catalog** and **`jev-1.13.0`** on 2026-09-24, with randomized task/variant order and two repetitions. There were 48 matched tasks and 32 independently authored confirmation tasks: **80 unique tasks / 480 comparison observations**. The confirmation author knew earlier diagnostic themes, but these tasks were not executed before the candidate was frozen. No retries, warmup or decision cache; first connections are included. Every scheduled observation and provider call is retained, with no errors, missing results or unknown input usage in the qualified cohorts. Timing includes selection preparation and response handling, excluding process startup, skill loading and task execution. Provider load and caching were uncontrolled.
 
-Hussi9 here means its [pinned published Jev chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py), not its complete router, hooks or fallback workflow. The pooled control is our unpublished modification. No new Native comparison or universal speed ranking follows from this study.
+Hussi9 here means its [pinned published Jev chooser](https://github.com/hussi9/skill-router/blob/652953a0cbb423d4bb7f62de83db15ad4ca9b16e/scripts/jev_choose.py), not its complete router, hooks or fallback workflow. The pooled control is our unpublished modification. The original three-arm study contains no Native measurements; the separately audited Native supplement is documented above. No universal speed ranking follows from this study.
 
 [Audited observations, source hashes and qualification gates](../../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json) · [Earlier optimization attempts and provider interruption](../../../../skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json) · [Evaluation details and limitations](../../../../skill-evals/jev-capability-advisor/README.md#explicit-next-skill-qualification-2026-09-24).
 
-### 15,100 completed benchmark executions
+### Historical total before the Native supplement: 15,100 completed benchmark executions
 
 | Contribution                                   | Completed executions | What counts                                                 |
 | ---------------------------------------------- | -------------------: | ----------------------------------------------------------- |

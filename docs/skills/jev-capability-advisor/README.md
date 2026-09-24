@@ -71,7 +71,7 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage, historical speed comparisons and **15,100 recorded benchmark executions** across development iterations, including rejected candidates and failures. The website presents these in separate visual sections below this guide.
+**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage, the 6.40× Native selection comparison, historical studies and **15,164 recorded benchmark executions** across development iterations, including rejected candidates and failures. The website presents these in separate visual sections below this guide.
 
 The new next-skill profile wins on input tokens against both measured Hussi variants. Our pooled Hussi control remains slightly faster. Earlier general-profile timing factors retain their original dates and scope; they do not measure the new profile.
 
