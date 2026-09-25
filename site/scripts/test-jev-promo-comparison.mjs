@@ -274,10 +274,19 @@ console.log(
 // The published comparison uses genuine Native observations, never this file's fixture.
 const { getJevPromoComparison } = await import("../src/lib/jev-benchmarks.mjs");
 const actual = getJevPromoComparison();
+const currentReport = JSON.parse(
+  readFileSync(
+    new URL(
+      "../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
 const nativeReceipt = JSON.parse(
   readFileSync(
     new URL(
-      "../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+      "../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json",
       import.meta.url,
     ),
     "utf8",
@@ -292,22 +301,58 @@ assert.equal(
   actual.nativeCachedTurns,
   nativeReceipt.observations.filter((row) => row.usage.cached_input_tokens > 0).length,
 );
-assert.equal(actual.nativeCachedTurns, 43);
-assert.equal(actual.rows.find((row) => row.id === "native").medianSeconds, 3.1163054764765548);
-assert.equal(actual.rows.find((row) => row.id === "jev_session").factor.toFixed(2), "6.40");
+assert.equal(actual.nativeCachedTurns, 45);
+assert.equal(actual.rows.find((row) => row.id === "native").medianSeconds, 3.091701245495642);
+assert.equal(actual.rows.find((row) => row.id === "jev_session").factor.toFixed(2), "6.42");
+assert.equal(actual.hussiFactor, null, "A retained comparator timeout cannot become a speed claim");
+const timedOutHussi = actual.rows.find((row) => row.id === "hussi_original");
+assert.equal(timedOutHussi.factor, null);
+assert.equal(timedOutHussi.correct, 45);
+assert.equal(timedOutHussi.errorLabel, "1 timeout");
+assert.equal(timedOutHussi.speedLabel, "Speed factor withheld");
+assert.match(timedOutHussi.info, /2 abstentions and 1 timeout/);
+assert.equal(actual.runtime.measuredRevision, "095de174e8eb345b27a726631c6a2215168958df");
 assert.equal(
-  nativeReceipt.provenance.public_export_sha256,
-  "ac26c0551720240af1073021a5c15aa978da39db6a6627b81135189011de9f9f",
+  actual.evidencePath,
+  "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
 );
+assert.equal(actual.previouslyExposed, true);
 assert.equal(
   nativeReceipt.provenance.raw_results_sha256,
-  "6561d8288a0a16ef3181301aee07eb5591f424183362bd90e05e5ccae226c813",
+  "974a199354e8a2db38b775ce8ff90330736502d1bf19a63ed962b41f9ec95adf",
 );
-assert.equal(nativeReceipt.groups.skill.p95_ms, 5863.2536529621575);
-assert.equal(nativeReceipt.source_export_groups.skill.timing.selector_ms.p95_ms, 5256.865);
+assert.equal(nativeReceipt.groups.skill.p95_ms, 5916.691621998325);
+assert.equal(nativeReceipt.source_export_groups.skill.timing.selector_ms.p95_ms, 5916.692);
+const historicalNative = JSON.parse(
+  readFileSync(
+    new URL(
+      "../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
+assert.equal(
+  promoComparison(report, historicalNative)
+    .rows.find((r) => r.id === "jev_session")
+    .factor.toFixed(2),
+  "6.40",
+);
+assert.throws(() => promoComparison(report, nativeReceipt), /Native freeze_sha256 mismatch/);
+assert.throws(
+  () => promoComparison(currentReport, historicalNative),
+  /Native freeze_sha256 mismatch/,
+);
+assert.equal(
+  joinNativeNextSkill(
+    nativeReceipt,
+    currentReport.studies.find((s) => s.study_id === "next-skill-hidden32"),
+  ).rows.find((r) => r.id === "hussi_original").factor,
+  null,
+);
 const wrongQuantile = structuredClone(nativeReceipt);
 wrongQuantile.statistics.p95 = "linear_interpolation";
-assert.throws(() => promoComparison(report, wrongQuantile), /percentile convention/);
+assert.throws(() => promoComparison(currentReport, wrongQuantile), /percentile convention/);
 const readme = readFileSync(
   new URL("../../docs/skills/jev-capability-advisor/benchmarks/README.md", import.meta.url),
   "utf8",
@@ -330,7 +375,7 @@ for (let index = 0; index < ours.features.length; index++) {
   );
 }
 for (const row of actual.allRows) {
-  const expected = `| ${row.label}${row.experimental ? " (internal, unpublished)" : ""} | ${row.medianSeconds.toFixed(6)} s | ${row.p95Seconds.toFixed(6)} s | ${row.factor === null ? "Baseline" : row.factor.toFixed(2) + "×"} | ${row.correct}/${row.observations} | ${row.noneCorrect}/${row.noneObservations} | ${row.errors} |`;
+  const expected = `| ${row.label}${row.experimental ? " (internal, unpublished)" : ""} | ${row.medianSeconds.toFixed(6)} s | ${row.p95Seconds.toFixed(6)} s | ${row.id === "native" ? "Baseline" : row.factor === null ? "Withheld (timeout)" : row.factor.toFixed(2) + "×"} | ${row.correct}/${row.observations} | ${row.noneCorrect}/${row.noneObservations} | ${row.errors} |`;
   assert.ok(
     currentReadme.replace(/\s+/g, " ").includes(expected),
     `Current README row differs: ${row.id}`,
@@ -342,7 +387,7 @@ for (const value of [
   actual.nativeWindow.started_at,
   actual.nativeWindow.summary_written_at,
   actual.jevWindow.started_at,
-  `${actual.hussiFactor.toFixed(2)}×`,
+  `${actual.rows.find((r) => r.id === "jev_session").factor.toFixed(2)}×`,
 ])
   assert.ok(currentReadme.includes(value), `README missing current value: ${value}`);
 assert.ok(!/80\/80|9\.54/.test(currentReadme));

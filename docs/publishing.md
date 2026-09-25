@@ -93,6 +93,14 @@ Test the changed public skill locally after approval:
 pnpm dlx skills@1.5.23 add ./skills --skill codegraph-ast-grep -a codex --copy -y
 ```
 
+### Requested PR previews
+
+The separate `stark-ai-de/agent-skills-preview` repository deploys an explicitly requested open PR through `pages-preview.yml`, with inputs `pr` and its exact `source_sha`. It replaces that preview site's latest snapshot, not production Pages.
+
+To check the same build locally, set `AGENT_SKILLS_PREVIEW_PR` and `AGENT_SKILLS_PREVIEW_SHA` together when running `pnpm run validate:site`. Assets, navigation and manifest URLs use `/agent-skills-preview/pr-<number>/`; source links use the pinned SHA. Preview HTML is `noindex, nofollow`, robots disallows crawling and no sitemap is emitted. Without those variables, the production build retains `/agent-skills/` and its normal indexing metadata.
+
+After deployment, verify `preview.json` against the PR head, then check that CSS/JavaScript load and the benchmark interactions work. A successful deployment receipt alone does not prove the page works.
+
 ## Repository Settings
 
 Keep the repository public before claiming public install readiness. Keep default workflow permissions read-only and grant write permissions only on the release jobs that need them.

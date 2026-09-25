@@ -2,9 +2,32 @@
 
 This evaluation records the accepted public skill scope and separates its evidence from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
+## Release recheck, 2026-09-25
+
+**553/553 new live observations** bind all seven runtime modules to release `0.23.0`, commit `095de174e8eb345b27a726631c6a2215168958df`. The original frozen tasks/catalog were reused; this is not a new blind holdout. No runtime or labels were changed during the campaign.
+
+| Scope                       | Completed |                 Jev correctness | Errors          |
+| --------------------------- | --------: | ------------------------------: | --------------- |
+| Development check           |         9 |                             9/9 | 0               |
+| Matched48 × 2 × 3 variants  |       288 |         80/80 skill; 16/16 NONE | 0               |
+| Repeated32 × 2 × 3 variants |       192 |         48/48 skill; 16/16 NONE | 1 Hussi timeout |
+| Native32 × 2                |        64 | Native: 48/48 skill; 16/16 NONE | 0               |
+
+**Native: gpt-6-luna / medium, Codex CLI 0.157.0.** Raw skill medians are **3091.701245495642 ms** Native and **481.74582499996177 ms** Jev: **6.42×**. Both score 48/48; their 16 NONE observations are separate. The backend did not expose resolved model identity. Preparation plus model turn excludes process startup, loading and task execution.
+
+The published Hussi chooser scored **45/48**: two abstentions and one timeout. Its median includes failure-return latency; no Hussi selection-speed factor is qualified. The timeout returned after 1,216.581 ms; the transport drained for another 283.259 ms. The late response’s 8,993 input tokens remain counted. Jev uses **6.3% less skill-selection input** than either Hussi arm; the original quality/token gates pass. The pooled control remains slightly faster.
+
+- **Source/input audit:** all 207 repeated-cohort freeze files and 81 Native input files match; all seven runtime hashes equal the release Git objects. Every Native payload, mapping and prompt matches the new Jev freeze.
+- **Execution audit:** exactly 489 TypeSafe dispatches and 64 Native turns; no duplicate attempts, warmups, harness retries or model fallback. Every outcome and all provider usage are retained.
+- **Native raw audit:** scores recomputed from frozen labels; model-turn times reconstructed from all 64 event pairs; no model/auth rejection, unexpected tool execution or remaining process group. The known `skip_host_skill_discovery` notice is a configuration warning, not a failed model turn. Prefix caching appeared in 45/64 turns and was uncontrolled.
+- **Offline evidence:** 178 runtime tests; fresh, source-bound general parity with 116 initial payload checks, 232 replays and 18 fixtures. The replays preserve 29 historical wrong results, including two errors. These checks are not new live observations.
+- **Import:** the supplied Native export used a legacy layout despite its schema label. The normalized supplement derives full-precision times, opaque accepted/forbidden codes and nearest-rank p95 from raw results. Source-export and raw-result hashes are retained. The Jev import attaches the fresh parity receipt alongside its audit; live observations stay unchanged.
+
+[Current Jev/Hussi report](benchmarks/next-skill-2026-09-25.json) · [Current Native supplement](benchmarks/native-next-skill-2026-09-25.json) · [Full figures and windows](../../docs/skills/jev-capability-advisor/benchmarks/README.md#current-next-skill-comparison).
+
 ## Native next-skill supplement, 2026-09-24
 
-**Measured source snapshot:** these observations belong to [the recorded runtime revision](https://github.com/stark-ai-de/agent-skills/tree/a4a8512dd8ebb55abb26650e08af38f301cea064/skills/skill-maintenance/jev-capability-advisor/scripts). Current catalog-validation and alias-punctuation fixes are outside that snapshot and have not been live rebenchmarked. The figures do not qualify the changed runtime. The site compares all seven current runtime files with the receipt hashes and displays any difference alongside the measurements; the observation reports and their source identities remain unchanged.
+**Historical measured snapshot:** these observations belong to [the earlier runtime revision](https://github.com/stark-ai-de/agent-skills/tree/a4a8512dd8ebb55abb26650e08af38f301cea064/skills/skill-maintenance/jev-capability-advisor/scripts). They remain unchanged. The September 25 release recheck above qualifies the current source separately.
 
 The new Native arm reuses exactly the frozen independent `next-skill-hidden32` inputs: **32 tasks × two repetitions**, with **48 skill and 16 NONE observations**. Requested model: **gpt-6-luna / medium**, Codex CLI 0.156.1. All **64/64** results are correct, with zero failed selections, timeouts, rejected model requests or tool executions. The existing 192 Jev/Hussi observations are reused; the supplement adds exactly 64 Native observations.
 
@@ -31,12 +54,12 @@ The [sanitized Native receipt](benchmarks/native-next-skill-2026-09-24.json) inc
 
 [Shared tables and technical differences](../../docs/skills/jev-capability-advisor/benchmarks/README.md#next-skill-input-efficiency) · [Sanitized audited observations](benchmarks/next-skill-2026-09-24.json) · [Rejected development and interruption ledger](benchmarks/optimization-development-2026-09-24.json).
 
-The current next-skill report contains 480 comparison observations and a separate nine-observation development smoke. Offline parity is counted separately. The [optimization ledger](benchmarks/optimization-development-2026-09-24.json) is retained unchanged because the report binds its SHA-256 and campaign metadata. It preserves rejected candidates, a provider refusal and 107 unexecuted slots; these are not passing observations or part of the published selection comparison. Earlier, superseded benchmark reports and cumulative development-count promotion have been removed from the release tree.
+The September 24 next-skill report contains 480 comparison observations and a separate nine-observation development smoke. Offline parity is counted separately. The [optimization ledger](benchmarks/optimization-development-2026-09-24.json) is retained unchanged because the report binds its SHA-256 and campaign metadata. It preserves rejected candidates, a provider refusal and 107 unexecuted slots; these are not passing observations or part of the published selection comparison. Earlier, superseded benchmark reports and cumulative development-count promotion have been removed from the release tree.
 
 ## Known limitations
 
 - General compound advice remains experimental. Bounded retrieval can omit necessary candidates, and the host must assess recommendations and remaining work.
-- The measured snapshot could lose preference for a qualified alias followed by a terminal period (15/16 supplementary cases passed). The current runtime fixes this while preserving longer dotted identifiers, with offline regression coverage. The original failure remains in the immutable report; the fix is not a new live quality measurement.
+- The measured snapshot could lose preference for a qualified alias followed by a terminal period (15/16 supplementary cases passed). The current runtime fixes this while preserving longer dotted identifiers, with offline regression coverage. The original failure remains in the immutable September 24 report. The release recheck measures the fixed runtime on previously used tasks; it does not isolate this fix’s live effect.
 - The next-skill profile deliberately leaves additional work unassessed. Its input and latency measurements do not qualify complete-task quality or execution speed.
 - Native host activation and authoritative inventory must be qualified per host under ADR-0057. Installation alone does not install automatic interception.
 
@@ -53,7 +76,7 @@ The current next-skill report contains 480 comparison observations and a separat
 | Broad or high-value use     | Choosing relevant capabilities from a current host-supplied catalog and inspecting candidates locally are useful recurring agent tasks. The maintainer accepts the measured next-skill efficiency and optional inspection workflow as sufficient utility for catalog inclusion. General compound results remain advisory and experimental; the host checks recommendations and remaining work.                                                                                                                                                                                                                     |
 | Acceptable maintenance cost | Repository maintainers own the skill. Its Python runtime and offline evaluator use the standard library; bounded requests, explicit provider configuration and regression coverage make this maintenance commitment acceptable. This is a maintainer judgment, not a measured operating-cost claim.                                                                                                                                                                                                                                                                                                                |
 
-The benchmark observations remain bound to their recorded source revision. Later catalog-validation and alias fixes have offline regression evidence, not a new live measurement. This scoped acceptance replaces the earlier plan's requirement for a representative whole-workflow comparison before any promotion; ADR-0008 does not prescribe that experiment. The historical pilots below remain visible but do not gate this narrower release. Publication follows the [release handoff](../../docs/skills/jev-capability-advisor/README.md#release-handoff).
+This promotion decision used the earlier source-bound measurements. The separate September 25 release recheck above adds current runtime evidence without rewriting the original decision or observations. This scoped acceptance replaces the earlier plan's requirement for a representative whole-workflow comparison before any promotion; ADR-0008 does not prescribe that experiment. The historical pilots below remain visible but do not gate this narrower release. Publication follows the [release handoff](../../docs/skills/jev-capability-advisor/README.md#release-handoff).
 
 Maintenance ownership remains with the repository maintainers. Runtime tests require only Python's standard library, and provider calls follow an explicit experiment scope and recorded resource limits. Recheck host catalog contracts, provider behavior and the evidence scope when changing the selection prompt, retrieval policy or supported hosts. Retire the website's New highlight with the next featured skill or the next catalog release after promotion.
 
