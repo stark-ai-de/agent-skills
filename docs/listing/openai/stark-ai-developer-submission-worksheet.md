@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.2.0`
+- Version: `1.3.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds observation-gated ChatGPT and Codex web Plan adapters, preserves explicit refusals and proven-absence fallback, reports read-only enforcement independently, and uses documented native controls with product-neutral skill starter prompts. Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.
+- Release notes: Adds Jev Capability Advisor for Codex with offline inspection, optional local caches and user-key TypeSafe recommendations. The host retains activation, permissions and execution.
 
 ## Capabilities
 
@@ -29,6 +29,7 @@ freeze evidence or a portal draft identifier.
 - Create editable draw.io diagrams from system context.
 - Create repository documentation and animated README assets.
 - Curate durable Codex memory with explicit safety boundaries.
+- Recommend available skills and tools for a supplied task with Jev in Codex.
 
 ## Starter prompts
 
@@ -51,10 +52,11 @@ freeze evidence or a portal draft identifier.
 - `architecture-compass`: CHAT, CODEX; implicit invocation enabled; portal glyph `hierarchy`
 - `codegraph-ast-grep`: CODEX; implicit invocation disabled; portal glyph `search`
 - `drawio-diagrams`: CHAT, CODEX; implicit invocation enabled; portal glyph `pen`
+- `jev-capability-advisor`: CODEX; implicit invocation enabled; portal glyph `chart`
 
 ## Portal asset handoff
 
-1. Verify the six packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
+1. Verify the packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
 2. Keep both existing Plugin Info logos unchanged. Restore them only if the ZIP upload reset them.
 3. Follow the [Composer icon handoff](stark-ai-developer-first-publication.md#composer-icon-handoff) to set the separate light and dark PNGs manually; do not use the Plugin Info logos for these fields.
 4. After propagation, verify light and dark rendering plus the public directory identity.

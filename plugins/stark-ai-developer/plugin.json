@@ -4,7 +4,7 @@
     "name": "servrox solutions UG",
     "url": "https://stark-ai.de"
   },
-  "description": "stark AI Developer is a harness-first developer workflow toolkit for developers and coding agents: from a rough feature idea and existing code to an implementation-ready specification, architecture with transparent trade-offs, structural code findings, editable architecture diagrams, consistent repository documentation, and safely curated agent memory.\n\nThe included skills are not a theoretical catalog for the store. They come from our daily work, are used multiple times a day, and are continuously improved. The plugin reflects the standard we apply to our own work and to every tool that analyzes or changes production code.\n\nWe chose open source deliberately: transparency about how it works and what it contains, room for your own adaptations, and a way to contribute feedback, ideas, and improvements. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
+  "description": "stark AI Developer brings practical workflows for implementation-ready specifications, architecture decisions, structural code analysis, editable diagrams, repository visuals, agent memory, and capability recommendations. Its open-source skills expose their instructions and supporting scripts for review and adaptation.\n\nThe package has no shared backend, bundled MCP server, telemetry or analytics. Jev Capability Advisor is an optional Codex workflow: fresh recommendations send your supplied task and public capability descriptions to TypeSafe using your own API key. Offline candidate inspection needs no credential or network. Your host controls discovery, permissions and execution; other tools and services keep their own access requirements.",
   "homepage": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
   "keywords": [
     "developer-tools",
@@ -16,5 +16,5 @@
   "license": "Apache-2.0",
   "name": "stark-ai-developer",
   "repository": "https://github.com/stark-ai-de/agent-skills",
-  "version": "1.2.0"
+  "version": "1.3.0"
 }

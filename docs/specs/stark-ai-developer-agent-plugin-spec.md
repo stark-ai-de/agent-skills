@@ -1,12 +1,12 @@
 # Implementation Specification: stark AI Developer Skills and OpenAI Plugin Distribution
 
-- **Status:** Phase 6 complete; public listing live
-- **Contract revision:** 12
-- **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 listing is live. Directory identity is a continuous scheduled/manual post-publication plus local `pnpm run verify:openai-directory` gate.
+- **Status:** Phase 6 publication recorded; current catalog membership unconfirmed
+- **Contract revision:** 13
+- **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 publication is recorded. Directory identity is a manual `pnpm run verify:openai-directory` diagnostic; see [current observation limits](../publishing.md#manual-directory-observation).
 - **Specification date:** 2026-08-21
 - **External contracts last verified:** 2026-08-18; live portal observations from 2026-08-19 in `docs/listing/openai/stark-ai-developer-first-publication.md` outrank stale country-picker and separate-Codex-directory procedure. The listing source omits publisher region fields.
 - **Repository:** `stark-ai-de/agent-skills`
-- **Current phase:** Phase 6 complete (public listing live)
+- **Current phase:** Phase 6 complete (historical publication observation)
 - **Bundle ID:** `codex`
 - **Plugin ID:** `stark-ai-developer`
 - **Public display name:** **stark AI Developer**
@@ -27,10 +27,10 @@ exists. The release descriptor, dated contract snapshots, the
 fixtures, requirement traceability, and the supply-chain inventory command are
 present. A public ChatGPT plugin page was observed on 2026-08-19, and Codex in the
 ChatGPT Windows app showed the same directory. That observation exits Phase 6.
-Directory identity is enforced by `pnpm run verify:openai-directory` locally and
-by the strict scheduled/manual post-publication `ChatGPT Directory Identity`
-workflow through `.github/actions/verify-openai-directory`. Hosted `Validate`
-does not fetch the live directory. Record portal
+Directory identity is checked manually with `pnpm run verify:openai-directory`.
+The scheduled workflow and composite action were removed; see
+[manual directory observation](../publishing.md#manual-directory-observation).
+Hosted `Validate` does not fetch the live directory. Record portal
 observations in `docs/listing/openai/stark-ai-developer-first-publication.md`.
 Freeze JSON and the generated worksheet are not publication proof.
 
@@ -556,11 +556,9 @@ warning as `manifest_normalized`. It does not document a URL or download that
 returns the saved file. Do not invent an export path or treat the public
 directory card as the saved `.codex-plugin/plugin.json`.
 
-The scheduled/manual post-publication `ChatGPT Directory Identity` workflow runs
-`.github/actions/verify-openai-directory`, which calls
-`scripts/plugin/verify-openai-directory.mjs`. Local fallback is
-`pnpm run verify:openai-directory`. That script runs two checks against the
-unofficial ChatGPT web API:
+The manual `pnpm run verify:openai-directory` diagnostic calls
+`scripts/plugin/verify-openai-directory.mjs`. It runs two strict checks against
+the unofficial ChatGPT web API when those endpoints are accessible:
 
 - `DIR-001` compares listing JSON, skill interface, SKILL.md descriptions,
   portal glyphs, and skills-only invariants to
@@ -572,16 +570,17 @@ unofficial ChatGPT web API:
   `installation_policy: AVAILABLE`. Derive `<slug>` from
   `listing.plugin.category` (`Developer Tools` → `developer-tools`). Paginate
   until the plugin is found or the catalog ends. Do not require Featured or
-  `/plugins/home` teaser membership. The unofficial category catalog currently
-  returns Cloudflare HTML 403 to a custom User-Agent; both checks send a
-  browser User-Agent on GET-only requests.
+  `/plugins/home` teaser membership. Both checks send a browser User-Agent on
+  GET-only requests, which does not guarantee access to the unofficial catalog.
+  Access failures and missing entries remain failures; see the
+  [dated observation](../publishing.md#manual-directory-observation).
 
 Do not package an OpenAI zip in that check. Do not compare portal-rewritten
 plugin-card short or long descriptions, logo or catalog icon CDN URLs,
 `discoverability`, support/security/chatgptPlugin URLs, dark brand color, or
 account identifiers. Do not log category `pageToken` values, cookies, or other
 private fields. The live directory fetch is part of neither `pnpm run validate`
-nor hosted `Validate`; only the dedicated scheduled/manual workflow runs it.
+nor hosted `Validate`; operators invoke the diagnostic manually.
 
 Release evidence still records:
 
@@ -1306,7 +1305,7 @@ slug parsed from the ChatGPT plugin URL, in
 Phase 6 is complete when that live page and shared-directory observation are
 recorded. Sanitized portal plugin and submission identifiers live in
 `docs/listing/openai/stark-ai-developer-first-publication.md`. Directory identity
-is a continuous `verify:openai-directory` gate, not a Phase 6 exit criterion.
+is a manual `verify:openai-directory` diagnostic, not a Phase 6 exit criterion.
 
 Exit when the public listing is visible in the Universal Plugins Directory
 shared by ChatGPT and Codex.
@@ -1391,8 +1390,8 @@ Phase 7 is not required for the v1 **stark AI Developer** launch.
 - [x] Phase 6 listing is complete: a public ChatGPT plugin page exists for **stark AI Developer**; Codex in the ChatGPT Windows app showed the same catalog. The public plugin slug is `plugins_6a85d98a7bc48191879aedd91610271e`.
 - [x] The publishing organization and verified identity are selected and consistent with public metadata. OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`; verified individual Marcel Michael Mayer; public developer name `servrox solutions UG`.
 - [x] OpenAI review identifiers are recorded in sanitized evidence. Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`; portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`.
-- [x] Listing JSON, skill interface, and skills-only invariants match the live ChatGPT directory document (`DIR-001`; `pnpm run verify:openai-directory`; scheduled/manual post-publication `ChatGPT Directory Identity`).
-- [x] The plugin appears ENABLED in the public Developer Tools category catalog with `installation_policy: AVAILABLE` (`DIR-002`; same command and workflows).
+- [x] Listing JSON, skill interface, and skills-only invariants matched the live ChatGPT directory document on 2026-09-25 (`DIR-001`; manual Node.js 24.20.0 observation; [evidence and limits](../publishing.md#manual-directory-observation)).
+- [ ] Current Developer Tools category-catalog membership is unconfirmed (`DIR-002`): the 2026-09-25 response contained no matching plugin and no next page. Historical publication does not establish current membership; see [manual directory observation](../publishing.md#manual-directory-observation).
 
 ### Definition of “my skills are listed”
 
@@ -1493,7 +1492,7 @@ The maintainer-provided drafts agree on one canonical skill source, explicit six
 
 ADR-0043 resolves the durable packaging boundary. This specification applies that decision without duplicating its rationale and adds implementation gates for the current repository schema, validator, README, local marketplace, official package formats, and public submission flow.
 
-This specification distinguishes public plugin publication from repository, personal, and workspace distribution; defines one public v1 listing rather than six independent cards; points the canonical repository marketplace at the portable projection; makes `agents/openai.yaml` canonical skill-local metadata; and requires one intended release descriptor, explicit artifact lifecycle, dated contract snapshots, a normative reproducible ZIP profile, traceability, and supply-chain gates. The generated OpenAI archive is the exact public submission artifact. Directory identity is a continuous `verify:openai-directory` gate. The evaluation contract is the portal cases plus `skill-evals/stark-ai-developer/`.
+This specification distinguishes public plugin publication from repository, personal, and workspace distribution; defines one public v1 listing rather than six independent cards; points the canonical repository marketplace at the portable projection; makes `agents/openai.yaml` canonical skill-local metadata; and requires one intended release descriptor, explicit artifact lifecycle, dated contract snapshots, a normative reproducible ZIP profile, traceability, and supply-chain gates. The generated OpenAI archive is the exact public submission artifact. Directory identity is a manual `verify:openai-directory` diagnostic. The evaluation contract is the portal cases plus `skill-evals/stark-ai-developer/`.
 
 ## 28. Done when
 
@@ -1507,7 +1506,7 @@ Repository implementation is done when one explicit bundle deterministically pro
 
 Canonical ownership, exact bundle membership, release identity, authoritative schema validation, product routing, capability boundaries, marketplace target, reproducible archive profile, traceability, public documentation, legal pages, supply-chain review, role approvals, and security scans must all remain enforced.
 
-Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Directory identity remains a continuous `verify:openai-directory` gate. Provenance for later GitHub Releases is `Publish Release` plus `Post-release Evidence`.
+Phase 6 listing is complete when the public ChatGPT plugin page is recorded. Directory identity remains a manual `verify:openai-directory` diagnostic. Provenance for later GitHub Releases is `Publish Release` plus `Post-release Evidence`.
 
 Version 1 does not require six independent public skill cards. Those require separately approved one-skill plugin submissions.
 
@@ -1556,8 +1555,8 @@ release:
 | `REP-001`      | `zip-store-v1` deterministic build                                                                                                 | `verify:release-reproducibility`                                             | Linux/macOS/Windows archive byte equality                |
 | `SEC-001`      | Secret, path, endpoint, dependency, license, and provenance gates                                                                  | `verify:supply-chain` plus scanners                                          | SBOM, license inventory, scan results, attestation       |
 | `PUB-001`      | Legal, publisher, portal review, explicit publication                                                                              | submission worksheet and publication checklist                               | Recorded approvals, portal IDs, public smoke tests       |
-| `DIR-001`      | Live ChatGPT directory identity versus listing JSON, skill interface, and skills-only invariants                                   | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
-| `DIR-002`      | Live ChatGPT category catalog membership versus listing plugin id, display name, ENABLED status, and AVAILABLE installation policy | `verify:openai-directory`                                                    | Scheduled/manual post-publication workflow, local script |
+| `DIR-001`      | Live ChatGPT directory identity versus listing JSON, skill interface, and skills-only invariants                                   | `verify:openai-directory`                                                    | Manual post-publication diagnostic                       |
+| `DIR-002`      | Live ChatGPT category catalog membership versus listing plugin id, display name, ENABLED status, and AVAILABLE installation policy | `verify:openai-directory`                                                    | Manual post-publication diagnostic                       |
 
 Every normative validator failure must cite at least one requirement ID. Every acceptance checkbox and release-evidence record must map back to one or more IDs. New requirements must add or extend an ID before implementation merges. `docs/listing/openai/requirement-traceability.json` is generated from this baseline and checked by `pnpm run validate:traceability`.
 

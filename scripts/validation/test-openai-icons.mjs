@@ -78,7 +78,7 @@ for (const skill of bundle.skills) {
     `${skill.name} projected OpenAI metadata bytes`,
   );
 }
-assert.equal(pixelDigests.size, 6);
+assert.equal(pixelDigests.size, bundle.skills.length);
 
 const archiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-openai-icons-"));
 try {
@@ -111,4 +111,4 @@ try {
   fs.rmSync(archiveRoot, { recursive: true, force: true });
 }
 
-console.log("Six OpenAI skill icons and their exact projection/package bytes passed.");
+console.log("OpenAI skill icons and their exact projection/package bytes passed.");

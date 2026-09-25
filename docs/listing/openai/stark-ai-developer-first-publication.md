@@ -14,6 +14,20 @@ only from a clean tagged identity.
 Do not add secrets, tokens, cookies, private reviewer messages, customer data,
 or machine-specific paths here.
 
+## Jev update handoff
+
+**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current candidate contains seven skills, including Jev Capability Advisor 0.1.0. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) tracks the remaining publication steps.
+
+After GitHub publication and post-release evidence are complete:
+
+- Update the **existing** plugin using the release's exact direct `openai.zip`; do not create a second listing or upload the portable ZIP.
+- Check all **seven** packaged skill interfaces against the [current submission worksheet](stark-ai-developer-submission-worksheet.md). Jev is **CODEX only**, with implicit invocation allowed and portal glyph **`chart`**. This metadata does not install a pre-prompt hook.
+- Preserve the six existing glyphs recorded below; use `chart` for Jev. Verify its packaged icon and restore the portal glyph if the upload ignores it.
+- Preserve Plugin Info logos and restore both [Composer icons](#composer-icon-handoff) if the package update resets them. Inspect light and dark modes.
+- Complete the portal's scans/review and explicit publication, then verify directory propagation and a Codex install/update. Record that observation separately from local packaging and CI.
+
+The [official submission guide](https://developers.openai.com/plugins/deploy/submission) is the live source for portal controls. Reviewed on 2026-09-23; no upload, approval or publication for this update has been performed by the release-preparation task.
+
 ## Observed listing
 
 The public ChatGPT plugin page is:
@@ -234,11 +248,13 @@ The catalog PWA `site/public/icon-512.png` was not replaced.
 - Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`
 - portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`
 
-Directory identity is `pnpm run verify:openai-directory` locally and the strict
-`ChatGPT Directory Identity` workflow after publication on a schedule or manual
-dispatch, through `.github/actions/verify-openai-directory`. Deterministic hosted
-`Validate` does not fetch the live directory. That gate covers the directory
-document (`DIR-001`) and public category-catalog membership (`DIR-002`).
+Directory identity is a manual `pnpm run verify:openai-directory` diagnostic
+covering the directory document (`DIR-001`) and public category-catalog
+membership (`DIR-002`). The scheduled workflow and composite action were removed;
+see [manual directory observation](../../publishing.md#manual-directory-observation)
+for the 2026-09-25 access failures and missing catalog entry. These first-publication
+observations are historical and do not establish current catalog membership.
+Deterministic hosted `Validate` does not fetch the live directory.
 
 Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)

@@ -1,0 +1,10 @@
+interface:
+  display_name: "Jev Capability Advisor"
+  short_description: "Find relevant available skills and tools with Jev"
+  icon_small: "./assets/openai-icon.png"
+  icon_large: "./assets/openai-icon.png"
+  default_prompt: "Use $jev-capability-advisor to recommend available skills or tools for my task, inspect candidates locally, or integrate a reusable host session. Use a current host-supplied catalog, preserve activation restrictions, distinguish selection from clarification and failure, and keep loading and execution under host control."
+policy:
+  products:
+    - CODEX
+  allow_implicit_invocation: true

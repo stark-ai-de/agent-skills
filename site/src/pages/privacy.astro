@@ -79,14 +79,27 @@ const description =
     <h2>The package</h2>
     <p>
       The package is Markdown skill instructions, OpenAI skill metadata, references, scripts,
-      templates, and static assets. It has no backend, MCP server, connector, account system,
-      authentication flow, telemetry, analytics, hidden network call, or runtime download.
+      templates, and static assets. It has no publisher-operated backend, MCP server,
+      account system, telemetry, or analytics.
     </p>
     <p>
       When a host uses a skill, that client or model may see the prompt, files, workspace
       metadata, command output, or other artifacts you make available. The package does not
-      collect, keep, sell, profile, or transmit those categories on its own, and it does not
       send prompts, repositories, files, outputs, or credentials to <StarkAi />.
+    </p>
+    <p>
+      Jev Capability Advisor has an optional TypeSafe API connection. When you request a fresh
+      recommendation, its local helper sends your task text and public capability cards to
+      TypeSafe and authenticates with your key. It does not execute recommended tools or send
+      their results. Offline candidate inspection makes no API request. Only supply task text
+      and catalog descriptions you intend to share with that provider; its processing is
+      governed by its own terms and privacy notice.
+    </p>
+    <p>
+      Optional local caches and JSON receipts may contain task text, capability metadata,
+      and recommendation results. They are stored in the paths you choose and remain on
+      your machine until you remove them. The helper excludes authentication headers from
+      its receipts. Do not put credentials in task text or catalog descriptions.
     </p>
 
     <h2>Answers for this package</h2>
@@ -96,18 +109,20 @@ const description =
     </p>
     <ul>
       <li>
-        <strong>Personal data collected through the package:</strong> none.
+        <strong>Publisher collection:</strong> no package telemetry is sent to <StarkAi />.
+        Task text you submit to the optional TypeSafe API may contain personal data.
       </li>
       <li>
-        <strong>Purpose of processing by the package:</strong> none. The package does not
-        independently collect, retain, sell, profile, or transmit user data.
+        <strong>Purpose of optional API processing:</strong> choose capabilities for the task
+        you supply. Optional local caches reuse recommendations; receipts support inspection.
       </li>
       <li>
-        <strong>Who receives data from the package:</strong> no one.
+        <strong>Recipients:</strong> TypeSafe receives advisor requests when you enable API
+        use. The helper does not send those requests to <StarkAi />.
       </li>
       <li>
-        <strong>How long package data is kept:</strong> the package does not store personal
-        data.
+        <strong>Retention:</strong> you control local output and cache files. TypeSafe and
+        your host set their own service retention policies.
       </li>
       <li>
         <strong>Your controls:</strong> use <a href={withBase("/support/")}>Support</a> for
@@ -122,7 +137,7 @@ const description =
         policies. This package cannot guarantee those processors.
       </li>
       <li>
-        <strong>Accounts, backend, and telemetry:</strong> v1 has no <StarkAi /> account,
+        <strong>Accounts, backend, and telemetry:</strong> the package has no <StarkAi /> account,
         backend, telemetry, analytics, or hidden network calls.
       </li>
       <li>

@@ -1,4 +1,4 @@
-name: Publish Release
+name: 🚀 Publish Release
 run-name: ${{ inputs.recovery_release_sha != '' && format('Publish Release · recovery {0}', inputs.recovery_release_sha) || 'Publish Release' }}
 
 on:
