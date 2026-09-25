@@ -113,7 +113,7 @@ A trailing period after an explicitly named qualified skill ID can prefer an equ
 
 The current comparison retains both full observation reports unchanged. The small [optimization ledger](../../../../skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json) also remains because the next-skill report binds its SHA-256 and records rejected candidates and a provider interruption. Its 107 observations left unexecuted remain missing. It provides provenance, not additional current-comparison observations or a development-effort KPI. Superseded benchmark presentations and their unrelated receipts are excluded from the release tree.
 
-General-profile recorded-response parity preserves 29 incorrect baseline outcomes, including two errors, across 232 offline replays. This establishes unchanged behavior for those supplied responses, not new model-quality successes. No native workflow quality improvement or whole-task speed gain has been demonstrated; [production promotion remains open](../../../../skill-evals/jev-capability-advisor/README.md#promotion-gate).
+General-profile recorded-response parity preserves 29 incorrect baseline outcomes, including two errors, across 232 offline replays. This establishes unchanged behavior for those supplied responses, not new model-quality successes. No whole-task accuracy improvement or speed gain has been demonstrated. The [accepted promotion scope](../../../../skill-evals/jev-capability-advisor/README.md#promotion-decision) relies on efficient, correct next-skill selection and optional inspection; general compound advice remains experimental.
 
 ## What you get
 
@@ -126,6 +126,6 @@ General-profile recorded-response parity preserves 29 incorrect baseline outcome
 | Offline inspection   | Inspect candidates without a key or network call.                          |
 | Host control         | Preserve activation restrictions, permissions and execution ownership.     |
 
-The skill remains a release candidate. Installation does not install automatic prompt interception; host activation, inventory and advice delivery require separate qualification.
+The skill is accepted for optional, requested advice and offline inspection. Installation does not install automatic prompt interception; automatic host activation, inventory and advice delivery require separate qualification.
 
-[Evaluation methods and open gates](../../../../skill-evals/jev-capability-advisor/README.md) · [Install and use](../README.md)
+[Evaluation methods and promotion decision](../../../../skill-evals/jev-capability-advisor/README.md) · [Install and use](../README.md)

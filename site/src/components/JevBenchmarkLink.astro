@@ -3,10 +3,9 @@ import { withBase } from "../lib/site";
 
 interface Props {
   placement?: "announcement" | "jump";
-  releaseCandidate?: boolean;
 }
 
-const { placement = "jump", releaseCandidate = false } = Astro.props;
+const { placement = "jump" } = Astro.props;
 const announcement = placement === "announcement";
 const title = announcement ? "Jev Capability Advisor" : "Scroll down to Benchmark";
 const subtitle = announcement ? "Less choosing. More doing. See the benchmarks." : "Why this skill stands out";
@@ -15,12 +14,12 @@ const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "
 ---
 
 <aside class={`jev-discovery jev-discovery--${placement}`} data-jev-discovery={placement} data-state="settled" aria-label={announcement ? "Featured Jev benchmarks" : "Jump to Jev benchmarks"}>
-  <a class="jev-discovery__link" href={href} aria-label={`${title}. ${subtitle}${releaseCandidate ? " Release candidate." : ""}`}>
+  <a class="jev-discovery__link" href={href} aria-label={`${title}. ${subtitle}`}>
     <svg class="jev-discovery__pixels" viewBox="0 0 51 15" aria-hidden="true" focusable="false">
       {pixels.flatMap((row, y) => Array.from(row).map((pixel, x) => pixel === "1" && <rect x={x * 3} y={y * 3} width="2.4" height="2.4" style={`--pixel-delay: ${(x * 3 + y * 7) % 13 * 45}ms`} />))}
     </svg>
     <span class="jev-discovery__copy" aria-hidden="true">
-      {announcement && <span class="jev-discovery__extra"><span class="jev-discovery__eyebrow">New {releaseCandidate ? "· Release candidate" : "in the catalog"}</span></span>}
+      {announcement && <span class="jev-discovery__extra"><span class="jev-discovery__eyebrow">New in the catalog</span></span>}
       <span class="jev-discovery__title"><span class="jev-discovery__reserve">{title}</span><span data-jev-reveal>{title}</span></span>
       <span class:list={["jev-discovery__subtitle", { "jev-discovery__extra": announcement }]}><span>{subtitle}</span></span>
     </span>

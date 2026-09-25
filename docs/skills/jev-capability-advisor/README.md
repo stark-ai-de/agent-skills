@@ -15,7 +15,7 @@ Jev Capability Advisor recommends capabilities from the catalog your agent actua
 
 ## Install and use
 
-**Release preparation:** the catalog and plugin changes are proposed together. Production promotion still requires the [quality and utility gate](../../../skill-evals/jev-capability-advisor/README.md#promotion-gate). The following installation command applies after publication.
+**Approved scope:** optional, requested capability advice and offline inspection are [accepted for public catalog promotion](../../../skill-evals/jev-capability-advisor/README.md#promotion-decision). The following installation command applies once the skill is available on the repository's default branch; versioned packages and the plugin-directory update follow the separate release steps below.
 
 ```sh
 npx skills@latest add stark-ai-de/agent-skills --skill jev-capability-advisor -g -a codex
@@ -33,7 +33,7 @@ Or keep the first check entirely local:
 
 The helper needs **Python 3.10+**; it has no third-party Python dependencies, router service or embedding-model download. A fresh Jev recommendation uses your own TypeSafe API key and sends the supplied task plus bounded public capability cards to TypeSafe. Offline inspection needs no key or network. Configure credentials locally; never paste or commit them. The agent needs a **current host-supplied catalog**: files on disk alone do not establish which tools are available. See the [catalog and CLI contract](../../../skills/skill-maintenance/jev-capability-advisor/references/contract.md).
 
-This release candidate also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
+This update also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
 
 ## One next skill, explicitly
 
@@ -79,13 +79,13 @@ The next-skill profile used less selection input than both measured Hussi varian
 
 ## Scope
 
-The agent supplies the current catalog and controls loading, permissions and execution. This release candidate does not automatically intercept ordinary prompts. General compound advice remains experimental, and omitted candidates can limit either profile. Next-skill advice deliberately leaves additional work unassessed and does not replace a complete plan.
+The agent supplies the current catalog and controls loading, permissions and execution. The skill does not automatically intercept ordinary prompts. General compound advice remains experimental, and omitted candidates can limit either profile. Next-skill advice deliberately leaves additional work unassessed and does not replace a complete plan.
 
 Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-advisor/SKILL.md) for the operational workflow and [evaluation record](../../../skill-evals/jev-capability-advisor/README.md) for qualification and known limits.
 
 ## Release handoff
 
-**Prepared for review; production promotion is still open.** The [promotion gate](../../../skill-evals/jev-capability-advisor/README.md#promotion-gate) requires representative native workflow benefit. The selector benchmark does not establish faster complete agent tasks. Plugin inclusion and a green build do not replace that decision.
+**Promotion accepted on 2026-09-25 for optional, requested advice and offline inspection.** The [promotion decision](../../../skill-evals/jev-capability-advisor/README.md#promotion-decision) records the evidence for all four ADR-0008 criteria. Merge may proceed after current checks pass. Versioned release and plugin-directory publication remain the steps below; automatic host interception remains separately unqualified.
 
 | Component              | Prepared version                    | Distribution                                                                     |
 | ---------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
@@ -97,7 +97,7 @@ The source allowlist, generated portable copy, OpenAI listing and submission wor
 
 ### Maintainer steps
 
-1. **Close the promotion gate, then merge the feature PR.** Review the [evaluation record](../../../skill-evals/jev-capability-advisor/README.md), supported scope and exact-head checks. Do not merge the proposed public promotion while the gate remains open. Review and resolve the explanatory PR threads.
+1. **Merge the approved feature PR after passing checks.** Confirm the [accepted scope](../../../skill-evals/jev-capability-advisor/README.md#promotion-decision), successful checks on the current head and resolved review threads.
 2. **Review the generated release PR.** After the feature merge, let Release Please refresh its draft and confirm the Jev change is included. It owns exactly `package.json`, `.release-please-manifest.json` and `CHANGELOG.md`. If no draft exists, use `pnpm run release:manage -- release-pr --confirm` from protected `main`. Merge the reviewed, passing release PR.
 3. **Approve GitHub publication.** Inspect the automatically started Publish Release readiness job, then approve its waiting `release` environment deployment. Wait for publication and exact-tag Post-release Evidence to pass. Check the production Pages deployment separately. The release preserves `openai.zip`, `portable.zip` and `release-subject.json` as direct assets.
 4. **Update the existing OpenAI plugin.** Run `pnpm run release:manage -- openai-handoff --tag <ACTUAL_TAG>` and upload that release's exact `openai.zip`. Follow the [seven-skill update checklist](../../listing/openai/stark-ai-developer-first-publication.md#jev-update-handoff). A local ZIP is preparation proof, not the portal upload source. Complete portal review and publication manually.

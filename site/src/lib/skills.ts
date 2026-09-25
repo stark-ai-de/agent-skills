@@ -125,7 +125,6 @@ export interface CatalogSkill {
   evalUrl?: string;
   fileTree: SkillTreeNode;
   featured: boolean;
-  releaseCandidate: boolean;
   hasOpenAiMetadata: boolean;
   html: string;
   installCommands: SkillInstallCommand[];
@@ -317,8 +316,6 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     evalUrl: evalPath ? repoUrl(evalPath) : undefined,
     fileTree,
     featured: kind === "public" && name === "jev-capability-advisor",
-    // Keep preparation visible without implying the ADR-0008 promotion gate has passed.
-    releaseCandidate: kind === "public" && name === "jev-capability-advisor",
     hasOpenAiMetadata,
     html,
     installCommands: installCommandsFor(kind, name, defaultInstallHost, supportedInstallHosts),

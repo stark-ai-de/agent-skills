@@ -16,9 +16,9 @@ or machine-specific paths here.
 
 ## Jev update handoff
 
-**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current candidate contains seven skills, including Jev Capability Advisor 0.1.0. Its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) keeps the outstanding promotion gate explicit.
+**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current candidate contains seven skills, including Jev Capability Advisor 0.1.0. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) tracks the remaining publication steps.
 
-After promotion, GitHub publication and post-release evidence are complete:
+After GitHub publication and post-release evidence are complete:
 
 - Update the **existing** plugin using the release's exact direct `openai.zip`; do not create a second listing or upload the portable ZIP.
 - Check all **seven** packaged skill interfaces against the [current submission worksheet](stark-ai-developer-submission-worksheet.md). Jev is **CODEX only**, with implicit invocation allowed and portal glyph **`chart`**. This metadata does not install a pre-prompt hook.

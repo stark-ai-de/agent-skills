@@ -1,6 +1,6 @@
 # stark AI Developer listing values review
 
-Status: plugin 1.3.0 release candidate prepared; the existing 1.2.0 portal observation remains historical evidence. Directory identity is a continuous
+Status: plugin 1.3.0 prepared with Jev's optional advice and inspection scope accepted for promotion; publication is pending. The existing 1.2.0 portal observation remains historical evidence. Directory identity is a continuous
 `verify:openai-directory` gate (`DIR-001` document, `DIR-002` category catalog).
 
 The machine-readable source of truth is
@@ -9,7 +9,7 @@ submission worksheets must be derived from that file. Portal and product-surface
 observations after the first listing live in
 [`stark-ai-developer-first-publication.md`](stark-ai-developer-first-publication.md).
 
-## Candidate addition
+## Accepted addition awaiting publication
 
 Jev Capability Advisor adds a seventh, Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. No updated portal submission, approval, or publication is asserted by this candidate.
 
