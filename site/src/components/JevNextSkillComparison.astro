@@ -10,8 +10,7 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
 ---
 
 <div class="jev-next" data-jev-token-evidence>
-  <p><strong>One next skill, less model input.</strong> The explicit <code>next_skill</code> profile asks one choice question, using compact shared catalog cards and at most one provider call. Other work remains unassessed.</p>
-  <p class="jev-next__context">{comparison.catalogRecords}-entry skill catalog · {comparison.model} · two separate cohorts, two repetitions per task.</p>
+  <p class="jev-next__context">{comparison.catalogRecords}-entry catalog · {comparison.model} · two independent cohorts · two runs per task.</p>
 
   <div class="jev-next__cohorts">
     {comparison.cohorts.map((cohort) => (
@@ -41,7 +40,7 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
     ))}
   </div>
 
-  <p><strong>What the percentages mean:</strong> total provider input across every skill-choice observation. Both median and total input must beat both Hussi variants while every candidate skill and no-match result is correct. This is selection input, not whole-agent tokens, cost or complete-task speed.</p>
+  <p><strong>How to read this:</strong> input is total provider-reported tokens across all skill-choice observations. Jev must use fewer than both Hussi variants, with every skill and no-match choice correct. This measures selection input, not whole-agent usage, cost or task speed.</p>
   <details class="jev-next__method">
     <summary>Study design, source checks &amp; known limits</summary>
     <ul>

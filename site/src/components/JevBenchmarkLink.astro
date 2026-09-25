@@ -24,7 +24,11 @@ const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "
       <span class="jev-discovery__title"><span class="jev-discovery__reserve">{title}</span><span data-jev-reveal>{title}</span></span>
       <span class:list={["jev-discovery__subtitle", { "jev-discovery__extra": announcement }]}><span>{subtitle}</span></span>
     </span>
-    <span class="jev-discovery__action" aria-hidden="true">{announcement && <span>Benchmarks</span>}<span class="jev-discovery__arrow">↘</span></span>
+    <span class="jev-discovery__action" aria-hidden="true">{announcement && <span>See benchmark results</span>}{announcement ? (
+      <svg class="jev-discovery__arrow jev-discovery__arrow--right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16" /><path d="m13 5 7 7-7 7" /></svg>
+    ) : (
+      <svg class="jev-discovery__arrow jev-discovery__arrow--down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v17" /><path d="m5 13 7 7 7-7" /></svg>
+    )}</span>
   </a>
 </aside>
 
@@ -44,9 +48,6 @@ const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "
   document.querySelectorAll<HTMLElement>("[data-jev-discovery]").forEach((notice) => {
     const output = notice.querySelector<HTMLElement>("[data-jev-reveal]")!;
     const title = output.textContent ?? "";
-    const storageKey = `jev-discovery-v1-${notice.dataset.jevDiscovery}`;
-    let seen = false;
-    try { seen = window.sessionStorage.getItem(storageKey) === "seen"; } catch { /* Storage is optional. */ }
     let frame = 0;
     let timer = 0;
     let pendingSettle = false;
@@ -79,8 +80,7 @@ const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "
       output.textContent = title;
       notice.dataset.state = "settled";
     }, { once: true });
-    if (motion.matches || seen || window.location.hash || window.scrollY > 72) return;
-    try { window.sessionStorage.setItem(storageKey, "seen"); } catch { /* Still reveal once on this page. */ }
+    if (motion.matches) return;
     notice.dataset.state = "intro";
     const started = performance.now();
     const characters = Array.from(title);
@@ -130,7 +130,11 @@ const pixels = ["00111 11111 10001", "00010 10000 10001", "00010 11110 10001", "
   .jev-discovery__eyebrow { color: var(--secondary); font-size: .68rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
   .jev-discovery__subtitle { color: var(--muted); font-size: .82rem; line-height: 1.55; }
   .jev-discovery__action { display: flex; align-items: center; gap: .75rem; font-size: .73rem; font-weight: 650; color: var(--primary); }
-  .jev-discovery__arrow { font-size: 1.35rem; line-height: 1; }
+  .jev-discovery__arrow { display: block; width: 1.35rem; height: 1.35rem; flex: 0 0 1.35rem; }
+  .jev-discovery__arrow--down { animation: jev-discovery-arrow-nudge 1.1s ease-in-out infinite; }
+  @keyframes jev-discovery-arrow-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(.22rem); } }
+  .jev-discovery__arrow--right { animation: jev-discovery-arrow-nudge-right 1.1s ease-in-out infinite; }
+  @keyframes jev-discovery-arrow-nudge-right { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(.22rem); } }
   .jev-discovery--jump .jev-discovery__link { grid-template-columns: 3.5rem minmax(0, 1fr) auto; padding: 1.25rem; border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); }
   .jev-discovery--jump .jev-discovery__title { font-size: clamp(.95rem, 2vw, 1.2rem); margin-bottom: .2rem; }
   .jev-discovery--announcement[data-state="intro"] .jev-discovery__link { grid-template-columns: 4rem minmax(0, 1fr) auto; padding: 1.2rem 1.5rem; }

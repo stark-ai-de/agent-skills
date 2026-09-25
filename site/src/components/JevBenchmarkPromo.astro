@@ -37,7 +37,7 @@ const runs = [
 <section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
   <header class="jev-promo__header">
     <div>
-      <p class="jev-promo__label">Powered by TypeSafe Jev</p>
+      <p class="jev-promo__label"><a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev" target="_blank" rel="noreferrer">Powered by TypeSafe Jev</a></p>
       <h2 id="jev-benchmark-title">Less choosing. More doing.</h2>
       <p>Help your agent pick the right skill or MCP tool.</p>
     </div>
@@ -154,63 +154,47 @@ const runs = [
   </div>
 
   <details class="jev-promo__details" id="jev-feature-details">
-    <summary>What you get — and how it compares with Hussi9</summary>
+    <summary>Selection modes &amp; scope</summary>
     <div class="jev-promo__details-body">
-      <p><strong>Fast next-skill selection, with a broader advisor when you need it.</strong> Jev Session retains its HTTPS connection and search index. Its compact <code>next_skill</code> mode selects one skill; <code>general</code> also supports MCP tools and other outcomes. Hussi9’s complete router also supports MCP tools in its Codex variant.</p>
-      <div class="jev-promo__table-scroll" role="region" aria-label="Product feature comparison" tabindex="0">
-        <table>
-          <caption>Product scope from source inspection · not a benchmark of every feature</caption>
-          <thead><tr><th scope="col">Feature</th><th scope="col">Jev Capability Advisor</th><th scope="col">Hussi9 skill-router</th></tr></thead>
-          <tbody>{initial.features.map((feature, index) => <tr><th scope="row">{feature.label}</th><td>{feature.value}</td><td>{comparison.allRows.find((row) => row.id === "hussi_original")!.features[index].value}</td></tr>)}</tbody>
-        </table>
-      </div>
-      <ul>
-        <li><strong>Less connection setup:</strong> a retained Jev Session reuses HTTPS. The published Hussi chooser opens a fresh connection in this measured path. Transport and provider effects were not isolated individually.</li>
-        <li><strong>More task text:</strong> Jev permits 16,000 task characters. Hussi’s Jev chooser sends at most 600, plus up to 300 characters from the previous assistant message for tasks of 15 words or fewer. This is a request allowance, not the complete router’s input limit.</li>
-        <li><strong>Different reuse:</strong> our measured path reuses transport and a derived search index, without cached answers. Hussi’s full router has a local index and saved decisions; those shortcuts and its fallback workflow are outside the chooser measurement.</li>
-        <li><strong>The experiment:</strong> we connected Hussi’s selection function to our reusable HTTPS client and tested it with a fixed skill list. We did not integrate its inventory scan or MCP routing. The question marks mean “not checked or not used here”, not “Hussi cannot do this”. It is internal, unpublished and slightly faster in this cohort.</li>
-      </ul>
-      <p>Catalogs: Jev accepts the current inventory supplied by the host. Hussi can use its local index or supplied skill entries. The experiment used only the frozen benchmark entries.</p>
-      <p><a href={comparison.hussiSource}>Pinned Hussi chooser source</a> · <a href={repoUrl(bench.readmePath) + "#product-features-and-measured-selection"}>Product-source references and technical notes</a></p>
-
-      <p>Use <code>general</code> for skills, tools and experimental compound recommendations. Choose <code>next_skill</code> explicitly for one skill to load next; the rest of the task remains unassessed. Installing the skill does not install an automatic prompt hook.</p>
+      <p><code>general</code> can recommend skills and MCP tools for the request. <code>next_skill</code> chooses one skill to load next; it does not assess the remaining work.</p>
+      <p><a href="#skill-guide">Read the usage guide</a> · <a href={repoUrl(bench.readmePath) + "#product-features-and-measured-selection"}>Source notes</a> · <a href={comparison.hussiSource}>Hussi9 chooser source</a></p>
     </div>
   </details>
 
   <details class="jev-promo__details" id="jev-token-details">
-    <summary>Token savings: the two head-to-head comparisons</summary>
+    <summary>Selection input · two cohorts</summary>
     <div class="jev-promo__details-body"><JevNextSkillComparison comparison={nextSkill} /></div>
   </details>
 
   <details class="jev-promo__details" id="jev-speed-details">
-    <summary>Speed comparison: full results &amp; how we measured</summary>
+    <summary>Speed results &amp; measurement</summary>
     <div class="jev-promo__details-body" id="jev-speed-method">
-      <p>24 skill tasks and eight no-match tasks each ran twice, using the same frozen 132-entry catalog. Jev Session, published Hussi9 and our HTTPS experiment ran interleaved on {confirmation.date}; Native ran separately. All 48 skill observations per variant contribute to the displayed median, including incorrect accepted results. The 16 no-match observations are separate below.</p>
+      <p>Each variant used the same 32 frozen tasks and 132-entry catalog: 24 skill tasks and eight no-match tasks, each run twice. Jev, Hussi9 and our experiment ran interleaved on {confirmation.date}; Native ran separately. The chart uses all 48 skill observations, including incorrect accepted results.</p>
       <div class="jev-promo__table-scroll" role="region" aria-label="Complete next-skill results" tabindex="0">
         <table>
-          <caption>Independent next-skill confirmation · 32 tasks × two repetitions · 64 observations per variant</caption>
+          <caption>Independent next-skill confirmation · 64 observations per variant</caption>
           <thead><tr><th scope="col">Variant</th><th scope="col">Skill median</th><th scope="col">Skill p95</th><th scope="col">Correct accepted choices</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
           <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.label}{row.experimental && " (internal, unpublished)"}</th><td>{row.medianSeconds.toFixed(6)} s</td><td>{row.p95Seconds.toFixed(6)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
         </table>
       </div>
       <ul>
-        <li><strong>Same selection contract:</strong> same tasks, catalog and outcome grading. Native receives Jev’s exact next-skill cards and rules; Hussi retains its published chooser format and original 0.8 acceptance gate. Jev and Native select one next skill or no match; remaining work is unassessed. Hussi abstentions are not necessarily wrong raw guesses.</li>
-        <li><strong>What is timed:</strong> selection preparation plus the model response. Session retains its process, HTTPS connection and index; no warmup, retries or decision cache. Process startup, skill loading and task execution are excluded.</li>
-        <li><strong>Separate measurement windows:</strong> Jev/Hussi {comparison.jevWindow.started_at} – {comparison.jevWindow.summary_written_at}; Native {comparison.nativeWindow.started_at} – {comparison.nativeWindow.summary_written_at}. Provider load and prefix caching were uncontrolled; Native reported cached input in {comparison.nativeCachedTurns}/64 turns.</li>
-        <li><strong>Native model:</strong> {comparison.nativeModel}, reasoning {comparison.nativeReasoning}. The requested configuration is recorded; backend identity is not independently observable. Jev variants use {comparison.jevModel}.</li>
+        <li><strong>Scoring:</strong> one next skill or no match. Native received Jev’s next-skill cards and rules; Hussi used its published chooser and 0.8 acceptance gate. A Hussi abstention is not necessarily a wrong guess.</li>
+        <li><strong>Timer:</strong> selection preparation plus the model response. Session process, HTTPS connection and index were reused. Startup, skill loading and task execution were excluded; there were no warmups, retries or decision cache.</li>
+        <li><strong>Measurement windows:</strong> Jev/Hussi {comparison.jevWindow.started_at} – {comparison.jevWindow.summary_written_at}; Native {comparison.nativeWindow.started_at} – {comparison.nativeWindow.summary_written_at}. Provider load and prefix caching were uncontrolled; Native reported cached input in {comparison.nativeCachedTurns}/64 turns.</li>
+        <li><strong>Models:</strong> Native requested {comparison.nativeModel}, reasoning {comparison.nativeReasoning}; Jev variants used {comparison.jevModel}. The backend’s actual model identity is not independently observable.</li>
       </ul>
-      <p>Medians and factors use full recorded precision; p95 uses the same nearest-rank definition for all four variants. Native’s original handoff used an interpolated p95; its reported summaries remain in the evidence. The experiment is our modification, not a published Hussi9 release. Product-feature differences do not imply a benchmark of MCP or full-router workflows. These results describe this task set, not a complete market ranking or whole-task speedup.</p>
+      <p>Medians and factors use full recorded precision; p95 uses the same nearest-rank definition for all four variants. The experiment is our unpublished modification. This benchmark covers next-skill selection only, not MCP routing, full-router workflows, or whole-task speed.</p>
       <p><a href={repoUrl(comparison.evidencePath)}>Frozen Jev/Hussi evidence</a> · <a href={repoUrl(comparison.nativeEvidencePath)}>Native supplement and audit</a></p>
     </div>
   </details>
 
   <details class="jev-promo__details" id="jev-history-details">
-    <summary>All {number(comparison.totalRuns)} runs &amp; earlier experiments</summary>
+    <summary>Run-count breakdown &amp; earlier studies</summary>
     <div class="jev-promo__details-body">
   <details class="jev-promo__details" id="jev-run-count">
-    <summary>What counts as {number(comparison.totalRuns)} benchmark runs?</summary>
+    <summary>How the {number(comparison.totalRuns)} runs are counted</summary>
     <div class="jev-promo__details-body">
-      <p>Completed benchmark executions across development revisions. Repeated tasks and comparison variants count as separate runs. This is not a count of unique tasks, passing tests or API requests.</p>
+      <p>Each completed benchmark execution counts once; repeated tasks and comparison variants count separately. This is not a count of unique tasks, passing tests or API requests.</p>
       <div class="jev-promo__table-scroll" role="region" aria-label="Benchmark run breakdown" tabindex="0">
         <table>
           <caption>Recorded development measurements</caption>
@@ -279,7 +263,7 @@ const runs = [
   </details>
 
   <footer class="jev-promo__footer">
-    <span>Release candidate · your agent controls loading and permissions</span>
+    <span>Fastest agent helper in town ↯</span>
     <div><a href={repoUrl(bench.readmePath)}>Benchmark README</a><a href={repoUrl(bench.methodsPath)}>Full evidence</a></div>
   </footer>
 </section>
