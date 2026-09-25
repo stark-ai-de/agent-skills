@@ -248,11 +248,13 @@ The catalog PWA `site/public/icon-512.png` was not replaced.
 - Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`
 - portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`
 
-Directory identity is `pnpm run verify:openai-directory` locally and the strict
-`ChatGPT Directory Identity` workflow after publication on a schedule or manual
-dispatch, through `.github/actions/verify-openai-directory`. Deterministic hosted
-`Validate` does not fetch the live directory. That gate covers the directory
-document (`DIR-001`) and public category-catalog membership (`DIR-002`).
+Directory identity is a manual `pnpm run verify:openai-directory` diagnostic
+covering the directory document (`DIR-001`) and public category-catalog
+membership (`DIR-002`). The scheduled workflow and composite action were removed;
+see [manual directory observation](../../publishing.md#manual-directory-observation)
+for the 2026-09-25 access failures and missing catalog entry. These first-publication
+observations are historical and do not establish current catalog membership.
+Deterministic hosted `Validate` does not fetch the live directory.
 
 Regenerate
 [`stark-ai-developer-release-evidence.json`](stark-ai-developer-release-evidence.json)
