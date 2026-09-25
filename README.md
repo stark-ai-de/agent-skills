@@ -135,7 +135,7 @@ The icons follow the reviewed glyph choices prepared for the [stark AI Developer
 
 ## New in the catalog: Jev Capability Advisor
 
-Find relevant available skills and tools for a supplied task, with optional local caching and inspectable recommendations. Read the [usage guide](docs/skills/jev-capability-advisor/README.md) or explore [benchmarks and benefits](docs/skills/jev-capability-advisor/benchmarks/README.md), including the explicit next-skill profile: 6.3% less selection input than both measured Hussi variants in independent confirmation. The linked measurements describe the recorded runtime snapshot; subsequent catalog-validation and alias-punctuation fixes have not been live rebenchmarked. Maintainers: see the [release handoff](docs/skills/jev-capability-advisor/README.md#release-handoff) for the accepted scope, package versions and publication steps.
+Find relevant available skills and tools for a supplied task, with optional local caching and inspectable recommendations. Read the [usage guide](docs/skills/jev-capability-advisor/README.md) or explore [benchmarks and benefits](docs/skills/jev-capability-advisor/benchmarks/README.md), including the explicit next-skill profile: 6.3% less selection input than both measured Hussi variants in the September 25 release recheck. The current release matches all seven measured runtime files and selects a skill 6.42× as fast as the tested Native selector (GPT-6 Luna, medium); this excludes loading and task execution. Maintainers: see the [release handoff](docs/skills/jev-capability-advisor/README.md#release-handoff) for the accepted scope, package versions and publication steps.
 
 ## How the catalog works
 

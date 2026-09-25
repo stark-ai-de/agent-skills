@@ -1,3 +1,5 @@
+import { measurementSeries } from "./jev-measurement-series.mjs";
+
 const OURS = "jev_next_skill";
 const HUSSI = ["hussi_original", "hussi_session_control"];
 const ARMS = [OURS, ...HUSSI];
@@ -287,6 +289,7 @@ export function nextSkillComparison(report) {
     );
   }
   const [matched, hidden, development] = studies.map(({ study }) => study);
+  const series = measurementSeries(hidden);
   requireEvidence(
     Date.parse(development.window.summary_written_at) <= Date.parse(matched.window.started_at) &&
       Date.parse(matched.window.summary_written_at) <= Date.parse(hidden.window.started_at),
@@ -352,6 +355,7 @@ export function nextSkillComparison(report) {
         skillObservations: skill.n,
         noneCorrect: none.correct,
         noneObservations: none.n,
+        errors: study.groups.all[row.id].errors,
         medianInputTokens: skill.input_tokens_per_fully_reported_selection.median,
         totalInputTokens: skill.input_tokens_for_all_scheduled_selections,
         noneMedianInputTokens: none.input_tokens_per_fully_reported_selection.median,
@@ -362,7 +366,10 @@ export function nextSkillComparison(report) {
     });
     return {
       id: spec.id,
-      label: spec.label,
+      label:
+        series.previouslyExposed && spec.id === "next-skill-hidden32"
+          ? "Repeated confirmation"
+          : spec.label,
       date: study.window.started_at.slice(0, 10),
       rows,
       skillObservations: spec.skill,
@@ -373,13 +380,13 @@ export function nextSkillComparison(report) {
     };
   });
   return {
+    ...series,
     cohorts,
     model: MODEL,
     catalogRecords: matched.catalog_records,
     source: source.next_skill,
     knownInheritedLimitation:
       report.supplementary_offline_evidence?.known_inherited_limitation?.summary ?? null,
-    evidencePath: "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json",
     readmePath:
       "docs/skills/jev-capability-advisor/benchmarks/README.md#next-skill-input-efficiency",
     hussiSource: `https://github.com/hussi9/skill-router/blob/${revision}/scripts/jev_choose.py`,

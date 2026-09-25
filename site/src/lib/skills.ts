@@ -9,11 +9,13 @@ import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
 import { pluginMarketplaceSource } from "./plugin-listing";
+import { SITE_BUILD } from "./site-build.mjs";
 
 const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
-const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
-const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
+const REPO_REF = SITE_BUILD.isPreview ? SITE_BUILD.sha : "main";
+const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/${REPO_REF}`;
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/${REPO_REF}`;
 
 const repoRoot = findRepoRoot();
 const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
@@ -24,6 +26,8 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "docs/skills/jev-capability-advisor/benchmarks/README.md",
     "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json",
     "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+    "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
+    "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json",
     "skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json",
     "site/src/components/JevBenchmarkPromo.astro",
     "site/src/components/JevBenchmarkLink.astro",
@@ -34,6 +38,7 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "site/src/lib/jev-promo-comparison.mjs",
     "site/src/lib/jev-benchmarks.mjs",
     "site/src/lib/jev-runtime-evidence.mjs",
+    "site/src/lib/jev-measurement-series.mjs",
   ],
 };
 

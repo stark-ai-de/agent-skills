@@ -621,7 +621,7 @@ requireCondition(
 
 const expectedSiteScripts = {
   build:
-    'bun exec "bun --bun scripts/test-jev-benchmarks.mjs && bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
+    'bun exec "bun --bun scripts/test-site-build.mjs && bun --bun scripts/test-jev-benchmarks.mjs && bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
   dev: "bun --bun astro dev",
   preview: "bun --bun astro preview",
   "validate:seo": "bun --bun scripts/validate-seo.mjs",

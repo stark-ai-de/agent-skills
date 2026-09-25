@@ -43,7 +43,7 @@ const definitions = [
     arm: "hussi_original",
     label: "Published Hussi9 chooser",
     description: "Published chooser · original acceptance gate.",
-    info: "Published Jev chooser with fresh HTTPS, a 600-character task allowance and its original 0.8 confidence gate. Two suggestions were withheld by that gate: 46/48 accepted choices, not necessarily two wrong guesses. The complete router also supports MCP tools and saved decisions; its hooks and fallback are outside this timing.",
+    info: "Published Jev chooser with fresh HTTPS, a 600-character task allowance and its original 0.8 confidence gate. The complete router also supports MCP tools and saved decisions; its hooks and fallback are outside this timing.",
   },
   {
     id: "hussi_control",
@@ -91,25 +91,48 @@ export function promoComparison(report, nativeEvidence) {
         definition.id === "native" ? native.groups.none : study.groups.none[definition.arm];
       const all = definition.id === "native" ? native.groups.all : study.groups.all[definition.arm];
       const medianSeconds = skill.selection_latency_ms.median / 1000;
-      const factor =
+      const skillRows = study.observations.filter(
+        (row) => row.arm === definition.arm && row.category === "skill",
+      );
+      const timeouts =
         definition.id === "native"
+          ? native.groups.skill.timeouts
+          : skillRows.filter((row) => row.error?.includes("timeout")).length;
+      const abstentions = skillRows.filter(
+        (row) => row.status === "abstained" && row.error === null,
+      ).length;
+      const speedQualified = skill.errors === 0 && native.groups.skill.errors === 0;
+      const factor =
+        definition.id === "native" || !speedQualified
           ? null
           : native.groups.skill.selection_latency_ms.median / skill.selection_latency_ms.median;
       const features = productFeatures[definition.id] ?? [];
       return {
         ...definition,
+        info:
+          definition.info &&
+          definition.info +
+            (definition.id === "hussi_original"
+              ? ` This run: ${skill.correct}/${skill.n} accepted correct choices; ${abstentions} abstentions and ${timeouts} timeout${timeouts === 1 ? "" : "s"}. Abstention is not necessarily a wrong guess.${speedQualified ? "" : " The median includes failure returns; no selection-speed factor is claimed."}`
+              : ""),
         features,
         sourceUrl: definition.id === "hussi_original" ? evidence.hussiSource : undefined,
         githubAriaLabel: `Open ${definition.id === "jev_session" ? "Jev Capability Advisor" : "Hussi9 skill-router"} on GitHub (new tab)`,
         factor,
+        speedQualified,
+        errorLabel: skill.errors
+          ? `${skill.errors} ${timeouts === skill.errors ? "timeout" : "error"}${skill.errors === 1 ? "" : "s"}`
+          : null,
         speedLabel:
-          factor === null
+          definition.id === "native"
             ? "Native baseline"
-            : factor > 1
-              ? "Faster skill selection"
-              : factor < 1
-                ? "Native selects faster"
-                : "Same median selection speed",
+            : !speedQualified
+              ? "Speed factor withheld"
+              : factor > 1
+                ? "Faster skill selection"
+                : factor < 1
+                  ? "Native selects faster"
+                  : "Same median selection speed",
         medianSeconds,
         p95Seconds: skill.selection_latency_ms.p95 / 1000,
         correct: skill.correct,
@@ -117,7 +140,7 @@ export function promoComparison(report, nativeEvidence) {
         noneCorrect: none.correct,
         noneObservations: none.n,
         errors: all.errors,
-        announcement: `${definition.label}${definition.experimental ? " (internal, unpublished experiment)" : ""}: ${medianSeconds.toFixed(2)} seconds median. ${factor === null ? "Native baseline" : `${factor.toFixed(2)} times the native selection speed`}. ${skill.correct} of ${skill.n} correct accepted choices. Product features: ${features.map((item) => `${item.label}: ${item.value}`).join("; ")}.`,
+        announcement: `${definition.label}${definition.experimental ? " (internal, unpublished experiment)" : ""}: ${medianSeconds.toFixed(2)} seconds median. ${definition.id === "native" ? "Native baseline" : factor === null ? "Speed factor withheld because the comparison includes an error" : `${factor.toFixed(2)} times the native selection speed`}. ${skill.correct} of ${skill.n} correct accepted choices; ${skill.errors} error${skill.errors === 1 ? "" : "s"}. Product features: ${features.map((item) => `${item.label}: ${item.value}`).join("; ")}.`,
       };
     })
     .sort((left, right) => left.medianSeconds - right.medianSeconds);
@@ -128,7 +151,8 @@ export function promoComparison(report, nativeEvidence) {
     baselineId: "native",
     allRows,
     rows: allRows.filter((row) => visibleVariantIds.includes(row.id)),
-    hussiFactor: hussi.medianSeconds / ours.medianSeconds,
+    hussiFactor:
+      hussi.speedQualified && ours.speedQualified ? hussi.medianSeconds / ours.medianSeconds : null,
     inputSaving: Math.min(confirmation.reductionVsPublished, confirmation.reductionVsControl),
     skillObservations: confirmation.skillObservations,
     noneObservations: confirmation.noneObservations,
@@ -142,8 +166,9 @@ export function promoComparison(report, nativeEvidence) {
     dateLabel: [...new Set([confirmation.date, native.window.started_at.slice(0, 10)])].join(" / "),
     hussiSource: evidence.hussiSource,
     evidencePath: evidence.evidencePath,
-    nativeEvidencePath:
-      "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+    nativeEvidencePath: evidence.nativeEvidencePath,
+    measuredRevision: evidence.measuredRevision,
+    previouslyExposed: evidence.previouslyExposed,
     displayedObservations: allRows
       .filter((row) => visibleVariantIds.includes(row.id))
       .reduce((total, row) => total + row.observations + row.noneObservations, 0),

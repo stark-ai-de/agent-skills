@@ -3,12 +3,13 @@
  * Call nextSkillComparison(originalReport) before passing its hidden32 study.
  * This pure module performs no I/O, credential access, model calls or writes.
  */
+import { measurementSeries } from "./jev-measurement-series.mjs";
+
 export const NATIVE_SCHEMA = "jev-native-next-skill-supplement/v1";
 const STUDY = "next-skill-hidden32";
 const SHA = /^[a-f0-9]{64}$/;
 const CODE = /^[0-9]{3}$/;
 const EXPECTED = {
-  freeze_sha256: "c67d4543ab54eb9dbc76d0c5122000835a9e90e26d7913e21ac92a5330060a67",
   tasks_sha256: "73c945cea4c8db97975690084e40c9d618a705c59d8d01d4b2764b7fa6d47301",
   catalog_sha256: "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
 };
@@ -40,6 +41,7 @@ const sourceEqual = (a, b) =>
 const parseDate = (value) => (typeof value === "string" ? Date.parse(value) : NaN);
 
 function expectedCases(study) {
+  measurementSeries(study);
   fail(
     study?.study_id === STUDY &&
       study.comparison_valid === true &&
@@ -112,7 +114,7 @@ export function joinNativeNextSkill(native, study) {
   const pairs = expectedCases(study);
   fail(native?.schema === NATIVE_SCHEMA, "missing or unsupported Native supplement");
   fail(native.comparison?.study_id === STUDY, "wrong comparison cohort");
-  for (const field of Object.keys(EXPECTED)) {
+  for (const field of ["freeze_sha256", ...Object.keys(EXPECTED)]) {
     fail(native.comparison[field] === study.provenance[field], `Native ${field} mismatch`);
   }
   fail(
@@ -257,7 +259,7 @@ export function joinNativeNextSkill(native, study) {
     return {
       id,
       medianMs,
-      factor: nativeMedianMs / medianMs,
+      factor: skill.errors === 0 && groups.skill.errors === 0 ? nativeMedianMs / medianMs : null,
       correct: skill.correct,
       n: skill.n,
       noneCorrect: none.correct,

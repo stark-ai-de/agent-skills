@@ -61,7 +61,7 @@ Run it from the installed skill directory. Use the existing `TYPESAFE_API_KEY`, 
 - **One choice question.** An uncached next-skill recommendation uses at most one provider call. It does not estimate the total number of required capabilities or ask follow-up selection questions.
 - **Clear remaining work.** Success uses `status: next_skill` and `additional_work: unassessed`. The host checks relevance and restrictions before loading the skill and remains responsible for other deliverables. No-match and clarification remain valid distinct outcomes.
 
-The catalog still has bounded candidate coverage and request sizes. In the independently confirmed [next-skill comparison](benchmarks/README.md#next-skill-input-efficiency), this mode used **6.3% less provider input than both measured Hussi variants**, with 48/48 skill choices and 16/16 no-match decisions correct. This measures selection input, not total agent tokens or complete-task speed.
+The catalog still has bounded candidate coverage and request sizes. In the September 25 release recheck’s [next-skill comparison](benchmarks/README.md#next-skill-input-efficiency), this mode used **6.3% less provider input than both measured Hussi variants**, with 48/48 skill choices and 16/16 no-match decisions correct. This measures selection input, not total agent tokens or complete-task speed.
 
 ## Repeated advice and automatic integration
 
@@ -71,7 +71,7 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage and the 6.40× Native selection comparison, including sample sizes, measurement windows and limitations. The measurements belong to the linked recorded runtime snapshot; later catalog-validation and alias-punctuation fixes have not been live rebenchmarked.
+**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage and the 6.42× Native selection comparison, including sample sizes, measurement windows and limitations. The September 25 measurements match all seven released runtime files. The published Hussi arm had one retained timeout, so no Hussi speed factor is claimed for that run.
 
 The next-skill profile used less selection input than both measured Hussi variants. Our unpublished pooled-HTTPS control remains slightly faster; the complete results disclose it alongside the three public comparison choices.
 

@@ -33,13 +33,17 @@ assert.deepEqual(
 );
 // The report is immutable dated evidence. Detect and disclose runtime drift instead of
 // replacing its hashes or treating a new implementation as already benchmarked.
-const runtime = inspectRuntimeSources(comparison.source, runtimeDirectory);
+const runtime = inspectRuntimeSources(
+  comparison.source,
+  runtimeDirectory,
+  comparison.measuredRevision,
+);
 assert.equal(typeof runtime.matchesCurrentRuntime, "boolean");
 assert.ok(runtime.measuredSourceUrl.includes(runtime.measuredRevision));
 const matching = compareRuntimeSources(comparison.source, comparison.source);
 assert.equal(matching.matchesCurrentRuntime, true);
 assert.deepEqual(matching.changedFiles, []);
-assert.match(matching.disclosure, /not a fresh live benchmark/);
+assert.match(matching.disclosure, /All seven current runtime files match/);
 const changed = { ...comparison.source, "jev_advisor.py": "0".repeat(64) };
 const drifted = compareRuntimeSources(comparison.source, changed);
 assert.equal(drifted.matchesCurrentRuntime, false);
@@ -98,7 +102,34 @@ const readme = readFileSync(
 );
 const normalizedReadme = readme.replace(/\s+/g, " ");
 const number = (value) => value.toLocaleString("en-US", { maximumFractionDigits: 1 });
-for (const cohort of comparison.cohorts) {
+const currentReport = JSON.parse(
+  readFileSync(
+    new URL(
+      "../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
+const currentComparison = nextSkillComparison(currentReport);
+assert.equal(currentComparison.measuredRevision, "095de174e8eb345b27a726631c6a2215168958df");
+assert.equal(comparison.measuredRevision, "a4a8512dd8ebb55abb26650e08af38f301cea064");
+assert.equal(currentComparison.previouslyExposed, true);
+assert.equal(currentComparison.knownInheritedLimitation, null);
+assert.equal(currentReport.supplementary_offline_evidence.current_release_suite.tests_run, 178);
+assert.equal(currentReport.counting.completed_executions, 489);
+assert.equal(currentComparison.cohorts[1].rows[1].errors, 1);
+assert.equal(currentComparison.cohorts[1].rows[1].skillCorrect, 45);
+const mixedSources = structuredClone(currentReport);
+mixedSources.studies.find(
+  (s) => s.study_id === "next-skill-hidden32",
+).provenance.source_sha256.next_skill = comparison.source;
+assert.throws(() => nextSkillComparison(mixedSources), /runtime changed between studies/);
+const unregistered = structuredClone(currentReport);
+unregistered.studies.find((s) => s.study_id === "next-skill-hidden32").provenance.freeze_sha256 =
+  "0".repeat(64);
+assert.throws(() => nextSkillComparison(unregistered), /unreviewed freeze/);
+for (const cohort of currentComparison.cohorts) {
   assert.ok(readme.includes(`### ${cohort.label}`));
   assert.ok(
     readme.includes(
@@ -107,7 +138,7 @@ for (const cohort of comparison.cohorts) {
   );
   for (const row of cohort.rows) {
     const label = row.label + (row.experiment ? " (experiment)" : "");
-    const expected = `| ${label} | ${number(row.medianInputTokens)} | ${number(row.totalInputTokens)} | ${row.skillCorrect}/${row.skillObservations} | ${row.noneCorrect}/${row.noneObservations} | ${(row.medianLatencyMs / 1000).toFixed(3)} s |`;
+    const expected = `| ${label} | ${number(row.medianInputTokens)} | ${number(row.totalInputTokens)} | ${row.skillCorrect}/${row.skillObservations} | ${row.noneCorrect}/${row.noneObservations} | ${(row.medianLatencyMs / 1000).toFixed(3)} s | ${row.errors} |`;
     assert.ok(
       normalizedReadme.includes(expected),
       `README row differs from shared evidence: ${cohort.id}/${row.id}`,
@@ -117,7 +148,7 @@ for (const cohort of comparison.cohorts) {
 for (const scope of [
   "provider-reported input tokens",
   "remaining work explicitly unassessed",
-  "pooled Hussi control remains slightly faster",
+  "pooled control remains slightly faster",
   "107 observations left unexecuted",
   "173 main contract tests passed",
 ]) {
