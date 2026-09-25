@@ -1,7 +1,9 @@
 # stark AI Developer listing values review
 
-Status: plugin 1.3.0 prepared with Jev's optional advice and inspection scope accepted for promotion; publication is pending. The existing 1.2.0 portal observation remains historical evidence. Directory identity is a continuous
-`verify:openai-directory` gate (`DIR-001` document, `DIR-002` category catalog).
+Status: plugin 1.3.0 prepared with Jev's optional advice and inspection scope accepted for promotion; publication is pending. The existing 1.2.0 portal observation remains historical evidence. Directory identity is a manual
+`pnpm run verify:openai-directory` diagnostic (`DIR-001` document, `DIR-002` category catalog).
+See [manual directory observation](../../publishing.md#manual-directory-observation)
+for the current limitations and dated evidence.
 
 The machine-readable source of truth is
 [`stark-ai-developer.json`](stark-ai-developer.json). Generated manifests and
