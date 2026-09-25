@@ -15,7 +15,7 @@ import {
 } from "../lib/plugin-projections.mjs";
 import { loadValidatedBundle } from "../lib/bundle-contract.mjs";
 import { sourceTreeSha256 } from "../lib/release-input-digest.mjs";
-import { listUntrackedAndIgnored } from "../lib/git-index.mjs";
+import { copyTrackedPrefixes, listUntrackedAndIgnored } from "../lib/git-index.mjs";
 import { PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH } from "../lib/release-descriptor.mjs";
 import { LISTING_PATH, withOpenAiStage } from "../lib/openai-projection.mjs";
 import { readOpenAiListing } from "../lib/openai-listing.mjs";
@@ -189,9 +189,23 @@ try {
     path.join(repositoryRoot, "package.json"),
     path.join(mutationClone, "package.json"),
   );
+  // A prepared candidate may add a skill that is not in the cloned HEAD yet.
+  copyTrackedPrefixes({
+    gitRoot: repositoryRoot,
+    sourceRoot: repositoryRoot,
+    targetRoot: mutationClone,
+    prefixes: bundle.skills.map((entry) => entry.source),
+  });
   const stagedContract = spawnSync(
     "git",
-    ["add", "--", PLUGIN_SOURCE_PATH, PLUGIN_SOURCE_SCHEMA_PATH, "scripts/vendor/snapshots"],
+    [
+      "add",
+      "--",
+      PLUGIN_SOURCE_PATH,
+      PLUGIN_SOURCE_SCHEMA_PATH,
+      "scripts/vendor/snapshots",
+      ...bundle.skills.map((entry) => entry.source),
+    ],
     { cwd: mutationClone, encoding: "utf8" },
   );
   assert.equal(stagedContract.status, 0, stagedContract.stderr);

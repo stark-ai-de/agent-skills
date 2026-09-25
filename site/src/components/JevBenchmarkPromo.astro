@@ -1,0 +1,465 @@
+---
+import { jevBenchmarks as bench, getJevPromoComparison } from "../lib/jev-benchmarks.mjs";
+import { repoUrl } from "../lib/skills";
+import ContextTooltip from "./ContextTooltip.astro";
+import JevFeatureStatus from "./JevFeatureStatus.astro";
+import JevNextSkillComparison from "./JevNextSkillComparison.astro";
+import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
+
+const comparison = getJevPromoComparison();
+const nextSkill = nextSkillComparison(bench.nextSkillEvidence);
+const confirmation = nextSkill.cohorts[1];
+const confirmedInputSaving = comparison.inputSaving;
+const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
+const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
+const chartWidth = 540;
+const featureRows = initial.features.map((feature, index) => ({ ...feature, alternatives: comparison.rows.map((row) => row.features[index].value) }));
+---
+
+<section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
+  <header class="jev-promo__header">
+    <div>
+      <p class="jev-promo__label"><a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev" target="_blank" rel="noreferrer">Powered by TypeSafe Jev</a></p>
+      <h2 id="jev-benchmark-title">Less choosing. More doing.</h2>
+      <p>Help your agent pick the right skill or MCP tool.</p>
+    </div>
+    <a class="jev-promo__source" href="#skill-guide">How to use it <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></a>
+  </header>
+
+  <p class="jev-promo__runtime" data-jev-runtime-current={String(comparison.runtime.matchesCurrentRuntime)}>
+    <strong>Measured runtime:</strong> {comparison.runtime.disclosure}{" "}
+    <a href={comparison.runtime.measuredSourceUrl}>Inspect the measured source</a>.
+  </p>
+
+  <div class="jev-promo__comparison" id="selection-speed">
+    <div class="jev-promo__headline">
+      <p class="jev-promo__speed-label" data-jev-speed-label>{initial.speedLabel}</p>
+      <p class="jev-promo__ratio" data-jev-ratio aria-hidden="true"><b data-jev-factor>{initial.factor!.toFixed(2)}</b><span>×</span></p>
+      <p class="jev-promo__quality"><strong>Correct skill choices</strong><br />
+        <span class="jev-promo__score" data-jev-score data-perfect={String(initial.observations > 0 && initial.correct === initial.observations)}>
+          <span data-jev-quality>{initial.correct}/{initial.observations}</span>
+          <span class="jev-promo__sparkles" aria-hidden="true">
+            {[0, 1, 2].map((star) => (
+              <svg class={`jev-promo__star jev-promo__star--${star}`} viewBox="0 0 32 32" focusable="false">
+                <defs><linearGradient id={`jev-star-gold-${star}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff9da" /><stop offset="0.35" stop-color="#ffe58a" /><stop offset="0.65" stop-color="#e9ae24" /><stop offset="1" stop-color="#a56a08" /></linearGradient></defs>
+                <path d="m16 2 4.3 8.9 9.7 1.4-7 6.8 1.6 9.7-8.6-4.6-8.6 4.6 1.6-9.7-7-6.8 9.7-1.4Z" fill={`url(#jev-star-gold-${star})`} stroke="#bc861b" stroke-width="0.7" stroke-linejoin="round" />
+                <path d="M16 2v14l-4.3-5.1Z" fill="#fffdf0" opacity="0.9" />
+                <path d="M30 12.3 16 16l4.3-5.1Z" fill="#fff2b0" />
+                <path d="m24.6 28.8-8.6-12.8 7 3.1Z" fill="#a86c0c" opacity="0.75" />
+                <path d="m7.4 28.8 8.6-12.8v8.2Z" fill="#ffd35c" />
+                <path d="m13 10 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z" fill="#fff" opacity="0.85" />
+              </svg>
+            ))}
+          </span>
+        </span>
+      </p>
+      <div class="jev-promo__feature-heading">
+        <h3 id="jev-supported-features">Supported Features</h3>
+        <ContextTooltip id="jev-feature-scope" label="Supported Features" align="end">
+          <span class="jev-feature-popover">
+            <span class="jev-feature-popover__legend" role="list" aria-label="Feature status key">
+              <span role="listitem"><span class="jev-feature-popover__key jev-feature-popover__key--supported" aria-hidden="true">✓</span>Supported</span>
+              <span role="listitem"><span class="jev-feature-popover__key jev-feature-popover__key--unsupported" aria-hidden="true">×</span>Not supported</span>
+              <span role="listitem"><span class="jev-feature-popover__key jev-feature-popover__key--neutral" aria-hidden="true">?</span>Not checked</span>
+            </span>
+            <span class="jev-feature-popover__scope"><em>The bars measure selection time. This list describes product features.</em></span>
+            <span class="jev-feature-popover__guide">
+              <span><strong>Skills &amp; MCP</strong><span>What the advisor can recommend.</span></span>
+              <span><strong>HTTPS &amp; search index</strong><span>Reuses HTTPS + catalog<br />in Session.</span></span>
+              <span class="jev-feature-popover__guide-wide"><strong>16k vs 600 characters</strong><span>More room for Jev to consider details in long tasks before the text limit is reached.</span></span>
+            </span>
+          </span>
+        </ContextTooltip>
+      </div>
+      <ul class="jev-promo__features" aria-labelledby="jev-supported-features" data-jev-features>
+        {featureRows.map((feature, index) => (
+          <li data-jev-feature data-status={feature.status}>
+            <JevFeatureStatus id={`jev-feature-gloss-${index}`} status={feature.status} />
+            <span><strong>{feature.label}</strong><span class="jev-promo__feature-values">
+              <span data-jev-feature-value>{feature.value}</span>
+              {feature.alternatives.map((value) => <span class="jev-promo__reserve" aria-hidden="true">{value}</span>)}
+            </span></span>
+          </li>
+        ))}
+      </ul>
+      <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-jev-announcement>{initial.announcement}</p>
+    </div>
+
+    <svg class="jev-promo__connector" aria-hidden="true" focusable="false" data-jev-connector>
+      <path data-jev-connector-path />
+    </svg>
+
+    <figure class="jev-promo__chart" data-jev-chart>
+      <figcaption>Skill selection · median · lower is better<span>Hover or tap a bar. Your selection stays while you read.</span></figcaption>
+      <div class="jev-promo__rows">
+        {comparison.rows.map((row) => {
+          const Row = row.id === comparison.baselineId ? "div" : "button";
+          return (
+          <div class="jev-promo__entry" data-jev-entry={row.id}>
+            <div class="jev-promo__chart-label">
+              <span class="jev-promo__chart-name"><strong>{row.label}</strong>{(row.sourceUrl || row.sourcePath) && (
+                <a class="jev-promo__github" href={row.sourceUrl ?? repoUrl(row.sourcePath!)} target="_blank" rel="noreferrer" aria-label={row.githubAriaLabel}>
+                  <span aria-hidden="true">(</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
+                  <span aria-hidden="true">)</span>
+                </a>
+              )}</span>
+              <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s</span>
+              <ContextTooltip id={`jev-info-${row.id}`} label={row.label} align="end">
+                <span>{row.info}</span>
+              </ContextTooltip>
+            </div>
+            <Row type={row.id === comparison.baselineId ? undefined : "button"} role={row.id === comparison.baselineId ? "img" : undefined} class="jev-promo__row" data-jev-row={row.id}
+              data-factor={row.factor === null ? "" : row.factor.toFixed(2)} data-label={row.label}
+              data-speed-label={row.speedLabel}
+              data-features={JSON.stringify(row.features)} data-quality={`${row.correct}/${row.observations}`}
+              data-perfect={String(row.observations > 0 && row.correct === row.observations)}
+              data-announcement={row.announcement} aria-label={row.announcement}
+              aria-pressed={row.id === comparison.baselineId ? undefined : row.id === comparison.defaultId}>
+              <svg viewBox="0 0 540 26" aria-hidden="true">
+                <rect class="jev-promo__track" x="0" y="3" width={chartWidth} height="20" rx="4" />
+                <rect class={`jev-promo__bar jev-promo__bar--${row.id}`} x="0" y="3" width={chartWidth * row.medianSeconds / chartMax} height="20" rx="4" />
+              </svg>
+            </Row>
+          </div>
+          );
+        })}
+      </div>
+      <svg class="jev-promo__axis" viewBox="0 0 540 30" aria-hidden="true">
+        {[0, chartMax / 4, chartMax / 2, chartMax * 3 / 4, chartMax].map((tick) => (
+          <text x={tick / chartMax * chartWidth} y="22" text-anchor={tick === 0 ? "start" : tick === chartMax ? "end" : "middle"}>{Number.isInteger(tick) ? tick.toFixed(0) : tick.toFixed(2)} s</text>
+        ))}
+      </svg>
+      <p class="jev-promo__models">Using: {comparison.nativeModel} · reasoning {comparison.nativeReasoning} · {comparison.jevModel} · {comparison.catalogRecords}-skill catalog · {comparison.skillObservations} skill choices</p>
+      <p class="jev-promo__caption"><a href="#jev-speed-method" data-jev-disclosure="jev-speed-details">Method &amp; scope</a></p>
+    </figure>
+  </div>
+
+  <div class="jev-promo__proof" role="group" aria-label="Selection input">
+    <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input <ContextTooltip id="jev-input-saving-info" label="Less selection input" align="start" text={`For the same next-skill tasks, Jev sent ${confirmedInputSaving.toFixed(1)}% fewer provider-reported input tokens than the tested public chooser. That means less selection overhead and can reduce input-token cost; it is not a claim about whole-task token use.`} /></h3><p>Than the tested publicly available competitor.</p></div>
+  </div>
+
+  <details class="jev-promo__details" id="jev-feature-details">
+    <summary>Selection modes &amp; scope</summary>
+    <div class="jev-promo__details-body">
+      <p><code>general</code> can recommend skills and MCP tools for the request. <code>next_skill</code> chooses one skill to load next; it does not assess the remaining work.</p>
+      <p><a href="#skill-guide">Read the usage guide</a> · <a href={repoUrl(bench.readmePath) + "#product-features-and-measured-selection"}>Source notes</a> · <a href={comparison.hussiSource}>Hussi9 chooser source</a></p>
+    </div>
+  </details>
+
+  <details class="jev-promo__details" id="jev-token-details">
+    <summary>Selection input · two cohorts</summary>
+    <div class="jev-promo__details-body"><JevNextSkillComparison comparison={nextSkill} /></div>
+  </details>
+
+  <details class="jev-promo__details" id="jev-speed-details">
+    <summary>Speed results &amp; measurement</summary>
+    <div class="jev-promo__details-body" id="jev-speed-method">
+      <p>Each variant used the same 32 frozen tasks and 132-entry catalog: 24 skill tasks and eight no-match tasks, each run twice. Jev, Hussi9 and our experiment ran interleaved on {confirmation.date}; Native ran separately. The chart uses all 48 skill observations, including incorrect accepted results.</p>
+      <div class="jev-promo__table-scroll" role="region" aria-label="Complete next-skill results" tabindex="0">
+        <table>
+          <caption>Independent next-skill confirmation · 64 observations per variant</caption>
+          <thead><tr><th scope="col">Variant</th><th scope="col">Skill median</th><th scope="col">Skill p95</th><th scope="col">Correct accepted choices</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
+          <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.label}{row.experimental && " (internal, unpublished)"}</th><td>{row.medianSeconds.toFixed(6)} s</td><td>{row.p95Seconds.toFixed(6)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>Scoring:</strong> one next skill or no match. Native received Jev’s next-skill cards and rules; Hussi used its published chooser and 0.8 acceptance gate. A Hussi abstention is not necessarily a wrong guess.</li>
+        <li><strong>Timer:</strong> selection preparation plus the model response. Session process, HTTPS connection and index were reused. Startup, skill loading and task execution were excluded; there were no warmups, retries or decision cache.</li>
+        <li><strong>Measurement windows:</strong> Jev/Hussi {comparison.jevWindow.started_at} – {comparison.jevWindow.summary_written_at}; Native {comparison.nativeWindow.started_at} – {comparison.nativeWindow.summary_written_at}. Provider load and prefix caching were uncontrolled; Native reported cached input in {comparison.nativeCachedTurns}/64 turns.</li>
+        <li><strong>Models:</strong> Native requested {comparison.nativeModel}, reasoning {comparison.nativeReasoning}; Jev variants used {comparison.jevModel}. The backend’s actual model identity is not independently observable.</li>
+      </ul>
+      <p>Medians and factors use full recorded precision; p95 uses the same nearest-rank definition for all four variants. Our unpublished pooled-HTTPS control was slightly faster than Jev Session (0.479 s versus 0.487 s) and remains in the complete results above; it is not a released product. This benchmark covers next-skill selection only, not MCP routing, full-router workflows, or whole-task speed.</p>
+      <p><a href={repoUrl(comparison.evidencePath)}>Frozen Jev/Hussi evidence</a> · <a href={repoUrl(comparison.nativeEvidencePath)}>Native supplement and audit</a></p>
+    </div>
+  </details>
+
+  <footer class="jev-promo__footer">
+    <div><a href={repoUrl(bench.readmePath)}>Benchmark README</a><a href={repoUrl(bench.methodsPath)}>Full evidence</a></div>
+  </footer>
+</section>
+
+<script>
+  const promo = document.querySelector<HTMLElement>("[data-jev-promo]");
+  const chart = promo?.querySelector<HTMLElement>("[data-jev-chart]");
+  const rows = Array.from(chart?.querySelectorAll<HTMLElement>("[data-jev-row]") ?? []);
+  const defaultRow = rows.find((row) => row.dataset.jevRow === "jev_session");
+  if (promo && chart && defaultRow) {
+    const factor = promo.querySelector<HTMLElement>("[data-jev-factor]")!;
+    const speedLabel = promo.querySelector<HTMLElement>("[data-jev-speed-label]")!;
+    const comparison = promo.querySelector<HTMLElement>(".jev-promo__comparison")!;
+    const connector = promo.querySelector<SVGPathElement>("[data-jev-connector-path]")!;
+    const quality = promo.querySelector<HTMLElement>("[data-jev-quality]")!;
+    const score = promo.querySelector<HTMLElement>("[data-jev-score]")!;
+    const features = Array.from(promo.querySelectorAll<HTMLElement>("[data-jev-feature]"));
+    const featureIcons = features.map((feature) => feature.querySelector<HTMLElement>("[data-jev-feature-icon]")!);
+    const featureStatuses: Record<string, string> = { supported: "Supported", unsupported: "Not supported", neutral: "Not checked or not used here" };
+    const revealFeatures = () => featureIcons.forEach((icon) => { icon.dataset.revealed = "true"; });
+    const announcement = promo.querySelector<HTMLElement>("[data-jev-announcement]")!;
+    const replayScore = () => {
+      score.dataset.revealed = "false";
+      score.querySelectorAll<SVGElement>(".jev-promo__star").forEach((star) => {
+        star.getAnimations().forEach((animation) => animation.cancel());
+      });
+      void score.offsetWidth;
+      if (score.dataset.perfect === "true") score.dataset.revealed = "true";
+    };
+    if ("IntersectionObserver" in window) {
+      const revealScore = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
+          score.dataset.revealed = "true";
+          revealScore.disconnect();
+        }
+      }, { threshold: 0.75 });
+      revealScore.observe(score);
+      const featureObserver = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          revealFeatures();
+          featureObserver.disconnect();
+        }
+      }, { threshold: 0.5 });
+      featureObserver.observe(promo.querySelector("[data-jev-features]")!);
+    } else {
+      revealFeatures();
+    }
+    let selectedRow = defaultRow;
+    const updateConnector = (row: HTMLElement) => {
+      if (window.matchMedia("(max-width: 700px)").matches) {
+        connector.setAttribute("d", "");
+        return;
+      }
+      const entry = row.closest<HTMLElement>("[data-jev-entry]");
+      const ratio = promo.querySelector<HTMLElement>("[data-jev-ratio]");
+      if (!entry || !ratio) return;
+      const comparisonRect = comparison.getBoundingClientRect();
+      const ratioRect = ratio.getBoundingClientRect();
+      const chartRect = chart.getBoundingClientRect();
+      const entryRect = entry.getBoundingClientRect();
+      const referenceRow = defaultRow;
+      const referenceEntry = referenceRow.closest<HTMLElement>("[data-jev-entry]");
+      if (!referenceEntry) return;
+      const referenceRect = referenceEntry.getBoundingClientRect();
+      const startX = Math.round(ratioRect.right - comparisonRect.left);
+      const startY = Math.round((referenceRect.top + referenceRect.bottom) / 2 - comparisonRect.top);
+      const bendX = Math.round(Math.min(entryRect.left, chartRect.left - 8) - comparisonRect.left);
+      const endX = chartRect.left - comparisonRect.left - 1.25;
+      const endY = Math.round((entryRect.top + entryRect.bottom) / 2 - comparisonRect.top);
+      connector.setAttribute("d", `M ${startX} ${startY} H ${bendX} V ${endY} H ${endX}`);
+    };
+    requestAnimationFrame(() => updateConnector(selectedRow));
+    if ("ResizeObserver" in window) new ResizeObserver(() => updateConnector(selectedRow)).observe(comparison);
+    window.addEventListener("resize", () => updateConnector(selectedRow));
+    const select = (requested: HTMLElement) => {
+      const baseline = requested.dataset.factor === "";
+      const row = baseline ? defaultRow : requested;
+      if (row === selectedRow) return;
+      selectedRow = row;
+      factor.textContent = row.dataset.factor ?? "";
+      speedLabel.textContent = row.dataset.speedLabel ?? "";
+      requestAnimationFrame(() => updateConnector(row));
+      quality.textContent = row.dataset.quality ?? "";
+      score.dataset.perfect = row.dataset.perfect;
+      replayScore();
+      const selectedFeatures: { value: string; status: string }[] = JSON.parse(row.dataset.features!);
+      features.forEach((feature, index) => {
+        const selected = selectedFeatures[index];
+        feature.dataset.status = selected.status;
+        feature.querySelector<HTMLElement>("[data-jev-feature-value]")!.textContent = selected.value;
+        const icon = featureIcons[index];
+        icon.dataset.status = selected.status;
+        icon.setAttribute("aria-label", featureStatuses[selected.status]);
+        // Restart the short emphasis on a new variant, including after it settled.
+        icon.getAnimations().forEach((animation) => { animation.cancel(); animation.play(); });
+      });
+      announcement.textContent = row.dataset.announcement ?? "";
+      rows.filter((item) => item instanceof HTMLButtonElement).forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
+    };
+    rows.forEach((row) => {
+      const entry = row.closest<HTMLElement>("[data-jev-entry]")!;
+      entry.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") select(row);
+      });
+      entry.addEventListener("focusin", () => select(row));
+      entry.addEventListener("click", () => select(row));
+    });
+    promo.querySelectorAll<HTMLElement>(".context-tip").forEach((tip) => {
+      const card = tip.querySelector<HTMLElement>(".context-tip__card")!;
+      const position = () => {
+        const trigger = tip.getBoundingClientRect();
+        tip.dataset.side = trigger.bottom + card.offsetHeight + 12 > window.innerHeight && trigger.top > card.offsetHeight + 16 ? "above" : "below";
+      };
+      tip.addEventListener("pointerenter", position);
+      tip.addEventListener("focusin", position);
+      tip.addEventListener("pointerdown", position);
+    });
+    // Keep the last choice while visitors read its details or open a popover.
+    // Another bar selects a variant; Native and Escape explicitly reset to Jev.
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        select(defaultRow);
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      // Outside taps also dismiss a tooltip whose trigger retains touch focus.
+      promo.querySelectorAll<HTMLElement>(".context-tip[data-open='true'], .context-tip:focus-within, .context-tip:hover").forEach((tip) => {
+        if (event.target instanceof Node && !tip.contains(event.target)) {
+          tip.dataset.dismissed = "true";
+          delete tip.dataset.open;
+          tip.querySelector("[data-context-tip-trigger]")?.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+  }
+  if (promo && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        promo.classList.add("jev-promo--animate");
+        observer.disconnect();
+      }
+    }, { threshold: 0.1 });
+    observer.observe(promo);
+  }
+  document.querySelectorAll<HTMLAnchorElement>("a[data-jev-disclosure]").forEach((link) => {
+    link.addEventListener("click", () => {
+      const details = document.getElementById(link.dataset.jevDisclosure ?? "");
+      if (details instanceof HTMLDetailsElement) details.open = true;
+    });
+  });
+</script>
+
+<style>
+  .jev-promo { margin-top: 0; padding: clamp(1.1rem, 2.5vw, 2rem); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-solid); color: var(--foreground); scroll-margin-top: 7rem; }
+  .jev-promo p { line-height: 1.65; }
+  .jev-promo p a { text-decoration: underline; text-underline-offset: .15em; }
+  .jev-promo__runtime { padding: .8rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .8rem; }
+  .jev-promo__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .jev-promo__label { margin: 0 0 0.5rem; color: var(--secondary); font-weight: 700; }
+  .jev-promo h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.65rem, 3vw, 2.5rem); line-height: 1.2; letter-spacing: -0.04em; }
+  .jev-promo__header p:last-child { max-width: 48ch; color: var(--muted); margin: 0.55rem 0 0; }
+  .jev-promo__source { display: inline-flex; align-items: center; gap: 0.3rem; max-width: 15ch; flex-shrink: 0; font-size: 0.82rem; line-height: 1.5; }
+  .jev-promo__source svg { width: 0.9rem; height: 0.9rem; flex: none; }
+  .jev-promo__comparison { position: relative; display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 1.5rem; margin-top: 1.5rem; align-items: center; scroll-margin-top: 7rem; }
+  .jev-promo__headline, .jev-promo__chart { position: relative; z-index: 1; }
+  .jev-promo__connector { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .jev-promo__connector path { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .jev-promo__ratio { margin: 0; font-family: var(--font-display); font-size: clamp(5rem, 8vw, 7.5rem); font-weight: 800; line-height: 1 !important; letter-spacing: -0.065em; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .jev-promo__ratio { min-height: 1em; }
+  .jev-promo__ratio b { font: inherit; }
+  .jev-promo__ratio span { font-size: 0.6em; margin-left: 0.08em; }
+  .jev-promo h3 { font-size: 1rem; margin: 0.75rem 0 0; line-height: 1.4; }
+  .jev-promo__headline > p:not(.jev-promo__ratio) { max-width: 34ch; font-size: 0.86rem; color: var(--muted); }
+  /* Every variant reserves its actual wrapped size, including without JavaScript. */
+  .jev-promo__reserve { visibility: hidden; pointer-events: none; }
+  .jev-promo__feature-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; position: relative; z-index: 3; border-top: 1px solid var(--border); padding-top: .65rem; margin-top: .8rem; }
+  .jev-promo__feature-heading h3 { margin: 0; font-size: .82rem; }
+  .jev-promo__feature-heading :global(.context-tip) { position: static; }
+  .jev-promo__feature-heading :global(.context-tip__card > .jev-feature-popover) { white-space: normal; }
+  .jev-promo :global(.jev-feature-popover) { display: grid; gap: .65rem; color: var(--muted); font-size: .72rem; line-height: 1.4; }
+  .jev-promo :global(.jev-feature-popover__legend) { display: flex; flex-wrap: wrap; gap: .4rem .65rem; }
+  .jev-promo :global(.jev-feature-popover__legend > span) { display: inline-flex; align-items: center; gap: .3rem; }
+  .jev-promo :global(.jev-feature-popover__key) { display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; border-radius: .3rem; font-size: .85rem; font-weight: 800; line-height: 1; }
+  .jev-promo :global(.jev-feature-popover__key--supported) { background: rgb(34 197 94 / 14%); color: #22c55e; }
+  .jev-promo :global(.jev-feature-popover__key--unsupported) { background: rgb(148 163 184 / 15%); color: var(--muted); }
+  .jev-promo :global(.jev-feature-popover__key--neutral) { background: rgb(234 179 8 / 14%); color: #eab308; }
+  .jev-promo :global(.jev-feature-popover__guide) { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: .45rem .65rem; }
+  .jev-promo :global(.jev-feature-popover__guide > span) { display: grid; grid-template-rows: 1.4em auto; align-content: start; gap: .08rem; text-align: start; }
+  .jev-promo :global(.jev-feature-popover__guide-wide) { grid-column: 1 / -1; margin-top: .2rem; }
+  .jev-promo :global(.jev-feature-popover__guide strong) { color: var(--foreground); white-space: nowrap; }
+  .jev-promo :global(.jev-feature-popover__scope) { margin: 0; padding-bottom: .65rem; border-bottom: 1px solid var(--border); }
+  .jev-promo__features { list-style: none; padding: 0; margin: .6rem 0 0; display: grid; gap: .6rem; }
+  .jev-promo__features li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: .55rem; align-items: center; font-size: .77rem; line-height: 1.4; }
+  .jev-promo__features strong { display: block; font-weight: 600; }
+  .jev-promo__feature-values { display: grid; color: var(--muted); }
+  .jev-promo__feature-values > span { grid-area: 1 / 1; }
+  .jev-promo__quality { max-width: none; margin-top: .8rem; border-top: 1px solid var(--border); padding-top: .65rem; }
+  .jev-promo__quality strong { color: var(--foreground); }
+  .jev-promo__score { position: relative; display: inline-block; margin-top: 0.2rem; color: var(--foreground); font-size: 1.05rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .jev-promo__sparkles { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+  .jev-promo__score[data-perfect="true"] .jev-promo__sparkles { visibility: visible; }
+  .jev-promo__star { position: absolute; overflow: visible; filter: drop-shadow(0 1px 0.7px rgb(139 86 4 / 24%)); transform: rotate(var(--star-angle)); }
+  .jev-promo__star--0 { width: 17px; height: 17px; right: -19px; top: -5px; --star-angle: 14deg; --star-delay: 0ms; }
+  .jev-promo__star--1 { width: 11px; height: 11px; left: -10px; bottom: -2px; --star-angle: -16deg; --star-delay: 100ms; }
+  .jev-promo__star--2 { width: 8px; height: 8px; right: -9px; bottom: -6px; --star-angle: 8deg; --star-delay: 180ms; }
+  .jev-promo__score[data-revealed="true"][data-perfect="true"] .jev-promo__star { animation: jev-star-burst 850ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--star-delay) both; }
+  @keyframes jev-star-burst {
+    0% { opacity: 0; transform: translateY(7px) scale(0.25) rotate(-30deg); }
+    60% { opacity: 1; transform: translateY(-2px) scale(1.15) rotate(var(--star-angle)); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(var(--star-angle)); }
+  }
+  .jev-promo__chart { margin: 0; padding: 1.25rem; background: var(--surface-muted); border-radius: var(--radius); }
+  .jev-promo__chart figcaption { font-size: 0.9rem; font-weight: 650; margin-bottom: 1rem; }
+  .jev-promo__chart figcaption span { display: block; color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-top: 0.3rem; }
+  .jev-promo__chart-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+  .jev-promo__chart-name { display: flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; min-width: 0; }
+  .jev-promo__time { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 650; }
+  .jev-promo__github { display: inline-flex; align-items: center; justify-content: center; gap: 0.15rem; min-width: 32px; min-height: 32px; }
+  .jev-promo__github svg { width: 15px; height: 15px; }
+  .jev-promo__rows { display: grid; gap: 0.25rem; }
+  .jev-promo__entry { position: relative; z-index: 0; min-width: 0; border: 1px solid transparent; border-radius: 6px; padding: 0.35rem 0.5rem; }
+  .jev-promo__entry:has(.jev-promo__row[aria-pressed="true"]) { border-color: var(--primary); background: var(--surface-solid); }
+  .jev-promo__entry:hover, .jev-promo__entry:focus-within, .jev-promo__entry:has(.context-tip[data-open="true"]) { z-index: 2; }
+  .jev-promo__row { display: block; width: 100%; min-height: 32px; border: 0; border-radius: 4px; background: transparent; color: inherit; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+  .jev-promo__row[data-jev-row="native"] { cursor: default; }
+  .jev-promo__row:focus-visible, .jev-promo :global(.context-tip__trigger:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .jev-promo__row svg { display: block; width: 100%; overflow: visible; }
+  .jev-promo :global(.context-tip) { flex-shrink: 0; }
+  .jev-promo :global(.context-tip__trigger) { display: inline-grid; width: 24px; height: 24px; padding: 0; place-items: center; line-height: 1; border-radius: var(--radius); }
+  .jev-promo :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
+  .jev-promo__feature-heading :global(.context-tip__card) { width: min(19rem, 100%); }
+  .jev-promo :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
+  /* Keep the hover target continuous between the trigger and its card. */
+  .jev-promo :global(.context-tip__card)::before { content: ""; position: absolute; bottom: 100%; left: 0; right: 0; height: 0.65rem; }
+  .jev-promo :global(.context-tip[data-side="above"] .context-tip__card) { top: auto; bottom: calc(100% + 0.6rem); }
+  .jev-promo :global(.context-tip[data-side="above"] .context-tip__card)::before { bottom: auto; top: 100%; }
+  /* The feature card anchors to its padded heading, so bridge that extra gap too. */
+  .jev-promo__feature-heading :global(.context-tip[data-side="above"] .context-tip__card)::before { height: calc(1.3rem + 1px); }
+  .jev-promo__chart .jev-promo__axis { display: block; overflow: visible; width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
+  .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
+  .jev-promo__track { fill: var(--border); }
+  .jev-promo__bar--jev_session { fill: var(--primary); }
+  .jev-promo__bar--hussi_original { fill: var(--foreground); opacity: 0.65; }
+  .jev-promo__bar--native { fill: var(--muted); }
+  .jev-promo__chart text { fill: var(--muted); font-size: 16px; font-family: var(--font-body); }
+  .jev-promo__caption { margin: 0; font-size: 0.75rem; color: var(--muted); }
+  .jev-promo--animate .jev-promo__bar { transform-origin: left; transform-box: fill-box; animation: jev-bar-reveal 950ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes jev-bar-reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .jev-promo__details { border-top: 1px solid var(--border); scroll-margin-top: 7rem; }
+  .jev-promo__details summary { cursor: pointer; padding-block: 1rem; font-size: 0.87rem; font-weight: 650; }
+  .jev-promo__details-body { font-size: 0.85rem; color: var(--content-foreground); padding-bottom: 1rem; }
+  .jev-promo__table-scroll { overflow-x: auto; }
+  .jev-promo table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+  .jev-promo caption { text-align: left; color: var(--muted); padding: 0.5rem; }
+  .jev-promo th, .jev-promo td { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--border); }
+  .jev-promo td { font-variant-numeric: tabular-nums; }
+  .jev-promo__footer { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1.2rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; line-height: 1.6; }
+  .jev-promo__footer > div { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .jev-promo a:focus-visible, .jev-promo summary:focus-visible, .jev-promo__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
+  @media (max-width: 700px) {
+    .jev-promo__header, .jev-promo__footer { flex-direction: column; }
+    .jev-promo__source { max-width: none; }
+    .jev-promo__chart text { font-size: 26px; }
+    .jev-promo__comparison { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+    .jev-promo__connector { display: none; }
+  }
+  .jev-promo__speed-label { margin: 0 0 .25rem; color: var(--foreground) !important; font-weight: 650; }
+  .jev-promo__proof { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.3rem; margin-top: clamp(1rem, 2vw, 1.5rem); padding: 1.25rem 0 .8rem; border-top: 1px solid var(--border); }
+  .jev-promo__proof-number { margin: 0; color: var(--primary); font-family: var(--font-display); font-size: clamp(1.9rem, 3.3vw, 2.75rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.1 !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .jev-promo__proof-number span { font-size: .6em; }
+  .jev-promo__proof h3 { display: flex; align-items: center; gap: .4rem; margin-top: .45rem; font-size: .82rem; }
+  .jev-promo__proof p:not(.jev-promo__proof-number) { margin: .3rem 0 0; color: var(--muted); font-size: .74rem; }
+  .jev-promo__details-body { min-width: 0; }
+  .jev-promo__details-body > .jev-promo__details { margin-inline: .5rem; }
+  #jev-speed-method { scroll-margin-top: 7rem; }
+  @media (max-width: 700px) {
+    .jev-promo__proof { grid-template-columns: 1fr; gap: .8rem; }
+    .jev-promo__proof > div { display: grid; grid-template-columns: minmax(6.4rem, .8fr) minmax(0, 1.2fr); column-gap: .8rem; align-items: center; }
+    .jev-promo__proof-number { grid-row: span 2; font-size: 1.8rem; }
+    .jev-promo__proof h3 { margin-top: 0; }
+    .jev-promo__details summary { line-height: 1.5; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jev-promo--animate .jev-promo__bar { animation: none; transform: none; }
+    .jev-promo__score[data-revealed="true"][data-perfect="true"] .jev-promo__star { animation: none; }
+    .jev-promo :global(.context-tip__card) { transition: none; }
+  }
+</style>

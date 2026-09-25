@@ -1,0 +1,85 @@
+---
+import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json";
+import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
+import { repoUrl } from "../lib/skills";
+
+interface Props { comparison?: ReturnType<typeof nextSkillComparison>; }
+const { comparison = nextSkillComparison(evidence) } = Astro.props;
+const number = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
+---
+
+<div class="jev-next" data-jev-token-evidence>
+  <p class="jev-next__context">{comparison.catalogRecords}-entry catalog · {comparison.model} · two independent cohorts · two runs per task.</p>
+
+  <div class="jev-next__cohorts">
+    {comparison.cohorts.map((cohort) => (
+      <section class="jev-next__cohort" aria-labelledby={`${cohort.id}-title`}>
+        <h3 id={`${cohort.id}-title`}>{cohort.label}</h3>
+        <p class="jev-next__saving"><strong>{cohort.reductionVsPublished.toFixed(1)}% less total skill-selection input</strong> than each Hussi variant · {cohort.date}</p>
+        <div class="jev-next__table-scroll" role="region" aria-label={`${cohort.label}: input tokens and selection quality`} tabindex="0">
+          <table>
+            <caption>Input tokens · lower is better. Scroll to compare all columns.</caption>
+            <thead><tr><th scope="col">Variant</th><th scope="col">Median input<br /><span>Total below</span></th><th scope="col">Skills<br />correct</th><th scope="col">No match<br />correct</th></tr></thead>
+            <tbody>{cohort.rows.map((row) => (
+              <tr class:list={{ "jev-next__winner": row.highlight }}>
+                <th scope="row">{row.label}{row.experiment && <small>Our experiment</small>}</th>
+                <td><strong>{number(row.medianInputTokens)}</strong><small>{number(row.totalInputTokens)} total</small></td>
+                <td>{row.skillCorrect}/{row.skillObservations}</td>
+                <td>{row.noneCorrect}/{row.noneObservations}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+        <p class="jev-next__timing"><strong>Median selection time:</strong> ours {seconds(cohort.rows[0].medianLatencyMs)} s; published Hussi9 {seconds(cohort.rows[1].medianLatencyMs)} s; pooled control {seconds(cohort.rows[2].medianLatencyMs)} s.{cohort.pooledControlFaster && <> The pooled control was faster.</>}</p>
+        <details>
+          <summary>No-match input, separately</summary>
+          <ul>{cohort.rows.map((row) => <li><strong>{row.label}:</strong> {number(row.noneMedianInputTokens)} median input tokens; {number(row.noneTotalInputTokens)} total.</li>)}</ul>
+        </details>
+      </section>
+    ))}
+  </div>
+
+  <p><strong>How to read this:</strong> input is total provider-reported tokens across all skill-choice observations. Jev must use fewer than both Hussi variants, with every skill and no-match choice correct. This measures selection input, not whole-agent usage, cost or task speed.</p>
+  <details class="jev-next__method">
+    <summary>Study design, source checks &amp; known limits</summary>
+    <ul>
+      <li><strong>Same inputs:</strong> 48 matched tasks and 32 independently authored confirmation tasks, each repeated twice for three variants: {comparison.confirmationExecutions} observations. Same catalog and model, randomized order; no retries, warmup or decision cache. First connections are included. The separate {comparison.developmentExecutions}-observation development smoke remains in the report.</li>
+      <li><strong>Independent confirmation:</strong> these synthetic tasks were not executed before the candidate was frozen; their author knew earlier diagnostic themes. Accuracy here is an observation, not a guarantee for future tasks. All outcomes and reported usage are retained.</li>
+      <li><strong>Comparator scope:</strong> the pinned published Hussi Jev chooser retains its original thresholds and timeout. Its full router, hooks and fallback are not measured. The pooled HTTPS control is our modification. Both pooled variants need a retained process. These timings do not add a new Native comparison; process startup, skill loading and task execution are excluded.</li>
+      <li><strong>Default behavior:</strong> {comparison.parity.replays} deterministic recorded-response replays preserve {comparison.parity.preservedWrong} incorrect baseline outcomes, including {comparison.parity.preservedErrors} errors. This proves unchanged general behavior for supplied responses, not a new live accuracy result. Failed optimization attempts remain documented.</li>
+      {comparison.knownInheritedLimitation && <li><strong>Retained limitation:</strong> {comparison.knownInheritedLimitation}</li>}
+    </ul>
+  </details>
+  <p class="jev-next__sources"><a href={repoUrl(comparison.evidencePath)}>Audited observations</a><a href={comparison.hussiSource}>Pinned Hussi9 source</a><a href={repoUrl(comparison.readmePath)}>Full comparison</a></p>
+</div>
+
+<style>
+  .jev-next { padding-top: .25rem; }
+  .jev-next p, .jev-next li { line-height: 1.6; }
+  .jev-next__context { color: var(--muted); font-size: .75rem; }
+  .jev-next__cohorts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-block: 1.2rem; }
+  .jev-next__cohort { min-width: 0; }
+  .jev-next h3 { color: var(--foreground); font-size: 1rem; margin: 0; }
+  .jev-next__saving { font-size: .75rem; margin: .4rem 0; color: var(--muted); }
+  .jev-next__saving strong { color: var(--primary); }
+  .jev-next__table-scroll { overflow-x: auto; }
+  .jev-next table { width: 100%; border-collapse: collapse; text-align: left; font-size: .75rem; }
+  .jev-next caption { padding-block: .5rem; text-align: left; font-size: .7rem; color: var(--muted); }
+  .jev-next th, .jev-next td { padding: .65rem .35rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .jev-next thead th { font-size: .7rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .jev-next thead th span { font-weight: 400; }
+  .jev-next tbody th { min-width: 7rem; line-height: 1.4; font-weight: 550; }
+  .jev-next tbody td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .jev-next table small { display: block; color: var(--muted); margin-top: .2rem; font-size: .65rem; font-weight: 400; }
+  .jev-next__winner th, .jev-next__winner td { color: var(--primary); font-weight: 750; }
+  .jev-next__timing { font-size: .75rem; color: var(--muted); }
+  .jev-next summary { cursor: pointer; padding-block: .8rem; font-weight: 600; }
+  .jev-next details { font-size: .8rem; }
+  .jev-next details ul { padding-left: 1.2rem; margin-top: 0; }
+  .jev-next li + li { margin-top: .5rem; }
+  .jev-next__method { border-top: 1px solid var(--border); }
+  .jev-next__sources { display: flex; flex-wrap: wrap; gap: .6rem 1rem; font-size: .75rem; }
+  .jev-next a:focus-visible, .jev-next summary:focus-visible, .jev-next__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
+  @media (max-width: 1050px) { .jev-next__cohorts { grid-template-columns: minmax(0, 1fr); } }
+</style>

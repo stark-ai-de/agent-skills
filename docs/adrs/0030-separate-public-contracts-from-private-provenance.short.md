@@ -2,7 +2,7 @@
 
 ID: ADR-0030
 Title: Separate public contracts from private provenance
-Status: Accepted
+Status: Superseded
 Date: 2026-07-17
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0056
 Guide verified: 2026-07-28
 Gist: Keep public contracts usable while private provenance stays local.
 

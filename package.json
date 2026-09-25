@@ -55,7 +55,7 @@
   "scripts": {
     "list": "bun --bun scripts/catalog/list-skills.mjs",
     "list:incubator": "bun --bun scripts/catalog/list-incubator-skills.mjs",
-    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:site\"",
+    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:jev && pnpm run validate:site\"",
     "release:prepare": "bun --bun scripts/release/prepare-release.mjs",
     "release:intent": "bun --bun scripts/release/check-release-intent.mjs",
     "release:validate": "bun --bun scripts/release/validate-release.mjs",
@@ -73,7 +73,7 @@
     "validate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs --check",
     "validate:projections": "bun exec \"bun --bun scripts/plugin/sync-agent-plugin.mjs --check && bun --bun scripts/plugin/validate-agent-plugin.mjs && bun --bun scripts/validation/test-plugin-projections.mjs\"",
     "validate:archives": "bun --bun scripts/release/validate-archives.mjs",
-    "validate:network-endpoints": "bun --bun scripts/plugin/validate-network-endpoints.mjs",
+    "validate:network-endpoints": "bun exec \"bun --bun scripts/plugin/validate-network-endpoints.mjs && bun --bun scripts/validation/test-network-endpoints.mjs\"",
     "validate:release-proof": "bun exec \"pnpm run validate:archives && pnpm run verify:release-reproducibility && pnpm run validate:network-endpoints && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run verify:supply-chain\"",
     "sync:agent-plugin": "bun --bun scripts/plugin/sync-agent-plugin.mjs",
     "sync:openai-plugin": "bun --bun scripts/plugin/sync-openai-plugin.mjs",
@@ -119,7 +119,8 @@
     "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check .",
     "lint": "oxlint --config oxlint.json scripts",
     "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
-    "lint:fix": "oxlint --config oxlint.json --fix scripts"
+    "lint:fix": "oxlint --config oxlint.json --fix scripts",
+    "validate:jev": "bun --bun scripts/validation/jev-capability-advisor/validate.mjs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

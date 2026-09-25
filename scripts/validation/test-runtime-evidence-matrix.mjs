@@ -14,6 +14,22 @@ const internalNodeOwners = new Map([
     "internal:validate-drawio:node-children",
   ],
 ]);
+const internalPythonOwners = new Map([
+  ["scripts/validation/lib/visual-assertions.mjs", "internal:visual-validators:python"],
+  [
+    "scripts/validation/skillopt-setup/validate-setup.mjs",
+    "internal:skillopt-qualification:python",
+  ],
+  ["scripts/validation/jev-capability-advisor/validate.mjs", "internal:validate-jev:python"],
+  ["scripts/validation/drawio-diagrams/validate-fixtures.mjs", "internal:visual-validators:python"],
+  [
+    "scripts/validation/animated-readme-logo/validate-runtime.mjs",
+    "internal:visual-validators:python",
+  ],
+  ["scripts/validation/lib/visual-assertion-regressions.mjs", "internal:visual-validators:python"],
+]);
+const explicitPythonSelector =
+  /\b(?:spawnSync|spawn|execFileSync|execFile|run)\s*\(\s*["']python3?["']/s;
 const historicalAutomationOwners = new Map([
   [
     ".github/actions/post-release-subjects/action.yml",
@@ -209,24 +225,40 @@ function discoverAutomationSurfaces(sources) {
 }
 
 function discoverInternalNodeSurfaces(sources, owners = internalNodeOwners) {
+  return discoverInternalRuntimeSurfaces(sources, owners, explicitNodeSelector, "Node.js", "node");
+}
+
+function discoverInternalPythonSurfaces(sources, owners = internalPythonOwners) {
+  return discoverInternalRuntimeSurfaces(
+    sources,
+    owners,
+    explicitPythonSelector,
+    "Python",
+    "python3",
+  );
+}
+
+function discoverInternalRuntimeSurfaces(sources, owners, selector, label, runtime) {
   const findings = [];
   const occurrences = [];
   const matchedOwners = new Set();
 
   for (const { relativePath, text } of sources) {
-    if (!explicitNodeSelector.test(text)) continue;
+    if (!selector.test(text)) continue;
     const surface = owners.get(relativePath);
     if (!surface) {
-      findings.push(`${relativePath}: unclassified explicit Node.js script owner`);
+      findings.push(`${relativePath}: unclassified explicit ${label} script owner`);
       continue;
     }
     matchedOwners.add(relativePath);
-    occurrences.push({ source: relativePath, surface, runtime: "node" });
+    occurrences.push({ source: relativePath, surface, runtime });
   }
 
   for (const relativePath of owners.keys()) {
     if (!matchedOwners.has(relativePath)) {
-      findings.push(`${relativePath}: registered Node.js owner no longer selects Node explicitly`);
+      findings.push(
+        `${relativePath}: registered ${label} owner no longer selects its runtime explicitly`,
+      );
     }
   }
 
@@ -265,6 +297,25 @@ function negativeFixtureErrors() {
     findings.push("unregistered explicit Node.js script fixture must be rejected");
   }
 
+  const syntheticPythonCall = ["spawnSync(", JSON.stringify("python3"), ", [])"].join("");
+  const unknownPythonOwner = discoverInternalPythonSurfaces(
+    [{ relativePath: "scripts/validation/new-python-owner.mjs", text: syntheticPythonCall }],
+    new Map(),
+  );
+  if (
+    !unknownPythonOwner.errors.some((error) =>
+      error.includes("unclassified explicit Python script owner"),
+    )
+  ) {
+    findings.push("unregistered explicit Python script fixture must be rejected");
+  }
+  const knownPythonOwner = discoverInternalPythonSurfaces(
+    [{ relativePath: "fixture.mjs", text: syntheticPythonCall }],
+    new Map([["fixture.mjs", "fixture:python"]]),
+  );
+  if (knownPythonOwner.errors.length || knownPythonOwner.occurrences[0]?.runtime !== "python3") {
+    findings.push("registered Python script fixture must preserve its runtime");
+  }
   const processExecPathOnly = discoverInternalNodeSurfaces(
     [
       {
@@ -464,16 +515,19 @@ const packageDiscovery = discoverPackageScriptSurfaces(
 );
 const automationDiscovery = discoverAutomationSurfaces(automationSources());
 const internalNodeDiscovery = discoverInternalNodeSurfaces(scriptSources());
+const internalPythonDiscovery = discoverInternalPythonSurfaces(scriptSources());
 errors.push(
   ...packageDiscovery.errors,
   ...automationDiscovery.errors,
   ...internalNodeDiscovery.errors,
+  ...internalPythonDiscovery.errors,
 );
 
 const surfaceOccurrences = [
   ...packageDiscovery.occurrences,
   ...automationDiscovery.occurrences,
   ...internalNodeDiscovery.occurrences,
+  ...internalPythonDiscovery.occurrences,
 ];
 if (
   read("scripts/repo/smoke-install.mjs").includes('"dlx", "skills@1.5.23"') &&
@@ -500,8 +554,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 11,
-  `current runtime-selection inventory must discover 11 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 14,
+  `current runtime-selection inventory must discover 14 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -509,8 +563,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 11,
-  `current runtime evidence matrix must define 11 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 14,
+  `current runtime evidence matrix must define 14 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());
@@ -566,7 +620,8 @@ requireCondition(
 );
 
 const expectedSiteScripts = {
-  build: 'bun exec "bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
+  build:
+    'bun exec "bun --bun scripts/test-jev-benchmarks.mjs && bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
   dev: "bun --bun astro dev",
   preview: "bun --bun astro preview",
   "validate:seo": "bun --bun scripts/validate-seo.mjs",

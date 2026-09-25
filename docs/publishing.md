@@ -39,9 +39,9 @@ Use:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a cursor -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
@@ -59,8 +59,8 @@ The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai
 Install Claude Code public skills project-locally or globally with the skills CLI:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -a claude-code -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -367,7 +367,7 @@ pnpm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `pnpm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.2.0.zip` is the local OpenAI-native
+`dist/openai/stark-ai-developer-1.3.0.zip` is the local OpenAI-native
 harness-first submission fallback, generated from ephemeral adapter staging at
 package time. The normal portal handoff source is the direct `openai.zip` asset
 from the verified GitHub Release; its bytes came unchanged from successful
@@ -497,9 +497,9 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.2.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
+   `1.3.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
-3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
+3. Inspect all seven canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
 4. Run focused and aggregate validation, inspect the ZIP listing, and confirm
    two-build checksum equality.
@@ -518,8 +518,8 @@ security routes return HTTP 200.
 2. Create a plugin draft and choose **Skills only**.
 3. Enter the public listing and verified developer identity.
 4. Upload the exact direct `openai.zip` asset from the verified GitHub Release.
-5. Verify all six packaged skill icons. If the portal ignores package metadata,
-   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, and `pen`
+5. Verify all packaged skill icons. If the portal ignores package metadata,
+   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`, and `chart`
    glyphs.
 6. Keep the existing light and dark Plugin Info logos unchanged.
 7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)

@@ -83,7 +83,7 @@ npx skills@latest update
 <summary><strong>Install the Codex bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a codex -y
 ```
 
 Install the portable plugin with Codex CLI 0.147.0 or later:
@@ -101,7 +101,7 @@ See the [plugin documentation](plugins/README.md) for package and distribution d
 <summary><strong>Install the Cursor bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a cursor -y
 ```
 
 </details>
@@ -110,12 +110,12 @@ npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cur
 <summary><strong>Install the Claude Code bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
 ```
 
 </details>
 
-Bundles use explicit, version-controlled manifests. The Codex bundle is the ordered six-skill allowlist in [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json), and its install command below is checked against that manifest. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
+Bundles use explicit, version-controlled manifests. The Codex bundle is the ordered skill allowlist in [`plugins/stark-ai-developer.source.json`](plugins/stark-ai-developer.source.json), and its install command below is checked against that manifest. The bundles install globally; remove `-g` for a project-local install. Avoid `--skill '*'` when targeting one runtime because it also selects skills built specifically for other runtimes.
 
 The `-a` option selects the host where a skill is installed; it does not change that skill's target contract. An intentionally cross-host install preserves target-specific evidence and output while adapting collaboration controls to the selected host.
 
@@ -129,8 +129,13 @@ The `-a` option selects the host where a skill is installed; it does not change 
 |  <img src="plugins/stark-ai-developer/skills/architecture-compass/assets/openai-icon.png" alt="" width="24" height="24" />  | [Architecture Compass](skills/engineering-workflows/architecture-compass/SKILL.md) | Set up repository-native ADR governance, audit architecture, or plan and execute ADR-guided refactors through intent-bound workflows. Use when work needs binding agent-facing ADRs, provider-to-local mapping, architecture PR review or drift, Next.js request patterns, source placement, backend/runtime/env/config boundaries, stack deviations, or bounded ADR-governed implementation. Do not use for tiny edits, generic framework education, or work with no architecture or governance consequence.  |
 |   <img src="plugins/stark-ai-developer/skills/codegraph-ast-grep/assets/openai-icon.png" alt="" width="24" height="24" />   | [CodeGraph + ast-grep](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)   | Set up, update, or diagnose CodeGraph and ast-grep so coding agents can use semantic repository scope and structural syntax evidence automatically. Use when a repository needs an idempotent CodeGraph/ast-grep installation, stable tool and index migrations, MCP reconnection, persisted agent guidance, or a read-only setup diagnosis.                                                                                                                                                                   |
 |    <img src="plugins/stark-ai-developer/skills/drawio-diagrams/assets/openai-icon.png" alt="" width="24" height="24" />     | [Draw.io Diagrams](skills/engineering-workflows/drawio-diagrams/SKILL.md)          | Create, draw, generate, edit, verify, and export draw.io/diagrams.net `.drawio` diagrams. Use when the user asks for editable diagrams, flowcharts, architecture, sequence, ER/UML/state, BPMN, SysML, ML/DL, swimlane, timeline, network, icon-rich technical diagrams, or PNG/SVG/PDF exports; do not use for charts/plots or artistic image generation.                                                                                                                                                     |
+| <img src="plugins/stark-ai-developer/skills/jev-capability-advisor/assets/openai-icon.png" alt="" width="24" height="24" /> | [Jev Capability Advisor](skills/skill-maintenance/jev-capability-advisor/SKILL.md) | Recommend available skills and tools for a supplied task, or inspect candidates locally without an API call.                                                                                                                                                                                                                                                                                                                                                                                                   |
 
-The icons follow the six glyph choices shown on the [stark AI Developer plugin page](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). See the [complete public catalog](skills/README.md) for Cursor- and Claude-specific variants, exact trigger descriptions, and [`skill-evals/`](skill-evals/README.md) for maintainer proof.
+The icons follow the reviewed glyph choices prepared for the [stark AI Developer plugin page](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). See the [complete public catalog](skills/README.md) for Cursor- and Claude-specific variants, exact trigger descriptions, and [`skill-evals/`](skill-evals/README.md) for maintainer proof.
+
+## New in the catalog: Jev Capability Advisor
+
+Find relevant available skills and tools for a supplied task, with optional local caching and inspectable recommendations. Read the [usage guide](docs/skills/jev-capability-advisor/README.md) or explore [benchmarks and benefits](docs/skills/jev-capability-advisor/benchmarks/README.md), including the explicit next-skill profile: 6.3% less selection input than both measured Hussi variants in independent confirmation. The linked measurements describe the recorded runtime snapshot; subsequent catalog-validation and alias-punctuation fixes have not been live rebenchmarked. Maintainers: see the [release handoff](docs/skills/jev-capability-advisor/README.md#release-handoff) for the accepted scope, package versions and publication steps.
 
 ## How the catalog works
 
@@ -208,7 +213,7 @@ pnpm run scaffold:incubator engineering-workflows/my-candidate-skill
 
 ## Compatibility and safety
 
-Standalone skills follow the open [Agent Skills specification](https://agentskills.io/specification). The portable **stark AI Developer** plugin follows the [Agent Plugins](https://agent-plugins.org/) contract. Compatibility varies by skill, plugin client, and host; review a skill's `SKILL.md` and the installing client's plugin support before installation. Runtime-specific skills stay in their runtime category, while reusable workflows live under `engineering-workflows`.
+Standalone skills follow the open [Agent Skills specification](https://agentskills.io/specification). The portable **stark AI Developer** plugin follows the [Agent Plugins](https://agent-plugins.org/) contract. Compatibility varies by skill, plugin client, and host; review a skill's `SKILL.md` and the installing client's plugin support before installation. Runtime-specific skills stay in their runtime category, while reusable workflows live under `engineering-workflows` or `skill-maintenance`.
 
 Skills and plugins are executable context. Helper scripts are read-only unless their documentation explicitly says otherwise. Never add secrets, tokens, customer data, private repository paths, or internal hostnames to public skills, plugins, references, assets, tests, or examples.
 
