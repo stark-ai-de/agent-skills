@@ -8,14 +8,12 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
-import { siteConfig } from "../../site-config.mjs";
-
 import { pluginMarketplaceSource } from "./plugin-listing";
 
 const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
-const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/${siteConfig.sourceRef}`;
-const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/${siteConfig.sourceRef}`;
+const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
 
 const repoRoot = findRepoRoot();
 const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
@@ -24,18 +22,9 @@ const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
 const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly string[]>> = {
   "jev-capability-advisor": [
     "docs/skills/jev-capability-advisor/benchmarks/README.md",
-    "skill-evals/jev-capability-advisor/benchmarks/2026-09-22.json",
-    "skill-evals/jev-capability-advisor/benchmarks/session-2026-09-22.json",
-    "skill-evals/jev-capability-advisor/benchmarks/native-session-2026-09-23.json",
-    "skill-evals/jev-capability-advisor/benchmarks/compact-initial-2026-09-23.json",
-    "skill-evals/jev-capability-advisor/benchmarks/resumed-2026-09-23.json",
-    "skill-evals/jev-capability-advisor/benchmarks/session-index-2026-09-23.json",
-    "skill-evals/jev-capability-advisor/benchmarks/native-index-2026-09-23.json",
-    "skill-evals/jev-capability-advisor/benchmarks/session-index-parity-2026-09-23.json",
     "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json",
     "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
     "skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json",
-    "skill-evals/jev-capability-advisor/benchmarks/development-counts-2026-09-22.json",
     "site/src/components/JevBenchmarkPromo.astro",
     "site/src/components/JevBenchmarkLink.astro",
     "site/src/components/JevFeatureStatus.astro",
@@ -44,6 +33,7 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "site/src/lib/jev-native-next-skill.mjs",
     "site/src/lib/jev-promo-comparison.mjs",
     "site/src/lib/jev-benchmarks.mjs",
+    "site/src/lib/jev-runtime-evidence.mjs",
   ],
 };
 

@@ -289,12 +289,6 @@ The `Validate` workflow runs on pushes to `main`, pull requests, and manual disp
 
 The required `Validate` workflow already builds `site/` on pull requests through `pnpm run validate`. The `GitHub Pages` workflow therefore runs only for relevant pushes to `main` (or an explicit manual dispatch); main-branch runs upload the static `site/dist` artifact and deploy through GitHub Pages Actions.
 
-An explicitly requested [PR preview](github-pages-previews.md) builds a pinned
-source commit with a separate base path and deploys through the dedicated
-`agent-skills-preview` repository. Its build and live verification are additional
-preview evidence, not production publication. The ordinary source-repository
-workflow does not deploy pull requests.
-
 The dedicated `ChatGPT Directory Identity` workflow runs the strict
 `.github/actions/verify-openai-directory` action after publication on a daily
 schedule or manual dispatch. It is intentionally separate from deterministic

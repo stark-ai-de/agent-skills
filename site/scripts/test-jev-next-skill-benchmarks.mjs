@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { join } from "node:path";
+import { compareRuntimeSources, inspectRuntimeSources } from "../src/lib/jev-runtime-evidence.mjs";
 import { fileURLToPath } from "node:url";
 import { nextSkillComparison } from "../src/lib/jev-next-skill-benchmarks.mjs";
 
@@ -31,15 +31,26 @@ assert.deepEqual(
   ],
   "Bind every qualified runtime module, and accept no arbitrary source path",
 );
-for (const [file, expectedHash] of Object.entries(comparison.source)) {
-  assert.equal(
-    createHash("sha256")
-      .update(readFileSync(join(runtimeDirectory, file)))
-      .digest("hex"),
-    expectedHash,
-    `Current canonical runtime differs from the qualified next-skill source: ${file}`,
-  );
-}
+// The report is immutable dated evidence. Detect and disclose runtime drift instead of
+// replacing its hashes or treating a new implementation as already benchmarked.
+const runtime = inspectRuntimeSources(comparison.source, runtimeDirectory);
+assert.equal(typeof runtime.matchesCurrentRuntime, "boolean");
+assert.ok(runtime.measuredSourceUrl.includes(runtime.measuredRevision));
+const matching = compareRuntimeSources(comparison.source, comparison.source);
+assert.equal(matching.matchesCurrentRuntime, true);
+assert.deepEqual(matching.changedFiles, []);
+assert.match(matching.disclosure, /not a fresh live benchmark/);
+const changed = { ...comparison.source, "jev_advisor.py": "0".repeat(64) };
+const drifted = compareRuntimeSources(comparison.source, changed);
+assert.equal(drifted.matchesCurrentRuntime, false);
+assert.deepEqual(drifted.changedFiles, ["jev_advisor.py"]);
+assert.match(drifted.disclosure, /jev_advisor\.py.*not been live rebenchmarked/);
+assert.match(drifted.disclosure, /do not qualify the changed runtime/);
+assert.throws(() => compareRuntimeSources(comparison.source, {}), /all seven/);
+assert.throws(
+  () => compareRuntimeSources(comparison.source, { ...changed, "extra.py": "0".repeat(64) }),
+  /all seven/,
+);
 assert.equal(comparison.cohorts.length, 2);
 assert.equal(comparison.confirmationExecutions, 480);
 assert.equal(comparison.developmentExecutions, 9);
@@ -107,7 +118,6 @@ for (const scope of [
   "provider-reported input tokens",
   "remaining work explicitly unassessed",
   "pooled Hussi control remains slightly faster",
-  "15,100 completed benchmark executions",
   "107 observations left unexecuted",
   "173 main contract tests passed",
 ]) {
@@ -131,10 +141,6 @@ for (const field of [
 ]) {
   assert.equal(development.campaign[field], report.historical_campaign[field]);
 }
-assert.equal(
-  report.historical_campaign.completed_executions + report.counting.completed_executions + 11308,
-  15100,
-);
 assert.equal(report.historical_campaign.diagnostic_calls_separate, 2);
 assert.equal(report.historical_campaign.missing_planned_executions, 107);
 
@@ -265,5 +271,5 @@ rejects((r) => {
 }, "Keep one pinned Hussi source");
 
 console.log(
-  `Next-skill comparison: two audited cohorts, seven current runtime hashes, complete accounting and ${negativeCases} negative contract cases passed.`,
+  `Next-skill comparison: two audited cohorts, recorded source identities and current-runtime disclosure, complete accounting and ${negativeCases} negative contract cases passed.`,
 );

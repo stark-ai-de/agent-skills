@@ -1,9 +1,8 @@
 import { joinNativeNextSkill } from "./jev-native-next-skill.mjs";
 import { nextSkillComparison } from "./jev-next-skill-benchmarks.mjs";
 
-// Remove the experimental entry here to publish the three-product view.
-// Full results stay in the evidence disclosure regardless of visibility.
-export const visibleVariantIds = ["jev_session", "hussi_original", "hussi_control", "native"];
+// The unpublished control remains in the evidence table, outside the product chart.
+export const visibleVariantIds = ["jev_session", "hussi_original", "native"];
 
 const feature = (label, value, status = "supported") => ({ label, value, status });
 const productFeatures = {
@@ -20,13 +19,6 @@ const productFeatures = {
     feature("16k task characters to Jev", "Only up to 600 task characters", "unsupported"),
     feature("HTTPS connection reuse", "Fresh connection in the tested chooser", "unsupported"),
     feature("Search index reuse", "Reuses its local skill index"),
-  ],
-  hussi_control: [
-    feature("Skill recommendations", "Tested with the fixed skill catalog"),
-    feature("MCP tool recommendations", "Not tested in this experiment", "neutral"),
-    feature("16k task characters to Jev", "Only up to 600 task characters", "unsupported"),
-    feature("HTTPS connection reuse", "Added by our benchmark adapter"),
-    feature("Search index reuse", "Not used · fixed candidate list", "neutral"),
   ],
   native: [
     feature("Skill recommendations", "Depends on the host", "neutral"),
@@ -58,9 +50,6 @@ const definitions = [
     arm: "hussi_session_control",
     label: "Hussi9 + our HTTPS",
     experimental: true,
-    description: "Our internal experiment · not a published skill.",
-    info: "This prototype used a fixed catalog and did not test live inventory discovery or MCP routing, which our advisor needs. That’s why it stayed unpublished. About 8 ms faster here; 48/48 accepted choices.",
-    credit: true,
   },
   {
     id: "native",
@@ -72,7 +61,7 @@ const definitions = [
 ];
 
 /** Every public comparison requires the source-bound Native observation audit. */
-export function promoComparison(report, nativeEvidence, visibleIds = visibleVariantIds) {
+export function promoComparison(report, nativeEvidence) {
   const evidence = nextSkillComparison(report);
   const confirmation = evidence.cohorts.find((cohort) => cohort.id === "next-skill-hidden32");
   const study = report.studies.find((entry) => entry.study_id === confirmation.id);
@@ -94,14 +83,6 @@ export function promoComparison(report, nativeEvidence, visibleIds = visibleVari
       ]),
     ),
   };
-  const allowed = definitions.map((row) => row.id);
-  if (
-    visibleIds.length < 3 ||
-    new Set(visibleIds).size !== visibleIds.length ||
-    !visibleIds.every((id) => allowed.includes(id)) ||
-    !["jev_session", "hussi_original", "native"].every((id) => visibleIds.includes(id))
-  )
-    throw new Error("Jev promo: require the three public comparison variants");
   const allRows = definitions
     .map((definition) => {
       const skill =
@@ -114,7 +95,7 @@ export function promoComparison(report, nativeEvidence, visibleIds = visibleVari
         definition.id === "native"
           ? null
           : native.groups.skill.selection_latency_ms.median / skill.selection_latency_ms.median;
-      const features = productFeatures[definition.id];
+      const features = productFeatures[definition.id] ?? [];
       return {
         ...definition,
         features,
@@ -146,7 +127,7 @@ export function promoComparison(report, nativeEvidence, visibleIds = visibleVari
     defaultId: "jev_session",
     baselineId: "native",
     allRows,
-    rows: allRows.filter((row) => visibleIds.includes(row.id)),
+    rows: allRows.filter((row) => visibleVariantIds.includes(row.id)),
     hussiFactor: hussi.medianSeconds / ours.medianSeconds,
     inputSaving: Math.min(confirmation.reductionVsPublished, confirmation.reductionVsControl),
     skillObservations: confirmation.skillObservations,
@@ -164,7 +145,7 @@ export function promoComparison(report, nativeEvidence, visibleIds = visibleVari
     nativeEvidencePath:
       "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
     displayedObservations: allRows
-      .filter((row) => visibleIds.includes(row.id))
+      .filter((row) => visibleVariantIds.includes(row.id))
       .reduce((total, row) => total + row.observations + row.noneObservations, 0),
     completedNativeExecutions: native.groups.all.n,
   };

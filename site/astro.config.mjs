@@ -1,9 +1,8 @@
 import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
 
-import { siteConfig } from "./site-config.mjs";
-
-const { origin: SITE_ORIGIN, basePath: SITE_BASE_PATH } = siteConfig;
+const SITE_ORIGIN = "https://stark-ai-de.github.io";
+const SITE_BASE_PATH = "/agent-skills";
 
 function sitemapPriority(pathname) {
   if (pathname === `${SITE_BASE_PATH}/`) {
@@ -29,23 +28,19 @@ export default defineConfig({
   base: SITE_BASE_PATH,
   output: "static",
   trailingSlash: "always",
-  integrations: siteConfig.isPreview
-    ? []
-    : [
-        sitemap({
-          filter: (page) => {
-            const { pathname } = new URL(page);
-            return !pathname.includes("/404") && !pathname.includes("/incubator/");
-          },
-          serialize(item) {
-            const { pathname } = new URL(item.url);
-            item.priority = sitemapPriority(pathname);
-            item.changefreq =
-              pathname === `${SITE_BASE_PATH}/` || pathname.includes("/skills/")
-                ? "weekly"
-                : "monthly";
-            return item;
-          },
-        }),
-      ],
+  integrations: [
+    sitemap({
+      filter: (page) => {
+        const { pathname } = new URL(page);
+        return !pathname.includes("/404") && !pathname.includes("/incubator/");
+      },
+      serialize(item) {
+        const { pathname } = new URL(item.url);
+        item.priority = sitemapPriority(pathname);
+        item.changefreq =
+          pathname === `${SITE_BASE_PATH}/` || pathname.includes("/skills/") ? "weekly" : "monthly";
+        return item;
+      },
+    }),
+  ],
 });

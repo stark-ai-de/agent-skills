@@ -207,8 +207,8 @@ console.log(
   `Native contract: positive joins + ${negative} negative cases passed; synthetic Native fixture only.`,
 );
 
-// Presentation must remain coherent when the internal experiment is hidden.
-const four = promoComparison(report, fixture);
+// The public product chart has three choices; the complete results retain the control.
+const three = promoComparison(report, fixture);
 const nativeWins = promoComparison(report, faster);
 assert.ok(
   nativeWins.rows
@@ -216,32 +216,29 @@ assert.ok(
     .every((row) => row.factor < 1 && row.speedLabel === "Native selects faster"),
 );
 assert.ok(
-  four.rows
+  three.rows
     .filter((row) => row.id !== "native")
     .every((row) => row.factor > 1 && row.speedLabel === "Faster skill selection"),
 );
-const three = promoComparison(
-  report,
-  fixture,
-  visibleVariantIds.filter((id) => id !== "hussi_control"),
-);
-assert.equal(four.rows.length, 4);
+assert.deepEqual(visibleVariantIds, ["jev_session", "hussi_original", "native"]);
 assert.equal(three.rows.length, 3);
+assert.equal(three.allRows.length, 4);
 assert.deepEqual(
   three.rows,
-  four.rows.filter((row) => row.id !== "hussi_control"),
+  three.allRows.filter((row) => row.id !== "hussi_control"),
 );
-assert.deepEqual(three.allRows, four.allRows);
 assert.equal(three.completedNativeExecutions, 64);
-assert.equal(four.displayedObservations, 256);
 assert.equal(three.displayedObservations, 192);
-assert.equal(four.hussiFactor.toFixed(2), "1.78");
-assert.equal(four.inputSaving.toFixed(1), "6.3");
-assert.ok(four.rows.every((row) => row.observations === 48 && row.features.length === 5));
-const ours = four.rows.find((row) => row.id === "jev_session");
-const hussi = four.rows.find((row) => row.id === "hussi_original");
-const experiment = four.rows.find((row) => row.id === "hussi_control");
-for (const row of four.rows) {
+assert.equal(three.hussiFactor.toFixed(2), "1.78");
+assert.equal(three.inputSaving.toFixed(1), "6.3");
+assert.ok(three.rows.every((row) => row.observations === 48 && row.features.length === 5));
+const ours = three.rows.find((row) => row.id === "jev_session");
+const hussi = three.rows.find((row) => row.id === "hussi_original");
+const experiment = three.allRows.find((row) => row.id === "hussi_control");
+assert.ok(experiment.experimental);
+assert.ok(experiment.medianSeconds < ours.medianSeconds);
+assert.deepEqual(experiment.features, []);
+for (const row of three.rows) {
   assert.deepEqual(
     row.features.map((item) => item.label),
     ours.features.map((item) => item.label),
@@ -251,10 +248,6 @@ assert.ok(ours.features.every((item) => item.status === "supported"));
 assert.deepEqual(
   hussi.features.map((item) => item.status),
   ["supported", "supported", "unsupported", "unsupported", "supported"],
-);
-assert.deepEqual(
-  experiment.features.map((item) => item.status),
-  ["supported", "neutral", "unsupported", "supported", "neutral"],
 );
 // Tie the advertised task-text allowance to the actual runtime, not a marketing target.
 const advisor = readFileSync(
@@ -268,21 +261,14 @@ const taskLimit = Number(advisor.match(/^MAX_QUERY_CHARS = ([\d_]+)$/m)[1].repla
 assert.equal(taskLimit, 16000);
 assert.ok(ours.features[2].value.includes(taskLimit.toLocaleString("en-US")));
 assert.ok(hussi.features[2].value.includes("600"));
-assert.equal(four.rows.find((row) => row.id === "hussi_original").correct, 46);
+assert.equal(three.rows.find((row) => row.id === "hussi_original").correct, 46);
 assert.equal(
-  four.rows.find((row) => row.id === "jev_session").sourcePath,
+  three.rows.find((row) => row.id === "jev_session").sourcePath,
   "skills/skill-maintenance/jev-capability-advisor/SKILL.md",
 );
-for (const ids of [
-  [],
-  ["jev_session", "native"],
-  ["jev_session", "native", "hussi_original", "native"],
-  ["jev_session", "native", "hussi_original", "jev_cold"],
-])
-  assert.throws(() => promoComparison(report, fixture, ids), /require the three/);
 assert.throws(() => promoComparison(report, null), /missing or unsupported/);
 console.log(
-  "Promo presentation: 3/4 variants, invariant factors/samples, feature rows and missing-evidence refusal passed.",
+  "Promo presentation: three public choices, complete control disclosure, invariant factors/samples and features passed.",
 );
 
 // The published comparison uses genuine Native observations, never this file's fixture.
@@ -297,7 +283,10 @@ const nativeReceipt = JSON.parse(
     "utf8",
   ),
 );
-assert.equal(actual.totalRuns, 15164);
+assert.ok(!("totalRuns" in actual));
+assert.equal(actual.rows.length, 3);
+assert.equal(actual.allRows.length, 4);
+assert.ok(actual.runtime.disclosure.length > 0);
 assert.equal(actual.completedNativeExecutions, 64);
 assert.equal(
   actual.nativeCachedTurns,
@@ -353,12 +342,11 @@ for (const value of [
   actual.nativeWindow.started_at,
   actual.nativeWindow.summary_written_at,
   actual.jevWindow.started_at,
-  actual.totalRuns.toLocaleString("en-US") + " completed benchmark executions",
   `${actual.hussiFactor.toFixed(2)}×`,
 ])
   assert.ok(currentReadme.includes(value), `README missing current value: ${value}`);
 assert.ok(!/80\/80|9\.54/.test(currentReadme));
 assert.ok(!/\/home\/|\/tmp\/|servrox|Bearer /.test(JSON.stringify(nativeReceipt)));
 console.log(
-  "Actual Native import: full-precision factors, 48/16 cohorts, quantile provenance, once-only count and README parity passed.",
+  "Actual Native import: full-precision factors, 48/16 cohorts, quantile provenance, runtime disclosure and README parity passed.",
 );

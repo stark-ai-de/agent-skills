@@ -7,7 +7,7 @@ status: "draft"
 owner: "stark-ai-de"
 repo: "stark-ai-de/agent-skills"
 created: "2026-05-26"
-updated: "2026-09-22"
+updated: "2026-07-13"
 source_request: "Generate a Codex-ready spec for a GitHub Pages setup in this repo using the style, metadata, icons, favicons, and related brand assets of stark-ai.de."
 ---
 
@@ -31,7 +31,6 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - Copy approved brand assets and design tokens from `stark-ai.de` into this repo.
 - Add static favicons, app icons, manifest metadata, SEO metadata, Open Graph metadata, and Twitter card metadata.
 - Add a GitHub Pages workflow that deploys the static site only from `main`; the required `Validate` workflow owns pull-request site-build proof.
-- Support explicitly requested, commit-pinned PR snapshots in a separate Pages repository, with isolated paths and preview labels; keep production deployment unchanged.
 - Add validation so pull requests catch site build failures before merge.
 - Update existing repo-facing docs that become stale because of the new Pages surface.
 
@@ -110,8 +109,6 @@ The site should use the visual language, metadata conventions, logos, favicons, 
 - WHEN metadata is generated, THE SYSTEM SHALL include title, description, canonical URL, Open Graph image, Twitter card metadata, manifest, theme color, favicon, SVG icon, and apple icon.
 - WHEN the required `Validate` workflow runs on pull requests, THE SYSTEM SHALL build the site without deploying it.
 - WHEN the Pages workflow runs for a relevant `main` push or an explicit manual dispatch from `main`, THE SYSTEM SHALL build and deploy the static artifact with GitHub Pages Actions.
-- WHEN a maintainer requests a PR preview, THE SYSTEM SHALL verify the current head of an open same-repository PR, build the exact SHA, and publish only its static output to the separate preview site.
-- WHEN preview output is generated, THE SYSTEM SHALL label its PR and commit, use the preview base path for local routes and assets, pin source links to that commit, and set every HTML page to `noindex, nofollow`.
 
 ### Non-functional requirements
 

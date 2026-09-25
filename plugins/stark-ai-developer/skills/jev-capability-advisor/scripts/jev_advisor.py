@@ -128,7 +128,9 @@ def _alias_key(item):
 
 
 def _mentioned(query, value):
-    return bool(re.search(r'(?<![\w:./-])' + re.escape(value) + r'(?![\w:./-])', query))
+    # Sentence punctuation may follow an ID; a dotted suffix still belongs to it.
+    return bool(re.search(r'(?<![\w:./-])' + re.escape(value)
+                          + r'(?=$|[^\w:./-]|\.+(?=$|[^\w:./-]))', query))
 
 
 def _consolidate(query, items):
@@ -167,14 +169,20 @@ def _items(candidates, catalog_by_id=None):
         item = catalog_by_id[raw['id']] if catalog_by_id is not None else raw
         if not isinstance(item, dict):
             raise ValueError('invalid_catalog_item')
-        if item.get('enabled') is False:
-            continue
         if any(not isinstance(item.get(key), str) or not item[key].strip() for key in ('id', 'name', 'kind')):
+            raise ValueError('invalid_catalog_item')
+        if item['kind'] not in ('skill', 'tool', 'mcp_tool'):
+            raise ValueError('invalid_catalog_item')
+        if any(key in item and not isinstance(item[key], bool) for key in ('enabled', 'explicit_only')):
             raise ValueError('invalid_catalog_item')
         if item['id'] in seen:
             raise ValueError('duplicate_candidate_id')
+        if any(key in item and not isinstance(item[key], str) for key in ('description', 'brief')):
+            raise ValueError('invalid_description')
         guidance(item)
         seen.add(item['id'])
+        if item.get('enabled') is False:
+            continue
         result.append(item)
     return result
 

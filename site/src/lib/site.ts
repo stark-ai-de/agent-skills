@@ -1,12 +1,7 @@
-import { siteConfig } from "../../site-config.mjs";
-
 import { pluginMarketplaceSource } from "./plugin-listing";
 
-export const SITE_ORIGIN = siteConfig.origin;
-export const SITE_BASE_PATH = siteConfig.basePath;
-export const SITE_PREVIEW = siteConfig.isPreview;
-export const SITE_PREVIEW_PR = siteConfig.previewPr;
-export const SITE_SOURCE_REF = siteConfig.sourceRef;
+export const SITE_ORIGIN = "https://stark-ai-de.github.io";
+export const SITE_BASE_PATH = "/agent-skills";
 export const STARK_AI_MARK = "stark AI";
 export const STARK_AI_HAIR_SPACE = "\u200A";
 export const STARK_AI_NAME = `stark${STARK_AI_HAIR_SPACE}AI`;
@@ -26,7 +21,7 @@ export const GITHUB_ORG_URL = `https://github.com/${GITHUB_REPO_SLUG.split("/")[
 export const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues`;
 export const GITHUB_SECURITY_POLICY_URL = `${GITHUB_REPO_URL}/security/policy`;
 export const GITHUB_SECURITY_ADVISORIES_URL = `${GITHUB_REPO_URL}/security/advisories/new`;
-export const LICENSE_URL = `${GITHUB_REPO_URL}/blob/${SITE_SOURCE_REF}/LICENSE`;
+export const LICENSE_URL = `${GITHUB_REPO_URL}/blob/main/LICENSE`;
 export const STARK_AI_URL = "https://stark-ai.de/";
 export const STARK_AI_PRIVACY_URL = "https://stark-ai.de/en/datenschutz";
 export const LOOPLATCH_URL = "https://loop-latch-opal.vercel.app/";
@@ -108,7 +103,7 @@ export function toSeoDescription(value: string) {
 }
 
 export function robotsDirective(canonicalPath: string, noindex = false): RobotsDirective {
-  if (noindex || SITE_PREVIEW) {
+  if (noindex) {
     return "noindex, nofollow";
   }
 

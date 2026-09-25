@@ -256,12 +256,21 @@ class AliasAndConfidenceTests(unittest.TestCase):
         self.assertEqual(len(result['candidate_aliases']['review']), 251)
 
     def test_explicit_qualified_name_or_id_preserves_the_requested_alias(self):
-        for query in ('Use $ops-kit:review', 'Use plugin-review'):
+        for query in ('Use $ops-kit:review', 'Use plugin-review', 'Use $ops-kit:review.',
+                      'Use plugin-review. Then inspect the result.', 'Use $ops-kit:review...'):
             result = advisor.advise(query, [self.original, self.alias], Transport())
             self.assertEqual(result['selected'], ['plugin-review'])
             self.assertEqual({a['id'] for a in result['candidate_aliases']['plugin-review']}, {'review', 'plugin-review'})
         both = advisor.offline_candidates('Compare $review and $ops-kit:review', [self.original, self.alias])
         self.assertEqual({x['id'] for x in both}, {'review', 'plugin-review'})
+
+    def test_alias_prefix_inside_a_longer_identifier_is_not_an_explicit_request(self):
+        for query in ('Use plugin-review.extra', 'Use $ops-kit:review.extra',
+                      'Use plugin-review/extra', 'Use prefix.plugin-review',
+                      'Use plugin-review..extra'):
+            with self.subTest(query=query):
+                found = advisor.offline_candidates(query, [self.original, self.alias])
+                self.assertEqual([candidate['id'] for candidate in found], ['review'])
 
     def test_same_text_or_skill_md_hash_is_not_whole_bundle_proof(self):
         for proof in ({}, {'content_sha256': 'a' * 64}, {'bundle_sha256': 'bad', 'skill_identity': 'review'},

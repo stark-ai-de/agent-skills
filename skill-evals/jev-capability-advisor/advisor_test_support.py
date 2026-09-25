@@ -1,7 +1,5 @@
-"""Resolve the canonical public skill, with an incubator fallback during development."""
+"""Resolve the canonical skill exercised by the public runtime regression suite."""
 from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-PUBLIC = REPOSITORY / 'skills/skill-maintenance/jev-capability-advisor/scripts'
-INCUBATOR = REPOSITORY / 'incubator/skills/skill-maintenance/jev-capability-advisor/scripts'
-SCRIPTS = PUBLIC if PUBLIC.is_dir() else INCUBATOR
+SCRIPTS = REPOSITORY / "skills/skill-maintenance/jev-capability-advisor/scripts"

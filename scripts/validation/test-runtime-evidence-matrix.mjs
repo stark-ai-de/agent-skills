@@ -49,10 +49,6 @@ const historicalAutomationOwners = new Map([
 const explicitNodeSelector =
   /\b(?:spawnSync|spawn|execFileSync|execFile|check|resolveCommandPath)\s*\(\s*["']node["']/s;
 const explicitAutomationNode = /\bnode[ \t]+(?=["'$./-]|[A-Za-z0-9_])/;
-const automationPythonOwners = new Map([
-  [".github/workflows/pages-preview.yml", "ci:pages-preview:python"],
-]);
-const explicitAutomationPython = /\bpython3[ \t]+(?=["'$./-]|[A-Za-z0-9_])/;
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repositoryRoot, relativePath), "utf8");
@@ -242,25 +238,7 @@ function discoverInternalPythonSurfaces(sources, owners = internalPythonOwners) 
   );
 }
 
-function discoverAutomationPythonSurfaces(sources, owners = automationPythonOwners) {
-  return discoverInternalRuntimeSurfaces(
-    sources,
-    owners,
-    explicitAutomationPython,
-    "Python",
-    "python3",
-    "automation",
-  );
-}
-
-function discoverInternalRuntimeSurfaces(
-  sources,
-  owners,
-  selector,
-  label,
-  runtime,
-  ownerKind = "script",
-) {
+function discoverInternalRuntimeSurfaces(sources, owners, selector, label, runtime) {
   const findings = [];
   const occurrences = [];
   const matchedOwners = new Set();
@@ -269,7 +247,7 @@ function discoverInternalRuntimeSurfaces(
     if (!selector.test(text)) continue;
     const surface = owners.get(relativePath);
     if (!surface) {
-      findings.push(`${relativePath}: unclassified explicit ${label} ${ownerKind} owner`);
+      findings.push(`${relativePath}: unclassified explicit ${label} script owner`);
       continue;
     }
     matchedOwners.add(relativePath);
@@ -365,47 +343,6 @@ function negativeFixtureErrors() {
     )
   ) {
     findings.push("unregistered explicit Node.js automation fixture must be rejected");
-  }
-
-  const pythonAutomationFixture = {
-    relativePath: ".github/workflows/python-fixture.yml",
-    text: "jobs:\n  test:\n    steps:\n      - run: python3 - <<'PY'\n          print('ok')\n          PY\n",
-  };
-  const pythonAutomationOwners = new Map([
-    [pythonAutomationFixture.relativePath, "fixture:automation:python"],
-  ]);
-  const unknownPythonAutomation = discoverAutomationPythonSurfaces(
-    [pythonAutomationFixture],
-    new Map(),
-  );
-  if (
-    !unknownPythonAutomation.errors.some((error) =>
-      error.includes("unclassified explicit Python automation owner"),
-    )
-  ) {
-    findings.push("unregistered Python automation fixture must be rejected");
-  }
-  const knownPythonAutomation = discoverAutomationPythonSurfaces(
-    [pythonAutomationFixture],
-    pythonAutomationOwners,
-  );
-  if (
-    knownPythonAutomation.errors.length ||
-    knownPythonAutomation.occurrences.length !== 1 ||
-    knownPythonAutomation.occurrences[0]?.runtime !== "python3"
-  ) {
-    findings.push("registered Python automation fixture must preserve its runtime");
-  }
-  const removedPythonAutomation = discoverAutomationPythonSurfaces(
-    [{ ...pythonAutomationFixture, text: "jobs:\n  test:\n    steps: []\n" }],
-    pythonAutomationOwners,
-  );
-  if (
-    !removedPythonAutomation.errors.some((error) =>
-      error.includes("no longer selects its runtime explicitly"),
-    )
-  ) {
-    findings.push("removed Python automation command must be rejected");
   }
 
   const changedWinner = structuredClone(matrix.boundaries);
@@ -576,15 +513,12 @@ const packageDiscovery = discoverPackageScriptSurfaces(
   packageJson.scripts ?? {},
   sitePackageJson.scripts ?? {},
 );
-const automation = automationSources();
-const automationDiscovery = discoverAutomationSurfaces(automation);
-const automationPythonDiscovery = discoverAutomationPythonSurfaces(automation);
+const automationDiscovery = discoverAutomationSurfaces(automationSources());
 const internalNodeDiscovery = discoverInternalNodeSurfaces(scriptSources());
 const internalPythonDiscovery = discoverInternalPythonSurfaces(scriptSources());
 errors.push(
   ...packageDiscovery.errors,
   ...automationDiscovery.errors,
-  ...automationPythonDiscovery.errors,
   ...internalNodeDiscovery.errors,
   ...internalPythonDiscovery.errors,
 );
@@ -592,7 +526,6 @@ errors.push(
 const surfaceOccurrences = [
   ...packageDiscovery.occurrences,
   ...automationDiscovery.occurrences,
-  ...automationPythonDiscovery.occurrences,
   ...internalNodeDiscovery.occurrences,
   ...internalPythonDiscovery.occurrences,
 ];
@@ -621,8 +554,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 15,
-  `current runtime-selection inventory must discover 15 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 14,
+  `current runtime-selection inventory must discover 14 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -630,8 +563,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 15,
-  `current runtime evidence matrix must define 15 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 14,
+  `current runtime evidence matrix must define 14 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());
@@ -688,10 +621,9 @@ requireCondition(
 
 const expectedSiteScripts = {
   build:
-    'bun exec "bun --bun scripts/test-preview.mjs && bun --bun scripts/test-jev-benchmarks.mjs && bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
+    'bun exec "bun --bun scripts/test-jev-benchmarks.mjs && bun --bun astro build && bun --bun scripts/validate-seo.mjs"',
   dev: "bun --bun astro dev",
   preview: "bun --bun astro preview",
-  "test:preview": "bun --bun scripts/test-preview.mjs",
   "validate:seo": "bun --bun scripts/validate-seo.mjs",
 };
 requireCondition(

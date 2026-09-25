@@ -1,7 +1,6 @@
 ---
 import type { CatalogSkill } from "../lib/skills";
 import { withBase } from "../lib/site";
-import { jevBenchmarks } from "../lib/jev-benchmarks.mjs";
 
 interface Props {
   skill: CatalogSkill;
@@ -15,9 +14,6 @@ const { skill } = Astro.props;
     <p class="eyebrow">{skill.releaseCandidate ? "New · Release candidate" : "New in the catalog"}</p>
     <h2>{skill.title}</h2>
     <p>{skill.summary}</p>
-    {skill.name === "jev-capability-advisor" && (
-      <p class="featured-skill__evidence"><strong>{(Math.floor(jevBenchmarks.totalRuns / 1000) * 1000).toLocaleString("en-US")}+ benchmark runs</strong> across development iterations.</p>
-    )}
   </div>
   <a class="button button--secondary" href={withBase(`/skills/${skill.name}/`)}>
     Explore the advisor <span aria-hidden="true">→</span>
@@ -60,12 +56,6 @@ const { skill } = Astro.props;
 
   .featured-skill > a {
     flex-shrink: 0;
-  }
-
-  .featured-skill .featured-skill__evidence {
-    margin-top: 0.55rem;
-    font-size: 0.85rem;
-    color: var(--secondary);
   }
 
   @media (max-width: 640px) {

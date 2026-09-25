@@ -1,8 +1,12 @@
 """Offline invariants for recommendation-only routing; no API or secret access."""
 import json
+from contextlib import redirect_stdout
+import io
 from pathlib import Path
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 from advisor_test_support import SCRIPTS
@@ -40,6 +44,65 @@ def code(payload, name):
 class AdvisorTests(unittest.TestCase):
     def setUp(self):
         self.catalog = [item('alpha'), item('beta'), item('gamma')]
+
+    def test_invalid_catalog_flags_and_kinds_never_dispatch(self):
+        malformed = [dict(item('bad'), kind='other')]
+        for field in ('enabled', 'explicit_only'):
+            malformed.extend(dict(item('bad'), **{field: value})
+                             for value in ('false', 0, 1, None, []))
+        malformed.append(dict(item('bad'), kind='other', enabled=False))
+        for profile in ('general', 'next_skill'):
+            for invalid in malformed:
+                with self.subTest(profile=profile, invalid=invalid):
+                    transport = Scripted()
+                    result = advisor.advise('Use alpha', [item('alpha'), invalid], transport,
+                                            selection_profile=profile)
+                    self.assertEqual(result['status'], 'error')
+                    self.assertEqual(result['selected'], [])
+                    self.assertEqual(result['error'], 'invalid_catalog_item')
+                    self.assertEqual(result['request_count'], 0)
+                    self.assertEqual(transport.payloads, [])
+
+    def test_disabled_duplicate_ids_are_rejected_before_filtering(self):
+        for catalog in ([item('alpha'), item('alpha', enabled=False)],
+                        [item('alpha', enabled=False), item('alpha')],
+                        [item('alpha', enabled=False), item('alpha', enabled=False)]):
+            with self.subTest(catalog=catalog):
+                transport = Scripted()
+                result = advisor.advise('Use alpha', catalog, transport)
+                self.assertEqual(result['error'], 'duplicate_candidate_id')
+                self.assertEqual(result['selected'], [])
+                self.assertEqual(transport.payloads, [])
+
+    def test_disabled_malformed_descriptions_are_rejected_before_dispatch(self):
+        for field in ('description', 'brief'):
+            for value in (None, False, 42, [], {}):
+                with self.subTest(field=field, value=value):
+                    catalog = [item('alpha'), dict(item('disabled', enabled=False), **{field: value})]
+                    transport = Scripted()
+                    result = advisor.advise('Use alpha', catalog, transport)
+                    self.assertEqual(result['error'], 'invalid_description')
+                    self.assertEqual(result['selected'], [])
+                    self.assertEqual(transport.payloads, [])
+
+    def test_cli_invalid_catalog_precedes_credentials_and_offline_inspection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            catalog = Path(directory) / 'catalog.json'
+            catalog.write_text(json.dumps([item('alpha', enabled='false')]))
+            for profile in ('general', 'next_skill'):
+                for offline in ([], ['--offline-candidates']):
+                    with self.subTest(profile=profile, offline=offline):
+                        output = io.StringIO()
+                        with patch.object(advisor, 'make_transport', side_effect=AssertionError('network forbidden')) as network:
+                            with redirect_stdout(output):
+                                status = advisor.main(['--catalog', str(catalog), '--query', 'Use alpha',
+                                                       '--selection-profile', profile,
+                                                       '--key-file', str(Path(directory) / 'missing-key'), *offline])
+                        self.assertEqual(status, 1)
+                        result = json.loads(output.getvalue())
+                        self.assertEqual(result['error'], 'invalid_catalog_item')
+                        self.assertEqual(result['request_count'], 0)
+                        network.assert_not_called()
 
     def test_single_is_one_request_and_one_result(self):
         transport = Scripted(lambda payload: answer(mode='SINGLE', primary=code(payload, 'alpha')))

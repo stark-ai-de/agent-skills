@@ -42,7 +42,7 @@ Supply a JSON array exported from the current host's available capabilities. Do 
 ]
 ```
 
-Required fields are unique `id`, `kind`, and `name`; meaningful `description` is necessary for useful semantic selection. Optional `brief` is a concise selection description. `enabled: false` excludes a capability. `explicit_only: true` is preserved in the model's selection instructions; the host must independently enforce it before activation.
+Required fields are unique `id`, `kind`, and `name`; meaningful `description` is necessary for useful semantic selection. Use `kind: skill` or `kind: tool`. The direct advisor and CLI also retain the legacy `mcp_tool` spelling; the stricter Session frame requires `tool`. Supplied `enabled` and `explicit_only` flags must be JSON booleans, and supplied `description`/`brief` values must be strings. Invalid fields and duplicate IDs are rejected before disabled entries are filtered or credentials are read. Optional `brief` is a concise selection description. `enabled: false` excludes a capability. `explicit_only: true` is preserved in the model's selection instructions; the host must independently enforce it before activation.
 
 ### Optional routing guidance
 

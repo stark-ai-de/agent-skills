@@ -494,12 +494,6 @@ Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence
 Open the published Pages URL and confirm plugin, privacy, terms, support, and
 security routes return HTTP 200.
 
-For an explicitly requested PR-only deployment, follow
-[GitHub Pages pull-request previews](github-pages-previews.md). Verify the live
-preview's PR/commit banner and receipt, then put the snapshot URL in the PR.
-The separate preview site does not satisfy production publication or skill
-promotion gates.
-
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,

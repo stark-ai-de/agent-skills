@@ -71,11 +71,11 @@ For a host integration, use the [Python/NDJSON session interface](../../../skill
 
 ## Benchmarks and benefits
 
-**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage, the 6.40× Native selection comparison, historical studies and **15,164 recorded benchmark executions** across development iterations, including rejected candidates and failures. The website presents these in separate visual sections below this guide.
+**[Explore the benchmarks](benchmarks/README.md)** for the confirmed next-skill input advantage and the 6.40× Native selection comparison, including sample sizes, measurement windows and limitations. The measurements belong to the linked recorded runtime snapshot; later catalog-validation and alias-punctuation fixes have not been live rebenchmarked.
 
-The new next-skill profile wins on input tokens against both measured Hussi variants. Our pooled Hussi control remains slightly faster. Earlier general-profile timing factors retain their original dates and scope; they do not measure the new profile.
+The next-skill profile used less selection input than both measured Hussi variants. Our unpublished pooled-HTTPS control remains slightly faster; the complete results disclose it alongside the three public comparison choices.
 
-**[Why routing speeds differ](benchmarks/README.md#why-routing-speeds-differ):** a short technical table compares Hussi9, Jev Fresh Connection and reusable Jev sessions, including confidence thresholds and connection reuse.
+[Product features and measured selection](benchmarks/README.md#product-features-and-measured-selection) distinguishes source-inspected capabilities from the specific paths timed in the comparison.
 
 ## Scope
 
@@ -102,9 +102,3 @@ The source allowlist, generated portable copy, OpenAI listing and submission wor
 3. **Approve GitHub publication.** Inspect the automatically started Publish Release readiness job, then approve its waiting `release` environment deployment. Wait for publication and exact-tag Post-release Evidence to pass. Check the production Pages deployment separately. The release preserves `openai.zip`, `portable.zip` and `release-subject.json` as direct assets.
 4. **Update the existing OpenAI plugin.** Run `pnpm run release:manage -- openai-handoff --tag <ACTUAL_TAG>` and upload that release's exact `openai.zip`. Follow the [seven-skill update checklist](../../listing/openai/stark-ai-developer-first-publication.md#jev-update-handoff). A local ZIP is preparation proof, not the portal upload source. Complete portal review and publication manually.
 5. **Verify public installation, then announce.** Test the standalone command above and an eligible Codex plugin install/update. Confirm Jev's instructions, scripts and allowed invocation work; verify directory identity and the live benchmark page. Record sanitized lifecycle evidence using the [publishing runbook](../../publishing.md#post-release-evidence-and-lifecycle-lanes). Publish the launch post only after the distribution it advertises is available.
-
-### Release-note draft
-
-The new input metric and older timing evidence cover different profiles; do not combine them into a whole-agent claim.
-
-> Adds Jev Capability Advisor 0.1.0 to the catalog and stark AI Developer 1.3.0. An explicit next-skill profile chooses one eligible skill with remaining work unassessed. Independent confirmation measured 6.3% less provider input than both the published Hussi chooser and our pooled-HTTPS control, with 48/48 skill choices and 16/16 no-match decisions correct. The default profile retains skills, MCP tools and experimental compound advice. Session reuse, local inspection and compact receipts remain available; automatic host activation and production utility still require qualification.

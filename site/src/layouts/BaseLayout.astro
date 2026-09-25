@@ -16,9 +16,6 @@ import {
   SEO_KEYWORDS,
   SITE_DESCRIPTION,
   SITE_TITLE,
-  SITE_PREVIEW,
-  SITE_PREVIEW_PR,
-  SITE_SOURCE_REF,
   STARK_AI_NAME,
   STARK_AI_URL,
   toSeoDescription,
@@ -132,7 +129,7 @@ const tracingMode =
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" hreflang="en" href={canonicalUrl} />
     <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
-    {!SITE_PREVIEW && <link rel="sitemap" type="application/xml" title="Sitemap" href={sitemapUrl} />}
+    <link rel="sitemap" type="application/xml" title="Sitemap" href={sitemapUrl} />
     <link rel="manifest" href={manifestUrl} />
     <link rel="icon" href={withBase("/agent-skills-head.svg")} type="image/svg+xml" sizes="any" />
     <link rel="alternate icon" href={withBase("/favicon.ico")} type="image/x-icon" sizes="16x16 32x32 48x48" />
@@ -199,14 +196,6 @@ const tracingMode =
       )
     }
     <a class="skip-link" href="#content">Skip to content</a>
-    {SITE_PREVIEW && (
-      <aside class="preview-banner" aria-label="Pull request preview" data-preview-pr={SITE_PREVIEW_PR} data-preview-sha={SITE_SOURCE_REF}>
-        <strong>Preview</strong>
-        <a href={`${GITHUB_REPO_URL}/pull/${SITE_PREVIEW_PR}`}>PR #{SITE_PREVIEW_PR}</a>
-        <span>Commit <a href={`${GITHUB_REPO_URL}/commit/${SITE_SOURCE_REF}`}><code>{SITE_SOURCE_REF.slice(0, 7)}</code></a></span>
-        <span>Unreleased changes for review.</span>
-      </aside>
-    )}
     <header class="site-header">
       <slot name="announcement" />
       <nav class="topbar" aria-label="Primary navigation">

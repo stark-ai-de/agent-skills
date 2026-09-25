@@ -1855,10 +1855,10 @@
       "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
     },
     {
-      "byteLength": 24689,
+      "byteLength": 25074,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/contract.md",
-      "sha256": "12481698ecc4c5cce9355e872f10ca484285436d439fc69c3bd52b4cc93e9f7e"
+      "sha256": "e85f9fc87ad95b84d37dfe833c2cdfa36cdac5eaba4366ca0737a171beb0322e"
     },
     {
       "byteLength": 10258,
@@ -1885,10 +1885,10 @@
       "sha256": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1"
     },
     {
-      "byteLength": 45364,
+      "byteLength": 45919,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
-      "sha256": "f431ba4fa0bbddc9d7a7d3835a2f8a08580c3a155794337c9260ee408b4c04e5"
+      "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
     },
     {
       "byteLength": 19499,
@@ -1915,5 +1915,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "be819106a199be456498fa6aa72735a3b03f3b03ebde994155acb9a69ac3e8fb"
+  "treeHash": "cb5535e967a7b7b6e5b16cf1576314cd8d38ef6885d7cdc2ae2233fe23c7f9b1"
 }

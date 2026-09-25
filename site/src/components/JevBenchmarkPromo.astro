@@ -6,10 +6,7 @@ import JevFeatureStatus from "./JevFeatureStatus.astro";
 import JevNextSkillComparison from "./JevNextSkillComparison.astro";
 import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
 
-const number = (value: number) => value.toLocaleString("en-US");
 const comparison = getJevPromoComparison();
-const history = bench.current;
-const optimization = history.optimization;
 const nextSkill = nextSkillComparison(bench.nextSkillEvidence);
 const confirmation = nextSkill.cohorts[1];
 const confirmedInputSaving = comparison.inputSaving;
@@ -17,21 +14,6 @@ const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
 const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
 const chartWidth = 540;
 const featureRows = initial.features.map((feature, index) => ({ ...feature, alternatives: comparison.rows.map((row) => row.features[index].value) }));
-const runs = [
-  { label: "Next-skill Native supplement", count: comparison.completedNativeExecutions, detail: "32 frozen tasks × 2 Native observations; earlier Jev/Hussi observations reused, not counted again" },
-  { label: "Next-skill qualification", count: bench.runCounts.nextSkillQualification, detail: "480 paired comparison observations + 9 development checks; no offline replays or diagnostic calls" },
-  { label: "Optimization development", count: bench.runCounts.nextSkillDevelopment, detail: "Earlier rejected candidates retained, including one HTTP 402 refusal; 107 unexecuted slots excluded" },
-  { label: "Resumed qualification", count: bench.runCounts.resumedQualification, detail: "10 cohorts; rejected shorter-description variants retained; health probe excluded" },
-  { label: "Session index qualification", count: bench.runCounts.sessionIndexQualification, detail: "480 matched + 400 mixed observations; offline replay excluded" },
-  { label: "Earlier general-profile Native supplement", count: bench.runCounts.nativeIndexSupplement, detail: "48 identical tasks × 2 new Native observations" },
-  { label: "Compact selection development", count: bench.runCounts.compactDevelopment, detail: "8 cohorts; includes 150 HTTP 402 rejections, excluded from speed and quality comparisons" },
-  { label: "Session and selector development", count: bench.runCounts.sessionDevelopment, detail: "37 completed experiments, including 384 fresh-task comparisons" },
-  { label: "Retrieval evaluations", count: bench.runCounts.retrieval, detail: "270 tasks × 4 configurations" },
-  { label: "Live selection evaluations", count: bench.runCounts.liveSelection, detail: "160 + 100 + 32 + 160 runs" },
-  { label: "Runtime measurements", count: bench.runCounts.runtime, detail: "320 + 80 fresh-process measurements" },
-  { label: "Native supplement", count: bench.runCounts.nativeSupplement, detail: "48 existing holdout tasks × 2 native observations" },
-  { label: "Archived replay evaluations", count: bench.runCounts.replay, detail: "100 recorded-response replays" },
-];
 ---
 
 <section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
@@ -43,6 +25,11 @@ const runs = [
     </div>
     <a class="jev-promo__source" href="#skill-guide">How to use it <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></a>
   </header>
+
+  <p class="jev-promo__runtime" data-jev-runtime-current={String(comparison.runtime.matchesCurrentRuntime)}>
+    <strong>Measured runtime:</strong> {comparison.runtime.disclosure}{" "}
+    <a href={comparison.runtime.measuredSourceUrl}>Inspect the measured source</a>.
+  </p>
 
   <div class="jev-promo__comparison" id="selection-speed">
     <div class="jev-promo__headline">
@@ -116,10 +103,10 @@ const runs = [
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.95 10.95 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
                   <span aria-hidden="true">)</span>
                 </a>
-              )}{row.experimental && <span class="jev-promo__experiment-badge">Internal · unpublished</span>}</span>
+              )}</span>
               <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s</span>
               <ContextTooltip id={`jev-info-${row.id}`} label={row.label} align="end">
-                <span>{row.info}{row.credit && <span class="jev-promo__experiment-credit">Thanks to <a href="https://github.com/hussi9" target="_blank" rel="noreferrer">Hussi9</a> for the published chooser that gave us our first benchmark baseline ♥</span>}</span>
+                <span>{row.info}</span>
               </ContextTooltip>
             </div>
             <Row type={row.id === comparison.baselineId ? undefined : "button"} role={row.id === comparison.baselineId ? "img" : undefined} class="jev-promo__row" data-jev-row={row.id}
@@ -148,9 +135,8 @@ const runs = [
     </figure>
   </div>
 
-  <div class="jev-promo__proof" role="group" aria-label="Selection input and development record">
+  <div class="jev-promo__proof" role="group" aria-label="Selection input">
     <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input <ContextTooltip id="jev-input-saving-info" label="Less selection input" align="start" text={`For the same next-skill tasks, Jev sent ${confirmedInputSaving.toFixed(1)}% fewer provider-reported input tokens than the tested public chooser. That means less selection overhead and can reduce input-token cost; it is not a claim about whole-task token use.`} /></h3><p>Than the tested publicly available competitor.</p></div>
-    <div><p class="jev-promo__proof-number">{number(comparison.totalRuns)}</p><h3>Benchmark runs recorded <ContextTooltip id="jev-run-count-info" label="Benchmark runs recorded" align="start" text="We benchmark during development to see whether changes help and to catch speed, accuracy, or regression issues." /></h3><p>Across development, including unsuccessful attempts.</p></div>
   </div>
 
   <details class="jev-promo__details" id="jev-feature-details">
@@ -183,87 +169,12 @@ const runs = [
         <li><strong>Measurement windows:</strong> Jev/Hussi {comparison.jevWindow.started_at} – {comparison.jevWindow.summary_written_at}; Native {comparison.nativeWindow.started_at} – {comparison.nativeWindow.summary_written_at}. Provider load and prefix caching were uncontrolled; Native reported cached input in {comparison.nativeCachedTurns}/64 turns.</li>
         <li><strong>Models:</strong> Native requested {comparison.nativeModel}, reasoning {comparison.nativeReasoning}; Jev variants used {comparison.jevModel}. The backend’s actual model identity is not independently observable.</li>
       </ul>
-      <p>Medians and factors use full recorded precision; p95 uses the same nearest-rank definition for all four variants. The experiment is our unpublished modification. This benchmark covers next-skill selection only, not MCP routing, full-router workflows, or whole-task speed.</p>
+      <p>Medians and factors use full recorded precision; p95 uses the same nearest-rank definition for all four variants. Our unpublished pooled-HTTPS control was slightly faster than Jev Session (0.479 s versus 0.487 s) and remains in the complete results above; it is not a released product. This benchmark covers next-skill selection only, not MCP routing, full-router workflows, or whole-task speed.</p>
       <p><a href={repoUrl(comparison.evidencePath)}>Frozen Jev/Hussi evidence</a> · <a href={repoUrl(comparison.nativeEvidencePath)}>Native supplement and audit</a></p>
     </div>
   </details>
 
-  <details class="jev-promo__details" id="jev-history-details">
-    <summary>Run-count breakdown &amp; earlier studies</summary>
-    <div class="jev-promo__details-body">
-  <details class="jev-promo__details" id="jev-run-count">
-    <summary>How the {number(comparison.totalRuns)} runs are counted</summary>
-    <div class="jev-promo__details-body">
-      <p>Each completed benchmark execution counts once; repeated tasks and comparison variants count separately. This is not a count of unique tasks, passing tests or API requests.</p>
-      <div class="jev-promo__table-scroll" role="region" aria-label="Benchmark run breakdown" tabindex="0">
-        <table>
-          <caption>Recorded development measurements</caption>
-          <thead><tr><th scope="col">Experiment</th><th scope="col">Runs</th><th scope="col">Counted once</th></tr></thead>
-          <tbody>{runs.map((run) => <tr><th scope="row">{run.label}</th><td>{number(run.count)}</td><td>{run.detail}</td></tr>)}</tbody>
-          <tfoot><tr><th scope="row">Total</th><td>{number(comparison.totalRuns)}</td><td>Warmups, rescorings and assertions excluded</td></tr></tfoot>
-        </table>
-      </div>
-    </div>
-  </details>
-
-      <details class="jev-promo__details">
-        <summary>Earlier general-profile comparison · {history.dateLabel}</summary>
-        <div class="jev-promo__details-body">
-          <p>Different tasks and a different selection profile. These results are not used in the current factors.</p>
-          <div class="jev-promo__table-scroll" role="region" aria-label="Historical general-profile results" tabindex="0"><table>
-            <thead><tr><th scope="col">Variant</th><th scope="col">Skill median</th><th scope="col">Correct accepted choices</th></tr></thead>
-            <tbody>{history.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.medianSeconds.toFixed(3)} s</td><td>{row.correct}/{row.observations}</td></tr>)}</tbody>
-          </table></div>
-          <p><a href={repoUrl(history.evidencePath)}>Jev/Hussi evidence</a> · <a href={repoUrl(history.nativeEvidencePath)}>Native evidence</a></p>
-        </div>
-      </details>
-
-      <section class="jev-promo__technical jev-promo__compact" aria-labelledby="jev-compact-title">
-        <p class="jev-promo__label">Earlier optimization · 2026-09-23</p>
-        <h3 id="jev-compact-title">{optimization.title}</h3>
-        <p><strong>{optimization.reductionPercent.toFixed(1)}% lower median selection time</strong> across skills, MCP tools, clarification, no match and compound tasks in a {optimization.catalogRecords}-entry catalog. Same inputs and selection rules, reusable HTTPS in both variants.</p>
-        <div class="jev-promo__table-scroll" role="region" aria-label="Session index results" tabindex="0">
-          <table>
-            <caption>Mixed selection · median · lower is better · 200 observations per variant</caption>
-            <thead><tr><th scope="col">Variant</th><th scope="col">Median</th><th scope="col">Complete correct results</th><th scope="col">Errors</th></tr></thead>
-            <tbody>{optimization.rows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.median_ms.toFixed(0)} ms</td><td>{row.correct}/{row.n}</td><td>{row.errors}</td></tr>)}</tbody>
-          </table>
-        </div>
-        <dl class="jev-promo__technical-mobile">
-          {optimization.rows.map((row) => (
-            <div><dt>{row.label}</dt><dd><strong>{row.median_ms.toFixed(0)} ms</strong>Median selection</dd><dd><strong>{row.correct}/{row.n} correct</strong>{row.errors} errors retained</dd></div>
-          ))}
-        </dl>
-        <ul>{optimization.notes.map((note) => <li><strong>{note.title}.</strong> {note.text}</li>)}</ul>
-        <p>The smaller skill-only catalog did not show the same total-speed benefit: Session was {optimization.smallCatalogChangePercent.toFixed(1)}% slower than our previous preparation, with 79/80 versus 80/80 accepted choices. Local preparation fell, while request time increased. These measurements do not establish the fastest skill overall.</p>
-        <p class="jev-promo__technical-source"><a href={repoUrl(history.evidencePath)}>Both complete cohorts and paired intervals</a> · <a href={repoUrl(history.parityPath)}>Recorded-response equivalence</a></p>
-      </section>
-
-  <details class="jev-promo__details">
-    <summary>Earlier native comparison: {bench.speedRatio.toFixed(2)}× faster median selection</summary>
-    <div class="jev-promo__details-body">
-      <div class="jev-promo__table-scroll" role="region" aria-label="Selection benchmark results" tabindex="0">
-        <table>
-          <caption>Earlier pre-session selection comparison · {bench.date}</caption>
-          <thead><tr><th scope="col">Measure</th><th scope="col">Jev advisor</th><th scope="col">Native selector</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">Median selection</th><td><strong>{bench.jev.medianSeconds.toFixed(3)} s</strong></td><td>{bench.native.medianSeconds.toFixed(3)} s</td></tr>
-            <tr><th scope="row">p95 selection</th><td>{bench.jev.p95Seconds.toFixed(3)} s</td><td>{bench.native.p95Seconds.toFixed(3)} s</td></tr>
-            <tr><th scope="row">Correct complete results</th><td>{bench.jev.correct}/{bench.tasks}</td><td>{bench.native.correct}/{bench.tasks}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>Both selectors received the same {bench.candidates} ordered cards per task from a {bench.catalogSize}-entry catalog. Task and arm order were randomized, with one sample per arm/task, no retries and no local caches. Provider caching and service load were uncontrolled.</p>
-      <p>The headline is the ratio of medians. These are previously used synthetic regressions, not a fresh holdout. Single-task, no-match and clarification results tied at 58/60; compound results were 12/20 for Jev and 14/20 for native. All failures remain counted.</p>
-      <p>Whole-host pilots have not shown faster task completion. Automatic prompt interception remains unqualified; the new session API is an integration building block. The cumulative run count covers earlier revisions too; it does not expand this earlier comparison beyond {bench.tasks} tasks.</p>
-    </div>
-  </details>
-
-    </div>
-  </details>
-
   <footer class="jev-promo__footer">
-    <span>Fastest agent helper in town ↯</span>
     <div><a href={repoUrl(bench.readmePath)}>Benchmark README</a><a href={repoUrl(bench.methodsPath)}>Full evidence</a></div>
   </footer>
 </section>
@@ -324,7 +235,7 @@ const runs = [
       const ratioRect = ratio.getBoundingClientRect();
       const chartRect = chart.getBoundingClientRect();
       const entryRect = entry.getBoundingClientRect();
-      const referenceRow = rows.find((candidate) => candidate.dataset.jevRow === "hussi_control") ?? defaultRow;
+      const referenceRow = defaultRow;
       const referenceEntry = referenceRow.closest<HTMLElement>("[data-jev-entry]");
       if (!referenceEntry) return;
       const referenceRect = referenceEntry.getBoundingClientRect();
@@ -420,6 +331,7 @@ const runs = [
   .jev-promo { margin-top: 0; padding: clamp(1.1rem, 2.5vw, 2rem); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-solid); color: var(--foreground); scroll-margin-top: 7rem; }
   .jev-promo p { line-height: 1.65; }
   .jev-promo p a { text-decoration: underline; text-underline-offset: .15em; }
+  .jev-promo__runtime { padding: .8rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .8rem; }
   .jev-promo__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
   .jev-promo__label { margin: 0 0 0.5rem; color: var(--secondary); font-weight: 700; }
   .jev-promo h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.65rem, 3vw, 2.5rem); line-height: 1.2; letter-spacing: -0.04em; }
@@ -493,8 +405,6 @@ const runs = [
   .jev-promo :global(.context-tip) { flex-shrink: 0; }
   .jev-promo :global(.context-tip__trigger) { display: inline-grid; width: 24px; height: 24px; padding: 0; place-items: center; line-height: 1; border-radius: var(--radius); }
   .jev-promo :global(.context-tip__card) { width: min(19rem, calc(100vw - 5rem)); right: 0; }
-  .jev-promo__experiment-credit { display: block; margin-top: .4rem; }
-  .jev-promo__experiment-credit a { color: var(--primary); text-decoration: underline; text-underline-offset: .15em; }
   .jev-promo__feature-heading :global(.context-tip__card) { width: min(19rem, 100%); }
   .jev-promo :global(.context-tip[data-dismissed="true"] .context-tip__card) { transition: none; }
   /* Keep the hover target continuous between the trigger and its card. */
@@ -506,8 +416,6 @@ const runs = [
   .jev-promo__chart .jev-promo__axis { display: block; overflow: visible; width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
   .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
   .jev-promo__track { fill: var(--border); }
-  .jev-promo__experiment-badge { font-size: 0.62rem; font-weight: 600; border: 1px dashed var(--muted); border-radius: 0.3rem; padding: 0.1rem 0.35rem; color: var(--muted); white-space: nowrap; }
-  .jev-promo__bar--hussi_control { fill: var(--foreground); opacity: 0.4; }
   .jev-promo__bar--jev_session { fill: var(--primary); }
   .jev-promo__bar--hussi_original { fill: var(--foreground); opacity: 0.65; }
   .jev-promo__bar--native { fill: var(--muted); }
@@ -515,17 +423,6 @@ const runs = [
   .jev-promo__caption { margin: 0; font-size: 0.75rem; color: var(--muted); }
   .jev-promo--animate .jev-promo__bar { transform-origin: left; transform-box: fill-box; animation: jev-bar-reveal 950ms cubic-bezier(0.22, 1, 0.36, 1) both; }
   @keyframes jev-bar-reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .jev-promo__technical { margin-block: 1.25rem; }
-  .jev-promo__technical h3 { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.035em; scroll-margin-top: 7rem; }
-  .jev-promo__technical > p, .jev-promo__technical li { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
-  .jev-promo__technical th, .jev-promo__technical td { vertical-align: top; }
-  .jev-promo__technical th:first-child { width: 18%; }
-  .jev-promo__technical td { width: 41%; }
-  .jev-promo__technical ul { padding-left: 1.25rem; margin-top: 1.25rem; }
-  .jev-promo__technical li + li { margin-top: 0.6rem; }
-  .jev-promo__technical strong { color: var(--foreground); }
-  .jev-promo__technical .jev-promo__technical-source { font-size: 0.75rem; }
-  .jev-promo__technical-mobile { display: none; }
   .jev-promo__details { border-top: 1px solid var(--border); scroll-margin-top: 7rem; }
   .jev-promo__details summary { cursor: pointer; padding-block: 1rem; font-size: 0.87rem; font-weight: 650; }
   .jev-promo__details-body { font-size: 0.85rem; color: var(--content-foreground); padding-bottom: 1rem; }
@@ -538,12 +435,6 @@ const runs = [
   .jev-promo__footer > div { display: flex; gap: 1rem; flex-wrap: wrap; }
   .jev-promo a:focus-visible, .jev-promo summary:focus-visible, .jev-promo__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
   @media (max-width: 700px) {
-    .jev-promo__technical > .jev-promo__table-scroll { display: none; }
-    .jev-promo__technical-mobile { display: block; font-size: 0.8rem; line-height: 1.6; }
-    .jev-promo__technical-mobile > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem 1rem; padding-block: 1rem; border-bottom: 1px solid var(--border); }
-    .jev-promo__technical-mobile dt { grid-column: 1 / -1; font-weight: 700; }
-    .jev-promo__technical-mobile dd { margin: 0; color: var(--muted); }
-    .jev-promo__technical-mobile strong { display: block; margin-bottom: 0.25rem; }
     .jev-promo__header, .jev-promo__footer { flex-direction: column; }
     .jev-promo__source { max-width: none; }
     .jev-promo__chart text { font-size: 26px; }
@@ -551,7 +442,7 @@ const runs = [
     .jev-promo__connector { display: none; }
   }
   .jev-promo__speed-label { margin: 0 0 .25rem; color: var(--foreground) !important; font-weight: 650; }
-  .jev-promo__proof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.3rem; margin-top: clamp(1rem, 2vw, 1.5rem); padding: 1.25rem 0 .8rem; border-top: 1px solid var(--border); }
+  .jev-promo__proof { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.3rem; margin-top: clamp(1rem, 2vw, 1.5rem); padding: 1.25rem 0 .8rem; border-top: 1px solid var(--border); }
   .jev-promo__proof-number { margin: 0; color: var(--primary); font-family: var(--font-display); font-size: clamp(1.9rem, 3.3vw, 2.75rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.1 !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .jev-promo__proof-number span { font-size: .6em; }
   .jev-promo__proof h3 { display: flex; align-items: center; gap: .4rem; margin-top: .45rem; font-size: .82rem; }
