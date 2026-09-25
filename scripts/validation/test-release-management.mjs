@@ -188,6 +188,7 @@ const bootstrapConfig = JSON.parse(read("release-please-config.v0.21.0.json"));
 const manifest = JSON.parse(read(".release-please-manifest.json"));
 const rootPackage = JSON.parse(read("package.json"));
 assert.equal(config["release-type"], "node");
+assert.equal(config["changelog-type"], "github");
 assert.equal(config["skip-github-release"], true);
 assert.equal(config["include-v-in-tag"], true);
 assert.equal(config["include-component-in-tag"], false);
@@ -257,6 +258,46 @@ assert.equal(
 );
 assert.equal(automatedReleaseVersionSupported("0.20.2"), false);
 assert.equal(automatedReleaseVersionSupported(FIRST_AUTOMATED_RELEASE_VERSION), true);
+
+const githubNotes = [
+  "## What's Changed",
+  "* Add capability advice by @contributor in https://github.com/example/repo/pull/90",
+  "",
+  "## New Contributors",
+  "* @contributor made their first contribution.",
+  "",
+  "**Full Changelog**: https://github.com/example/repo/compare/v0.22.0...v0.23.0",
+].join("\n");
+const githubBaseline = [
+  "# Changelog",
+  "",
+  "## Unreleased",
+  "",
+  "## Maintenance notes",
+  "Preserve these unreleased notes.",
+  "",
+  "## v0.22.0 - 2026-09-08",
+  "",
+  "## What's Changed",
+  "* Preserve the previous release byte-for-byte.",
+  "",
+].join("\n");
+const githubReleaseSection = `## 0.23.0 (2026-09-25)\n\n${githubNotes}\n\n`;
+const githubChangelog = githubBaseline.replace("## v0.22.0", `${githubReleaseSection}## v0.22.0`);
+assert.equal(extractChangelogReleaseNotes(githubChangelog, "0.23.0"), githubNotes);
+assert.equal(removeChangelogReleaseSection(githubChangelog, "0.23.0"), githubBaseline);
+assert.deepEqual(changelogReleaseOrder(githubChangelog), ["0.23.0", "0.22.0"]);
+assert.deepEqual([...changelogReleaseVersions(githubChangelog)], ["0.23.0", "0.22.0"]);
+assert.equal(
+  splitChangelogSections(githubChangelog).get("Unreleased"),
+  splitChangelogSections(githubBaseline).get("Unreleased"),
+);
+assert.equal(
+  splitChangelogSections(githubChangelog).get("0.22.0"),
+  splitChangelogSections(githubBaseline).get("0.22.0"),
+);
+assert.equal(removeChangelogReleaseSection(githubChangelog, "0.24.0"), null);
+assert.equal(removeChangelogReleaseSection(githubChangelog + githubReleaseSection, "0.23.0"), null);
 
 assert.equal(
   isGeneratedReleaseMerge({
@@ -337,6 +378,24 @@ try {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.githubOutput.contract_kind, "release-pr");
 
+  const githubReleaseChangelog = releaseChangelog("0.21.0").replace(
+    "### Features\n\n* add release automation",
+    "## What's Changed\n\n* add release automation\n\n## New Contributors\n\n* @contributor",
+  );
+  fs.writeFileSync(path.join(releaseFixture.root, "CHANGELOG.md"), githubReleaseChangelog);
+  const githubResult = runImpact(releaseFixture.root, releaseFixture.base);
+  assert.equal(githubResult.status, 0, githubResult.stderr || githubResult.stdout);
+  assert.equal(githubResult.githubOutput.contract_kind, "release-pr");
+
+  fs.writeFileSync(
+    path.join(releaseFixture.root, "CHANGELOG.md"),
+    githubReleaseChangelog.replace("- Baseline.", "- Rewritten history."),
+  );
+  const rewrittenHistoryResult = runImpact(releaseFixture.root, releaseFixture.base);
+  assert.notEqual(rewrittenHistoryResult.status, 0);
+  assert.match(rewrittenHistoryResult.stderr, /all existing bytes must remain unchanged/);
+  fs.writeFileSync(path.join(releaseFixture.root, "CHANGELOG.md"), githubReleaseChangelog);
+
   git(releaseFixture.root, ["add", ...GENERATED_RELEASE_FILES]);
   git(releaseFixture.root, ["commit", "--quiet", "-m", "chore(release): release 0.21.0"]);
   const output = path.join(releaseFixture.root, "github-output.txt");
@@ -405,6 +464,18 @@ for (const [name, prepare, expected] of [
     (root) => prepareGeneratedRelease(root, "0.21.0", { afterBaseline: true }),
     /newest CHANGELOG\.md release heading/,
   ],
+  ...["0.22.0-rc.1", "[0.22.x](https://github.com/example/repo/releases)"].map((heading) => [
+    `generated changelog unsupported version heading ${heading}`,
+    (root) => {
+      prepareGeneratedRelease(root, "0.21.0");
+      const changelogPath = path.join(root, "CHANGELOG.md");
+      fs.writeFileSync(
+        changelogPath,
+        fs.readFileSync(changelogPath, "utf8").replace("### Features", `## ${heading}`),
+      );
+    },
+    /all existing bytes must remain unchanged/,
+  ]),
 ]) {
   const fixture = createReleaseFixture();
   try {

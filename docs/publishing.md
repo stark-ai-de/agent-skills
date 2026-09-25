@@ -166,6 +166,13 @@ Historical `## vX.Y.Z - date` headings and new Release Please headings are both
 valid; historical sections and the existing `## Unreleased` section remain
 unchanged in the generated PR.
 
+Release Please uses GitHub-generated changelog notes to summarize merged pull
+requests rather than intermediate branch commits. Keep each PR title accurate
+for its final behavior; removed experiments must not be advertised as shipped
+features. Conventional Commits still determine the version. The changelog parser
+preserves GitHub's internal headings such as `What's Changed` within their
+version section, while release validation protects all existing changelog bytes.
+
 ### Generate the release PR
 
 After feature work merges, the `Release Please` workflow uses a repository-scoped
