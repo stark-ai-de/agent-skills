@@ -108,7 +108,11 @@ try {
   rejects(
     "stale adoption count",
     `${skill}/assets/setup-report-template.md`,
-    (s) => s.replace("Matrix row count: `43`", "Matrix row count: `39`"),
+    (s) =>
+      s.replace(
+        /Matrix row count: `(\d+)`/,
+        (_, count) => `Matrix row count: \`${Number(count) - 1}\``,
+      ),
     /matrix|count/i,
   );
   rejects(

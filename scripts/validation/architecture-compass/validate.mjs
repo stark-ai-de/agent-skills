@@ -31,7 +31,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 62 }, (_, index) => index + 1);
+const expectedAdrIds = Array.from({ length: 63 }, (_, index) => index + 1);
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -143,6 +143,7 @@ const expectedCategories = new Map([
   [60, "quality-delivery"],
   [61, "quality-delivery"],
   [62, "quality-delivery"],
+  [63, "stack-tooling"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -216,6 +217,7 @@ const expectedStems = new Map([
   [60, "ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts"],
   [61, "ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets"],
   [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
+  [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -336,10 +338,18 @@ const measurableTestingEvalCases = [
   "testing-selective-routing.md",
   "testing-promotion-integrity.md",
 ];
+const shadcnLintEvalCases = [
+  "shadcn-lint-default-profile.md",
+  "shadcn-lint-ownership-and-compatibility.md",
+  "shadcn-lint-staged-enforcement.md",
+  "shadcn-lint-discovery-and-freshness.md",
+  "shadcn-lint-component-and-evidence-boundaries.md",
+];
 const expectedEvalCases = [
   ...baselineEvalCases,
   ...routedLibraryEvalCases,
   ...measurableTestingEvalCases,
+  ...shadcnLintEvalCases,
 ];
 const legacyCaseSourceCommit = "1d454f06375f3b74ba506fef54b664a2517674c0";
 const legacyCaseSources = [
@@ -2063,7 +2073,7 @@ for (const field of [
 }
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${measurableTestingEvalCases.length} measurable-testing cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
+export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${measurableTestingEvalCases.length} measurable-testing cases, ${shadcnLintEvalCases.length} shadcn-lint cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
 
 const isMain =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

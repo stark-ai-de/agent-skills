@@ -10,6 +10,8 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 
 ## Tracked Specs
 
+- [`architecture-compass-shadcn-lint-spec.md`](architecture-compass-shadcn-lint-spec.md) - all-rules design-system lint adoption, practical ESLint/Oxlint and shared-UI guidance, evidence boundaries, and provider integration.
+
 - [`animated-readme-logo-provider-routing-and-promotion-spec.md`](animated-readme-logo-provider-routing-and-promotion-spec.md) - portable provider routing, strict asset validation, and public promotion for `animated-readme-logo`.
 - [`animated-readme-logo-export-toolchain-fallback-spec.md`](animated-readme-logo-export-toolchain-fallback-spec.md) - reusable recipe-driven raster export, approval-gated tool installation, and configured-browser fallback routing for `animated-readme-logo`.
 - [`chatgpt-host-plan-adapter-spec.md`](chatgpt-host-plan-adapter-spec.md) - observed ChatGPT and Codex web Plan routing, fail-closed fallback, dual handoffs, and product-neutral starter prompts.
