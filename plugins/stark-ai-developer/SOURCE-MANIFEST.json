@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "d0b84d75d93b6b680980db29c79f6a4edb857dff3c2a8be32f9cb5ae36310995"
+      "sha256": "a5f61932d48d2ed19e526f78313d3b20c7e4790be730108a67f75bbc94e08cc8"
     },
     {
       "byteLength": 12772,
@@ -175,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 16382,
+      "byteLength": 17019,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "6971ae62e55e701e80c05143322e33493135d5df55fc28e07bb9004734ae5458"
+      "sha256": "fd0e66bd46e49f9f365dfb4a8403e0e673481aba490085c95154b7df6155f99f"
     },
     {
       "byteLength": 891,
@@ -247,16 +247,28 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 7196,
+      "byteLength": 7577,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "872b3d5291365ec55fe61ae203c1676d60a83a45f7e1adb0b7097a07e209a824"
+      "sha256": "b2a311390dfcbbcd06bcdc20732bed34ed5f6160de036f9451823d77376972c7"
     },
     {
-      "byteLength": 11764,
+      "byteLength": 12735,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "b32a03e07218109c8d8cbb2a65062ec8a8e887affd6a15a630bbff4328c568b9"
+      "sha256": "5301351033a8800db4be21474236851a3cbef39d3546bc5e9a807f1b873273a5"
+    },
+    {
+      "byteLength": 6103,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/testing-outcome-receipt-template.md",
+      "sha256": "894ed710f10c0ccb910640ac9b5b642178e2e5272ab57a70861910136b5afc96"
+    },
+    {
+      "byteLength": 9212,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/vitest4-testing-profile.md",
+      "sha256": "cc36c3d424e43bf5922d8df81bbd2286dbc8f407b820a31c8c304e07a6894874"
     },
     {
       "byteLength": 3796,
@@ -1303,10 +1315,100 @@
       "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
     },
     {
-      "byteLength": 48634,
+      "byteLength": 2868,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.guide.md",
+      "sha256": "e9d76e7ff8aa1bacae02048d5a604e5e9d6e5a79accfeb094b5a82d3d56c9be3"
+    },
+    {
+      "byteLength": 5421,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.long.md",
+      "sha256": "921f2452f542660c899164b5449e3a206b05d8b41a5eac57c78d9a840f14aa6d"
+    },
+    {
+      "byteLength": 1839,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.short.md",
+      "sha256": "1513ac0efedda38dccbb012e7f5d9906138ea5eb464b34d9cc9c61408fb1f6af"
+    },
+    {
+      "byteLength": 2493,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.guide.md",
+      "sha256": "2e62add0ba300c7ee07e2548415cbef0c870b8dc3dd63b2d7400b22a27d911a3"
+    },
+    {
+      "byteLength": 5331,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.long.md",
+      "sha256": "e9dc4367506ffbd75bee8476f878debdfabf1542ebe345a08aac84f98a949948"
+    },
+    {
+      "byteLength": 1672,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.short.md",
+      "sha256": "83b7fc274e4e155a81682c2bd67f2fea65aae061b3a9560c2d03080590e362f8"
+    },
+    {
+      "byteLength": 2785,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.guide.md",
+      "sha256": "e14fecceceb5ad610d3c64162f6c492c20709cae85a1f6a8fdb7213710132bf0"
+    },
+    {
+      "byteLength": 5575,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.long.md",
+      "sha256": "18e05f2151e72b35e3bde1a40dcf900f3278ff86817a9c9ce6c58f16bfefcefc"
+    },
+    {
+      "byteLength": 1651,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.short.md",
+      "sha256": "678958f6f3d4d3e91d8658d78dde9facfd71899b6745d81cadf071d1ff9bdf53"
+    },
+    {
+      "byteLength": 2621,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.guide.md",
+      "sha256": "55b3649b9f761ebb9c0ffa50640d96735e2248900ff1196adb14357e03719861"
+    },
+    {
+      "byteLength": 5319,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.long.md",
+      "sha256": "489dacfbe885df7e8cfdfc9124f9a4ead5c21fe7bb554d381791b69c94b68283"
+    },
+    {
+      "byteLength": 1635,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.short.md",
+      "sha256": "bdc916731983178de134f2487a1d4b5e6c9080cae2671b28211df0f6263f4635"
+    },
+    {
+      "byteLength": 15720,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.guide.md",
+      "sha256": "733e5424b9921e3756196dbf806747bc327c3229d0ef76e1d49c3e2ca49e88fb"
+    },
+    {
+      "byteLength": 7427,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.long.md",
+      "sha256": "47bf04a50043c54c78c7603d9d0c9c79521932a0e674fd211743154c7c0e0d42"
+    },
+    {
+      "byteLength": 2301,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.short.md",
+      "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
+    },
+    {
+      "byteLength": 53477,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "71f200a769602add8f3c9e4e2697da94cde9cca8105ef3ef3e824a5013b1094e"
+      "sha256": "9b1783e9226d7057a195e52eaeca55aae105b2c529984ccc06e7c780dd7e0487"
     },
     {
       "byteLength": 6996,
@@ -1911,9 +2013,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "cb5535e967a7b7b6e5b16cf1576314cd8d38ef6885d7cdc2ae2233fe23c7f9b1"
+  "treeHash": "83dcae896f724f28d0aec2172ac64e3b9cf05512f8dd49f795f5d52f95d12a49"
 }
