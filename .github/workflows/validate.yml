@@ -134,6 +134,28 @@ jobs:
           success: Use the three direct release-subject artifacts only from a successful main push; pull requests do not publish them. Next hosted step is Publish Release in docs/publishing.md. Operator follow-up is docs/publishing.md#operator-follow-up.
           failure: Open the failed contract step, fix the owning boundary, and rerun the workflow.
 
+  jev-hook-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Test opt-in hook registration and emitters
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_hooks.py -v
+
   archive-identity:
     strategy:
       fail-fast: false

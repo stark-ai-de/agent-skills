@@ -1,5 +1,7 @@
 # Reusable host sessions
 
+This is the **owner-process session** mode of Integrate. For optional Codex CLI or Claude Code reminders without a retained process, use [hook guidance](hook-integration.md). That mode delegates selection to the active agent and does not create an `AdvisorSession`.
+
 Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. HTTPS and a bounded derived search index are reused. Previous tasks and recommendations are not cached; the host must supply and validate current inventory on every request.
 
 ## Python interface

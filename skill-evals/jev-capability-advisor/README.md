@@ -86,6 +86,35 @@ The native utility pilot compared six predeclared regression tasks in twelve pai
 
 A subsequent twelve-turn A/B compared the previous advisor workflow with compact output, with identical corrected response replay and the same requested native model configuration. Both scored 6/6. Helper calls fell 12→6 and median emitted helper bytes 528,722→1,512, but native turn median rose 25.134→26.535 s (process median 25.999→27.549 s). Reported native input tokens, including cached input, fell 599,882→487,965 (18.7%); no billing inference is made. The median paired ratio was 1.036; this small mixed timing result supports no speed claim. All twelve read the contract and five compact turns redundantly reread selected metadata. All commands passed, no replay internals were inspected, no TypeSafe call occurred and no process group remained. The final prose revision addresses those repeated reads; the A/B is evidence for its preceding frozen instruction snapshot, not a speed qualification of that final revision.
 
+## Hook integration qualification
+
+The optional [hook integration](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md) adds static agent guidance, not a selector benchmark or a complete native inventory export. Existing release observations above remain bound to their original source and selection scope. They do not qualify these hook paths. The implementation targets below need independent, source-bound evidence before being advertised as qualified automatic advice.
+
+| Host        | Platform       | Hook registration/delivery | Eligible inventory and actual advice/adoption |
+| ----------- | -------------- | -------------------------- | --------------------------------------------- |
+| Codex CLI   | Linux / WSL    | Pending live evidence      | Pending live evidence                         |
+| Codex CLI   | macOS          | Pending live evidence      | Pending live evidence                         |
+| Codex CLI   | Native Windows | Pending live evidence      | Pending live evidence                         |
+| Claude Code | Linux / WSL    | Pending live evidence      | Pending live evidence                         |
+| Claude Code | macOS          | Pending live evidence      | Pending live evidence                         |
+| Claude Code | Native Windows | Pending live evidence      | Pending live evidence                         |
+
+Use isolated host configuration and synthetic tasks/catalogs. Record the tested host/Python versions, OS and shell, source hashes, opt-in scope, normal trust review, and sanitized outcomes. Never publish credentials, private prompts, inventories or user paths. A controlled eligible test catalog proves that catalog's flow; it does not establish machine-wide native inventory completeness.
+
+1. **Registration and rollback:** preview, install twice, inspect, submit a prompt, then uninstall. Preserve unrelated hooks/settings and later user edits. Verify the configured event actually reaches the agent, rather than only replaying its command. Repeat with user and project scopes; check configuration overrides and host policy/trust blocks.
+2. **Task selection:** with qualified current metadata and configured credentials, submit a new actionable task. Observe a real bounded `general`/`current` Recommend call, returned IDs checked against the same current inventory, authorized capability use and one status line. Follow with “thanks”, an explanation question and a continuation; none should trigger a second consultation. A distinct new task should.
+3. **Authority and inventory:** repeat with explicit user skill selection, explicit-only or disabled capabilities, stale/partial/deferred metadata and a Plan-mode write prohibition. No restriction may be guessed or bypassed. Unverifiable eligibility must yield a concrete native fallback; a recommended capability grants no permission.
+4. **Failure and cancellation:** remove configured credentials, inject a provider error, exhaust the existing advice deadline and cancel a task. Verify bounded work, no retry loop, no false successful-advice status and normal host continuation. Separately timeout the five-second static hook; it must not block the user's task. A skipped or cancelled observation is not a pass.
+5. **Platforms and launchers:** exercise Python paths containing spaces, apostrophes, Unicode and shell metacharacters. Test Codex native Windows through cmd, PowerShell and Git Bash; test Claude's direct executable form. Record final encoded command lengths and prove clean failure for unsupported launchers. Passing platform fixtures does not replace these host observations.
+
+Run only the hook regression module from the repository root:
+
+```sh
+python3 -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_hooks.py -v
+```
+
+The focused CI matrix runs these offline tests on Linux, macOS and Windows. It exercises configuration ownership, static output and launcher construction without provider keys. The general evaluator below also discovers hook tests. Keep automated regression results, real hook delivery, agent judgment, eligible inventory, fresh provider calls and recommendation adoption as separate evidence; no hook latency or whole-task speed benefit is claimed.
+
 ## Offline regression suite
 
 Run the repository-owned evaluator from the repository root:
@@ -103,3 +132,19 @@ node site/scripts/test-jev-benchmarks.mjs
 ```
 
 The site build includes this benchmark gate. The retained reports remain dated evidence; passing their consistency checks is not a fresh live benchmark or a production-promotion decision.
+
+### Isolated hook discovery check — 2026-09-25
+
+Codex CLI 0.157.0 on Linux/WSL, using a separate temporary home and state directory with no credentials, discovered the generated registration through the experimental app-server `hooks/list` method. It reported `eventName: userPromptSubmit`, `source: user`, `timeoutSec: 5`, synchronous execution, no parse errors or warnings, and `trustStatus: untrusted`. Uninstall then removed the owned registration. No trust bypass, agent turn or provider call was used. This proves configuration discovery and preservation of the trust boundary; delivery, agent adoption, eligible inventory and genuine advice remain unqualified.
+
+The local hook tests exercise both command forms as subprocesses on Linux. Separate native Windows execution used Python 3.11.15 and Windows PowerShell 5.1.26100.9492 in temporary Windows directories. After the approved version-controlled-home exception, all 39 hook tests completed: 30 passed, seven POSIX-only home-repository cases skipped, and two symbolic-link cases skipped because that account lacked symlink-creation rights. Windows junction rejection passed. Cmd, PowerShell and Git Bash preserved the emitted JSON, including multilingual guidance; an existing interpreter copied into a path containing spaces, Unicode, apostrophe, percent, dollar, backtick and semicolon also worked. No Windows host application or provider was invoked. macOS, actual agent delivery/adoption and eligible-inventory/advice qualification remain pending; no CI execution is claimed.
+
+PowerShell creates empty profile directories on its first isolated launch even with `-NoProfile`. The tests allow only those empty startup directories, require existing configuration/state to remain unchanged, and verify that subsequent prompt-bearing calls create no runtime state. The emitter itself is separately tested with all file/network access forbidden.
+
+The current Linux/WSL Jev suite completed 217 tests: 215 passed and two native-Windows cases skipped. The home-repository tests verify real Git exclusion, rejection of already tracked state, preservation of conflicting ignore files, read-only inspection and repair without rewriting a trusted hook command. Local user-scope installation also succeeded and was idempotent; Codex discovered the entry as enabled but untrusted. This still does not prove delivery or automatic consultation.
+
+Source identities for the repeated native Windows observation (SHA-256):
+
+- Manager: `35e508b98c0a0f3c593f5d0cf924fbc1d0d7abf97cf15e80f7a42d3e998db649`
+- Guidance: `85a8a9e141cdb834a204b9a251ed893e04591ccf3740171adc78ffad70b426e3`
+- Tests: `d5ea7f06de05eb0aad6f1fbb3edfa58280a28d054abbef1e3d72bc6298db486c`

@@ -1831,16 +1831,22 @@
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
     },
     {
-      "byteLength": 11118,
+      "byteLength": 12610,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "70d02472f8d873aeba874c26ba4c70c87b718d89e8e45368b2748c341c236e8f"
+      "sha256": "9c1b167c2b667f902b4f34f4d01b5416779c60d429b47dcf77d03086cf01e600"
     },
     {
       "byteLength": 615,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/agents/openai.yaml",
       "sha256": "35ba491bf0dfb7d900f5cb5c48ef45c51dd1db0d6748f809bdefd2202063d09f"
+    },
+    {
+      "byteLength": 1006,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/hook-guidance.txt",
+      "sha256": "85a8a9e141cdb834a204b9a251ed893e04591ccf3740171adc78ffad70b426e3"
     },
     {
       "byteLength": 15526,
@@ -1861,10 +1867,16 @@
       "sha256": "e85f9fc87ad95b84d37dfe833c2cdfa36cdac5eaba4366ca0737a171beb0322e"
     },
     {
-      "byteLength": 10258,
+      "byteLength": 12271,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/hook-integration.md",
+      "sha256": "c998067d4c7a6d5e0f24679116171ad1f71de100b6d36fc3153d5e00a6dde328"
+    },
+    {
+      "byteLength": 10525,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/session-integration.md",
-      "sha256": "c21b6bf916654adcc1866f62d00a97bcc04362471051f72166d795c776a7849b"
+      "sha256": "35f84a39f4fced62f30a95c5d2feb6f2175c2b28b2165e2d25fc69a2a00b0222"
     },
     {
       "byteLength": 4617,
@@ -1891,6 +1903,12 @@
       "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
     },
     {
+      "byteLength": 22428,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_hooks.py",
+      "sha256": "35e508b98c0a0f3c593f5d0cf924fbc1d0d7abf97cf15e80f7a42d3e998db649"
+    },
+    {
       "byteLength": 19499,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_session.py",
@@ -1915,5 +1933,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "cb5535e967a7b7b6e5b16cf1576314cd8d38ef6885d7cdc2ae2233fe23c7f9b1"
+  "treeHash": "ae9622d3ddf114d9b6ea49baac418287ed0eb94e17e6542370657e813a1d8089"
 }
