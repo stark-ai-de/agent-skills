@@ -9,11 +9,13 @@ import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
 import { pluginMarketplaceSource } from "./plugin-listing";
+import { SITE_BUILD } from "./site-build.mjs";
 
 const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
-const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
-const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
+const REPO_REF = SITE_BUILD.isPreview ? SITE_BUILD.sha : "main";
+const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/${REPO_REF}`;
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/${REPO_REF}`;
 
 const repoRoot = findRepoRoot();
 const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
