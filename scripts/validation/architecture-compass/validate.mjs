@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inventory.mjs";
+
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
 
@@ -31,7 +33,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 63 }, (_, index) => index + 1);
+const expectedAdrIds = [...PUBLIC_ARCHITECTURE_ADR_IDS];
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -144,6 +146,7 @@ const expectedCategories = new Map([
   [61, "quality-delivery"],
   [62, "quality-delivery"],
   [63, "stack-tooling"],
+  [65, "stack-tooling"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -218,6 +221,7 @@ const expectedStems = new Map([
   [61, "ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets"],
   [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
   [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
+  [65, "ac-adr-065-use-portless-for-local-development-endpoints"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -282,6 +286,12 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "portless-compatible-default.md",
+  "portless-existing-routing-migration.md",
+  "portless-no-local-endpoint.md",
+  "portless-technical-exception.md",
+  "portless-worktree-collision.md",
+  "portless-local-adr-conflict.md",
   "adr-catalog-short-first-inventory.md",
   "selective-frontend-routing.md",
   "selective-backend-routing.md",

@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.8.0"
+  version: "0.9.0"
 ---
 
 # Architecture Compass
