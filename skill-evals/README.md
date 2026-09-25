@@ -23,6 +23,7 @@ Use this folder for:
 - [`cursor-memory-curator`](cursor-memory-curator/README.md)
 - [`cursor-spec-interviewer`](cursor-spec-interviewer/README.md)
 - [`drawio-diagrams`](drawio-diagrams/README.md)
+- [`jev-capability-advisor`](jev-capability-advisor/README.md)
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 

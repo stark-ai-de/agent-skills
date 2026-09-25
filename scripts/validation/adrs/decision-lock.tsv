@@ -50,3 +50,5 @@ ADR-0052	0052-allow-scoped-json-only-published-release-repair	744e4df7a99c193345
 ADR-0053	0053-recover-unpublished-releases-through-protected-replacement-candidates	e68760930ab9f05b052d37d7d10b66a47e58a7b83be83b01928104f895d1760a
 ADR-0054	0054-select-repository-runtimes-through-an-advisory-evidence-matrix	c7ced32197ddc3e25320af9cc39350e3622986a8d8bbb595160ed05816205f8d
 ADR-0055	0055-use-pnpm-for-package-management-and-bun-for-execution	820554f06b4aaaf5bd15bdc89cba699cd3be3e855a5e9db6639527a8cd8f6027
+ADR-0056	0056-allow-reviewed-public-comparisons-while-protecting-private-provenance	13de7b49331436fd870da27cef1fb8e3a372c3b4835814ad9c1e22df1703b8d3
+ADR-0057	0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts	7aa836655e849d5b29a013df9f847bd197aae485113382f5fb58967d23000a10

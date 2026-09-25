@@ -9,13 +9,41 @@ import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
 import { pluginMarketplaceSource } from "./plugin-listing";
+import { SITE_BUILD } from "./site-build.mjs";
 
 const REPO_NAME = pluginMarketplaceSource();
 const REPO_SOURCE_URL = `https://github.com/${REPO_NAME}`;
-const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/main`;
-const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/main`;
+const REPO_REF = SITE_BUILD.isPreview ? SITE_BUILD.sha : "main";
+const REPO_BLOB_URL = `${REPO_SOURCE_URL}/blob/${REPO_REF}`;
+const REPO_TREE_URL = `${REPO_SOURCE_URL}/tree/${REPO_REF}`;
 
 const repoRoot = findRepoRoot();
+const PUBLIC_DOCUMENTATION_BY_SKILL: Readonly<Record<string, string>> = {
+  "jev-capability-advisor": "docs/skills/jev-capability-advisor/README.md",
+};
+const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly string[]>> = {
+  "jev-capability-advisor": [
+    "docs/skills/jev-capability-advisor/benchmarks/README.md",
+    "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json",
+    "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+    "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
+    "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json",
+    "skill-evals/jev-capability-advisor/benchmarks/native-luna-low-dev9-2026-09-25.json",
+    "skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json",
+    "site/src/components/JevBenchmarkPromo.astro",
+    "site/src/components/JevBenchmarkLink.astro",
+    "site/src/components/JevFeatureStatus.astro",
+    "site/src/components/JevLunaLowDev9.astro",
+    "site/src/components/JevNextSkillComparison.astro",
+    "site/src/lib/jev-luna-low-dev9.mjs",
+    "site/src/lib/jev-next-skill-benchmarks.mjs",
+    "site/src/lib/jev-native-next-skill.mjs",
+    "site/src/lib/jev-promo-comparison.mjs",
+    "site/src/lib/jev-benchmarks.mjs",
+    "site/src/lib/jev-runtime-evidence.mjs",
+    "site/src/lib/jev-measurement-series.mjs",
+  ],
+};
 
 marked.use({
   gfm: true,
@@ -99,9 +127,12 @@ export interface CatalogSkill {
   compatibility?: string;
   defaultInstallHost: SkillInstallHost;
   description: string;
+  documentationPath?: string;
+  documentationUrl?: string;
   evalPath?: string;
   evalUrl?: string;
   fileTree: SkillTreeNode;
+  featured: boolean;
   hasOpenAiMetadata: boolean;
   html: string;
   installCommands: SkillInstallCommand[];
@@ -263,10 +294,22 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
   const openAiMetadataPath = normalizePath(path.join(skillDir, "agents/openai.yaml"));
   const hasOpenAiMetadata = existsSync(path.join(repoRoot, openAiMetadataPath));
   const evalPath = publicEvalPath(name);
+  const documentationPath = kind === "public" ? PUBLIC_DOCUMENTATION_BY_SKILL[name] : undefined;
+  const pageMarkdown = documentationPath
+    ? await readFile(path.join(repoRoot, documentationPath), "utf8")
+    : parsed.content;
+  const pageSourceDir = documentationPath ? path.dirname(documentationPath) : skillDir;
   const html = sanitizeSkillHtml(
-    await marked.parse(normalizeSkillMarkdown(parsed.content, skillDir)),
+    await marked.parse(normalizeSkillMarkdown(pageMarkdown, pageSourceDir)),
   );
   const { modifiedAt, publishedAt } = sourceDates(sourcePath);
+  const presentationSources = documentationPath
+    ? [documentationPath, ...(PUBLIC_PRESENTATION_SOURCES_BY_SKILL[name] ?? [])]
+    : [];
+  const presentationModifiedAt = presentationSources.reduce((latest, source) => {
+    const date = sourceDates(source).modifiedAt;
+    return date > latest ? date : latest;
+  }, modifiedAt);
 
   return {
     body: parsed.content,
@@ -275,16 +318,19 @@ async function readSkillFile(kind: SkillKind, relativePath: string) {
     compatibility,
     defaultInstallHost,
     description,
+    documentationPath,
+    documentationUrl: documentationPath ? repoUrl(documentationPath) : undefined,
     evalPath,
     evalUrl: evalPath ? repoUrl(evalPath) : undefined,
     fileTree,
+    featured: kind === "public" && name === "jev-capability-advisor",
     hasOpenAiMetadata,
     html,
     installCommands: installCommandsFor(kind, name, defaultInstallHost, supportedInstallHosts),
     kind,
     license: asString(data.license) ?? "Unspecified",
     metadata,
-    modifiedAt,
+    modifiedAt: presentationModifiedAt,
     name,
     openAiMetadataPath: hasOpenAiMetadata ? openAiMetadataPath : undefined,
     openAiMetadataUrl: hasOpenAiMetadata ? repoUrl(openAiMetadataPath) : undefined,

@@ -39,9 +39,9 @@ Use:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a cursor -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
@@ -59,8 +59,8 @@ The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai
 Install Claude Code public skills project-locally or globally with the skills CLI:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -a claude-code -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -92,6 +92,14 @@ Test the changed public skill locally after approval:
 ```bash
 pnpm dlx skills@1.5.23 add ./skills --skill codegraph-ast-grep -a codex --copy -y
 ```
+
+### Requested PR previews
+
+The separate `stark-ai-de/agent-skills-preview` repository deploys an explicitly requested open PR through `pages-preview.yml`, with inputs `pr` and its exact `source_sha`. It replaces that preview site's latest snapshot, not production Pages.
+
+To check the same build locally, set `AGENT_SKILLS_PREVIEW_PR` and `AGENT_SKILLS_PREVIEW_SHA` together when running `pnpm run validate:site`. Assets, navigation and manifest URLs use `/agent-skills-preview/pr-<number>/`; source links use the pinned SHA. Preview HTML is `noindex, nofollow`, robots disallows crawling and no sitemap is emitted. Without those variables, the production build retains `/agent-skills/` and its normal indexing metadata.
+
+After deployment, verify `preview.json` against the PR head, then check that CSS/JavaScript load and the benchmark interactions work. A successful deployment receipt alone does not prove the page works.
 
 ## Repository Settings
 
@@ -166,6 +174,13 @@ Historical `## vX.Y.Z - date` headings and new Release Please headings are both
 valid; historical sections and the existing `## Unreleased` section remain
 unchanged in the generated PR.
 
+Release Please uses GitHub-generated changelog notes to summarize merged pull
+requests rather than intermediate branch commits. Keep each PR title accurate
+for its final behavior; removed experiments must not be advertised as shipped
+features. Conventional Commits still determine the version. The changelog parser
+preserves GitHub's internal headings such as `What's Changed` within their
+version section, while release validation protects all existing changelog bytes.
+
 ### Generate the release PR
 
 After feature work merges, the `Release Please` workflow uses a repository-scoped
@@ -208,7 +223,7 @@ token to add `autorelease: tagged` and remove `autorelease: pending` for that
 exact generated PR. A failed dispatch or label transition keeps the run failed
 and is safe to retry; it cannot silently unlock the next generated release PR.
 If `main` advanced after the candidate was validated, recover a transient
-failure through **Actions → Publish Release → original run → Re-run jobs** or
+failure through **Actions → 🚀 Publish Release → original run → Re-run jobs** or
 `gh run rerun <original-run-id>`. A normal new
 `pnpm run release:manage -- publish --confirm` dispatch always targets current
 `main` and is not a retry of the older candidate.
@@ -324,6 +339,23 @@ contracts and runs root release validation only for the generated release PR.
 
 GitHub Actions job summaries name the next operator follow-up after each run.
 
+### GitHub Actions workflows
+
+The maintained workflows shown in Actions are:
+
+| Workflow                                                                   | Purpose                                           | Trigger                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| [✅ Validate](../.github/workflows/validate.yml)                           | Repository checks and release-subject preparation | Pull request, push to `main`, manual    |
+| [🌐 GitHub Pages](../.github/workflows/pages.yml)                          | Build and deploy the skill catalog                | Relevant push to `main`, manual         |
+| [📝 Release Please](../.github/workflows/release-please.yml)               | Create or update the draft release PR             | Push to `main`, manual                  |
+| [🚀 Publish Release](../.github/workflows/publish-release.yml)             | Verify and publish an approved release            | Release-manifest push to `main`, manual |
+| [🧾 Post-release Evidence](../.github/workflows/post-release-evidence.yml) | Verify published archives and attestations        | Publisher dispatch or manual            |
+| [🔏 Attest Release Archives](../.github/workflows/attest-release.yml)      | Attest archives for an exact tag                  | Manual                                  |
+
+Workflow filenames and job IDs are stable automation identifiers. Release run
+titles retain their existing format because recovery and evidence lookup match
+them exactly, including historical runs.
+
 ### CLI and GitHub web equivalents
 
 All local commands dispatch hosted workflows or APIs; none creates a local tag
@@ -334,11 +366,11 @@ or release. Hosted mutations require `--confirm`.
 | `pnpm run release:manage -- status`                                                     | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
 | `pnpm run release:manage -- setup-check`                                                | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
 | `pnpm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]`        | Review the feature diff and affected component versions.                                                                                                                                                                                     |
-| `pnpm run release:manage -- release-pr --confirm`                                       | **Actions → Release Please → Run workflow**.                                                                                                                                                                                                 |
-| `pnpm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                              |
-| `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                     |
+| `pnpm run release:manage -- release-pr --confirm`                                       | **Actions → 📝 Release Please → Run workflow**.                                                                                                                                                                                              |
+| `pnpm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                           |
+| `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                  |
 | `pnpm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                 |
-| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                       |
+| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → 🧾 Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                    |
 | `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
 
 Equivalent local release validation:
@@ -403,13 +435,7 @@ file. After first publication, sanitized portal observations belong in
 The committed evidence recipe may lag listing-asset changes until a maintainer
 regenerates it from a clean tagged identity.
 
-Directory identity is `pnpm run verify:openai-directory` locally. The dedicated
-`ChatGPT Directory Identity` workflow runs the same strict script through
-`.github/actions/verify-openai-directory` on a schedule or manual dispatch after
-publication; deterministic hosted `Validate` does not fetch the live directory.
-That gate covers the directory document (`DIR-001`) and public category-catalog
-membership (`DIR-002`). Provenance for later
-GitHub Releases is `Publish Release` plus `Post-release Evidence`; the local
+Provenance for later GitHub Releases is `Publish Release` plus `Post-release Evidence`; the local
 fallback is `pnpm run build:release-subjects`. Annotated GitHub Release tags on this
 repository are unsigned today. The existing
 `.github/workflows/attest-release.yml` attests archives from an existing tag;
@@ -452,10 +478,30 @@ npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a c
 
 For Claude Code release artifacts, verify the source archive includes the two named Claude-operation skills and the explicitly named engineering-workflow skills used by the commands above; do not infer membership from a directory listing. Then verify installation with the `-a claude-code` commands above.
 
+### Manual directory observation
+
+`pnpm run verify:openai-directory` remains a strict, manual diagnostic for the
+directory document (`DIR-001`) and public category-catalog membership (`DIR-002`).
+It depends on unofficial ChatGPT endpoints. Neither the local aggregate nor
+hosted `Validate` fetches them. An access failure provides no identity verdict;
+a successful document comparison alone does not prove catalog membership.
+Record the observed result and environment separately from publication evidence.
+
+The `ChatGPT Directory Identity` workflow and its composite action were removed
+after repeated catalog HTTP 403 failures, including the
+[2026-09-25 run](https://github.com/stark-ai-de/agent-skills/actions/runs/36137097513).
+On that date, local Bun 1.4.2 reproduced the Cloudflare challenge with the
+existing browser User-Agent. Node.js 24.20.0 retrieved both endpoints and the
+directory document matched, but the plugin was absent from the returned
+Developer Tools catalog (256 entries, no next page). Switching runtimes alone
+therefore did not restore the complete check. The manual diagnostic still fails
+on access errors or mismatches; investigate current portal and client visibility
+before claiming that publication or installation is available.
+
 ## Operator follow-up
 
 GitHub Actions job summaries point here after a run. These checks are product
-and portal work. Directory identity is the `verify:openai-directory` gate.
+and portal work. Directory identity is a [manual observation](#manual-directory-observation).
 Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence`.
 
 ### Before a listing update
@@ -499,7 +545,7 @@ security routes return HTTP 200.
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
    `1.4.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
-3. Inspect all six canonical `agents/openai.yaml` files and their byte-identical
+3. Inspect all seven canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
 4. Run focused and aggregate validation, inspect the ZIP listing, and confirm
    two-build checksum equality.
@@ -518,8 +564,8 @@ security routes return HTTP 200.
 2. Create a plugin draft and choose **Skills only**.
 3. Enter the public listing and verified developer identity.
 4. Upload the exact direct `openai.zip` asset from the verified GitHub Release.
-5. Verify all six packaged skill icons. If the portal ignores package metadata,
-   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, and `pen`
+5. Verify all packaged skill icons. If the portal ignores package metadata,
+   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`, and `chart`
    glyphs.
 6. Keep the existing light and dark Plugin Info logos unchanged.
 7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)

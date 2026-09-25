@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" shape-rendering="crispEdges">
+  <title>Jev capability radar</title>
+  <g fill="none" stroke="#0021c7" stroke-width="42">
+    <circle cx="512" cy="512" r="316"/>
+    <circle cx="512" cy="512" r="210"/>
+    <circle cx="512" cy="512" r="104"/>
+  </g>
+  <circle cx="512" cy="512" r="43" fill="#0021c7"/>
+  <g fill="#7fa0ff">
+    <circle cx="696" cy="328" r="44"/>
+    <circle cx="407" cy="625" r="39"/>
+  </g>
+</svg>

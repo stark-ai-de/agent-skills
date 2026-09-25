@@ -27,10 +27,14 @@
       {
         "name": "drawio-diagrams",
         "source": "skills/engineering-workflows/drawio-diagrams"
+      },
+      {
+        "name": "jev-capability-advisor",
+        "source": "skills/skill-maintenance/jev-capability-advisor"
       }
     ]
   },
-  "bundleHash": "b2d496e49651069e45a85ce812f8289bcffb7a7e519a3f2f3894bbcccf84ec1d",
+  "bundleHash": "95c343362fa847c56593d88ff87e56abdab91dddcc96224201ec81ee1b98141f",
   "files": [
     {
       "byteLength": 10271,
@@ -39,16 +43,16 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 658,
+      "byteLength": 788,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "5692cd2079d09874a4926eecc437ea7c29a9f63736b19c07614f3a73bf5fd8d0"
+      "sha256": "caec8199236ed995fd3b6454b054ed8831cc3e17b79a7d3158cb8111e346447e"
     },
     {
-      "byteLength": 1486,
+      "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "0b72536b7407aa8e983f2f06040ae9e9d74fb033882a6f55f65033b0abe55342"
+      "sha256": "a5f61932d48d2ed19e526f78313d3b20c7e4790be730108a67f75bbc94e08cc8"
     },
     {
       "byteLength": 12772,
@@ -1927,6 +1931,84 @@
       "mode": "0755",
       "path": "skills/drawio-diagrams/scripts/validate_drawio.py",
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
+    },
+    {
+      "byteLength": 11118,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/SKILL.md",
+      "sha256": "70d02472f8d873aeba874c26ba4c70c87b718d89e8e45368b2748c341c236e8f"
+    },
+    {
+      "byteLength": 615,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/agents/openai.yaml",
+      "sha256": "35ba491bf0dfb7d900f5cb5c48ef45c51dd1db0d6748f809bdefd2202063d09f"
+    },
+    {
+      "byteLength": 15526,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.png",
+      "sha256": "fd2dbb93b1ac7c3df6e971eef019ca20c6ecd1a8519b6c672bc8c83a876dfe79"
+    },
+    {
+      "byteLength": 504,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.svg",
+      "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
+    },
+    {
+      "byteLength": 25074,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/contract.md",
+      "sha256": "e85f9fc87ad95b84d37dfe833c2cdfa36cdac5eaba4366ca0737a171beb0322e"
+    },
+    {
+      "byteLength": 10258,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/session-integration.md",
+      "sha256": "c21b6bf916654adcc1866f62d00a97bcc04362471051f72166d795c776a7849b"
+    },
+    {
+      "byteLength": 4617,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/decision_cache.py",
+      "sha256": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa"
+    },
+    {
+      "byteLength": 14366,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/https_transport.py",
+      "sha256": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f"
+    },
+    {
+      "byteLength": 12958,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/index_cache.py",
+      "sha256": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1"
+    },
+    {
+      "byteLength": 45919,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
+      "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
+    },
+    {
+      "byteLength": 19499,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_session.py",
+      "sha256": "154d0040f456deb6f8b5303348a9ee10695a8bbfb33972f3f3a9870f2e5f3efa"
+    },
+    {
+      "byteLength": 17467,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/retrieval.py",
+      "sha256": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a"
+    },
+    {
+      "byteLength": 3418,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/routing_metadata.py",
+      "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     }
   ],
   "plugin": {
@@ -1935,5 +2017,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "01833376ed644b6f3ded91e636fbc4ff2581a92b978626d8ebc37e62673072b8"
+  "treeHash": "83dcae896f724f28d0aec2172ac64e3b9cf05512f8dd49f795f5d52f95d12a49"
 }

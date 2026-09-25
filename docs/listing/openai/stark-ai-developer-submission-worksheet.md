@@ -29,6 +29,7 @@ freeze evidence or a portal draft identifier.
 - Create editable draw.io diagrams from system context.
 - Create repository documentation and animated README assets.
 - Curate durable Codex memory with explicit safety boundaries.
+- Recommend available skills and tools for a supplied task with Jev in Codex.
 
 ## Starter prompts
 
@@ -51,10 +52,11 @@ freeze evidence or a portal draft identifier.
 - `architecture-compass`: CHAT, CODEX; implicit invocation enabled; portal glyph `hierarchy`
 - `codegraph-ast-grep`: CODEX; implicit invocation disabled; portal glyph `search`
 - `drawio-diagrams`: CHAT, CODEX; implicit invocation enabled; portal glyph `pen`
+- `jev-capability-advisor`: CODEX; implicit invocation enabled; portal glyph `chart`
 
 ## Portal asset handoff
 
-1. Verify the six packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
+1. Verify the packaged skill icons. If the portal ignores package icon metadata, restore the existing reviewed portal glyph for each skill.
 2. Keep both existing Plugin Info logos unchanged. Restore them only if the ZIP upload reset them.
 3. Follow the [Composer icon handoff](stark-ai-developer-first-publication.md#composer-icon-handoff) to set the separate light and dark PNGs manually; do not use the Plugin Info logos for these fields.
 4. After propagation, verify light and dark rendering plus the public directory identity.
