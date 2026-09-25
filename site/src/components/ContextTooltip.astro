@@ -3,10 +3,11 @@ interface Props {
   align?: "start" | "center" | "end";
   id: string;
   label: string;
-  text: string;
+  text?: string;
 }
 
-const { align = "center", id, label, text } = Astro.props;
+const { align = "center", id, label, text = "" } = Astro.props;
+const hasCustomContent = Astro.slots.has("default");
 ---
 
 <span class={`context-tip context-tip--${align}`}>
@@ -23,6 +24,6 @@ const { align = "center", id, label, text } = Astro.props;
   </button>
   <span class="context-tip__card" id={id} role="tooltip">
     <strong>{label}</strong>
-    <span>{text}</span>
+    {hasCustomContent ? <slot /> : <span>{text}</span>}
   </span>
 </span>

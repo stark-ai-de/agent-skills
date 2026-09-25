@@ -59,14 +59,15 @@ const definitions = [
     label: "Hussi9 + our HTTPS",
     experimental: true,
     description: "Our internal experiment · not a published skill.",
-    info: "We tested Hussi’s selection function with our reusable HTTPS client and compact JSON. We did not integrate the rest of its router, such as inventory discovery and MCP routing. Those features were not removed from Hussi; they are outside this experiment. It was about 8 ms faster than Jev here, with 48/48 accepted skill choices. Internal and unpublished.",
+    info: "This prototype used a fixed catalog and did not test live inventory discovery or MCP routing, which our advisor needs. That’s why it stayed unpublished. About 8 ms faster here; 48/48 accepted choices.",
+    credit: true,
   },
   {
     id: "native",
     arm: "native",
     label: "Native",
     description: "Native model selector · identical next-skill inputs.",
-    info: "GPT-6 Luna, reasoning medium, receives the same frozen task, candidate cards and one-choice rules. Measures preparation plus the model turn in a separate run. Process startup, skill loading and task execution are excluded. Native stays the reference; hovering resets the Jev comparison.",
+    info: "GPT-6 Luna, reasoning medium, receives the same frozen task, candidate cards and one-choice rules. Measures preparation plus the model turn in a separate run. Process startup, skill loading and task execution are excluded. Native stays the reference.",
   },
 ];
 
@@ -150,6 +151,7 @@ export function promoComparison(report, nativeEvidence, visibleIds = visibleVari
     inputSaving: Math.min(confirmation.reductionVsPublished, confirmation.reductionVsControl),
     skillObservations: confirmation.skillObservations,
     noneObservations: confirmation.noneObservations,
+    catalogRecords: evidence.catalogRecords,
     nativeModel: native.model,
     nativeReasoning: native.reasoning,
     nativeCachedTurns: nativeEvidence.provider_prefix_cache_observations,
