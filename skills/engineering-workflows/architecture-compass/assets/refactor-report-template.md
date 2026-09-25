@@ -97,6 +97,8 @@ Complete this section for `refactor` and the execution phase of `plan-run-refact
 - Integrated diff review:
 - Deferred work:
 
+For adopted testing decisions, link the target-native measurement record using [testing-outcome-receipt-template.md](testing-outcome-receipt-template.md). Preserve provider revision/content identity and local mapping there; do not create a second ledger. Measurement states (`met`, `unmet`, `unmeasured`, `waived`, `not-applicable`) do not replace execution or evidence statuses.
+
 ## Validation ledger
 
 Record one AC-ADR-049 receipt per distinct proof obligation and reconcile every delegated receipt against the integrated candidate.

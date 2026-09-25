@@ -1,4 +1,4 @@
-name: Post-release Evidence
+name: 🧾 Post-release Evidence
 run-name: Post-release Evidence · ${{ inputs.tag }}
 
 on:

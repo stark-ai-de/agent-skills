@@ -440,6 +440,11 @@
         }
       ]
     },
+    { "id": "AC-ADR-059", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-060", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-061", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-062", "disposition": "independent", "relations": [] },
+    { "id": "AC-ADR-063", "disposition": "independent", "relations": [] },
     {
       "id": "AC-ADR-064",
       "disposition": "material",

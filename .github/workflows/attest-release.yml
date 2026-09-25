@@ -1,4 +1,4 @@
-name: Attest Release Archives
+name: 🔏 Attest Release Archives
 
 on:
   workflow_dispatch:

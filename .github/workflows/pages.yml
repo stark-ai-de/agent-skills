@@ -1,4 +1,4 @@
-name: GitHub Pages
+name: 🌐 GitHub Pages
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ on:
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
+      - docs/skills/**
       - incubator/**
       - skill-evals/**
       - site/**

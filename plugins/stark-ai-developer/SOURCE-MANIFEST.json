@@ -27,10 +27,14 @@
       {
         "name": "drawio-diagrams",
         "source": "skills/engineering-workflows/drawio-diagrams"
+      },
+      {
+        "name": "jev-capability-advisor",
+        "source": "skills/skill-maintenance/jev-capability-advisor"
       }
     ]
   },
-  "bundleHash": "b2d496e49651069e45a85ce812f8289bcffb7a7e519a3f2f3894bbcccf84ec1d",
+  "bundleHash": "95c343362fa847c56593d88ff87e56abdab91dddcc96224201ec81ee1b98141f",
   "files": [
     {
       "byteLength": 10271,
@@ -39,16 +43,16 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 658,
+      "byteLength": 788,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "5692cd2079d09874a4926eecc437ea7c29a9f63736b19c07614f3a73bf5fd8d0"
+      "sha256": "caec8199236ed995fd3b6454b054ed8831cc3e17b79a7d3158cb8111e346447e"
     },
     {
-      "byteLength": 1486,
+      "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "7687fdb4549409386c01a0d2e805047edde8a94085a2d8f8c7a67265229fdf13"
+      "sha256": "30f9842ab925a5f177964b06ac9a8ca4edbfb9f3805669ff5ac95a1c60302269"
     },
     {
       "byteLength": 13030,
@@ -171,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 16705,
+      "byteLength": 17342,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "6b65f167c0d9a7d41b7aeb0722cace6e5ac89174ed99450ffb4fe7238ad7b8c3"
+      "sha256": "faf358f1be32ce8e155797be0e09f2c72b04641006178cd2be7c3eadebf67d08"
     },
     {
       "byteLength": 692,
@@ -243,16 +247,28 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 7561,
+      "byteLength": 7942,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "afed8b4539917a0bd366b3e5a74a52b622beaac756d6b9539ee2dd5c470776fc"
+      "sha256": "62da0156652b7bb6505a3978d8f0414f5192c540338217dc345c6126b3bea2b1"
     },
     {
-      "byteLength": 11861,
+      "byteLength": 12832,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "80e26f1bda7c90251fad99e836b7dbab2c4a2745ee649dfb060397284757df44"
+      "sha256": "34d02de1e9e309a9ce94947cd02a076a8a825737a3462b280609973a61281af9"
+    },
+    {
+      "byteLength": 6103,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/testing-outcome-receipt-template.md",
+      "sha256": "894ed710f10c0ccb910640ac9b5b642178e2e5272ab57a70861910136b5afc96"
+    },
+    {
+      "byteLength": 9212,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/vitest4-testing-profile.md",
+      "sha256": "cc36c3d424e43bf5922d8df81bbd2286dbc8f407b820a31c8c304e07a6894874"
     },
     {
       "byteLength": 3796,
@@ -1299,6 +1315,96 @@
       "sha256": "a9baa65d71b98c12a19ceba82ef9c057ab34e9a08929b23a19581527296560f8"
     },
     {
+      "byteLength": 2868,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.guide.md",
+      "sha256": "e9d76e7ff8aa1bacae02048d5a604e5e9d6e5a79accfeb094b5a82d3d56c9be3"
+    },
+    {
+      "byteLength": 5421,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.long.md",
+      "sha256": "921f2452f542660c899164b5449e3a206b05d8b41a5eac57c78d9a840f14aa6d"
+    },
+    {
+      "byteLength": 1839,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-059-own-repository-validation-through-discoverable-framework-tests.short.md",
+      "sha256": "1513ac0efedda38dccbb012e7f5d9906138ea5eb464b34d9cc9c61408fb1f6af"
+    },
+    {
+      "byteLength": 2493,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.guide.md",
+      "sha256": "2e62add0ba300c7ee07e2548415cbef0c870b8dc3dd63b2d7400b22a27d911a3"
+    },
+    {
+      "byteLength": 5331,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.long.md",
+      "sha256": "e9dc4367506ffbd75bee8476f878debdfabf1542ebe345a08aac84f98a949948"
+    },
+    {
+      "byteLength": 1672,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts.short.md",
+      "sha256": "83b7fc274e4e155a81682c2bd67f2fea65aae061b3a9560c2d03080590e362f8"
+    },
+    {
+      "byteLength": 2785,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.guide.md",
+      "sha256": "e14fecceceb5ad610d3c64162f6c492c20709cae85a1f6a8fdb7213710132bf0"
+    },
+    {
+      "byteLength": 5575,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.long.md",
+      "sha256": "18e05f2151e72b35e3bde1a40dcf900f3278ff86817a9c9ce6c58f16bfefcefc"
+    },
+    {
+      "byteLength": 1651,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets.short.md",
+      "sha256": "678958f6f3d4d3e91d8658d78dde9facfd71899b6745d81cadf071d1ff9bdf53"
+    },
+    {
+      "byteLength": 2621,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.guide.md",
+      "sha256": "55b3649b9f761ebb9c0ffa50640d96735e2248900ff1196adb14357e03719861"
+    },
+    {
+      "byteLength": 5319,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.long.md",
+      "sha256": "489dacfbe885df7e8cfdfc9124f9a4ead5c21fe7bb554d381791b69c94b68283"
+    },
+    {
+      "byteLength": 1635,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-062-cache-test-transforms-without-reusing-correctness.short.md",
+      "sha256": "bdc916731983178de134f2487a1d4b5e6c9080cae2671b28211df0f6263f4635"
+    },
+    {
+      "byteLength": 15720,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.guide.md",
+      "sha256": "733e5424b9921e3756196dbf806747bc327c3229d0ef76e1d49c3e2ca49e88fb"
+    },
+    {
+      "byteLength": 7427,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.long.md",
+      "sha256": "47bf04a50043c54c78c7603d9d0c9c79521932a0e674fd211743154c7c0e0d42"
+    },
+    {
+      "byteLength": 2301,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.short.md",
+      "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
+    },
+    {
       "byteLength": 12348,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
@@ -1317,10 +1423,10 @@
       "sha256": "9e095f6a44a9d78928aeed56bcc5d367284b5da2b31147cf6303549d0b2c5993"
     },
     {
-      "byteLength": 49104,
+      "byteLength": 53947,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "b06fa0e3e126318bef1dabbb14d65d22a4e254b4fc399d2090651ee57df1fc5d"
+      "sha256": "36af2769510af7ed5aac6f96c9ea020bf889614749b7762a609074555a2131bf"
     },
     {
       "byteLength": 6988,
@@ -1861,13 +1967,91 @@
       "mode": "0755",
       "path": "skills/drawio-diagrams/scripts/validate_drawio.py",
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
+    },
+    {
+      "byteLength": 11118,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/SKILL.md",
+      "sha256": "70d02472f8d873aeba874c26ba4c70c87b718d89e8e45368b2748c341c236e8f"
+    },
+    {
+      "byteLength": 615,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/agents/openai.yaml",
+      "sha256": "35ba491bf0dfb7d900f5cb5c48ef45c51dd1db0d6748f809bdefd2202063d09f"
+    },
+    {
+      "byteLength": 15526,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.png",
+      "sha256": "fd2dbb93b1ac7c3df6e971eef019ca20c6ecd1a8519b6c672bc8c83a876dfe79"
+    },
+    {
+      "byteLength": 504,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/openai-icon.svg",
+      "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
+    },
+    {
+      "byteLength": 25074,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/contract.md",
+      "sha256": "e85f9fc87ad95b84d37dfe833c2cdfa36cdac5eaba4366ca0737a171beb0322e"
+    },
+    {
+      "byteLength": 10258,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/references/session-integration.md",
+      "sha256": "c21b6bf916654adcc1866f62d00a97bcc04362471051f72166d795c776a7849b"
+    },
+    {
+      "byteLength": 4617,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/decision_cache.py",
+      "sha256": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa"
+    },
+    {
+      "byteLength": 14366,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/https_transport.py",
+      "sha256": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f"
+    },
+    {
+      "byteLength": 12958,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/index_cache.py",
+      "sha256": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1"
+    },
+    {
+      "byteLength": 45919,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
+      "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
+    },
+    {
+      "byteLength": 19499,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/jev_session.py",
+      "sha256": "154d0040f456deb6f8b5303348a9ee10695a8bbfb33972f3f3a9870f2e5f3efa"
+    },
+    {
+      "byteLength": 17467,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/retrieval.py",
+      "sha256": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a"
+    },
+    {
+      "byteLength": 3418,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/scripts/routing_metadata.py",
+      "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     }
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.3.0"
+    "version": "1.5.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "c95b0d51e27a386a7c2b58c17e24f4e7d9112662e892c3bd5267f2f005abb059"
+  "treeHash": "6b8c226493526252e43571c49b6e5b3ae520e42ea507566c1b78b1c12e660d6d"
 }

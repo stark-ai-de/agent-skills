@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "stark-ai-developer",
-    "version": "1.3.0",
+    "version": "1.5.0",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
-    "longDescription": "stark AI Developer is a harness-first developer workflow toolkit for developers and coding agents: from a rough feature idea and existing code to an implementation-ready specification, architecture with transparent trade-offs, structural code findings, editable architecture diagrams, consistent repository documentation, and safely curated agent memory.\n\nThe included skills are not a theoretical catalog for the store. They come from our daily work, are used multiple times a day, and are continuously improved. The plugin reflects the standard we apply to our own work and to every tool that analyzes or changes production code.\n\nWe chose open source deliberately: transparency about how it works and what it contains, room for your own adaptations, and a way to contribute feedback, ideas, and improvements. The package has no backend, MCP server, connectors, authentication, telemetry, analytics, hidden network calls, or runtime downloads.",
+    "longDescription": "stark AI Developer brings practical workflows for implementation-ready specifications, architecture decisions, structural code analysis, editable diagrams, repository visuals, agent memory, and capability recommendations. Its open-source skills expose their instructions and supporting scripts for review and adaptation.\n\nThe package has no shared backend, bundled MCP server, telemetry or analytics. Jev Capability Advisor is an optional Codex workflow: fresh recommendations send your supplied task and public capability descriptions to TypeSafe using your own API key. Offline candidate inspection needs no credential or network. Your host controls discovery, permissions and execution; other tools and services keep their own access requirements.",
     "developerName": "servrox solutions UG",
     "category": "Developer Tools",
     "capabilities": [
@@ -14,7 +14,8 @@
       "Search code structurally with CodeGraph and ast-grep workflows.",
       "Create editable draw.io diagrams from system context.",
       "Create repository documentation and animated README assets.",
-      "Curate durable Codex memory with explicit safety boundaries."
+      "Curate durable Codex memory with explicit safety boundaries.",
+      "Recommend available skills and tools for a supplied task with Jev in Codex."
     ],
     "starterPrompts": [
       "Turn this feature idea into an implementation-ready specification.",
@@ -46,7 +47,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Adds observation-gated ChatGPT and Codex web Plan adapters, preserves explicit refusals and proven-absence fallback, reports read-only enforcement independently, and uses documented native controls with product-neutral skill starter prompts. Adds Architecture Compass guidance for pnpm-owned dependencies, Bun-first execution, evidence-selected runtime winners, and explicit verified fallbacks.",
+  "releaseNotes": "Adds an adoptable Architecture Compass decision for Tailwind design-system linting with all supported shadcn lint rules enabled by default. Includes ESLint and Oxlint examples, shared UI discovery, scoped component contracts, staged enforcement, and explicit compatibility and evidence boundaries.",
   "skills": [
     {
       "name": "codex-memory-curator",
@@ -95,6 +96,14 @@
       "products": ["CHAT", "CODEX"],
       "allowImplicitInvocation": true,
       "portalGlyph": "pen"
+    },
+    {
+      "name": "jev-capability-advisor",
+      "intent": "Recommend available skills or MCP tools for a supplied task, or inspect candidates locally.",
+      "cohesion": "Helps choose an appropriate next workflow from the host-provided catalog without replacing native discovery or execution.",
+      "products": ["CODEX"],
+      "allowImplicitInvocation": true,
+      "portalGlyph": "chart"
     }
   ]
 }

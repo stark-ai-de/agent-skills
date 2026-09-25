@@ -93,11 +93,18 @@
       "cadence": "every aggregate run"
     },
     {
-      "id": "hosted-directory",
+      "id": "manual-directory",
       "command": "pnpm run verify:openai-directory",
-      "owner": ".github/actions/verify-openai-directory/action.yml",
-      "proof": "Hosted directory identity and catalog membership",
-      "cadence": "scheduled/manual post-publication"
+      "owner": "scripts/plugin/verify-openai-directory.mjs",
+      "proof": "Live directory identity and catalog membership when unofficial endpoints are accessible",
+      "cadence": "manual post-publication"
+    },
+    {
+      "id": "jev-capability-advisor",
+      "command": "pnpm run validate:jev",
+      "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
+      "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
+      "cadence": "every aggregate run"
     }
   ]
 }

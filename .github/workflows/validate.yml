@@ -1,4 +1,4 @@
-name: Validate
+name: ✅ Validate
 
 on:
   workflow_dispatch:
@@ -133,6 +133,39 @@ jobs:
           title: Repository validation
           success: Use the three direct release-subject artifacts only from a successful main push; pull requests do not publish them. Next hosted step is Publish Release in docs/publishing.md. Operator follow-up is docs/publishing.md#operator-follow-up.
           failure: Open the failed contract step, fix the owning boundary, and rerun the workflow.
+
+  testing-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Install isolated testing profile
+        run: pnpm --dir skill-evals/architecture-compass/fixtures/measurable-testing install --frozen-lockfile
+
+      - name: Qualify testing profile
+        run: pnpm --dir skill-evals/architecture-compass/fixtures/measurable-testing run qualify --output "$RUNNER_TEMP/testing-outcome.json"
+
+      - name: Upload exact-run testing evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: testing-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/testing-outcome.json
+          if-no-files-found: warn
 
   archive-identity:
     strategy:

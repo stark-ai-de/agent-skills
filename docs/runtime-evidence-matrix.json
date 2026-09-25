@@ -279,6 +279,79 @@
       "rationale": "This repository publishes skills, plugins, archives, and a static Astro site; it has no Bun server artifact in scope.",
       "fallbackOrder": ["not-applicable"],
       "revisit": "Revisit if the repository adds a server deployable."
+    },
+    {
+      "id": "jev-advisor-python",
+      "surfaces": ["internal:validate-jev:python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "localOfflineFixtures": "pass",
+            "nativeCodexOfflineInvocation": "unknown",
+            "minimum310Interpreter": "unknown",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        "skills/skill-maintenance/jev-capability-advisor/SKILL.md",
+        "scripts/validation/jev-capability-advisor/validate.mjs",
+        "skill-evals/jev-capability-advisor/README.md",
+        "pnpm run validate:jev"
+      ],
+      "rationale": "The advisor is a dependency-free Python 3.10+ helper; current local offline fixtures ran on Python 3.14.7. Earlier native Codex inspection predates the current runtime and does not qualify its host integration. Bun launches the repository gate but does not execute Python. The minimum interpreter and other hosts remain unqualified.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Requalify after Python compatibility, cache primitive or helper dependency changes. If Python is unavailable, report the missing prerequisite; do not install or substitute a runtime silently."
+    },
+    {
+      "id": "visual-validator-python",
+      "surfaces": ["internal:visual-validators:python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "localDrawioAndSvgFixtures": "pass",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        "scripts/validation/drawio-diagrams/validate-fixtures.mjs",
+        "scripts/validation/animated-readme-logo/validate-runtime.mjs",
+        "scripts/validation/lib/visual-assertion-regressions.mjs",
+        "pnpm run validate:drawio",
+        "pnpm run validate:animated-readme-logo"
+      ],
+      "rationale": "Existing Draw.io and SVG validation helpers execute Python explicitly under JavaScript parent gates. This inventory records their existing runtime rather than changing it; local aggregate fixtures passed on Python 3.14.7.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Re-evaluate when the visual validators change runtime or minimum Python requirements; missing Python fails the owning check."
+    },
+    {
+      "id": "skillopt-qualification-python",
+      "surfaces": ["internal:skillopt-qualification:python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "localSetupQualification": "unknown",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        "scripts/validation/skillopt-setup/validate-setup.mjs",
+        "pnpm run validate:skillopt"
+      ],
+      "rationale": "The existing SkillOpt setup validator explicitly launches Python helpers. This newly discovered inventory entry records source-level ownership only; it does not claim a new SkillOpt execution result.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
     }
   ]
 }

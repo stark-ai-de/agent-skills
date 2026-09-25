@@ -8,6 +8,7 @@ import {
   assertExactPublicSkillSet,
   copyGitCandidateRepository,
 } from "../validation/smoke-install-contract.mjs";
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../lib/architecture-compass-inventory.mjs";
 
 const root = process.cwd();
 
@@ -69,6 +70,11 @@ const smokeEnvironment = {
 const skillsCommand = configuredSkillsCli || "pnpm";
 const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"];
 const installCases = [
+  {
+    agent: "codex",
+    destination: path.join(".agents", "skills", "jev-capability-advisor"),
+    skill: "jev-capability-advisor",
+  },
   {
     agent: "codex",
     destination: path.join(".agents", "skills", "codex-spec-interviewer"),
@@ -199,11 +205,8 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  // 059–063 belong to separate in-flight decisions; the current payload is sparse.
   const expectedIds = new Set(
-    [...Array.from({ length: 58 }, (_, index) => index + 1), 64].map((id) =>
-      String(id).padStart(3, "0"),
-    ),
+    PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")),
   );
   const expectedPublicAdrCount = expectedIds.size;
   const expectedVariantCount = expectedPublicAdrCount * 3;
@@ -330,6 +333,8 @@ function architectureManifest(skillDir) {
   }
 
   for (const required of [
+    "assets/testing-outcome-receipt-template.md",
+    "assets/vitest4-testing-profile.md",
     "assets/adr-template.short.md",
     "assets/adr-template.long.md",
     "assets/adr-template.guide.md",

@@ -2,7 +2,7 @@
 
 ID: ADR-0028
 Title: Preserve target contracts and gate gateway extraction
-Status: Accepted
+Status: Superseded
 Date: 2026-07-13
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0026
-Superseded by: None
+Superseded by: ADR-0057
 Guide verified: 2026-07-28
 Gist: Preserve target contracts; extract gateways only after reuse and isolation.
 

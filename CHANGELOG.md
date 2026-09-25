@@ -12,6 +12,19 @@
 
 ### Removed
 
+## 0.23.0 (2026-09-25)
+
+## What's Changed
+* fix(site): use project branding for catalog logos and icons by @servrox in https://github.com/stark-ai-de/agent-skills/pull/80
+* feat(site): add Product Hunt launch badge by @servrox in https://github.com/stark-ai-de/agent-skills/pull/82
+* fix(site): keep Product Hunt badge visible when images are blocked by @servrox in https://github.com/stark-ai-de/agent-skills/pull/83
+* Add Agent Skills logo assets by @servrox in https://github.com/stark-ai-de/agent-skills/pull/85
+* feat(jev): add capability advice and qualify lower-input next-skill selection by @servrox in https://github.com/stark-ai-de/agent-skills/pull/90
+* fix(release): generate changelog notes from merged pull requests by @servrox in https://github.com/stark-ai-de/agent-skills/pull/93
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.22.0...v0.23.0
+
 ## [0.22.0](https://github.com/stark-ai-de/agent-skills/compare/v0.21.0...v0.22.0) (2026-09-08)
 
 
