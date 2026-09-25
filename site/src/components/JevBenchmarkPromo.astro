@@ -3,6 +3,7 @@ import { jevBenchmarks as bench, getJevPromoComparison } from "../lib/jev-benchm
 import { repoUrl } from "../lib/skills";
 import ContextTooltip from "./ContextTooltip.astro";
 import JevFeatureStatus from "./JevFeatureStatus.astro";
+import JevLunaLowDev9 from "./JevLunaLowDev9.astro";
 import JevNextSkillComparison from "./JevNextSkillComparison.astro";
 import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
 
@@ -139,6 +140,11 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
   <div class="jev-promo__proof" role="group" aria-label="Selection input">
     <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input <ContextTooltip id="jev-input-saving-info" label="Less selection input" align="start" text={`For the same next-skill tasks, Jev sent ${confirmedInputSaving.toFixed(1)}% fewer provider-reported input tokens than the tested public chooser. That means less selection overhead and can reduce input-token cost; it is not a claim about whole-task token use.`} /></h3><p>Than the tested publicly available competitor.</p></div>
   </div>
+
+  <details class="jev-promo__details" id="jev-luna-low-dev9" open>
+    <summary>GPT-6 Luna Low · live development run · quality gate failed</summary>
+    <div class="jev-promo__details-body"><JevLunaLowDev9 /></div>
+  </details>
 
   <details class="jev-promo__details" id="jev-feature-details">
     <summary>Selection modes &amp; scope</summary>
