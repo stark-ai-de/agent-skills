@@ -205,9 +205,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedIds = new Set(
-    PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")),
-  );
+  const expectedIds = new Set(PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")));
   const expectedPublicAdrCount = expectedIds.size;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
