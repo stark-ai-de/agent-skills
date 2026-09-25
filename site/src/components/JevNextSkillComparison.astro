@@ -1,5 +1,5 @@
 ---
-import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json";
+import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json";
 import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
 import { repoUrl } from "../lib/skills";
 
@@ -10,7 +10,7 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
 ---
 
 <div class="jev-next" data-jev-token-evidence>
-  <p class="jev-next__context">{comparison.catalogRecords}-entry catalog · {comparison.model} · two independent cohorts · two runs per task.</p>
+  <p class="jev-next__context">{comparison.catalogRecords}-entry catalog · {comparison.model} · two cohorts · two runs per task.</p>
 
   <div class="jev-next__cohorts">
     {comparison.cohorts.map((cohort) => (
@@ -20,13 +20,14 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
         <div class="jev-next__table-scroll" role="region" aria-label={`${cohort.label}: input tokens and selection quality`} tabindex="0">
           <table>
             <caption>Input tokens · lower is better. Scroll to compare all columns.</caption>
-            <thead><tr><th scope="col">Variant</th><th scope="col">Median input<br /><span>Total below</span></th><th scope="col">Skills<br />correct</th><th scope="col">No match<br />correct</th></tr></thead>
+            <thead><tr><th scope="col">Variant</th><th scope="col">Median input<br /><span>Total below</span></th><th scope="col">Skills<br />correct</th><th scope="col">No match<br />correct</th><th scope="col">Errors</th></tr></thead>
             <tbody>{cohort.rows.map((row) => (
               <tr class:list={{ "jev-next__winner": row.highlight }}>
                 <th scope="row">{row.label}{row.experiment && <small>Our experiment</small>}</th>
                 <td><strong>{number(row.medianInputTokens)}</strong><small>{number(row.totalInputTokens)} total</small></td>
                 <td>{row.skillCorrect}/{row.skillObservations}</td>
                 <td>{row.noneCorrect}/{row.noneObservations}</td>
+                <td>{row.errors}</td>
               </tr>
             ))}</tbody>
           </table>
@@ -45,8 +46,8 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
     <summary>Study design, source checks &amp; known limits</summary>
     <ul>
       <li><strong>Same inputs:</strong> 48 matched tasks and 32 independently authored confirmation tasks, each repeated twice for three variants: {comparison.confirmationExecutions} observations. Same catalog and model, randomized order; no retries, warmup or decision cache. First connections are included. The separate {comparison.developmentExecutions}-observation development smoke remains in the report.</li>
-      <li><strong>Independent confirmation:</strong> these synthetic tasks were not executed before the candidate was frozen; their author knew earlier diagnostic themes. Accuracy here is an observation, not a guarantee for future tasks. All outcomes and reported usage are retained.</li>
-      <li><strong>Comparator scope:</strong> the pinned published Hussi Jev chooser retains its original thresholds and timeout. Its full router, hooks and fallback are not measured. The pooled HTTPS control is our modification. Both pooled variants need a retained process. These timings do not add a new Native comparison; process startup, skill loading and task execution are excluded.</li>
+      <li><strong>Confirmation scope:</strong> {comparison.previouslyExposed ? "These synthetic tasks were used before. This run rechecks the released code; it is not a new unseen test set." : "These synthetic tasks were not executed before the candidate was frozen; their author knew earlier diagnostic themes."} Accuracy here does not guarantee future results. All outcomes and reported usage are retained.</li>
+      <li><strong>Comparator scope:</strong> the published Hussi chooser retains its thresholds and timeout; its router, hooks and fallback are not measured. The pooled HTTPS control is our modification. Both pooled variants need a retained process. Timings include failure returns; errors block a speed-factor claim. Startup, skill loading and task execution are excluded. <a href="#jev-speed-method">Native comparison and complete timings</a>.</li>
       <li><strong>Default behavior:</strong> {comparison.parity.replays} deterministic recorded-response replays preserve {comparison.parity.preservedWrong} incorrect baseline outcomes, including {comparison.parity.preservedErrors} errors. This proves unchanged general behavior for supplied responses, not a new live accuracy result. Failed optimization attempts remain documented.</li>
       {comparison.knownInheritedLimitation && <li><strong>Retained limitation:</strong> {comparison.knownInheritedLimitation}</li>}
     </ul>

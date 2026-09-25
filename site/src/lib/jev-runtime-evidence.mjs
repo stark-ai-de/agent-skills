@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-// All seven receipt hashes were checked against this public commit's source files.
+// Historical default; current presentation supplies its reviewed measurement-series revision.
 export const measuredRevision = "a4a8512dd8ebb55abb26650e08af38f301cea064";
 export const measuredSourceUrl = `https://github.com/stark-ai-de/agent-skills/tree/${measuredRevision}/skills/skill-maintenance/jev-capability-advisor/scripts`;
 // Site builds run from site/; direct consistency checks run from the repository root.
@@ -25,7 +25,9 @@ export const runtimeFiles = [
   "routing_metadata.py",
 ];
 
-export function compareRuntimeSources(measured, current) {
+export function compareRuntimeSources(measured, current, revision = measuredRevision) {
+  if (!/^[a-f0-9]{40}$/.test(revision))
+    throw new Error("Jev runtime evidence: invalid source revision");
   for (const sources of [measured, current]) {
     if (
       !sources ||
@@ -37,17 +39,21 @@ export function compareRuntimeSources(measured, current) {
   const changedFiles = runtimeFiles.filter((file) => current[file] !== measured[file]);
   const matchesCurrentRuntime = changedFiles.length === 0;
   return {
-    measuredRevision,
-    measuredSourceUrl,
+    measuredRevision: revision,
+    measuredSourceUrl: `https://github.com/stark-ai-de/agent-skills/tree/${revision}/skills/skill-maintenance/jev-capability-advisor/scripts`,
     matchesCurrentRuntime,
     changedFiles,
     disclosure: matchesCurrentRuntime
-      ? "These dated measurements belong to the recorded runtime snapshot. The current runtime files match that snapshot; consistency checks are not a fresh live benchmark."
+      ? "All seven current runtime files match this dated live benchmark’s source snapshot."
       : `These measurements belong to the recorded runtime snapshot. The current runtime differs in ${changedFiles.join(", ")}; it has not been live rebenchmarked. These figures do not qualify the changed runtime.`,
   };
 }
 
-export function inspectRuntimeSources(measured, directory = currentRuntimeDirectory()) {
+export function inspectRuntimeSources(
+  measured,
+  directory = currentRuntimeDirectory(),
+  revision = measuredRevision,
+) {
   const current = Object.fromEntries(
     runtimeFiles.map((file) => [
       file,
@@ -56,5 +62,5 @@ export function inspectRuntimeSources(measured, directory = currentRuntimeDirect
         .digest("hex"),
     ]),
   );
-  return compareRuntimeSources(measured, current);
+  return compareRuntimeSources(measured, current, revision);
 }

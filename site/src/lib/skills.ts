@@ -24,6 +24,8 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "docs/skills/jev-capability-advisor/benchmarks/README.md",
     "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-24.json",
     "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-24.json",
+    "skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json",
+    "skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json",
     "skill-evals/jev-capability-advisor/benchmarks/optimization-development-2026-09-24.json",
     "site/src/components/JevBenchmarkPromo.astro",
     "site/src/components/JevBenchmarkLink.astro",
@@ -34,6 +36,7 @@ const PUBLIC_PRESENTATION_SOURCES_BY_SKILL: Readonly<Record<string, readonly str
     "site/src/lib/jev-promo-comparison.mjs",
     "site/src/lib/jev-benchmarks.mjs",
     "site/src/lib/jev-runtime-evidence.mjs",
+    "site/src/lib/jev-measurement-series.mjs",
   ],
 };
 
