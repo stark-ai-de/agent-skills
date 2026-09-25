@@ -1,0 +1,71 @@
+---
+import evidence from "../../../skill-evals/jev-capability-advisor/benchmarks/native-luna-low-dev9-2026-09-25.json" with { type: "json" };
+import { summarizeNativeDev9 } from "../lib/jev-luna-low-dev9.mjs";
+import { repoUrl } from "../lib/skills";
+
+const summary = summarizeNativeDev9(evidence);
+const number = (value: number) => value.toLocaleString("en-US");
+const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
+---
+
+<section class="jev-luna-dev9" aria-labelledby="jev-luna-dev9-title" data-jev-luna-dev9 data-gate="failed">
+  <header>
+    <p class="jev-luna-dev9__eyebrow">Partial live result · {evidence.evidence_date}</p>
+    <h3 id="jev-luna-dev9-title">Jev next-skill · requested {evidence.requested.model}, reasoning {evidence.requested.reasoning_effort}</h3>
+    <p class="jev-luna-dev9__gate"><strong>Predeclared development gate failed:</strong> {summary.all.correct}/{summary.all.n} correct; the gate required {evidence.quality_gate.required_correct}/{summary.all.n}.</p>
+  </header>
+
+  <dl class="jev-luna-dev9__metrics">
+    <div><dt>Correct choices</dt><dd>{summary.all.correct}/{summary.all.n}<small>Skills {summary.skill.correct}/{summary.skill.n} · no-match {summary.none.correct}/{summary.none.n}</small></dd></div>
+    <div><dt>Model-turn latency</dt><dd>{seconds(summary.model_turn_ms.median)} s median<small>{seconds(summary.model_turn_ms.p95_nearest_rank)} s p95 · nearest rank</small></dd></div>
+    <div><dt>Reported input tokens</dt><dd>{number(summary.all_input_tokens.median)} median<small>{number(summary.all_input_tokens.total)} total across nine turns</small></dd></div>
+    <div><dt>Completed turns</dt><dd>{evidence.execution.completed_model_turns}/{evidence.execution.planned_dev9_observations}<small>Usage reported for all nine · {summary.errors} runtime errors</small></dd></div>
+  </dl>
+
+  <p>One skill task returned <code>clarify</code>, so exact 9/9 accuracy was not met. The run stopped at this gate: {evidence.campaign.remaining_not_run} of {evidence.campaign.planned_live_observations} planned campaign observations were not run, including the matched and confirmation cohorts. No Hussi Native arm ran, so this is not a comparative accuracy, speed, or cost result.</p>
+  <p>The Codex Native CLI completed all nine requested turns with reported usage. The resolved backend model was not exposed in the recorded response. These previously used tasks are a development check, not a blind confirmation; latency is descriptive and is not pooled with the other benchmark results.</p>
+
+  <details class="jev-luna-dev9__observations">
+    <summary>Inspect the nine audited observations</summary>
+    <div class="jev-luna-dev9__table-scroll" role="region" aria-label="GPT-6 Luna Low Dev9 observations" tabindex="0">
+      <table>
+        <caption>One live Codex model turn per scheduled Dev9 task.</caption>
+        <thead><tr><th scope="col">Task</th><th scope="col">Returned outcome</th><th scope="col">Correct</th><th scope="col">Turn time</th><th scope="col">Input tokens</th></tr></thead>
+        <tbody>{evidence.observations.map((row) => (
+          <tr>
+            <th scope="row">{row.case_id}<small>{row.category}</small></th>
+            <td><code>{row.status}</code></td>
+            <td>{row.correct ? "Yes" : "No"}</td>
+            <td>{seconds(row.model_turn_ms)} s</td>
+            <td>{number(row.input_tokens)}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  </details>
+
+  <p class="jev-luna-dev9__source"><a href={repoUrl(evidence.evidence_path)}>Audited observations, protocol and source digests</a></p>
+</section>
+
+<style>
+  .jev-luna-dev9 { display: grid; gap: .8rem; }
+  .jev-luna-dev9 p { line-height: 1.6; margin: 0; }
+  .jev-luna-dev9 h3 { margin: 0; color: var(--foreground); font-size: 1rem; }
+  .jev-luna-dev9__eyebrow { color: var(--muted); font-size: .72rem; }
+  .jev-luna-dev9__gate { padding: .75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: .82rem; }
+  .jev-luna-dev9__metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; margin: 0; }
+  .jev-luna-dev9__metrics > div { min-width: 0; padding: .7rem; border: 1px solid var(--border); border-radius: var(--radius); }
+  .jev-luna-dev9__metrics dt { color: var(--muted); font-size: .7rem; }
+  .jev-luna-dev9__metrics dd { margin: .25rem 0 0; font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .jev-luna-dev9__metrics small, .jev-luna-dev9 table small { display: block; margin-top: .2rem; color: var(--muted); font-size: .68rem; font-weight: 400; }
+  .jev-luna-dev9__observations { border-top: 1px solid var(--border); }
+  .jev-luna-dev9__observations summary { cursor: pointer; padding-block: .8rem; font-weight: 600; }
+  .jev-luna-dev9__table-scroll { overflow-x: auto; }
+  .jev-luna-dev9 table { width: 100%; border-collapse: collapse; text-align: left; font-size: .75rem; }
+  .jev-luna-dev9 caption { padding: .5rem; color: var(--muted); text-align: left; }
+  .jev-luna-dev9 th, .jev-luna-dev9 td { padding: .55rem .4rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .jev-luna-dev9 td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .jev-luna-dev9__source { font-size: .75rem; }
+  .jev-luna-dev9 a:focus-visible, .jev-luna-dev9 summary:focus-visible, .jev-luna-dev9__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
+  @media (max-width: 700px) { .jev-luna-dev9__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
