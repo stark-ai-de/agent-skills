@@ -27,7 +27,7 @@ const requiredIds = new Set([
   "openai-plugin",
   "actions",
   "scripts",
-  "hosted-directory",
+  "manual-directory",
   "jev-capability-advisor",
 ]);
 assert.deepEqual(
@@ -64,26 +64,22 @@ const validateWorkflow = fs.readFileSync(
   path.join(repositoryRoot, ".github/workflows/validate.yml"),
   "utf8",
 );
-const directoryWorkflow = fs.readFileSync(
-  path.join(repositoryRoot, ".github/workflows/openai-directory.yml"),
-  "utf8",
-);
+const liveDirectoryInvocation =
+  /verify:openai-directory|scripts\/plugin\/verify-openai-directory\.mjs|\.\/\.github\/actions\/verify-openai-directory/;
 assert.doesNotMatch(
   validateWorkflow,
-  /\.\/\.github\/actions\/verify-openai-directory/,
+  liveDirectoryInvocation,
   "deterministic Validate must not own live directory observation",
 );
-assert.match(directoryWorkflow, /workflow_dispatch:/);
-assert.match(directoryWorkflow, /schedule:/);
-assert.equal(
-  directoryWorkflow.match(/\.\/\.github\/actions\/verify-openai-directory/g)?.length,
-  1,
-  "scheduled/manual directory workflow must contain exactly one strict live check",
-);
 assert.doesNotMatch(
-  directoryWorkflow,
-  /continue-on-error/,
-  "scheduled/manual directory verification must remain strict",
+  packageJson.scripts.validate,
+  liveDirectoryInvocation,
+  "the local aggregate must not own live directory observation",
+);
+assert.equal(
+  plan.gates.find((gate) => gate.id === "manual-directory").owner,
+  "scripts/plugin/verify-openai-directory.mjs",
+  "manual directory observation must retain its executable owner",
 );
 
 console.log("Validation ownership plan passed.");
