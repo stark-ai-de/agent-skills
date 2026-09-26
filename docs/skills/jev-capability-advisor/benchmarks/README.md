@@ -4,7 +4,39 @@
 
 Jev Capability Advisor helps your agent find a relevant skill or tool from its available catalog. [Install and use the advisor](../README.md).
 
-## Current next-skill comparison
+## Current comparison — 2026-09-26
+
+**10.44× the Native selector’s speed** for Jev Capability Advisor: **0.311 seconds** median versus **3.249 seconds** for Native. This measures skill selection, including preparation and required selection stages; process startup and task execution are excluded.
+
+Native requested **GPT-6 Luna, reasoning low**. The six selectors retain their original Jev model settings and selection rules. The source revisions and five product-feature checks per participant are recorded in the [audited comparison](../../../../skill-evals/jev-capability-advisor/benchmarks/selector-comparison-2026-09-26.json). MCP support is a product property, not a measured MCP-performance claim.
+
+| Participant                   | Skill median |  Skill p95 | Factor vs Native | Correct skill choices | No match correct | Errors |
+| ----------------------------- | -----------: | ---------: | ---------------: | --------------------: | ---------------: | -----: |
+| Jev Capability Advisor        |   0.311155 s | 0.397086 s |           10.44× |                 48/48 |            16/16 |      0 |
+| lomeshdutta/skill-router      |   0.335795 s | 0.366119 s |            9.68× |                 44/48 |            16/16 |      0 |
+| hussi9/skill-router           |   0.357207 s | 0.416671 s |            9.10× |                 46/48 |            16/16 |      0 |
+| Dicklesworthstone/skillranker |   0.627500 s | 0.712000 s |            5.18× |                 39/48 |            16/16 |      0 |
+| MuskanPaliwal/skill-picker    |   0.696134 s | 0.818213 s |            4.67× |                 34/48 |            16/16 |      0 |
+| Native Luna Low               |   3.248902 s | 5.591474 s |         Baseline |                 48/48 |            16/16 |      0 |
+| win4r/jev-skill-suggester     |   Incomplete | Incomplete |     Details only |                 24/48 |            16/16 |     24 |
+
+The chart retains the release layout and adds measured competitors in the same box, each with its own bar, hover/touch selection, factor and feature list. Hussi9 completed all 64 observations without a timeout. Skill Suggester stays in the detail tables: its unchanged implementation exceeds its 12-candidate pool limit in 24 of 64 observations. It has no timing bar, aggregate timing or performance factor.
+
+**Same inputs:** 132 frozen skill texts; 24 skill tasks and eight no-match tasks, each repeated twice. Wrong choices and abstentions remain in every complete timing series. The tasks were previously used; these are repeated measurements, not an unseen evaluation. Median and nearest-rank p95 use unrounded observations. Missing usage or resolved model identity remains unknown.
+
+**Two measurement windows:** 448 selected observations come from 520 retained attempts: 376 original observations plus 72 separately frozen corrections. Only the 64 failed Lomesh observations and eight Native quota failures were repeated. The Lomesh defect was double gzip decoding in our capture adapter; it was not a product timeout. All successful original observations and all failed attempts remain preserved.
+
+- The original runner missed the immediate stop on a Native quota rejection and dispatched 52 later observations. All attempts are retained; the repair does not make that original execution protocol-compliant.
+- Original Native preflight used Codex CLI 0.157.0, but individual observations did not record their executable identity. The eight repaired Native observations used pinned CLI 0.157.1. The combined Native series therefore has a CLI-version uncertainty.
+- Only the 64 failed Lomesh observations and eight Native quota failures were repeated in a separate frozen window, after correcting our capture adapter and quota-stop handling. Successful original observations were retained. Provider load and prefix caching may differ between windows.
+
+The independent raw and source audits qualify this combined comparison with these disclosed deviations; they do not certify the original campaign as protocol-compliant. Selection factors remain specific to these sources, inputs, timing boundaries and measurement windows. No warmups, extra harness retries or saved selection decisions were introduced.
+
+The per-observation evidence separates preparation, model-turn, process-wall and dispatch-wall times where reported. Original corpus rules are preserved: Jev/Native consolidate to 128 cards, skill-picker and Skill Suggester admit 130, and SkillRanker imports 132 with 131 eligible. Source-index and connection reuse claims identify their scope.
+
+**Historical results below retain their original models, counts and limitations. They are not added to this comparison.**
+
+## Historical release recheck — 2026-09-25
 
 **6.42× the native selector’s speed.** Jev Session needs **0.482 seconds** versus Native’s **3.092 seconds**, with **48/48 correct skill choices** each. This measures selection, not complete-task speed.
 
@@ -23,9 +55,9 @@ Jev Capability Advisor helps your agent find a relevant skill or tool from its a
 - **Timer:** preparation plus response handling/model turn. Process startup, skill loading, fallback work and task execution are excluded. Session needs a retained process. No warmups, harness retries or saved decisions. Medians use full precision; p95 uses nearest rank.
 - **One retained Hussi timeout:** the published chooser returned 45/48 accepted correct skill choices, with two confidence abstentions and one timeout. Its median includes the failure return, so its speed factor is withheld. The late response’s input tokens are still counted. Jev and Native each have zero errors.
 
-The product chart shows the qualified Jev Session and Native timings, with the **6.42×** Native-relative factor beside Jev’s bar. The published Hussi chooser’s timing bar is excluded because of its retained timeout; its complete results remain in the table above. Our unpublished pooled-HTTPS control also remains in the table: its median was about 1.5 ms below Jev’s. This is a transport experiment, not a released product or qualified MCP integration.
+The previous product chart showed the qualified Jev Session and Native timings, with the **6.42×** Native-relative factor beside Jev’s bar. The published Hussi chooser’s timing bar is excluded because of its retained timeout; its complete results remain in the table above. Our unpublished pooled-HTTPS control also remains in the table: its median was about 1.5 ms below Jev’s. This is a transport experiment, not a released product or qualified MCP integration.
 
-The same chart box lists four discovered selector candidates: [skill-picker](https://github.com/MuskanPaliwal/skill-picker), [jev-skill-suggester](https://github.com/win4r/jev-skill-suggester), [SkillRanker](https://github.com/Dicklesworthstone/skillranker), and [skill-router by Lomesh](https://github.com/lomeshdutta/skill-router). They were not included in the recorded campaigns and have no comparable measurements here. They are labeled **Not benchmarked**, without timing bars or factors. The partial Luna Low development run did not produce a replacement comparison.
+That previous chart box listed four discovered selector candidates: [skill-picker](https://github.com/MuskanPaliwal/skill-picker), [jev-skill-suggester](https://github.com/win4r/jev-skill-suggester), [SkillRanker](https://github.com/Dicklesworthstone/skillranker), and [skill-router by Lomesh](https://github.com/lomeshdutta/skill-router). At that time they had no comparable measurements and were labeled **Not benchmarked**, without bars or factors. The dated comparison above now replaces that presentation; these historical observations remain unchanged.
 
 [Current Jev/Hussi observations](../../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json) · [Current Native observations and audit bindings](../../../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json) · [Import and measurement checks](../../../../skill-evals/jev-capability-advisor/README.md#release-recheck-2026-09-25).
 
