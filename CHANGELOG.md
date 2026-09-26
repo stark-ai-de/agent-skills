@@ -12,6 +12,28 @@
 
 ### Removed
 
+## 0.24.0 (2026-09-26)
+
+## What's Changed
+* docs(jev): qualify released runtime with fresh benchmarks by @servrox in https://github.com/stark-ai-de/agent-skills/pull/95
+* ci(actions): retire broken directory monitor and add workflow emojis by @servrox in https://github.com/stark-ai-de/agent-skills/pull/94
+* feat(site): publish Luna Low Dev9 partial results by @servrox in https://github.com/stark-ai-de/agent-skills/pull/97
+* feat(architecture-compass): add measurable testing ADRs and qualification by @servrox in https://github.com/stark-ai-de/agent-skills/pull/84
+* feat(site): add per-skill bars to Luna Low Dev9 results by @servrox in https://github.com/stark-ai-de/agent-skills/pull/98
+* fix(site): show selector candidates in the comparison chart by @servrox in https://github.com/stark-ai-de/agent-skills/pull/100
+* feat(jev): add adoptable Compass host-advice policy by @servrox in https://github.com/stark-ai-de/agent-skills/pull/101
+* .github/workflows: Migrate workflows to Blacksmith runners by @blacksmith-sh[bot] in https://github.com/stark-ai-de/agent-skills/pull/103
+* feat(jev): add scoped hook consent and session catalog evidence by @servrox in https://github.com/stark-ai-de/agent-skills/pull/102
+* fix(site): restore release comparison with six measured selectors by @servrox in https://github.com/stark-ai-de/agent-skills/pull/105
+* fix(jev): harden credential source validation by @servrox in https://github.com/stark-ai-de/agent-skills/pull/104
+* feat(architecture-compass): default local development to Portless by @servrox in https://github.com/stark-ai-de/agent-skills/pull/99
+* feat(skills): modernize planning and reuse scoped approvals by @servrox in https://github.com/stark-ai-de/agent-skills/pull/87
+
+## New Contributors
+* @blacksmith-sh[bot] made their first contribution in https://github.com/stark-ai-de/agent-skills/pull/103
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.23.0...v0.24.0
+
 ## 0.23.0 (2026-09-25)
 
 ## What's Changed
