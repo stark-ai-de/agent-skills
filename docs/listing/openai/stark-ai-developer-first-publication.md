@@ -16,7 +16,7 @@ or machine-specific paths here.
 
 ## Jev update handoff
 
-**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current candidate contains seven skills, including Jev Capability Advisor 0.1.0. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) tracks the remaining publication steps.
+**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current plugin 1.5.0 candidate contains seven skills, including Jev Capability Advisor 0.2.0. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) tracks the remaining publication steps.
 
 After GitHub publication and post-release evidence are complete:
 

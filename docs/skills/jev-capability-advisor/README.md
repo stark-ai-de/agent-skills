@@ -33,7 +33,7 @@ Or keep the first check entirely local:
 
 The helper needs **Python 3.10+**; it has no third-party Python dependencies, router service or embedding-model download. A fresh Jev recommendation uses your own TypeSafe API key and sends the supplied task plus bounded public capability cards to TypeSafe. Offline inspection needs no key or network. Configure credentials locally; never paste or commit them. The agent needs a **current host-supplied catalog**: files on disk alone do not establish which tools are available. See the [catalog and CLI contract](../../../skills/skill-maintenance/jev-capability-advisor/references/contract.md).
 
-This update also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
+This update also prepares the skill for **Codex in stark AI Developer 1.5.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
 
 ## One next skill, explicitly
 
@@ -115,8 +115,8 @@ Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-a
 
 | Component              | Prepared version                    | Distribution                                                                     |
 | ---------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
-| Jev Capability Advisor | `0.1.0`                             | Standalone Agent Skill; optional `dist/skills/jev-capability-advisor.zip`        |
-| stark AI Developer     | `1.3.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
+| Jev Capability Advisor | `0.2.0`                             | Standalone Agent Skill; optional `dist/skills/jev-capability-advisor.zip`        |
+| stark AI Developer     | `1.5.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
 | Catalog                | Next generated minor after `0.22.0` | Release Please owns the final version and changelog; no manual root version bump |
 
 The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection and index reuse need a retained process.

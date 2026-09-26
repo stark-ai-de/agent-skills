@@ -235,6 +235,8 @@ The final Linux/WSL Jev suite completed **243 tests: 240 passed and three native
 
 Final source identities (SHA-256):
 
-- Integration content: `9afa5a333aa6e6019de8815ad25f1ec1038d4f87a154b86e923143cae299bbbb`
+- Integration content: `1c7ee92e085783189d3e60372eb48393c70dc59ce1c6a0c7365b90da413a5464`
 - Manager: `2bd0dc29ed6b81c0c7fedb01e50ea8c3d3b8dd72bc4651943b3dafe555c5ec05`
 - Hook tests: `f5ea7807676b0f6bda9e4cb05c0fc5de411c1db6b18cc27881fd212006983614`
+
+The feature release-impact gate also passed after preparing Jev `0.2.0` and plugin `1.5.0`, with matching listing/archive metadata and generated projections. Release-descriptor, bundle, OpenAI listing, archive and reproducibility checks passed for the prepared versions. The root release files remain unchanged. These version changes do not requalify any earlier live observation.
