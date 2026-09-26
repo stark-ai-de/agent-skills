@@ -5,6 +5,13 @@ const NETWORK_CALL_PATTERNS = [
   /\b(?:dns|net|tls)\.(?:connect|createConnection|lookup)\s*\(/,
   /\b(?:curl|wget)\s+/,
 ];
+// The hook manager is Python and must stay offline, including aliased imports.
+// These static checks complement review; they are not a runtime network sandbox.
+const HOOK_PYTHON_NETWORK_PATTERNS = [
+  /\b(?:urlopen|urlretrieve|HTTPConnection|HTTPSConnection|create_connection|socket)\s*\(/,
+  /\b(?:requests|httpx|aiohttp|urllib3)\./,
+  /^[ \t]*(?:from\s+(?:urllib|http|socket|requests|httpx|aiohttp|urllib3)\b|import\s+(?:[\w.]+\s*(?:as\s+\w+)?\s*,\s*)*(?:urllib|http|socket|requests|httpx|aiohttp|urllib3)\b)/m,
+];
 const DECLARED_ENDPOINT_PREFIXES = [
   "http://www.w3.org/",
   "https://www.w3.org/",
@@ -14,14 +21,15 @@ const DECLARED_ENDPOINT_PREFIXES = [
 const ENDPOINT_PATTERN = /https?:\/\/[^\s"'`<>()[\]{}]+/gi;
 
 function endpointIsDeclared(endpoint, relative) {
-  const advisorTransport =
-    /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/(?:jev_advisor|https_transport)\.py$/.test(
+  const advisorEndpointOwner =
+    /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/(?:jev_advisor|https_transport|jev_hooks)\.py$/.test(
       relative,
     );
-  // The opt-in advisor has one reviewed provider endpoint; other skills do not inherit it.
+  // The advisor owns one provider endpoint; the offline hook manager names it only
+  // in its processing disclosure. Network-call exceptions remain transport-only.
   return (
     DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix)) ||
-    (advisorTransport && endpoint === "https://api.typesafe.ai/v1/systemone")
+    (advisorEndpointOwner && endpoint === "https://api.typesafe.ai/v1/systemone")
   );
 }
 
@@ -42,7 +50,12 @@ export function scanNetworkSource(text, relative) {
           "reviewed_provider_call({",
         )
       : text;
-  for (const pattern of NETWORK_CALL_PATTERNS) {
+  const hookManager =
+    /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/jev_hooks\.py$/.test(relative);
+  const patterns = hookManager
+    ? [...NETWORK_CALL_PATTERNS, ...HOOK_PYTHON_NETWORK_PATTERNS]
+    : NETWORK_CALL_PATTERNS;
+  for (const pattern of patterns) {
     if (pattern.test(apiText))
       errors.push(`${relative} contains an undeclared network API: ${pattern}`);
     pattern.lastIndex = 0;

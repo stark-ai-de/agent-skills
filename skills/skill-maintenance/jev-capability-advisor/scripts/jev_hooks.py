@@ -8,12 +8,15 @@ user configuration or ownership state. No third-party dependencies.
 import argparse
 import base64
 from contextlib import contextmanager
+from copy import copy
 from dataclasses import dataclass
 import hashlib
 import json
 import os
 from pathlib import Path
 import shlex
+import shutil
+import re
 import stat
 import subprocess
 import sys
@@ -41,6 +44,16 @@ DISCLOSURE = ('Opt-in: for new actionable tasks, the agent may send a minimal ta
               'existing credentials. The hook itself performs no network access. '
               'Host restrictions and native fallback remain in effect.')
 
+CONSENT_TERMS = ('For new actionable tasks in this registration scope, send only a '
+                 'minimal non-sensitive task summary and public eligible capability '
+                 'metadata to https://api.typesafe.ai/v1/systemone for capability advice. '
+                 'Exclude secrets, private paths, transcripts, tool results and unrelated '
+                 'private content. Native approvals and user opt-outs remain binding.')
+CONSENT_NOTICE = ('User opt-in recorded for this registration: send minimal non-sensitive '
+                  'task summaries and public capability metadata to '
+                  'https://api.typesafe.ai/v1/systemone for advice. Verify current '
+                  'advice_consent via status. Native approvals still apply.')
+
 
 class HookError(Exception):
     """An actionable failure which must not overwrite user configuration."""
@@ -57,9 +70,13 @@ class Snapshot:
     identity: tuple | None
 
 
-def _identity(value):
+def _identity(value, *, descriptor=False):
+    # Windows path stat aliases ctime to creation time, while Python 3.14
+    # fstat can report change time. Compare the same timestamp on both APIs.
+    timestamp = (getattr(value, 'st_birthtime_ns', value.st_ctime_ns)
+                 if os.name == 'nt' and not descriptor else value.st_ctime_ns)
     return (value.st_dev, value.st_ino, value.st_size,
-            value.st_mtime_ns, value.st_ctime_ns, value.st_mode)
+            value.st_mtime_ns, timestamp, value.st_mode)
 
 
 def _same_path_metadata(left, right):
@@ -116,11 +133,12 @@ def read_snapshot(path):
         after = os.fstat(stream.fileno())
     path_after = path.lstat()
     if (len(data) > MAX_FILE_BYTES or not _same_path_metadata(before, opened)
-            or _identity(opened) != _identity(after)
+            or _identity(opened, descriptor=True) != _identity(after, descriptor=True)
             or not _same_path_identity(before, path_after)
             or not _same_path_metadata(after, path_after)):
         raise HookError('concurrent_modification: ' + str(path))
-    return Snapshot(data, _identity(after))
+    return Snapshot(data, _identity(after, descriptor=True))
+
 
 
 def atomic_write(path, data, expected):
@@ -150,7 +168,7 @@ def atomic_write(path, data, expected):
         temporary.unlink(missing_ok=True)
 
 
-def _unique_json_object_pairs(pairs):
+def _pairs(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
@@ -163,8 +181,7 @@ def parse_object(snapshot, label):
     if snapshot.data is None:
         return {}
     try:
-        result = json.loads(snapshot.data.decode('utf-8-sig'),
-                            object_pairs_hook=_unique_json_object_pairs,
+        result = json.loads(snapshot.data.decode('utf-8-sig'), object_pairs_hook=_pairs,
                             parse_constant=lambda _: (_ for _ in ()).throw(
                                 HookError('invalid_json_constant')))
     except (ValueError, UnicodeError) as error:
@@ -185,6 +202,47 @@ def digest(data):
 def load_guidance():
     return (Path(__file__).resolve().parent.parent / 'assets' /
             'hook-guidance.txt').read_text(encoding='utf-8').strip()
+
+
+def registration_guidance(host, scope, project_root, consent=None):
+    """Bind local status lookup to this registration, never provider metadata."""
+    binding = {'host': host, 'scope': scope,
+               'project_root': str(safe_path(project_root)) if scope == 'project' else None}
+    notice = '\n' + CONSENT_NOTICE if consent else ''
+    return (load_guidance() + notice + '\nLocal registration (never send to provider): ' +
+            json.dumps(binding, ensure_ascii=False, separators=(',', ':')))
+
+
+def new_consent():
+    return {'version': 1, 'disclosure_sha256': digest(CONSENT_TERMS.encode('utf-8')),
+            'basis': 'explicit_install_option', 'accepted_at': int(time.time())}
+
+
+def active_consent(receipt, owned):
+    """A local acceptance record is neither host trust nor call authorization."""
+    value = receipt.get('advice_consent')
+    if (not owned or not isinstance(value, dict)
+            or set(value) != {'version', 'disclosure_sha256', 'basis', 'accepted_at'}
+            or type(value.get('version')) is not int or value['version'] != 1
+            or value.get('disclosure_sha256') != digest(CONSENT_TERMS.encode('utf-8'))
+            or value.get('basis') != 'explicit_install_option'
+            or type(value.get('accepted_at')) is not int or value['accepted_at'] <= 0
+            or not isinstance(receipt.get('guidance'), str)
+            or CONSENT_NOTICE not in receipt['guidance']
+            or not isinstance(receipt.get('interpreter'), str)):
+        return None
+    try:
+        expected = build_registration(receipt['host'], receipt['interpreter'],
+                                      guidance=receipt['guidance'])
+    except HookError:
+        return None
+    return value if owned == expected else None
+
+
+def consent_status(consent, preview=False):
+    return {'status': ('would_record' if preview else 'recorded') if consent else 'not_recorded',
+            'terms': CONSENT_TERMS, 'record': consent,
+            'native_approval': 'still_required_when_host_requires_it'}
 
 
 def render_policy(host, policy):
@@ -335,7 +393,8 @@ def receipt_entry(receipt, config_path, snapshot, host, scope):
     if not receipt:
         return None
     if (receipt.get('version') != STATE_VERSION
-            or receipt.get('config_path') != str(config_path)
+            or not isinstance(receipt.get('config_path'), str)
+            or os.path.normcase(receipt['config_path']) != os.path.normcase(str(config_path))
             or receipt.get('host') != host or receipt.get('scope') != scope
             or receipt.get('phase') not in ('prepared', 'complete')):
         raise HookError('invalid_ownership_receipt')
@@ -388,7 +447,7 @@ def manager_lock(receipt_path):
 
 def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
                   config, old_receipt, owned, replacement, host, scope,
-                  interpreter, guidance):
+                  interpreter, guidance, consent):
     with manager_lock(receipt_path):
         if (read_snapshot(config_path) != config_snapshot
                 or read_snapshot(receipt_path) != receipt_snapshot):
@@ -406,6 +465,8 @@ def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
             'before_sha256': digest(config_snapshot.data), 'after_sha256': digest(after),
             'backup_path': str(backup) if backup else None,
             'interpreter': interpreter, 'guidance': guidance,
+            'advice_consent': consent,
+            'previous_advice_consent': old_receipt.get('advice_consent'),
             'previous_interpreter': old_receipt.get('interpreter'),
             'previous_guidance': old_receipt.get('guidance'),
         }
@@ -423,7 +484,7 @@ def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
         return str(backup) if backup else None
 
 
-def _run_hook_manager(args):
+def registration_run(args):
     config_path, receipt_path = locations(args.host, args.scope, args.project_root)
     config_snapshot = read_snapshot(config_path)
     receipt_snapshot = read_snapshot(receipt_path)
@@ -442,6 +503,7 @@ def _run_hook_manager(args):
         if digest(config_snapshot.data) == receipt.get('before_sha256'):
             receipt['interpreter'] = receipt.get('previous_interpreter')
             receipt['guidance'] = receipt.get('previous_guidance')
+            receipt['advice_consent'] = receipt.get('previous_advice_consent')
         receipt.update(entry=owned, phase='complete')
         if args.action != 'status' and not args.dry_run:
             with manager_lock(receipt_path):
@@ -450,13 +512,14 @@ def _run_hook_manager(args):
                 atomic_write(receipt_path, encode(receipt), receipt_snapshot)
             receipt_snapshot = read_snapshot(receipt_path)
             exclusion = 'present'
+    consent = active_consent(receipt, owned)
     interpreter = str(Path(sys.executable).resolve())
     result = {
         'host': args.host, 'scope': args.scope, 'config_path': str(config_path),
         'receipt_path': str(receipt_path), 'qualification': 'not_verified',
         'host_activation': 'not_verified', 'dry_run': args.dry_run,
         'state_git_exclusion': exclusion,
-        'disclosure': DISCLOSURE,
+        'disclosure': DISCLOSURE, 'advice_consent': consent_status(consent),
     }
     if args.action == 'status':
         result.update(status='configured' if owned else 'absent',
@@ -470,6 +533,8 @@ def _run_hook_manager(args):
         result['interpreter_available'] = bool(
             isinstance(registered_python, str) and Path(registered_python).is_file())
         result['known_obstacles'] = []
+        if not consent:
+            result['known_obstacles'].append('advice_consent_missing_or_changed')
         if exclusion != 'present':
             result['known_obstacles'].append('state_git_exclusion_' + exclusion)
         if owned and not result['interpreter_available']:
@@ -487,13 +552,18 @@ def _run_hook_manager(args):
             if Path(interpreter).suffix.lower() != '.exe':
                 raise HookError('windows_interpreter_requires_exe')
             if args.host == 'codex':
-                import shutil
                 if shutil.which('powershell.exe') is None:
                     raise HookError('powershell_unavailable')
-        guidance = load_guidance()
+        choice = getattr(args, 'advice_consent', None)
+        if choice == 'allow':
+            consent = consent or new_consent()
+        elif choice == 'revoke':
+            consent = None
+        result['advice_consent'] = consent_status(consent, args.dry_run)
+        guidance = registration_guidance(args.host, args.scope, args.project_root, consent)
         replacement = build_registration(args.host, interpreter, guidance=guidance)
         result.update(registration=replacement, interpreter=interpreter, guidance=guidance)
-        if owned == replacement:
+        if owned == replacement and consent == receipt.get('advice_consent'):
             if not args.dry_run and exclusion == 'missing':
                 with manager_lock(receipt_path):
                     pass
@@ -508,6 +578,8 @@ def _run_hook_manager(args):
         config.setdefault('hooks', {})['UserPromptSubmit'] = updated
         result['status'] = 'would_install' if args.dry_run else 'installed'
     else:
+        consent = None
+        result['advice_consent'] = consent_status(None)
         if owned is None:
             result['status'] = 'absent'
             return result
@@ -521,10 +593,254 @@ def _run_hook_manager(args):
     if not args.dry_run:
         result['backup_path'] = change_config(
             config_path, receipt_path, config_snapshot, receipt_snapshot, config,
-            receipt, owned, replacement, args.host, args.scope, interpreter, guidance)
+            receipt, owned, replacement, args.host, args.scope, interpreter, guidance, consent)
         result['state_git_exclusion'] = 'present'
     return result
 
+
+
+def key_file_readiness(path):
+    """Check access without reading, retaining, or authenticating key contents."""
+    try:
+        path = safe_path(path)
+        before = path.lstat()
+        if not stat.S_ISREG(before.st_mode):
+            return 'key_file_not_regular'
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_BINARY', 0)
+        with os.fdopen(os.open(path, flags), 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            path_after = path.lstat()
+            if (not _same_path_metadata(before, opened)
+                    or not _same_path_identity(before, path_after)
+                    or not _same_path_metadata(opened, path_after)):
+                return 'key_file_changed'
+            if not opened.st_size:
+                return 'key_file_empty'
+        return None
+    except FileNotFoundError:
+        return 'key_file_missing'
+    except (OSError, HookError, ValueError):
+        return 'key_file_unreadable'
+
+
+def credential_settings(path, host):
+    snapshot = read_snapshot(path)
+    settings = parse_object(snapshot, 'credential_config')
+    if snapshot.data is not None:
+        key_file = settings.get('key_file')
+        if (settings.get('version') != 1 or settings.get('host') != host
+                or not isinstance(key_file, str) or not key_file or '\0' in key_file
+                or not Path(key_file).is_absolute()):
+            raise HookError('invalid_credential_config')
+    return snapshot, settings
+
+
+def credential_status(settings):
+    key_file = settings.get('key_file')
+    if key_file is not None:
+        reason = key_file_readiness(key_file)
+        return {'source': 'key_file', 'key_file': key_file,
+                'readiness': 'unavailable' if reason else 'ready', 'reason': reason}
+    available = bool(os.environ.get('TYPESAFE_API_KEY', '').strip())
+    return {'source': 'environment' if available else 'none',
+            'readiness': 'ready' if available else 'unavailable',
+            'reason': None if available else 'credentials_missing'}
+
+
+def write_credential_settings(path, settings, expected):
+    """Caller holds the host lock; backups contain references, never key bytes."""
+    if read_snapshot(path) != expected:
+        raise HookError('concurrent_modification: credential_config')
+    if expected.data is not None:
+        backup = path.with_name(path.stem + '-' + str(time.time_ns()) + '.backup.json')
+        atomic_write(backup, expected.data, Snapshot(None, None))
+    atomic_write(path, encode(settings), expected)
+
+
+def integration_fingerprint():
+    root = Path(__file__).resolve().parent.parent
+    paths = [root / 'SKILL.md']
+    for folder in ('scripts', 'assets', 'references', 'agents'):
+        paths.extend(path for path in (root / folder).rglob('*')
+                     if path.is_file() and '__pycache__' not in path.parts
+                     and path.suffix != '.pyc')
+    hasher = hashlib.sha256()
+    for path in sorted(paths):
+        hasher.update(path.relative_to(root).as_posix().encode('utf-8') + b'\0')
+        hasher.update(hashlib.sha256(path.read_bytes()).digest())
+    return hasher.hexdigest()
+
+
+def host_version(host):
+    # A status inspection must not start another host or create its runtime
+    # files. The current agent supplies/verifies its version during live tests;
+    # a standalone manager cannot attest that session's build from disk.
+    return None
+
+
+def qualification_context(host, registration):
+    platform = ('windows' if sys.platform == 'win32' else
+                'macos' if sys.platform == 'darwin' else
+                'wsl' if os.environ.get('WSL_DISTRO_NAME') else 'linux')
+    return {'host_version': host_version(host), 'platform': platform,
+            'integration_sha256': integration_fingerprint(),
+            'registration_sha256': digest(encode(registration)) if registration else None}
+
+
+QUALIFICATION_SCENARIOS = (
+    'registration', 'delivery', 'catalog', 'provider', 'adoption', 'disabled',
+    'explicit_only', 'availability_change', 'incomplete_metadata', 'plan_mode',
+    'missing_key', 'error', 'timeout', 'cancellation', 'followup',
+)
+
+
+def qualification_evidence(path, host, current):
+    """Read bounded historical evidence; never treat it as a live session probe."""
+    result = {'evidence_path': str(path), 'status': 'absent'}
+    try:
+        snapshot = read_snapshot(path)
+        if snapshot.data is None:
+            return result
+        record = parse_object(snapshot, 'qualification_evidence')
+        catalog = record.get('catalog', {})
+        scenarios = record.get('scenarios', {})
+        valid = (record.get('version') == 1 and record.get('host') == host
+                 and isinstance(record.get('host_version'), str)
+                 and re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:[-+][a-zA-Z0-9.-]+)?',
+                                  record['host_version'])
+                 and record.get('platform') in ('linux', 'wsl', 'macos', 'windows')
+                 and all(isinstance(record.get(field), str) and re.fullmatch(
+                     r'[a-f0-9]{64}', record[field])
+                     for field in ('integration_sha256', 'registration_sha256'))
+                 and isinstance(catalog, dict)
+                 and all(type(catalog.get(field)) is int and 0 <= catalog[field] <= 240
+                         for field in ('skills', 'mcp_tools'))
+                 and catalog.get('completeness') in ('bounded', 'unknown')
+                 and isinstance(scenarios, dict)
+                 and all(scenarios.get(field) in ('passed', 'failed', 'simulated', 'not_run')
+                         for field in QUALIFICATION_SCENARIOS))
+        if not valid:
+            raise HookError('invalid_qualification_evidence')
+        # Do not echo arbitrary record fields, paths, transcripts or raw data.
+        result.update({field: record[field] for field in (
+            'host', 'host_version', 'platform', 'integration_sha256', 'registration_sha256')})
+        result['catalog'] = {field: catalog[field] for field in ('skills', 'mcp_tools', 'completeness')}
+        result['scenarios'] = {field: scenarios[field] for field in QUALIFICATION_SCENARIOS}
+        result['status'] = 'matching_environment'
+        if any(current[field] is not None and current[field] != record[field]
+               for field in current):
+            result['status'] = 'stale'
+        elif any(value is None for value in current.values()):
+            result['status'] = 'historical'
+        result['all_scenarios_passed'] = all(value == 'passed' for value in result['scenarios'].values())
+    except (HookError, OSError, UnicodeError, TypeError):
+        result.update(status='invalid', reason='invalid_qualification_evidence')
+    return result
+
+
+def run(args):
+    if getattr(args, 'advice_consent', None) is not None and args.action != 'install':
+        raise HookError('advice_consent_requires_install')
+    key_file = getattr(args, 'key_file', None)
+    if key_file is not None and args.action != 'install':
+        raise HookError('key_file_requires_install')
+    _, receipt_path = locations(args.host, args.scope, args.project_root)
+    settings_path = receipt_path.parent / (args.host + '-settings.json')
+    pending_path = settings_path.with_suffix('.pending.json')
+    try:
+        pending_snapshot = read_snapshot(pending_path)
+        pending = parse_object(pending_snapshot, 'credential_transaction')
+    except (HookError, OSError, UnicodeError):
+        if args.action == 'install':
+            raise HookError('invalid_credential_transaction') from None
+        pending_snapshot, pending = None, {'invalid': True}
+    settings_error = None
+    try:
+        settings_snapshot, settings = credential_settings(settings_path, args.host)
+    except (HookError, OSError, UnicodeError):
+        if args.action == 'install':
+            raise HookError('invalid_credential_config') from None
+        settings_snapshot, settings = None, {}
+        settings_error = 'invalid_credential_config'
+    updated = dict(settings)
+    if key_file is not None:
+        key_file = str(safe_path(key_file))
+        reason = key_file_readiness(key_file)
+        if reason:
+            raise HookError(reason)
+        updated.update(version=1, host=args.host, key_file=key_file)
+    changed = updated != settings
+    if pending_snapshot is None or pending_snapshot.data is not None:
+        settings_error = 'incomplete_credential_update'
+        if args.action == 'install':
+            if (pending.get('version') != 1 or pending.get('host') != args.host
+                    or key_file is None or pending.get('key_file') != key_file
+                    or digest(settings_snapshot.data) not in (
+                        pending.get('before_sha256'), pending.get('after_sha256'))
+                    or digest(encode(updated)) != pending.get('after_sha256')):
+                raise HookError('incomplete_credential_update: retry the original install with --key-file; preserve the private journal')
+            settings_error = None
+
+    def apply():
+        if settings_snapshot is not None and read_snapshot(settings_path) != settings_snapshot:
+            raise HookError('concurrent_modification: credential_config')
+        transaction_snapshot = pending_snapshot
+        updating = args.action == 'install' and (changed or pending)
+        if updating and not args.dry_run:
+            if read_snapshot(pending_path) != pending_snapshot:
+                raise HookError('concurrent_modification: credential_transaction')
+            if not pending:
+                journal = {'version': 1, 'host': args.host, 'key_file': key_file,
+                           'before_sha256': digest(settings_snapshot.data),
+                           'after_sha256': digest(encode(updated))}
+                atomic_write(pending_path, encode(journal), pending_snapshot)
+                transaction_snapshot = read_snapshot(pending_path)
+        try:
+            result = registration_run(args)
+            if changed and not args.dry_run:
+                write_credential_settings(settings_path, updated, settings_snapshot)
+            if updating and not args.dry_run:
+                if read_snapshot(pending_path) != transaction_snapshot:
+                    raise HookError('concurrent_modification: credential_transaction')
+                pending_path.unlink()
+        except (HookError, OSError, UnicodeError) as error:
+            if updating and not args.dry_run:
+                raise HookError('credential_update_incomplete: hook may have changed; advice is disabled until the original install with --key-file succeeds') from error
+            raise
+        result['credential_config_path'] = str(settings_path)
+        result['credential_transaction_path'] = str(pending_path)
+        result['credential_configuration'] = (
+            'would_update' if args.dry_run else 'updated') if changed else 'unchanged'
+        result['credentials'] = ({'source': 'unknown', 'readiness': 'unavailable',
+                                  'reason': settings_error} if settings_error
+                                 else credential_status(updated))
+        if args.action == 'status':
+            context = qualification_context(args.host, result['registration'])
+            result['qualification_context'] = context
+            result['qualification_evidence'] = qualification_evidence(
+                receipt_path.with_suffix('.qualification.json'), args.host, context)
+            result['currently_unverified'] = [
+                'effective_host_trust_and_policy', 'current_session_catalog_and_restrictions',
+                'hook_delivery', 'provider_authentication', 'recommendation_adoption',
+                'failure_and_followup_behavior',
+            ]
+            if result['credentials']['reason']:
+                result['known_obstacles'].append(result['credentials']['reason'])
+        return result
+
+    if args.action == 'status' or args.dry_run:
+        return apply()
+    # Validate registration before creating any state or lock. Preserve the
+    # existing no-op uninstall behavior when no registration exists.
+    preview_args = copy(args)
+    preview_args.dry_run = True
+    preview = registration_run(preview_args)
+    if args.action == 'uninstall' and preview['status'] == 'absent':
+        return apply()
+    # Serialize credential updates across all scopes for this host. Existing
+    # registration locks and optimistic snapshots continue to protect ownership.
+    with manager_lock(settings_path):
+        return apply()
 
 def main(argv=None):
     parser = Parser(description=__doc__, epilog=DISCLOSURE)
@@ -533,12 +849,16 @@ def main(argv=None):
     parser.add_argument('--scope', choices=('user', 'project'))
     parser.add_argument('--project-root', type=Path)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--advice-consent', choices=('allow', 'revoke'),
+                        help='Install only: record or revoke explicit TypeSafe processing consent for this registration. ' + CONSENT_TERMS)
     parser.add_argument('--policy', choices=('repository-adopted',))
+    parser.add_argument('--key-file', type=Path, help='Install only: save an existing key-file reference privately; never copy its contents')
     try:
         args = parser.parse_args(argv)
         if args.action == 'render':
             if (args.host != 'codex' or args.policy != 'repository-adopted'
-                    or args.scope is not None or args.project_root is not None or args.dry_run):
+                    or args.scope is not None or args.project_root is not None or args.dry_run
+                    or args.key_file is not None or args.advice_consent is not None):
                 raise HookError('invalid_arguments: render requires --host codex '
                                 '--policy repository-adopted and no installer options')
             result = render_policy(args.host, args.policy)
@@ -546,8 +866,8 @@ def main(argv=None):
             if args.policy is not None:
                 raise HookError('invalid_arguments: --policy is only supported by render')
             args.scope = args.scope or 'user'
-            result = _run_hook_manager(args)
-    except (HookError, OSError, UnicodeError) as error:
+            result = run(args)
+    except (HookError, OSError, UnicodeError, ValueError) as error:
         print(json.dumps({'status': 'error', 'reason': str(error)}, ensure_ascii=True))
         return 1
     print(json.dumps(result, ensure_ascii=True, indent=2))
