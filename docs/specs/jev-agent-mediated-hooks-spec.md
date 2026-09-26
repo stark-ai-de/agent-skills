@@ -27,7 +27,7 @@ The maintainer confirmed both hosts, all target platforms, user-wide default wit
 
 Canonical runtime belongs to the existing skill-maintenance Jev skill. Bundled projections are generated with the repository synchronizer; evaluation code stays outside installed runtime. Writing agents use individually assigned worktrees under ADR-0029.
 
-ADR required: **no**. [ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) permits qualified opt-in advice while retaining eligible inventory, invocation restrictions, permissions and native fallback. [ADR-0038](../adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.long.md) governs finite workflow disclosure. Existing projection and focused-validation boundaries remain binding.
+ADR required: **no**. [ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.short.md) ([Long, canonical](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) · [Guide](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.guide.md)) permits qualified opt-in advice while retaining eligible inventory, invocation restrictions, permissions and native fallback. [ADR-0038](../adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.short.md) ([Long, canonical](../adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.long.md) · [Guide](../adrs/0038-expose-finite-skill-workflows-and-permit-intent-bound-agent-selection.guide.md)) governs finite workflow disclosure. Existing projection and focused-validation boundaries remain binding.
 
 ## Requirements and acceptance criteria
 

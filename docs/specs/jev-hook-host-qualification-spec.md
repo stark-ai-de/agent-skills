@@ -73,7 +73,7 @@ Extend the current manager and integration references rather than creating a new
 ## Architectural decisions
 
 - New ADR required: no.
-- [ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) governs Jev integration.
+- [ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.short.md) ([Long, canonical](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) · [Guide](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.guide.md)) governs Jev integration.
 - ADR-0029 governs assigned worktrees; ADR-0041 governs changed-contract validation.
 - No accepted decision is superseded or rewritten.
 - Implementation blocked on ADR acceptance: no.

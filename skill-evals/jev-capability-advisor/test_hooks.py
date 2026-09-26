@@ -1130,6 +1130,66 @@ class HookPrimitiveTests(unittest.TestCase):
             with self.assertRaisesRegex(self.module.HookError, "home_state_git_root_mismatch"):
                 self.module.verify_home_state_repository(self.root, self.root / "state")
 
+    def test_snapshot_accepts_stable_path_and_descriptor_metadata(self):
+        target = self.root / "snapshot.json"
+        target.write_bytes(b"old")
+        target.write_bytes(b"stable contents after creation")
+        lstat = target.lstat()
+        with target.open("rb") as stream:
+            fstat = os.fstat(stream.fileno())
+        fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns",
+                  "st_birthtime_ns", "st_mode")
+        diagnostic = {name: {field: getattr(value, field, None) for field in fields}
+                      for name, value in (("lstat", lstat), ("fstat", fstat))}
+        try:
+            snapshot = self.module.read_snapshot(target)
+        except self.module.HookError as error:
+            self.fail(str(error) + "; metadata=" + json.dumps(diagnostic, sort_keys=True))
+        self.assertEqual(snapshot.data, b"stable contents after creation")
+        self.assertEqual(self.module.read_snapshot(target), snapshot)
+        self.assertIsNone(self.module.key_file_readiness(target), json.dumps(diagnostic, sort_keys=True))
+
+    def test_windows_creation_time_normalization_preserves_other_identity_checks(self):
+        # Affected Windows Python path stat exposes creation time as ctime while
+        # fstat exposes metadata change time; birthtime is consistent in both.
+        path_metadata = {"st_dev": 11, "st_ino": 12, "st_size": 13,
+                         "st_mtime_ns": 14, "st_ctime_ns": 15,
+                         "st_birthtime_ns": 15, "st_mode": 0o100600}
+        descriptor_metadata = dict(path_metadata, st_ctime_ns=99)
+        with patch.object(self.module.os, "name", "nt"):
+            reference = self.module._identity(SimpleNamespace(**path_metadata))
+            self.assertEqual(self.module._identity(SimpleNamespace(**descriptor_metadata)), reference)
+            for field in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_birthtime_ns", "st_mode"):
+                with self.subTest(field=field):
+                    changed = dict(descriptor_metadata)
+                    changed[field] += 1
+                    self.assertNotEqual(self.module._identity(SimpleNamespace(**changed)), reference)
+            legacy = dict(path_metadata)
+            legacy.pop("st_birthtime_ns")
+            self.assertEqual(self.module._identity(SimpleNamespace(**legacy)), reference)
+
+    def test_posix_identity_preserves_metadata_change_time_even_with_birthtime(self):
+        metadata = {"st_dev": 11, "st_ino": 12, "st_size": 13,
+                    "st_mtime_ns": 14, "st_ctime_ns": 15,
+                    "st_birthtime_ns": 10, "st_mode": 0o100600}
+        with patch.object(self.module.os, "name", "posix"):
+            before = self.module._identity(SimpleNamespace(**metadata))
+            metadata["st_ctime_ns"] += 1
+            self.assertNotEqual(self.module._identity(SimpleNamespace(**metadata)), before)
+
+    @unittest.skipIf(os.name == "nt", "POSIX permission changes are not portable to Windows")
+    def test_atomic_write_refuses_concurrent_permission_change(self):
+        target = self.root / "protected-config.json"
+        target.write_bytes(b'{"preserve":true}')
+        expected = self.module.read_snapshot(target)
+        mode = target.stat().st_mode & 0o777
+        target.chmod(mode ^ 0o100)
+        changed = target.stat()
+        with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+            self.module.atomic_write(target, b"{}", expected)
+        self.assertEqual(target.read_bytes(), b'{"preserve":true}')
+        self.assertEqual(target.stat().st_mode, changed.st_mode)
+
     def test_atomic_write_refuses_stale_snapshot(self):
         target = self.root / "config.json"
         target.write_bytes(b'{"before": true}')

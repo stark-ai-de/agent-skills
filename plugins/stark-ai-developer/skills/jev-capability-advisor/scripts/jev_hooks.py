@@ -60,8 +60,12 @@ class Snapshot:
 
 
 def _identity(value):
+    # Windows path stat aliases ctime to creation time, while Python 3.14
+    # fstat can report change time. Compare the same timestamp on both APIs.
+    timestamp = (getattr(value, 'st_birthtime_ns', value.st_ctime_ns)
+                 if os.name == 'nt' else value.st_ctime_ns)
     return (value.st_dev, value.st_ino, value.st_size,
-            value.st_mtime_ns, value.st_ctime_ns, value.st_mode)
+            value.st_mtime_ns, timestamp, value.st_mode)
 
 
 def safe_path(path):

@@ -2005,10 +2005,10 @@
       "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
     },
     {
-      "byteLength": 35406,
+      "byteLength": 35679,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_hooks.py",
-      "sha256": "52bf3e4fd7eae4d711330accac796ed2e08b274df90a3e7bbe9bf9bf44d64fd3"
+      "sha256": "2bd0dc29ed6b81c0c7fedb01e50ea8c3d3b8dd72bc4651943b3dafe555c5ec05"
     },
     {
       "byteLength": 19499,
@@ -2035,5 +2035,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "9f25b5986c6d829d660c25be026e68e218f7ccdcbda89c940b34646622857296"
+  "treeHash": "9fd114b4cfbec1f275c2fd0d7145a12aec611446aaa42eb710a9036d11e82da4"
 }
