@@ -1,6 +1,7 @@
 import { inspectRuntimeSources } from "./jev-runtime-evidence.mjs";
-import { promoComparison } from "./jev-promo-comparison.mjs";
-import nativeNextSkill from "../../../skill-evals/jev-capability-advisor/benchmarks/native-next-skill-2026-09-25.json" with { type: "json" };
+import { selectorComparison } from "./jev-selector-comparison.mjs";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import nextSkillEvidence from "../../../skill-evals/jev-capability-advisor/benchmarks/next-skill-2026-09-25.json" with { type: "json" };
 
 export const jevBenchmarks = {
@@ -10,12 +11,23 @@ export const jevBenchmarks = {
 };
 
 export function getJevPromoComparison() {
-  const comparison = promoComparison(nextSkillEvidence, nativeNextSkill);
-  const measured = nextSkillEvidence.studies.find(
-    (study) => study.study_id === "next-skill-hidden32",
-  ).provenance.source_sha256.next_skill;
+  const cwd = process.cwd();
+  const root = existsSync(join(cwd, "skill-evals")) ? cwd : resolve(cwd, "..");
+  // No fallback to a partial campaign, historical timing series, or synthetic fixture.
+  const report = JSON.parse(
+    readFileSync(
+      join(
+        root,
+        "skill-evals/jev-capability-advisor/benchmarks/selector-comparison-2026-09-26.json",
+      ),
+      "utf8",
+    ),
+  );
+  const comparison = selectorComparison(report);
+  const measured = report.provenance.jev_runtime_sha256;
+  const revision = report.selectors.find((row) => row.arm === "jev").revision;
   return {
     ...comparison,
-    runtime: inspectRuntimeSources(measured, undefined, comparison.measuredRevision),
+    runtime: inspectRuntimeSources(measured, undefined, revision),
   };
 }

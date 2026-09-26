@@ -52,8 +52,9 @@ the current composer control.
 <original request>`. Combine the command and continuation only if this same
   composer also proves inline argument support.
 - When Codex web control or state evidence is missing or contradictory, report
-  `Planning capability: Indeterminate`, ask for current-composer evidence, and
-  wait. Do not fall back or emit the handoff.
+  `Planning capability: Indeterminate` and continue read-only discovery and
+  questions. Resolve the control state only when a requested handoff or save
+  depends on it; missing evidence alone does not prove Plan is unavailable.
 - When the user positively enumerates current Codex web controls without Plan,
   report `Planning capability: Unavailable` and record the fallback evidence.
 

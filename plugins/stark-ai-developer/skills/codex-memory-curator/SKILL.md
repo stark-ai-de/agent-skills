@@ -82,11 +82,13 @@ Every route applies the same review quality to the explicitly requested scope be
 
    Use `${CODEX_HOME}` when set; otherwise use the user's home directory plus `.codex`.
 
-2. Inventory memory files without dumping contents:
+2. For requests that explicitly cover the entire memory store, inventory all memory files without dumping contents:
 
    ```bash
    node scripts/inventory-memories.mjs
    ```
+
+   For a narrower request, skip this whole-store command and inventory only the explicitly requested paths with targeted reads.
 
 3. Run the redacted risk scanner when looking for sensitive, stale, broad, local, repo-specific, or config-like entries:
 
@@ -97,7 +99,7 @@ Every route applies the same review quality to the explicitly requested scope be
    Exit code `1` means findings were found, not that the scan failed. The scanner caps returned findings and skips generated evidence by default; raise `--max-findings` or add `--include-generated-evidence` only when needed.
    Use scanner JSON as evidence; report counts and the highest-signal redacted findings instead of pasting the full payload.
 
-4. Locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.
+4. If configuration is requested or needed to resolve an in-scope conflict, locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.
 5. Classify memory mode as disabled, enabled but not injected, enabled and injected, external-context generation disabled, or unknown. Load `references/config-modes.md` for exact mode signals.
 6. If multiple memory file types are present, load `references/memory-store-anatomy.md` before deciding what is safe to edit.
 7. Read memory files in small chunks; avoid huge dumps and redact sensitive values.
@@ -164,7 +166,7 @@ node scripts/backup-memories.mjs [--repo PATH] [--codex-home PATH] [--backup-roo
 
 ## Output format
 
-Use the workflow announcement above; report only unresolved approval gates.
+Use the workflow announcement above. There, report only unresolved approval gates; in the selected route's result, report its required deliverables and verification according to the route execution and file-delivery contracts below.
 
 Before producing a report, load and follow [`assets/review-report-template.md`](assets/review-report-template.md) as the canonical heading and field contract. File routes copy that complete template into the one curation record; chat routes render only applicable sections in chat and create no report file. Populate every applicable field, use `not applicable` with a reason for skipped phases, and redact sensitive values.
 

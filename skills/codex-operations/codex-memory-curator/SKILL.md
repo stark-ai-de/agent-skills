@@ -82,11 +82,13 @@ Every route applies the same review quality to the explicitly requested scope be
 
    Use `${CODEX_HOME}` when set; otherwise use the user's home directory plus `.codex`.
 
-2. Inventory memory files without dumping contents:
+2. For requests that explicitly cover the entire memory store, inventory all memory files without dumping contents:
 
    ```bash
    node scripts/inventory-memories.mjs
    ```
+
+   For a narrower request, skip this whole-store command and inventory only the explicitly requested paths with targeted reads.
 
 3. Run the redacted risk scanner when looking for sensitive, stale, broad, local, repo-specific, or config-like entries:
 
@@ -164,7 +166,7 @@ node scripts/backup-memories.mjs [--repo PATH] [--codex-home PATH] [--backup-roo
 
 ## Output format
 
-Use the workflow announcement above; report only unresolved approval gates.
+Use the workflow announcement above. There, report only unresolved approval gates; in the selected route's result, report its required deliverables and verification according to the route execution and file-delivery contracts below.
 
 Before producing a report, load and follow [`assets/review-report-template.md`](assets/review-report-template.md) as the canonical heading and field contract. File routes copy that complete template into the one curation record; chat routes render only applicable sections in chat and create no report file. Populate every applicable field, use `not applicable` with a reason for skipped phases, and redact sensitive values.
 

@@ -11,8 +11,15 @@ Passing behavior must:
 - limit agent-initiated selection to a relevant read-only audit unless the user's existing request authorizes the mutating outcome and scope;
 - use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
 - keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
-- respect active/explicitly requested native Plan, continue safe planning with inactive/unknown/declined controls, reuse unchanged content/write approval, exit active Plan before writes, and recheck state before execution;
+- treat AC-ADR-065 as an optional adoptable target policy, record local mapping/authorized hosts/prerequisite gaps, and keep installed, configured, active/trusted, processing-authorized, current-inventory, and qualified states distinct;
+- audit adopted Jev policies from existing evidence without provider requests or repair, preserve native fallback with visible unmet obligations, and require fresh exact host/runtime/configuration/model/reasoning evidence for qualification;
+- respect active/explicitly requested native Plan, continue permitted no-write planning with inactive, unavailable, declined, or indeterminate controls, reuse unchanged content/write approval, exit active Plan before writes, and recheck state before execution; unknown control state blocks only an action that depends on resolving that state;
 - distinguish execution-host control evidence from target runtime and actual permission; unknown evidence permits no writes and does not invent transition commands;
+- distinguish ChatGPT web Chat/Work from Codex web: only an observed inactive
+  Codex web `/plan` may receive the Codex `$` handoff. Missing evidence remains
+  `Indeterminate` while read-only discovery continues; explicit `unknown`
+  surface or experience values block host-specific actions that depend on them,
+  and a positive no-control enumeration permits fallback;
 - route from `references/adr-catalog.md` to Short variants first, then load only applicable canonical Long ADRs and optional Guides;
 - preserve accepted local ADR identity and history, use repository-native provider mapping, and keep skill-runtime ADRs outside target adoption matrices;
 - rank architecture evidence through AC-ADR-046 independently from operational authority and stop the affected scope when same-rank accepted decisions conflict;
@@ -110,6 +117,8 @@ Focused routed-library cases:
 - `cases/legacy-input-routing.md`
 - `cases/instruction-adr-authority-conflict.md`
 - `cases/setup-adoptable-only.md`
+- `cases/jev-policy-adoption-prerequisites.md`
+- `cases/jev-policy-audit-read-only.md`
 - `cases/stale-subagent-reconciliation.md`
 - `cases/evidence-stage-claim-limits.md`
 - `cases/invalid-missing-triplet.md`

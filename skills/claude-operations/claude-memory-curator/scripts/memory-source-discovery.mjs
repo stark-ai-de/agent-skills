@@ -54,8 +54,25 @@ export function walk(dir, predicate = () => true) {
   return files.sort();
 }
 
+export function collectAncestorAgentFiles(repo) {
+  const files = [];
+  let directory = path.dirname(path.resolve(repo));
+
+  while (true) {
+    const candidate = path.join(directory, "AGENTS.md");
+    if (isFile(candidate)) files.push(candidate);
+
+    const parent = path.dirname(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+
+  return files;
+}
+
 export function collectProjectFiles(repo) {
   return [
+    ...collectAncestorAgentFiles(repo),
     path.join(repo, "CLAUDE.md"),
     path.join(repo, ".claude", "CLAUDE.md"),
     path.join(repo, "CLAUDE.local.md"),

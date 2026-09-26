@@ -2047,6 +2047,8 @@ function runClaudeCandidateContract(curator) {
   try {
     const repo = path.join(temp, "repo");
     const home = path.join(temp, "claude");
+    const ancestorAgents = path.join(temp, "AGENTS.md");
+    writeFixture(ancestorAgents, "Always use synthetic policy.\n");
     const allowed = ["AGENTS.md", ".claude/AGENTS.md", "nested/AGENTS.md"];
     const excluded = ["AGENTS.local.md", "AGENTS.override.md", ".agents/AGENTS.md"];
     for (const file of [...allowed, ...excluded])
@@ -2080,10 +2082,11 @@ function runClaudeCandidateContract(curator) {
     );
     if (
       result.status !== 0 ||
-      candidates.length !== allowed.length ||
+      candidates.length < allowed.length + 1 ||
+      !candidates.some((file) => file.path === ancestorAgents) ||
       candidates.some((file) => file.loading !== "unverified")
     ) {
-      fail("Claude inventory: native AGENTS candidates must not be reported as effective loading");
+      fail("Claude inventory: repo and ancestor AGENTS candidates must remain unverified");
     }
     for (const file of allowed) {
       if (!candidates.some((candidate) => candidate.path === path.join(repo, file)))
@@ -2160,7 +2163,10 @@ function runClaudeCandidateContract(curator) {
     const scanPayload = JSON.parse(scan.stdout);
     if (
       scan.status !== 1 ||
-      !scanPayload.findings.some((finding) => finding.surface === "claude-agents-md-candidate")
+      !scanPayload.findings.some(
+        (finding) =>
+          finding.surface === "claude-agents-md-candidate" && finding.path === ancestorAgents,
+      )
     ) {
       fail(
         "Claude scanner: requested AGENTS candidate content must be included as unverified candidate evidence",

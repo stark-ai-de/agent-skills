@@ -448,12 +448,12 @@
     {
       "id": "AC-ADR-064",
       "disposition": "material",
-      "relations": [
-        {
-          "type": "adapts",
-          "sources": ["ADR-0038"]
-        }
-      ]
+      "relations": [{ "type": "adapts", "sources": ["ADR-0038"] }]
+    },
+    {
+      "id": "AC-ADR-065",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0058"] }]
     }
   ]
 }

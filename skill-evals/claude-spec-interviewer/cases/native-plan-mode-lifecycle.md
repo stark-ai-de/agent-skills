@@ -12,7 +12,7 @@ Assume Claude Code supports native Plan mode, `EnterPlanMode`, `AskUserQuestion`
 
 ## Expected Behavior
 
-- Preserve active native Plan and inspect relevant evidence read-only. Ask only unresolved material questions using an available permitted tool or conversation.
+- Preserve native Plan after Claude Code confirms activation and inspect relevant evidence read-only. When Plan is inactive, continue permitted read-only interview work without treating it as active. Ask only unresolved material questions using an available permitted tool or conversation.
 - Prepare the complete spec and any required ADR/index content before one positive checkpoint naming exact paths and writes.
 - Use the native plan approval as that checkpoint when it actually covers the draft and save scope; otherwise retain the explicit chat approval across the required exit.
 - Report `Persistence status: pending Plan-mode exit` until actual exit; never write or claim a save in Plan.

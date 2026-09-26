@@ -217,6 +217,7 @@ function surfaceFor(repo, claudeHome, memoryDir, file) {
     if (repoRelative === ".claude/settings.json") return "claude-project-settings";
     if (repoRelative === ".claude/settings.local.json") return "claude-local-settings";
   }
+  if (path.basename(file) === "AGENTS.md") return "claude-agents-md-candidate";
   return "unknown";
 }
 

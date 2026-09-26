@@ -146,6 +146,7 @@ const expectedCategories = new Map([
   [62, "quality-delivery"],
   [63, "stack-tooling"],
   [64, "governance"],
+  [65, "governance"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -221,6 +222,7 @@ const expectedStems = new Map([
   [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
   [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
   [64, "ac-adr-064-preserve-approved-scope-through-capability-aware-planning"],
+  [65, "ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -300,6 +302,8 @@ const routedLibraryEvalCases = [
   "cross-category-adr-routing.md",
   "instruction-adr-authority-conflict.md",
   "setup-adoptable-only.md",
+  "jev-policy-adoption-prerequisites.md",
+  "jev-policy-audit-read-only.md",
   "stale-subagent-reconciliation.md",
   "evidence-stage-claim-limits.md",
   "invalid-missing-triplet.md",
