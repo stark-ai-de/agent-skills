@@ -6,6 +6,9 @@ import { repoUrl } from "../lib/skills";
 const summary = summarizeNativeDev9(evidence);
 const number = (value: number) => value.toLocaleString("en-US");
 const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
+const skillNameByCaseId = new Map(
+  summary.skillResults.map((result) => [result.caseId, result.skillName]),
+);
 ---
 
 <section class="jev-luna-dev9" aria-labelledby="jev-luna-dev9-title" data-jev-luna-dev9 data-gate="failed">
@@ -25,6 +28,40 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
   <p>One skill task returned <code>clarify</code>, so exact 9/9 accuracy was not met. The run stopped at this gate: {evidence.campaign.remaining_not_run} of {evidence.campaign.planned_live_observations} planned campaign observations were not run, including the matched and confirmation cohorts. No Hussi Native arm ran, so this is not a comparative accuracy, speed, or cost result.</p>
   <p>The Codex Native CLI completed all nine requested turns with reported usage. The resolved backend model was not exposed in the recorded response. These previously used tasks are a development check, not a blind confirmation; latency is descriptive and is not pooled with the other benchmark results.</p>
 
+  <section class="jev-luna-dev9__skill-results" aria-labelledby="jev-luna-dev9-skill-results-title">
+    <header>
+      <h4 id="jev-luna-dev9-skill-results-title">Observed result for each target skill</h4>
+      <p>Each chart shows one Dev9 observation only: 1/1 correct or 0/1. These are task outcomes, not stable per-skill accuracy estimates.</p>
+    </header>
+    <div class="jev-luna-dev9__skill-chart-grid">
+      {summary.skillResults.map((result) => (
+        <figure class="jev-luna-dev9__skill-chart" data-skill-result={result.skillName} data-correct={result.correct}>
+          <figcaption>
+            <strong>{result.skillName}</strong>
+            <span>{result.correct ? "Correct · 1/1" : "Not correct · 0/1"}</span>
+          </figcaption>
+          <div class="jev-luna-dev9__skill-axis" aria-hidden="true"><span>0 correct</span><span>1 correct</span></div>
+          <div
+            class="jev-luna-dev9__skill-bar"
+            role="meter"
+            aria-label={result.skillName + " result from one Dev9 observation"}
+            aria-valuemin="0"
+            aria-valuemax="1"
+            aria-valuenow={result.correctObservations}
+            aria-valuetext={result.correct ? "1 of 1 correct" : "0 of 1 correct"}
+          >
+            <span style={"width:" + result.accuracyPercent + "%"}></span>
+            {!result.correct && <i aria-hidden="true"></i>}
+          </div>
+          <dl>
+            <div><dt>Model turn</dt><dd>{seconds(result.modelTurnMs)} s</dd></div>
+            <div><dt>Input tokens</dt><dd>{number(result.inputTokens)}</dd></div>
+          </dl>
+        </figure>
+      ))}
+    </div>
+  </section>
+
   <details class="jev-luna-dev9__observations">
     <summary>Inspect the nine audited observations</summary>
     <div class="jev-luna-dev9__table-scroll" role="region" aria-label="GPT-6 Luna Low Dev9 observations" tabindex="0">
@@ -33,7 +70,7 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
         <thead><tr><th scope="col">Task</th><th scope="col">Returned outcome</th><th scope="col">Correct</th><th scope="col">Turn time</th><th scope="col">Input tokens</th></tr></thead>
         <tbody>{evidence.observations.map((row) => (
           <tr>
-            <th scope="row">{row.case_id}<small>{row.category}</small></th>
+            <th scope="row">{skillNameByCaseId.get(row.case_id) ?? "No-match task"}<small>{row.case_id}</small></th>
             <td><code>{row.status}</code></td>
             <td>{row.correct ? "Yes" : "No"}</td>
             <td>{seconds(row.model_turn_ms)} s</td>
@@ -58,6 +95,21 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
   .jev-luna-dev9__metrics dt { color: var(--muted); font-size: .7rem; }
   .jev-luna-dev9__metrics dd { margin: .25rem 0 0; font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .jev-luna-dev9__metrics small, .jev-luna-dev9 table small { display: block; margin-top: .2rem; color: var(--muted); font-size: .68rem; font-weight: 400; }
+  .jev-luna-dev9__skill-results { display: grid; gap: .65rem; border-block: 1px solid var(--border); padding-block: .8rem; }
+  .jev-luna-dev9__skill-results h4 { margin: 0; color: var(--foreground); font-size: .88rem; }
+  .jev-luna-dev9__skill-results header p { margin-top: .25rem; color: var(--muted); font-size: .72rem; }
+  .jev-luna-dev9__skill-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .jev-luna-dev9__skill-chart { min-width: 0; margin: 0; padding: .7rem; border: 1px solid var(--border); border-radius: var(--radius); }
+  .jev-luna-dev9__skill-chart figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+  .jev-luna-dev9__skill-chart figcaption strong { overflow-wrap: anywhere; font-size: .75rem; }
+  .jev-luna-dev9__skill-chart figcaption span { color: var(--muted); font-size: .68rem; white-space: nowrap; }
+  .jev-luna-dev9__skill-axis { display: flex; justify-content: space-between; margin: .55rem 0 .2rem; color: var(--muted); font-size: .62rem; }
+  .jev-luna-dev9__skill-bar { position: relative; height: .65rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--muted-band-background); }
+  .jev-luna-dev9__skill-bar span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+  .jev-luna-dev9__skill-bar i { position: absolute; inset-block: 0; inset-inline-start: 0; width: 2px; background: var(--muted); }
+  .jev-luna-dev9__skill-chart dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin: .6rem 0 0; }
+  .jev-luna-dev9__skill-chart dt { color: var(--muted); font-size: .62rem; }
+  .jev-luna-dev9__skill-chart dd { margin: .15rem 0 0; font-size: .72rem; font-variant-numeric: tabular-nums; }
   .jev-luna-dev9__observations { border-top: 1px solid var(--border); }
   .jev-luna-dev9__observations summary { cursor: pointer; padding-block: .8rem; font-weight: 600; }
   .jev-luna-dev9__table-scroll { overflow-x: auto; }
@@ -67,5 +119,10 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
   .jev-luna-dev9 td { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .jev-luna-dev9__source { font-size: .75rem; }
   .jev-luna-dev9 a:focus-visible, .jev-luna-dev9 summary:focus-visible, .jev-luna-dev9__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
-  @media (max-width: 700px) { .jev-luna-dev9__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) {
+    .jev-luna-dev9__metrics, .jev-luna-dev9__skill-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .jev-luna-dev9__metrics, .jev-luna-dev9__skill-chart-grid { grid-template-columns: minmax(0, 1fr); }
+  }
 </style>

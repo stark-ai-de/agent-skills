@@ -18,6 +18,19 @@ const group = (rows) => ({
   accuracy: rows.filter((row) => row.correct).length / rows.length,
 });
 
+// Crosswalk reconstructed from the retained Dev9 task requirements and catalog.
+// The drawio aliases share one catalog skill identity and therefore one chart.
+const DEV9_TARGET_SKILL_BY_CASE = Object.freeze({
+  "nextdev-h008": "cli-creator",
+  "nextdev-stressv5c001": "plugin-creator",
+  "nextdev-stressv5c002": "drawio-diagrams",
+  "nextdev-stressv5c003": "higgsfield-product-photoshoot",
+  "nextdev-stressv5c004": "vercel:ncc",
+  "nextdev-stressv5c005": "ads-manager:ads-manager-insights",
+  "nextdev-stressv5c006": "vercel:geist",
+  "nextdev-stressv5c008": "security-best-practices",
+});
+
 const requireSameMetric = (actual, expected, path) => {
   requireEvidence(actual && typeof actual === "object", `${path}: missing summary`);
   for (const [key, value] of Object.entries(expected))
@@ -95,6 +108,25 @@ export function summarizeNativeDev9(evidence) {
 
   const skills = rows.filter((row) => row.category === "skill");
   const noMatch = rows.filter((row) => row.category === "none");
+  const skillResults = skills.map((row) => {
+    const skillName = DEV9_TARGET_SKILL_BY_CASE[row.case_id];
+    requireEvidence(typeof skillName === "string", "skill target is missing for " + row.case_id);
+    return {
+      caseId: row.case_id,
+      skillName,
+      correct: row.correct,
+      correctObservations: row.correct ? 1 : 0,
+      observations: 1,
+      accuracyPercent: row.correct ? 100 : 0,
+      modelTurnMs: row.model_turn_ms,
+      inputTokens: row.input_tokens,
+    };
+  });
+  requireEvidence(
+    skillResults.length === Object.keys(DEV9_TARGET_SKILL_BY_CASE).length &&
+      new Set(skillResults.map((row) => row.skillName)).size === skillResults.length,
+    "skill target mapping does not exactly cover the unique Dev9 skills",
+  );
   const summary = {
     all: group(rows),
     skill: group(skills),
@@ -137,5 +169,5 @@ export function summarizeNativeDev9(evidence) {
     "quality gate does not match the audited observations",
   );
 
-  return summary;
+  return { ...summary, skillResults };
 }
