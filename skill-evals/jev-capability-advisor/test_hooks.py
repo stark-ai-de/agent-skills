@@ -158,6 +158,54 @@ class HookRegistrationTests(unittest.TestCase):
                 self.run_cli("uninstall", host)
                 self.assertEqual(self.read_config(host), original)
 
+    def test_render_ignores_broken_user_configuration_and_state(self):
+        # Rendering must not even parse installation files, including corrupt ones.
+        (self.codex / "hooks.json").write_bytes(b"not JSON: private config canary")
+        (self.root / "state").write_bytes(b"not a directory: ownership canary")
+        before = self.snapshot()
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        self.assertEqual(set(fragment), {"hooks"})
+        self.assertEqual(set(fragment["hooks"]), {EVENT})
+        groups = fragment["hooks"][EVENT]
+        self.assertEqual(len(groups), 1)
+        handler = groups[0]["hooks"][0]
+        self.assertEqual(handler["timeout"], 5)
+        self.assertEqual(handler["type"], "command")
+        self.assertEqual(self.snapshot(), before)
+
+    def test_rendered_policy_output_is_constant_for_arbitrary_hook_input(self):
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        handler = fragment["hooks"][EVENT][0]["hooks"][0]
+        expected = (SCRIPT.parent.parent / "assets/repository-hook-guidance.txt").read_text(
+            encoding="utf-8").strip()
+        before = self.snapshot()
+        for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
+                        b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
+                        b'"tool_result":"PRIVATE_RESULT_CANARY"}'):
+            with self.subTest(size=len(payload)):
+                result = self.execute_registration("codex", handler, payload)
+                self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
+                self.assertNotIn("CANARY", json.dumps(result))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_invalid_render_combinations_leave_state_unchanged(self):
+        before = self.snapshot()
+        cases = (
+            ("render", "codex", ()),
+            ("render", "claude-code", ("--policy", "repository-adopted")),
+            ("render", "codex", ("--policy", "repository-adopted", "--scope", "user")),
+            ("render", "codex", ("--policy", "repository-adopted", "--project-root", str(self.project))),
+            ("render", "codex", ("--policy", "repository-adopted", "--dry-run")),
+            *((action, "codex", ("--policy", "repository-adopted"))
+              for action in ("install", "status", "uninstall")),
+        )
+        for action, host, arguments in cases:
+            with self.subTest(action=action, host=host, arguments=arguments):
+                result = self.run_cli(action, host, *arguments, success=False)
+                self.assertEqual(result["status"], "error")
+                self.assertIn("invalid_arguments", result["reason"])
+                self.assertEqual(self.snapshot(), before)
+
     def test_repeated_install_is_idempotent_and_uninstall_is_safe_twice(self):
         for host in ("codex", "claude-code"):
             with self.subTest(host=host):
@@ -643,6 +691,39 @@ class HookPrimitiveTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="jev-hook-primitives-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
+
+    def test_render_can_read_only_its_packaged_policy_guidance(self):
+        asset = SCRIPT.parent.parent / "assets/repository-hook-guidance.txt"
+        original_open = Path.open
+        opened = []
+
+        def asset_only(path, mode="r", *args, **kwargs):
+            self.assertEqual(path, asset)
+            self.assertEqual(mode, "r")
+            opened.append(path)
+            return original_open(path, mode, *args, **kwargs)
+
+        output = io.StringIO()
+        with patch.object(Path, "open", asset_only), \
+                patch.object(self.module, "run", side_effect=AssertionError("installer forbidden")), \
+                patch.object(self.module, "read_snapshot", side_effect=AssertionError("config read forbidden")), \
+                patch.object(os, "open", side_effect=AssertionError("file access forbidden")), \
+                patch.object(socket, "socket", side_effect=AssertionError("network forbidden")), \
+                patch.object(sys, "stdin", None), patch.object(sys, "stdout", output):
+            status = self.module.main(["render", "--host", "codex", "--policy", "repository-adopted"])
+        self.assertEqual(status, 0)
+        self.assertEqual(opened, [asset])
+        self.assertIn(EVENT, json.loads(output.getvalue())["hooks"])
+
+    def test_render_rejects_unsupported_arguments_before_any_file_read(self):
+        for arguments in (["render", "--host", "codex"],
+                          ["render", "--host", "claude-code", "--policy", "repository-adopted"],
+                          ["install", "--host", "codex", "--policy", "repository-adopted"]):
+            with self.subTest(arguments=arguments), \
+                    patch.object(Path, "open", side_effect=AssertionError("file read forbidden")), \
+                    patch.object(self.module, "run", side_effect=AssertionError("installer forbidden")), \
+                    patch.object(sys, "stdout", io.StringIO()):
+                self.assertEqual(self.module.main(arguments), 1)
 
     def test_home_git_failures_and_false_roots_are_refused(self):
         failures = (FileNotFoundError("git unavailable"),

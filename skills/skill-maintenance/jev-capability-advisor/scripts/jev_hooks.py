@@ -2,7 +2,8 @@
 """Opt-in Jev hook registration. No provider access or capability discovery.
 
 install/uninstall modify only the selected hook config and private ownership state.
-status and --dry-run never write. No third-party dependencies.
+status and --dry-run never write. render prints a fragment without accessing
+user configuration or ownership state. No third-party dependencies.
 """
 import argparse
 import base64
@@ -162,6 +163,15 @@ def digest(data):
 def load_guidance():
     return (Path(__file__).resolve().parent.parent / 'assets' /
             'hook-guidance.txt').read_text(encoding='utf-8').strip()
+
+
+def render_policy(host, policy):
+    """Build a static fragment; never inspect installation or user state."""
+    if host != 'codex' or policy != 'repository-adopted':
+        raise HookError('unsupported_policy')
+    guidance = (Path(__file__).resolve().parent.parent / 'assets' /
+                'repository-hook-guidance.txt').read_text(encoding='utf-8').strip()
+    return {'hooks': {'UserPromptSubmit': [build_registration(host, guidance=guidance)]}}
 
 
 def _ps_quote(value):
@@ -496,13 +506,25 @@ def run(args):
 
 def main(argv=None):
     parser = Parser(description=__doc__, epilog=DISCLOSURE)
-    parser.add_argument('action', choices=('install', 'status', 'uninstall'))
+    parser.add_argument('action', choices=('install', 'status', 'uninstall', 'render'))
     parser.add_argument('--host', choices=('codex', 'claude-code'), required=True)
-    parser.add_argument('--scope', choices=('user', 'project'), default='user')
+    parser.add_argument('--scope', choices=('user', 'project'))
     parser.add_argument('--project-root', type=Path)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--policy', choices=('repository-adopted',))
     try:
-        result = run(parser.parse_args(argv))
+        args = parser.parse_args(argv)
+        if args.action == 'render':
+            if (args.host != 'codex' or args.policy != 'repository-adopted'
+                    or args.scope is not None or args.project_root is not None or args.dry_run):
+                raise HookError('invalid_arguments: render requires --host codex '
+                                '--policy repository-adopted and no installer options')
+            result = render_policy(args.host, args.policy)
+        else:
+            if args.policy is not None:
+                raise HookError('invalid_arguments: --policy is only supported by render')
+            args.scope = args.scope or 'user'
+            result = run(args)
     except (HookError, OSError, UnicodeError) as error:
         print(json.dumps({'status': 'error', 'reason': str(error)}, ensure_ascii=True))
         return 1

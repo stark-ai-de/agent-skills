@@ -11,6 +11,8 @@ Passing behavior must:
 - limit agent-initiated selection to a relevant read-only audit unless the user's existing request authorizes the mutating outcome and scope;
 - use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
 - keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
+- treat AC-ADR-065 as an optional adoptable target policy, record local mapping/authorized hosts/prerequisite gaps, and keep installed, configured, active/trusted, processing-authorized, current-inventory, and qualified states distinct;
+- audit adopted Jev policies from existing evidence without provider requests or repair, preserve native fallback with visible unmet obligations, and require fresh exact host/runtime/configuration/model/reasoning evidence for qualification;
 - use native Plan mode for plan workflows when supported, block on indeterminate state, fall back only when native Plan is definitely unavailable, exit before writes, and recheck state before execution;
 - distinguish ChatGPT web Chat/Work from Codex web: only an observed inactive
   Codex web `/plan` may receive the Codex `$` handoff, while missing evidence is
@@ -103,6 +105,8 @@ Focused routed-library cases:
 - `cases/legacy-input-routing.md`
 - `cases/instruction-adr-authority-conflict.md`
 - `cases/setup-adoptable-only.md`
+- `cases/jev-policy-adoption-prerequisites.md`
+- `cases/jev-policy-audit-read-only.md`
 - `cases/stale-subagent-reconciliation.md`
 - `cases/evidence-stage-claim-limits.md`
 - `cases/invalid-missing-triplet.md`

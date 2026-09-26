@@ -88,7 +88,7 @@ A subsequent twelve-turn A/B compared the previous advisor workflow with compact
 
 ## Hook integration qualification
 
-The optional [hook integration](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md) adds static agent guidance, not a selector benchmark or a complete native inventory export. Existing release observations above remain bound to their original source and selection scope. They do not qualify these hook paths. The implementation targets below need independent, source-bound evidence before being advertised as qualified automatic advice.
+The optional [hook integration](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md) adds static agent guidance, not a selector benchmark or a complete native inventory export. Existing release observations above remain bound to their original source and selection scope. They do not qualify these hook paths. The implementation targets below need independent, source-bound evidence before being advertised as qualified automatic advice. This matrix covers the original optional installer guidance; the separate repository-policy variant has its own observations below.
 
 | Host        | Platform       | Hook registration/delivery | Eligible inventory and actual advice/adoption |
 | ----------- | -------------- | -------------------------- | --------------------------------------------- |
@@ -114,6 +114,56 @@ python3 -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_ho
 ```
 
 The focused CI matrix runs these offline tests on Linux, macOS and Windows. It exercises configuration ownership, static output and launcher construction without provider keys. The general evaluator below also discovers hook tests. Keep automated regression results, real hook delivery, agent judgment, eligible inventory, fresh provider calls and recommendation adoption as separate evidence; no hook latency or whole-task speed benefit is claimed.
+
+## Repository policy qualification
+
+The repository-adopted renderer extends the reviewed hook dependency at `39c77a0e0ddc9cc6bc631b35f571eaee49a87058`. It does not change the original optional new-task installer guidance. Its separate fixed reminder evaluates repository adoption and covers material task/capability changes as well as new tasks. See the [repository policy contract](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#repository-adopted-policy).
+
+Local regression on Linux/WSL with Python 3.14.7 ran **222 tests: 220 passed and two native-Windows tests were skipped**. The hook module contributes 44 tests, including the five new renderer cases: only its packaged policy asset can be read, installer/state access is forbidden, corrupt user configuration is ignored, invalid option combinations have no side effects, and arbitrary event bytes produce only fixed output. The complete suite initially hit a sandbox denial in an existing local-socket fixture; rerunning the same offline suite with local sockets allowed passed. No provider credentials or live model requests are used by that suite. Prior Windows observations below remain tied to their recorded source hashes.
+
+Native CLI qualification is tracked separately from these local checks. Current eligibility and the declared inventory coverage need evidence; a synthetic catalog can establish only its bounded fixture flow and cannot prove a complete host export. Installation, render output, command replay and unit tests do not establish actual agent delivery, consultation ordering or task minimization. Required observations include two repository contexts, new tasks and material capability changes, unchanged continuations, missing adoption/processing authority, invocation restrictions, failures, timeout, removal, and captured synthetic outgoing payloads. The separately bounded real TypeSafe smoke must retain `general`/`current`; neither fixture replies nor a direct helper call replace native advice evidence.
+
+### Native observations, 2026-09-26
+
+**General automatic repository-policy integration remains unqualified.** The observations establish actual reminder delivery, a bounded explicitly requested consultation, and native fallback behavior. They do not establish automatic consultations on new/materially changed tasks against a generally eligible host inventory.
+
+The fixed environment was Codex CLI **0.157.0**, Linux/NixOS on WSL, Bash, Python **3.14.7**, model **gpt-6-astra**, reasoning **max**. Native batch turns used approval `never`, sandbox `workspace-write` and explicitly allowed network access; the read-only case overrode the sandbox to `read-only`. An isolated user-level fragment was reviewed through the normal `/hooks` trust interface. Fresh `hooks/list` observations showed it enabled and trusted in both repository contexts. No real global activation was performed.
+
+Final observed source identities, relative to the Jev skill root:
+
+| Source                                | SHA-256                                                            |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| `scripts/jev_hooks.py`                | `142726bbc009d85b075da488c43287fe34f876d5fccad49cae5c601fc16d81a0` |
+| `assets/repository-hook-guidance.txt` | `d142fc3e86c27f31a3504558904a0ec40ffc2ace85b460c5c1f36523eb18a5c7` |
+| `scripts/jev_advisor.py`              | `e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec` |
+| Rendered fragment                     | `0926b85833bfbc069a2db53a29dc7a805b850223feb5894049b64f9f7b04d4da` |
+
+All **13 native turns** completed with CLI exit zero and the fixed model/reasoning. The exact final reminder appeared as developer context in the 12 turns with the fragment present and was absent after removal. Exit zero describes host continuation; it does not convert failed advice or unavailable qualification into a pass.
+
+| Observation                                     | Result and evidence boundary                                                                                                                                                                                                             |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adopted repository without processing authority | Native result and unmet-obligation notice; no helper/provider call.                                                                                                                                                                      |
+| Unchanged continuation                          | No repeated consultation or Jev status message.                                                                                                                                                                                          |
+| Material task change                            | Native result and unmet-obligation notice; positive automatic reconsultation unavailable.                                                                                                                                                |
+| Capability restriction                          | An explicit per-turn user prohibition was respected. This did not exercise a persistent host enable/disable toggle.                                                                                                                      |
+| Non-adopting repository                         | Native result without policy-driven consultation or Jev status message.                                                                                                                                                                  |
+| Read-only sandbox                               | Native result and unmet-obligation notice; no preparation writes or helper/provider call. Native Plan collaboration mode was not exercised.                                                                                              |
+| Authorized processing, unverified inventory     | Read-only bootstrap inspection followed by native fallback; no invented complete export or provider call.                                                                                                                                |
+| Bounded genuine TypeSafe smoke                  | Exactly one native helper invocation and one actual provider request, explicitly `general/current`; `selected`, with the explicitly requested, currently native-enabled synthetic skill selected before the final uppercase task result. |
+| Controlled provider error and timeout           | One injected-transport helper call per case, helper exit one, followed by native task completion and the specific failure notice. No actual TypeSafe request.                                                                            |
+| Controlled cancellation                         | One injected `KeyboardInterrupt`, helper exit 130 and no completed advice receipt; native work continued. This was not a real host user interruption.                                                                                    |
+| Missing credential file                         | One actual helper invocation failed before transport creation; native work continued with a credential-gap notice. The receipt's attempt count of one is not a network request.                                                          |
+| Fragment removal                                | Fresh `hooks/list` returned zero in both contexts; the next native turn contained no reminder and made no helper call. The adopting repository's unmet-obligation notice remained applicable.                                            |
+
+The real smoke used an explicitly authorized synthetic subset, not automatic discovery of a complete inventory. The helper's HTTPS receipt captured the serialized request object, response and transport identity. Its query matched the approved synthetic input exactly and the outgoing object contained no private paths. This is helper-level transport evidence, not a separate packet capture. Private-output inspection found neither the TypeSafe key nor Codex authentication tokens. Total genuine TypeSafe traffic for this protocol was **one consultation, one request**, with no retry or model substitution.
+
+Separately, **16 direct helper fixture cases passed** without credentials or network. Captures preserved the exact minimal query and approved metadata while excluding disabled candidates, local source paths and private arbitrary fields. These fixtures covered selected/none/clarify/error outcomes, timeouts, cancellation propagation, missing credentials, partial results and explicit-only metadata. A deliberately inconsistent explicit-only recommendation remained locally selected: the host must still recheck restrictions; provider advice grants no invocation authority. Direct fixtures are not native restriction-enforcement evidence.
+
+Remaining acceptance gaps are positive automatic new-task/material-task/material-inventory consultations, reliable current restrictions for the claimed host inventory, a persistent host capability-toggle observation, native Plan mode, real host interruption, and native minimization from a raw prompt containing all specified canaries. The preapproved smoke payload and direct fixture captures do not demonstrate arbitrary model-mediated redaction. Current `skills/list` enabled metadata does not expose all invocation or tool/account restrictions; this observation cannot establish a complete host export. These gaps prevent a general qualification claim; the bounded smoke remains valid within its stated scope.
+
+Setup failures remain recorded separately: a sandboxed TUI discovery attempt failed before a model turn; the authorized network run succeeded. Two early introspection wrappers timed out during process shutdown after returning responses; the final probe closed stdin and exited normally. Neither event was treated as an advice observation. Cleanup removed the temporary authentication copy and policy fragment and stopped the remaining owned process. Original authentication, configuration and provider-key hashes were unchanged.
+
+Required repository gates passed using their exact Bun script bodies because the local pnpm launcher could not resolve the pinned package-manager version in the restricted environment. Projection generation and its gates used the explicitly authorized disposable validation index; generated files were copied back and compared byte-for-byte. The working checkout's index remained unchanged. These local results do not claim CI execution, publication or host qualification.
 
 ## Offline regression suite
 
@@ -141,7 +191,7 @@ The local hook tests exercise both command forms as subprocesses on Linux. Separ
 
 PowerShell creates empty profile directories on its first isolated launch even with `-NoProfile`. The tests allow only those empty startup directories, require existing configuration/state to remain unchanged, and verify that subsequent prompt-bearing calls create no runtime state. The emitter itself is separately tested with all file/network access forbidden.
 
-The current Linux/WSL Jev suite completed 217 tests: 215 passed and two native-Windows cases skipped. The home-repository tests verify real Git exclusion, rejection of already tracked state, preservation of conflicting ignore files, read-only inspection and repair without rewriting a trusted hook command. Local user-scope installation also succeeded and was idempotent; Codex discovered the entry as enabled but untrusted. This still does not prove delivery or automatic consultation.
+At the hook dependency snapshot, the Linux/WSL Jev suite completed 217 tests: 215 passed and two native-Windows cases skipped. The home-repository tests verify real Git exclusion, rejection of already tracked state, preservation of conflicting ignore files, read-only inspection and repair without rewriting a trusted hook command. Local user-scope installation also succeeded and was idempotent; Codex discovered the entry as enabled but untrusted. This still does not prove delivery or automatic consultation.
 
 Source identities for the repeated native Windows observation (SHA-256):
 

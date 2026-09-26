@@ -177,6 +177,11 @@
         { "type": "adapts", "sources": ["ADR-0018"] },
         { "type": "diverges-from", "sources": ["ADR-0034"] }
       ]
+    },
+    {
+      "id": "AC-ADR-065",
+      "disposition": "material",
+      "relations": [{ "type": "adapts", "sources": ["ADR-0058"] }]
     }
   ]
 }

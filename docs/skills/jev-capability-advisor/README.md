@@ -81,6 +81,14 @@ Use `--host claude-code` for Claude Code. User scope is the default; `--scope pr
 
 Opt-in covers sending a minimal task summary and bounded capability cards to TypeSafe when advice is actually possible. Existing credentials and current, trustworthy host metadata are required. Installed files or incomplete discovery output are not a complete eligible inventory. If eligibility, credentials or allowed execution cannot be established, the agent continues with native selection. The installer does not provision keys or bypass Plan-mode restrictions.
 
+For an explicitly adopted repository policy, render a Codex configuration fragment instead:
+
+```sh
+python3 scripts/jev_hooks.py render --host codex --policy repository-adopted
+```
+
+This command reads no user configuration and writes nothing. The [repository policy contract](../../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#repository-adopted-policy) separates adoption, host-owner activation, processing consent, eligible inventory and qualification. Its fixed reminder covers new tasks and material task/capability changes, with unchanged continuations skipped. Missing prerequisites retain native selection and expose the unmet obligation. Apply or remove the reviewed fragment through the host owner's configuration management; the existing installer does not manage it. Consult the [qualification evidence](../../../skill-evals/jev-capability-advisor/README.md#repository-policy-qualification); rendering alone does not qualify a host.
+
 The owner-process session instead reuses healthy HTTPS and an unchanged catalog's derived search index across tasks, validates fresh capabilities per request and does not cache decisions. Its profile is fixed at construction. Single general-profile CLI invocations also reuse their connection for compound follow-ups.
 
 **Configuration is not automatic-advice qualification.** Each host must independently demonstrate hook delivery, eligible inventory and actual adoption under ADR-0057. Current Codex discovery interfaces do not expose every effective skill and tool restriction. Installing the ordinary skill/plugin never activates a hook, and selector benchmarks do not prove hook or whole-task performance.

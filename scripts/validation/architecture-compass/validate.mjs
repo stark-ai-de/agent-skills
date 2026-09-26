@@ -31,7 +31,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 58 }, (_, index) => index + 1);
+const expectedAdrIds = [...Array.from({ length: 58 }, (_, index) => index + 1), 65];
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -139,6 +139,7 @@ const expectedCategories = new Map([
   [56, "quality-delivery"],
   [57, "quality-delivery"],
   [58, "stack-tooling"],
+  [65, "governance"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -208,6 +209,7 @@ const expectedStems = new Map([
   [56, "ac-adr-056-preserve-release-candidates-through-verified-protected-history"],
   [57, "ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance"],
   [58, "ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution"],
+  [65, "ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -278,6 +280,8 @@ const routedLibraryEvalCases = [
   "cross-category-adr-routing.md",
   "instruction-adr-authority-conflict.md",
   "setup-adoptable-only.md",
+  "jev-policy-adoption-prerequisites.md",
+  "jev-policy-audit-read-only.md",
   "stale-subagent-reconciliation.md",
   "evidence-stage-claim-limits.md",
   "invalid-missing-triplet.md",

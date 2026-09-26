@@ -2,7 +2,7 @@
 
 Use this **Integrate** mode to add a short reminder to Codex CLI or Claude Code before the agent handles a submitted user message. The reminder asks the agent to obtain Jev advice for new actionable work when the active host can supply trustworthy eligible capabilities. It does not obtain advice itself. For repeated calls from a process you control, choose the separate [owner-process session](session-integration.md).
 
-## Opt-in and task behavior
+## Default opt-in and task behavior
 
 Installing the skill or plugin leaves host configuration unchanged. Hook setup is a separate, explicit action with a named host and user/project scope. Explain during setup that actual advice sends a minimal task summary and bounded capability cards to TypeSafe, using the already configured credential source. Do not add unrelated private content, transcripts, tool results, private paths or secrets. Do not provision credentials or ask for a key in chat.
 
@@ -18,7 +18,27 @@ Before automatic advice, independently establish the actual host hook, current e
 
 Codex's existing discovery signals do not export every effective skill and tool restriction. The registration cannot repair that gap. If reliable current eligibility cannot be established, use native discovery. A controlled synthetic host catalog can demonstrate a bounded flow but cannot qualify all capabilities on a real machine. Installation status and static command tests alone are not automatic-advice qualification.
 
-## Manage the registration
+## Repository-adopted policy
+
+A repository can deliberately adopt the Architecture Compass Jev host-advice policy through its own accepted ADR and mapping. Adoption records an obligation for named host scopes; it is separate from host-owner activation, TypeSafe processing authority and practical qualification. A non-adopting repository does not acquire that obligation because another repository uses the same user-level hook.
+
+From the installed Jev skill directory, render the Codex fragment:
+
+```sh
+python3 scripts/jev_hooks.py render --host codex --policy repository-adopted
+```
+
+The command prints a JSON object with `hooks.UserPromptSubmit`. It reads only its packaged fixed guidance and uses the existing registration builder. It never reads or changes user configuration, credentials, ownership records or backups. `--scope`, `--project-root` and `--dry-run` are installer options and are rejected by `render`; `--policy` is rejected by the installer commands. Rendering is not a status or qualification check.
+
+Review the fragment and apply it only through the host owner's configuration management and normal exact-definition hook trust. Merge the event entry with existing hooks; do not replace the whole config or install both guidance variants for the same scope. The existing installer owns only its default registration and receipts. It does not apply, inspect or remove the rendered policy fragment. Removal belongs to the configuration management that applied it. A configuration change requires fresh trust review; rollback preserves native selection and does not erase the repository's adoption.
+
+For every new actionable task or material task/capability change, the agent checks the current repository's accepted local mapping and authorized host scope. When current eligibility, integration qualification, scoped processing consent and credentials are established, it consults Jev through the existing `general`/`current` helper **before substantive work**, then validates returned IDs and retains execution control. Bootstrap reads and consultation preparation precede substantive work. A changed task outcome, capability set or activation restriction invalidates previous advice. Unchanged continuations, confirmations, status questions and consultation steps do not trigger another call or repeated status.
+
+Missing adoption causes no policy-driven provider call. Missing prerequisites or provider failure, timeout or cancellation in an adopted scope preserve native work and produce a brief, truthful unmet-obligation report. Honor explicit user choices and opt-outs. Never infer processing consent from adoption, infer eligibility from absent flags or promote a model-visible catalog to a complete host export. Do not export a catalog or write a receipt if Plan/read-only constraints forbid it. Send only a minimal task summary and bounded approved metadata. Exclude secrets, customer data, private paths, raw prompts/transcripts, unrelated content and tool results from both; model-mediated minimization is not guaranteed secret detection or redaction.
+
+Compass `setup` records the local mapping, host scope and missing prerequisites without configuring the host. `audit` only inspects evidence; it neither installs hooks nor calls TypeSafe to manufacture qualification. Track installation, configuration, effective activation/trust, processing authority, current eligible inventory and actual advice/delivery separately. See the [qualification record](https://github.com/stark-ai-de/agent-skills/blob/main/skill-evals/jev-capability-advisor/README.md#repository-policy-qualification) before making any support claim. The first qualification target is Codex CLI on Linux/WSL; other hosts/platforms have no new qualification from this renderer.
+
+## Manage the default registration
 
 Run from the installed skill directory with an existing Python 3.10+ interpreter. On native Windows, use the installed Python executable instead of assuming a `python3` command exists. The interpreter running the manager becomes the registered interpreter; choose an OS-native binary, not a Windows shim from WSL or a WSL executable from Windows.
 

@@ -20,7 +20,7 @@ Return a task-specific recommendation from capabilities actually available in th
 - The user explicitly wants one eligible skill to load next, rather than complete capability coverage.
 - The user wants to inspect the candidate set or evaluate selection quality.
 - The user wants to integrate repeated advice into a host that supplies current eligible capabilities.
-- An explicitly enabled, qualified hook requests advice for a new actionable task; follow the [hook integration contract](references/hook-integration.md).
+- An explicitly enabled, qualified hook requests advice for a new actionable task, or an adopted repository policy requires it after a material task/capability change; follow the [hook integration contract](references/hook-integration.md).
 
 ## When not to use
 
@@ -46,7 +46,7 @@ Select and proceed when intent is clear. On a bare invocation, ask which workflo
 
 **Integrate** has two modes; select from clear intent or ask when the host or mode is ambiguous:
 
-- **Hook guidance:** follow the [hook integration contract](references/hook-integration.md) for Codex CLI or Claude Code. `install` explicitly enables the selected user/project registration; `status` is read-only; `uninstall` removes only its owned entry. Disclose task-summary and capability-card processing during opt-in. The static hint asks the agent to use Recommend once per new actionable task, with `general`/`current` and no new caches; it does not call Jev itself.
+- **Hook guidance:** follow the [hook integration contract](references/hook-integration.md). Choose optional new-task guidance through `install|status|uninstall` for Codex CLI or Claude Code, or the [repository-adopted policy](references/hook-integration.md#repository-adopted-policy) through `render --host codex --policy repository-adopted`. Rendering only prints a fragment; it neither reads user configuration nor installs or authorizes processing. The repository policy also covers material task/capability changes, with separate adoption, host activation, processing consent and qualification. Both hints use Recommend `general`/`current`; neither calls Jev itself.
 - **Owner-process session:** follow the [session integration contract](references/session-integration.md). The owner chooses `selection_profile` at construction; frames cannot change it. Retain one process with fresh eligible inventory per request, reusable HTTPS and a bounded derived index.
 
 Qualify the host callback, current eligible inventory and recommendation delivery before automatic advice. A configured hook or session helper alone is not qualification. Missing prerequisites, stale inventory, timeout or cancellation retain native fallback. Honor explicit-only restrictions, user skill choices, permissions and Plan-mode limits; installing the skill/plugin never enables hooks. Do not export inputs or write receipts when the active mode forbids those writes.
@@ -81,7 +81,7 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 
 ## Scripts
 
-- `scripts/jev_hooks.py`: explicit hook `install`/`uninstall` mutate the selected host configuration and private ownership state; `status` and `--dry-run` are read-only. Embeds static guidance; no provider access, dependency installation or trust changes.
+- `scripts/jev_hooks.py`: explicit hook `install`/`uninstall` mutate the selected host configuration and private ownership state; `status` and `--dry-run` are read-only; `render` prints a repository-policy fragment without accessing user configuration or ownership state. Embeds static guidance; no provider access, dependency installation or trust changes.
 - `scripts/jev_advisor.py`: recommendation client; network access only for a fresh requested recommendation. `--output` writes the requested local result file; `--cache-dir` opts in to decision-cache writes; `--index-cache-dir` separately enables local index-cache writes, including during offline inspection.
 - `scripts/retrieval.py`: deterministic candidate retrieval, used by the client. No network or installation.
 - `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
