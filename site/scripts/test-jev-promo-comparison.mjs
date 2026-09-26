@@ -2,7 +2,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { NATIVE_SCHEMA, joinNativeNextSkill } from "../src/lib/jev-native-next-skill.mjs";
-import { promoComparison, visibleVariantIds } from "../src/lib/jev-promo-comparison.mjs";
+import {
+  promoComparison,
+  visibleVariantIds,
+  unmeasuredSelectorCandidates,
+} from "../src/lib/jev-promo-comparison.mjs";
 const report = JSON.parse(
   readFileSync(
     new URL(
@@ -222,6 +226,7 @@ assert.ok(
 );
 assert.deepEqual(visibleVariantIds, ["jev_session", "hussi_original", "native"]);
 assert.equal(three.rows.length, 3);
+assert.deepEqual(three.excludedRows, [], "Error-free public arms remain eligible");
 assert.equal(three.allRows.length, 4);
 assert.deepEqual(
   three.rows,
@@ -293,7 +298,17 @@ const nativeReceipt = JSON.parse(
   ),
 );
 assert.ok(!("totalRuns" in actual));
-assert.equal(actual.rows.length, 3);
+assert.equal(actual.rows.length, 2);
+assert.equal(actual.displayedObservations, 128);
+assert.deepEqual(
+  actual.rows.map((row) => row.id),
+  ["jev_session", "native"],
+);
+assert.deepEqual(
+  actual.excludedRows.map((row) => row.id),
+  ["hussi_original"],
+);
+assert.ok(actual.rows.every((row) => row.speedQualified));
 assert.equal(actual.allRows.length, 4);
 assert.ok(actual.runtime.disclosure.length > 0);
 assert.equal(actual.completedNativeExecutions, 64);
@@ -305,7 +320,7 @@ assert.equal(actual.nativeCachedTurns, 45);
 assert.equal(actual.rows.find((row) => row.id === "native").medianSeconds, 3.091701245495642);
 assert.equal(actual.rows.find((row) => row.id === "jev_session").factor.toFixed(2), "6.42");
 assert.equal(actual.hussiFactor, null, "A retained comparator timeout cannot become a speed claim");
-const timedOutHussi = actual.rows.find((row) => row.id === "hussi_original");
+const timedOutHussi = actual.allRows.find((row) => row.id === "hussi_original");
 assert.equal(timedOutHussi.factor, null);
 assert.equal(timedOutHussi.correct, 45);
 assert.equal(timedOutHussi.errorLabel, "1 timeout");
@@ -394,4 +409,18 @@ assert.ok(!/80\/80|9\.54/.test(currentReadme));
 assert.ok(!/\/home\/|\/tmp\/|servrox|Bearer /.test(JSON.stringify(nativeReceipt)));
 console.log(
   "Actual Native import: full-precision factors, 48/16 cohorts, quantile provenance, runtime disclosure and README parity passed.",
+);
+
+// Discovery candidates cannot acquire fabricated timing bars or Native factors.
+assert.deepEqual(
+  unmeasuredSelectorCandidates.map((row) => row.label),
+  ["skill-picker", "jev-skill-suggester", "SkillRanker", "skill-router (Lomesh)"],
+);
+for (const candidate of unmeasuredSelectorCandidates) {
+  assert.match(candidate.sourceUrl, /^https:\/\/github\.com\/[^/]+\/[^/]+$/);
+  assert.equal(candidate.medianSeconds, undefined);
+  assert.equal(candidate.factor, undefined);
+}
+console.log(
+  "Chart eligibility: failed Hussi timing excluded, complete evidence retained, candidates unmeasured.",
 );
