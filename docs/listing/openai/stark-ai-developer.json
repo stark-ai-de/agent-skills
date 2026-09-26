@@ -47,7 +47,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Adds capability-aware planning workflows to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse.",
+  "releaseNotes": "Adds AC-ADR-064 capability-aware planning to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse. Adds accepted AC-ADR-065 for qualified Jev host advice, opt-in static host hooks, and a write-free Codex policy renderer; adoption, host activation, processing consent, and qualification remain separate, with general automatic host qualification pending. Adds accepted AC-ADR-066, defaulting compatible local HTTP and WebSocket endpoints to Portless and HTTPS, with evidence-backed exceptions and authorized migration of existing routing. Hardens Jev credential validation for file and environment sources and fails closed for invalid configured files; native selection remains available.",
   "skills": [
     {
       "name": "codex-memory-curator",

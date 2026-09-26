@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../lib/architecture-compass-inventory.mjs";
+
 import {
   assertExactPublicSkillSet,
   copyGitCandidateRepository,
@@ -205,8 +207,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedIds = new Set(PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")));
-  const expectedPublicAdrCount = expectedIds.size;
+  const expectedPublicAdrCount = PUBLIC_ARCHITECTURE_ADR_IDS.length;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
@@ -240,6 +241,7 @@ function architectureManifest(skillDir) {
       `Installed architecture-compass payload does not contain ${expectedPublicAdrCount} complete public triplets.`,
     );
   }
+  const expectedIds = new Set(PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")));
   const actualIds = new Set(
     [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
   );

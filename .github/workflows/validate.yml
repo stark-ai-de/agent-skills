@@ -31,7 +31,7 @@ jobs:
         run: git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
 
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: true
@@ -142,7 +142,7 @@ jobs:
         uses: useblacksmith/checkout@v1
 
       - name: Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: false
@@ -161,7 +161,7 @@ jobs:
 
       - name: Upload exact-run testing evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: testing-outcome-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/testing-outcome.json
@@ -179,7 +179,7 @@ jobs:
       PYTHONDONTWRITEBYTECODE: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -207,12 +207,12 @@ jobs:
           git config --global core.eol lf
 
       - name: ⬇️ Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: true
@@ -233,7 +233,7 @@ jobs:
         run: bun --bun scripts/release/report-archive-identity.mjs
 
       - name: 📤 Upload archive identity
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: archive-identity-${{ matrix.os }}
           path: dist/archive-identity.json
@@ -257,7 +257,7 @@ jobs:
           fetch-depth: 1
 
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: true
@@ -269,7 +269,7 @@ jobs:
           bun-version-file: ".bun-version"
 
       - name: 📥 Download identity reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: archive-identity-*
           path: dist/archive-identities

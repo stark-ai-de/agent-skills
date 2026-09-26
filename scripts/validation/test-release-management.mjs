@@ -1343,11 +1343,11 @@ assert.match(
   /^CHANGELOG\.md$/m,
   "the Release Please-owned root changelog must remain outside formatter ownership",
 );
-assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v2/);
+assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v3/);
 for (const permission of ["contents", "pull-requests", "issues"]) {
   assert.match(releasePleaseWorkflow, new RegExp(`permission-${permission}: write`));
 }
-assert.match(releasePleaseWorkflow, /googleapis\/release-please-action@v4/);
+assert.match(releasePleaseWorkflow, /googleapis\/release-please-action@v5/);
 assert.match(releasePleaseWorkflow, /classify-release-please-trigger\.mjs --github-output/);
 assert.match(releasePleaseWorkflow, /id: release-config/);
 assert.match(
@@ -1367,9 +1367,9 @@ assert.match(releasePleaseWorkflow, /expected_workflow_ref=.*release-please\.yml
 assert.match(releasePleaseWorkflow, /branches\/main" --jq '\.protected'/);
 assert.ok(
   releasePleaseWorkflow.indexOf("Verify trusted protected-main source") <
-    releasePleaseWorkflow.indexOf("actions/create-github-app-token@v2") &&
+    releasePleaseWorkflow.indexOf("actions/create-github-app-token@v3") &&
     releasePleaseWorkflow.indexOf("classify-release-please-trigger.mjs") <
-      releasePleaseWorkflow.indexOf("actions/create-github-app-token@v2"),
+      releasePleaseWorkflow.indexOf("actions/create-github-app-token@v3"),
   "trusted main and merged release PRs must be verified before creating a write token",
 );
 
@@ -1448,7 +1448,7 @@ assert.doesNotMatch(readiness, /actions\/attest@|reconcile-github-release\.mjs a
 const publishJob = publishWorkflow.split("\n  publish:")[1];
 const environmentCheckIndex = publishJob.indexOf("check-release-environment.mjs");
 assert.ok(environmentCheckIndex >= 0, "publish must preflight the protected environment");
-assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm/setup@v2"));
+assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm/setup@v3"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm install"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("actions/attest@v4"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("reconcile-github-release.mjs apply"));
