@@ -180,7 +180,8 @@ Version changes and incomplete metadata can invalidate historical evidence. Trea
 - [x] Available live checks are attempted and results separated from unavailable, simulated, or blocked scenarios.
 - [x] Projections and relevant documentation are synchronized for the initial implementation; no unsupported platform qualification is claimed.
 - [x] Follow-up processing-consent persistence and catalog provenance pass their local checks.
-- [ ] Fresh-session behavior with consent delivered by the updated trusted hook is independently checked.
+- [x] Fresh-session hook consent delivery, bounded MCP catalog preparation and native denial/fallback are independently checked.
+- [ ] Successful automatic provider approval and recommendation adoption with hook-delivered consent are qualified; the latest ordinary attempt was denied before provider execution.
 
 Implementation completion requires the code and local checks. A host/platform is qualified only after its own successful live evidence.
 
