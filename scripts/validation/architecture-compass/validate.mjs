@@ -31,7 +31,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = [...Array.from({ length: 58 }, (_, index) => index + 1), 65];
+const expectedAdrIds = [...Array.from({ length: 63 }, (_, index) => index + 1), 65];
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -139,6 +139,11 @@ const expectedCategories = new Map([
   [56, "quality-delivery"],
   [57, "quality-delivery"],
   [58, "stack-tooling"],
+  [59, "quality-delivery"],
+  [60, "quality-delivery"],
+  [61, "quality-delivery"],
+  [62, "quality-delivery"],
+  [63, "stack-tooling"],
   [65, "governance"],
 ]);
 const expectedStems = new Map([
@@ -209,6 +214,11 @@ const expectedStems = new Map([
   [56, "ac-adr-056-preserve-release-candidates-through-verified-protected-history"],
   [57, "ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance"],
   [58, "ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution"],
+  [59, "ac-adr-059-own-repository-validation-through-discoverable-framework-tests"],
+  [60, "ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts"],
+  [61, "ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets"],
+  [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
+  [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
   [65, "ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption"],
 ]);
 const expectedInternalStems = new Map([
@@ -316,7 +326,35 @@ const routedLibraryEvalCases = [
   "internal-public-adr-namespace-separation.md",
   "receipt-accessibility-fallback.md",
 ];
-const expectedEvalCases = [...baselineEvalCases, ...routedLibraryEvalCases];
+const measurableTestingEvalCases = [
+  "testing-tiny-ts.md",
+  "testing-monorepo-cost.md",
+  "testing-bun-product.md",
+  "testing-runtime-fallback.md",
+  "testing-native-framework.md",
+  "testing-local-conflict.md",
+  "testing-public-validator.md",
+  "testing-file-inputs.md",
+  "testing-isolation-faults.md",
+  "testing-shard-faults.md",
+  "testing-cache-faults.md",
+  "testing-metric-truth.md",
+  "testing-selective-routing.md",
+  "testing-promotion-integrity.md",
+];
+const shadcnLintEvalCases = [
+  "shadcn-lint-default-profile.md",
+  "shadcn-lint-ownership-and-compatibility.md",
+  "shadcn-lint-staged-enforcement.md",
+  "shadcn-lint-discovery-and-freshness.md",
+  "shadcn-lint-component-and-evidence-boundaries.md",
+];
+const expectedEvalCases = [
+  ...baselineEvalCases,
+  ...routedLibraryEvalCases,
+  ...measurableTestingEvalCases,
+  ...shadcnLintEvalCases,
+];
 const legacyCaseSourceCommit = "1d454f06375f3b74ba506fef54b664a2517674c0";
 const legacyCaseSources = [
   {
@@ -1332,7 +1370,7 @@ for (const id of expectedAdrIds) {
   if (guide && lineage) {
     const lineageHeadingCount = headingCount(guide.text, "Decision lineage");
     if (lineage.disposition === "independent") {
-      if (lineageHeadingCount !== 0) {
+      if (lineageHeadingCount !== 0 || /^Decision lineage:/im.test(guide.text)) {
         fail(`${guide.rel}: independent disposition must omit Decision lineage`);
       }
     } else {
@@ -1702,6 +1740,7 @@ const receiptAssetNames = new Set([
   "setup-report-template.md",
   "refactor-report-template.md",
   "new-repo-adoption-plan-template.md",
+  "testing-outcome-receipt-template.md",
 ]);
 const evidenceStageContract =
   "Evidence stage: source/static | local | CI | publication/install | deployed/production | external/third-party";
@@ -1987,8 +2026,58 @@ const legacyCaseLineage = validateLegacyCaseLineage({
 });
 errors.push(...legacyCaseLineage.errors);
 
+// New exposed testing decisions keep their measurement contract in canonical Longs.
+for (const id of [59, 60, 61, 62]) {
+  const stem = expectedStems.get(id);
+  const file = path.join(referencesDir, `${stem}.long.md`);
+  const text = readRegularFile(file);
+  for (const heading of [
+    "Intent",
+    "Invariants",
+    "Measurable outcomes",
+    "Adoption evidence",
+    "Failure and exceptions",
+    "Revisit",
+  ]) {
+    if (!sectionText(text, heading))
+      fail(`${relative(file)}: missing measurable testing section ${heading}`);
+  }
+  // A blank line ends a Markdown table even though its detached pipe rows match inventory regexes.
+  for (const [tableFile, tableText] of [
+    [catalogFile, readRegularFile(catalogFile)],
+    [setupReportFile, setupReportText],
+  ]) {
+    const lines = tableText.split("\n");
+    const index = lines.findIndex((line) =>
+      new RegExp(`^\\|\\s*AC-ADR-${String(id).padStart(3, "0")}\\s*\\|`).test(line),
+    );
+    let start = index;
+    while (start > 0 && lines[start - 1].startsWith("|")) start--;
+    if (index < 0 || !lines.slice(start, index).some((line) => /^\|[ :|-]+\|$/.test(line))) {
+      fail(
+        `${relative(tableFile)}: AC-ADR-${String(id).padStart(3, "0")} must be inside its headed Markdown table`,
+      );
+    }
+  }
+}
+const testingReceiptFile = path.join(assetsDir, "testing-outcome-receipt-template.md");
+const testingReceipt = readRegularFile(testingReceiptFile);
+for (const field of [
+  "canonical content digest",
+  "Population/denominator",
+  "Approved target/direction",
+  "Measurement state",
+  "waived",
+  "not-applicable",
+  "expiry",
+  "replacement evidence",
+]) {
+  if (!testingReceipt.includes(field))
+    fail(`${relative(testingReceiptFile)}: missing testing evidence field ${field}`);
+}
+
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
+export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${measurableTestingEvalCases.length} measurable-testing cases, ${shadcnLintEvalCases.length} shadcn-lint cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
 
 const isMain =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

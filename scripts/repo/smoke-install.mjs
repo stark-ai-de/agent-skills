@@ -204,9 +204,9 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  // 059–064 are allocated by other changes; validate this branch's exact set.
+  // 064 is allocated by another change; validate this branch's exact set.
   const expectedIds = new Set([
-    ...Array.from({ length: 58 }, (_, index) => String(index + 1).padStart(3, "0")),
+    ...Array.from({ length: 63 }, (_, index) => String(index + 1).padStart(3, "0")),
     "065",
   ]);
   const expectedPublicAdrCount = expectedIds.size;
@@ -334,6 +334,8 @@ function architectureManifest(skillDir) {
   }
 
   for (const required of [
+    "assets/testing-outcome-receipt-template.md",
+    "assets/vitest4-testing-profile.md",
     "assets/adr-template.short.md",
     "assets/adr-template.long.md",
     "assets/adr-template.guide.md",

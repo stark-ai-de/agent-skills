@@ -95,7 +95,7 @@ Setup and audit use existing Compass instruction/report surfaces; no new Compass
 - Projection ownership: [ADR-0043](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](../adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)).
 - Supersedes: none. Preserve ADR-0057 and its accepted decision digest.
 - ADR acceptance gate: **satisfied on 2026-09-25**. Hook dependency gate: **satisfied by `39c77a0e0ddc9cc6bc631b35f571eaee49a87058`**.
-- Public policy: **AC-ADR-065**, Accepted, target-repository and `Adoptable: true`. AC-ADR-059 through AC-ADR-064 were already allocated in available repository history; the public ID was rechecked before integration. This branch carries the exact public set 001–058 plus 065 without importing unrelated changes.
+- Public policy: **AC-ADR-065**, Accepted, target-repository and `Adoptable: true`. AC-ADR-059 through AC-ADR-064 were already allocated in available repository history; the public ID was rechecked before integration. After incorporating the current PR base, this branch carries the exact public set 001–063 plus 065; AC-ADR-064 remains allocated outside main.
 - Policy exposure, repository adoption, global activation, data-processing authority, qualification and release remain separate.
 
 ## Source challenge

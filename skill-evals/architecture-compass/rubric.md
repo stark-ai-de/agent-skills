@@ -65,3 +65,18 @@ A setup run passes only when it:
 - records authorized host scope and separate operational evidence/gaps when AC-ADR-065 is adopted, without provider processing or global activation from setup authority;
 - records a repository-native receipt location when required; and
 - classifies the conditional target selector as applicable, not applicable, or indeterminate and changes it only when applicable.
+
+## Measurable testing outcomes
+
+- Select only applicable testing candidates and preserve native local authority, runtime ownership and the unchanged evidence-empty foundation.
+- Map intent and evidence through target-native decisions; distinguish met, unmet, unmeasured, waived and not-applicable metrics from adoption/execution status.
+- Reject partial or mismatched distributed proof, hidden runtime gaps, stale transform results and invented performance claims.
+- Keep target fixtures and evaluation evidence outside installed payloads; structural cases are not agent-behavior execution evidence.
+
+## Tailwind design-system lint adoption
+
+- Select AC-ADR-063 for compatible Tailwind v4 design-system enforcement and preserve local tooling, runtime and operational authority.
+- Default to all reviewed rules and practical upstream examples; require bounded, owned exclusions and qualified staged promotion.
+- Distinguish consumers from component definitions, preserving remaining checks inside the shared UI package.
+- Reject registration-only, discovery-fallback and stale-cache success claims; qualify the real command with positive and negative fixtures.
+- Preserve visual, accessibility, compiler and runtime evidence as separate obligations.

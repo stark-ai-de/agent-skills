@@ -151,3 +151,35 @@ Audit cases perform no repository, untracked, ignored, index, generated-artifact
 Routed-library cases use the catalog and Short variants for discovery, canonical Long variants for decisions, and Guides only for implementation help. Invalid-library cases are static negative contracts and never authorize repair of their fixture.
 
 The 2026-09-08 adapter cases cover complete-record proven absence, separate native control and inline parsing evidence, busy composers, and independent read-only enforcement. Codex Spec Interviewer also covers refusal before capability evidence while preserving the earlier routing gate. These are behavioral evaluation scenarios; static inventory validation does not execute live client turns.
+
+## Measurable testing evaluation
+
+The fourteen scenario contracts below cover AC-ADR-059 through AC-ADR-062. They are static expectations; passing structural validation is not an agent-behavior run. The [executable qualification fixtures](fixtures/measurable-testing/README.md) exercise runtime, input discovery, isolation, aggregation, cache and measurement mechanisms outside the installed payload.
+
+- `cases/testing-tiny-ts.md`
+- `cases/testing-monorepo-cost.md`
+- `cases/testing-bun-product.md`
+- `cases/testing-runtime-fallback.md`
+- `cases/testing-native-framework.md`
+- `cases/testing-local-conflict.md`
+- `cases/testing-public-validator.md`
+- `cases/testing-file-inputs.md`
+- `cases/testing-isolation-faults.md`
+- `cases/testing-shard-faults.md`
+- `cases/testing-cache-faults.md`
+- `cases/testing-metric-truth.md`
+- `cases/testing-selective-routing.md`
+- `cases/testing-promotion-integrity.md`
+
+## Tailwind design-system lint cases
+
+These cases cover AC-ADR-063. Structural validation is not an executed agent
+behavior or plugin-runtime pass. Required-concept assertions complement semantic
+review of Expected Behavior; they do not classify a quoted unsafe suggestion as
+an endorsement, nor prove correctness merely because keywords are present.
+
+- `cases/shadcn-lint-default-profile.md`
+- `cases/shadcn-lint-ownership-and-compatibility.md`
+- `cases/shadcn-lint-staged-enforcement.md`
+- `cases/shadcn-lint-discovery-and-freshness.md`
+- `cases/shadcn-lint-component-and-evidence-boundaries.md`

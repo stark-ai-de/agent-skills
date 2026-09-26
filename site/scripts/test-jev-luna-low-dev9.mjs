@@ -33,6 +33,25 @@ assert.deepEqual(
   [summary.model_turn_ms.median, summary.model_turn_ms.p95_nearest_rank],
   [2720.3591950019472, 4480.07122999843],
 );
+assert.deepEqual(
+  summary.skillResults.map(({ caseId, skillName, correct, accuracyPercent }) => [
+    caseId,
+    skillName,
+    correct,
+    accuracyPercent,
+  ]),
+  [
+    ["nextdev-h008", "cli-creator", true, 100],
+    ["nextdev-stressv5c001", "plugin-creator", true, 100],
+    ["nextdev-stressv5c002", "drawio-diagrams", true, 100],
+    ["nextdev-stressv5c003", "higgsfield-product-photoshoot", true, 100],
+    ["nextdev-stressv5c004", "vercel:ncc", true, 100],
+    ["nextdev-stressv5c005", "ads-manager:ads-manager-insights", true, 100],
+    ["nextdev-stressv5c006", "vercel:geist", true, 100],
+    ["nextdev-stressv5c008", "security-best-practices", false, 0],
+  ],
+);
+assert.ok(summary.skillResults.every((row) => row.observations === 1));
 
 const incorrectlyPerfect = structuredClone(evidence);
 incorrectlyPerfect.observations[8].correct = true;
