@@ -179,3 +179,16 @@ an endorsement, nor prove correctness merely because keywords are present.
 - `cases/shadcn-lint-staged-enforcement.md`
 - `cases/shadcn-lint-discovery-and-freshness.md`
 - `cases/shadcn-lint-component-and-evidence-boundaries.md`
+
+## Portless local-development cases
+
+These six scenarios cover AC-ADR-065 applicability, migration preference,
+technical exceptions, worktree identity and local decision authority. They are
+static contracts, not executed agent turns or Portless runtime tests.
+
+- `cases/portless-compatible-default.md`
+- `cases/portless-existing-routing-migration.md`
+- `cases/portless-no-local-endpoint.md`
+- `cases/portless-technical-exception.md`
+- `cases/portless-worktree-collision.md`
+- `cases/portless-local-adr-conflict.md`

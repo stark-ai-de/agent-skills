@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "a5f61932d48d2ed19e526f78313d3b20c7e4790be730108a67f75bbc94e08cc8"
+      "sha256": "30f9842ab925a5f177964b06ac9a8ca4edbfb9f3805669ff5ac95a1c60302269"
     },
     {
       "byteLength": 12772,
@@ -178,7 +178,7 @@
       "byteLength": 17019,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "fd0e66bd46e49f9f365dfb4a8403e0e673481aba490085c95154b7df6155f99f"
+      "sha256": "954a6857ee55e3fab49b9dfcc7ed5f0e432718b86b8a1293caffe994fa1101b2"
     },
     {
       "byteLength": 891,
@@ -253,10 +253,10 @@
       "sha256": "b2a311390dfcbbcd06bcdc20732bed34ed5f6160de036f9451823d77376972c7"
     },
     {
-      "byteLength": 12735,
+      "byteLength": 12853,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "5301351033a8800db4be21474236851a3cbef39d3546bc5e9a807f1b873273a5"
+      "sha256": "44e5a3d7b7d5c015fe2d40ce1f5a757476bdfd44c4bb1405fb1cbd0cf132ec1f"
     },
     {
       "byteLength": 6103,
@@ -1405,10 +1405,28 @@
       "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
     },
     {
-      "byteLength": 53477,
+      "byteLength": 6902,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.guide.md",
+      "sha256": "c375707d5b2b6e6cbfd04a80d645abd935cad872a8a5a2cfd6fad91fa3e72050"
+    },
+    {
+      "byteLength": 7109,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.long.md",
+      "sha256": "b9f85a5b15ea921ad0505a2780a2e443b542793d9bb009b2bd968559d75a7244"
+    },
+    {
+      "byteLength": 2475,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.short.md",
+      "sha256": "6bb98b42ce10f587ad17026ee354fe993b79d880192aa4ed5f2bd91af954a1f8"
+    },
+    {
+      "byteLength": 54220,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "9b1783e9226d7057a195e52eaeca55aae105b2c529984ccc06e7c780dd7e0487"
+      "sha256": "73bf74c0810ee94aa880b5888980705002421e76fe2c315587d95480010c353a"
     },
     {
       "byteLength": 6996,
@@ -2013,9 +2031,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "83dcae896f724f28d0aec2172ac64e3b9cf05512f8dd49f795f5d52f95d12a49"
+  "treeHash": "90cdc55c4cb209dc742c909f780e069604b9ecb079bb1bb352698ce5fe0a1414"
 }

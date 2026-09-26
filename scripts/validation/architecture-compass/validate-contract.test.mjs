@@ -9,7 +9,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-contract-"));
 const skill = "skills/engineering-workflows/architecture-compass";
 const refs = `${skill}/references`;
 const stems = new Map(
-  [59, 60, 61, 62].map((id) => [
+  [59, 60, 61, 62, 65].map((id) => [
     id,
     fs
       .readdirSync(path.join(source, refs))
@@ -63,6 +63,26 @@ try {
   const baseline = run();
   assert.equal(baseline.status, 0, baseline.stderr);
   rejects("missing variant", file(59, "short"), () => null, /missing|triplet/i);
+  rejects("missing sparse-ID variant", file(65, "guide"), () => null, /missing|triplet/i);
+  const unexpectedFiles = ["short", "long", "guide"].map((variant) =>
+    file(65, variant).replace("ac-adr-065-", "ac-adr-064-"),
+  );
+  try {
+    for (const [index, variant] of ["short", "long", "guide"].entries()) {
+      fs.writeFileSync(
+        path.join(root, unexpectedFiles[index]),
+        fs
+          .readFileSync(path.join(root, file(65, variant)), "utf8")
+          .replaceAll("AC-ADR-065", "AC-ADR-064")
+          .replaceAll("ac-adr-065-", "ac-adr-064-"),
+      );
+    }
+    const result = run();
+    assert.notEqual(result.status, 0, "unexpected complete triplet in reserved gap");
+    assert.match(result.stderr, /AC-ADR-064: ID is outside the approved inventory/);
+  } finally {
+    for (const relative of unexpectedFiles) fs.rmSync(path.join(root, relative));
+  }
   rejects(
     "Proposed cannot ship",
     file(59, "short"),
@@ -138,7 +158,7 @@ try {
     /lineage|relations/i,
   );
   console.log(
-    "Architecture Compass contract regressions passed: baseline and 12 malformed candidates; real source untouched.",
+    "Architecture Compass contract regressions passed: baseline and 14 malformed candidates; real source untouched.",
   );
 } finally {
   fs.rmSync(root, { recursive: true, force: true });
