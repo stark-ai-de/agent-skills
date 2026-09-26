@@ -14,6 +14,18 @@ For a new actionable task, consultation or prerequisite failure emits one short 
 
 Before the provider command, check the executing host's network policy. If outbound access requires approval, use its normal approval mechanism for that bounded advisor invocation. Ready credentials do not grant network access. A denied or unavailable approval requires a concrete fallback; do not weaken the sandbox, change global permissions or silently retry a failed provider request.
 
+For Codex hosts whose active `exec_command` schema exposes `sandbox_permissions`, request `require_escalated` on the **first advisor invocation** when its network access needs approval. Supply a concise `justification` identifying the bounded TypeSafe advice request. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval. For example, after resolving real local paths:
+
+```json
+{
+  "cmd": "python3 /installed/jev/scripts/jev_advisor.py --catalog /private/catalog.json --query-file /private/task.txt --key-file /private/existing-key --summary --output /private/receipt.json",
+  "sandbox_permissions": "require_escalated",
+  "justification": "May Jev send this task summary and the eligible capability cards to TypeSafe for one bounded consultation?"
+}
+```
+
+Use the executing host's actual tool schema; another host or permission profile may expose a narrower native network-approval mechanism instead. If approval is disabled, denied or unavailable, state that prerequisite failure and continue natively without dispatching the request. Do not run a predictably blocked advisor first and interpret its `network_error` as an approval request: a failed shell command does not itself grant or request network access. Keep the existing no-replay rule if a request has already failed. Auto-review, when configured by the user, decides native approval requests; the skill must not alter reviewer settings, add persistent allow rules or bypass a decision. [Codex sandbox and approval behavior](https://learn.chatgpt.com/docs/agent-approvals-security#common-sandbox-and-approval-combinations).
+
 ## Capture a bounded current-session catalog
 
 Use the current running agent's host metadata. The catalog may contain both skills and MCP tools; its scope is the provable entries supplied to this session, not everything installed on the machine. Qualify the host callback, this catalog-capture path, delivery and actual recommendation use independently before claiming automatic advice. A static reminder, configuration check or historical receipt alone proves none of those steps.
