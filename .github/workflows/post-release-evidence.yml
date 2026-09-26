@@ -62,7 +62,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: ⬇️ Checkout workflow sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.verifier.outputs.verifier_sha }}
           fetch-depth: 0
@@ -208,7 +208,7 @@ jobs:
 
       - name: ⬆️ Upload post-release evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: post-release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout exact main candidate
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -88,7 +88,7 @@ jobs:
       - name: 🔑 Create repository-scoped release App token
         if: ${{ steps.classify.outputs.skip != 'true' }}
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
@@ -98,7 +98,7 @@ jobs:
 
       - name: 📝 Create or update draft release PR
         if: ${{ steps.classify.outputs.skip != 'true' }}
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           token: ${{ steps.app-token.outputs.token }}
           target-branch: main

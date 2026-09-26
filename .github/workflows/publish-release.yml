@@ -45,14 +45,14 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout publication candidate
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 2
           persist-credentials: false
 
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: false
@@ -152,14 +152,14 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout exact publication candidate
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.publication-trigger.outputs.candidate_sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: true
@@ -399,7 +399,7 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout validated SHA
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-readiness.outputs.release_sha }}
           fetch-depth: 1
@@ -450,7 +450,7 @@ jobs:
 
       # release-readiness already validated this immutable SHA; publish only verifies and publishes it.
       - name: 🟢 Setup pnpm and Node
-        uses: pnpm/setup@v2
+        uses: pnpm/setup@v3
         with:
           runtime: node@24.18.0
           cache: false
@@ -586,7 +586,7 @@ jobs:
 
       - name: ⬆️ Upload pre-publication evidence
         if: ${{ steps.reconciliation.outputs.release_published != 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pre-release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: pre-release-receipt.json
@@ -626,7 +626,7 @@ jobs:
 
       - name: 🔑 Create release-label lifecycle token
         id: release-label-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}

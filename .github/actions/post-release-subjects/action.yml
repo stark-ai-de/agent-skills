@@ -79,7 +79,7 @@ runs:
           --github-output "$GITHUB_OUTPUT"
 
     - name: Set up pnpm and Node
-      uses: pnpm/setup@v2
+      uses: pnpm/setup@v3
       with:
         runtime: node@24.18.0
         cache: false
