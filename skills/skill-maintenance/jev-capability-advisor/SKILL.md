@@ -31,7 +31,7 @@ Return a task-specific recommendation from capabilities actually available in th
 
 - The requested task, relevant conversation context, and any skills already loaded or services already configured.
 - A current host-supplied catalog of available capability IDs, names, descriptions, and activation restrictions. Installed files alone do not prove availability.
-- Python 3.10+ (`python3`) and an existing `TYPESAFE_API_KEY` environment variable or local raw-key file. Never request a key in chat.
+- Python 3.10+ (`python3`) and an existing credential source. Use an explicitly configured raw-key file when present; otherwise the helper reads `TYPESAFE_API_KEY` from its process environment. A configured file is authoritative and does not fall back to the environment on error. Never request a key in chat.
 
 ## Workflow
 
@@ -66,7 +66,7 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
 
 For an explicitly requested next skill, add `--selection-profile next_skill` to that command and supply a current catalog with no enabled tools. `none`, `clarify` and `error` remain distinct; next-skill replies always leave additional work unassessed.
 
-Run from the skill directory, or resolve the script relative to this `SKILL.md`. Add `--key-file /path/to/local-key` for an existing raw-key file instead of `TYPESAFE_API_KEY`. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid recommendation. A summary is advisory and does not prove semantic correctness.
+Run from the skill directory, or resolve the script relative to this `SKILL.md`. Pass a ready host-configured `credentials.key_file` with `--key-file`; if none is configured, omit the option and let the helper read `TYPESAFE_API_KEY` from its process environment. A supplied file is authoritative; read errors do not fall back to the environment. Never put the key value in command arguments, checked-in files, provider inputs or logs. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid recommendation. A summary is advisory and does not prove semantic correctness.
 
 ## Safety rules
 

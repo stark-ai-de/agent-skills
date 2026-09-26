@@ -28,8 +28,54 @@ MAX_CRITERIA_STATE_BYTES = 80_000
 MAX_RESPONSE_BYTES = 2_000_000
 MAX_REQUESTS = 3
 TIMEOUT_SECONDS = 30
+MAX_API_KEY_BYTES = 8192
 SELECTION_PROFILES = ('general', 'next_skill')
 NEXT_SKILL_SCOPE = {'selection_profile': 'next_skill', 'additional_work': 'unassessed'}
+
+
+class CredentialError(ValueError):
+    """A safe, value-free credential loading error."""
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def load_api_key(key_file=None, *, missing_code='missing_api_key'):
+    """Read one bounded ASCII API key from an explicit file or the process env.
+
+    An explicit file is authoritative. File errors never fall through to the
+    environment, so a stale ambient key cannot mask broken local configuration.
+    """
+    if key_file is None:
+        value = os.environ.get('TYPESAFE_API_KEY')
+        if value is None:
+            raise CredentialError(missing_code)
+        if not isinstance(value, str) or len(value) > MAX_API_KEY_BYTES:
+            raise CredentialError('credential_invalid')
+        try:
+            value.encode('ascii')
+        except UnicodeError:
+            raise CredentialError('credential_invalid') from None
+    else:
+        try:
+            with Path(key_file).open('rb') as stream:
+                raw = stream.read(MAX_API_KEY_BYTES + 1)
+        except OSError:
+            raise CredentialError('credential_unavailable') from None
+        if len(raw) > MAX_API_KEY_BYTES:
+            raise CredentialError('credential_invalid')
+        try:
+            value = raw.decode('ascii')
+        except UnicodeError:
+            raise CredentialError('credential_invalid') from None
+
+    value = value.strip()
+    if (not value or len(value) > MAX_API_KEY_BYTES or not value.isascii()
+            or any(ord(character) < 0x20 or ord(character) == 0x7f for character in value)):
+        raise CredentialError('credential_invalid')
+    return value
+
+
 NEXT_SKILL_RULES = (
     'Recommend exactly one skill for the next meaningful step of state.query. '
     'This is next-step advice, not a complete plan for all requested work. '
@@ -436,6 +482,7 @@ def _error_code(error):
              'criteria_state_budget_exceeded', 'request_budget_exceeded', 'choice_budget_exceeded',
              'malformed_answers', 'malformed_choice', 'unknown_choice', 'inconsistent_initial_choices',
              'response_too_large', 'invalid_response_json', 'invalid_api_key', 'missing_api_key', 'invalid_catalog',
+             'credential_unavailable', 'credential_invalid',
              'invalid_cache_scope', 'invalid_cache_ttl', 'invalid_routing_metadata', 'invalid_retrieval_policy',
              'invalid_index_cache_configuration', 'invalid_selection_profile',
              'invalid_selection_profile_usage', 'next_skill_requires_skill_catalog'}
@@ -579,9 +626,7 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
                     return result
                 result['cache']['status'] = 'invalid'
         if transport is None:
-            key = os.environ.get('TYPESAFE_API_KEY')
-            if not key: raise ValueError('missing_api_key')
-            transport = make_transport(key)
+            transport = make_transport(load_api_key())
             owned_transport = transport
         by_id = {item['id']: item for item in candidates}
         planned_count = None
@@ -711,7 +756,8 @@ def main(argv=None):
     queries = parser.add_mutually_exclusive_group(required=True)
     queries.add_argument('--query')
     queries.add_argument('--query-file', type=Path)
-    parser.add_argument('--key-file', type=Path, help='File containing only the raw API key; alternatively TYPESAFE_API_KEY')
+    parser.add_argument('--key-file', type=Path,
+                        help='File containing only the raw API key; overrides TYPESAFE_API_KEY')
     parser.add_argument('--output', type=Path, help='Write the complete result JSON here, including with --summary')
     parser.add_argument('--summary', action='store_true',
                         help='Print recommendation, selected cards and coverage only; not for --offline-candidates')
@@ -748,7 +794,7 @@ def main(argv=None):
                 def transport(payload):
                     nonlocal key_transport
                     if key_transport is None:
-                        key_transport = make_transport(args.key_file.read_text(encoding='utf-8').strip())
+                        key_transport = make_transport(load_api_key(args.key_file))
                     return key_transport(payload)
                 transport.transport_kind = 'https'
             result = advise(query, catalog, transport=transport, cache_dir=args.cache_dir,
