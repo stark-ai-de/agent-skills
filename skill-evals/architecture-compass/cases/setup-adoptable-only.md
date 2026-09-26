@@ -41,6 +41,7 @@ target repository's ADR set.
 - not_contains: Adopt AC-ADR-046
 - not_contains: Adopt AC-ADR-047
 - not_contains: Adopt AC-ADR-048
+- not_contains: Adopt AC-ADR-064
 
 ## Expected Behavior
 

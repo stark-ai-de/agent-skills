@@ -12,10 +12,9 @@ Assume Claude Code supports native Plan mode, `EnterPlanMode`, `AskUserQuestion`
 
 ## Expected Behavior
 
-- Before repo inspection or substantive questions, invoke `EnterPlanMode` and continue only after the host confirms Plan mode is active.
-- If `EnterPlanMode` is unavailable, tell the user to switch with Shift+Tab, the mode selector, or `/plan`, then reply `continue`; do not ask them to resend the request.
-- Continue the interview inline without forking and use `AskUserQuestion` for material decisions when available.
-- Inspect relevant repo evidence read-only, complete the source challenge and ADR gate, and write no repository or workspace artifacts while Plan mode is active; allow only the host-managed `ExitPlanMode` plan.
-- After explicit verification of scope, non-goals, assumptions, risks, validation, ADR result, and artifact paths, report `Persistence status: pending` and invoke `ExitPlanMode` with a plan limited to save-only finalization.
-- After the user approves `ExitPlanMode`, persist only the approved spec, any required ADR, and the convention-required minimal ADR index entry; emit the Claude Code execution prompt, validate and report the artifact paths, then stop without implementing the retry redesign. If `ExitPlanMode` is unavailable, tell the user to exit Plan mode with Shift+Tab or the mode selector and reply `continue` before the same save-only handoff.
-- Do not report completion before persistence succeeds. If Plan mode becomes unavailable or the user explicitly declines it, record that fallback before continuing conversationally.
+- Preserve active native Plan and inspect relevant evidence read-only. Ask only unresolved material questions using an available permitted tool or conversation.
+- Prepare the complete spec and any required ADR/index content before one positive checkpoint naming exact paths and writes.
+- Use the native plan approval as that checkpoint when it actually covers the draft and save scope; otherwise retain the explicit chat approval across the required exit.
+- Report `Persistence status: pending Plan-mode exit` until actual exit; never write or claim a save in Plan.
+- After host exit and known write permissions, save only approved artifacts without asking content/save approval again. Read back, report paths, emit the target execution prompt, and finish the interviewer handoff.
+- Do not implement the feature inside the interviewer; separately authorized outer work may then resume.

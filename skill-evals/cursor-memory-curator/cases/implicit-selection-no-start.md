@@ -19,4 +19,4 @@ Clean up stale Cursor rules and persistent context in this repository. Use the s
 
 ## Expected Behavior
 
-Show all eight workflows, announce `plan-run-cleanup-file` from the explicit cleanup request and unspecified delivery, then proceed to the Plan-mode preflight. Do not require a redundant workflow confirmation. Execute only after plan approval, state recheck, Plan-mode exit, exact-file backup, and successful record persistence.
+Show all eight workflows, announce `plan-run-cleanup-file` from the explicit cleanup request and unspecified delivery, then proceed to the Plan-mode preflight. Do not require a redundant workflow confirmation. Execute only after plan approval, state recheck, exit from active Plan mode and actual write permission, exact-file backup, and successful record persistence.

@@ -6,6 +6,7 @@ import { TextDecoder } from "node:util";
 
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inventory.mjs";
 
 const root = process.cwd();
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
@@ -31,7 +32,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 63 }, (_, index) => index + 1);
+const expectedAdrIds = [...PUBLIC_ARCHITECTURE_ADR_IDS];
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -79,7 +80,7 @@ const allowedCategories = new Set([
 ]);
 const internalAllowedCategories = new Set([...allowedCategories, "implementation-policy"]);
 const allowedStatuses = new Set(["Accepted", "Superseded"]);
-const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53]);
+const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53, 64]);
 const expectedCategories = new Map([
   [1, "governance"],
   [2, "governance"],
@@ -144,6 +145,7 @@ const expectedCategories = new Map([
   [61, "quality-delivery"],
   [62, "quality-delivery"],
   [63, "stack-tooling"],
+  [64, "governance"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -218,6 +220,7 @@ const expectedStems = new Map([
   [61, "ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets"],
   [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
   [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
+  [64, "ac-adr-064-preserve-approved-scope-through-capability-aware-planning"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -246,6 +249,15 @@ const baselineEvalCases = [
   "audit-strict-read-only.md",
   "refactor-governance-boundary.md",
   "plan-mode-lifecycle.md",
+  "plan-inactive-conversation.md",
+  "approval-reused-after-transition.md",
+  "approval-still-active.md",
+  "native-final-approval-scope.md",
+  "approval-target-drift.md",
+  "approval-bounded-revision.md",
+  "planning-chat-only.md",
+  "async-question-no-consent.md",
+  "mode-toggle-not-approval.md",
   "plan-mode-unavailable-fallback.md",
   "plan-mode-indeterminate-stop.md",
   "plan-mode-declined-stop.md",
@@ -1549,13 +1561,62 @@ for (const required of [
   "Setup never authorizes application refactoring, deployment, publication, or production probes.",
   "perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment",
   "Direct refactor never invents a durable decision or silently repairs governance.",
-  "Uncertainty never authorizes fallback.",
+  "Unknown mode or permission state never authorizes writes.",
+  "Prepare the complete reviewable draft and exact delivery/write scope before one approval.",
+  "Preserve approval across required host transitions",
+  "Silence, timeout, and preselected options are not approval.",
   "Write no target repository/workspace artifact while Plan mode is active.",
-  "recheck state after approval and Plan-mode exit",
-  "references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md",
+  "Recheck state after approval and Plan-mode exit when required",
+  "references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md",
 ]) {
   if (!skillText.includes(required)) {
     fail(`${skillRel}: missing workflow invariant ${JSON.stringify(required)}`);
+  }
+}
+// Current runtime surfaces must not reintroduce the superseded conversation stop.
+// Historical ADRs and locked evaluation baselines intentionally retain old wording.
+for (const currentFile of [
+  skillFile,
+  path.join(
+    referencesDir,
+    "ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
+  ),
+  path.join(
+    referencesDir,
+    "ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
+  ),
+]) {
+  const currentText = readRegularFile(currentFile);
+  for (const obsolete of [
+    "only `Unavailable` permits the portable fallback",
+    "stop before substantive planning",
+    "stop pending confirmed activation",
+    "If supported but inactive or support is indeterminate, stop",
+    "Request the native transition and wait for observed activation.",
+  ]) {
+    if (currentText.includes(obsolete)) {
+      fail(
+        `${relative(currentFile)}: superseded unconditional planning stop ${JSON.stringify(obsolete)}`,
+      );
+    }
+  }
+}
+const lifecycleGuide = readRegularFile(
+  path.join(
+    referencesDir,
+    "ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
+  ),
+);
+for (const required of [
+  "Reuse a prior approval of the same version/scope",
+  "A mode toggle alone is not content approval.",
+  "If content, write scope, destination, or target state changed materially, resolve only the affected change.",
+  "Keep Proposed ADR persistence separate from acceptance.",
+  "Explicit chat-only delivery completes that delivery",
+  "While a required answer is pending, continue only independent authorized work.",
+]) {
+  if (!lifecycleGuide.includes(required)) {
+    fail(`AC-ADR-064 Guide: missing approval or capability boundary ${JSON.stringify(required)}`);
   }
 }
 const conditionalSelector = sectionText(skillText, "Conditional stable-skill selector instruction");

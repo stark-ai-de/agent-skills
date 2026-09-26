@@ -2,7 +2,7 @@
 
 ID: AC-ADR-048
 Title: Persist Approved Governance Before Planned Architecture Refactors
-Status: Accepted
+Status: Superseded
 Date: 2026-07-29
 Owner: stark-ai-de
 Scope: skill-runtime
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: AC-ADR-045
-Superseded by: none
+Superseded by: AC-ADR-064
 Guide verified: 2026-07-29
 Gist: Preserve five intent-bound workflows while making approved post-Plan governance persistence explicit and bounded.
 

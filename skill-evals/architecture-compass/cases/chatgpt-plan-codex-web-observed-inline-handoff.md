@@ -18,6 +18,8 @@ Yes.
 
 ## Prompt
 
+I explicitly request native Plan mode and a handoff through the observed control.
+
 Run `plan-refactor` with Architecture Compass for a polling-to-webhook migration.
 
 ## Deterministic Assertions
@@ -28,5 +30,7 @@ Run `plan-refactor` with Architecture Compass for a polling-to-webhook migration
 - not_contains: Planning capability: Active
 
 ## Expected Behavior
+
+Respect this explicit native-mode request. Only its transition waits for observed activation; independent safe discovery and conversation may continue.
 
 A combined command is allowed only with evidence for both the native control and its inline parser; wait for the next turn to confirm activation.

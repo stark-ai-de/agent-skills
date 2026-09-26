@@ -19,14 +19,14 @@
       "rationale": "The former two-action selector is replaced by the accepted five-workflow outcome model; no legacy alias or implicit execution authority is restored.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": [
             "Available workflows: setup | audit | refactor | plan-refactor | plan-run-refactor"
@@ -47,21 +47,21 @@
       "kind": "guidance",
       "summary": "Internal mode selection",
       "disposition": "adapted",
-      "rationale": "Legacy internal modes are expressed through the five public workflows and explicit Plan-mode lifecycle, preserving the outcome while removing hidden sub-modes.",
+      "rationale": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Plan workflows",
           "markers": [
-            "native Plan-mode support",
-            "portable in-chat fallback only when native Plan mode is definitely unavailable"
+            "execution host's planning and permission capabilities",
+            "continue permitted read-only discovery and conversation"
           ]
         }
       ]
@@ -82,14 +82,14 @@
       "rationale": "The legacy routing matrix is consolidated into intent-bound routing with explicit governance and authority stops.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": [
             "Use this routing table:",
@@ -121,7 +121,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -169,7 +169,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -227,7 +227,7 @@
       "rationale": "Setup remains the governance workflow, while current routing explicitly separates workflow selection from operational write authority.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -241,7 +241,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Write scope:"]
         }
@@ -263,14 +263,14 @@
       "rationale": "The old internal existing-repository phase is replaced by the public Setup workflow with recommended or complete coverage.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["For `recommended`", "For `complete`"]
         }
@@ -299,7 +299,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -331,14 +331,14 @@
       "rationale": "Current Setup distinguishes evidence-selected recommended coverage from exhaustive complete coverage instead of applying every bundled row universally.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["record `adopt`, `adapt`, `defer`, or `reject`"]
         }
@@ -472,7 +472,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -501,14 +501,14 @@
       "rationale": "The report and handoff intent remains, but the current five-workflow dispatcher and explicit authority fields replace the legacy two-mode prompts.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Expected artifacts:"]
         }
@@ -530,14 +530,14 @@
       "rationale": "The internal new-repository decision phase is replaced by Setup, and application bootstrap remains a separately planned implementation.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": [
             "`setup-new-repo` or `new-repo-bootstrap`",
@@ -569,14 +569,14 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["new or lacks architecture evidence", "repository-native IDs"]
         },
@@ -603,14 +603,14 @@
       "rationale": "Complete coverage evaluates every adoptable candidate; recommended coverage selects by evidence while still recording every in-scope non-selection.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["For `recommended`", "For `complete`"]
         }
@@ -733,14 +733,14 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Risk-based validation receipt",
           "markers": ["Final aggregate gate:"]
         }
@@ -769,24 +769,24 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Selected:", "Protected state:"]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["Record every `AC-ADR -> local ADR` mapping"]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Risk-based validation receipt",
           "markers": ["Proof obligations and one owner each:"]
         }
@@ -813,14 +813,14 @@
           "markers": ["Give every relevant finding exactly one disposition:"]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Audit procedure",
           "markers": ["Audit creates no repository artifact", "validation obligations"]
         }
@@ -842,7 +842,7 @@
       "rationale": "The behavior-preserving bounded refactor remains available only under accepted local ADRs and explicit write scope.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -856,7 +856,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Refactor procedure",
           "markers": ["Use direct `refactor` only", "Execute reversible slices"]
         }
@@ -878,7 +878,7 @@
       "rationale": "New implementation now routes by governance readiness: bounded governed work may refactor, while missing durable decisions route back to Setup or planning.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -892,7 +892,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": ["new-implementation", "plan-run-refactor"]
         }
@@ -914,7 +914,7 @@
       "rationale": "Bootstrap is split into governance Setup and a separately authorized implementation plan, avoiding speculative application structure.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -928,7 +928,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": ["new-repo-bootstrap", "separate planned implementation"]
         }
@@ -950,14 +950,14 @@
       "rationale": "The legacy PR-review mode is folded into audit while preserving host review surfaces and the no-fix boundary.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": ["`pr-review`", "read-only `audit`"]
         }
@@ -1035,7 +1035,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Audit procedure",
           "markers": ["architecture boundaries", "implementation drift"]
         }
@@ -1064,7 +1064,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -1100,14 +1100,14 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": ["`docs-sync`", "matching whether execution is requested"]
         }
@@ -1172,14 +1172,14 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Write scope:"]
         }
@@ -1229,7 +1229,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Legacy intent mapping",
           "markers": ["stack-deviation", "Plan workflow"]
         }
@@ -1916,7 +1916,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -1945,14 +1945,14 @@
       "rationale": "Setup remains the selected workflow for establishing or reconciling ADR governance.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Establish or reconcile ADR governance"]
         }
@@ -2015,14 +2015,14 @@
       "rationale": "The disposition contract remains, but recommended and complete coverage now determine which provider candidates are in scope.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": [
             "record `adopt`, `adapt`, `defer`, or `reject`",
@@ -2054,7 +2054,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2235,14 +2235,14 @@
       "rationale": "The old setup/refactor prompt pair is replaced by the complete intent-bound workflow activation record.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Activation routing",
           "markers": ["Available workflows:"]
         }
@@ -2300,14 +2300,14 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Risk-based validation receipt",
           "markers": ["Final aggregate gate:"]
         }
@@ -2698,7 +2698,7 @@
       "rationale": "Planning states remain explicit, but declined or indeterminate native Plan mode no longer silently authorizes a portable execution fallback.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2813,7 +2813,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2856,7 +2856,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2892,7 +2892,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2928,7 +2928,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2964,7 +2964,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -2990,7 +2990,7 @@
       "kind": "example",
       "summary": "After explicit implementation approval, confirm any required write permission, then re-read repository state (HEAD and git --no-optional-locks status when Git exists), the gover...",
       "disposition": "explicitly-rejected",
-      "rationale": "The unconditional portable-fallback continuation is explicitly rejected because declined or indeterminate native Plan support no longer authorizes fallback execution.",
+      "rationale": "The unconditional portable execution continuation remains rejected. AC-ADR-064 permits safe conversation despite unavailable, declined, or unknown controls, but native Plan state, actual permission, exact approval, and a fresh state check still gate every write.",
       "targets": [
         {
           "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -3000,7 +3000,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -3009,7 +3009,7 @@
         {
           "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
           "heading": "Capability state handling",
-          "markers": ["Explicitly declined", "do not ask again unchanged"]
+          "markers": ["Explicitly declined", "Honor the refusal without repeating it"]
         }
       ]
     },
@@ -3036,7 +3036,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -3072,7 +3072,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -3100,11 +3100,11 @@
       },
       "kind": "guidance",
       "summary": "Execution re-entry",
-      "disposition": "preserved",
-      "rationale": "Execution re-entry still requires a fresh HEAD, index, working-tree, authority, dependency, and external-state check before mutation.",
+      "disposition": "adapted",
+      "rationale": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -3118,9 +3118,12 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Plan workflows",
-          "markers": ["recheck HEAD, index, working tree", "Stop on material drift"]
+          "markers": [
+            "recheck HEAD, index, working tree",
+            "Stop dependent execution on material drift"
+          ]
         }
       ]
     },
@@ -5197,7 +5200,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -5914,7 +5917,7 @@
       "rationale": "The legacy mode wording is adapted to the five public workflows and the independent architecture-authority ranking.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -5979,7 +5982,7 @@
       "rationale": "The former inspect-every-row rule is adapted so complete is exhaustive while recommended is evidence-selected with explicit non-selected dispositions.",
       "targets": [
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "Architecture Compass exposes exactly five public workflows: `setup`, `audit`, `refactor`, `plan-refactor`, and `plan-run-refactor`. It always discloses"
@@ -5993,7 +5996,7 @@
           ]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
           "heading": "Setup procedure",
           "markers": ["For `recommended`", "For `complete`"]
         }
@@ -6061,7 +6064,7 @@
           "markers": ["Operational authority:", "Architecture source A:", "Disjoint work:"]
         },
         {
-          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md",
+          "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md",
           "heading": "Decision",
           "markers": [
             "An agent-initiated activation may select `audit` without mutation authority.",

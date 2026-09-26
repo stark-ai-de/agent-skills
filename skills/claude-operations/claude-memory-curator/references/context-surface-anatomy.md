@@ -4,7 +4,7 @@ Use this reference when deciding which Claude Code surface owns a durable instru
 
 ## CLAUDE.md Files
 
-Claude Code reads `CLAUDE.md`, not `AGENTS.md`, at session start. Project instructions can live at `./CLAUDE.md` or `./.claude/CLAUDE.md`. User instructions live at `~/.claude/CLAUDE.md`. Managed policy instructions can live in system-managed locations such as `/etc/claude-code/CLAUDE.md` on Linux and WSL.
+Claude Code loads applicable `CLAUDE.md` instructions; native `AGENTS.md` support is conditional, as described below. Project instructions can live at `./CLAUDE.md` or `./.claude/CLAUDE.md`. User instructions live at `~/.claude/CLAUDE.md`. Managed policy instructions can live in system-managed locations such as `/etc/claude-code/CLAUDE.md` on Linux and WSL.
 
 Use `CLAUDE.md` for concise instructions that should be loaded broadly in Claude Code sessions. Keep files focused; long procedures usually belong in skills or path-scoped rules.
 
@@ -14,7 +14,13 @@ Use `CLAUDE.local.md` for personal project-specific preferences that should not 
 
 ## AGENTS.md
 
-Claude Code does not read `AGENTS.md` directly. If a repo already uses `AGENTS.md` as the cross-agent source of truth, recommend a `CLAUDE.md` import such as `@AGENTS.md` plus any Claude-specific additions instead of duplicating the same rules.
+Confirm native support from the installed version and session evidence; file presence is not loading proof. As documented on 2026-09-21, direct loading requires v2.1.277+, available feature flags, enabled built-in `agents-md`, and compatible hooks. Older versions, some providers (including Bedrock), disabled telemetry, first sessions after installation/upgrade, `disableAllHooks`, or `allowManagedHooksOnly` can prevent it.
+
+The default `claude-md-or-agents-md` uses `AGENTS.md` only without a project/ancestor `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`. `claude-md-and-agents-md` loads both; `claude-md` and `managed-only` exclude native `AGENTS.md`. Check `pluginConfigs["agents-md@builtin"].options.instructionFiles` in user, explicit, or managed settings; project/local settings do not control it. Inventory reports these as observed signals, not resolved effective settings.
+
+Native candidates include `AGENTS.md` and `.claude/AGENTS.md`; exclude `AGENTS.local.md`, `AGENTS.override.md`, and `.agents/`. Check the startup loading message or session instruction evidence. Absence from `/memory`, `/context` Memory files, or `InstructionsLoaded` hooks is not proof of non-loading.
+
+Retain a working `CLAUDE.md` import (`@AGENTS.md`) for unsupported, restricted, or uncertain hosts. Do not remove it or alter settings/hooks merely because a newer version exists. Verify the actual session before recommending a migration; shared-file changes require named approval.
 
 ## .claude/rules
 
@@ -40,7 +46,7 @@ Managed policy files and managed settings are organization-controlled. Treat the
 
 ## Source Basis
 
-- Claude Code memory docs: https://code.claude.com/docs/en/memory
+- Claude Code memory docs (conditional loading, verified 2026-09-21): https://code.claude.com/docs/en/memory#agents-md
 - Claude Code settings docs: https://code.claude.com/docs/en/settings
 - Claude Code skills docs: https://code.claude.com/docs/en/skills
 - Claude Code hooks docs: https://code.claude.com/docs/en/hooks

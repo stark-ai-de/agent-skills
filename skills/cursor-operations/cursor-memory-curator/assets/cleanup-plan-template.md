@@ -7,7 +7,9 @@ Embed this structure in the `Plan` section of the selected route's chat result o
 - Repo:
 - Requested by:
 - Created:
-- Plan approval status: not approved
+- Plan approval status and evidence: record current or earlier approval of this unchanged plan
+- Host Plan state / actual write permission:
+- Material drift since approval:
 - Backup required before edits: yes
 
 ## Entries

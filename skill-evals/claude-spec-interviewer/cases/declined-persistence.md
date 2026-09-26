@@ -14,3 +14,5 @@ Interview me and produce a proper spec for migrating our session storage to Redi
 - Respect the explicit persistence decline: write no spec or ADR files.
 - Return the complete final spec and any ADR draft in chat, including the path that would have been used.
 - Still include the verification checkpoint, validation commands, and a Claude Code execution prompt.
+
+Explicit chat-only delivery is a completed requested outcome: report `Persistence status: not requested`, do not ask for a save path, and do not label it incomplete merely because no file was saved.

@@ -211,18 +211,6 @@ rg "fetchJson\\(" .
 - duplicated requests or retry regressions
 - accidental scope creep in touched files
 
-## Verification checkpoint
-
-- Scope and non-goals confirmed: yes
-- Assumptions reviewed: yes
-- Non-blocking unknowns accepted: no; API-client ownership must be confirmed first
-- Blocking decisions: ADR gate remains unresolved until existing ADRs and ownership are checked
-- Risks and rollout reviewed: yes
-- Validation plan reviewed: yes
-- ADR result reviewed: yes
-- Spec saved: yes
-- ADR persistence needed: unresolved
-
 ## Rollout and rollback
 
 - Rollout strategy:

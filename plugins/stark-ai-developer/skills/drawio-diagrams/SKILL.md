@@ -1,11 +1,11 @@
 ---
 name: drawio-diagrams
-description: Create, draw, generate, edit, verify, and export draw.io/diagrams.net `.drawio` diagrams. Use when the user asks for editable diagrams, flowcharts, architecture, sequence, ER/UML/state, BPMN, SysML, ML/DL, swimlane, timeline, network, icon-rich technical diagrams, or PNG/SVG/PDF exports; do not use for charts/plots or artistic image generation.
+description: Create, edit, review, or export editable draw.io diagrams. Use when the user needs .drawio architecture, flow, sequence, network, or other technical diagrams; not data plots or artistic images.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.7.4"
+  version: "0.7.5"
 ---
 
 # drawio-diagrams
@@ -48,6 +48,8 @@ There is no `auto` workflow. Infer only from task intent and authority:
 
 For clear direct intent, state all four workflows, the selected workflow and rationale, inputs, requested outputs, design profile, theme/animation/icon modes, recommended authoring/render route (`direct-xml | transactional-native | approved-raw-cli-manual | fixed-theme-browser-raster | browser-url-preview | html-viewer-preview`), write scope, expected artifacts, protected files, and later approval boundaries, then proceed. A bare invocation, mixed outcomes with materially different scope, or unresolved source/destination requires showing the options and asking. Agent-initiated activation may select and announce `review` without confirmation; it may select a mutating workflow only when the user's existing request already authorizes that outcome and scope. Installation, hosted content transfer, browser rasterization, file-writing fallback helpers, destructive overwrite, paid/external actions, and scope expansion retain separate approval.
 
+For clear intent, a compact disclosure of `create | edit-repair | review | export` and the selected route is sufficient; do not repeat a selection question or details already established in the conversation. Reuse an explicit approval only when it still covers the exact action, target, tool/provider, cost when relevant, and write scope. Separate approval boundaries remain separate: authorization for one never implies another. Ask again only for a changed or missing decision.
+
 ## Inputs to inspect
 
 Inspect the prompt, requested outputs, audience, question, scope, abstraction, and privacy constraints needed to select workflow and authority. After selection, run the non-mutating capability preflight before inspecting architecture sources, existing `.drawio` files, current/target state, icons, profile/theme, text hierarchy, routing risks, or tool-specific inputs. New directed flows default to animation `on`. During the preflight, use the read-only `scripts/probe-drawio-toolset.mjs [--json]` helper to detect Node >= 18, Python, draw.io candidates, browser/MCP signals, and caches; capability evidence is not permission. Prefer a Linux-native draw.io candidate with `/proc/self/fd` guarantees; version-probe candidates with `probe-drawio-toolset.mjs`, and send stale/non-executable `DRAWIO_BIN` candidates to the raw/manual export fallback. Browser rasterization uses `rasterize-themed-svg.mjs` only with a pinned absolute executable. Installation/setup is approval-gated, and capability receipts must use sanitized paths.
@@ -56,7 +58,7 @@ Inspect the prompt, requested outputs, audience, question, scope, abstraction, a
 
 Follow the detailed capability ladder and receipt procedure in [workflow-details.md](references/workflow-details.md).
 
-1. State the selected workflow, authority, inputs, outputs, profile, theme/animation/icon modes, renderer route, write scope, protected files, and approval boundaries. Run a non-mutating capability preflight for mutating/export workflows; `review` skips it.
+1. Use the selection and scope already announced; update them only if new evidence changes the route or a material decision. Run a non-mutating capability preflight for mutating/export workflows; `review` skips it.
 2. If `review` is selected, use a strict read-only branch: inspect supplied sources and existing renders, build only the needed semantic model, and run only read-only validators. Do not create backups, author or patch XML, render, rasterize, export, open hosted services, or fix findings. Report findings and evidence limits, then return; do not execute the remaining workflow steps.
 3. Build a compact semantic model, choose a route from `transactional-native | approved-raw-cli-manual | fixed-theme-browser-raster | browser-url-preview | html-viewer-preview | direct-xml`, plan connector gutters, and preserve the editable source.
 4. Author or patch `.drawio` XML only within the selected authority. Apply the selected profile, official-first icon policy, concrete edge routing, and animation policy. Adapt any user-supplied visual reference only into reusable tokens/effects; never copy its composition or assets or persist a learned profile without an explicit request.

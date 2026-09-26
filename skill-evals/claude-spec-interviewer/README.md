@@ -1,40 +1,13 @@
-# claude-spec-interviewer Eval Proof
+# claude-spec-interviewer evaluation evidence
 
-This folder contains the initial promotion proof for `claude-spec-interviewer`.
+`cases/` contains trigger, target-runtime and host-capability scenarios. `rubric.md` defines the current outcome criteria. Historical `runs/` are dated records, not current proof.
 
-## Promotion Rationale
+## Shared approval regression matrix
 
-- Broad utility: applies to fuzzy features, refactors, migrations, bugfixes, and architecture work.
-- Clear boundary: excludes tiny direct edits and already complete implementation specs.
-- High value: produces implementation specs, ADR gate results, validation plans, and Claude Code execution prompts.
-- Durable output: verifies final scope, saves the spec, and creates ADR files only when required.
-- Cross-host Claude Code fit: uses the current execution host's Plan-mode lifecycle and structured-question controls, with `EnterPlanMode`, `AskUserQuestion`, and `ExitPlanMode` applying only when Claude Code executes the skill. It keeps `CLAUDE.md`, `.claude/rules/**/*.md`, auto memory, and the execution prompt Claude Code-targeted while specs and ADRs remain repository-owned artifacts.
-- Manageable maintenance: mostly repo-workflow guidance plus bundled templates and rubrics.
+Run [approval-scenarios.json](../codex-spec-interviewer/approval-scenarios.json) against all three interviewer targets. It supplies fixed context, prompts, answer cards and required/forbidden observations for prior authority, native/manual exit, revisions, destination drift, ADR status, chat delivery, async pending answers and older hosts.
 
-## Eval Set
+Use real conversation continuation for interactive evidence. Preserve material decisions while counting duplicate questions and avoidable mode interruptions. Separate native UI prompts from skill-generated questions. Test actual saved artifacts and permissions; do not score expected text as execution.
 
-Cases cover positive triggers, negative triggers, and output-quality expectations:
+## Evidence boundaries
 
-- `cases/fuzzy-refactor-request.md`
-- `cases/vague-feature-request.md`
-- `cases/plan-before-coding-trigger.md`
-- `cases/native-plan-mode-lifecycle.md`
-- `cases/native-plan-mode-fallbacks.md`
-- `cases/codex-execution-host.md`
-- `cases/claude-md-evidence.md`
-- `cases/claude-rules-adr-implications.md`
-- `cases/docs-producing-interview-request.md`
-- `cases/no-spec-structure-repo.md`
-- `cases/declined-persistence.md`
-- `cases/already-specified-negative.md`
-- `cases/claude-memory-curator-negative.md`
-- `cases/codex-memory-curator-negative.md`
-- `cases/direct-implementation-negative.md`
-
-Use `rubric.md` to grade outputs. `runs/` stores run summaries and evidence.
-
-Passing outputs must identify the current execution host and run that host's Plan-mode preflight before substantive interviewing. When Plan mode is supported but inactive and not explicitly declined, the skill must invoke that host's transition control when available; otherwise it gives accurate manual activation instructions for that host and waits for `continue` without requesting the original prompt again. The Plan-mode interview must keep repository/workspace artifacts read-only and stay in the main conversation; only a plan artifact created by the current host's plan-exit control is allowed. After the verified checkpoint, the skill must mark persistence pending and use that host's plan-exit control with a save-only plan, using manual exit only when no such control exists. In Claude Code, the lifecycle controls are `EnterPlanMode`, `AskUserQuestion`, and `ExitPlanMode`. Only after the continuation persists the repository-owned approved spec, any required ADR, and the convention-required minimal ADR index entry; emits the Claude Code-targeted execution prompt; and stops without implementation may the run report completion.
-
-If Plan mode is definitely unavailable or explicitly declined, passing outputs must record `unavailable` or `declined` plus the reason and continue the interview conversationally. Indeterminate support/state follows the supported-but-inactive transition/handoff and never falls back. If persistence itself is explicitly declined or blocked, passing outputs must write no files, return the complete save-ready spec and any ADR draft in chat, and report the proposed path plus the decline or blocker.
-
-The 2026-07-13 Codex run is historical routing evidence from an environment with only `claude-spec-interviewer` installed; it does not prove competing-skill selection, checkpoint verification, Plan-mode exit, or save-only persistence for the strengthened cross-host case.
+`validate:skills` checks structural consistency, metadata, template records and scenario inventory. Case assertions are evaluator expectations, not live passes. Parent PR evidence records the bounded Codex/Astra pilot separately; a CLI result does not prove ChatGPT, Claude Code, Cursor or native UI behavior. Historical case filenames are retained for compatibility even where the current expected lifecycle changed.

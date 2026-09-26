@@ -9,7 +9,7 @@ Yes.
 Plan and implement this broad architecture migration with Architecture Compass.
 Package ownership, the request boundary, and the public package contract are
 unresolved durable decisions. Do not implement until the decisions and exact
-scope are approved and native Plan mode has exited.
+scope are approved and any active native Plan mode has exited.
 
 ## Deterministic Assertions
 
@@ -27,10 +27,9 @@ scope are approved and native Plan mode has exited.
 ## Expected Behavior
 
 - Classify unresolved package ownership, request boundaries, and public contract changes as durable decisions that require the decision phase.
-- Select `plan-run-refactor`, enter and confirm native Plan mode before
-  substantive planning, and keep repository/workspace state read-only.
+- Select `plan-run-refactor`, respect active or requested native Plan and recommend it for this substantial ambiguous work. Continue safe planning conversation without forcing activation, and keep repository/workspace state read-only.
 - Return `Architecture decision status: pending` and
   `Execution status: blocked` until approval.
-- After approval, exit Plan mode before persistence, persist and validate only
+- After approval, exit active Plan mode before persistence, persist and validate only
   the approved specification and required governance artifacts, recheck state,
   and execute only the unchanged approved scope.

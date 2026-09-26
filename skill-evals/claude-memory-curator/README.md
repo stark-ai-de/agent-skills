@@ -37,7 +37,7 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 
 Use `rubric.md` to grade outputs. `expected/report-shape.md` describes the expected report skeleton. `runs/` stores run summaries and evidence.
 
-Passing outputs expose all eight workflows with `plan-run-cleanup-file` first and Recommended, announce and proceed with an intent-bound route when clear, ask on ambiguity, and keep agent-initiated activation read-only unless cleanup was explicitly requested. Every route performs the same full review. Chat routes create no durable report; file routes use one redacted record. Mutating routes require exact-file backups, Plan routes use the native lifecycle when supported, and direct cleanup is restricted to high-confidence atomic edits in existing editable Claude context.
+Passing outputs expose all eight workflows in stable order with an intent-matched recommendation, announce and proceed with an intent-bound route when clear, ask on ambiguity, and keep agent-initiated activation read-only unless cleanup was explicitly requested. Every route applies the same review quality to the explicitly requested scope. Chat routes create no durable report; file routes use one redacted record. Mutating routes require exact-file backups, Plan routes respect native restrictions and allow conversational planning when controls are unavailable or inactive, and direct cleanup is restricted to high-confidence atomic edits in existing editable Claude context.
 
 ## Maintenance Guardrails
 
@@ -46,3 +46,10 @@ Passing outputs expose all eight workflows with `plan-run-cleanup-file` first an
 - Do not edit managed policy files by default.
 - Do not add Claude plugin metadata without a supporting ADR.
 - Prefer new eval evidence over longer runtime instructions.
+
+## Interaction regressions
+
+- `cases/scoped-review-intent.md`
+- `cases/approval-reuse-and-drift.md`
+- `cases/async-answer-boundary.md`
+- `cases/conditional-agents-loading.md`

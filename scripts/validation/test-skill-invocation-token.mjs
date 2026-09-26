@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 
+import { testInterviewerContractChecks } from "../../skill-evals/codex-spec-interviewer/validate-contract.mjs";
+
 import { containsKnownSkillInvocationToken } from "../catalog/skill-invocation-token.mjs";
 
 const knownSkillNames = new Set(["architecture-compass", "codex-spec-interviewer"]);
@@ -34,3 +36,5 @@ for (const prompt of [
 }
 
 console.log("Validated complete known $skill invocation token matching.");
+
+testInterviewerContractChecks();

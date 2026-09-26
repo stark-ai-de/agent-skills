@@ -1,63 +1,24 @@
-# Artifact Destinations
+# Artifact destinations
 
-Use this reference when selecting or saving implementation spec files and any required ADR files.
+Use when selecting delivery and concrete spec/ADR paths. Reuse the request, prior answers and exact write authority; do not restart permission discovery at finalization.
 
-## Destination Discovery
+## Discover delivery and paths
 
-1. Use explicit user-provided folders only when the user asks for them.
-2. Otherwise inspect the repository for existing spec and ADR structures.
-3. If one clear spec convention exists, use it and report the path in the final checkpoint.
-4. Do not interrupt the interview just to confirm existing structures.
-5. Ask for confirmation at the final checkpoint when no clear convention exists, multiple plausible conventions exist, public/private placement is ambiguous, the target directory must be created, an overwrite is needed, or an ADR file would be written.
-6. If no structure exists, suggest the smallest conventional structure at the final checkpoint.
-7. Save the final spec unless the user explicitly declines persistence.
-8. Save ADR files only when the ADR gate requires them and the user has not declined persistence.
+1. Default to a repository-owned saved spec; explicit chat-only delivery takes precedence without a persistence question. Carry existing save authority forward and identify the path while interviewing.
+2. Use an explicit path first, then a clear repository convention. If neither exists, propose `docs/specs/<kebab-slug>-spec.md`.
+3. Inspect public/private placement, directory existence and existing destination content. Raise material ambiguity early or include it in the final checkpoint. Do not interrupt merely to confirm a clear existing convention.
+4. Include unapproved directory creation, overwrites, required ADR writes and minimal ADR index updates in the same concrete checkpoint. Previously approved actions do not need another question unless their scope or target state changed.
 
-If the user explicitly declines persistence, output the final spec and any ADR draft in chat.
+In this `agent-skills` repository, follow `docs/specs.md`: use the ignored `docs/specs/do-not-publish/` for private, exploratory, sensitive, repository-creation, or not-yet-public specs. Use public `docs/specs/` only after the maintainer explicitly confirms publishability. In other repositories, local conventions take precedence. An intentionally local-only artifact does not require a new sharing question; ask only when an ignored destination conflicts with the requested shared result. Never unignore a path implicitly.
 
-## Spec Path Rules
+Use lowercase kebab-case names ending in `-spec.md` unless the repository requires another format. Do not add sequential numbers unless the repository does.
 
-1. Use an explicit user-provided path when present.
-2. Otherwise, follow an existing repository spec convention when one is discoverable.
-3. Otherwise, propose `docs/specs/<kebab-slug>-spec.md`.
+## Approve and persist
 
-When operating inside this `agent-skills` repository, follow `docs/specs.md`: save private, exploratory, sensitive, repo-creation, or not-yet-public specs under the ignored `docs/specs/do-not-publish/`, and save specs under `docs/specs/` only after the maintainer explicitly confirms they are publishable. In other repositories, follow the local convention first.
+Follow [workflow-details.md](workflow-details.md): prepare the complete reviewable content, then combine content approval and outstanding concrete write decisions into one positive checkpoint. A mode toggle alone is not approval. Do not overwrite a file merely because the slug matches; inspect its content and reuse only authority that covers that content/state.
 
-Spec filenames must be lowercase kebab-case and end in `-spec.md`. Do not add sequential numbers unless the target repository already uses numbered spec filenames.
+Native Plan permits no repository persistence. Keep an approved result pending until actual exit and known write permissions, without asking approval again. During save-only finalization write only the spec, required ADR and minimal convention-required ADR index entry; capture other documentation work in the spec for later implementation. Read back saved artifacts and report actual paths. Explicit chat-only output completes the requested delivery; a blocked requested save remains incomplete.
 
-## Persistence Rules
+## ADR destinations and status
 
-- While native Codex Plan mode is active, do not create, edit, or persist any file. After the verified checkpoint, report the approved paths and persistence as pending, then issue the save-only continuation defined in `SKILL.md`.
-- Save every final spec file after the destination is selected from a clear repo convention or confirmed by the user.
-- If the target directory is missing, create it only after confirmation unless repo instructions explicitly require that directory.
-- If the selected specs folder is ignored by version control and the user expects a shared repo artifact, ask whether to keep it local-only, unignore that path, or choose a tracked docs path.
-- If the target file exists, ask before overwriting. Prefer a clearer slug over automatic suffixes.
-- Save ADR files only when the ADR gate requires a new or superseding ADR.
-- During the save-only continuation, persist only the approved spec, any required ADR, and the minimal ADR index entry required by the repository's existing convention. Defer all other repo-facing documentation updates to later implementation, and record that work in the spec.
-- Report every saved path in the final response.
-- Avoid pasting full persisted artifacts unless the user requests it or file persistence was blocked.
-
-## ADR Path Rules
-
-1. Use the repository's ADR directory, template, numbering, and index conventions.
-2. Use one durable decision per ADR.
-3. Mark new ADRs as `Proposed` unless the maintainer explicitly accepts them.
-4. Update the repository's existing ADR index when its convention requires one. Treat that minimal entry as part of ADR persistence, not unrelated documentation.
-5. Link required ADRs from the implementation spec.
-
-Do not create ADRs for feature behavior, UI copy, routine refactors under existing architecture, test cases, validation commands, or temporary experiments.
-
-## Verification Checkpoint
-
-Before saving final artifacts, summarize:
-
-- scope and non-goals,
-- assumptions and any non-blocking unknowns,
-- blocking decisions or open questions,
-- source challenge findings,
-- risks and rollout notes,
-- validation commands,
-- ADR gate result,
-- spec path basis and any required ADR paths.
-
-Ask whether anything material is missing or wrong. Continue interviewing if the answer reveals a material gap. If the user explicitly declined persistence, return the complete approved artifacts in chat and write nothing. Otherwise, in active Plan mode, prepare the approved artifact content without writing, report persistence as pending, and provide the save-only continuation. Outside Plan mode, save the spec by convention, save any required ADR only after explicit confirmation, and make the minimal ADR index update required by the repository's existing convention. Defer all other repo-facing documentation changes to later implementation.
+Follow the repository's ADR directory, linked representations, template, numbering and index. Keep one durable decision per ADR. Default to `Proposed` unless the maintainer explicitly accepts the reviewed decision. Approval to save a proposed ADR is not decision acceptance. Carry prior acceptance forward when unchanged. Link required ADRs from the spec and block dependent implementation until acceptance.

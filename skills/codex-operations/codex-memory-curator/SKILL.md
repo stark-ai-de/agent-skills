@@ -1,11 +1,11 @@
 ---
 name: codex-memory-curator
-description: Audit, review, clean up, and prune Codex memories. Use when the user asks about ~/.codex/memories, stale or noisy memories, memory pollution, cross-repo rule leakage, sensitive memory contents, memory config tuning, cleanup plans, or whether entries belong in memory, AGENTS.md, repo docs, skills, config, or deletion. Do not use for ordinary repo docs cleanup.
+description: Audit and safely curate Codex memory, including stale claims, cross-repo leakage, sensitive entries, and memory configuration. Use when reviewing or cleaning Codex memory, not generic repository docs.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.2.2"
+  version: "0.2.3"
 ---
 
 # Codex Memory Curator
@@ -30,18 +30,18 @@ Memory is context, not truth. The latest user request, current repo files, `AGEN
 
 ## Workflow selection
 
-Always expose these workflows in this order. `plan-run-cleanup-file` is always first and Recommended:
+Expose all eight workflows in this stable order, compactly when intent is clear. Recommend the route matching the requested outcome and delivery; for a bare invocation recommend `review-chat` while asking the user to choose:
 
-| Workflow                              | Delivery                             | Result                                                                                   |
-| ------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `plan-run-cleanup-file` (Recommended) | One redacted file record             | Full review, user-approved cleanup plan, backup, execution, and verification.            |
-| `review-chat`                         | Chat only                            | Full read-only review and recommendations.                                               |
-| `review-file`                         | One redacted file record             | Full read-only review and recommendations.                                               |
-| `cleanup-chat`                        | Chat plus backup                     | Full review followed by direct high-confidence atomic cleanup and verification.          |
-| `cleanup-file`                        | One redacted file record plus backup | Persist the review, then directly apply high-confidence atomic cleanup and verification. |
-| `plan-cleanup-chat`                   | Chat only                            | Full review and user-approved cleanup plan; no cleanup.                                  |
-| `plan-cleanup-file`                   | One redacted file record             | Full review and user-approved cleanup plan; no cleanup.                                  |
-| `plan-run-cleanup-chat`               | Chat plus backup                     | Full review, user-approved cleanup plan, backup, execution, and verification.            |
+| Workflow                | Delivery and result                                                          |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `plan-run-cleanup-file` | One record: review, approved plan, backup, cleanup, verification.            |
+| `review-chat`           | Chat: read-only review and recommendations.                                  |
+| `review-file`           | One record: read-only review and recommendations.                            |
+| `cleanup-chat`          | Chat and backup: review, high-confidence atomic cleanup, verification.       |
+| `cleanup-file`          | One record and backup: review, high-confidence atomic cleanup, verification. |
+| `plan-cleanup-chat`     | Chat: review and approved plan; no cleanup.                                  |
+| `plan-cleanup-file`     | One record: review and approved plan; no cleanup.                            |
+| `plan-run-cleanup-chat` | Chat and backup: review, approved plan, cleanup, verification.               |
 
 Route from intent instead of adding an `auto` workflow:
 
@@ -52,7 +52,7 @@ Route from intent instead of adding an `auto` workflow:
 - A bare invocation, conflicting cues, or ambiguity about review versus cleanup, chat versus file, execution, Codex home, or mutation authority exposes the table and asks the user to choose.
 - A mutating route may be selected only when the user already requested cleanup of the identified Codex memory scope.
 
-Before substantive inspection, show the complete table plus `Selected`, `Reason`, Codex home/repo target, write scope, expected artifacts, protected state, Plan-mode capability, and remaining separate approvals. If selection is unambiguous, announce it and proceed. If it is ambiguous, stop before inventory and ask.
+Before substantive inspection, disclose the complete finite options once and state `Selected`, `Reason`, Codex home/repo target, write scope, expected artifacts, protected state, Plan-mode capability, and unresolved approvals. Reuse facts and exact authority already established in the task; combine known fields into a short announcement. If selection is unambiguous, announce it and proceed. If it is ambiguous, stop before inventory and ask only the unresolved choice. Do not repeat the selector or ask for an unchanged selection again.
 
 Workflow selection does not authorize whole-file deletion, destructive recovery, config changes, paid or external actions, deployment, publication, or scope expansion.
 
@@ -76,7 +76,7 @@ Workflow selection does not authorize whole-file deletion, destructive recovery,
 
 ## Workflow
 
-Every route performs the same full-depth review before planning or cleanup:
+Every route applies the same review quality to the explicitly requested scope before planning or cleanup. A request about one file or claim does not authorize inspecting the entire store: use targeted reads instead of whole-root inventory/scanner commands, and consult other evidence only to resolve an in-scope conflict. Delivery never reduces review quality:
 
 1. Resolve the selected route, Codex home, repo target, persistence path when applicable, and protected state. Discover Codex home as follows:
 
@@ -97,7 +97,7 @@ Every route performs the same full-depth review before planning or cleanup:
    Exit code `1` means findings were found, not that the scan failed. The scanner caps returned findings and skips generated evidence by default; raise `--max-findings` or add `--include-generated-evidence` only when needed.
    Use scanner JSON as evidence; report counts and the highest-signal redacted findings instead of pasting the full payload.
 
-4. Inspect `<codex-home>/config.toml` when present; read no more than the first 220 lines.
+4. If configuration is requested or needed to resolve an in-scope conflict, locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.
 5. Classify memory mode as disabled, enabled but not injected, enabled and injected, external-context generation disabled, or unknown. Load `references/config-modes.md` for exact mode signals.
 6. If multiple memory file types are present, load `references/memory-store-anatomy.md` before deciding what is safe to edit.
 7. Read memory files in small chunks; avoid huge dumps and redact sensitive values.
@@ -107,7 +107,7 @@ Every route performs the same full-depth review before planning or cleanup:
 
 11. Tag high-risk entries as useful context only: `stale`, `duplicated`, `too-broad`, `too-specific`, `repo-specific`, `workflow`, `config`, `sensitive`, `conflicting`, or `useful`.
 12. Add confidence (`high`, `medium`, or `low`) and a proposed action to every entry.
-13. Produce the complete review before planning or editing. Route delivery must not reduce review depth.
+13. Produce the complete review before planning or editing. Route delivery must not reduce review quality or expand the requested scope.
 
 ## Route execution
 
@@ -122,12 +122,7 @@ Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence 
 
 ## Plan lifecycle
 
-The four `plan-*` routes require native Plan mode when the host supports it:
-
-1. Detect support before substantive planning.
-2. If supported and active, plan there. If supported but inactive, or support is indeterminate, stop and ask the user to enter or confirm Plan mode.
-3. Use an in-chat portable fallback only when native Plan mode is definitely unavailable.
-4. Before execution, record plan approval, recheck target files and protected state, stop on material drift, and exit Plan mode before mutation.
+Respect active/requested native Plan mode and actual write permissions on every route: no report, backup, or cleanup write while Plan is active or permission is unknown. Planning may continue read-only without a manual mode switch. For `plan-*` routes or pending material questions, read [references/plan-lifecycle.md](references/plan-lifecycle.md). Reuse unchanged approval; mode exit alone is not approval, and unanswered questions grant no authority. Recheck state before writes and reconfirm only material changes. Plan-only routes never authorize cleanup.
 
 Do not invoke `codex-spec-interviewer` inside this curation workflow. If findings require a broader durable rule, repository spec, or unresolved product decision, finish the selected curation route and offer the interviewer as a separate follow-up.
 
@@ -158,16 +153,18 @@ Use only when needed. All scripts are non-interactive, use Node.js stdlib only, 
 
 ```bash
 node scripts/inventory-memories.mjs [--codex-home PATH] [--json]
+node scripts/locate-memory-config.mjs [--codex-home PATH] [--json]
 node scripts/scan-memory-risks.mjs [--codex-home PATH] [--json] [--max-findings N] [--include-generated-evidence]
 node scripts/backup-memories.mjs [--repo PATH] [--codex-home PATH] [--backup-root PATH --backup-root-alias NAME] [--include PATH ...]
 ```
 
+- The config locator is read-only and scans the complete document, including late tables and dotted/quoted keys. It is a discovery aid; comments and strings can match, so resolve TOML scope, active profiles, and overrides before classifying mode.
 - Inventory is read-only. The scanner is read-only, redacts by default, bounds findings, skips generated evidence unless requested, and uses exit `1` for findings rather than execution failure.
-- `backup-memories.mjs` creates a no-clobber backup plus `backup-manifest.json`. Unredacted backup payloads and manifests stay outside Git worktrees and outside the resolved Codex memories tree; default and explicit roots equal to or below that source tree, including symlink aliases, fail before discovery can include them or any backup directory is created. The script defaults to deterministic user state and rejects an unsafe `--backup-root` before copying. One or more repeatable `--include PATH` values select exact-only mode; zero includes retain full legacy memory discovery. Selected paths must be readable; every symlink path component and legacy traversal error fails before root creation. It does not edit or delete memory files.
+- `backup-memories.mjs` creates a no-clobber backup plus `backup-manifest.json` without editing sources. Unredacted backup payloads and manifests stay outside Git worktrees and outside the resolved Codex memories tree, including physical aliases. Preflight rejects unsafe roots and every symlink path component; any traversal error fails before root creation. Use exact `--include` paths for edits; zero includes retains legacy discovery. Before invoking it, read `references/safe-editing-procedure.md` for root safety, preflight, manifest reconciliation, and recovery.
 
 ## Output format
 
-Start with the selected workflow, rationale, Codex home/repo target, write scope, expected artifacts, protected state, Plan-mode state, persistence path or `chat only`, and remaining approvals.
+Use the workflow announcement above; report only unresolved approval gates.
 
 Before producing a report, load and follow [`assets/review-report-template.md`](assets/review-report-template.md) as the canonical heading and field contract. File routes copy that complete template into the one curation record; chat routes render only applicable sections in chat and create no report file. Populate every applicable field, use `not applicable` with a reason for skipped phases, and redact sensitive values.
 
@@ -187,7 +184,3 @@ Before edits, complete the review and decision tables. After edits, complete the
 - Unknown schema: defer instead of editing or creating sibling state.
 - Sensitive or conflicting content: redact; cite location and higher source; recommend removal/rotation or classify for rewrite, move, or deletion.
 - Persistence, backup, or approved-state recheck failure: stop before mutation (or before further mutation), report the failure, and return to planning after drift.
-
-## Final output instruction
-
-Stay skeptical and concise. Lead with top decisions and the cleanup report, not a long explanation. Give one concrete next action when action is needed.

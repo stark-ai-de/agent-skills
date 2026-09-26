@@ -19,16 +19,14 @@ Run `plan-refactor` with this complete observation record:
 ## Deterministic Assertions
 
 - contains: Planning capability: Indeterminate
-- contains: distinguishable experience
-- contains: wait
 - not_contains: Planning capability: Active
 - not_contains: Planning capability: Available but inactive
 - not_contains: Planning capability: Unavailable
-- not_contains: portable in-chat planning fallback
 - not_contains: /plan Use
+
+- contains: no-write conversation
+- contains: unknown state never authorizes writes
 
 ## Expected Behavior
 
-An explicit unknown experience cannot select ChatGPT Chat, Work, or Codex web.
-Stop before every active, web, non-web, fallback, or handoff branch, ask for a
-distinguishable experience, and wait.
+Report the uncertain capability without inventing a control, mode transition, or positive absence. Continue permitted no-write conversation and proven non-mutating discovery. Unknown state never authorizes writes; obtain only the missing state needed for a requested transition or a later write. Product identity, missing slash commands, documentation alone, and a busy menu are not live control evidence.

@@ -8,6 +8,7 @@ import {
   assertExactPublicSkillSet,
   copyGitCandidateRepository,
 } from "../validation/smoke-install-contract.mjs";
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../lib/architecture-compass-inventory.mjs";
 
 const root = process.cwd();
 
@@ -204,7 +205,8 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedPublicAdrCount = 63;
+  const expectedIds = new Set(PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")));
+  const expectedPublicAdrCount = expectedIds.size;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
@@ -238,11 +240,6 @@ function architectureManifest(skillDir) {
       `Installed architecture-compass payload does not contain ${expectedPublicAdrCount} complete public triplets.`,
     );
   }
-  const expectedIds = new Set(
-    Array.from({ length: expectedPublicAdrCount }, (_, index) =>
-      String(index + 1).padStart(3, "0"),
-    ),
-  );
   const actualIds = new Set(
     [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
   );
