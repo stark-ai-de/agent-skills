@@ -6,6 +6,9 @@ import { repoUrl } from "../lib/skills";
 const summary = summarizeNativeDev9(evidence);
 const number = (value: number) => value.toLocaleString("en-US");
 const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
+const skillNameByCaseId = new Map(
+  summary.skillResults.map((result) => [result.caseId, result.skillName]),
+);
 ---
 
 <section class="jev-luna-dev9" aria-labelledby="jev-luna-dev9-title" data-jev-luna-dev9 data-gate="failed">
@@ -33,7 +36,7 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
         <thead><tr><th scope="col">Task</th><th scope="col">Returned outcome</th><th scope="col">Correct</th><th scope="col">Turn time</th><th scope="col">Input tokens</th></tr></thead>
         <tbody>{evidence.observations.map((row) => (
           <tr>
-            <th scope="row">{row.case_id}<small>{row.category}</small></th>
+            <th scope="row">{skillNameByCaseId.get(row.case_id) ?? "No-match task"}<small>{row.case_id}</small></th>
             <td><code>{row.status}</code></td>
             <td>{row.correct ? "Yes" : "No"}</td>
             <td>{seconds(row.model_turn_ms)} s</td>
@@ -67,5 +70,10 @@ const seconds = (milliseconds: number) => (milliseconds / 1000).toFixed(3);
   .jev-luna-dev9 td { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .jev-luna-dev9__source { font-size: .75rem; }
   .jev-luna-dev9 a:focus-visible, .jev-luna-dev9 summary:focus-visible, .jev-luna-dev9__table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
-  @media (max-width: 700px) { .jev-luna-dev9__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) {
+    .jev-luna-dev9__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .jev-luna-dev9__metrics { grid-template-columns: minmax(0, 1fr); }
+  }
 </style>
