@@ -578,7 +578,13 @@ class HookRegistrationTests(unittest.TestCase):
         env, state = self.versioned_home()
         result = self.run_cli("install", env=env)
         config = self.config_path()
+        config_contents = config.read_bytes()
         config_metadata = config.stat()
+        config_write_metadata = (
+            config_metadata.st_dev, config_metadata.st_ino, config_metadata.st_mode,
+            config_metadata.st_size, config_metadata.st_mtime_ns,
+            config_metadata.st_ctime_ns,
+        )
         receipt = Path(result["receipt_path"]).read_bytes()
         (state / ".gitignore").unlink()
         before = self.snapshot()
@@ -588,7 +594,13 @@ class HookRegistrationTests(unittest.TestCase):
         repaired = self.run_cli("install", env=env)
         self.assertEqual(repaired["status"], "unchanged")
         self.assertEqual(repaired["state_git_exclusion"], "present")
-        self.assertEqual(config.stat(), config_metadata)
+        current_metadata = config.stat()
+        self.assertEqual(config.read_bytes(), config_contents)
+        self.assertEqual((
+            current_metadata.st_dev, current_metadata.st_ino, current_metadata.st_mode,
+            current_metadata.st_size, current_metadata.st_mtime_ns,
+            current_metadata.st_ctime_ns,
+        ), config_write_metadata)
         self.assertEqual(Path(result["receipt_path"]).read_bytes(), receipt)
         self.assertEqual((state / ".gitignore").read_bytes(), b"*\n")
 
