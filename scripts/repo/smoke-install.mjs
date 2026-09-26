@@ -10,7 +10,6 @@ import {
   assertExactPublicSkillSet,
   copyGitCandidateRepository,
 } from "../validation/smoke-install-contract.mjs";
-import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../lib/architecture-compass-inventory.mjs";
 
 const root = process.cwd();
 
