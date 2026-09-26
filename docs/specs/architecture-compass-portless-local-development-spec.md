@@ -7,7 +7,7 @@ status: "approved"
 owner: "stark-ai-de"
 repo: "agent-skills"
 created: "2026-09-25"
-updated: "2026-09-25"
+updated: "2026-09-26"
 phases: ["persist-spec", "integrate-adr", "validate"]
 ---
 
@@ -21,7 +21,7 @@ adoptable decision through the existing library and workflow routing.
 
 ## Scope and non-goals
 
-Add AC-ADR-065, its Short/Long/Guide variants, catalog and concern routing,
+Add AC-ADR-066, its Short/Long/Guide variants, catalog and concern routing,
 decision lock and independent lineage, adoption matrix, explicit public ID
 inventory, evaluation cases, installation verification and generated plugin
 projection. Increase the changed skill and bundled plugin component versions.
@@ -41,9 +41,9 @@ technical exceptions need evidence and a revisit condition. Repositories
 without relevant local endpoints are not applicable.
 
 ADR required: yes. The approved portable decision is
-[AC-ADR-065 Short](../../skills/engineering-workflows/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.short.md)
-([Long, canonical](../../skills/engineering-workflows/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.long.md) ·
-[Guide](../../skills/engineering-workflows/architecture-compass/references/ac-adr-065-use-portless-for-local-development-endpoints.guide.md)).
+[AC-ADR-066 Short](../../skills/engineering-workflows/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.short.md)
+([Long, canonical](../../skills/engineering-workflows/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.long.md) ·
+[Guide](../../skills/engineering-workflows/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.guide.md)).
 It supersedes no existing decision and has independent lineage. No separate
 repository adoption of Portless is implied. The complete normative decision
 lives in Long; do not maintain a second policy copy in this spec.
@@ -56,7 +56,7 @@ dependent implementation until an adaptation or successor is accepted.
 
 ## Requirements and acceptance criteria
 
-- WHEN setup finds compatible local web endpoints, it selects AC-ADR-065 through
+- WHEN setup finds compatible local web endpoints, it selects AC-ADR-066 through
   existing routing and provider-to-local mapping. Governance adoption alone
   does not install or migrate tooling; audit remains read-only.
 - WHEN development entrypoints are migrated, they use Portless by default,
@@ -69,7 +69,8 @@ dependent implementation until an adaptation or successor is accepted.
   and propose the required local decision before implementing migration.
 - WHEN a repository has no local HTTP/WebSocket endpoint, record non-applicability
   without requiring a new runtime, manifest or dependency installation.
-- The library contains complete 065 variants and no accidental 064 placeholder.
+- The library contains complete 066 variants, preserves the independent Jev
+  decision at 065, and has no accidental 064 placeholder.
   Validator and installer share an explicit ID inventory, reject unexpected IDs
   and missing variants, and the target-adoption matrix includes the new row.
 - Source and generated plugin copies match; existing accepted decision digests
@@ -78,21 +79,21 @@ dependent implementation until an adaptation or successor is accepted.
 ## Implementation
 
 Use an assigned worktree from current origin/main. Recheck ID collisions before
-writing; 064 belongs to separate work and is not imported. This base contains
-001–063; adding 065 yields 64 public decisions, 192 variants and 45 eligible
-target-repository decisions. Keep ID inventory explicit rather than deriving
-identity from the count. Reconcile deliberately if the base later gains 064.
+writing; 064 remains reserved. The merged base contains AC-ADR-001–063 and the
+independent Jev AC-ADR-065; assigning Portless AC-ADR-066 yields 65 public
+decisions, 195 variants and 45 eligible target-repository decisions. Keep ID
+inventory explicit rather than deriving identity from the count.
 
 1. Persist this approved spec before implementation.
 2. Add the accepted triplet, catalog row and concern route. Keep version-specific
    commands, compatibility caveats and evidence collection in Guide.
 3. Update locks, lineage, matrix and the shared inventory used by library and
    installation checks. Add six evaluation scenarios and negative regressions
-   for missing 065 variants and unexpected complete 064 payloads.
-4. Increase Architecture Compass 0.8.0 to 0.9.0 and the bundled plugin source
-   1.4.0 to 1.5.0; keep the local listing, submission worksheet and version badge
-   consistent. Leave root release versions unchanged. Generate projections
-   with `pnpm run sync:agent-plugin` and review the diff.
+   for missing 066 variants and unexpected complete 064 payloads.
+4. Increase Architecture Compass 0.8.0 to 0.9.0. Preserve the merged main
+   plugin source version 1.6.0 and align the local listing, submission worksheet
+   and version badge at 1.6.0. Leave root release versions unchanged. Generate
+   projections with `pnpm run sync:agent-plugin` and review the diff.
 5. Run the scoped validation below and record actual outcomes separately.
 
 ## Source challenge
@@ -126,12 +127,16 @@ accepted the decision content and explicitly approved public spec versioning.
 The implementation continuation explicitly selected full ADR integration over
 the earlier save-only handoff. No material policy questions remain open.
 
+On 2026-09-26, conflict resolution preserved main's accepted Jev AC-ADR-065
+and its reserved AC-ADR-064 gap, so this Portless decision uses AC-ADR-066.
+This identifier adaptation does not change the accepted Portless policy.
+
 ## Validation
 
 Run `pnpm run validate:architecture-compass`, `pnpm run validate:skills`,
 `pnpm run validate:projections`, `pnpm run validate:plugin-evals`, and
 `pnpm run smoke:install`. Check formatting of changed files and whitespace.
-The negative contract tests must prove missing 065 variants and unexpected 064
+The negative contract tests must prove missing 066 variants and unexpected 064
 triplets fail. Scenario files cover suitable default, migration, no endpoint,
 technical exceptions, worktree collision and accepted target ADR conflict.
 

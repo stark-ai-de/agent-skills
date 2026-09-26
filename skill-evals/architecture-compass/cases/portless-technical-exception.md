@@ -10,7 +10,7 @@ Plan Portless adoption for Bun-first scripts in NixOS/WSL. Upstream lists Node r
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: AC-ADR-058
 - contains: evidence
 - contains: revisit

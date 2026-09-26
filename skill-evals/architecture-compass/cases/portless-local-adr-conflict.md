@@ -10,7 +10,7 @@ Audit a web repository whose accepted local ADR requires its existing proxy. The
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: conflict
 - contains: successor
 - contains: read-only

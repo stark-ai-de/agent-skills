@@ -3,4 +3,5 @@
 export const PUBLIC_ARCHITECTURE_ADR_IDS = Object.freeze([
   ...Array.from({ length: 63 }, (_, index) => index + 1),
   65,
+  66,
 ]);

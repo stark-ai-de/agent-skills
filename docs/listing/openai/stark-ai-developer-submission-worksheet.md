@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.5.0`
+- Version: `1.6.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,9 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds an adoptable Architecture Compass decision for Tailwind design-system linting with all supported shadcn lint rules enabled by default. Includes ESLint and Oxlint examples, shared UI discovery, scoped component contracts, staged enforcement, and explicit compatibility and evidence boundaries.
+- Release notes: Adds accepted AC-ADR-065, an explicitly adoptable Architecture Compass policy for qualified Jev host advice, opt-in static host hooks, and a write-free Codex repository-policy renderer. Adoption, host activation, processing consent and qualification remain separate; native selection remains available. General automatic host qualification is still pending.
+
+Adds accepted AC-ADR-066, defaulting compatible local HTTP and WebSocket development endpoints to Portless and HTTPS, with evidence-backed exceptions and migration of existing routing only during a suitable authorized change.
 
 ## Capabilities
 

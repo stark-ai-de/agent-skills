@@ -36,3 +36,35 @@ assert.deepEqual(scanNetworkSource("fetching = False", "canonical/offline/script
 console.log(
   "Network policy: fixed Jev endpoint/call, projection parity and 17 rejection cases passed.",
 );
+
+// The manager discloses the provider destination but remains offline.
+const hookSource = fs.readFileSync(
+  new URL(
+    "../../skills/skill-maintenance/jev-capability-advisor/scripts/jev_hooks.py",
+    import.meta.url,
+  ),
+  "utf8",
+);
+for (const prefix of ["canonical", "portable"]) {
+  const label = `${prefix}/jev-capability-advisor/scripts/jev_hooks.py`;
+  assert.deepEqual(scanNetworkSource(hookSource, label), []);
+  for (const unsafe of [
+    hookSource.replaceAll(
+      "https://api.typesafe.ai/v1/systemone",
+      "https://unexpected.example/advice",
+    ),
+    hookSource + "\nfetch('https://api.typesafe.ai/v1/systemone')",
+    hookSource + "\nhttps.request('https://api.typesafe.ai/v1/systemone')",
+    hookSource + "\nurllib.request.urlopen('https://api.typesafe.ai/v1/systemone')",
+    hookSource + "\nfrom urllib.request import urlopen as open_remote\nopen_remote(destination)",
+    hookSource + "\nimport os, requests as client\nclient.post(destination)",
+    hookSource + "\nfrom http.client import HTTPSConnection as Connection\nConnection(host)",
+    hookSource + "\nsocket.create_connection((host, 443))",
+  ])
+    assert.ok(
+      scanNetworkSource(unsafe, label).length > 0,
+      "disclosure must not authorize hook networking",
+    );
+  assert.ok(scanNetworkSource(hookSource, label.replace("jev_hooks.py", "another.py")).length > 0);
+}
+console.log("Hook processing disclosure is declared; hook network calls remain rejected.");

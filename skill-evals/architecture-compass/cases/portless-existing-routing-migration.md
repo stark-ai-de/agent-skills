@@ -10,7 +10,7 @@ Plan the next authorized local-development workflow change. The repository alrea
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: migration
 - contains: revisit
 - contains: authorized

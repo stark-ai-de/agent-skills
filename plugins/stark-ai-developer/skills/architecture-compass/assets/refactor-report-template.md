@@ -37,6 +37,19 @@ Use AC-ADR-046 strengths without confusing architecture authority with execution
 | ---- | ------------- | ------------------ | -------------- | -------------- | ----------------- | ---------- |
 |      |               |                    |                |                |                   |            |
 
+## Adopted Jev host advice
+
+- Provider candidate: `AC-ADR-065`; disposition and target evidence:
+- Accepted repository-native ADR, provider mapping, and applicable repository scope:
+- Authorized hosts and configuration owner:
+- Missing prerequisites, unmet obligation, native fallback, owner, and revisit trigger:
+
+| Host and repository scope | Installed artifact | Configured registration | Effectively active/trusted | Explicit processing authority and approved metadata scope | Current inventory, restrictions, and coverage limits | Qualified host/runtime/configuration/model/reasoning evidence | Evidence status, source, observed at, and invalidators |
+| ------------------------- | ------------------ | ----------------------- | -------------------------- | --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------ |
+|                           |                    |                         |                            |                                                           |                                                      |                                                               |                                                        |
+
+Use separate evidence for each dimension; adoption is not activation, processing consent, current eligibility, or qualification. Mark unknown, missing, failed, or stale evidence truthfully. Preserve explicit user skill choices and native selection when prerequisites are unmet. Audit reports existing evidence only: no provider requests, qualification probes, repairs, or writes. Setup records governance and gaps without changing global host configuration.
+
 ## Findings and disposition
 
 Assign each finding exactly one disposition: `fix-and-prove-now`, `verify-now`, `defer-recorded`, `accept-risk`, or `not-applicable`.

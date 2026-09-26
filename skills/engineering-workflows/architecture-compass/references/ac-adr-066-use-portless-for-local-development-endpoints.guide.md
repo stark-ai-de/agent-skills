@@ -1,6 +1,6 @@
-# AC-ADR-065: Use Portless for Local Development Endpoints
+# AC-ADR-066: Use Portless for Local Development Endpoints
 
-ID: AC-ADR-065
+ID: AC-ADR-066
 Title: Use Portless for Local Development Endpoints
 Status: Accepted
 Date: 2026-09-25
@@ -17,7 +17,7 @@ Superseded by: none
 Guide verified: 2026-09-25
 Gist: Default compatible local development endpoints to Portless and HTTPS, migrate existing routing through authorized changes, and document evidence-backed exceptions.
 
-Variants: [Short](ac-adr-065-use-portless-for-local-development-endpoints.short.md) · [Long, canonical](ac-adr-065-use-portless-for-local-development-endpoints.long.md) · **Guide**
+Variants: [Short](ac-adr-066-use-portless-for-local-development-endpoints.short.md) · [Long, canonical](ac-adr-066-use-portless-for-local-development-endpoints.long.md) · **Guide**
 
 ## Purpose
 

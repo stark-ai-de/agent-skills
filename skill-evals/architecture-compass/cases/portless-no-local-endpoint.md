@@ -10,13 +10,13 @@ Use Architecture Compass complete setup for a native CLI library repository. It 
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: not applicable
 - contains: endpoint
 
 ## Expected Behavior
 
-Evaluate AC-ADR-065 in complete coverage and record not applicable with the absent-endpoint evidence, using the existing adoption matrix dispositions. Do not add a package manifest, runtime or Portless installation merely to satisfy coverage. A future local web preview is a reason to reassess applicability.
+Evaluate AC-ADR-066 in complete coverage and record not applicable with the absent-endpoint evidence, using the existing adoption matrix dispositions. Do not add a package manifest, runtime or Portless installation merely to satisfy coverage. A future local web preview is a reason to reassess applicability.
 
 ## Evidence Stage
 

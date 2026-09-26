@@ -10,7 +10,7 @@ Two active worktrees, feature/auth and fix/auth, resolve to the same Portless na
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: collision
 - contains: identity
 - contains: direct

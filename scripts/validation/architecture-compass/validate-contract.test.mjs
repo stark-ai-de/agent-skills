@@ -9,7 +9,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-contract-"));
 const skill = "skills/engineering-workflows/architecture-compass";
 const refs = `${skill}/references`;
 const stems = new Map(
-  [59, 60, 61, 62, 65].map((id) => [
+  [59, 60, 61, 62, 65, 66].map((id) => [
     id,
     fs
       .readdirSync(path.join(source, refs))
@@ -63,18 +63,18 @@ try {
   const baseline = run();
   assert.equal(baseline.status, 0, baseline.stderr);
   rejects("missing variant", file(59, "short"), () => null, /missing|triplet/i);
-  rejects("missing sparse-ID variant", file(65, "guide"), () => null, /missing|triplet/i);
+  rejects("missing sparse-ID variant", file(66, "guide"), () => null, /missing|triplet/i);
   const unexpectedFiles = ["short", "long", "guide"].map((variant) =>
-    file(65, variant).replace("ac-adr-065-", "ac-adr-064-"),
+    file(66, variant).replace("ac-adr-066-", "ac-adr-064-"),
   );
   try {
     for (const [index, variant] of ["short", "long", "guide"].entries()) {
       fs.writeFileSync(
         path.join(root, unexpectedFiles[index]),
         fs
-          .readFileSync(path.join(root, file(65, variant)), "utf8")
-          .replaceAll("AC-ADR-065", "AC-ADR-064")
-          .replaceAll("ac-adr-065-", "ac-adr-064-"),
+          .readFileSync(path.join(root, file(66, variant)), "utf8")
+          .replaceAll("AC-ADR-066", "AC-ADR-064")
+          .replaceAll("ac-adr-066-", "ac-adr-064-"),
       );
     }
     const result = run();

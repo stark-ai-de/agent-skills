@@ -10,14 +10,14 @@ Use Architecture Compass setup for a repository with one local HTTP app and an H
 
 ## Deterministic Assertions
 
-- contains: AC-ADR-065
+- contains: AC-ADR-066
 - contains: HTTPS
 - contains: direct
 - contains: governance
 
 ## Expected Behavior
 
-Select AC-ADR-065 even for a single app, assess each actual endpoint and map it into local governance. Prefer Portless and HTTPS for qualified development entrypoints, with a documented direct path. Preserve package/runtime ownership and distinguish adoption from installation or source migration; governance setup alone performs neither.
+Select AC-ADR-066 even for a single app, assess each actual endpoint and map it into local governance. Prefer Portless and HTTPS for qualified development entrypoints, with a documented direct path. Preserve package/runtime ownership and distinguish adoption from installation or source migration; governance setup alone performs neither.
 
 ## Evidence Stage
 
