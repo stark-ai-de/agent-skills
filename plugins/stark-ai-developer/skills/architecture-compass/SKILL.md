@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.8.0"
+  version: "0.9.0"
 ---
 
 # Architecture Compass
@@ -70,6 +70,7 @@ Route skill behavior through:
 - **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md).
 - **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
 - **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md).
+- **Adopted Jev host advice:** [AC-ADR-065 Short](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.short.md) · [Long](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.long.md) · [Guide](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.guide.md); load for local adoption, host prerequisite evidence, or compliance audit.
 - **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md).
 
 For provider mechanics, resolve the applicable public AC-ADR and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only `AC-INTERNAL-001` for persistence resolution or `AC-INTERNAL-002` for receipt rendering. Internal ADRs are implementation policy, do not enter target-repository adoption, and cannot relax an accepted public Long decision.
@@ -111,10 +112,11 @@ Load the [AC-ADR-048 Guide](references/ac-adr-048-persist-approved-governance-be
 ### `setup`
 
 - Use target evidence for `recommended` or evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation. Setup never authorizes application refactoring, deployment, publication, or production probes.
+- When AC-ADR-065 is selected, record the repository-native adoption mapping, authorized hosts, and prerequisite gaps through its Guide. Adoption does not activate hooks or authorize TypeSafe processing.
 
 ### `audit`
 
-- Preserve enforceable no-write behavior and perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment. Create no artifact or mutation.
+- Preserve enforceable no-write behavior and perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment. Create no artifact or mutation. For adopted Jev policies, report installed, configured, active/trusted, processing-authorized, current-inventory, and qualified evidence separately. Make no provider request or qualification/repair attempt; name unmet obligations while preserving native work.
 
 ### `refactor`
 

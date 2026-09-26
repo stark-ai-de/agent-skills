@@ -16,8 +16,8 @@ target repository's ADR set.
 - contains: Scope: target-repository
 - contains: Adoptable: true
 - contains: Setup coverage: complete
-- contains: Catalog candidates: 35
-- contains: Selected + not selected: 35
+- contains: Catalog candidates: 45
+- contains: Selected + not selected: 45
 - contains: one row per candidate
 - contains: adopt
 - contains: adapt
@@ -48,11 +48,11 @@ target repository's ADR set.
   coverage.
 - Identify the current skill-runtime controls, including AC-ADR-046, as excluded
   from the target adoption matrix.
-- Put exactly one row for each of the 35 current ADRs with
+- Put exactly one row for each of the 45 current ADRs with
   `Scope: target-repository` and `Adoptable: true` into the `adopt`, `adapt`,
   `defer`, or `reject` matrix.
 - Reconcile the matrix totals: selected (`adopt` plus `adapt`) and not selected
-  (`defer` plus `reject`) must sum to `Catalog candidates: 35`, with no duplicate
+  (`defer` plus `reject`) must sum to `Catalog candidates: 45`, with no duplicate
   or unclassified candidate.
 - Do not turn internal action, collaboration, or evidence workflow rules into
   target-repository architecture decisions.

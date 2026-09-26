@@ -1,5 +1,7 @@
 # Reusable host sessions
 
+This is the **owner-process session** mode of Integrate. For optional Codex CLI or Claude Code reminders without a retained process, use [hook guidance](hook-integration.md). That mode delegates selection to the active agent and does not create an `AdvisorSession`.
+
 Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. HTTPS and a bounded derived search index are reused. Previous tasks and recommendations are not cached; the host must supply and validate current inventory on every request.
 
 ## Python interface
@@ -92,7 +94,7 @@ An oversized frame returns `frame_too_large` and terminates without draining the
 
 1. Enable data processing explicitly: the supplied task and bounded capability descriptions go to TypeSafe. Reuse existing authorization for the actual scope; synthetic benchmark permission does not cover unrelated future private content.
 2. Obtain the active session's eligible capabilities and preserve disabled, explicit-only and account restrictions. Files on disk or another client's catalog do not prove availability. Do not retain a catalog across turns without a host freshness check.
-3. If automatic advice is wanted, qualify the real pre-task callback, eligible inventory, delivery before the model action, and actual adoption independently for that host. Keep explicit user choices and native fallback. Skill/plugin installation alone proves none of these steps.
+3. If automatic advice is wanted, qualify the real pre-task callback, eligible inventory, advice delivery before substantive work, and actual adoption independently for that host. A model-mediated static hook runs before model processing but consultation occurs afterward; it must not be described as advice before the first model action. Keep explicit user choices and native fallback. Skill/plugin installation alone proves none of these steps.
 4. Enforce an outer deadline for the complete active callback, including IPC and serialization. The default inner eight-second budget covers recommendation validation, preparation, credential/client setup and API calls. Input waiting/JSON decoding and output serialization/flushing are outside that inner budget. Native DNS/certificate-store calls are not forcibly interruptible; terminate the owned process when a hard cutoff is required.
 5. Validate returned IDs against the current catalog and interpret `selected`, `next_skill`, `none`, `clarify`, incomplete proposals and `error` separately. A next-skill result identifies one next skill; `additional_work: unassessed` means the host still owns every remaining deliverable and must not mark the whole task covered. Check the coverage fields: `none_scope: retrieved_candidates` covers only the considered shortlist. If `catalog_truncated` is true or unknown, use native discovery for unresolved work and never treat NONE as proof that no capability exists in the full catalog. Advice grants no execution authority. The host owns loading, permissions and tool execution; unavailable or stale integration falls back to native discovery.
 

@@ -1,11 +1,11 @@
 ---
 name: jev-capability-advisor
-description: Recommend available skills or MCP tools using TypeSafe Jev, or explicitly choose one next skill. Use when the user requests capability advice, candidate inspection, selection evaluation, or reusable host integration. Ordinary task execution continues through the client's own discovery.
+description: Recommend available skills or MCP tools using TypeSafe Jev, or explicitly choose one next skill. Use when the user requests capability advice, candidate inspection, selection evaluation, or reusable host integration. Native client selection remains the default and fallback.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Jev Capability Advisor
@@ -20,10 +20,11 @@ Return a task-specific recommendation from capabilities actually available in th
 - The user explicitly wants one eligible skill to load next, rather than complete capability coverage.
 - The user wants to inspect the candidate set or evaluate selection quality.
 - The user wants to integrate repeated advice into a host that supplies current eligible capabilities.
+- An explicitly enabled, qualified hook requests advice for a new actionable task, or an adopted repository policy requires it after a material task/capability change; follow the [hook integration contract](references/hook-integration.md).
 
 ## When not to use
 
-- A normal task already has a clear skill or tool; use the client's normal selection.
+- A normal task already has a clear skill or tool; use the client's normal selection unless qualified hook advice was explicitly enabled. Explicit user skill choices always take priority.
 - A plain skill installation is expected to intercept every prompt. Automatic interception requires a separately qualified, explicitly enabled host adapter.
 
 ## Inputs to inspect
@@ -39,11 +40,16 @@ Return a task-specific recommendation from capabilities actually available in th
 | **Recommend**            | The user wants capabilities for the supplied task                   | Default `general`: one to three skills/tools; compound advice remains experimental |
 | **Recommend next skill** | The user or configured host explicitly wants one skill to load next | Explicit `next_skill`: one skill; additional work stays unassessed                 |
 | **Inspect**              | The user wants to inspect local candidates                          | Local retrieval; no semantic recommendation                                        |
-| **Integrate**            | The user requests reusable advice in a host                         | Owner-process integration with an explicitly chosen profile                        |
+| **Integrate**            | The user requests reusable advice in a host                         | Optional hook guidance or an owner-process session                                 |
 
 Select and proceed when intent is clear. On a bare invocation, ask which workflow is wanted; request a task or target host only if missing. Keep `general` unless the one-next-skill goal is explicit. It requires every enabled catalog entry to be a skill; use `general` for an inventory containing enabled tools, without quietly removing them.
 
-**Integrate:** follow the [session integration contract](references/session-integration.md). The owner chooses `selection_profile` when constructing the session; frames cannot change it. Use one owner process with a fresh eligible catalog per request, reusable HTTPS and a bounded derived search index. Qualify the host callback, inventory and advice delivery before enabling automatic advice; fall back to native discovery when those cannot be established. The session helper alone does not install or qualify a hook.
+**Integrate** has two modes; select from clear intent or ask when the host or mode is ambiguous:
+
+- **Hook guidance:** follow the [hook integration contract](references/hook-integration.md). Choose optional new-task guidance through `install|status|uninstall` for Codex CLI or Claude Code, or the [repository-adopted policy](references/hook-integration.md#repository-adopted-policy) through `render --host codex --policy repository-adopted`. Rendering only prints a fragment; it neither reads user configuration nor installs or authorizes processing. The repository policy also covers material task/capability changes, with separate adoption, host activation, processing consent and qualification. Both hints use Recommend `general`/`current`; neither calls Jev itself.
+- **Owner-process session:** follow the [session integration contract](references/session-integration.md). The owner chooses `selection_profile` at construction; frames cannot change it. Retain one process with fresh eligible inventory per request, reusable HTTPS and a bounded derived index.
+
+Qualify the host callback, current eligible inventory and recommendation delivery before automatic advice. A configured hook or session helper alone is not qualification. Missing prerequisites, stale inventory, timeout or cancellation retain native fallback. Honor explicit-only restrictions, user skill choices, permissions and Plan-mode limits; installing the skill/plugin never enables hooks. Do not export inputs or write receipts when the active mode forbids those writes.
 
 1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
@@ -75,6 +81,7 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 
 ## Scripts
 
+- `scripts/jev_hooks.py`: explicit hook `install`/`uninstall` mutate the selected host configuration and private ownership state; `status` and `--dry-run` are read-only; `render` prints a repository-policy fragment without accessing user configuration or ownership state. Embeds static guidance; no provider access, dependency installation or trust changes.
 - `scripts/jev_advisor.py`: recommendation client; network access only for a fresh requested recommendation. `--output` writes the requested local result file; `--cache-dir` opts in to decision-cache writes; `--index-cache-dir` separately enables local index-cache writes, including during offline inspection.
 - `scripts/retrieval.py`: deterministic candidate retrieval, used by the client. No network or installation.
 - `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
@@ -89,7 +96,7 @@ Return status, selected capability names/IDs, why the selection fits the request
 
 ## Completion criteria
 
-Recommend/Inspect ends with a concrete recommendation, a scoped no-capability answer, candidate inspection or a specific clarification need. Recommend next skill ends with one next skill or a distinct no-match/clarification/failure outcome, while remaining work stays unassessed. Integrate ends with a reviewed host integration and its activation/inventory/delivery evidence, or a precise unsupported-host gap with native fallback; a session helper alone is not a qualified automatic integration. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
+Recommend/Inspect ends with a concrete recommendation, a scoped no-capability answer, candidate inspection or a specific clarification need. Recommend next skill ends with one next skill or a distinct no-match/clarification/failure outcome, while remaining work stays unassessed. Integrate ends with a reviewed host integration and its activation/inventory/delivery evidence, or a precise unsupported-host gap with native fallback; a configured hook or session helper alone is not a qualified automatic integration. Hook attempts return one short status line naming the recommendation or the concrete fallback reason; skipped follow-ups need no advisory status. Provider failure is reported as failure. No install, configuration change, or target-tool execution is implied by a successful recommendation.
 
 ## Failure modes
 
