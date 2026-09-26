@@ -97,7 +97,7 @@ Every route applies the same review quality to the explicitly requested scope be
    Exit code `1` means findings were found, not that the scan failed. The scanner caps returned findings and skips generated evidence by default; raise `--max-findings` or add `--include-generated-evidence` only when needed.
    Use scanner JSON as evidence; report counts and the highest-signal redacted findings instead of pasting the full payload.
 
-4. Locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.
+4. If configuration is requested or needed to resolve an in-scope conflict, locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.
 5. Classify memory mode as disabled, enabled but not injected, enabled and injected, external-context generation disabled, or unknown. Load `references/config-modes.md` for exact mode signals.
 6. If multiple memory file types are present, load `references/memory-store-anatomy.md` before deciding what is safe to edit.
 7. Read memory files in small chunks; avoid huge dumps and redact sensitive values.
