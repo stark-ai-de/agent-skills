@@ -1,6 +1,6 @@
 # Architecture Audit and Refactor Report
 
-> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts.
+> Derived, non-normative asset. The applicable canonical Long ADRs prevail if this template conflicts or drifts. Include only applicable sections; keep activation compact and report each fact once.
 
 ## Intent-bound selection
 
@@ -86,7 +86,10 @@ If two applicable sources conflict, do not blend them. Record both sources, oper
 
 Complete this section for `plan-refactor` and `plan-run-refactor`.
 
-- Plan-mode state and transition evidence:
+- Native or conversational planning and material host-state evidence:
+- Approval revision, exact scope, and existing authority reused:
+- Delivery: `persist | chat-only`
+- Actual persistence status and paths (separate from approval):
 - Approved outcome and non-goals:
 - Durable decisions resolved:
 - Exact path allowlist:
@@ -94,7 +97,8 @@ Complete this section for `plan-refactor` and `plan-run-refactor`.
 - Proof obligations, owners, and reusable receipts:
 - Rollback and stop conditions:
 - Separate external/high-risk approvals:
-- Plan-mode exit evidence before persistence or execution:
+- Plan-mode exit evidence before persistence or execution, when required:
+- Target-state recheck and any affected change requiring renewed approval:
 
 ## State recheck and execution
 

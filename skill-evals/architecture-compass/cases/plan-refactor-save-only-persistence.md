@@ -25,6 +25,7 @@ that handoff.
 - contains: bounded execution handoff
 - contains: stop without source implementation
 - not_contains: Execution status: completed
+- not_contains: approve the same specification again
 
 ## Expected Behavior
 

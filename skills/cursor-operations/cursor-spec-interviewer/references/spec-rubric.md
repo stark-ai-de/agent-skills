@@ -30,43 +30,27 @@ Use this before finalizing the implementation spec.
 | Artifact path / persistence        | path only | required | required |
 | Done when                          | required  | required | required |
 
-## Acceptance Criteria Bar
+## Acceptance criteria bar
 
-- Specificity: no vague "handle appropriately" language.
-- Testability: at least one concrete verification route exists.
-- Bounded scope: non-goals and exclusions are explicit.
-- Repo fit: references actual repo files and commands when known.
-- Source fit: important decisions are checked against repo instructions, ADRs, current code, and current external docs when relevant.
-- ADR fit: durable architectural decisions are captured in ADRs, while feature-specific details remain in the spec.
-- Persistence fit: the skill uses clear repo conventions without ceremony, confirms ambiguous or risky destinations, saves the spec by default, keeps compact specs to an artifact path line, saves ADR files only when required, and uses chat output only after an explicit persistence decline or blocker.
-- Plan-mode fit: when supported, the interview uses the current execution host's Plan Mode, structured-question, transition, and plan-exit controls, writes no repository or workspace artifacts apart from a plan artifact created by that host's plan-exit control, and hands approved artifacts to a separate save-only continuation. Any fallback is explicitly justified and recorded; Cursor-native controls apply only when Cursor executes the skill.
-- Safety: risky changes have migration or rollback notes.
-- Cursor readiness: Cursor Agent can act without another discovery loop, using `.cursor/rules` as target evidence and a Cursor-targeted execution prompt.
-- User verification: the final scope, non-goals, assumptions, risks, validation plan, ADR result, and artifact paths were confirmed by the user before final spec creation.
-- Persistence: the repository-owned spec is saved to `docs/specs/<kebab-slug>-spec.md` or the repo-approved equivalent, and required ADRs are saved to the repo's ADR folder.
-- Documentation propagation: a required ADR is indexed during save-only persistence when the repository convention requires it. All other repo-facing documentation work is identified in the spec for later implementation.
+- Specific, testable requirements and bounded scope; actual repository facts and commands where known.
+- Important assumptions challenged against repository evidence and current primary sources when relevant; skipped checks explained.
+- Durable decisions in ADRs, with proposed persistence and acceptance distinguished; feature details stay in the spec.
+- Complete reviewable content prepared before one approval covering the revision and its concrete writes. Reuse prior answers and exact authority.
+- Planning and permissions capability-gated independently; missing controls allow conversation, never unproven writes.
+- Delivery matches the request: saved artifacts read back or explicit chat-only output fulfilled. Pending Plan exit or blocked requested save is not success.
+- Risky changes include rollback. The Cursor Agent execution prompt is usable without another avoidable interview.
 
-## Final Self-Check
+## Final self-check
 
-- Is the goal explicit?
-- Are non-goals explicit?
-- Are acceptance criteria testable?
-- Are validation commands concrete?
-- Are unknowns labeled rather than invented?
-- Are all material unknowns resolved, source-backed, or explicitly verified by the user as non-blocking?
-- Were named requirements and important assumptions challenged against the best available sources?
-- Did the ADR gate classify architectural decisions correctly?
-- Does the spec reference ADRs instead of duplicating durable architecture rationale?
-- Did the final checkpoint verify scope, non-goals, assumptions, risks, validation, ADR status, and artifact paths?
-- Was the current execution host's Plan Mode used when supported, or was an unavailable/explicitly-declined fallback recorded?
-- Were all repository and workspace writes deferred until the current execution host confirmed Plan Mode exit and invoked the save-only continuation, apart from a plan artifact created by that host's plan-exit control?
-- Are any unresolved decisions clearly blocking, non-blocking, or accepted by the user?
-- Was any required ADR persisted to the repo and indexed when the repository convention requires it?
-- Are all other repo-facing documentation changes explicitly deferred and recorded as later implementation work?
-- Was the spec persisted to the repo with the approved filename pattern?
-- Did the user approve final artifact paths and confirm the checkpoint before creation?
-- Does the spec identify any related repo-facing docs that later implementation must update?
-- Is any skipped source challenge justified?
-- Is persistence confirmed as saved rather than still pending Plan Mode exit?
-- Did the save-only continuation stop without implementing the feature or changing unrelated files?
-- Could Cursor Agent implement this without another interview cycle?
+- Are scope, non-goals, acceptance criteria, commands, risks and unknowns concrete?
+- Did the interview resolve material choices without asking again about facts or answers already available?
+- Does the reviewed version include the final spec, required ADR content and exact paths/write actions?
+- Is approval of that unchanged version reused, including across a native Plan exit?
+- Were only affected changes reconfirmed after material content, destination, write-scope or target-state drift?
+- Were native tools used only when exposed and permitted, without blocking permissible reads on a mode switch?
+- Was silence, timeout or a preselected answer kept distinct from consent?
+- Were writes deferred during native Plan or unknown mode/permission state?
+- Are content approval and actual persistence recorded separately, once each?
+- Did requested persistence succeed and get read back, or did explicit chat-only delivery complete?
+- Are required ADR acceptance gates visible and minimal required index writes included?
+- Did the interviewer finish save-only work without implementing features or unrelated docs, preserving any separately authorized outer workflow?

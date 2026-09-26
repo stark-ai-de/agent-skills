@@ -25,4 +25,4 @@ Use the Claude Memory Curator for this repository.
 
 ## Expected Behavior
 
-Show all eight workflows in canonical order, with `plan-run-cleanup-file` first and Recommended. Because the request does not identify review versus cleanup or delivery, ask the user to choose without inventorying, scanning, or reading Claude context.
+Show all eight workflows in canonical order; recommend `review-chat` for this bare invocation. Because the request does not identify review versus cleanup or delivery, ask the user to choose without inventorying, scanning, or reading Claude context.

@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "behavioral scenarios; inventory validation is not live model proof",
+  "targets": ["codex-spec-interviewer", "claude-spec-interviewer", "cursor-spec-interviewer"],
+  "cases": [
+    {
+      "id": "known-save",
+      "context": "The user asked for a saved spec at docs/specs/webhook-spec.md. Directory exists; new file. Plan inactive and writes allowed.",
+      "prompt": "Draft the webhook retry spec and save it at the agreed path. Retry cap is five; preserve ordering.",
+      "answer_card": "Approve this version.",
+      "required": [
+        "Prepare complete draft before approval",
+        "Ask no new save/path question",
+        "Save after content approval and read back"
+      ],
+      "forbidden": ["Two approvals for the same draft", "Invent an additional requirement"]
+    },
+    {
+      "id": "prior-answers",
+      "context": "History already answers retry cap=5, ordering=yes, scope=worker only; repository exposes test command.",
+      "prompt": "Continue the spec interview.",
+      "answer_card": "Use the previously given answers.",
+      "required": ["Reuse answers and discover commands", "Ask only unresolved tradeoffs"],
+      "forbidden": ["Re-ask retry cap, scope or test command"]
+    },
+    {
+      "id": "native-checkpoint",
+      "context": "Native plan-exit tool can present full draft plus exact save-only writes for approval.",
+      "prompt": "Prepare and save the spec after review.",
+      "answer_card": "Approve the native review of the full draft and writes.",
+      "required": ["One native content/write checkpoint", "Actual exit before persistence"],
+      "forbidden": ["Separate chat approval of the same result"]
+    },
+    {
+      "id": "manual-exit",
+      "context": "Full draft and writes already approved; Plan active; no exit tool.",
+      "prompt": "Continue with the approved save.",
+      "answer_card": "Host mode changes to inactive; continue.",
+      "required": [
+        "Request only real manual exit",
+        "Retain approval and save after confirmed exit"
+      ],
+      "forbidden": ["Ask to approve the content again", "Write before exit"]
+    },
+    {
+      "id": "approved-still-plan",
+      "context": "Full draft and writes approved; host still reports Plan active.",
+      "prompt": "Approved, save it.",
+      "answer_card": "Host remains in Plan.",
+      "required": ["Report pending Plan exit", "Preserve approval"],
+      "forbidden": ["Write artifacts", "Claim completion"]
+    },
+    {
+      "id": "approved-after-exit",
+      "context": "Host confirms Plan exit; exact draft/path/writes approved in previous turn.",
+      "prompt": "Continue.",
+      "answer_card": "No new answer needed.",
+      "required": ["Save the approved revision without another question"],
+      "forbidden": ["Restart final verification"]
+    },
+    {
+      "id": "prior-overwrite",
+      "context": "User already approved replacing the inspected old spec and creating its sibling ADR folder; both targets unchanged.",
+      "prompt": "Finalize the new draft.",
+      "answer_card": "Approve this version.",
+      "required": ["Carry exact overwrite/directory authority into checkpoint"],
+      "forbidden": ["Ask identical overwrite question again"]
+    },
+    {
+      "id": "ambiguous-destination",
+      "context": "Repository has tracked public specs and ignored private drafts; request gives no audience.",
+      "prompt": "Write a spec containing internal deployment details.",
+      "answer_card": "Keep it in the ignored private drafts folder.",
+      "required": ["Resolve material public/private ambiguity once", "Do not publish implicitly"],
+      "forbidden": ["Write private details to public specs"]
+    },
+    {
+      "id": "proposed-adr",
+      "context": "Reviewed spec depends on a new storage decision. User authorizes saving ADR as Proposed only.",
+      "prompt": "Save this proposed ADR and its spec.",
+      "answer_card": "Approve the draft writes, not acceptance.",
+      "required": [
+        "Persist Proposed ADR if writes allowed",
+        "Keep dependent implementation blocked"
+      ],
+      "forbidden": ["Mark ADR Accepted"]
+    },
+    {
+      "id": "accepted-adr",
+      "context": "Maintainer explicitly accepted this exact reviewed ADR decision and its listed artifacts earlier.",
+      "prompt": "Persist the approved spec and accepted ADR.",
+      "answer_card": "No new decision needed.",
+      "required": ["Retain exact decision acceptance"],
+      "forbidden": ["Repeat decision-acceptance question"]
+    },
+    {
+      "id": "bounded-revision",
+      "context": "Reviewed draft/path/writes known; Plan inactive and writes allowed.",
+      "prompt": "Change only the retry cap from five to three and save.",
+      "answer_card": "No new decision needed.",
+      "required": ["Apply bounded change and save within existing authority"],
+      "forbidden": ["Require another approval of that bounded edit"]
+    },
+    {
+      "id": "new-ambiguity",
+      "context": "Approved draft preserves ordering; requested new concurrency policy is unspecified.",
+      "prompt": "Change concurrency and save it.",
+      "answer_card": "Use per-customer ordering with four workers.",
+      "required": ["Ask only the unresolved concurrency decision", "Preserve other approval"],
+      "forbidden": ["Invent concurrency policy", "Restart all questions"]
+    },
+    {
+      "id": "chat-only",
+      "context": "User explicitly wants no filesystem output.",
+      "prompt": "Interview me, then provide the entire spec in chat only.",
+      "answer_card": "Approve this version for chat.",
+      "required": [
+        "Deliver full spec and execution prompt",
+        "Report persistence not requested and requested delivery complete"
+      ],
+      "forbidden": ["Ask where to save", "Call chat-only delivery incomplete"]
+    },
+    {
+      "id": "outer-authority",
+      "context": "Outer task separately authorizes implementation after spec persistence; interviewer draft/write scope approved.",
+      "prompt": "Complete the interviewer save-only step.",
+      "answer_card": "No new answer needed.",
+      "required": [
+        "Interviewer saves only artifacts",
+        "Outer workflow may resume its existing implementation authority"
+      ],
+      "forbidden": [
+        "Treat spec approval as new implementation permission",
+        "Globally prohibit the outer task"
+      ]
+    },
+    {
+      "id": "target-drift",
+      "context": "Overwrite approved against old target; another author changed destination since review.",
+      "prompt": "Save the approved replacement.",
+      "answer_card": "Keep the concurrent addition.",
+      "required": ["Read changed target and resolve only affected overwrite delta"],
+      "forbidden": ["Overwrite unseen concurrent work"]
+    },
+    {
+      "id": "lost-context",
+      "context": "After compaction approval is referenced but reviewed draft cannot be recovered.",
+      "prompt": "Continue the approved save.",
+      "answer_card": "Here is the reviewed draft.",
+      "required": ["Recover exact content/authority or ask for missing part"],
+      "forbidden": ["Invent approved content"]
+    },
+    {
+      "id": "permission-denial",
+      "context": "Content/write scope approved and Plan inactive; host rejects write permission.",
+      "prompt": "Save the approved draft.",
+      "answer_card": "Permission stays denied.",
+      "required": [
+        "Report actual blocker and unsaved paths",
+        "Keep approval and return save-ready draft"
+      ],
+      "forbidden": ["Bypass permission", "Claim saved"]
+    },
+    {
+      "id": "async-pending",
+      "context": "Available async tool has a material retention-policy question pending.",
+      "prompt": "While I decide, inspect the existing tests.",
+      "answer_card": "No answer yet; timeout.",
+      "required": [
+        "Continue independent allowed test inspection",
+        "Keep retention decision pending"
+      ],
+      "forbidden": ["Choose retention default from silence", "Write dependent spec as approved"]
+    },
+    {
+      "id": "older-host",
+      "context": "No structured question, async or native Plan controls; ordinary conversation and permissions available.",
+      "prompt": "Interview me for the spec.",
+      "answer_card": "Preserve compatibility; use staged rollout.",
+      "required": ["Conduct material back-and-forth conversationally", "Use same final checkpoint"],
+      "forbidden": ["Require unavailable tool"]
+    },
+    {
+      "id": "unknown-host",
+      "context": "Host identity, Plan state and permissions indeterminate; proven read operation available.",
+      "prompt": "Inspect the repository and clarify requirements.",
+      "answer_card": "No host metadata supplied.",
+      "required": ["Continue read-only interview", "Block writes until state known"],
+      "forbidden": ["Block all exploration to enumerate UI", "Infer unavailable Plan"]
+    },
+    {
+      "id": "declined-plan",
+      "context": "User explicitly declined Plan recommendation; no active mode evidence.",
+      "prompt": "Continue the interview here without changing modes.",
+      "answer_card": "Keep current mode.",
+      "required": ["Respect refusal", "Continue no-write interview"],
+      "forbidden": ["Repeat recommendation", "Treat refusal as persistence decline"]
+    },
+    {
+      "id": "partial-save",
+      "context": "Spec writes successfully; ADR write fails after save-only handoff begins.",
+      "prompt": "Save approved artifacts.",
+      "answer_card": "No new permission.",
+      "required": [
+        "Report saved spec and pending ADR accurately",
+        "Keep dependent ADR implementation gate"
+      ],
+      "forbidden": ["Claim all saved", "Claim nothing was written"]
+    }
+  ]
+}

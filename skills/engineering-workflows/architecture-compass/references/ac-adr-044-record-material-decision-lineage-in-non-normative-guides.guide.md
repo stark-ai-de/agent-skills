@@ -23,7 +23,7 @@ This guide is non-normative. The canonical Long decision controls lineage classi
 
 ## Current workflow mapping
 
-The canonical phrase `Setup and Apply` names the provider-to-local mapping lifecycle, not two current public workflow labels. The mapping is created or reconciled by current `setup`; later authorized application occurs through `refactor` or `plan-run-refactor` under AC-ADR-048. `audit` reports the mapping without writing, and `plan-refactor` may persist only its approved governance slice plus a bounded execution handoff.
+The canonical phrase `Setup and Apply` names the provider-to-local mapping lifecycle, not two current public workflow labels. The mapping is created or reconciled by current `setup`; later authorized application occurs through `refactor` or `plan-run-refactor` under AC-ADR-064. `audit` reports the mapping without writing, and `plan-refactor` may persist only its approved governance slice plus a bounded execution handoff.
 
 ## Classification procedure
 

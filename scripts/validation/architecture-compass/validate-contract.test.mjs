@@ -65,7 +65,7 @@ try {
   rejects("missing variant", file(59, "short"), () => null, /missing|triplet/i);
   rejects("missing sparse-ID variant", file(66, "guide"), () => null, /missing|triplet/i);
   const unexpectedFiles = ["short", "long", "guide"].map((variant) =>
-    file(66, variant).replace("ac-adr-066-", "ac-adr-064-"),
+    file(66, variant).replace("ac-adr-066-", "ac-adr-067-"),
   );
   try {
     for (const [index, variant] of ["short", "long", "guide"].entries()) {
@@ -73,13 +73,13 @@ try {
         path.join(root, unexpectedFiles[index]),
         fs
           .readFileSync(path.join(root, file(66, variant)), "utf8")
-          .replaceAll("AC-ADR-066", "AC-ADR-064")
-          .replaceAll("ac-adr-066-", "ac-adr-064-"),
+          .replaceAll("AC-ADR-066", "AC-ADR-067")
+          .replaceAll("ac-adr-066-", "ac-adr-067-"),
       );
     }
     const result = run();
-    assert.notEqual(result.status, 0, "unexpected complete triplet in reserved gap");
-    assert.match(result.stderr, /AC-ADR-064: ID is outside the approved inventory/);
+    assert.notEqual(result.status, 0, "unexpected complete triplet beyond the approved inventory");
+    assert.match(result.stderr, /AC-ADR-067: ID is outside the approved inventory/);
   } finally {
     for (const relative of unexpectedFiles) fs.rmSync(path.join(root, relative));
   }

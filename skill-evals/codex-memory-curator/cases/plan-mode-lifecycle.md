@@ -6,17 +6,15 @@ Yes.
 
 ## Prompt
 
-Plan and run a persisted Codex memory cleanup. Native Plan mode is supported but inactive.
+Plan and run a persisted Codex memory cleanup. Native Plan mode is supported but inactive. Start the read-only review now; recommend a mode change if useful, without waiting for it.
 
 ## Deterministic Assertions
 
 - contains: plan-run-cleanup-file
-- contains: enter Plan mode
+- contains: read-only
 - contains: state recheck
-- contains: exit Plan mode
-- not_contains: portable fallback started
 - not_contains: cleanup applied
 
 ## Expected Behavior
 
-Stop and ask the user to enter native Plan mode. After planning and approval, recheck state, stop on drift, exit Plan mode, then execute only the unchanged plan without a generic second cleanup question.
+Disclose the eight routes compactly, select the requested route, and begin the scoped read-only review. Recommend native Plan mode for substantial ambiguous planning without requiring a manual switch before permissible inspection. Prepare the complete plan before requesting missing approval. If Plan mode becomes active, no report, backup, or cleanup write is allowed until the host permits writes outside Plan mode. Preserve unchanged approval across exit; recheck target state and execute only the approved actions. A declined or unavailable mode control permits conversational planning; unknown state never permits writes.

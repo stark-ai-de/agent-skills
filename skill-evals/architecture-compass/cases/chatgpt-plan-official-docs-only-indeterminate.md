@@ -23,14 +23,14 @@ Run `plan-refactor` on ChatGPT Work on the web. Official documentation says
 ## Deterministic Assertions
 
 - contains: Planning capability: Indeterminate
-- contains: ask whether Plan is available
 - not_contains: Planning capability: Available but inactive
 - not_contains: Planning capability: Unavailable
-- not_contains: portable in-chat planning fallback
 - not_contains: select the observed `/plan` item
 - not_contains: /plan Use $architecture-compass
 
+- contains: no-write conversation
+- contains: unknown state never authorizes writes
+
 ## Expected Behavior
 
-Official documentation may describe a possible control but cannot prove this
-turn's composer or Plan state. Ask for current-composer evidence and wait.
+Report the uncertain capability without inventing a control, mode transition, or positive absence. Continue permitted no-write conversation and proven non-mutating discovery. Unknown state never authorizes writes; obtain only the missing state needed for a requested transition or a later write. Product identity, missing slash commands, documentation alone, and a busy menu are not live control evidence.

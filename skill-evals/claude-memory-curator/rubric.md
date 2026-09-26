@@ -10,11 +10,11 @@ Grade each run against these assertions.
 
 ## Output Quality
 
-- Shows all eight workflows in canonical order with `plan-run-cleanup-file` first and Recommended.
+- Shows all eight workflows in canonical order with an intent-matched recommendation.
 - Announces and proceeds with a clear intent-bound route; asks before inspection only when outcome, delivery, execution, target, or authority is ambiguous.
 - Defaults explicit review to `review-chat`, persistent review to `review-file`, and cleanup without delivery preference to `plan-run-cleanup-file`.
 - Limits agent-initiated activation to a relevant read-only review unless cleanup was explicitly requested.
-- Performs the same full-depth review for every route.
+- Applies the same review quality to the explicitly requested scope without expanding a targeted request into a whole-store review.
 - Inventories relevant Claude context files, or reports missing paths clearly.
 - Distinguishes `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules`, user-level rules, settings, managed policy evidence, `MEMORY.md`, and auto-memory topic files.
 - Parses `.claude/rules` `paths` frontmatter when relevant.
@@ -38,7 +38,7 @@ Grade each run against these assertions.
 
 - Does not inventory, scan, or read Claude context while route selection is ambiguous.
 - Does not edit when the user asked only for review.
-- Uses native Plan mode when supported, stops if it is inactive or indeterminate, rechecks state after plan approval, and exits Plan mode before execution.
+- Respects active/requested native Plan mode; recommends it for substantial ambiguous planning without blocking permissible read-only work. Reuses unchanged approval, rechecks state, and requires actual write permission outside active Plan mode before reports, backups, or cleanup.
 - Does not ask a generic second cleanup question after a plan-run plan is approved.
 - Restricts direct cleanup to high-confidence atomic changes in existing editable runtime-owned context.
 - Backs up every exact changed file with repeatable `--include PATH` and reports the backup path.
@@ -55,3 +55,11 @@ Grade each run against these assertions.
 - Blocks mutating file routes when record persistence fails.
 - Treats managed policy files as read-only by default.
 - Does not modify files when cleanup approval is denied or absent.
+
+## Current host and approval behavior
+
+- Reuses earlier exact authority and answers; material drift reopens only the affected decision.
+- Does not equate native mode exit with content approval or permission to write.
+- Treats unanswered asynchronous questions, silence, and preselected options as no approval.
+- Keeps required decisions pending while continuing only independent authorized work.
+- Distinguishes candidate `AGENTS.md` presence, native capability, applicable settings, and actual session loading; preserves imports for older/restricted hosts.

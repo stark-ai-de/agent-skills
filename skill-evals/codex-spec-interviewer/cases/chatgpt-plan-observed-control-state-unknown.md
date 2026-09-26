@@ -15,16 +15,10 @@ Yes.
 Use Codex Spec Interviewer to define a safe migration from polling to webhook
 delivery. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Indeterminate
-- contains: ask whether Plan is active
-- contains: wait
-- not_contains: Plan-mode fallback: unavailable
-- not_contains: Planning capability: Unavailable
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-An observed control with unknown current state is fail-closed. Ask for state
-confirmation and wait; do not fall back or emit a transition handoff.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Keep unsupported or missing evidence indeterminate; do not infer a native control or technical absence. Resolve a capability question only when the next required action depends on it.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

@@ -76,4 +76,4 @@ Use Exact Repo Work Mode for the current refactor because stale memory assumptio
 
 ## Recommended Next Action
 
-Invoke a cleanup route explicitly if these recommendations should be applied; `plan-run-cleanup-file` is Recommended.
+Invoke a cleanup route explicitly if these recommendations should be applied; `plan-run-cleanup-file` matches cleanup with a persisted plan and receipt.

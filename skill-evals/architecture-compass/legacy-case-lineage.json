@@ -5,7 +5,7 @@
   "cases": [
     {
       "sourcePath": "skill-evals/architecture-compass/cases/conditional-plan-routing-matrix.md",
-      "reason": "The former dual host-transition matrix is adapted to the five-workflow contract by selecting `plan-run-refactor`: native Plan mode must be active before planning, read-only enforcement remains independent and is activated before checks that may write, and mutation begins only after approval and Plan-mode exit.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/conditional-plan-routing-matrix.md",
       "sourceSha256": "eb20fd998bfa0d0ca92daa588b9e5e881a547a4436a637c0f69faf3c3b008c38",
       "disposition": "adapted",
@@ -265,7 +265,7 @@
           "reason": "The broad-refactor activation is adapted to the current intent-bound rule: broad implementation or unresolved durable decisions before execution selects `plan-run-refactor`. The retired behavior-changing and multi-boundary adjectives no longer act as independent triggers, but the execution-bearing broad-work route is preserved.",
           "targets": [
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Activation routing",
               "markers": [
                 "Implement broad architecture work or resolve durable choices before execution",
@@ -337,8 +337,8 @@
             "heading": "Expected Behavior",
             "marker": "- After confirmation, inspect only enough evidence to plan the work; perform no repository, untracked, ignored, index, or external-state writes."
           },
-          "outcome": "preserved",
-          "reason": "The evidence limit and every no-write category remain active. Architecture Compass inspects only what the resolved route needs; the Plan lifecycle forbids repository/workspace, index, environment, and external mutation; AC-ADR-048 waits for confirmed Plan mode; and the index-safe Guide records staged, unstaged, untracked, ignored, and external state without refreshing the index.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
@@ -349,14 +349,15 @@
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Write no target repository/workspace artifact while Plan mode is active.",
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": ["stop and ask the user to enter or confirm Plan mode"]
+              "markers": [
+                "Recommend Plan for substantial ambiguous work, but continue permitted read-only discovery and conversation"
+              ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -377,14 +378,14 @@
             "marker": "- Ask the maintainer to decide the unresolved ownership and contract questions only after both required host states are confirmed."
           },
           "outcome": "adapted",
-          "reason": "The maintainer-facing decision step is adapted to the current Plan workflow's `Resolve durable choices with the user` contract. Native Plan activation must be confirmed first; planning and read-only enforcement remain independent, and read-only activation is required before a check that may write, replacing the former blanket requirement that both host states always be active before any question.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "Resolve durable choices with the user",
-                "stop and ask the user to enter or confirm Plan mode"
+                "resolve only open material decisions",
+                "Recommend Plan for substantial ambiguous work, but continue permitted read-only discovery and conversation"
               ]
             },
             {
@@ -392,7 +393,7 @@
               "heading": "Capability state handling",
               "markers": [
                 "Planning capability and read-only enforcement are independent.",
-                "Request the native transition and wait for observed activation.",
+                "Recommend native Plan for substantial ambiguous work; continue safe discovery/conversation.",
                 "Activate it before a check that may otherwise write."
               ]
             }
@@ -405,7 +406,7 @@
             "marker": "- Return `Architecture decision status: pending` and `Execution status: blocked` until approval. A later approved Plan-mode turn returns pending Plan-mode exit, exact target paths, exact validation commands, and the bounded continuation."
           },
           "outcome": "adapted",
-          "reason": "The pre-approval `Architecture decision status: pending` and `Execution status: blocked` pair is retained for `plan-run-refactor`. The later handoff is adapted to the current approved-specification fields for exact paths, proof obligations, receipts, and Plan-mode exit evidence, the validation ledger, and AC-ADR-048's exit/recheck/unchanged-plan procedure instead of one generic preformatted continuation.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/clear-plan-run-refactor-intent.md",
@@ -423,7 +424,7 @@
               "markers": [
                 "Exact path allowlist:",
                 "Proof obligations, owners, and reusable receipts:",
-                "Plan-mode exit evidence before persistence or execution:"
+                "Plan-mode exit evidence before persistence or execution, when required:"
               ]
             },
             {
@@ -432,11 +433,11 @@
               "markers": ["Record one AC-ADR-049 receipt per distinct proof obligation"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "Exit native Plan mode before any persistence or implementation mutation.",
-                "Stop on material drift; otherwise execute only the unchanged approved plan."
+                "Exit active Plan before mutation.",
+                "Stop dependent execution on material drift; otherwise execute only the unchanged approved plan."
               ]
             }
           ]
@@ -451,7 +452,7 @@
           "reason": "The exclusion is retained as explicit finite routing: pr-review maps to read-only audit; docs-sync maps to bounded refactor when accepted governance resolves it; and direct refactor is limited to a complete bounded change governed by accepted ADRs. Narrow behavior-preserving refactors is generalized to that bounded-governed-refactor rule, replacing the legacy negative list without widening Plan routing.",
           "targets": [
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Legacy intent mapping",
               "markers": [
                 "pr-review",
@@ -461,14 +462,14 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Refactor procedure",
               "markers": [
                 "Use direct refactor only when accepted local ADRs already govern the complete bounded change"
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Activation routing",
               "markers": ["Review architecture, ADR coverage, drift, or risk", "audit"]
             }
@@ -478,7 +479,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/conflicting-adrs-plan-gate.md",
-      "reason": "The conflict gate is adapted into the evidence-ranking stop: applicable accepted ADRs retain highest authority, the affected scope remains blocked, and only an accepted successor or maintainer resolution may establish precedence.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/conflicting-adrs-plan-gate.md",
       "sourceSha256": "1ed3db444e449878d16733d2dc5cb8ebc45f38c7f9ae0a6086476aa595ab3557",
       "disposition": "adapted",
@@ -683,7 +684,7 @@
             "marker": "- contains: no-write"
           },
           "outcome": "adapted",
-          "reason": "The legacy global `no-write` label is adapted into bounded enforcement: AC-ADR-036 keeps mutation outside an enforced read-only turn, the Plan lifecycle forbids mutation before Plan-mode exit, and the conflict fixture leaves operational authority unchanged while stopping only the affected boundary so separately authorized unaffected work may continue.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -694,7 +695,7 @@
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             },
             {
@@ -768,8 +769,8 @@
             "heading": "Expected Behavior",
             "marker": "- Record the active planning capability and independently enforced read-only permission, use the no-write decision gate, and perform no repository, untracked, ignored, index, or external-state writes."
           },
-          "outcome": "preserved",
-          "reason": "Every compound safety clause remains represented: the approved-decision eval records Active planning and enforced read-only separately; AC-ADR-036 defines both states and index-safe evidence; the Plan lifecycle forbids mutation; authority ranking cannot widen permission; and the conflict fixture explicitly leaves operational authority unchanged.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/approved-decision-no-implementation.md",
@@ -802,7 +803,7 @@
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             },
             {
@@ -891,7 +892,7 @@
             "marker": "- After a decision, enumerate only the approved instruction and index paths and validation commands before producing an execution continuation."
           },
           "outcome": "adapted",
-          "reason": "The instruction-and-index-specific handoff is adapted to the current universal execution checkpoint: exact allowed paths and validation commands are recorded before execution, Plan-mode exit evidence precedes persistence or execution, every target path is re-read, and only the approved slice may continue.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -909,7 +910,7 @@
               "heading": "Approved refactoring specification",
               "markers": [
                 "Exact path allowlist:",
-                "Plan-mode exit evidence before persistence or execution:"
+                "Plan-mode exit evidence before persistence or execution, when required:"
               ]
             },
             {
@@ -926,7 +927,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/direct-route-reclassification.md",
-      "reason": "The preliminary direct-route example is adapted to the explicit governance-precondition and conflict-stop cases: a refactor route is provisional until accepted decisions govern it, and material conflict reclassifies or blocks before mutation.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/direct-route-reclassification.md",
       "sourceSha256": "c4e946f351a1c671a58ba712d2a8b78b172ed90a188243e9992db593867dc656",
       "disposition": "adapted",
@@ -1054,7 +1055,7 @@
             "marker": "- Do not request Plan or Read Only solely from the preliminary direct route."
           },
           "outcome": "adapted",
-          "reason": "The preliminary route still cannot trigger either transition by itself: direct refactor first proves accepted ADRs govern the complete bounded change, Plan is requested only after a valid Plan reclassification, and Read Only is activated only before a check that could write. The combined legacy prohibition is therefore split across governance and independent-capability gates.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/clear-bounded-refactor-intent.md",
@@ -1072,10 +1073,10 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "If supported but inactive or support is indeterminate, stop and ask the user to enter or confirm Plan mode."
+                "Recommend Plan for substantial ambiguous work, but continue permitted read-only discovery and conversation"
               ]
             }
           ]
@@ -1145,7 +1146,7 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Refactor procedure",
               "markers": ["stop on decision conflict, material drift, or required scope expansion"]
             }
@@ -1243,7 +1244,7 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Refactor procedure",
               "markers": ["stop on decision conflict, material drift, or required scope expansion"]
             },
@@ -1260,7 +1261,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/native-plan-declined-fallback.md",
-      "reason": "The old conversational fallback after a current-turn Plan refusal is intentionally adapted: Explicitly declined no longer authorizes a silent fallback, and another workflow is offered only when its independent preconditions are satisfied.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/native-plan-declined-fallback.md",
       "sourceSha256": "0d32e79f8249c5859da3fc5fbbdf859ba3ff17ba3db1866d8934ec1e415eca23",
       "disposition": "adapted",
@@ -1271,8 +1272,8 @@
             "heading": "Deterministic Assertions",
             "marker": "- contains: Planning capability: Explicitly declined"
           },
-          "outcome": "preserved",
-          "reason": "`Planning capability: Explicitly declined` remains the exact capability state. The declined-lane eval and AC-ADR-036 honor the refusal, forbid a silent fallback or repeated unchanged request, and allow another workflow only when that workflow independently satisfies its own preconditions; otherwise the planning route stops.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
@@ -1280,20 +1281,23 @@
               "markers": [
                 "Planning capability: Explicitly declined",
                 "plan-run-refactor cannot continue",
-                "offer another fitting workflow only if its preconditions are met",
-                "silent fallback"
+                "same approval contract",
+                "no-write conversation"
               ]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
               "heading": "Expected Behavior",
-              "markers": ["Do not bypass the required planning lifecycle.", "otherwise stop."]
+              "markers": [
+                "Honor the refusal without repeating the recommendation",
+                "a refusal would not itself exit an active mode"
+              ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Honor the refusal; use a compatible non-Plan workflow or stop, and do not ask again unchanged."
+                "Honor the refusal without repeating it; continue the same safe conversational planning contract."
               ]
             }
           ]
@@ -1325,15 +1329,15 @@
             "marker": "- contains: Plan-mode fallback: explicitly declined"
           },
           "outcome": "adapted",
-          "reason": "Explicitly declined remains an exact planning-capability state and the refusal and no-repeat rules are retained. The separate Plan-mode fallback field and any implication that refusal activates a portable fallback are removed; the current result is an independently fitting non-Plan workflow or a stop.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
               "heading": "Deterministic Assertions",
               "markers": [
                 "Planning capability: Explicitly declined",
-                "offer another fitting workflow only if its preconditions are met",
-                "silent fallback"
+                "same approval contract",
+                "no-write conversation"
               ]
             },
             {
@@ -1341,7 +1345,7 @@
               "heading": "Capability state handling",
               "markers": [
                 "`Explicitly declined`",
-                "Honor the refusal; use a compatible non-Plan workflow or stop, and do not ask again unchanged."
+                "Honor the refusal without repeating it; continue the same safe conversational planning contract."
               ]
             }
           ]
@@ -1415,7 +1419,7 @@
             "marker": "- Activate and treat package ownership as an unresolved durable decision."
           },
           "outcome": "adapted",
-          "reason": "Treating package ownership as an unresolved durable choice is retained and still routes implementation-before-resolution to plan-run-refactor. The instruction to activate a conversational fallback after Plan refusal is removed because declined Plan stops that route and permits another workflow only when its own preconditions hold.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
@@ -1423,11 +1427,11 @@
               "markers": [
                 "Planning capability: Explicitly declined",
                 "plan-run-refactor cannot continue",
-                "offer another fitting workflow only if its preconditions are met"
+                "same approval contract"
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Activation routing",
               "markers": [
                 "Implement broad architecture work or resolve durable choices before execution",
@@ -1450,7 +1454,7 @@
             "marker": "- Quote or faithfully summarize the current-turn refusal after `Plan-mode fallback: explicitly declined -` and do not repeat the transition request."
           },
           "outcome": "adapted",
-          "reason": "The current contract preserves honoring the refusal and not repeating the unchanged transition request, but intentionally removes the fixed `Plan-mode fallback: explicitly declined -` prefix and the requirement to quote or summarize the refusal; refusal handling is now reported through the explicit capability status and stop or compatible-workflow result.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
@@ -1458,20 +1462,23 @@
               "markers": [
                 "Planning capability: Explicitly declined",
                 "plan-run-refactor cannot continue",
-                "offer another fitting workflow only if its preconditions are met",
-                "silent fallback"
+                "same approval contract",
+                "no-write conversation"
               ]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
               "heading": "Expected Behavior",
-              "markers": ["Do not bypass the required planning lifecycle.", "otherwise stop."]
+              "markers": [
+                "Honor the refusal without repeating the recommendation",
+                "a refusal would not itself exit an active mode"
+              ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Honor the refusal; use a compatible non-Plan workflow or stop, and do not ask again unchanged."
+                "Honor the refusal without repeating it; continue the same safe conversational planning contract."
               ]
             }
           ]
@@ -1503,18 +1510,21 @@
             "marker": "- Ask only the material ownership questions, perform no repository, index, artifact, or external-state writes, and return pending/not-requested statuses."
           },
           "outcome": "adapted",
-          "reason": "The no-write clause and pending and not-requested state reporting are retained. Asking material ownership questions is removed as an automatic post-refusal continuation because broad unresolved work cannot bypass the Plan lifecycle; questions may continue only through a separately valid non-Plan workflow, otherwise the route stops.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
               "heading": "Expected Behavior",
-              "markers": ["Do not bypass the required planning lifecycle.", "otherwise stop."]
+              "markers": [
+                "Honor the refusal without repeating the recommendation",
+                "a refusal would not itself exit an active mode"
+              ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             },
             {
@@ -1526,9 +1536,9 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": ["Resolve durable choices with the user"]
+              "markers": ["resolve only open material decisions"]
             }
           ]
         }
@@ -1536,7 +1546,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/native-plan-execution-lifecycle.md",
-      "reason": "The path-specific execution example is adapted into the general Plan lifecycle and plan-run re-entry contract: exit Plan mode before writes, confirm write authority, bind exact approved scope and validation, recheck state, and stop on drift.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/native-plan-execution-lifecycle.md",
       "sourceSha256": "4b874b9594e0aef6b3704f0641aeff96063a5bdb4bfba08ecf4ead6d5947e7ea",
       "disposition": "adapted",
@@ -1610,8 +1620,8 @@
             "heading": "Deterministic Assertions",
             "marker": "- contains: Execution status: pending Plan-mode exit"
           },
-          "outcome": "preserved",
-          "reason": "Pending Plan-mode exit remains an exact canonical Execution status, and the current Plan workflow still requires native Plan-mode exit before persistence or implementation. The status and its blocking condition are both retained.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -1619,11 +1629,9 @@
               "markers": ["`Execution status`", "`pending Plan-mode exit`"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": [
-                "Exit native Plan mode before any persistence or implementation mutation."
-              ]
+              "markers": ["Exit active Plan before mutation."]
             }
           ]
         },
@@ -1847,7 +1855,7 @@
             "marker": "- Recognize the supplied prior-turn inspection and approved two-path checkpoint; do not claim a new inspection or repeat the material decision work in this text-only turn."
           },
           "outcome": "adapted",
-          "reason": "The supplied-snapshot and text-only clauses are retained by the current re-entry case, which consumes the provided snapshot without claiming a new tool-backed read. Its two exact approved paths also remain present. The instruction not to repeat decision work is generalized to executing the unchanged approved plan and reopening planning only for a new decision, changed scope, or invalidated approval.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/reentry-material-drift.md",
@@ -1863,11 +1871,11 @@
               "markers": ["apps/web/app/orders/page.tsx", "apps/web/components/orders-screen.tsx"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
                 "execute only the unchanged approved plan",
-                "New decisions, changed scope, or invalidated approval require a new planning checkpoint."
+                "If content, write scope, destination, or target state changed materially, resolve only the affected change."
               ]
             }
           ]
@@ -1879,7 +1887,7 @@
             "marker": "- After explicit approval, return `Architecture decision status: approved` and `Execution status: pending Plan-mode exit`."
           },
           "outcome": "adapted",
-          "reason": "Approved and pending Plan-mode exit remain exact public status values, and native Plan exit remains mandatory before implementation. The concise contract now reports these as separate evidence-backed fields instead of preserving this fixture-specific adjacent sentence, so both status clauses survive with generalized presentation.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -1895,11 +1903,9 @@
               "markers": ["Architecture decision status:", "Execution status:"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": [
-                "Exit native Plan mode before any persistence or implementation mutation."
-              ]
+              "markers": ["Exit active Plan before mutation."]
             }
           ]
         },
@@ -1910,7 +1916,7 @@
             "marker": "- Emit the approved continuation contract with exactly the two target paths and one validation command from the prompt; add no speculative path."
           },
           "outcome": "adapted",
-          "reason": "The bounded approved handoff, exact path allowlist, checkpoint-bound validation, and prohibition on speculative paths are retained. The two orders paths remain concrete eval evidence, while the former exactly-one-command cardinality is intentionally generalized to the approved validation commands required by the current task.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -1922,9 +1928,9 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": ["emit a bounded copy-ready execution handoff"]
+              "markers": ["emit a bounded handoff"]
             },
             {
               "path": "skill-evals/architecture-compass/cases/reentry-material-drift.md",
@@ -2024,7 +2030,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/native-plan-fallbacks.md",
-      "reason": "The unavailable-host case is adapted to the current portable fallback: only definitive unavailability permits conversational planning, while approval, no-write, and post-planning persistence boundaries remain unchanged.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/native-plan-fallbacks.md",
       "sourceSha256": "1c7427a480b970672c2277030c7e29aa26340fae77e00e0ee5cb4d1a3f7238f4",
       "disposition": "adapted",
@@ -2035,8 +2041,8 @@
             "heading": "Deterministic Assertions",
             "marker": "- contains: Planning capability: Unavailable"
           },
-          "outcome": "preserved",
-          "reason": "`Planning capability: Unavailable` remains the exact capability state that alone authorizes the portable in-chat fallback. The unavailable eval requires definitive evidence and keeps the same approval, no-write, and post-planning persistence boundaries; AC-ADR-036 supplies the matching unavailable fallback contract.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -2052,7 +2058,7 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Use the portable fallback only from definitive unavailability evidence",
+                "Use the portable fallback with the same approval, no-write, and post-planning persistence boundaries.",
                 "same approval, no-write, and post-planning persistence boundaries"
               ]
             },
@@ -2098,12 +2104,15 @@
             "marker": "- contains: Plan-mode fallback: unavailable"
           },
           "outcome": "adapted",
-          "reason": "The legacy Plan-mode fallback field is removed. Current routing records Planning capability: Unavailable and selects the portable in-chat fallback only from definitive unavailability evidence; the approval/no-write contract and ban on silent downgrade remain.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
-              "markers": ["Planning capability", "only `Unavailable` permits the portable fallback"]
+              "markers": [
+                "Planning capability",
+                "Inactive, missing, declined, or unknown controls do not alone block permitted read-only discovery and conversation"
+              ]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -2141,7 +2150,7 @@
             "marker": "- contains: Execution status: not requested"
           },
           "outcome": "adapted",
-          "reason": "The literal Execution status: not requested output is removed from the replacement eval; its no-execution meaning is generalized to plan-refactor, which emits a bounded handoff and stops without implementing the refactor. The label itself is not claimed preserved for this case.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
@@ -2149,12 +2158,9 @@
               "markers": ["Produce a refactoring plan without execution"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": [
-                "emit a bounded copy-ready execution handoff",
-                "stop without implementing the refactor"
-              ]
+              "markers": ["emit a bounded handoff", "stop before implementation"]
             }
           ]
         },
@@ -2165,14 +2171,12 @@
             "marker": "- contains: read-only decision gate"
           },
           "outcome": "adapted",
-          "reason": "The phrase read-only decision gate is replaced by the portable conversational checkpoint with the same approval and no-write boundaries. The behavioral gate is retained, while the legacy label is removed.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
-              "markers": [
-                "preserve the same approval, no-write, and post-planning persistence boundaries"
-              ]
+              "markers": ["same approval, no-write, and post-planning persistence boundaries"]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -2208,7 +2212,7 @@
             "marker": "- Activate and classify the runtime split as decision-heavy architecture work."
           },
           "outcome": "adapted",
-          "reason": "The free-form decision-heavy architecture work classification is replaced by the finite plan-refactor route because this request asks for a broad plan without execution. The unresolved ownership and environment choices remain durable choices to resolve with the user before persistence.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
@@ -2216,9 +2220,9 @@
               "markers": ["Produce a refactoring plan without execution"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": ["Resolve durable choices with the user"]
+              "markers": ["resolve only open material decisions"]
             }
           ]
         },
@@ -2229,7 +2233,7 @@
             "marker": "- Record `Plan-mode fallback: unavailable - <runtime evidence>` rather than inventing a transition or silently downgrading."
           },
           "outcome": "adapted",
-          "reason": "The literal `Plan-mode fallback: unavailable - <runtime evidence>` label is replaced by `Planning capability: Unavailable` plus `portable in-chat planning fallback`, selected only from definitive unavailability evidence; this explicit route preserves the ban on inventing a host transition or silently downgrading.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -2245,7 +2249,7 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Use the portable fallback only from definitive unavailability evidence",
+                "Use the portable fallback with the same approval, no-write, and post-planning persistence boundaries.",
                 "same approval, no-write, and post-planning persistence boundaries"
               ]
             },
@@ -2291,19 +2295,17 @@
             "marker": "- Preserve the same read-only decision gate and ask material ownership and env boundary questions conversationally."
           },
           "outcome": "adapted",
-          "reason": "The same approval/no-write decision gate is retained through the conversational checkpoint. The explicit ownership and env boundary wording is generalized to resolving durable choices with the user, so those questions remain required by substance but are no longer enumerated in the fallback eval.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
-              "markers": [
-                "preserve the same approval, no-write, and post-planning persistence boundaries"
-              ]
+              "markers": ["same approval, no-write, and post-planning persistence boundaries"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
-              "markers": ["Resolve durable choices with the user"]
+              "markers": ["resolve only open material decisions"]
             }
           ]
         },
@@ -2313,15 +2315,14 @@
             "heading": "Expected Behavior",
             "marker": "- Perform no repository, untracked, ignored, index, or external-state writes."
           },
-          "outcome": "preserved",
-          "reason": "Every no-write clause remains: the Plan lifecycle forbids mutation of repository/workspace, index, environment, and external state, while the execution invariant explicitly preserves staged, unstaged, untracked, ignored, and external state unless authorized. Together these targets cover every legacy category.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Write no target repository/workspace artifact while Plan mode is active.",
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             },
             {
@@ -2340,7 +2341,7 @@
             "marker": "- Keep `Architecture decision status: pending`; because the current prompt does not request execution, return `Execution status: not requested`."
           },
           "outcome": "adapted",
-          "reason": "Both literal result labels—`Architecture decision status: pending` and `Execution status: not requested`—and the prompt-specific no-implementation rationale are omitted from the concise unavailable-fallback target; that target covers only capability routing and the approval, no-write, and post-planning-persistence boundaries, so neither status is claimed preserved.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -2356,7 +2357,7 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Use the portable fallback only from definitive unavailability evidence",
+                "Use the portable fallback with the same approval, no-write, and post-planning persistence boundaries.",
                 "same approval, no-write, and post-planning persistence boundaries"
               ]
             },
@@ -2398,7 +2399,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/native-plan-indeterminate-fallback.md",
-      "reason": "The former user-confirmation fallback is adapted to the stricter indeterminate-state stop: uncertainty never counts as unavailability, so the agent requests accurate capability evidence and performs no persistence or execution.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/native-plan-indeterminate-fallback.md",
       "sourceSha256": "efb34e4b321c6eccc3be01ff0613f437370a84131d79a2d61c77566627f41dee",
       "disposition": "adapted",
@@ -2409,8 +2410,8 @@
             "heading": "Deterministic Assertions",
             "marker": "- contains: Planning capability: Indeterminate"
           },
-          "outcome": "preserved",
-          "reason": "`Planning capability: Indeterminate` remains the exact state for uncertain native Plan support. The current eval waits for confirmed Plan mode and forbids fallback, persistence, or execution; AC-ADR-036 likewise requires capability verification and stops before any potentially mutating check.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
@@ -2418,7 +2419,7 @@
               "markers": [
                 "Planning capability: Indeterminate",
                 "wait for confirmed Plan mode",
-                "uncertainty never authorizes fallback",
+                "unknown state never authorizes writes",
                 "execute the refactor"
               ]
             },
@@ -2426,15 +2427,15 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Treat indeterminate like supported-inactive",
-                "stop without portable fallback, persistence, or execution"
+                "Continue the same no-write conversation",
+                "Resolve actual mode and permission before any persistence or execution"
               ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Stop and verify capability; do not assume the fallback lane.",
+                "Report uncertainty; continue no-write conversation and proven reads.",
                 "Stop before any potentially mutating check."
               ]
             }
@@ -2472,12 +2473,12 @@
             "marker": "- contains: Plan-mode fallback: indeterminate"
           },
           "outcome": "adapted",
-          "reason": "The legacy Plan-mode fallback: indeterminate field is removed: indeterminacy is now a planning-capability state, not a fallback state. Current behavior waits for confirmed Plan mode and explicitly forbids portable fallback under uncertainty.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
-              "markers": ["Uncertainty never authorizes fallback."]
+              "markers": ["Unknown mode or permission state never authorizes writes."]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
@@ -2485,7 +2486,7 @@
               "markers": [
                 "Planning capability: Indeterminate",
                 "wait for confirmed Plan mode",
-                "uncertainty never authorizes fallback"
+                "unknown state never authorizes writes"
               ]
             }
           ]
@@ -2515,12 +2516,12 @@
             "marker": "- contains: Execution status: not requested"
           },
           "outcome": "adapted",
-          "reason": "The literal Execution status: not requested label is removed from this eval; its safety effect is generalized to stopping without persistence or execution. The target therefore preserves non-execution but not the old output marker.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
-              "markers": ["stop without portable fallback, persistence, or execution"]
+              "markers": ["Resolve actual mode and permission before any persistence or execution"]
             }
           ]
         },
@@ -2531,12 +2532,12 @@
             "marker": "- contains: user confirmation"
           },
           "outcome": "adapted",
-          "reason": "Generic user confirmation is narrowed to an accurate Plan-mode transition or handoff followed by confirmed host-state evidence. Textual assent alone cannot turn indeterminate capability into an active or unavailable state.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
-              "markers": ["request an accurate transition or handoff"]
+              "markers": ["Do not invent a transition command"]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
@@ -2552,7 +2553,7 @@
             "marker": "- Activate and classify runtime ownership as decision-heavy architecture work."
           },
           "outcome": "adapted",
-          "reason": "The free-form decision-heavy architecture work label is replaced by the intent-bound plan-refactor classification for a broad planning-only request. Because capability is indeterminate, current routing stops before substantive planning and resumes only after confirmed Plan mode.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
@@ -2560,11 +2561,11 @@
               "markers": ["Produce a refactoring plan without execution"]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "Detect native Plan-mode support before substantive planning.",
-                "support is indeterminate, stop"
+                "Observe the execution host's planning and permission capabilities independently",
+                "controls are inactive, missing, declined, or unknown"
               ]
             }
           ]
@@ -2575,21 +2576,21 @@
             "heading": "Expected Behavior",
             "marker": "- Treat silence and missing controls as indeterminate rather than unavailable or explicitly declined."
           },
-          "outcome": "preserved",
-          "reason": "All distinctions remain: silent or missing evidence yields Planning capability: Indeterminate; uncertainty never authorizes the unavailable fallback; and Explicitly declined remains a separate state that requires an actual refusal and a different stop or compatible non-Plan response.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "only `Unavailable` permits the portable fallback",
-                "Honor `Explicitly declined`"
+                "Inactive, missing, declined, or unknown controls do not alone block permitted read-only discovery and conversation",
+                "honoring a declined recommendation does not silently exit active Plan"
               ]
             },
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-declined-stop.md",
               "heading": "Deterministic Assertions",
-              "markers": ["Planning capability: Explicitly declined", "silent fallback"]
+              "markers": ["Planning capability: Explicitly declined", "no-write conversation"]
             }
           ]
         },
@@ -2600,7 +2601,7 @@
             "marker": "- Record planning and read-only enforcement uncertainty separately."
           },
           "outcome": "adapted",
-          "reason": "`Planning capability: Indeterminate` retains planning uncertainty, but the separate `Read-only enforcement: indeterminate` record is removed; current routing replaces the two-record output with capability verification plus a stop before any potentially mutating check.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
@@ -2608,7 +2609,7 @@
               "markers": [
                 "Planning capability: Indeterminate",
                 "wait for confirmed Plan mode",
-                "uncertainty never authorizes fallback",
+                "unknown state never authorizes writes",
                 "execute the refactor"
               ]
             },
@@ -2616,15 +2617,15 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Treat indeterminate like supported-inactive",
-                "stop without portable fallback, persistence, or execution"
+                "Continue the same no-write conversation",
+                "Resolve actual mode and permission before any persistence or execution"
               ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Stop and verify capability; do not assume the fallback lane.",
+                "Report uncertainty; continue no-write conversation and proven reads.",
                 "Stop before any potentially mutating check."
               ]
             }
@@ -2637,7 +2638,7 @@
             "marker": "- Use only operations guaranteed read-only, disable optional Git locks for status inspection, and ask the user to confirm a safe host route."
           },
           "outcome": "adapted",
-          "reason": "The cited targets replace `operations guaranteed read-only` with a stricter stop before any potentially mutating check, and replace generic confirmation of a `safe host route` with an accurate transition or handoff while fallback remains forbidden. The optional-lock instruction is adapted, not removed: index-safe evidence uses `git --no-optional-locks status --short --untracked-files=all`.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -2653,7 +2654,7 @@
               "markers": [
                 "Planning capability: Indeterminate",
                 "wait for confirmed Plan mode",
-                "uncertainty never authorizes fallback",
+                "unknown state never authorizes writes",
                 "execute the refactor"
               ]
             },
@@ -2661,15 +2662,15 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
               "markers": [
-                "request an accurate transition or handoff",
-                "stop without portable fallback, persistence, or execution"
+                "Do not invent a transition command",
+                "Resolve actual mode and permission before any persistence or execution"
               ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Stop and verify capability; do not assume the fallback lane.",
+                "Report uncertainty; continue no-write conversation and proven reads.",
                 "Stop before any potentially mutating check."
               ]
             }
@@ -2682,7 +2683,7 @@
             "marker": "- Perform no repository, index, artifact, or external-state writes and return pending/not-requested statuses."
           },
           "outcome": "adapted",
-          "reason": "The repository, index, artifact, and external-state no-write clauses are replaced by `Stop before any potentially mutating check` and `stop without portable fallback, persistence, or execution`; the literal `Architecture decision status: pending` and `Execution status: not requested` outputs are omitted from the concise indeterminate-state target.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
@@ -2690,7 +2691,7 @@
               "markers": [
                 "Planning capability: Indeterminate",
                 "wait for confirmed Plan mode",
-                "uncertainty never authorizes fallback",
+                "unknown state never authorizes writes",
                 "execute the refactor"
               ]
             },
@@ -2698,15 +2699,15 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-indeterminate-stop.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Treat indeterminate like supported-inactive",
-                "stop without portable fallback, persistence, or execution"
+                "Continue the same no-write conversation",
+                "Resolve actual mode and permission before any persistence or execution"
               ]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
               "heading": "Capability state handling",
               "markers": [
-                "Stop and verify capability; do not assume the fallback lane.",
+                "Report uncertainty; continue no-write conversation and proven reads.",
                 "Stop before any potentially mutating check."
               ]
             }
@@ -2716,7 +2717,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/portable-fallback-execution-lifecycle.md",
-      "reason": "The path-specific portable execution example is adapted into the unavailable fallback plus plan-run contract: planning stays non-mutating, the approved continuation is persisted after planning, state is rechecked, and only unchanged authorized scope executes.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/portable-fallback-execution-lifecycle.md",
       "sourceSha256": "bb7364fbbc47e279cdc5c343c86f96bb86c1ba0faa310690927df5c89e1192d9",
       "disposition": "adapted",
@@ -2727,8 +2728,8 @@
             "heading": "Deterministic Assertions",
             "marker": "- contains: Planning capability: Unavailable"
           },
-          "outcome": "preserved",
-          "reason": "The exact planning-capability field and Unavailable value remain active. The current fallback fixture additionally requires definitive unavailability evidence before entering the portable lane, so this source assertion is preserved without treating uncertainty as unavailability.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -2738,7 +2739,10 @@
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
-              "markers": ["Planning capability", "only `Unavailable` permits the portable fallback"]
+              "markers": [
+                "Planning capability",
+                "Inactive, missing, declined, or unknown controls do not alone block permitted read-only discovery and conversation"
+              ]
             }
           ]
         },
@@ -2844,7 +2848,7 @@
             "marker": "- contains: After explicit implementation approval"
           },
           "outcome": "adapted",
-          "reason": "Explicit implementation authorization is retained, but the standalone continuation lead-in is replaced by a user-requested checkpoint and persisted approved specification. Approval establishes the intended slice; it does not replace the required permission and state rechecks before execution.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.long.md",
@@ -2856,10 +2860,10 @@
               ]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "persist and validate the same governance slice",
+                "persist and validate the same required governance slice",
                 "recheck HEAD, index, working tree, authority, dependencies, and external state"
               ]
             }
@@ -2990,7 +2994,7 @@
             "marker": "- Record the unavailable planning and enforcement evidence separately without claiming a host transition."
           },
           "outcome": "adapted",
-          "reason": "The requirement to emit planning-unavailable and read-only-unavailable evidence as separate records, and the explicit no-host-transition sentence, are removed from this unit; the current target replaces them with one definitive-unavailability fallback and the shared approval, no-write, and post-planning-persistence boundary before state recheck.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
@@ -3006,7 +3010,7 @@
               "path": "skill-evals/architecture-compass/cases/plan-mode-unavailable-fallback.md",
               "heading": "Expected Behavior",
               "markers": [
-                "Use the portable fallback only from definitive unavailability evidence",
+                "Use the portable fallback with the same approval, no-write, and post-planning persistence boundaries.",
                 "same approval, no-write, and post-planning persistence boundaries"
               ]
             }
@@ -3055,7 +3059,7 @@
             "marker": "- Preserve the behavioral no-write gate while returning the approved checkpoint."
           },
           "outcome": "adapted",
-          "reason": "The behavioral no-write clause is preserved for hosts without enforceable read-only controls. The second clause is adapted: instead of treating a returned conversational checkpoint as the durable boundary, the current workflow carries the same approval into bounded post-planning persistence before any state recheck or implementation.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -3063,10 +3067,10 @@
               "markers": ["Use a behavioral no-write gate only for commands proven non-mutating."]
             },
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "persist and validate the same governance slice",
+                "persist and validate the same required governance slice",
                 "recheck HEAD, index, working tree, authority, dependencies, and external state"
               ]
             }
@@ -3079,13 +3083,13 @@
             "marker": "- Emit the portable fallback continuation with exactly the two paths and one validation command from the prompt; add no speculative path."
           },
           "outcome": "adapted",
-          "reason": "A separate copy-ready continuation containing these retired fixture values is removed from the plan-run route. The current boundary instead persists the approved governance slice, then uses that run's exact allowed paths and validation commands, rechecks state, and executes only the unchanged approved plan; the prohibition on speculative paths remains binding.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
-              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md",
+              "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
               "heading": "Plan workflows",
               "markers": [
-                "persist and validate the same governance slice",
+                "persist and validate the same required governance slice",
                 "execute only the unchanged approved plan"
               ]
             },
@@ -3171,7 +3175,7 @@
     },
     {
       "sourcePath": "skill-evals/architecture-compass/cases/read-only-explicitly-declined-fallback.md",
-      "reason": "The explicitly declined enforcement lane is preserved through the active portability contract: Plan and read-only states remain independent, refusal is honored, and work proceeds only when the same behavioral no-write contract is enforceable.",
+      "reason": "This locked historical case is mapped to AC-ADR-064: safe planning continues without redundant host choreography, while active Plan, explicit native requests, permission, approval, and bounded execution remain independent gates.",
       "baselinePath": "skill-evals/architecture-compass/legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/read-only-explicitly-declined-fallback.md",
       "sourceSha256": "1d4f419e68932c1eeb3c61207da9403605df79845ee0f7f14ca5b8d24cd243ab",
       "disposition": "adapted",
@@ -3372,15 +3376,13 @@
             "heading": "Expected Behavior",
             "marker": "- Do not repeat the declined transition request or claim the Plan instruction is an enforced filesystem boundary."
           },
-          "outcome": "preserved",
-          "reason": "The no-repeat clause is retained exactly by the Plan lifecycle's rule to honor an explicit decline without repeating the unchanged request. The filesystem-boundary clause is generalized and strengthened: planning capability and filesystem permission are independent, and prompt text cannot change either control, so a Plan instruction is never treated as enforcement. No safety clause is removed.",
+          "outcome": "adapted",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
-              "markers": [
-                "Honor `Explicitly declined` without repeating the unchanged request; use another workflow only when its preconditions hold."
-              ]
+              "markers": ["honoring a declined recommendation does not silently exit active Plan"]
             },
             {
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
@@ -3398,7 +3400,7 @@
             "marker": "- Preserve the behavioral no-write gate, use only the supplied facts, ask the material ownership questions conversationally, and perform no repository, index, artifact, or external-state writes."
           },
           "outcome": "adapted",
-          "reason": "`behavioral no-write` and the repository, index, artifact, and external-state prohibitions are retained by the enforceable-or-stop no-write contract and the Plan lifecycle's direct artifact and mutation bans. The `use only the supplied facts` restriction and conversational ownership-question requirement are removed.",
+          "reason": "AC-ADR-064 adapts the native-mode gating expectation while preserving its locked source: safe no-write discovery and conversation can proceed, active or explicitly requested Plan remains respected, and persistence still requires exact approval, actual permissions, and a state recheck. The current target markers retain this unit's scope and evidence boundary.",
           "targets": [
             {
               "path": "skills/engineering-workflows/architecture-compass/references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
@@ -3412,8 +3414,7 @@
               "path": "skills/engineering-workflows/architecture-compass/SKILL.md",
               "heading": "Plan lifecycle",
               "markers": [
-                "Write no target repository/workspace artifact while Plan mode is active.",
-                "Perform no mutation of repository, workspace, index, environment, or external state before Plan-mode exit."
+                "Write no target repository/workspace artifact while Plan mode is active."
               ]
             }
           ]
@@ -3672,7 +3673,7 @@
             "marker": "- Return pending/not-requested statuses because the prompt does not request implementation."
           },
           "outcome": "adapted",
-          "reason": "`Execution status: not requested` and the prompt's plan-only rationale are retained. `Architecture decision status: pending` is removed because current `plan-refactor` obtains approval before persistence and the cited concise target asserts no pending architecture result.",
+          "reason": "AC-ADR-064 retains the explicit content, no-write, and persistence boundaries while allowing safe conversational planning without mandatory native activation. The locked source remains historical; current target markers identify the approved successor behavior.",
           "targets": [
             {
               "path": "skill-evals/architecture-compass/cases/clear-plan-refactor-intent.md",
@@ -3682,7 +3683,10 @@
             {
               "path": "skill-evals/architecture-compass/cases/clear-plan-refactor-intent.md",
               "heading": "Expected Behavior",
-              "markers": ["obtain approval there", "stop without source implementation"]
+              "markers": [
+                "obtain one approval of the complete specification and named save scope",
+                "stop without source implementation"
+              ]
             }
           ]
         }

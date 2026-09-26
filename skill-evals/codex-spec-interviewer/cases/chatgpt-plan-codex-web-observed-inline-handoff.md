@@ -20,13 +20,11 @@ Yes.
 
 Use Codex Spec Interviewer to define a safe polling-to-webhook migration. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Available but inactive
-- contains: Read-only enforcement: indeterminate
-- contains: /plan Use $codex-spec-interviewer to continue this request
-- not_contains: Planning capability: Active
-
 ## Expected Behavior
 
-A combined command is allowed only with evidence for both the native control and its inline parser; wait for the next turn to confirm activation.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- For a requested or necessary transition, use only the observed control and real client syntax; this optional transition does not block independent reads or the interview.
+- An inline mode-command continuation is permitted only because this same Codex web composer demonstrates argument support.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

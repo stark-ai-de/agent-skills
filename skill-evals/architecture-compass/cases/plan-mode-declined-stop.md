@@ -1,4 +1,4 @@
-# Declined Plan-mode Stops or Reclassifies
+# Declined Plan Recommendation Retains Safe Planning
 
 ## Should Trigger
 
@@ -6,15 +6,16 @@ Yes.
 
 ## Prompt
 
-The user explicitly declines native Plan mode after selecting broad unresolved architecture work.
+The user explicitly declines the native Plan recommendation after selecting broad unresolved architecture work. Current evidence shows native Plan is inactive; no persistence or implementation is yet approved.
 
 ## Deterministic Assertions
 
 - contains: Planning capability: Explicitly declined
-- contains: plan-run-refactor cannot continue
-- contains: offer another fitting workflow only if its preconditions are met
-- not_contains: silent fallback
+- contains: no-write conversation
+- contains: same approval contract
+- not_contains: plan-run-refactor cannot continue
+- not_contains: ask to enable Plan again
 
 ## Expected Behavior
 
-Do not bypass the required planning lifecycle. Offer a non-Plan route only if the work independently satisfies that route; otherwise stop.
+Honor the refusal without repeating the recommendation or inventing a different workflow. Continue substantive planning under the same approval contract. No writes are authorized yet, and a refusal would not itself exit an active mode.

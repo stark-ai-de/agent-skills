@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.6.2`
+- Version: `1.7.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,11 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds accepted AC-ADR-065, an explicitly adoptable Architecture Compass policy for qualified Jev host advice, opt-in static host hooks, and a write-free Codex repository-policy renderer. Adoption, host activation, processing consent and qualification remain separate; native selection remains available. General automatic host qualification is still pending.
-
-Adds accepted AC-ADR-066, defaulting compatible local HTTP and WebSocket development endpoints to Portless and HTTPS, with evidence-backed exceptions and migration of existing routing only during a suitable authorized change.
-
-Hardens Jev credential handling with bounded validation for file and environment sources and fail-closed configured-file behavior. Native selection remains available.
+- Release notes: Adds AC-ADR-064 capability-aware planning to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse. Adds accepted AC-ADR-065 for qualified Jev host advice, opt-in static host hooks, and a write-free Codex policy renderer; adoption, host activation, processing consent, and qualification remain separate, with general automatic host qualification pending. Adds accepted AC-ADR-066, defaulting compatible local HTTP and WebSocket endpoints to Portless and HTTPS, with evidence-backed exceptions and authorized migration of existing routing. Hardens Jev credential validation for file and environment sources and fails closed for invalid configured files; native selection remains available.
 
 ## Capabilities
 
