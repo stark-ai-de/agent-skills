@@ -276,9 +276,7 @@ console.log(
   "Promo presentation: three public choices, complete control disclosure, invariant factors/samples and features passed.",
 );
 
-// The published comparison uses genuine Native observations, never this file's fixture.
-const { getJevPromoComparison } = await import("../src/lib/jev-benchmarks.mjs");
-const actual = getJevPromoComparison();
+// Retained September 25 evidence uses genuine observations, never this file's fixture.
 const currentReport = JSON.parse(
   readFileSync(
     new URL(
@@ -297,6 +295,17 @@ const nativeReceipt = JSON.parse(
     "utf8",
   ),
 );
+const { inspectRuntimeSources } = await import("../src/lib/jev-runtime-evidence.mjs");
+const historicalComparison = promoComparison(currentReport, nativeReceipt);
+const actual = {
+  ...historicalComparison,
+  runtime: inspectRuntimeSources(
+    currentReport.studies.find((study) => study.study_id === "next-skill-hidden32").provenance
+      .source_sha256.next_skill,
+    undefined,
+    historicalComparison.measuredRevision,
+  ),
+};
 assert.ok(!("totalRuns" in actual));
 assert.equal(actual.rows.length, 2);
 assert.equal(actual.displayedObservations, 128);
@@ -373,7 +382,7 @@ const readme = readFileSync(
   "utf8",
 );
 const currentReadme = readme
-  .split("## Current next-skill comparison\n")[1]
+  .split("## Historical release recheck — 2026-09-25\n")[1]
   .split("\n## Product features")[0];
 const productReadme = readme
   .split("## Product features and measured selection\n")[1]
