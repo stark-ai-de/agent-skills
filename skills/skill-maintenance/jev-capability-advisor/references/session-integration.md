@@ -1,5 +1,7 @@
 # Reusable host sessions
 
+This is the **owner-process session** mode of Integrate. For optional Codex CLI or Claude Code reminders without a retained process, use [hook guidance](hook-integration.md). That mode delegates selection to the active agent and does not create an `AdvisorSession`.
+
 Use this interface when a host you control needs repeated Jev advice. Keep one Python object or one NDJSON child process for the owning session. Supply its current eligible catalog with every task. HTTPS and a bounded derived search index are reused. Previous tasks and recommendations are not cached; the host must supply and validate current inventory on every request.
 
 ## Python interface
@@ -100,4 +102,4 @@ An oversized frame returns `frame_too_large` and terminates without draining the
 
 The reusable Python/NDJSON interface is implemented. Choosing the next-skill profile does not itself prove lower latency, lower provider input or correct selection; those need separate profile-specific live evidence. Recorded-response parity of the general path is deterministic regression evidence, not a fresh live accuracy result. Automatic Codex, Claude Code and OpenAI-plugin interception remains separately unqualified. In Codex 0.154.0, hooks expose prompt/session/turn context, but no complete eligible capability snapshot. Thread-scoped MCP status and cwd-scoped skill discovery are useful inventory signals; they do not export every effective activation and prepared-call permission restriction. Do not silently turn those declarations into a fully eligible catalog.
 
-A controlled host can supply its authoritative eligible snapshot directly. For native integration, require an appropriate host export before claiming automatic routing. Recheck version-sensitive interfaces in the [official hook reference](https://learn.chatgpt.com/docs/hooks) and [app-server reference](https://learn.chatgpt.com/docs/app-server). Selector/session benchmarks do not prove installed-hook activation or whole-task acceleration.
+A controlled host can supply its authoritative eligible snapshot directly. The separate agent-mediated hook mode uses a [bounded current-session skill/tool catalog](hook-integration.md#capture-a-bounded-current-session-catalog), preserving verified host defaults, exclusions and unknown coverage. That does not turn a Session or SDK started alongside the native agent into an inventory oracle. Qualify the actual executing host and catalog scope before claiming automatic advice. Recheck version-sensitive interfaces in the [official hook reference](https://learn.chatgpt.com/docs/hooks) and [app-server reference](https://learn.chatgpt.com/docs/app-server). Selector/session benchmarks do not prove installed-hook activation or whole-task acceleration.

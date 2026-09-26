@@ -65,9 +65,35 @@ The catalog still has bounded candidate coverage and request sizes. In the Septe
 
 ## Repeated advice and automatic integration
 
-For a host integration, use the [Python/NDJSON session interface](../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md). It reuses a healthy HTTPS connection and an unchanged catalog’s derived search index across tasks, keeps credentials local and validates fresh eligible capabilities with every request. It does not cache model decisions. Single general-profile CLI invocations also reuse their connection for compound follow-ups. A host explicitly choosing next-skill advice sets `AdvisorSession(selection_profile="next_skill")` or the equivalent process flag once; request frames cannot change that profile.
+**Integrate offers two modes:** [hook guidance](../../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md) for Codex CLI or Claude Code, and a [Python/NDJSON session](../../../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md) for a host process you control.
 
-**Automatic interception still needs host qualification.** The session runtime supplies the integration building block; installing the skill or plugin does not install a pre-prompt hook. Current Codex discovery interfaces do not expose every effective skill and tool eligibility restriction. A host must supply authoritative inventory, demonstrate the callback and advice delivery, and retain native fallback before automatic use is claimed.
+Hook guidance is an explicit opt-in. A short `UserPromptSubmit` hint asks the agent to consult Jev once for a new actionable task, using `general` and `current`. The agent skips follow-ups, explanations and confirmations, honors explicit skill choices, and keeps its permissions and execution ownership. A real advice attempt produces one short status line with the recommendation or fallback reason. The hook itself only emits static context; it neither calls TypeSafe nor stores prompts. There is no background service or host rebuild.
+
+From the installed skill directory, inspect the proposed user-wide Codex registration before applying it:
+
+```sh
+python3 scripts/jev_hooks.py install --host codex --dry-run
+python3 scripts/jev_hooks.py install --host codex
+python3 scripts/jev_hooks.py status --host codex
+```
+
+Use `--host claude-code` for Claude Code. User scope is the default; `--scope project --project-root /path/to/project` explicitly selects a project. `uninstall` with the same host/scope removes only the unchanged owned entry. Installation preserves unrelated configuration and keeps ownership records and backups in private user state. Host trust still requires the host's normal review. Linux/WSL, macOS and native Windows are implementation targets; consult the [qualification matrix](../../../skill-evals/jev-capability-advisor/README.md#hook-integration-qualification) for actual evidence.
+
+Opt-in covers sending a minimal task summary and bounded capability cards to TypeSafe when advice is actually possible. Existing credentials and current, trustworthy host metadata are required. The agent captures a bounded catalog from the running model's skill list and loaded MCP definitions, using verified host defaults and excluding unknown availability or invocation restrictions. Files may enrich already available entries but cannot prove availability; another host session is not an inventory source. Coverage and exclusions stay explicit, and native permissions still govern concrete calls. If no reliable subset, credentials or allowed execution can be established, the agent continues with native selection. The installer does not provision keys or bypass Plan-mode restrictions.
+
+If credentials are stored in an existing local raw-key file, configure its reference explicitly:
+
+```sh
+python3 scripts/jev_hooks.py install --host codex --key-file /path/to/existing-key
+```
+
+Only the path is stored in private per-host settings, shared by its user/project registrations. Later installs without the option preserve it. A configured file takes precedence over `TYPESAFE_API_KEY`; an unreadable file causes native fallback, not a silent switch to the environment. The agent reads `status` for the actual host and passes that local path to the advisor's `--key-file`. The path and contents never enter provider metadata. Uninstall keeps the credential reference and recorded evidence.
+
+`status` separates registration, locally observable credential readiness and historical qualification evidence. A readable key file is not an authentication test. Matching file/platform records remain historical while the active host version and session conditions are unverified. Status deliberately does not launch the host to inspect its version; qualify the active host version, integration/registration fingerprints, catalog scope and scenario results separately, and still check current eligibility. The [hook reference](../../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#record-controlled-qualification) documents the private evidence format.
+
+The owner-process session instead reuses healthy HTTPS and an unchanged catalog's derived search index across tasks, validates fresh capabilities per request and does not cache decisions. Its profile is fixed at construction. Single general-profile CLI invocations also reuse their connection for compound follow-ups.
+
+**Configuration is not automatic-advice qualification.** Each host must independently demonstrate hook delivery, eligible inventory and actual adoption under ADR-0057. Bounded same-session catalogs do not claim complete machine inventory or pre-approve every possible tool argument. Installing the ordinary skill/plugin never activates a hook, and selector benchmarks do not prove hook or whole-task performance.
 
 ## Benchmarks and benefits
 
@@ -79,7 +105,7 @@ The next-skill profile used less selection input than both measured Hussi varian
 
 ## Scope
 
-The agent supplies the current catalog and controls loading, permissions and execution. The skill does not automatically intercept ordinary prompts. General compound advice remains experimental, and omitted candidates can limit either profile. Next-skill advice deliberately leaves additional work unassessed and does not replace a complete plan.
+The agent supplies the current catalog and controls loading, permissions and execution. Ordinary skill installation does not intercept prompts; optional hook guidance must be explicitly enabled and independently qualified. General compound advice remains experimental, and omitted candidates can limit either profile. Next-skill advice deliberately leaves additional work unassessed and does not replace a complete plan.
 
 Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-advisor/SKILL.md) for the operational workflow and [evaluation record](../../../skill-evals/jev-capability-advisor/README.md) for qualification and known limits.
 
