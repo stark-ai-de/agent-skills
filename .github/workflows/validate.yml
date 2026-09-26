@@ -186,8 +186,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Test opt-in hook registration and emitters
-        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_hooks.py -v
+      - name: Test opt-in hooks and catalog evidence
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_hook*.py' -v
 
   archive-identity:
     strategy:
