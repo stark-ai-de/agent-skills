@@ -1,8 +1,18 @@
 import { joinNativeNextSkill } from "./jev-native-next-skill.mjs";
 import { nextSkillComparison } from "./jev-next-skill-benchmarks.mjs";
 
-// The unpublished control remains in the evidence table, outside the product chart.
+// Eligible public variants. Failed timing series and the unpublished control
+// remain in the evidence table, outside the timing chart.
 export const visibleVariantIds = ["jev_session", "hussi_original", "native"];
+
+// Recovered discovery candidates, not measured benchmark arms. Keep them free
+// of numerical defaults: missing evidence is neither zero latency nor a factor.
+export const unmeasuredSelectorCandidates = [
+  { label: "skill-picker", sourceUrl: "https://github.com/MuskanPaliwal/skill-picker" },
+  { label: "jev-skill-suggester", sourceUrl: "https://github.com/win4r/jev-skill-suggester" },
+  { label: "SkillRanker", sourceUrl: "https://github.com/Dicklesworthstone/skillranker" },
+  { label: "skill-router (Lomesh)", sourceUrl: "https://github.com/lomeshdutta/skill-router" },
+];
 
 const feature = (label, value, status = "supported") => ({ label, value, status });
 const productFeatures = {
@@ -146,11 +156,14 @@ export function promoComparison(report, nativeEvidence) {
     .sort((left, right) => left.medianSeconds - right.medianSeconds);
   const ours = allRows.find((row) => row.id === "jev_session");
   const hussi = allRows.find((row) => row.id === "hussi_original");
+  const publicRows = allRows.filter((row) => visibleVariantIds.includes(row.id));
+  const rows = publicRows.filter((row) => row.speedQualified);
   return {
     defaultId: "jev_session",
     baselineId: "native",
     allRows,
-    rows: allRows.filter((row) => visibleVariantIds.includes(row.id)),
+    rows,
+    excludedRows: publicRows.filter((row) => !row.speedQualified),
     hussiFactor:
       hussi.speedQualified && ours.speedQualified ? hussi.medianSeconds / ours.medianSeconds : null,
     inputSaving: Math.min(confirmation.reductionVsPublished, confirmation.reductionVsControl),
@@ -169,9 +182,10 @@ export function promoComparison(report, nativeEvidence) {
     nativeEvidencePath: evidence.nativeEvidencePath,
     measuredRevision: evidence.measuredRevision,
     previouslyExposed: evidence.previouslyExposed,
-    displayedObservations: allRows
-      .filter((row) => visibleVariantIds.includes(row.id))
-      .reduce((total, row) => total + row.observations + row.noneObservations, 0),
+    displayedObservations: rows.reduce(
+      (total, row) => total + row.observations + row.noneObservations,
+      0,
+    ),
     completedNativeExecutions: native.groups.all.n,
   };
 }
