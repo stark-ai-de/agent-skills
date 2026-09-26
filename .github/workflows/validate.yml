@@ -167,6 +167,28 @@ jobs:
           path: ${{ runner.temp }}/testing-outcome.json
           if-no-files-found: warn
 
+  jev-hook-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Test opt-in hook registration and emitters
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_hooks.py -v
+
   archive-identity:
     strategy:
       fail-fast: false
