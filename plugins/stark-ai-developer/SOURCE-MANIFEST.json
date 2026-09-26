@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "30f9842ab925a5f177964b06ac9a8ca4edbfb9f3805669ff5ac95a1c60302269"
+      "sha256": "6ed418faca39db33add67213b05ab1285c8d23b337008def77c9c7107b9879ce"
     },
     {
       "byteLength": 12772,
@@ -1954,7 +1954,7 @@
       "byteLength": 13428,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "b45d7c45200c69525f73cfafe4e96c59268b61a7964abcd3630403e3cec51ff2"
+      "sha256": "b5e5676e7181eba6aa5f28774442bb1325c13a21e200b9872a2717824c7faec0"
     },
     {
       "byteLength": 615,
@@ -2055,9 +2055,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "c364411ff40b526b6a62afd8e1aabcbb000cbf347a191586bc5e4044dd44ef98"
+  "treeHash": "4f411b081c4791b736aaed1522386d4961802492feb3def8344115eb9de74e3c"
 }

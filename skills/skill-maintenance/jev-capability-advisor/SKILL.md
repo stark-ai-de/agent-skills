@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Jev Capability Advisor
