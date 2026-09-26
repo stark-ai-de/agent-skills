@@ -1944,6 +1944,17 @@ async function runBackupContract(curator) {
 }
 
 function runConfigDiscoveryContract(curator) {
+  const skill = read(path.join(curator.dir, "SKILL.md"));
+  if (
+    !skill.includes("then inspect the requested `memories` surfaces") ||
+    !skill.includes(
+      "Inspect `config.toml` only when configuration is requested or needed to resolve an in-scope conflict",
+    )
+  ) {
+    fail(
+      `${path.join(curator.dir, "SKILL.md")}: Codex config inspection must stay within requested scope`,
+    );
+  }
   const script = path.join(root, curator.dir, "scripts", "locate-memory-config.mjs");
   const fixture = path.join(root, "skill-evals", curator.name, "fixtures", "late-config");
   const before = snapshotTree(fixture);

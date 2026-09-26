@@ -58,7 +58,7 @@ Workflow selection does not authorize whole-file deletion, destructive recovery,
 
 ## Inputs to inspect
 
-- Resolve the user-provided Codex home or `${CODEX_HOME:-$HOME/.codex}`, then inspect its `memories` and visible `config.toml` surfaces.
+- Resolve the user-provided Codex home or `${CODEX_HOME:-$HOME/.codex}`, then inspect the requested `memories` surfaces. Inspect `config.toml` only when configuration is requested or needed to resolve an in-scope conflict.
 - Inspect current repository evidence only as needed to verify a disputed claim.
 - Load the classification, conflict, config-mode, store-anatomy, and safe-editing references below only when their decision is active. Load the report or plan asset whenever producing that artifact.
 
