@@ -1,5 +1,13 @@
 # Jev capability advisor evaluation
 
+## Seven-participant comparison — 2026-09-26
+
+The [audited comparison](benchmarks/selector-comparison-2026-09-26.json) contains 448 selected observations from 520 retained attempts, with six complete timing series and Skill Suggester in details only. It uses 132 frozen skill texts, 24 skill tasks and eight no-match tasks, each repeated twice. Native requests GPT-6 Luna with low reasoning; the other products keep their own Jev settings and source algorithms.
+
+The report explicitly distinguishes the original window from 72 authorized corrections (64 Lomesh capture failures and eight Native quota failures). The original missed quota stop and unrecorded per-observation CLI identity remain disclosed deviations. A separate raw-data auditor reconciled timing, mappings, outcomes and usage; a source auditor checked the preserved selection strategies and feature claims. The admission code rejects incomplete timing, unreviewed deviations, mismatched windows and changed factors. Failed and unresolved attempts are never silently repeated.
+
+The [comparison guide](../../docs/skills/jev-capability-advisor/benchmarks/README.md#current-comparison--2026-09-26) describes the resulting factors and limits. Public observations use opaque target identifiers; private task text, target mappings, runtime paths and provider records stay local. Competitor names and their public source revisions remain visible.
+
 This evaluation records the accepted public skill scope and separates its evidence from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
 ## Release recheck, 2026-09-25
