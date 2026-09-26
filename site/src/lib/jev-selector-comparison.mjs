@@ -283,8 +283,9 @@ export function selectorComparison(report) {
     ours.inputTokens !== null && hussi.inputTokens > 0
       ? 100 * (1 - ours.inputTokens / hussi.inputTokens)
       : null;
-  const times = report.observations.map((row) => row.started_at).sort(),
-    ends = report.observations.map((row) => row.completed_at).sort();
+  const byTime = (left, right) => Date.parse(left) - Date.parse(right);
+  const times = report.observations.map((row) => row.started_at).sort(byTime),
+    ends = report.observations.map((row) => row.completed_at).sort(byTime);
   return {
     rows,
     allRows: [...rows, ...excludedRows],

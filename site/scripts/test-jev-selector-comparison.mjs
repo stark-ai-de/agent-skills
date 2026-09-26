@@ -95,6 +95,19 @@ assert.equal(native.groups.skill.inputTokens, null);
 assert.equal(native.groups.all.requests, null);
 assert.equal(result.rows[0].groups.skill.medianMs, 111.5625);
 assert.equal(result.rows[0].groups.skill.p95Ms, 122.125);
+const offsetWindow = structuredClone(fixture);
+Object.assign(offsetWindow.observations[0], {
+  started_at: "2026-09-26T13:00:00+02:00",
+  completed_at: "2026-09-26T13:00:01+02:00",
+});
+Object.assign(offsetWindow.observations[1], {
+  started_at: "2026-09-26T11:30:00-02:00",
+  completed_at: "2026-09-26T11:30:01-02:00",
+});
+assert.deepEqual(selectorComparison(offsetWindow).window, {
+  started_at: offsetWindow.observations[0].started_at,
+  completed_at: offsetWindow.observations[1].completed_at,
+});
 let negative = 0;
 function rejects(change) {
   const copy = structuredClone(fixture);
