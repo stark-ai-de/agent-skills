@@ -187,6 +187,7 @@
       "id": "AC-ADR-065",
       "disposition": "material",
       "relations": [{ "type": "adapts", "sources": ["ADR-0058"] }]
-    }
+    },
+    { "id": "AC-ADR-066", "disposition": "independent", "relations": [] }
   ]
 }
