@@ -97,7 +97,7 @@ python3 scripts/jev_advisor.py --catalog /path/to/skill-catalog.json \
   --selection-profile next_skill --summary --output /path/to/next-skill-result.json
 ```
 
-Alternatively provide `TYPESAFE_API_KEY` through the existing process environment. Never put the secret in a command argument or checked-in file. `--output` writes the complete result file. Without `--summary`, the full result is also printed as before. Receipts contain the supplied task and catalog cards, so store them locally.
+Alternatively provide `TYPESAFE_API_KEY` through the existing process environment. The source order is explicit: `--key-file` wins when supplied; otherwise the helper reads the environment variable. An unreadable, oversized or malformed explicit file fails the advice attempt and never falls back to an ambient key. Both sources are loaded lazily and validated as bounded ASCII credentials; diagnostics contain only safe error codes. Never put the secret in a command argument or checked-in file. `--output` writes the complete result file. Without `--summary`, the full result is also printed as before. Receipts contain the supplied task and catalog cards, so store them locally.
 
 ### Compact host output
 

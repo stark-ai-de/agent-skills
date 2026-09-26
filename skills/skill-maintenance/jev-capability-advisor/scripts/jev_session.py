@@ -8,7 +8,6 @@ authority, interpreting recommendations and any forced process deadline.
 import argparse
 import json
 import math
-import os
 from pathlib import Path
 import re
 import sys
@@ -121,22 +120,9 @@ def validate_frame(frame):
 
 def _load_key(key_file):
     try:
-        if key_file is None:
-            value = os.environ.get('TYPESAFE_API_KEY')
-        else:
-            with Path(key_file).open('rb') as stream:
-                raw = stream.read(8193)
-            if len(raw) > 8192:
-                raise SessionError('credential_invalid')
-            value = raw.decode('ascii')
-    except (OSError, UnicodeError):
-        raise SessionError('credential_unavailable') from None
-    if value is None:
-        raise SessionError('credential_unavailable')
-    value = value.strip()
-    if not value or len(value) > 8192 or '\n' in value or '\r' in value or not value.isascii():
-        raise SessionError('credential_invalid')
-    return value
+        return jev_advisor.load_api_key(key_file, missing_code='credential_unavailable')
+    except jev_advisor.CredentialError as error:
+        raise SessionError(error.code) from None
 
 
 def _remaining(deadline):
