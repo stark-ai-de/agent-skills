@@ -93,6 +93,12 @@ class HookRegistrationTests(unittest.TestCase):
             for path in self.root.rglob("*")
         }
 
+    def assert_windows_startup_created_only_empty_directories(self, before, after):
+        """Allow PowerShell 5.1's empty first-startup profile directories only."""
+        self.assertEqual({key: after[key] for key in before}, before)
+        self.assertTrue(all(value == ("directory", None)
+                            for key, value in after.items() if key not in before))
+
     def registration(self, host="codex"):
         groups = self.read_config(host)["hooks"][EVENT]
         self.assertEqual(len(groups), 1)
@@ -186,7 +192,11 @@ class HookRegistrationTests(unittest.TestCase):
                 result = self.execute_registration("codex", handler, payload)
                 self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
                 self.assertNotIn("CANARY", json.dumps(result))
-        self.assertEqual(self.snapshot(), before)
+        after = self.snapshot()
+        if os.name == "nt":
+            self.assert_windows_startup_created_only_empty_directories(before, after)
+        else:
+            self.assertEqual(after, before)
 
     def test_invalid_render_combinations_leave_state_unchanged(self):
         before = self.snapshot()
@@ -367,9 +377,8 @@ class HookRegistrationTests(unittest.TestCase):
                     # PowerShell 5.1 creates empty profile directories on first
                     # startup even with -NoProfile. It must not change existing
                     # state or create files; later prompt-bearing calls write none.
-                    self.assertEqual({key: after_startup[key] for key in before}, before)
-                    self.assertTrue(all(value == ("directory", None)
-                                        for key, value in after_startup.items() if key not in before))
+                    self.assert_windows_startup_created_only_empty_directories(
+                        before, after_startup)
                 else:
                     self.assertEqual(after_startup, before)
                 before = after_startup
@@ -616,7 +625,7 @@ class HookRegistrationTests(unittest.TestCase):
                     with patch.dict(os.environ, self.env, clear=True), \
                             patch.object(module, "atomic_write", side_effect=interrupt):
                         with self.assertRaisesRegex(OSError, "synthetic interrupted"):
-                            module.run(arguments)
+                            module._run_hook_manager(arguments)
                     if phase == "before-config":
                         self.assertEqual(target.read_bytes(), original)
                     result = self.run_cli(action, host)
@@ -705,7 +714,8 @@ class HookPrimitiveTests(unittest.TestCase):
 
         output = io.StringIO()
         with patch.object(Path, "open", asset_only), \
-                patch.object(self.module, "run", side_effect=AssertionError("installer forbidden")), \
+                patch.object(self.module, "_run_hook_manager",
+                             side_effect=AssertionError("installer forbidden")), \
                 patch.object(self.module, "read_snapshot", side_effect=AssertionError("config read forbidden")), \
                 patch.object(os, "open", side_effect=AssertionError("file access forbidden")), \
                 patch.object(socket, "socket", side_effect=AssertionError("network forbidden")), \
@@ -721,7 +731,8 @@ class HookPrimitiveTests(unittest.TestCase):
                           ["install", "--host", "codex", "--policy", "repository-adopted"]):
             with self.subTest(arguments=arguments), \
                     patch.object(Path, "open", side_effect=AssertionError("file read forbidden")), \
-                    patch.object(self.module, "run", side_effect=AssertionError("installer forbidden")), \
+                    patch.object(self.module, "_run_hook_manager",
+                                 side_effect=AssertionError("installer forbidden")), \
                     patch.object(sys, "stdout", io.StringIO()):
                 self.assertEqual(self.module.main(arguments), 1)
 
@@ -749,6 +760,82 @@ class HookPrimitiveTests(unittest.TestCase):
             self.module.atomic_write(target, b'{"replacement": true}', expected)
         self.assertEqual(target.read_bytes(), external)
         self.assertEqual(list(self.root.iterdir()), [target])
+
+    def test_read_snapshot_tolerates_windows_path_and_handle_identity_differences(self):
+        target = self.root / "config.json"
+        expected = b'{"preserve": true}\n'
+        target.write_bytes(expected)
+        original_lstat = Path.lstat
+
+        def windows_path_stat(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + 1,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", windows_path_stat):
+            snapshot = self.module.read_snapshot(target)
+        self.assertEqual(snapshot.data, expected)
+
+    def test_read_snapshot_rejects_windows_path_replacement_with_matching_metadata(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+        target_lstat_calls = 0
+
+        def replaced_path_stat(path):
+            nonlocal target_lstat_calls
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            target_lstat_calls += 1
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + (1 if target_lstat_calls < 3 else 2),
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", replaced_path_stat):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
+
+    def test_read_snapshot_fails_closed_when_windows_file_identity_is_unavailable(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+
+        def without_file_identity(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=0,
+                st_ino=0,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", without_file_identity):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
 
     def test_atomic_write_rechecks_after_staging_and_cleans_temporary_file(self):
         target = self.root / "config.json"

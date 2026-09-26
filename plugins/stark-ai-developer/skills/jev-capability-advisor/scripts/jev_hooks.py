@@ -62,6 +62,25 @@ def _identity(value):
             value.st_mtime_ns, value.st_ctime_ns, value.st_mode)
 
 
+def _same_path_metadata(left, right):
+    if sys.platform == 'win32':
+        # Windows can report different file IDs and change times for lstat and
+        # fstat on the same file. Keep those full identity checks between fstats.
+        return (left.st_size, left.st_mtime_ns, left.st_mode) == (
+            right.st_size, right.st_mtime_ns, right.st_mode)
+    return _identity(left) == _identity(right)
+
+
+def _same_path_identity(left, right):
+    if sys.platform == 'win32':
+        # st_ino is a Windows file index when available. If either identifier
+        # is unavailable, matching content metadata cannot prove path stability.
+        left_identity = (left.st_dev, left.st_ino)
+        right_identity = (right.st_dev, right.st_ino)
+        return all(left_identity) and left_identity == right_identity
+    return _identity(left) == _identity(right)
+
+
 def safe_path(path):
     """Reject symlinked write paths, including existing ancestor components."""
     path = Path(os.path.abspath(path))
@@ -95,9 +114,11 @@ def read_snapshot(path):
         opened = os.fstat(stream.fileno())
         data = stream.read(MAX_FILE_BYTES + 1)
         after = os.fstat(stream.fileno())
-    if (len(data) > MAX_FILE_BYTES or _identity(before) != _identity(opened)
+    path_after = path.lstat()
+    if (len(data) > MAX_FILE_BYTES or not _same_path_metadata(before, opened)
             or _identity(opened) != _identity(after)
-            or _identity(after) != _identity(path.lstat())):
+            or not _same_path_identity(before, path_after)
+            or not _same_path_metadata(after, path_after)):
         raise HookError('concurrent_modification: ' + str(path))
     return Snapshot(data, _identity(after))
 
@@ -129,7 +150,7 @@ def atomic_write(path, data, expected):
         temporary.unlink(missing_ok=True)
 
 
-def _pairs(pairs):
+def _unique_json_object_pairs(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
@@ -142,7 +163,8 @@ def parse_object(snapshot, label):
     if snapshot.data is None:
         return {}
     try:
-        result = json.loads(snapshot.data.decode('utf-8-sig'), object_pairs_hook=_pairs,
+        result = json.loads(snapshot.data.decode('utf-8-sig'),
+                            object_pairs_hook=_unique_json_object_pairs,
                             parse_constant=lambda _: (_ for _ in ()).throw(
                                 HookError('invalid_json_constant')))
     except (ValueError, UnicodeError) as error:
@@ -401,7 +423,7 @@ def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
         return str(backup) if backup else None
 
 
-def run(args):
+def _run_hook_manager(args):
     config_path, receipt_path = locations(args.host, args.scope, args.project_root)
     config_snapshot = read_snapshot(config_path)
     receipt_snapshot = read_snapshot(receipt_path)
@@ -524,7 +546,7 @@ def main(argv=None):
             if args.policy is not None:
                 raise HookError('invalid_arguments: --policy is only supported by render')
             args.scope = args.scope or 'user'
-            result = run(args)
+            result = _run_hook_manager(args)
     except (HookError, OSError, UnicodeError) as error:
         print(json.dumps({'status': 'error', 'reason': str(error)}, ensure_ascii=True))
         return 1
