@@ -96,8 +96,11 @@ class HookRegistrationTests(unittest.TestCase):
     def assert_windows_startup_created_only_empty_directories(self, before, after):
         """Allow PowerShell 5.1's empty first-startup profile directories only."""
         self.assertEqual({key: after[key] for key in before}, before)
-        self.assertTrue(all(value == ("directory", None)
-                            for key, value in after.items() if key not in before))
+        unexpected = [key for key, value in after.items()
+                      if key not in before and value != ("directory", None)]
+        self.assertEqual(unexpected, [],
+                         "PowerShell startup created non-directory state: "
+                         + repr(unexpected))
 
     def registration(self, host="codex"):
         groups = self.read_config(host)["hooks"][EVENT]
@@ -184,7 +187,17 @@ class HookRegistrationTests(unittest.TestCase):
         handler = fragment["hooks"][EVENT][0]["hooks"][0]
         expected = (SCRIPT.parent.parent / "assets/repository-hook-guidance.txt").read_text(
             encoding="utf-8").strip()
-        before = self.snapshot()
+        before_startup = self.snapshot()
+        startup_output = self.execute_registration("codex", handler, b"")
+        self.assertEqual(
+            startup_output["hookSpecificOutput"]["additionalContext"], expected)
+        after_startup = self.snapshot()
+        if os.name == "nt":
+            self.assert_windows_startup_created_only_empty_directories(
+                before_startup, after_startup)
+        else:
+            self.assertEqual(after_startup, before_startup)
+        before = after_startup
         for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
                         b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
                         b'"tool_result":"PRIVATE_RESULT_CANARY"}'):
@@ -193,10 +206,7 @@ class HookRegistrationTests(unittest.TestCase):
                 self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
                 self.assertNotIn("CANARY", json.dumps(result))
         after = self.snapshot()
-        if os.name == "nt":
-            self.assert_windows_startup_created_only_empty_directories(before, after)
-        else:
-            self.assertEqual(after, before)
+        self.assertEqual(after, before)
 
     def test_invalid_render_combinations_leave_state_unchanged(self):
         before = self.snapshot()
