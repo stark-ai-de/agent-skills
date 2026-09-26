@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.6.0`
+- Version: `1.6.1`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds an explicitly adoptable Architecture Compass policy for qualified Jev host advice, opt-in static host hooks, and a write-free Codex repository-policy renderer. Adoption, host activation, processing consent and qualification remain separate; native selection remains available. General automatic host qualification is still pending.
+- Release notes: Hardens Jev credential handling with bounded validation for file and environment sources and fail-closed configured-file behavior. Native selection remains available.
 
 ## Capabilities
 
