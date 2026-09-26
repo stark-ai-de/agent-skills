@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.6.1`
+- Version: `1.7.0`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Hardens Jev credential handling with bounded validation for file and environment sources and fail-closed configured-file behavior. Native selection remains available.
+- Release notes: Adds capability-aware planning workflows to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse.
 
 ## Capabilities
 

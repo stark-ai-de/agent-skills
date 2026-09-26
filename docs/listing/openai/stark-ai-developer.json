@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "stark-ai-developer",
-    "version": "1.6.1",
+    "version": "1.7.0",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
     "longDescription": "stark AI Developer brings practical workflows for implementation-ready specifications, architecture decisions, structural code analysis, editable diagrams, repository visuals, agent memory, and capability recommendations. Its open-source skills expose their instructions and supporting scripts for review and adaptation.\n\nThe package has no shared backend, bundled MCP server, telemetry or analytics. Jev Capability Advisor is an optional Codex workflow: fresh recommendations send your supplied task and public capability descriptions to TypeSafe using your own API key. Offline candidate inspection needs no credential or network. Your host controls discovery, permissions and execution; other tools and services keep their own access requirements.",
@@ -47,7 +47,7 @@
     "verifiedIdentityKind": "individual",
     "verifiedIdentityName": "Marcel Michael Mayer"
   },
-  "releaseNotes": "Hardens Jev credential handling with bounded validation for file and environment sources and fail-closed configured-file behavior. Native selection remains available.",
+  "releaseNotes": "Adds capability-aware planning workflows to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse.",
   "skills": [
     {
       "name": "codex-memory-curator",
