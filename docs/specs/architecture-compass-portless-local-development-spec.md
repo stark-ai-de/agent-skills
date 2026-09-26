@@ -91,8 +91,8 @@ inventory explicit rather than deriving identity from the count.
    installation checks. Add six evaluation scenarios and negative regressions
    for missing 066 variants and unexpected complete 064 payloads.
 4. Increase Architecture Compass 0.8.0 to 0.9.0. Preserve the merged main
-   plugin source version 1.6.0 and align the local listing, submission worksheet
-   and version badge at 1.6.0. Leave root release versions unchanged. Generate
+   plugin source version 1.6.1 and align the local listing, submission worksheet
+   and version badge at 1.6.1. Leave root release versions unchanged. Generate
    projections with `pnpm run sync:agent-plugin` and review the diff.
 5. Run the scoped validation below and record actual outcomes separately.
 
@@ -129,7 +129,10 @@ the earlier save-only handoff. No material policy questions remain open.
 
 On 2026-09-26, conflict resolution preserved main's accepted Jev AC-ADR-065
 and its reserved AC-ADR-064 gap, so this Portless decision uses AC-ADR-066.
-This identifier adaptation does not change the accepted Portless policy.
+This identifier adaptation does not change the accepted Portless policy. The
+current main line also advances the plugin listing to 1.6.1 with Jev credential
+hardening; the regenerated listing retains the release notes for AC-ADR-065
+and AC-ADR-066 alongside that update.
 
 ## Validation
 

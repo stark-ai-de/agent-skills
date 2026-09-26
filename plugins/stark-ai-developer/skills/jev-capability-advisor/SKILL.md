@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Jev Capability Advisor
@@ -39,7 +39,7 @@ Keep one eligible skill instance's instructions and scripts together; do not con
 
 - The requested task, relevant conversation context, and any skills already loaded or services already configured.
 - A current host-supplied catalog of available capability IDs, names, descriptions, and activation restrictions. For hooks, capture a bounded skills/MCP subset from the running session using [verified host defaults and exclusions](references/hook-integration.md#capture-a-bounded-current-session-catalog); installed files or another session cannot prove availability.
-- Python 3.10+ (`python3`) and an existing credential source. Installer-managed hook advice reads `scripts/jev_hooks.py status` using the delivered local registration JSON's `host`, `scope` and project-only `project_root`, never guessed values or provider inputs: pass configured `credentials.key_file` to advisor `--key-file`; otherwise use `TYPESAFE_API_KEY`. An unavailable configured file does not fall back to the environment. Never request a key in chat.
+- Python 3.10+ (`python3`) and an existing credential source. Installer-managed hook advice reads `scripts/jev_hooks.py status` using the delivered local registration JSON's `host`, `scope` and project-only `project_root`, never guessed values or provider inputs: when status reports a ready `key_file` source, pass its `credentials.key_file` to advisor `--key-file`; when status reports a ready environment source, omit `--key-file` and use `TYPESAFE_API_KEY`. A configured file is authoritative; unavailable or invalid files never fall back to the environment. Never request a key in chat.
 
 ## Workflow
 
@@ -74,7 +74,7 @@ python3 scripts/jev_advisor.py --catalog /path/to/catalog.json \
 
 For an explicitly requested next skill, add `--selection-profile next_skill` to that command and supply a current catalog with no enabled tools. `none`, `clarify` and `error` remain distinct; next-skill replies always leave additional work unassessed.
 
-Run from the skill directory, or resolve the script relative to this `SKILL.md`. Add `--key-file /path/to/local-key` for an existing raw-key file instead of `TYPESAFE_API_KEY`. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid recommendation. A summary is advisory and does not prove semantic correctness.
+Run from the skill directory, or resolve the script relative to this `SKILL.md`. Pass a ready host-configured `credentials.key_file` with `--key-file`; if none is configured, omit the option and let the helper read `TYPESAFE_API_KEY` from its process environment. A supplied file is authoritative; read errors do not fall back to the environment. Never put the key value in command arguments, checked-in files, provider inputs or logs. Read the contract when preparing inputs or diagnosing a limit; do not add an inspection call before an already valid recommendation. A summary is advisory and does not prove semantic correctness.
 
 ## Safety rules
 
