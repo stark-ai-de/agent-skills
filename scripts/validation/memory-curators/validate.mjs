@@ -2054,7 +2054,11 @@ function runClaudeCandidateContract(curator) {
     for (const file of [...allowed, ...excluded])
       writeFixture(path.join(repo, file), "Always use synthetic policy.\n");
     writeFixture(path.join(repo, "CLAUDE.local.md"), "# Local instruction candidate\n");
-    const rulePaths = [".claude/rules/nested/AGENTS.md", "packages/sample/.claude/rules/AGENTS.md"];
+    const rulePaths = [
+      ".claude/rules/nested/AGENTS.md",
+      "packages/sample/.claude/rules/AGENTS.md",
+      "packages/sample/.claude/rules/testing.md",
+    ];
     for (const file of rulePaths) {
       writeFixture(
         path.join(repo, file),
@@ -2076,6 +2080,11 @@ function runClaudeCandidateContract(curator) {
     const args = [script, "--repo", repo, "--claude-home", home, "--json"];
     const before = snapshotTree(temp);
     const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+    if (!result.stdout.trim()) {
+      throw new Error(
+        `Claude inventory subprocess returned no JSON (status ${result.status}; error ${result.error?.message ?? "none"}; stderr: ${result.stderr.trim() || "empty"})`,
+      );
+    }
     const payload = JSON.parse(result.stdout);
     const candidates = payload.files.filter(
       (file) => file.surface === "claude-agents-md-candidate",
@@ -2103,6 +2112,14 @@ function runClaudeCandidateContract(curator) {
           "Claude inventory: AGENTS.md inside .claude/rules must retain rule metadata, not native candidate classification",
         );
       }
+    }
+    const nestedRule = payload.files.find(
+      (candidate) => candidate.path === path.join(repo, "packages/sample/.claude/rules/testing.md"),
+    );
+    if (nestedRule?.surface !== "claude-project-rule" || nestedRule.loading !== null) {
+      fail(
+        "Claude inventory: nested .claude/rules Markdown files must be discovered as project rules",
+      );
     }
     for (const file of excluded) {
       if (payload.files.some((candidate) => candidate.path === path.join(repo, file)))
@@ -2166,6 +2183,11 @@ function runClaudeCandidateContract(curator) {
       !scanPayload.findings.some(
         (finding) =>
           finding.surface === "claude-agents-md-candidate" && finding.path === ancestorAgents,
+      ) ||
+      !scanPayload.findings.some(
+        (finding) =>
+          finding.surface === "claude-project-rule" &&
+          finding.path === path.join(repo, "packages/sample/.claude/rules/testing.md"),
       )
     ) {
       fail(
@@ -2270,6 +2292,13 @@ for (const curator of curators) {
     !skill.includes("backup-memories.mjs [--repo PATH] [--codex-home PATH]")
   ) {
     fail(`${skillRelative}: Codex backup CLI must expose the target-repository boundary`);
+  }
+  if (
+    curator.runtime === "codex" &&
+    (!skill.includes("For a store-wide request, run the redacted risk scanner") ||
+      !skill.includes("do not run this whole-store scanner because it has no file selector"))
+  ) {
+    fail(`${skillRelative}: Codex risk scans must stay within the explicitly requested scope`);
   }
   const embeddedReportHeadings = [
     "## Review",

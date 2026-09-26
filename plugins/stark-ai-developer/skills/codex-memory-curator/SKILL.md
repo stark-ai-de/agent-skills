@@ -90,13 +90,13 @@ Every route applies the same review quality to the explicitly requested scope be
 
    For a narrower request, skip this whole-store command and inventory only the explicitly requested paths with targeted reads.
 
-3. Run the redacted risk scanner when looking for sensitive, stale, broad, local, repo-specific, or config-like entries:
+3. For a store-wide request, run the redacted risk scanner when looking for sensitive, stale, broad, local, repo-specific, or config-like entries:
 
    ```bash
    node scripts/scan-memory-risks.mjs --json
    ```
 
-   Exit code `1` means findings were found, not that the scan failed. The scanner caps returned findings and skips generated evidence by default; raise `--max-findings` or add `--include-generated-evidence` only when needed.
+   For a single-file or single-claim review, use targeted reads in the requested scope; do not run this whole-store scanner because it has no file selector. Exit code `1` means findings were found, not that the scan failed. The scanner caps returned findings and skips generated evidence by default; raise `--max-findings` or add `--include-generated-evidence` only when needed.
    Use scanner JSON as evidence; report counts and the highest-signal redacted findings instead of pasting the full payload.
 
 4. If configuration is requested or needed to resolve an in-scope conflict, locate memory/config signals across the entire `<codex-home>/config.toml` with `node scripts/locate-memory-config.mjs --json`. The locator emits line numbers and fixed signal names, never values. Inspect only relevant bounded sections, including their table/profile context; redact sensitive values. Candidate matches are not parsed TOML or effective configuration proof.

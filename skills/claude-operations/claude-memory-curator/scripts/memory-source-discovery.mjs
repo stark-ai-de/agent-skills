@@ -78,10 +78,14 @@ export function collectProjectFiles(repo) {
     path.join(repo, "CLAUDE.local.md"),
     path.join(repo, ".claude", "settings.json"),
     path.join(repo, ".claude", "settings.local.json"),
-    ...walk(path.join(repo, ".claude", "rules"), (file) => file.endsWith(".md")),
     ...walk(repo, (file) => {
       const name = path.basename(file);
+      const relative = path.relative(repo, file).split(path.sep);
+      const isProjectRule = relative.some(
+        (part, index) => part === ".claude" && relative[index + 1] === "rules",
+      );
       return (
+        (isProjectRule && file.endsWith(".md")) ||
         name === "CLAUDE.md" ||
         name === "CLAUDE.local.md" ||
         (name === "AGENTS.md" && !path.relative(repo, file).split(path.sep).includes(".agents"))

@@ -1549,10 +1549,10 @@
       "sha256": "483247453e62c19a6e602e8425d7a35984f6cdd610b033c8f47849a8ddbd86b2"
     },
     {
-      "byteLength": 16752,
+      "byteLength": 16932,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "9990b1fb99b4169f927b0e86853dd580e075eea2b84906c0f1d98afd952273f6"
+      "sha256": "ecf6e0e4418bbd60ae62cb3d84366c5b5bd8b30ea84703a6e079c04ade2050b9"
     },
     {
       "byteLength": 575,
@@ -2107,5 +2107,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "bad01fdcf0256d98ce61709f92ad083e325e3b51099e06b29a8881072566155f"
+  "treeHash": "f7088460a4d12f7ac0c27aa8d055eb6f579a72744136412fc3fb29c09a8980f9"
 }
