@@ -723,6 +723,28 @@ class HookRegistrationTests(unittest.TestCase):
         self.run_cli("install", "codex", "--advice-consent", "allow")
         self.assertEqual(self.run_cli("status")["advice_consent"]["status"], "recorded")
 
+    def test_key_readiness_accepts_windows_path_handle_difference_but_rejects_replacement(self):
+        module = self.hook_module()
+        key = self.credential_file()
+        original = Path.lstat
+        for replace_path in (False, True):
+            calls = 0
+            def path_stat(path):
+                nonlocal calls
+                value = original(path)
+                if path != key:
+                    return value
+                calls += 1
+                return SimpleNamespace(st_dev=value.st_dev + 1,
+                    st_ino=value.st_ino + (2 if replace_path and calls >= 3 else 1),
+                    st_size=value.st_size, st_mtime_ns=value.st_mtime_ns,
+                    st_ctime_ns=value.st_ctime_ns + 1, st_mode=value.st_mode,
+                    st_reparse_tag=getattr(value, "st_reparse_tag", 0))
+            with self.subTest(replace_path=replace_path), \
+                    patch.object(module.sys, "platform", "win32"), \
+                    patch.object(Path, "lstat", path_stat):
+                self.assertEqual(module.key_file_readiness(key), "key_file_changed" if replace_path else None)
+
     def test_consent_recovery_tracks_actual_config_before_and_after_interruption(self):
         module = self.hook_module()
         original_write = module.atomic_write
@@ -1217,6 +1239,118 @@ class HookRegistrationTests(unittest.TestCase):
         self.assertEqual(baseline["hookSpecificOutput"]["additionalContext"], guidance)
 
 
+    def assert_windows_startup_created_only_empty_directories(self, before, after):
+        """Allow PowerShell 5.1's empty first-startup profile directories only."""
+        self.assertEqual({key: after[key] for key in before}, before)
+        unexpected = [key for key, value in after.items()
+                      if key not in before and value != ("directory", None)]
+        self.assertEqual(unexpected, [],
+                         "PowerShell startup created non-directory state: "
+                         + repr(unexpected))
+
+
+    def test_render_ignores_broken_user_configuration_and_state(self):
+        # Rendering must not even parse installation files, including corrupt ones.
+        (self.codex / "hooks.json").write_bytes(b"not JSON: private config canary")
+        (self.root / "state").write_bytes(b"not a directory: ownership canary")
+        before = self.snapshot()
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        self.assertEqual(set(fragment), {"hooks"})
+        self.assertEqual(set(fragment["hooks"]), {EVENT})
+        groups = fragment["hooks"][EVENT]
+        self.assertEqual(len(groups), 1)
+        handler = groups[0]["hooks"][0]
+        self.assertEqual(handler["timeout"], 5)
+        self.assertEqual(handler["type"], "command")
+        self.assertEqual(self.snapshot(), before)
+
+
+    def test_rendered_policy_output_is_constant_for_arbitrary_hook_input(self):
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        handler = fragment["hooks"][EVENT][0]["hooks"][0]
+        expected = (SCRIPT.parent.parent / "assets/repository-hook-guidance.txt").read_text(
+            encoding="utf-8").strip()
+        before_startup = self.snapshot()
+        startup_output = self.execute_registration("codex", handler, b"")
+        self.assertEqual(
+            startup_output["hookSpecificOutput"]["additionalContext"], expected)
+        after_startup = self.snapshot()
+        if os.name == "nt":
+            self.assert_windows_startup_created_only_empty_directories(
+                before_startup, after_startup)
+            # Windows PowerShell creates this startup optimization cache lazily.
+            startup_cache = (
+                self.home / "AppData" / "Local" / "Microsoft" / "Windows"
+                / "PowerShell" / "StartupProfileData-NonInteractive"
+            )
+            allowed_runtime_paths = {str(startup_cache.relative_to(self.root))}
+            parent = startup_cache.parent
+            while parent != self.home:
+                allowed_runtime_paths.add(str(parent.relative_to(self.root)))
+                parent = parent.parent
+        else:
+            self.assertEqual(after_startup, before_startup)
+            allowed_runtime_paths = set()
+        before = after_startup
+        for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
+                        b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
+                        b'"tool_result":"PRIVATE_RESULT_CANARY"}'):
+            with self.subTest(size=len(payload)):
+                result = self.execute_registration("codex", handler, payload)
+                self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
+                self.assertNotIn("CANARY", json.dumps(result))
+                after = self.snapshot()
+                added = sorted(set(after) - set(before))
+                removed = sorted(set(before) - set(after))
+                changed = sorted(key for key in before.keys() & after.keys()
+                                 if before[key] != after[key])
+                if os.name == "nt":
+                    unexpected = sorted((set(added) | set(changed)) - allowed_runtime_paths)
+                    cache = after.get(str(startup_cache.relative_to(self.root)))
+                    self.assertTrue(cache is None or cache[0] == "file",
+                                    "PowerShell startup cache path is not a file")
+                    unexpected_directories = sorted(
+                        path for path in allowed_runtime_paths
+                        if path != str(startup_cache.relative_to(self.root))
+                        and path in after and after[path] != ("directory", None)
+                    )
+                    self.assertEqual(unexpected_directories, [],
+                                     "PowerShell cache parents are not directories")
+                    cache_markers = [] if cache is None else [
+                        marker for marker in (b"RAW_PROMPT_CANARY", b"PRIVATE_RESULT_CANARY")
+                        if marker in cache[1]
+                    ]
+                    self.assertEqual(cache_markers, [],
+                                     "PowerShell startup cache contains prompt markers")
+                else:
+                    unexpected = sorted(set(added) | set(changed))
+                self.assertEqual((unexpected, removed), ([], []),
+                                 f"hook input changed filesystem paths: size={len(payload)}, "
+                                 f"unexpected={unexpected!r}, removed={removed!r}")
+
+
+    def test_invalid_render_combinations_leave_state_unchanged(self):
+        before = self.snapshot()
+        cases = (
+            ("render", "codex", ()),
+            ("render", "claude-code", ("--policy", "repository-adopted")),
+            ("render", "codex", ("--policy", "repository-adopted", "--scope", "user")),
+            ("render", "codex", ("--policy", "repository-adopted", "--project-root", str(self.project))),
+            ("render", "codex", ("--policy", "repository-adopted", "--dry-run")),
+            ("render", "codex", ("--policy", "repository-adopted", "--key-file", str(self.root / "missing-key"))),
+            ("render", "codex", ("--policy", "repository-adopted", "--advice-consent", "allow")),
+            *((action, "codex", ("--policy", "repository-adopted"))
+              for action in ("install", "status", "uninstall")),
+        )
+        for action, host, arguments in cases:
+            with self.subTest(action=action, host=host, arguments=arguments):
+                result = self.run_cli(action, host, *arguments, success=False)
+                self.assertEqual(result["status"], "error")
+                self.assertIn("invalid_arguments", result["reason"])
+                self.assertEqual(self.snapshot(), before)
+
+
+
 class HookPrimitiveTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1263,6 +1397,14 @@ class HookPrimitiveTests(unittest.TestCase):
         self.assertEqual(snapshot.data, b"stable contents after creation")
         self.assertEqual(self.module.read_snapshot(target), snapshot)
         self.assertIsNone(self.module.key_file_readiness(target), json.dumps(diagnostic, sort_keys=True))
+
+    def test_windows_descriptor_identity_preserves_change_time(self):
+        value = SimpleNamespace(st_dev=1, st_ino=2, st_size=3, st_mtime_ns=4,
+                                st_ctime_ns=5, st_birthtime_ns=6, st_mode=7)
+        with patch.object(self.module.os, "name", "nt"):
+            before = self.module._identity(value, descriptor=True)
+            value.st_ctime_ns += 1
+            self.assertNotEqual(self.module._identity(value, descriptor=True), before)
 
     def test_windows_creation_time_normalization_preserves_other_identity_checks(self):
         # Affected Windows Python path stat exposes creation time as ctime while
@@ -1425,6 +1567,123 @@ class HookPrimitiveTests(unittest.TestCase):
         self.assertNotIn(guidance, decoded)
         with self.assertRaisesRegex(self.module.HookError, "windows_command_too_long"):
             self.module.build_registration("codex", platform="win32", guidance="x" * 5000)
+
+
+    def test_render_can_read_only_its_packaged_policy_guidance(self):
+        asset = SCRIPT.parent.parent / "assets/repository-hook-guidance.txt"
+        original_open = Path.open
+        opened = []
+
+        def asset_only(path, mode="r", *args, **kwargs):
+            self.assertEqual(path, asset)
+            self.assertEqual(mode, "r")
+            opened.append(path)
+            return original_open(path, mode, *args, **kwargs)
+
+        output = io.StringIO()
+        with patch.object(Path, "open", asset_only), \
+                patch.object(self.module, "run",
+                             side_effect=AssertionError("installer forbidden")), \
+                patch.object(self.module, "read_snapshot", side_effect=AssertionError("config read forbidden")), \
+                patch.object(os, "open", side_effect=AssertionError("file access forbidden")), \
+                patch.object(socket, "socket", side_effect=AssertionError("network forbidden")), \
+                patch.object(sys, "stdin", None), patch.object(sys, "stdout", output):
+            status = self.module.main(["render", "--host", "codex", "--policy", "repository-adopted"])
+        self.assertEqual(status, 0)
+        self.assertEqual(opened, [asset])
+        self.assertIn(EVENT, json.loads(output.getvalue())["hooks"])
+
+
+    def test_render_rejects_unsupported_arguments_before_any_file_read(self):
+        for arguments in (["render", "--host", "codex"],
+                          ["render", "--host", "claude-code", "--policy", "repository-adopted"],
+                          ["install", "--host", "codex", "--policy", "repository-adopted"]):
+            with self.subTest(arguments=arguments), \
+                    patch.object(Path, "open", side_effect=AssertionError("file read forbidden")), \
+                    patch.object(self.module, "run",
+                                 side_effect=AssertionError("installer forbidden")), \
+                    patch.object(sys, "stdout", io.StringIO()):
+                self.assertEqual(self.module.main(arguments), 1)
+
+
+    def test_read_snapshot_tolerates_windows_path_and_handle_identity_differences(self):
+        target = self.root / "config.json"
+        expected = b'{"preserve": true}\n'
+        target.write_bytes(expected)
+        original_lstat = Path.lstat
+
+        def windows_path_stat(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + 1,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", windows_path_stat):
+            snapshot = self.module.read_snapshot(target)
+        self.assertEqual(snapshot.data, expected)
+
+
+    def test_read_snapshot_rejects_windows_path_replacement_with_matching_metadata(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+        target_lstat_calls = 0
+
+        def replaced_path_stat(path):
+            nonlocal target_lstat_calls
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            target_lstat_calls += 1
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + (1 if target_lstat_calls < 3 else 2),
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", replaced_path_stat):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
+
+
+    def test_read_snapshot_fails_closed_when_windows_file_identity_is_unavailable(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+
+        def without_file_identity(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=0,
+                st_ino=0,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", without_file_identity):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
+
 
 
 if __name__ == "__main__":

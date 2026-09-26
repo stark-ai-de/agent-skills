@@ -2,7 +2,8 @@
 """Opt-in Jev hook registration. No provider access or capability discovery.
 
 install/uninstall modify only the selected hook config and private ownership state.
-status and --dry-run never write. No third-party dependencies.
+status and --dry-run never write. render prints a fragment without accessing
+user configuration or ownership state. No third-party dependencies.
 """
 import argparse
 import base64
@@ -69,13 +70,32 @@ class Snapshot:
     identity: tuple | None
 
 
-def _identity(value):
+def _identity(value, *, descriptor=False):
     # Windows path stat aliases ctime to creation time, while Python 3.14
     # fstat can report change time. Compare the same timestamp on both APIs.
     timestamp = (getattr(value, 'st_birthtime_ns', value.st_ctime_ns)
-                 if os.name == 'nt' else value.st_ctime_ns)
+                 if os.name == 'nt' and not descriptor else value.st_ctime_ns)
     return (value.st_dev, value.st_ino, value.st_size,
             value.st_mtime_ns, timestamp, value.st_mode)
+
+
+def _same_path_metadata(left, right):
+    if sys.platform == 'win32':
+        # Windows can report different file IDs and change times for lstat and
+        # fstat on the same file. Keep those full identity checks between fstats.
+        return (left.st_size, left.st_mtime_ns, left.st_mode) == (
+            right.st_size, right.st_mtime_ns, right.st_mode)
+    return _identity(left) == _identity(right)
+
+
+def _same_path_identity(left, right):
+    if sys.platform == 'win32':
+        # st_ino is a Windows file index when available. If either identifier
+        # is unavailable, matching content metadata cannot prove path stability.
+        left_identity = (left.st_dev, left.st_ino)
+        right_identity = (right.st_dev, right.st_ino)
+        return all(left_identity) and left_identity == right_identity
+    return _identity(left) == _identity(right)
 
 
 def safe_path(path):
@@ -111,11 +131,14 @@ def read_snapshot(path):
         opened = os.fstat(stream.fileno())
         data = stream.read(MAX_FILE_BYTES + 1)
         after = os.fstat(stream.fileno())
-    if (len(data) > MAX_FILE_BYTES or _identity(before) != _identity(opened)
-            or _identity(opened) != _identity(after)
-            or _identity(after) != _identity(path.lstat())):
+    path_after = path.lstat()
+    if (len(data) > MAX_FILE_BYTES or not _same_path_metadata(before, opened)
+            or _identity(opened, descriptor=True) != _identity(after, descriptor=True)
+            or not _same_path_identity(before, path_after)
+            or not _same_path_metadata(after, path_after)):
         raise HookError('concurrent_modification: ' + str(path))
-    return Snapshot(data, _identity(after))
+    return Snapshot(data, _identity(after, descriptor=True))
+
 
 
 def atomic_write(path, data, expected):
@@ -220,6 +243,15 @@ def consent_status(consent, preview=False):
     return {'status': ('would_record' if preview else 'recorded') if consent else 'not_recorded',
             'terms': CONSENT_TERMS, 'record': consent,
             'native_approval': 'still_required_when_host_requires_it'}
+
+
+def render_policy(host, policy):
+    """Build a static fragment; never inspect installation or user state."""
+    if host != 'codex' or policy != 'repository-adopted':
+        raise HookError('unsupported_policy')
+    guidance = (Path(__file__).resolve().parent.parent / 'assets' /
+                'repository-hook-guidance.txt').read_text(encoding='utf-8').strip()
+    return {'hooks': {'UserPromptSubmit': [build_registration(host, guidance=guidance)]}}
 
 
 def _ps_quote(value):
@@ -577,7 +609,10 @@ def key_file_readiness(path):
         flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_BINARY', 0)
         with os.fdopen(os.open(path, flags), 'rb') as stream:
             opened = os.fstat(stream.fileno())
-            if _identity(opened) != _identity(before):
+            path_after = path.lstat()
+            if (not _same_path_metadata(before, opened)
+                    or not _same_path_identity(before, path_after)
+                    or not _same_path_metadata(opened, path_after)):
                 return 'key_file_changed'
             if not opened.st_size:
                 return 'key_file_empty'
@@ -809,16 +844,29 @@ def run(args):
 
 def main(argv=None):
     parser = Parser(description=__doc__, epilog=DISCLOSURE)
-    parser.add_argument('action', choices=('install', 'status', 'uninstall'))
+    parser.add_argument('action', choices=('install', 'status', 'uninstall', 'render'))
     parser.add_argument('--host', choices=('codex', 'claude-code'), required=True)
-    parser.add_argument('--scope', choices=('user', 'project'), default='user')
+    parser.add_argument('--scope', choices=('user', 'project'))
     parser.add_argument('--project-root', type=Path)
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--advice-consent', choices=('allow', 'revoke'),
                         help='Install only: record or revoke explicit TypeSafe processing consent for this registration. ' + CONSENT_TERMS)
+    parser.add_argument('--policy', choices=('repository-adopted',))
     parser.add_argument('--key-file', type=Path, help='Install only: save an existing key-file reference privately; never copy its contents')
     try:
-        result = run(parser.parse_args(argv))
+        args = parser.parse_args(argv)
+        if args.action == 'render':
+            if (args.host != 'codex' or args.policy != 'repository-adopted'
+                    or args.scope is not None or args.project_root is not None or args.dry_run
+                    or args.key_file is not None or args.advice_consent is not None):
+                raise HookError('invalid_arguments: render requires --host codex '
+                                '--policy repository-adopted and no installer options')
+            result = render_policy(args.host, args.policy)
+        else:
+            if args.policy is not None:
+                raise HookError('invalid_arguments: --policy is only supported by render')
+            args.scope = args.scope or 'user'
+            result = run(args)
     except (HookError, OSError, UnicodeError, ValueError) as error:
         print(json.dumps({'status': 'error', 'reason': str(error)}, ensure_ascii=True))
         return 1

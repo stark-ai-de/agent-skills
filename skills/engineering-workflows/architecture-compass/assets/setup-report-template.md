@@ -34,12 +34,12 @@
 - Repository evidence state: `new | evidence-empty | established`
 - Foundation eligibility and evidence:
 - Catalog path and revision/fingerprint:
-- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `44`
-- Matrix row count: `44`
+- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `45`
+- Matrix row count: `45`
 - Selected count (`adopt` + `adapt`): `<number from completed matrix>`
 - Not-selected count (`defer` + `reject`): `<number from completed matrix>`
-- Total disposition count (`selected` + `not-selected`): `<number; must equal 44>`
-- Count equality: `selected + not-selected = total = 44`: `pass | fail`
+- Total disposition count (`selected` + `not-selected`): `<number; must equal 45>`
+- Count equality: `selected + not-selected = total = 45`: `pass | fail`
 - Duplicate IDs: `0 | <count and IDs>`
 - Missing IDs: `0 | <count and IDs>`
 - Deferred provider ADRs, triggers, and owners:
@@ -111,8 +111,22 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-061   |             |                 |                     |                        |                     |
 | AC-ADR-062   |             |                 |                     |                        |                     |
 | AC-ADR-063   |             |                 |                     |                        |                     |
+| AC-ADR-065   |             |                 |                     |                        |                     |
 
 AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, and AC-ADR-048 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
+
+## Adopted Jev host advice
+
+- Provider candidate: `AC-ADR-065`; disposition and target evidence:
+- Accepted repository-native ADR, provider mapping, and applicable repository scope:
+- Authorized hosts and configuration owner:
+- Missing prerequisites, unmet obligation, native fallback, owner, and revisit trigger:
+
+| Host and repository scope | Installed artifact | Configured registration | Effectively active/trusted | Explicit processing authority and approved metadata scope | Current inventory, restrictions, and coverage limits | Qualified host/runtime/configuration/model/reasoning evidence | Evidence status, source, observed at, and invalidators |
+| ------------------------- | ------------------ | ----------------------- | -------------------------- | --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------ |
+|                           |                    |                         |                            |                                                           |                                                      |                                                               |                                                        |
+
+Use separate evidence for each dimension; adoption is not activation, processing consent, current eligibility, or qualification. Mark unknown, missing, failed, or stale evidence truthfully. Preserve explicit user skill choices and native selection when prerequisites are unmet. Audit reports existing evidence only: no provider requests, qualification probes, repairs, or writes. Setup records governance and gaps without changing global host configuration.
 
 ## Accepted ADR overlap and conflict
 

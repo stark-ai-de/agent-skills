@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "30f9842ab925a5f177964b06ac9a8ca4edbfb9f3805669ff5ac95a1c60302269"
+      "sha256": "6ed418faca39db33add67213b05ab1285c8d23b337008def77c9c7107b9879ce"
     },
     {
       "byteLength": 12772,
@@ -175,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 17019,
+      "byteLength": 17904,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "fd0e66bd46e49f9f365dfb4a8403e0e673481aba490085c95154b7df6155f99f"
+      "sha256": "f37dc791610693886da39487825f56ff2f9c65e112894f2805ae1faa78bdfe85"
     },
     {
       "byteLength": 891,
@@ -247,16 +247,16 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 7577,
+      "byteLength": 9378,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "b2a311390dfcbbcd06bcdc20732bed34ed5f6160de036f9451823d77376972c7"
+      "sha256": "de1d20636482b2e2dd70a01f4b4697cf0c129550471a9c145a3c5fc6ea6bdd7a"
     },
     {
-      "byteLength": 12735,
+      "byteLength": 14654,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "5301351033a8800db4be21474236851a3cbef39d3546bc5e9a807f1b873273a5"
+      "sha256": "dccedbb9255a196757af907a71744a00fb931da60143acdf494f0d48824d8b94"
     },
     {
       "byteLength": 6103,
@@ -1405,10 +1405,28 @@
       "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
     },
     {
-      "byteLength": 53477,
+      "byteLength": 9269,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.guide.md",
+      "sha256": "fdd39b81596206c2c9c166e19076967a4af42828c28aec895edc0b6a1618fe7e"
+    },
+    {
+      "byteLength": 6330,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.long.md",
+      "sha256": "130d0bbd66f107d2f39bb953d5d10152e465897c5a6a3b1e97cc49fb7fe52b9f"
+    },
+    {
+      "byteLength": 3544,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.short.md",
+      "sha256": "0524a4e871899b4be58cde2010ee49d640e6215e7a787203315f821954aef6cd"
+    },
+    {
+      "byteLength": 54355,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "9b1783e9226d7057a195e52eaeca55aae105b2c529984ccc06e7c780dd7e0487"
+      "sha256": "b86fd048bc331715d0d855032cb217139673539b2946524d1dfe90b5032bc04f"
     },
     {
       "byteLength": 6996,
@@ -1933,10 +1951,10 @@
       "sha256": "a2178792b40306f7c98365105b93cf693204cd84601762370c3b7f6050c0fb4c"
     },
     {
-      "byteLength": 16926,
+      "byteLength": 18215,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/SKILL.md",
-      "sha256": "5e383f372f93efa5fd1566b971e9ad63c7522d1be7bd22d9959b7d284b575b9a"
+      "sha256": "d392a46e1d185f50f776d619eba3a330779b06156e415915a45fc14de6d672bf"
     },
     {
       "byteLength": 615,
@@ -1963,6 +1981,12 @@
       "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
     },
     {
+      "byteLength": 1401,
+      "mode": "0644",
+      "path": "skills/jev-capability-advisor/assets/repository-hook-guidance.txt",
+      "sha256": "d142fc3e86c27f31a3504558904a0ec40ffc2ace85b460c5c1f36523eb18a5c7"
+    },
+    {
       "byteLength": 25074,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/contract.md",
@@ -1975,16 +1999,16 @@
       "sha256": "672a1f985c9ecdf6482eef7316ad5c4979a5f546a87e140466aae55d812d4b6c"
     },
     {
-      "byteLength": 33001,
+      "byteLength": 37589,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/hook-integration.md",
-      "sha256": "2099d6105dac7eb1f2d94f173d6a46af702529b64843b53427d62072bcb4ef24"
+      "sha256": "9adf132bc992adcccfd6883325e792c29dec15c0f77b0da0a4c2888a1caf6b85"
     },
     {
-      "byteLength": 10836,
+      "byteLength": 11002,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/session-integration.md",
-      "sha256": "6139d9243e58e5a8226efc7c3c817102fe502fcacc93278f313c79d52faa7ade"
+      "sha256": "c9ab9536938f22115b4aadcab3d539c854cce0c2c6321231ee7b95139f02d82b"
     },
     {
       "byteLength": 4617,
@@ -2017,10 +2041,10 @@
       "sha256": "e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec"
     },
     {
-      "byteLength": 39203,
+      "byteLength": 41761,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_hooks.py",
-      "sha256": "6e2680e2614af42874f4630e2a088c5f8829ef9a1ac505a4928a9fb6bc8aa035"
+      "sha256": "356abd71f741a228ac0737496c1e6253da0f621605b2f43a0cd3bf3e2630b79b"
     },
     {
       "byteLength": 19499,
@@ -2043,9 +2067,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "65abc1e326c4577c20e4f6b7a6ebc8ebff2677836709659c18a541790b9f8d52"
+  "treeHash": "e9e534b8c8223da97b209eef4a1e0a1371df27f71476eb1e2fdd0ea8e4a40c80"
 }

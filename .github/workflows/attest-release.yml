@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   attest:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
     env:
       RELEASE_TAG: ${{ inputs.tag }}
@@ -63,7 +63,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: ⬇️ Checkout workflow sources
-        uses: actions/checkout@v6
+        uses: useblacksmith/checkout@v1
         with:
           ref: ${{ steps.verifier.outputs.verifier_sha }}
           fetch-depth: 0
