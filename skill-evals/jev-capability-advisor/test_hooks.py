@@ -205,8 +205,14 @@ class HookRegistrationTests(unittest.TestCase):
                 result = self.execute_registration("codex", handler, payload)
                 self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
                 self.assertNotIn("CANARY", json.dumps(result))
-        after = self.snapshot()
-        self.assertEqual(after, before)
+                after = self.snapshot()
+                added = sorted(set(after) - set(before))
+                removed = sorted(set(before) - set(after))
+                changed = sorted(key for key in before.keys() & after.keys()
+                                 if before[key] != after[key])
+                self.assertEqual((added, removed, changed), ([], [], []),
+                                 f"hook input changed filesystem paths: size={len(payload)}, "
+                                 f"added={added!r}, removed={removed!r}, changed={changed!r}")
 
     def test_invalid_render_combinations_leave_state_unchanged(self):
         before = self.snapshot()
