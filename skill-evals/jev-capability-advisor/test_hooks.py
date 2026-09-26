@@ -195,8 +195,19 @@ class HookRegistrationTests(unittest.TestCase):
         if os.name == "nt":
             self.assert_windows_startup_created_only_empty_directories(
                 before_startup, after_startup)
+            # Windows PowerShell creates this startup optimization cache lazily.
+            startup_cache = (
+                self.home / "AppData" / "Local" / "Microsoft" / "Windows"
+                / "PowerShell" / "StartupProfileData-NonInteractive"
+            )
+            allowed_runtime_paths = {str(startup_cache.relative_to(self.root))}
+            parent = startup_cache.parent
+            while parent != self.home:
+                allowed_runtime_paths.add(str(parent.relative_to(self.root)))
+                parent = parent.parent
         else:
             self.assertEqual(after_startup, before_startup)
+            allowed_runtime_paths = set()
         before = after_startup
         for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
                         b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
@@ -210,9 +221,29 @@ class HookRegistrationTests(unittest.TestCase):
                 removed = sorted(set(before) - set(after))
                 changed = sorted(key for key in before.keys() & after.keys()
                                  if before[key] != after[key])
-                self.assertEqual((added, removed, changed), ([], [], []),
+                if os.name == "nt":
+                    unexpected = sorted((set(added) | set(changed)) - allowed_runtime_paths)
+                    cache = after.get(str(startup_cache.relative_to(self.root)))
+                    self.assertTrue(cache is None or cache[0] == "file",
+                                    "PowerShell startup cache path is not a file")
+                    unexpected_directories = sorted(
+                        path for path in allowed_runtime_paths
+                        if path != str(startup_cache.relative_to(self.root))
+                        and path in after and after[path] != ("directory", None)
+                    )
+                    self.assertEqual(unexpected_directories, [],
+                                     "PowerShell cache parents are not directories")
+                    cache_markers = [] if cache is None else [
+                        marker for marker in (b"RAW_PROMPT_CANARY", b"PRIVATE_RESULT_CANARY")
+                        if marker in cache[1]
+                    ]
+                    self.assertEqual(cache_markers, [],
+                                     "PowerShell startup cache contains prompt markers")
+                else:
+                    unexpected = sorted(set(added) | set(changed))
+                self.assertEqual((unexpected, removed), ([], []),
                                  f"hook input changed filesystem paths: size={len(payload)}, "
-                                 f"added={added!r}, removed={removed!r}, changed={changed!r}")
+                                 f"unexpected={unexpected!r}, removed={removed!r}")
 
     def test_invalid_render_combinations_leave_state_unchanged(self):
         before = self.snapshot()
