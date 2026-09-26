@@ -661,6 +661,121 @@ class HookRegistrationTests(unittest.TestCase):
                     self.assertEqual(self.read_config(host)["laterSetting"], "preserve-after-recovery")
                     self.assertEqual(self.read_config(host)["hooks"][EVENT], [])
 
+    def test_explicit_consent_survives_fresh_status_and_is_emitted(self):
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                installed = self.run_cli("install", host, "--advice-consent", "allow")
+                self.assertEqual(installed["advice_consent"]["status"], "recorded")
+                output = self.execute_registration(host, self.registration(host))
+                context = output["hookSpecificOutput"]["additionalContext"]
+                self.assertIn("User opt-in recorded", context)
+                self.assertIn("https://api.typesafe.ai/v1/systemone", context)
+                self.assertIn("Native approvals still apply", context)
+                before = self.snapshot()
+                status = self.run_cli("status", host)
+                self.assertEqual(status["advice_consent"]["status"], "recorded")
+                self.assertEqual(self.snapshot(), before)
+                self.assertEqual(self.run_cli("install", host)["status"], "unchanged")
+                self.assertEqual(self.run_cli("status", host)["advice_consent"], status["advice_consent"])
+
+    def test_legacy_install_and_credentials_do_not_imply_consent(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        status = self.run_cli("status")
+        self.assertEqual(status["credentials"]["readiness"], "ready")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertNotIn("User opt-in recorded", status["guidance"])
+
+    def test_consent_revoke_and_uninstall_do_not_resurrect_acceptance(self):
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.run_cli("install", "codex", "--advice-consent", "revoke")
+        status = self.run_cli("status")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertNotIn("User opt-in recorded", status["guidance"])
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.run_cli("uninstall")
+        self.run_cli("install")
+        self.assertEqual(self.run_cli("status")["advice_consent"]["status"], "not_recorded")
+
+    def test_consent_is_scoped_and_dry_run_does_not_grant_it(self):
+        self.run_cli("install")
+        before = self.snapshot()
+        preview = self.run_cli("install", "codex", "--advice-consent", "allow", "--dry-run")
+        self.assertEqual(preview["advice_consent"]["status"], "would_record")
+        self.assertEqual(self.snapshot(), before)
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        project = self.run_cli("install", "codex", "--scope", "project", "--project-root", str(self.project))
+        self.assertEqual(project["advice_consent"]["status"], "not_recorded")
+        self.assertEqual(self.run_cli("install", "claude-code")["advice_consent"]["status"], "not_recorded")
+        self.assertIn("requires_install", self.run_cli("status", "codex", "--advice-consent", "allow", success=False)["reason"])
+
+    def test_changed_consent_record_requires_explicit_reacceptance(self):
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        path = Path(self.run_cli("status")["receipt_path"])
+        receipt = json.loads(path.read_text())
+        receipt["advice_consent"]["version"] = 999
+        path.write_text(json.dumps(receipt))
+        status = self.run_cli("status")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertIn("advice_consent_missing_or_changed", status["known_obstacles"])
+        self.run_cli("install")
+        self.assertNotIn("User opt-in recorded", self.run_cli("status")["guidance"])
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.assertEqual(self.run_cli("status")["advice_consent"]["status"], "recorded")
+
+    def test_consent_recovery_tracks_actual_config_before_and_after_interruption(self):
+        module = self.hook_module()
+        original_write = module.atomic_write
+        for phase in ("before-config", "after-config"):
+            for choice in ("allow", "revoke"):
+                with self.subTest(phase=phase, choice=choice):
+                    self.run_cli("install", "codex", "--advice-consent",
+                                 "revoke" if choice == "allow" else "allow")
+                    target = self.config_path()
+                    def interrupt(path, data, expected):
+                        if Path(path) == target:
+                            if phase == "after-config":
+                                original_write(path, data, expected)
+                            raise OSError("synthetic consent interruption")
+                        return original_write(path, data, expected)
+                    args = SimpleNamespace(action="install", host="codex", scope="user",
+                                           project_root=None, dry_run=False, advice_consent=choice)
+                    with patch.dict(os.environ, self.env, clear=True), \
+                            patch.object(module, "atomic_write", side_effect=interrupt):
+                        with self.assertRaisesRegex(OSError, "synthetic consent interruption"):
+                            module.run(args)
+                    before = self.snapshot()
+                    status = self.run_cli("status")
+                    effective = choice if phase == "after-config" else ("revoke" if choice == "allow" else "allow")
+                    self.assertEqual(status["advice_consent"]["status"],
+                                     "recorded" if effective == "allow" else "not_recorded")
+                    self.assertEqual(self.snapshot(), before)
+                    self.run_cli("install", "codex", "--advice-consent", choice)
+                    self.assertEqual(self.run_cli("status")["advice_consent"]["status"],
+                                     "recorded" if choice == "allow" else "not_recorded")
+
+    def test_consent_disclosure_change_invalidates_record_without_mutation(self):
+        module = self.hook_module()
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        before = self.snapshot()
+        args = SimpleNamespace(action="status", host="codex", scope="user", project_root=None, dry_run=False)
+        with patch.dict(os.environ, self.env, clear=True), \
+                patch.object(module, "CONSENT_TERMS", module.CONSENT_TERMS + " changed"):
+            self.assertEqual(module.run(args)["advice_consent"]["status"], "not_recorded")
+        self.assertEqual(self.snapshot(), before)
+
+    def test_full_consent_guidance_fits_windows_and_excludes_credentials(self):
+        module = self.hook_module()
+        key = self.credential_file()
+        result = self.run_cli("install", "codex", "--advice-consent", "allow", "--key-file", str(key))
+        self.assertNotIn(str(key), result["guidance"])
+        self.assertNotIn("synthetic-provider-secret", json.dumps(result))
+        for scope, root in (("user", None), ("project", self.project)):
+            guidance = module.registration_guidance("codex", scope, root, module.new_consent())
+            registration = module.build_registration("codex", python_executable="C:/Python user's space/python.exe",
+                                                     platform="win32", guidance=guidance)
+            self.assertLessEqual(len(registration["hooks"][0]["commandWindows"]), module.MAX_WINDOWS_COMMAND_CHARS)
+
     def credential_file(self, name="provider key ü ' $ %.txt", value=b"synthetic-provider-secret\n"):
         path = self.root / name
         path.write_bytes(value)

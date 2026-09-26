@@ -17,7 +17,7 @@ source_request: "Integrate the existing Jev advisor through optional portable ag
 
 Add an explicitly enabled UserPromptSubmit reminder to the existing Jev skill for Codex CLI and Claude Code on Linux/WSL, macOS and native Windows. The agent decides whether a submitted message begins a new actionable task and, when qualified prerequisites hold, uses the existing Recommend workflow once for that task.
 
-Ordinary skill/plugin installation remains non-activating. No host source patch, daemon, new advice cache, provider gateway, automatic toolchain installation or user-wide activation is part of feature implementation. Existing owner-process integration remains available. The approved [host-qualification follow-up](jev-hook-host-qualification-spec.md) adds bounded current-session catalog capture, private credential references and version-bound evidence without changing these architectural boundaries.
+Ordinary skill/plugin installation remains non-activating. No host source patch, daemon, new advice cache, provider gateway, automatic toolchain installation or user-wide activation is part of feature implementation. Existing owner-process integration remains available. The approved [host-qualification follow-up](jev-hook-host-qualification-spec.md) adds bounded current-session catalog capture, private provenance checks, per-registration processing consent, private credential references and version-bound evidence without changing these architectural boundaries.
 
 ## User verification
 

@@ -43,6 +43,16 @@ DISCLOSURE = ('Opt-in: for new actionable tasks, the agent may send a minimal ta
               'existing credentials. The hook itself performs no network access. '
               'Host restrictions and native fallback remain in effect.')
 
+CONSENT_TERMS = ('For new actionable tasks in this registration scope, send only a '
+                 'minimal non-sensitive task summary and public eligible capability '
+                 'metadata to https://api.typesafe.ai/v1/systemone for capability advice. '
+                 'Exclude secrets, private paths, transcripts, tool results and unrelated '
+                 'private content. Native approvals and user opt-outs remain binding.')
+CONSENT_NOTICE = ('User opt-in recorded for this registration: send minimal non-sensitive '
+                  'task summaries and public capability metadata to '
+                  'https://api.typesafe.ai/v1/systemone for advice. Verify current '
+                  'advice_consent via status. Native approvals still apply.')
+
 
 class HookError(Exception):
     """An actionable failure which must not overwrite user configuration."""
@@ -171,12 +181,45 @@ def load_guidance():
             'hook-guidance.txt').read_text(encoding='utf-8').strip()
 
 
-def registration_guidance(host, scope, project_root):
+def registration_guidance(host, scope, project_root, consent=None):
     """Bind local status lookup to this registration, never provider metadata."""
     binding = {'host': host, 'scope': scope,
                'project_root': str(safe_path(project_root)) if scope == 'project' else None}
-    return (load_guidance() + '\nLocal registration (never send to provider): ' +
+    notice = '\n' + CONSENT_NOTICE if consent else ''
+    return (load_guidance() + notice + '\nLocal registration (never send to provider): ' +
             json.dumps(binding, ensure_ascii=False, separators=(',', ':')))
+
+
+def new_consent():
+    return {'version': 1, 'disclosure_sha256': digest(CONSENT_TERMS.encode('utf-8')),
+            'basis': 'explicit_install_option', 'accepted_at': int(time.time())}
+
+
+def active_consent(receipt, owned):
+    """A local acceptance record is neither host trust nor call authorization."""
+    value = receipt.get('advice_consent')
+    if (not owned or not isinstance(value, dict)
+            or set(value) != {'version', 'disclosure_sha256', 'basis', 'accepted_at'}
+            or type(value.get('version')) is not int or value['version'] != 1
+            or value.get('disclosure_sha256') != digest(CONSENT_TERMS.encode('utf-8'))
+            or value.get('basis') != 'explicit_install_option'
+            or type(value.get('accepted_at')) is not int or value['accepted_at'] <= 0
+            or not isinstance(receipt.get('guidance'), str)
+            or CONSENT_NOTICE not in receipt['guidance']
+            or not isinstance(receipt.get('interpreter'), str)):
+        return None
+    try:
+        expected = build_registration(receipt['host'], receipt['interpreter'],
+                                      guidance=receipt['guidance'])
+    except HookError:
+        return None
+    return value if owned == expected else None
+
+
+def consent_status(consent, preview=False):
+    return {'status': ('would_record' if preview else 'recorded') if consent else 'not_recorded',
+            'terms': CONSENT_TERMS, 'record': consent,
+            'native_approval': 'still_required_when_host_requires_it'}
 
 
 def _ps_quote(value):
@@ -372,7 +415,7 @@ def manager_lock(receipt_path):
 
 def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
                   config, old_receipt, owned, replacement, host, scope,
-                  interpreter, guidance):
+                  interpreter, guidance, consent):
     with manager_lock(receipt_path):
         if (read_snapshot(config_path) != config_snapshot
                 or read_snapshot(receipt_path) != receipt_snapshot):
@@ -390,6 +433,8 @@ def change_config(config_path, receipt_path, config_snapshot, receipt_snapshot,
             'before_sha256': digest(config_snapshot.data), 'after_sha256': digest(after),
             'backup_path': str(backup) if backup else None,
             'interpreter': interpreter, 'guidance': guidance,
+            'advice_consent': consent,
+            'previous_advice_consent': old_receipt.get('advice_consent'),
             'previous_interpreter': old_receipt.get('interpreter'),
             'previous_guidance': old_receipt.get('guidance'),
         }
@@ -426,6 +471,7 @@ def registration_run(args):
         if digest(config_snapshot.data) == receipt.get('before_sha256'):
             receipt['interpreter'] = receipt.get('previous_interpreter')
             receipt['guidance'] = receipt.get('previous_guidance')
+            receipt['advice_consent'] = receipt.get('previous_advice_consent')
         receipt.update(entry=owned, phase='complete')
         if args.action != 'status' and not args.dry_run:
             with manager_lock(receipt_path):
@@ -434,13 +480,14 @@ def registration_run(args):
                 atomic_write(receipt_path, encode(receipt), receipt_snapshot)
             receipt_snapshot = read_snapshot(receipt_path)
             exclusion = 'present'
+    consent = active_consent(receipt, owned)
     interpreter = str(Path(sys.executable).resolve())
     result = {
         'host': args.host, 'scope': args.scope, 'config_path': str(config_path),
         'receipt_path': str(receipt_path), 'qualification': 'not_verified',
         'host_activation': 'not_verified', 'dry_run': args.dry_run,
         'state_git_exclusion': exclusion,
-        'disclosure': DISCLOSURE,
+        'disclosure': DISCLOSURE, 'advice_consent': consent_status(consent),
     }
     if args.action == 'status':
         result.update(status='configured' if owned else 'absent',
@@ -454,6 +501,8 @@ def registration_run(args):
         result['interpreter_available'] = bool(
             isinstance(registered_python, str) and Path(registered_python).is_file())
         result['known_obstacles'] = []
+        if not consent:
+            result['known_obstacles'].append('advice_consent_missing_or_changed')
         if exclusion != 'present':
             result['known_obstacles'].append('state_git_exclusion_' + exclusion)
         if owned and not result['interpreter_available']:
@@ -473,10 +522,16 @@ def registration_run(args):
             if args.host == 'codex':
                 if shutil.which('powershell.exe') is None:
                     raise HookError('powershell_unavailable')
-        guidance = registration_guidance(args.host, args.scope, args.project_root)
+        choice = getattr(args, 'advice_consent', None)
+        if choice == 'allow':
+            consent = consent or new_consent()
+        elif choice == 'revoke':
+            consent = None
+        result['advice_consent'] = consent_status(consent, args.dry_run)
+        guidance = registration_guidance(args.host, args.scope, args.project_root, consent)
         replacement = build_registration(args.host, interpreter, guidance=guidance)
         result.update(registration=replacement, interpreter=interpreter, guidance=guidance)
-        if owned == replacement:
+        if owned == replacement and consent == receipt.get('advice_consent'):
             if not args.dry_run and exclusion == 'missing':
                 with manager_lock(receipt_path):
                     pass
@@ -491,6 +546,8 @@ def registration_run(args):
         config.setdefault('hooks', {})['UserPromptSubmit'] = updated
         result['status'] = 'would_install' if args.dry_run else 'installed'
     else:
+        consent = None
+        result['advice_consent'] = consent_status(None)
         if owned is None:
             result['status'] = 'absent'
             return result
@@ -504,7 +561,7 @@ def registration_run(args):
     if not args.dry_run:
         result['backup_path'] = change_config(
             config_path, receipt_path, config_snapshot, receipt_snapshot, config,
-            receipt, owned, replacement, args.host, args.scope, interpreter, guidance)
+            receipt, owned, replacement, args.host, args.scope, interpreter, guidance, consent)
         result['state_git_exclusion'] = 'present'
     return result
 
@@ -647,6 +704,8 @@ def qualification_evidence(path, host, current):
 
 
 def run(args):
+    if getattr(args, 'advice_consent', None) is not None and args.action != 'install':
+        raise HookError('advice_consent_requires_install')
     key_file = getattr(args, 'key_file', None)
     if key_file is not None and args.action != 'install':
         raise HookError('key_file_requires_install')
@@ -755,6 +814,8 @@ def main(argv=None):
     parser.add_argument('--scope', choices=('user', 'project'), default='user')
     parser.add_argument('--project-root', type=Path)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--advice-consent', choices=('allow', 'revoke'),
+                        help='Install only: record or revoke explicit TypeSafe processing consent for this registration. ' + CONSENT_TERMS)
     parser.add_argument('--key-file', type=Path, help='Install only: save an existing key-file reference privately; never copy its contents')
     try:
         result = run(parser.parse_args(argv))

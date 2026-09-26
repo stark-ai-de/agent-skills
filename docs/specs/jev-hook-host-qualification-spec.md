@@ -22,7 +22,8 @@ Complete the existing agent-mediated hook integration with private credential re
 ### In scope
 
 - Current-session catalog guidance for Codex CLI and Claude Code, including verified native defaults and effective invocation restrictions.
-- Private per-host key-file references, credential precedence, and status that distinguishes configuration from qualification.
+- Private per-host key-file references, credential precedence, explicit per-registration processing consent, and status that distinguishes configuration from qualification.
+- Private current-session provenance sidecars checked for exact catalog consistency without claiming native host attestation.
 - Automated regressions and staged, controlled qualification on Linux, WSL, macOS, and Windows.
 - Public documentation, the original hook specification, and generated plugin projections.
 
@@ -58,6 +59,9 @@ The explicitly enabled hook requires the agent to consult Jev once per new actio
 5. Status separates registration, local credentials, recorded evidence, and currently unchecked conditions. Old evidence does not qualify a changed host version or integration revision. Historical `not_verified` is not itself an unavailable result or a blanket reason to skip advice; current verifiable prerequisites and ADR-0057 remain binding. Private paths never enter provider metadata or public evidence.
 6. Preserve agent-mediated `general/current` advice, existing limits, native execution controls, and fallback. The hook remains a static emitter without semantic prompt processing or provider calls. Once current prerequisites hold, consultation precedes task-specific skill loading, planning and questions; a late manual call does not satisfy automatic consultation.
 7. Embed local registration JSON containing `host`, `scope` and `project_root` (`null` for user scope; the bound absolute root for project scope). The agent uses these values for status arguments, without guessing host/scope/root or sending the binding to the provider. Missing, malformed or contradictory bindings produce immediate truthful native fallback.
+
+8. Explicit `install --advice-consent allow|revoke` records or withdraws the disclosed TypeSafe processing scope in the existing per-registration ownership transaction. Legacy installs, credentials, synthetic-test consent and native hook trust do not imply acceptance. Plain reinstall preserves only matching active acceptance; uninstall or changed terms invalidates it. A fresh session receives a compact acceptance snapshot but must recheck current status and all native approvals.
+9. A separate local `hook_catalog.py` checker binds the bare catalog to exact source snapshots, declared invocation restrictions, bounded coverage and omissions. It reads no credentials, calls no provider and writes no cache. Its consistency result does not attest that claimed metadata was delivered by the host; source truth and freshness require same-session evidence. Provenance never enters provider metadata.
 
 ### Non-functional requirements
 
@@ -121,6 +125,7 @@ Extend the current manager and integration references rather than creating a new
 
 - Final checkpoint: the maintainer confirmed the plan and separately requested direct full implementation after saving.
 - Confirmation date: 2026-09-26.
+- Follow-up checkpoint: after reviewing the remaining fresh-session consent and catalog-provenance gaps, the maintainer requested implementation and renewed live verification. Existing authorization for commit, push and PR updates remains separate from publication or merge authority.
 - Scope/non-goals: confirmed as above.
 - Accepted unknowns: environment availability, live host behavior, and indeterminate full catalog completeness.
 
@@ -173,7 +178,9 @@ Version changes and incomplete metadata can invalidate historical evidence. Trea
 - [x] Current-session catalog guidance covers both hosts, exclusions, verified defaults, and bounded coverage.
 - [x] Automated regressions and required local gates pass.
 - [x] Available live checks are attempted and results separated from unavailable, simulated, or blocked scenarios.
-- [x] Projections and relevant documentation are synchronized; no unsupported platform qualification is claimed.
+- [x] Projections and relevant documentation are synchronized for the initial implementation; no unsupported platform qualification is claimed.
+- [x] Follow-up processing-consent persistence and catalog provenance pass their local checks.
+- [ ] Fresh-session behavior with consent delivered by the updated trusted hook is independently checked.
 
 Implementation completion requires the code and local checks. A host/platform is qualified only after its own successful live evidence.
 
