@@ -93,17 +93,16 @@ class HookRegistrationTests(unittest.TestCase):
             for path in self.root.rglob("*")
         }
 
-    def assert_windows_startup_created_only_empty_directories(self, before, after):
-        """Allow PowerShell 5.1's empty first-startup profile directories only."""
-        self.assertEqual({key: after[key] for key in before}, before)
-        unexpected = [key for key, value in after.items()
-                      if key not in before and value != ("directory", None)]
-        self.assertEqual(unexpected, [],
-                         "PowerShell startup created non-directory state: "
-                         + repr(unexpected))
+    @staticmethod
+    def write_identity(path):
+        # Reads may legitimately update access time on Linux and Windows.
+        # Preserve inode, contents, write timestamps and mode instead.
+        metadata = path.stat()
+        return (metadata.st_dev, metadata.st_ino, metadata.st_size,
+                metadata.st_mtime_ns, metadata.st_ctime_ns, metadata.st_mode)
 
-    def registration(self, host="codex"):
-        groups = self.read_config(host)["hooks"][EVENT]
+    def registration(self, host="codex", project=False):
+        groups = self.read_config(host, project)["hooks"][EVENT]
         self.assertEqual(len(groups), 1)
         hooks = groups[0]["hooks"]
         self.assertEqual(len(hooks), 1)
@@ -167,102 +166,6 @@ class HookRegistrationTests(unittest.TestCase):
                 self.run_cli("uninstall", host)
                 self.assertEqual(self.read_config(host), original)
 
-    def test_render_ignores_broken_user_configuration_and_state(self):
-        # Rendering must not even parse installation files, including corrupt ones.
-        (self.codex / "hooks.json").write_bytes(b"not JSON: private config canary")
-        (self.root / "state").write_bytes(b"not a directory: ownership canary")
-        before = self.snapshot()
-        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
-        self.assertEqual(set(fragment), {"hooks"})
-        self.assertEqual(set(fragment["hooks"]), {EVENT})
-        groups = fragment["hooks"][EVENT]
-        self.assertEqual(len(groups), 1)
-        handler = groups[0]["hooks"][0]
-        self.assertEqual(handler["timeout"], 5)
-        self.assertEqual(handler["type"], "command")
-        self.assertEqual(self.snapshot(), before)
-
-    def test_rendered_policy_output_is_constant_for_arbitrary_hook_input(self):
-        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
-        handler = fragment["hooks"][EVENT][0]["hooks"][0]
-        expected = (SCRIPT.parent.parent / "assets/repository-hook-guidance.txt").read_text(
-            encoding="utf-8").strip()
-        before_startup = self.snapshot()
-        startup_output = self.execute_registration("codex", handler, b"")
-        self.assertEqual(
-            startup_output["hookSpecificOutput"]["additionalContext"], expected)
-        after_startup = self.snapshot()
-        if os.name == "nt":
-            self.assert_windows_startup_created_only_empty_directories(
-                before_startup, after_startup)
-            # Windows PowerShell creates this startup optimization cache lazily.
-            startup_cache = (
-                self.home / "AppData" / "Local" / "Microsoft" / "Windows"
-                / "PowerShell" / "StartupProfileData-NonInteractive"
-            )
-            allowed_runtime_paths = {str(startup_cache.relative_to(self.root))}
-            parent = startup_cache.parent
-            while parent != self.home:
-                allowed_runtime_paths.add(str(parent.relative_to(self.root)))
-                parent = parent.parent
-        else:
-            self.assertEqual(after_startup, before_startup)
-            allowed_runtime_paths = set()
-        before = after_startup
-        for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
-                        b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
-                        b'"tool_result":"PRIVATE_RESULT_CANARY"}'):
-            with self.subTest(size=len(payload)):
-                result = self.execute_registration("codex", handler, payload)
-                self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
-                self.assertNotIn("CANARY", json.dumps(result))
-                after = self.snapshot()
-                added = sorted(set(after) - set(before))
-                removed = sorted(set(before) - set(after))
-                changed = sorted(key for key in before.keys() & after.keys()
-                                 if before[key] != after[key])
-                if os.name == "nt":
-                    unexpected = sorted((set(added) | set(changed)) - allowed_runtime_paths)
-                    cache = after.get(str(startup_cache.relative_to(self.root)))
-                    self.assertTrue(cache is None or cache[0] == "file",
-                                    "PowerShell startup cache path is not a file")
-                    unexpected_directories = sorted(
-                        path for path in allowed_runtime_paths
-                        if path != str(startup_cache.relative_to(self.root))
-                        and path in after and after[path] != ("directory", None)
-                    )
-                    self.assertEqual(unexpected_directories, [],
-                                     "PowerShell cache parents are not directories")
-                    cache_markers = [] if cache is None else [
-                        marker for marker in (b"RAW_PROMPT_CANARY", b"PRIVATE_RESULT_CANARY")
-                        if marker in cache[1]
-                    ]
-                    self.assertEqual(cache_markers, [],
-                                     "PowerShell startup cache contains prompt markers")
-                else:
-                    unexpected = sorted(set(added) | set(changed))
-                self.assertEqual((unexpected, removed), ([], []),
-                                 f"hook input changed filesystem paths: size={len(payload)}, "
-                                 f"unexpected={unexpected!r}, removed={removed!r}")
-
-    def test_invalid_render_combinations_leave_state_unchanged(self):
-        before = self.snapshot()
-        cases = (
-            ("render", "codex", ()),
-            ("render", "claude-code", ("--policy", "repository-adopted")),
-            ("render", "codex", ("--policy", "repository-adopted", "--scope", "user")),
-            ("render", "codex", ("--policy", "repository-adopted", "--project-root", str(self.project))),
-            ("render", "codex", ("--policy", "repository-adopted", "--dry-run")),
-            *((action, "codex", ("--policy", "repository-adopted"))
-              for action in ("install", "status", "uninstall")),
-        )
-        for action, host, arguments in cases:
-            with self.subTest(action=action, host=host, arguments=arguments):
-                result = self.run_cli(action, host, *arguments, success=False)
-                self.assertEqual(result["status"], "error")
-                self.assertIn("invalid_arguments", result["reason"])
-                self.assertEqual(self.snapshot(), before)
-
     def test_repeated_install_is_idempotent_and_uninstall_is_safe_twice(self):
         for host in ("codex", "claude-code"):
             with self.subTest(host=host):
@@ -302,6 +205,75 @@ class HookRegistrationTests(unittest.TestCase):
                 files = [path for path in self.project.rglob("*") if path.is_file()]
                 self.assertTrue(all(path in {self.config_path(name, project=True)
                     for name in ("codex", "claude-code")} for path in files), files)
+
+    @staticmethod
+    def emitted_binding(output):
+        context = output["hookSpecificOutput"]["additionalContext"]
+        prefix = "\nLocal registration (never send to provider): "
+        guidance, marker, binding = context.rpartition(prefix)
+        if not marker:
+            raise AssertionError("The emitter must identify its local registration")
+        return guidance, json.loads(binding)
+
+    def test_project_only_hook_emits_exact_binding_with_hostile_root_as_data(self):
+        hostile = self.root / "project ü ' %NO_SUCH_ENVIRONMENT% $ ` ; {scope}"
+        hostile.mkdir()
+        project_args = ("--scope", "project", "--project-root", str(hostile))
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                installed = self.run_cli("install", host, *project_args)
+                hook = installed["registration"]["hooks"][0]
+                output = self.execute_registration(host, hook)
+                guidance, binding = self.emitted_binding(output)
+                self.assertEqual(binding, {"host": host, "scope": "project",
+                                           "project_root": str(hostile)})
+                self.assertNotIn(str(hostile), guidance)
+                self.assertFalse(self.config_path(host).exists())
+                project_status = self.run_cli("status", host, *project_args)
+                self.assertEqual(project_status["status"], "configured")
+                self.assertEqual(project_status["guidance"], output["hookSpecificOutput"]["additionalContext"])
+                self.run_cli("uninstall", host, *project_args)
+                self.assertEqual(self.run_cli("status", host, *project_args)["status"], "absent")
+
+    def test_user_and_project_hooks_emit_distinct_registration_bindings(self):
+        project_args = ("--scope", "project", "--project-root", str(self.project))
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                self.run_cli("install", host)
+                self.run_cli("install", host, *project_args)
+                user_hook = self.registration(host)
+                project_hook = self.registration(host, project=True)
+                user_output = self.execute_registration(host, user_hook)
+                project_output = self.execute_registration(host, project_hook)
+                user_guidance, user_binding = self.emitted_binding(user_output)
+                project_guidance, project_binding = self.emitted_binding(project_output)
+                self.assertEqual(user_binding, {"host": host, "scope": "user", "project_root": None})
+                self.assertEqual(project_binding, {"host": host, "scope": "project",
+                                                   "project_root": str(self.project)})
+                self.assertEqual(user_guidance, project_guidance)
+                self.assertNotEqual(user_output, project_output)
+                before = self.snapshot()
+                self.run_cli("install", host)
+                self.run_cli("install", host, *project_args)
+                self.assertEqual(self.snapshot(), before)
+                self.run_cli("uninstall", host, *project_args)
+                self.assertEqual(self.run_cli("status", host)["status"], "configured")
+                self.assertEqual(self.registration(host), user_hook)
+
+    @unittest.skipUnless(os.name == "nt", "Requires native Windows case-insensitive paths")
+    def test_windows_equivalent_case_config_paths_preserve_ownership_lifecycle(self):
+        for host, variable in (("codex", "CODEX_HOME"), ("claude-code", "CLAUDE_CONFIG_DIR")):
+            with self.subTest(host=host):
+                installed = self.run_cli("install", host)
+                alternate = dict(self.env, **{variable: self.env[variable].swapcase()})
+                before = self.snapshot()
+                status = self.run_cli("status", host, env=alternate)
+                self.assertEqual(status["status"], "configured")
+                self.assertEqual(status["receipt_path"], installed["receipt_path"])
+                self.assertEqual(self.run_cli("install", host, env=alternate)["status"], "unchanged")
+                self.assertEqual(self.snapshot(), before)
+                self.assertEqual(self.run_cli("uninstall", host, env=alternate)["status"], "uninstalled")
+                self.assertEqual(self.run_cli("status", host)["status"], "absent")
 
     def test_user_home_defaults_are_used_without_explicit_overrides(self):
         env = dict(self.env)
@@ -424,8 +396,9 @@ class HookRegistrationTests(unittest.TestCase):
                     # PowerShell 5.1 creates empty profile directories on first
                     # startup even with -NoProfile. It must not change existing
                     # state or create files; later prompt-bearing calls write none.
-                    self.assert_windows_startup_created_only_empty_directories(
-                        before, after_startup)
+                    self.assertEqual({key: after_startup[key] for key in before}, before)
+                    self.assertTrue(all(value == ("directory", None)
+                                        for key, value in after_startup.items() if key not in before))
                 else:
                     self.assertEqual(after_startup, before)
                 before = after_startup
@@ -578,13 +551,7 @@ class HookRegistrationTests(unittest.TestCase):
         env, state = self.versioned_home()
         result = self.run_cli("install", env=env)
         config = self.config_path()
-        config_contents = config.read_bytes()
-        config_metadata = config.stat()
-        config_write_metadata = (
-            config_metadata.st_dev, config_metadata.st_ino, config_metadata.st_mode,
-            config_metadata.st_size, config_metadata.st_mtime_ns,
-            config_metadata.st_ctime_ns,
-        )
+        config_metadata = self.write_identity(config)
         receipt = Path(result["receipt_path"]).read_bytes()
         (state / ".gitignore").unlink()
         before = self.snapshot()
@@ -594,13 +561,7 @@ class HookRegistrationTests(unittest.TestCase):
         repaired = self.run_cli("install", env=env)
         self.assertEqual(repaired["status"], "unchanged")
         self.assertEqual(repaired["state_git_exclusion"], "present")
-        current_metadata = config.stat()
-        self.assertEqual(config.read_bytes(), config_contents)
-        self.assertEqual((
-            current_metadata.st_dev, current_metadata.st_ino, current_metadata.st_mode,
-            current_metadata.st_size, current_metadata.st_mtime_ns,
-            current_metadata.st_ctime_ns,
-        ), config_write_metadata)
+        self.assertEqual(self.write_identity(config), config_metadata)
         self.assertEqual(Path(result["receipt_path"]).read_bytes(), receipt)
         self.assertEqual((state / ".gitignore").read_bytes(), b"*\n")
 
@@ -684,7 +645,7 @@ class HookRegistrationTests(unittest.TestCase):
                     with patch.dict(os.environ, self.env, clear=True), \
                             patch.object(module, "atomic_write", side_effect=interrupt):
                         with self.assertRaisesRegex(OSError, "synthetic interrupted"):
-                            module._run_hook_manager(arguments)
+                            module.run(arguments)
                     if phase == "before-config":
                         self.assertEqual(target.read_bytes(), original)
                     result = self.run_cli(action, host)
@@ -699,6 +660,538 @@ class HookRegistrationTests(unittest.TestCase):
                     self.run_cli("uninstall", host)
                     self.assertEqual(self.read_config(host)["laterSetting"], "preserve-after-recovery")
                     self.assertEqual(self.read_config(host)["hooks"][EVENT], [])
+
+    def test_explicit_consent_survives_fresh_status_and_is_emitted(self):
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                installed = self.run_cli("install", host, "--advice-consent", "allow")
+                self.assertEqual(installed["advice_consent"]["status"], "recorded")
+                output = self.execute_registration(host, self.registration(host))
+                context = output["hookSpecificOutput"]["additionalContext"]
+                self.assertIn("User opt-in recorded", context)
+                self.assertIn("https://api.typesafe.ai/v1/systemone", context)
+                self.assertIn("Native approvals still apply", context)
+                before = self.snapshot()
+                status = self.run_cli("status", host)
+                self.assertEqual(status["advice_consent"]["status"], "recorded")
+                self.assertEqual(self.snapshot(), before)
+                self.assertEqual(self.run_cli("install", host)["status"], "unchanged")
+                self.assertEqual(self.run_cli("status", host)["advice_consent"], status["advice_consent"])
+
+    def test_legacy_install_and_credentials_do_not_imply_consent(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        status = self.run_cli("status")
+        self.assertEqual(status["credentials"]["readiness"], "ready")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertNotIn("User opt-in recorded", status["guidance"])
+
+    def test_consent_revoke_and_uninstall_do_not_resurrect_acceptance(self):
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.run_cli("install", "codex", "--advice-consent", "revoke")
+        status = self.run_cli("status")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertNotIn("User opt-in recorded", status["guidance"])
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.run_cli("uninstall")
+        self.run_cli("install")
+        self.assertEqual(self.run_cli("status")["advice_consent"]["status"], "not_recorded")
+
+    def test_consent_is_scoped_and_dry_run_does_not_grant_it(self):
+        self.run_cli("install")
+        before = self.snapshot()
+        preview = self.run_cli("install", "codex", "--advice-consent", "allow", "--dry-run")
+        self.assertEqual(preview["advice_consent"]["status"], "would_record")
+        self.assertEqual(self.snapshot(), before)
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        project = self.run_cli("install", "codex", "--scope", "project", "--project-root", str(self.project))
+        self.assertEqual(project["advice_consent"]["status"], "not_recorded")
+        self.assertEqual(self.run_cli("install", "claude-code")["advice_consent"]["status"], "not_recorded")
+        self.assertIn("requires_install", self.run_cli("status", "codex", "--advice-consent", "allow", success=False)["reason"])
+
+    def test_changed_consent_record_requires_explicit_reacceptance(self):
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        path = Path(self.run_cli("status")["receipt_path"])
+        receipt = json.loads(path.read_text())
+        receipt["advice_consent"]["version"] = 999
+        path.write_text(json.dumps(receipt))
+        status = self.run_cli("status")
+        self.assertEqual(status["advice_consent"]["status"], "not_recorded")
+        self.assertIn("advice_consent_missing_or_changed", status["known_obstacles"])
+        self.run_cli("install")
+        self.assertNotIn("User opt-in recorded", self.run_cli("status")["guidance"])
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        self.assertEqual(self.run_cli("status")["advice_consent"]["status"], "recorded")
+
+    def test_key_readiness_accepts_windows_path_handle_difference_but_rejects_replacement(self):
+        module = self.hook_module()
+        key = self.credential_file()
+        original = Path.lstat
+        for replace_path in (False, True):
+            calls = 0
+            def path_stat(path):
+                nonlocal calls
+                value = original(path)
+                if path != key:
+                    return value
+                calls += 1
+                return SimpleNamespace(st_dev=value.st_dev + 1,
+                    st_ino=value.st_ino + (2 if replace_path and calls >= 3 else 1),
+                    st_size=value.st_size, st_mtime_ns=value.st_mtime_ns,
+                    st_ctime_ns=value.st_ctime_ns + 1, st_mode=value.st_mode,
+                    st_reparse_tag=getattr(value, "st_reparse_tag", 0))
+            with self.subTest(replace_path=replace_path), \
+                    patch.object(module.sys, "platform", "win32"), \
+                    patch.object(Path, "lstat", path_stat):
+                self.assertEqual(module.key_file_readiness(key), "key_file_changed" if replace_path else None)
+
+    def test_consent_recovery_tracks_actual_config_before_and_after_interruption(self):
+        module = self.hook_module()
+        original_write = module.atomic_write
+        for phase in ("before-config", "after-config"):
+            for choice in ("allow", "revoke"):
+                with self.subTest(phase=phase, choice=choice):
+                    self.run_cli("install", "codex", "--advice-consent",
+                                 "revoke" if choice == "allow" else "allow")
+                    target = self.config_path()
+                    def interrupt(path, data, expected):
+                        if Path(path) == target:
+                            if phase == "after-config":
+                                original_write(path, data, expected)
+                            raise OSError("synthetic consent interruption")
+                        return original_write(path, data, expected)
+                    args = SimpleNamespace(action="install", host="codex", scope="user",
+                                           project_root=None, dry_run=False, advice_consent=choice)
+                    with patch.dict(os.environ, self.env, clear=True), \
+                            patch.object(module, "atomic_write", side_effect=interrupt):
+                        with self.assertRaisesRegex(OSError, "synthetic consent interruption"):
+                            module.run(args)
+                    before = self.snapshot()
+                    status = self.run_cli("status")
+                    effective = choice if phase == "after-config" else ("revoke" if choice == "allow" else "allow")
+                    self.assertEqual(status["advice_consent"]["status"],
+                                     "recorded" if effective == "allow" else "not_recorded")
+                    self.assertEqual(self.snapshot(), before)
+                    self.run_cli("install", "codex", "--advice-consent", choice)
+                    self.assertEqual(self.run_cli("status")["advice_consent"]["status"],
+                                     "recorded" if choice == "allow" else "not_recorded")
+
+    def test_consent_disclosure_change_invalidates_record_without_mutation(self):
+        module = self.hook_module()
+        self.run_cli("install", "codex", "--advice-consent", "allow")
+        before = self.snapshot()
+        args = SimpleNamespace(action="status", host="codex", scope="user", project_root=None, dry_run=False)
+        with patch.dict(os.environ, self.env, clear=True), \
+                patch.object(module, "CONSENT_TERMS", module.CONSENT_TERMS + " changed"):
+            self.assertEqual(module.run(args)["advice_consent"]["status"], "not_recorded")
+        self.assertEqual(self.snapshot(), before)
+
+    def test_full_consent_guidance_fits_windows_and_excludes_credentials(self):
+        module = self.hook_module()
+        key = self.credential_file()
+        result = self.run_cli("install", "codex", "--advice-consent", "allow", "--key-file", str(key))
+        self.assertNotIn(str(key), result["guidance"])
+        self.assertNotIn("synthetic-provider-secret", json.dumps(result))
+        for scope, root in (("user", None), ("project", self.project)):
+            guidance = module.registration_guidance("codex", scope, root, module.new_consent())
+            registration = module.build_registration("codex", python_executable="C:/Python user's space/python.exe",
+                                                     platform="win32", guidance=guidance)
+            self.assertLessEqual(len(registration["hooks"][0]["commandWindows"]), module.MAX_WINDOWS_COMMAND_CHARS)
+
+    def credential_file(self, name="provider key ü ' $ %.txt", value=b"synthetic-provider-secret\n"):
+        path = self.root / name
+        path.write_bytes(value)
+        return path
+
+    def hook_module(self):
+        spec = importlib.util.spec_from_file_location("jev_hooks_credentials_fixture", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_key_file_reference_is_private_and_never_copied_into_hook_or_outputs(self):
+        secret = b"SYNTHETIC-KEY-CONTENT-MUST-NOT-BE-COPIED"
+        key = self.credential_file(value=secret)
+        original_stat = self.write_identity(key)
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                installed = self.run_cli("install", host, "--key-file", str(key))
+                status = self.run_cli("status", host)
+                credentials = status["credentials"]
+                self.assertEqual(credentials["source"], "key_file")
+                self.assertEqual(credentials["readiness"], "ready")
+                self.assertIsNone(credentials["reason"])
+                self.assertEqual(Path(credentials["key_file"]), key)
+                settings = Path(status["credential_config_path"])
+                self.assertEqual(settings.name, host + "-settings.json")
+                self.assertEqual(settings.parent, Path(status["receipt_path"]).parent)
+                self.assertFalse(settings.is_relative_to(self.project))
+                self.assertEqual((settings.parent / ".gitignore").read_bytes(), b"*\n")
+                self.assertNotIn(str(key), self.config_path(host).read_text(encoding="utf-8"))
+                self.assertNotIn(secret.decode(), json.dumps([installed, status]))
+                for candidate in self.root.rglob("*"):
+                    if candidate.is_file() and candidate != key:
+                        self.assertNotIn(secret, candidate.read_bytes(), str(candidate))
+                if os.name != "nt":
+                    self.assertEqual(settings.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(key.read_bytes(), secret)
+        self.assertEqual(self.write_identity(key), original_stat)
+
+    def test_key_reference_update_preserves_hook_bytes_and_other_private_settings(self):
+        first = self.credential_file("first-key.txt")
+        second = self.credential_file("second-key.txt")
+        self.run_cli("install", "codex", "--key-file", str(first))
+        status = self.run_cli("status")
+        settings = Path(status["credential_config_path"])
+        stored = json.loads(settings.read_text(encoding="utf-8"))
+        stored["future_setting"] = {"keep": ["untouched", 42]}
+        settings.write_text(json.dumps(stored), encoding="utf-8")
+        before_settings = settings.read_bytes()
+        before_hook = self.config_path().read_bytes()
+        hook_metadata = self.write_identity(self.config_path())
+        self.run_cli("install", "codex", "--key-file", str(second))
+        current = self.run_cli("status")
+        self.assertEqual(current["credentials"]["key_file"], str(second))
+        self.assertEqual(self.config_path().read_bytes(), before_hook)
+        self.assertEqual(self.write_identity(self.config_path()), hook_metadata)
+        self.assertEqual(json.loads(settings.read_text(encoding="utf-8"))["future_setting"],
+                         stored["future_setting"])
+        backups = [item for item in settings.parent.glob("*.backup.json")
+                   if item.read_bytes() == before_settings]
+        self.assertEqual(len(backups), 1, "Replacing the private pointer must retain its prior bytes")
+        if os.name != "nt":
+            self.assertEqual(backups[0].stat().st_mode & 0o777, 0o600)
+        before_repeat = self.snapshot()
+        self.run_cli("install")
+        self.run_cli("install", "codex", "--key-file", str(second))
+        self.assertEqual(self.snapshot(), before_repeat)
+
+    def test_key_reference_is_shared_between_scopes_and_isolated_between_hosts(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        user = self.run_cli("status")
+        project_args = ("--scope", "project", "--project-root", str(self.project))
+        self.run_cli("install", "codex", *project_args)
+        project = self.run_cli("status", "codex", *project_args)
+        self.assertEqual(project["credentials"], user["credentials"])
+        self.assertEqual(project["credential_config_path"], user["credential_config_path"])
+        other = self.run_cli("status", "claude-code")
+        self.assertEqual(other["credentials"]["source"], "none")
+        self.assertNotEqual(other["credential_config_path"], user["credential_config_path"])
+        self.run_cli("uninstall")
+        self.assertEqual(self.run_cli("status")["credentials"], user["credentials"])
+        self.assertEqual(self.run_cli("status", "codex", *project_args)["status"], "configured")
+
+    def test_environment_used_only_without_configured_key_reference(self):
+        self.run_cli("install")
+        without = self.run_cli("status")["credentials"]
+        self.assertEqual(without["source"], "none")
+        self.assertEqual(without["readiness"], "unavailable")
+        self.assertTrue(without["reason"])
+        env = dict(self.env, TYPESAFE_API_KEY="SYNTHETIC-ENVIRONMENT-SECRET")
+        environment = self.run_cli("status", env=env)
+        self.assertEqual(environment["credentials"]["source"], "environment")
+        self.assertEqual(environment["credentials"]["readiness"], "ready")
+        self.assertNotIn(env["TYPESAFE_API_KEY"], json.dumps(environment))
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key), env=env)
+        configured = self.run_cli("status", env=env)
+        self.assertEqual(configured["credentials"]["source"], "key_file")
+        key.unlink()
+        unavailable = self.run_cli("status", env=env)["credentials"]
+        self.assertEqual(unavailable["source"], "key_file")
+        self.assertEqual(unavailable["readiness"], "unavailable")
+        self.assertIn("missing", unavailable["reason"])
+        self.assertEqual(unavailable["key_file"], str(key))
+
+    def test_missing_empty_and_nonregular_new_key_files_leave_everything_unchanged(self):
+        missing = self.root / "missing-key.txt"
+        empty = self.credential_file("empty-key.txt", b"")
+        directory = self.root / "key-directory"
+        directory.mkdir()
+        for key in (missing, empty, directory):
+            with self.subTest(key=key.name):
+                before = self.snapshot()
+                failure = self.run_cli("install", "codex", "--key-file", str(key), success=False)
+                self.assertIn("key_file", failure["reason"])
+                self.assertEqual(self.snapshot(), before)
+
+    def test_configured_key_becoming_empty_is_unavailable_without_environment_fallback(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        key.write_bytes(b"")
+        before = self.snapshot()
+        status = self.run_cli("status", env=dict(self.env, TYPESAFE_API_KEY="synthetic-env"))
+        self.assertEqual(status["credentials"]["source"], "key_file")
+        self.assertEqual(status["credentials"]["readiness"], "unavailable")
+        self.assertIn("empty", status["credentials"]["reason"])
+        self.assertEqual(self.snapshot(), before)
+
+    def test_key_reference_dry_run_leaves_no_state_and_existing_reference_unchanged(self):
+        first = self.credential_file("first-key.txt")
+        second = self.credential_file("second-key.txt")
+        before = self.snapshot()
+        self.run_cli("install", "codex", "--key-file", str(first), "--dry-run")
+        self.assertEqual(self.snapshot(), before)
+        self.run_cli("install", "codex", "--key-file", str(first))
+        before = self.snapshot()
+        self.run_cli("install", "codex", "--key-file", str(second), "--dry-run")
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(self.run_cli("status")["credentials"]["key_file"], str(first))
+
+    def test_corrupt_credential_config_does_not_get_overwritten_or_hide_readiness_failure(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        settings = Path(self.run_cli("status")["credential_config_path"])
+        malformed = (b"{broken", b"[]", b'{"version":999,"key_file":"x"}',
+                     json.dumps({"version": 1, "host": "codex",
+                                 "key_file": str(key) + "\x00"}).encode("utf-8"))
+        for contents in malformed:
+            with self.subTest(contents=contents):
+                settings.write_bytes(contents)
+                before = self.snapshot()
+                status = self.run_cli("status", env=dict(self.env, TYPESAFE_API_KEY="synthetic-env"))
+                self.assertEqual(status["status"], "configured")
+                self.assertEqual(status["credentials"]["readiness"], "unavailable")
+                self.assertIn("credential_config", status["credentials"]["reason"])
+                self.run_cli("install", "codex", "--key-file", str(key), success=False)
+                self.run_cli("install", success=False)
+                self.assertEqual(self.snapshot(), before)
+        self.run_cli("uninstall")
+        self.assertEqual(settings.read_bytes(), contents)
+
+    def test_credential_settings_symlink_is_not_followed_for_replacement(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        settings = Path(self.run_cli("status")["credential_config_path"])
+        target = self.root / "external-settings.json"
+        settings.rename(target)
+        try:
+            settings.symlink_to(target)
+        except OSError as error:
+            self.skipTest("Symlink creation unavailable: " + str(error))
+        before = self.snapshot()
+        self.run_cli("install", "codex", "--key-file", str(key), success=False)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_private_credential_lock_prevents_key_update_across_registration_scopes(self):
+        first = self.credential_file("first-key.txt")
+        second = self.credential_file("second-key.txt")
+        self.run_cli("install", "codex", "--key-file", str(first))
+        settings = Path(self.run_cli("status")["credential_config_path"])
+        settings.with_suffix(".lock").write_text("synthetic-other-scope\n", encoding="ascii")
+        before = self.snapshot()
+        failure = self.run_cli("install", "codex", "--scope", "project", "--project-root",
+                               str(self.project), "--key-file", str(second), success=False)
+        self.assertIn("locked", failure["reason"])
+        self.assertEqual(self.snapshot(), before)
+
+    def test_unreadable_key_is_reported_without_environment_fallback_or_state_changes(self):
+        key = self.credential_file()
+        self.run_cli("install", "codex", "--key-file", str(key))
+        module = self.hook_module()
+        original_open = module.os.open
+        def deny_key(path, flags, *args, **kwargs):
+            if Path(path) == key:
+                raise PermissionError("synthetic permission denied")
+            return original_open(path, flags, *args, **kwargs)
+        arguments = SimpleNamespace(action="status", host="codex", scope="user",
+                                    project_root=None, dry_run=False, key_file=None)
+        before = self.snapshot()
+        with patch.dict(os.environ, dict(self.env, TYPESAFE_API_KEY="synthetic-env"), clear=True), \
+                patch.object(module.os, "open", side_effect=deny_key):
+            status = module.run(arguments)
+            self.assertEqual(status["credentials"]["source"], "key_file")
+            self.assertEqual(status["credentials"]["reason"], "key_file_unreadable")
+            self.assertEqual(status["credentials"]["readiness"], "unavailable")
+            arguments.action, arguments.key_file = "install", key
+            with self.assertRaisesRegex(module.HookError, "key_file_unreadable"):
+                module.run(arguments)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_concurrent_private_settings_edit_is_preserved_during_key_update(self):
+        first = self.credential_file("first-key.txt")
+        second = self.credential_file("second-key.txt")
+        self.run_cli("install", "codex", "--key-file", str(first))
+        settings = Path(self.run_cli("status")["credential_config_path"])
+        concurrent = json.loads(settings.read_text(encoding="utf-8"))
+        concurrent["concurrent_owner_setting"] = "preserve"
+        concurrent_bytes = json.dumps(concurrent).encode("utf-8")
+        module = self.hook_module()
+        original_write = module.write_credential_settings
+        def edit_before_commit(path, updated, snapshot):
+            self.assertEqual(path, settings)
+            path.write_bytes(concurrent_bytes)
+            return original_write(path, updated, snapshot)
+        arguments = SimpleNamespace(action="install", host="codex", scope="user",
+                                    project_root=None, dry_run=False, key_file=second)
+        before_hook = self.config_path().read_bytes()
+        with patch.dict(os.environ, self.env, clear=True), \
+                patch.object(module, "write_credential_settings", side_effect=edit_before_commit):
+            with self.assertRaisesRegex(module.HookError, "credential_update_incomplete") as failure:
+                module.run(arguments)
+        self.assertIn("concurrent_modification", str(failure.exception.__cause__))
+        self.assertEqual(settings.read_bytes(), concurrent_bytes)
+        self.assertEqual(self.config_path().read_bytes(), before_hook)
+        self.assertFalse(settings.with_suffix(".lock").exists())
+        status = self.run_cli("status", env=dict(self.env, TYPESAFE_API_KEY="synthetic-env"))
+        self.assertEqual(status["credentials"]["readiness"], "unavailable")
+        self.assertEqual(status["credentials"]["reason"], "incomplete_credential_update")
+        before_retry = self.snapshot()
+        self.run_cli("install", "codex", "--key-file", str(second), success=False)
+        self.assertEqual(self.snapshot(), before_retry)
+
+    def test_interrupted_credential_update_blocks_advice_and_recovers_only_with_original_reference(self):
+        first = self.credential_file("first-key.txt")
+        second = self.credential_file("second-key.txt")
+        module = self.hook_module()
+        original_write = module.write_credential_settings
+        for phase, host in (("before-write", "codex"), ("after-write", "claude-code")):
+            with self.subTest(phase=phase):
+                self.run_cli("install", host, "--key-file", str(first))
+                settings = Path(self.run_cli("status", host)["credential_config_path"])
+                before_hook = self.config_path(host).read_bytes()
+                def interrupt(path, updated, snapshot):
+                    if phase == "after-write":
+                        original_write(path, updated, snapshot)
+                    raise OSError("synthetic interrupted credential update")
+                arguments = SimpleNamespace(action="install", host=host, scope="user",
+                                            project_root=None, dry_run=False, key_file=second)
+                with patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(module, "write_credential_settings", side_effect=interrupt):
+                    with self.assertRaisesRegex(module.HookError, "credential_update_incomplete"):
+                        module.run(arguments)
+                pending = settings.with_suffix(".pending.json")
+                self.assertTrue(pending.is_file())
+                failed = self.run_cli("status", host, env=dict(self.env, TYPESAFE_API_KEY="synthetic-env"))
+                self.assertEqual(failed["credentials"]["readiness"], "unavailable")
+                self.assertEqual(failed["credentials"]["reason"], "incomplete_credential_update")
+                before_retry = self.snapshot()
+                self.run_cli("install", host, success=False)
+                self.run_cli("install", host, "--key-file", str(first), success=False)
+                self.assertEqual(self.snapshot(), before_retry)
+                self.run_cli("install", host, "--key-file", str(second))
+                self.assertFalse(pending.exists())
+                self.assertEqual(self.config_path(host).read_bytes(), before_hook)
+                recovered = self.run_cli("status", host)
+                self.assertEqual(recovered["credentials"]["readiness"], "ready")
+                self.assertEqual(recovered["credentials"]["key_file"], str(second))
+                before_repeat = self.snapshot()
+                self.run_cli("install", host, "--key-file", str(second))
+                self.assertEqual(self.snapshot(), before_repeat)
+
+    def test_key_option_is_rejected_for_status_and_uninstall_without_changes(self):
+        key = self.credential_file()
+        self.run_cli("install")
+        before = self.snapshot()
+        for action in ("status", "uninstall"):
+            with self.subTest(action=action):
+                failure = self.run_cli(action, "codex", "--key-file", str(key), success=False)
+                self.assertIn("key_file_requires_install", failure["reason"])
+                self.assertEqual(self.snapshot(), before)
+
+    def write_qualification_evidence(self, status, **changes):
+        context = status["qualification_context"]
+        record = {"version": 1, "host": status["host"],
+                  "host_version": context["host_version"] or "0.0.0",
+                  "platform": context["platform"],
+                  "integration_sha256": context["integration_sha256"],
+                  "registration_sha256": context["registration_sha256"],
+                  "catalog": {"skills": 1, "mcp_tools": 1, "completeness": "bounded"},
+                  "scenarios": {name: "passed" for name in (
+                      "registration", "delivery", "catalog", "provider", "adoption", "disabled",
+                      "explicit_only", "availability_change", "incomplete_metadata", "plan_mode",
+                      "missing_key", "error", "timeout", "cancellation", "followup")}}
+        record.update(changes)
+        path = Path(status["receipt_path"]).with_suffix(".qualification.json")
+        path.write_text(json.dumps(record), encoding="utf-8")
+        return path, record
+
+    def test_qualification_record_is_separate_from_current_conditions_and_redacted(self):
+        self.run_cli("install")
+        before_record = self.run_cli("status")
+        self.assertEqual(before_record["qualification_evidence"]["status"], "absent")
+        path, record = self.write_qualification_evidence(
+            before_record, private_raw_prompt="SYNTHETIC-PRIVATE-PROMPT", private_key="SYNTHETIC-PRIVATE-KEY")
+        before = self.snapshot()
+        status = self.run_cli("status")
+        evidence = status["qualification_evidence"]
+        expected = "matching_environment" if before_record["qualification_context"]["host_version"] else "historical"
+        self.assertEqual(evidence["status"], expected)
+        self.assertEqual(Path(evidence["evidence_path"]), path)
+        self.assertEqual(status["qualification"], "not_verified")
+        self.assertTrue(status["currently_unverified"])
+        self.assertNotIn("SYNTHETIC-PRIVATE", json.dumps(status))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_changed_integration_or_registration_marks_recorded_evidence_stale(self):
+        self.run_cli("install")
+        baseline = self.run_cli("status")
+        for field in ("integration_sha256", "registration_sha256"):
+            with self.subTest(field=field):
+                self.write_qualification_evidence(baseline, **{field: "f" * 64})
+                status = self.run_cli("status")
+                self.assertEqual(status["qualification_evidence"]["status"], "stale")
+                self.assertEqual(status["qualification"], "not_verified")
+
+    def test_invalid_evidence_does_not_prevent_status_or_hook_removal(self):
+        self.run_cli("install")
+        baseline = self.run_cli("status")
+        evidence_path, _ = self.write_qualification_evidence(baseline)
+        for contents in (b"{broken", b"[]", b'{"version":999}'):
+            with self.subTest(contents=contents):
+                evidence_path.write_bytes(contents)
+                before = self.snapshot()
+                status = self.run_cli("status")
+                self.assertEqual(status["status"], "configured")
+                self.assertEqual(status["qualification_evidence"]["status"], "invalid")
+                self.assertEqual(status["qualification"], "not_verified")
+                self.assertEqual(self.snapshot(), before)
+        self.run_cli("uninstall")
+        self.assertEqual(evidence_path.read_bytes(), contents)
+
+    def test_status_does_not_start_a_host_or_network_probe(self):
+        self.run_cli("install")
+        module = self.hook_module()
+        arguments = SimpleNamespace(action="status", host="codex", scope="user",
+                                    project_root=None, dry_run=False, key_file=None)
+        before = self.snapshot()
+        with patch.dict(os.environ, self.env, clear=True), \
+                patch.object(module.subprocess, "run", side_effect=AssertionError("process probe forbidden")), \
+                patch.object(socket, "socket", side_effect=AssertionError("network probe forbidden")):
+            status = module.run(arguments)
+        self.assertEqual(status["status"], "configured")
+        self.assertIsNone(status["qualification_context"]["host_version"])
+        self.assertEqual(self.snapshot(), before)
+
+    def test_host_version_changes_and_simulated_results_never_imply_live_qualification(self):
+        self.run_cli("install")
+        module = self.hook_module()
+        arguments = SimpleNamespace(action="status", host="codex", scope="user",
+                                    project_root=None, dry_run=False, key_file=None)
+        with patch.dict(os.environ, self.env, clear=True), \
+                patch.object(module, "host_version", return_value="1.2.3"):
+            baseline = module.run(arguments)
+            path, record = self.write_qualification_evidence(baseline)
+            record["scenarios"]["timeout"] = "simulated"
+            record["catalog"]["private_extra"] = "SYNTHETIC-PRIVATE-CATALOG"
+            record["scenarios"]["private_extra"] = "SYNTHETIC-PRIVATE-SCENARIO"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            matching = module.run(arguments)
+        self.assertEqual(matching["qualification_evidence"]["status"], "matching_environment")
+        self.assertFalse(matching["qualification_evidence"]["all_scenarios_passed"])
+        self.assertEqual(matching["qualification_evidence"]["scenarios"]["timeout"], "simulated")
+        self.assertEqual(matching["qualification"], "not_verified")
+        self.assertNotIn("SYNTHETIC-PRIVATE", json.dumps(matching))
+        for current_version, expected in (("1.2.4", "stale"), (None, "historical")):
+            with self.subTest(version=current_version):
+                with patch.dict(os.environ, self.env, clear=True), \
+                        patch.object(module, "host_version", return_value=current_version):
+                    status = module.run(arguments)
+                self.assertEqual(status["qualification_evidence"]["status"], expected)
+                self.assertEqual(status["qualification"], "not_verified")
 
     def test_interpreter_path_with_shell_metacharacters_executes_on_native_platform(self):
         environment = self.root / "Python ü space ' %NO_SUCH_ENVIRONMENT% $ ` ;"
@@ -746,6 +1239,118 @@ class HookRegistrationTests(unittest.TestCase):
         self.assertEqual(baseline["hookSpecificOutput"]["additionalContext"], guidance)
 
 
+    def assert_windows_startup_created_only_empty_directories(self, before, after):
+        """Allow PowerShell 5.1's empty first-startup profile directories only."""
+        self.assertEqual({key: after[key] for key in before}, before)
+        unexpected = [key for key, value in after.items()
+                      if key not in before and value != ("directory", None)]
+        self.assertEqual(unexpected, [],
+                         "PowerShell startup created non-directory state: "
+                         + repr(unexpected))
+
+
+    def test_render_ignores_broken_user_configuration_and_state(self):
+        # Rendering must not even parse installation files, including corrupt ones.
+        (self.codex / "hooks.json").write_bytes(b"not JSON: private config canary")
+        (self.root / "state").write_bytes(b"not a directory: ownership canary")
+        before = self.snapshot()
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        self.assertEqual(set(fragment), {"hooks"})
+        self.assertEqual(set(fragment["hooks"]), {EVENT})
+        groups = fragment["hooks"][EVENT]
+        self.assertEqual(len(groups), 1)
+        handler = groups[0]["hooks"][0]
+        self.assertEqual(handler["timeout"], 5)
+        self.assertEqual(handler["type"], "command")
+        self.assertEqual(self.snapshot(), before)
+
+
+    def test_rendered_policy_output_is_constant_for_arbitrary_hook_input(self):
+        fragment = self.run_cli("render", "codex", "--policy", "repository-adopted")
+        handler = fragment["hooks"][EVENT][0]["hooks"][0]
+        expected = (SCRIPT.parent.parent / "assets/repository-hook-guidance.txt").read_text(
+            encoding="utf-8").strip()
+        before_startup = self.snapshot()
+        startup_output = self.execute_registration("codex", handler, b"")
+        self.assertEqual(
+            startup_output["hookSpecificOutput"]["additionalContext"], expected)
+        after_startup = self.snapshot()
+        if os.name == "nt":
+            self.assert_windows_startup_created_only_empty_directories(
+                before_startup, after_startup)
+            # Windows PowerShell creates this startup optimization cache lazily.
+            startup_cache = (
+                self.home / "AppData" / "Local" / "Microsoft" / "Windows"
+                / "PowerShell" / "StartupProfileData-NonInteractive"
+            )
+            allowed_runtime_paths = {str(startup_cache.relative_to(self.root))}
+            parent = startup_cache.parent
+            while parent != self.home:
+                allowed_runtime_paths.add(str(parent.relative_to(self.root)))
+                parent = parent.parent
+        else:
+            self.assertEqual(after_startup, before_startup)
+            allowed_runtime_paths = set()
+        before = after_startup
+        for payload in (b"", b"invalid JSON \xff\x00", b"x" * 2_000_000,
+                        b'{"prompt":"RAW_PROMPT_CANARY $(touch must-not-exist)",'
+                        b'"tool_result":"PRIVATE_RESULT_CANARY"}'):
+            with self.subTest(size=len(payload)):
+                result = self.execute_registration("codex", handler, payload)
+                self.assertEqual(result["hookSpecificOutput"]["additionalContext"], expected)
+                self.assertNotIn("CANARY", json.dumps(result))
+                after = self.snapshot()
+                added = sorted(set(after) - set(before))
+                removed = sorted(set(before) - set(after))
+                changed = sorted(key for key in before.keys() & after.keys()
+                                 if before[key] != after[key])
+                if os.name == "nt":
+                    unexpected = sorted((set(added) | set(changed)) - allowed_runtime_paths)
+                    cache = after.get(str(startup_cache.relative_to(self.root)))
+                    self.assertTrue(cache is None or cache[0] == "file",
+                                    "PowerShell startup cache path is not a file")
+                    unexpected_directories = sorted(
+                        path for path in allowed_runtime_paths
+                        if path != str(startup_cache.relative_to(self.root))
+                        and path in after and after[path] != ("directory", None)
+                    )
+                    self.assertEqual(unexpected_directories, [],
+                                     "PowerShell cache parents are not directories")
+                    cache_markers = [] if cache is None else [
+                        marker for marker in (b"RAW_PROMPT_CANARY", b"PRIVATE_RESULT_CANARY")
+                        if marker in cache[1]
+                    ]
+                    self.assertEqual(cache_markers, [],
+                                     "PowerShell startup cache contains prompt markers")
+                else:
+                    unexpected = sorted(set(added) | set(changed))
+                self.assertEqual((unexpected, removed), ([], []),
+                                 f"hook input changed filesystem paths: size={len(payload)}, "
+                                 f"unexpected={unexpected!r}, removed={removed!r}")
+
+
+    def test_invalid_render_combinations_leave_state_unchanged(self):
+        before = self.snapshot()
+        cases = (
+            ("render", "codex", ()),
+            ("render", "claude-code", ("--policy", "repository-adopted")),
+            ("render", "codex", ("--policy", "repository-adopted", "--scope", "user")),
+            ("render", "codex", ("--policy", "repository-adopted", "--project-root", str(self.project))),
+            ("render", "codex", ("--policy", "repository-adopted", "--dry-run")),
+            ("render", "codex", ("--policy", "repository-adopted", "--key-file", str(self.root / "missing-key"))),
+            ("render", "codex", ("--policy", "repository-adopted", "--advice-consent", "allow")),
+            *((action, "codex", ("--policy", "repository-adopted"))
+              for action in ("install", "status", "uninstall")),
+        )
+        for action, host, arguments in cases:
+            with self.subTest(action=action, host=host, arguments=arguments):
+                result = self.run_cli(action, host, *arguments, success=False)
+                self.assertEqual(result["status"], "error")
+                self.assertIn("invalid_arguments", result["reason"])
+                self.assertEqual(self.snapshot(), before)
+
+
+
 class HookPrimitiveTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -759,41 +1364,6 @@ class HookPrimitiveTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="jev-hook-primitives-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
-
-    def test_render_can_read_only_its_packaged_policy_guidance(self):
-        asset = SCRIPT.parent.parent / "assets/repository-hook-guidance.txt"
-        original_open = Path.open
-        opened = []
-
-        def asset_only(path, mode="r", *args, **kwargs):
-            self.assertEqual(path, asset)
-            self.assertEqual(mode, "r")
-            opened.append(path)
-            return original_open(path, mode, *args, **kwargs)
-
-        output = io.StringIO()
-        with patch.object(Path, "open", asset_only), \
-                patch.object(self.module, "_run_hook_manager",
-                             side_effect=AssertionError("installer forbidden")), \
-                patch.object(self.module, "read_snapshot", side_effect=AssertionError("config read forbidden")), \
-                patch.object(os, "open", side_effect=AssertionError("file access forbidden")), \
-                patch.object(socket, "socket", side_effect=AssertionError("network forbidden")), \
-                patch.object(sys, "stdin", None), patch.object(sys, "stdout", output):
-            status = self.module.main(["render", "--host", "codex", "--policy", "repository-adopted"])
-        self.assertEqual(status, 0)
-        self.assertEqual(opened, [asset])
-        self.assertIn(EVENT, json.loads(output.getvalue())["hooks"])
-
-    def test_render_rejects_unsupported_arguments_before_any_file_read(self):
-        for arguments in (["render", "--host", "codex"],
-                          ["render", "--host", "claude-code", "--policy", "repository-adopted"],
-                          ["install", "--host", "codex", "--policy", "repository-adopted"]):
-            with self.subTest(arguments=arguments), \
-                    patch.object(Path, "open", side_effect=AssertionError("file read forbidden")), \
-                    patch.object(self.module, "_run_hook_manager",
-                                 side_effect=AssertionError("installer forbidden")), \
-                    patch.object(sys, "stdout", io.StringIO()):
-                self.assertEqual(self.module.main(arguments), 1)
 
     def test_home_git_failures_and_false_roots_are_refused(self):
         failures = (FileNotFoundError("git unavailable"),
@@ -809,6 +1379,74 @@ class HookPrimitiveTests(unittest.TestCase):
             with self.assertRaisesRegex(self.module.HookError, "home_state_git_root_mismatch"):
                 self.module.verify_home_state_repository(self.root, self.root / "state")
 
+    def test_snapshot_accepts_stable_path_and_descriptor_metadata(self):
+        target = self.root / "snapshot.json"
+        target.write_bytes(b"old")
+        target.write_bytes(b"stable contents after creation")
+        lstat = target.lstat()
+        with target.open("rb") as stream:
+            fstat = os.fstat(stream.fileno())
+        fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns",
+                  "st_birthtime_ns", "st_mode")
+        diagnostic = {name: {field: getattr(value, field, None) for field in fields}
+                      for name, value in (("lstat", lstat), ("fstat", fstat))}
+        try:
+            snapshot = self.module.read_snapshot(target)
+        except self.module.HookError as error:
+            self.fail(str(error) + "; metadata=" + json.dumps(diagnostic, sort_keys=True))
+        self.assertEqual(snapshot.data, b"stable contents after creation")
+        self.assertEqual(self.module.read_snapshot(target), snapshot)
+        self.assertIsNone(self.module.key_file_readiness(target), json.dumps(diagnostic, sort_keys=True))
+
+    def test_windows_descriptor_identity_preserves_change_time(self):
+        value = SimpleNamespace(st_dev=1, st_ino=2, st_size=3, st_mtime_ns=4,
+                                st_ctime_ns=5, st_birthtime_ns=6, st_mode=7)
+        with patch.object(self.module.os, "name", "nt"):
+            before = self.module._identity(value, descriptor=True)
+            value.st_ctime_ns += 1
+            self.assertNotEqual(self.module._identity(value, descriptor=True), before)
+
+    def test_windows_creation_time_normalization_preserves_other_identity_checks(self):
+        # Affected Windows Python path stat exposes creation time as ctime while
+        # fstat exposes metadata change time; birthtime is consistent in both.
+        path_metadata = {"st_dev": 11, "st_ino": 12, "st_size": 13,
+                         "st_mtime_ns": 14, "st_ctime_ns": 15,
+                         "st_birthtime_ns": 15, "st_mode": 0o100600}
+        descriptor_metadata = dict(path_metadata, st_ctime_ns=99)
+        with patch.object(self.module.os, "name", "nt"):
+            reference = self.module._identity(SimpleNamespace(**path_metadata))
+            self.assertEqual(self.module._identity(SimpleNamespace(**descriptor_metadata)), reference)
+            for field in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_birthtime_ns", "st_mode"):
+                with self.subTest(field=field):
+                    changed = dict(descriptor_metadata)
+                    changed[field] += 1
+                    self.assertNotEqual(self.module._identity(SimpleNamespace(**changed)), reference)
+            legacy = dict(path_metadata)
+            legacy.pop("st_birthtime_ns")
+            self.assertEqual(self.module._identity(SimpleNamespace(**legacy)), reference)
+
+    def test_posix_identity_preserves_metadata_change_time_even_with_birthtime(self):
+        metadata = {"st_dev": 11, "st_ino": 12, "st_size": 13,
+                    "st_mtime_ns": 14, "st_ctime_ns": 15,
+                    "st_birthtime_ns": 10, "st_mode": 0o100600}
+        with patch.object(self.module.os, "name", "posix"):
+            before = self.module._identity(SimpleNamespace(**metadata))
+            metadata["st_ctime_ns"] += 1
+            self.assertNotEqual(self.module._identity(SimpleNamespace(**metadata)), before)
+
+    @unittest.skipIf(os.name == "nt", "POSIX permission changes are not portable to Windows")
+    def test_atomic_write_refuses_concurrent_permission_change(self):
+        target = self.root / "protected-config.json"
+        target.write_bytes(b'{"preserve":true}')
+        expected = self.module.read_snapshot(target)
+        mode = target.stat().st_mode & 0o777
+        target.chmod(mode ^ 0o100)
+        changed = target.stat()
+        with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+            self.module.atomic_write(target, b"{}", expected)
+        self.assertEqual(target.read_bytes(), b'{"preserve":true}')
+        self.assertEqual(target.stat().st_mode, changed.st_mode)
+
     def test_atomic_write_refuses_stale_snapshot(self):
         target = self.root / "config.json"
         target.write_bytes(b'{"before": true}')
@@ -819,82 +1457,6 @@ class HookPrimitiveTests(unittest.TestCase):
             self.module.atomic_write(target, b'{"replacement": true}', expected)
         self.assertEqual(target.read_bytes(), external)
         self.assertEqual(list(self.root.iterdir()), [target])
-
-    def test_read_snapshot_tolerates_windows_path_and_handle_identity_differences(self):
-        target = self.root / "config.json"
-        expected = b'{"preserve": true}\n'
-        target.write_bytes(expected)
-        original_lstat = Path.lstat
-
-        def windows_path_stat(path):
-            metadata = original_lstat(path)
-            if path != target:
-                return metadata
-            return SimpleNamespace(
-                st_dev=metadata.st_dev + 1,
-                st_ino=metadata.st_ino + 1,
-                st_size=metadata.st_size,
-                st_mtime_ns=metadata.st_mtime_ns,
-                st_ctime_ns=metadata.st_ctime_ns + 1,
-                st_mode=metadata.st_mode,
-                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
-            )
-
-        with patch.object(self.module.sys, "platform", "win32"), \
-                patch.object(Path, "lstat", windows_path_stat):
-            snapshot = self.module.read_snapshot(target)
-        self.assertEqual(snapshot.data, expected)
-
-    def test_read_snapshot_rejects_windows_path_replacement_with_matching_metadata(self):
-        target = self.root / "config.json"
-        target.write_bytes(b'{"preserve": true}\n')
-        original_lstat = Path.lstat
-        target_lstat_calls = 0
-
-        def replaced_path_stat(path):
-            nonlocal target_lstat_calls
-            metadata = original_lstat(path)
-            if path != target:
-                return metadata
-            target_lstat_calls += 1
-            return SimpleNamespace(
-                st_dev=metadata.st_dev + 1,
-                st_ino=metadata.st_ino + (1 if target_lstat_calls < 3 else 2),
-                st_size=metadata.st_size,
-                st_mtime_ns=metadata.st_mtime_ns,
-                st_ctime_ns=metadata.st_ctime_ns + 1,
-                st_mode=metadata.st_mode,
-                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
-            )
-
-        with patch.object(self.module.sys, "platform", "win32"), \
-                patch.object(Path, "lstat", replaced_path_stat):
-            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
-                self.module.read_snapshot(target)
-
-    def test_read_snapshot_fails_closed_when_windows_file_identity_is_unavailable(self):
-        target = self.root / "config.json"
-        target.write_bytes(b'{"preserve": true}\n')
-        original_lstat = Path.lstat
-
-        def without_file_identity(path):
-            metadata = original_lstat(path)
-            if path != target:
-                return metadata
-            return SimpleNamespace(
-                st_dev=0,
-                st_ino=0,
-                st_size=metadata.st_size,
-                st_mtime_ns=metadata.st_mtime_ns,
-                st_ctime_ns=metadata.st_ctime_ns,
-                st_mode=metadata.st_mode,
-                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
-            )
-
-        with patch.object(self.module.sys, "platform", "win32"), \
-                patch.object(Path, "lstat", without_file_identity):
-            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
-                self.module.read_snapshot(target)
 
     def test_atomic_write_rechecks_after_staging_and_cleans_temporary_file(self):
         target = self.root / "config.json"
@@ -1005,6 +1567,123 @@ class HookPrimitiveTests(unittest.TestCase):
         self.assertNotIn(guidance, decoded)
         with self.assertRaisesRegex(self.module.HookError, "windows_command_too_long"):
             self.module.build_registration("codex", platform="win32", guidance="x" * 5000)
+
+
+    def test_render_can_read_only_its_packaged_policy_guidance(self):
+        asset = SCRIPT.parent.parent / "assets/repository-hook-guidance.txt"
+        original_open = Path.open
+        opened = []
+
+        def asset_only(path, mode="r", *args, **kwargs):
+            self.assertEqual(path, asset)
+            self.assertEqual(mode, "r")
+            opened.append(path)
+            return original_open(path, mode, *args, **kwargs)
+
+        output = io.StringIO()
+        with patch.object(Path, "open", asset_only), \
+                patch.object(self.module, "run",
+                             side_effect=AssertionError("installer forbidden")), \
+                patch.object(self.module, "read_snapshot", side_effect=AssertionError("config read forbidden")), \
+                patch.object(os, "open", side_effect=AssertionError("file access forbidden")), \
+                patch.object(socket, "socket", side_effect=AssertionError("network forbidden")), \
+                patch.object(sys, "stdin", None), patch.object(sys, "stdout", output):
+            status = self.module.main(["render", "--host", "codex", "--policy", "repository-adopted"])
+        self.assertEqual(status, 0)
+        self.assertEqual(opened, [asset])
+        self.assertIn(EVENT, json.loads(output.getvalue())["hooks"])
+
+
+    def test_render_rejects_unsupported_arguments_before_any_file_read(self):
+        for arguments in (["render", "--host", "codex"],
+                          ["render", "--host", "claude-code", "--policy", "repository-adopted"],
+                          ["install", "--host", "codex", "--policy", "repository-adopted"]):
+            with self.subTest(arguments=arguments), \
+                    patch.object(Path, "open", side_effect=AssertionError("file read forbidden")), \
+                    patch.object(self.module, "run",
+                                 side_effect=AssertionError("installer forbidden")), \
+                    patch.object(sys, "stdout", io.StringIO()):
+                self.assertEqual(self.module.main(arguments), 1)
+
+
+    def test_read_snapshot_tolerates_windows_path_and_handle_identity_differences(self):
+        target = self.root / "config.json"
+        expected = b'{"preserve": true}\n'
+        target.write_bytes(expected)
+        original_lstat = Path.lstat
+
+        def windows_path_stat(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + 1,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", windows_path_stat):
+            snapshot = self.module.read_snapshot(target)
+        self.assertEqual(snapshot.data, expected)
+
+
+    def test_read_snapshot_rejects_windows_path_replacement_with_matching_metadata(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+        target_lstat_calls = 0
+
+        def replaced_path_stat(path):
+            nonlocal target_lstat_calls
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            target_lstat_calls += 1
+            return SimpleNamespace(
+                st_dev=metadata.st_dev + 1,
+                st_ino=metadata.st_ino + (1 if target_lstat_calls < 3 else 2),
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns + 1,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", replaced_path_stat):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
+
+
+    def test_read_snapshot_fails_closed_when_windows_file_identity_is_unavailable(self):
+        target = self.root / "config.json"
+        target.write_bytes(b'{"preserve": true}\n')
+        original_lstat = Path.lstat
+
+        def without_file_identity(path):
+            metadata = original_lstat(path)
+            if path != target:
+                return metadata
+            return SimpleNamespace(
+                st_dev=0,
+                st_ino=0,
+                st_size=metadata.st_size,
+                st_mtime_ns=metadata.st_mtime_ns,
+                st_ctime_ns=metadata.st_ctime_ns,
+                st_mode=metadata.st_mode,
+                st_reparse_tag=getattr(metadata, "st_reparse_tag", 0),
+            )
+
+        with patch.object(self.module.sys, "platform", "win32"), \
+                patch.object(Path, "lstat", without_file_identity):
+            with self.assertRaisesRegex(self.module.HookError, "concurrent_modification"):
+                self.module.read_snapshot(target)
+
 
 
 if __name__ == "__main__":

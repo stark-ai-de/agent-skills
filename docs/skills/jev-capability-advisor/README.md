@@ -33,7 +33,7 @@ Or keep the first check entirely local:
 
 The helper needs **Python 3.10+**; it has no third-party Python dependencies, router service or embedding-model download. A fresh Jev recommendation uses your own TypeSafe API key and sends the supplied task plus bounded public capability cards to TypeSafe. Offline inspection needs no key or network. Configure credentials locally; never paste or commit them. The agent needs a **current host-supplied catalog**: files on disk alone do not establish which tools are available. See the [catalog and CLI contract](../../../skills/skill-maintenance/jev-capability-advisor/references/contract.md).
 
-This update also prepares the skill for **Codex in stark AI Developer 1.3.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
+This update also prepares the skill for **Codex in stark AI Developer 1.6.0**. Archive qualification and plugin-directory publication are separate stages; a locally built archive does not mean the directory already carries this update.
 
 ## One next skill, explicitly
 
@@ -79,7 +79,19 @@ python3 scripts/jev_hooks.py status --host codex
 
 Use `--host claude-code` for Claude Code. User scope is the default; `--scope project --project-root /path/to/project` explicitly selects a project. `uninstall` with the same host/scope removes only the unchanged owned entry. Installation preserves unrelated configuration and keeps ownership records and backups in private user state. Host trust still requires the host's normal review. Linux/WSL, macOS and native Windows are implementation targets; consult the [qualification matrix](../../../skill-evals/jev-capability-advisor/README.md#hook-integration-qualification) for actual evidence.
 
-Opt-in covers sending a minimal task summary and bounded capability cards to TypeSafe when advice is actually possible. Existing credentials and current, trustworthy host metadata are required. Installed files or incomplete discovery output are not a complete eligible inventory. If eligibility, credentials or allowed execution cannot be established, the agent continues with native selection. The installer does not provision keys or bypass Plan-mode restrictions.
+Opt-in covers sending a minimal task summary and bounded capability cards to TypeSafe when advice is actually possible. Existing credentials and current, trustworthy host metadata are required. The agent captures a bounded catalog from the running model's skill list and loaded MCP definitions, using verified host defaults and excluding unknown availability or invocation restrictions. Files may enrich already available entries but cannot prove availability; another host session is not an inventory source. Coverage and exclusions stay explicit, and native permissions still govern concrete calls. If no reliable subset, credentials or allowed execution can be established, the agent continues with native selection. The installer does not provision keys or bypass Plan-mode restrictions.
+
+If credentials are stored in an existing local raw-key file, configure its reference explicitly:
+
+```sh
+python3 scripts/jev_hooks.py install --host codex --key-file /path/to/existing-key
+```
+
+Only the path is stored in private per-host settings, shared by its user/project registrations. Later installs without the option preserve it. A configured file takes precedence over `TYPESAFE_API_KEY`; an unreadable file causes native fallback, not a silent switch to the environment. The agent reads `status` for the actual host and passes that local path to the advisor's `--key-file`. The path and contents never enter provider metadata. Uninstall keeps the credential reference and recorded evidence.
+
+`install --advice-consent allow|revoke` explicitly records or withdraws the disclosed processing scope per registration. A plain install, ready key and native trust do not imply acceptance. The private catalog evidence checker retains exact current source snapshots and bounded omissions without claiming host attestation.
+
+`status` separates registration, recorded processing consent, locally observable credential readiness and historical qualification evidence. A readable key file is not an authentication test. Matching file/platform records remain historical while the active host version and session conditions are unverified. Status deliberately does not launch the host to inspect its version; qualify the active host version, integration/registration fingerprints, catalog scope and scenario results separately, and still check current eligibility. The [hook reference](../../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#record-controlled-qualification) documents the private evidence format.
 
 For an explicitly adopted repository policy, render a Codex configuration fragment instead:
 
@@ -91,7 +103,7 @@ This command reads no user configuration and writes nothing. The [repository pol
 
 The owner-process session instead reuses healthy HTTPS and an unchanged catalog's derived search index across tasks, validates fresh capabilities per request and does not cache decisions. Its profile is fixed at construction. Single general-profile CLI invocations also reuse their connection for compound follow-ups.
 
-**Configuration is not automatic-advice qualification.** Each host must independently demonstrate hook delivery, eligible inventory and actual adoption under ADR-0057. Current Codex discovery interfaces do not expose every effective skill and tool restriction. Installing the ordinary skill/plugin never activates a hook, and selector benchmarks do not prove hook or whole-task performance.
+**Configuration is not automatic-advice qualification.** Each host must independently demonstrate hook delivery, eligible inventory and actual adoption under ADR-0057. Bounded same-session catalogs do not claim complete machine inventory or pre-approve every possible tool argument. Installing the ordinary skill/plugin never activates a hook, and selector benchmarks do not prove hook or whole-task performance.
 
 ## Benchmarks and benefits
 
@@ -113,8 +125,8 @@ Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-a
 
 | Component              | Prepared version                    | Distribution                                                                     |
 | ---------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
-| Jev Capability Advisor | `0.1.0`                             | Standalone Agent Skill; optional `dist/skills/jev-capability-advisor.zip`        |
-| stark AI Developer     | `1.3.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
+| Jev Capability Advisor | `0.3.0`                             | Standalone Agent Skill; optional `dist/skills/jev-capability-advisor.zip`        |
+| stark AI Developer     | `1.6.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
 | Catalog                | Next generated minor after `0.22.0` | Release Please owns the final version and changelog; no manual root version bump |
 
 The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection and index reuse need a retained process.

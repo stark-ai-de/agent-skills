@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Jev Capability Advisor
@@ -13,6 +13,14 @@ metadata:
 ## Goal
 
 Return a task-specific recommendation from capabilities actually available in the current client. The default `general` profile can recommend one to three capabilities; explicit `next_skill` recommends one skill without assessing remaining work. The client retains discovery, activation, permissions, and execution.
+
+## Enabled-hook entry
+
+Hook guidance requests **Recommend**, `general/current`. First distinguish the delivered mode. A `repository-adopted` reminder follows the [repository policy prerequisites](references/hook-integration.md#repository-adopted-policy), including adoption, scoped host-owner processing authority and qualification; it has no installer binding and must not invent one. The following bound-status and receipt steps apply to the optional installer-managed reminder. Resolve this `SKILL.md` from its current eligible host card. Use that exact directory for every reference and script; a repository/workspace search cannot establish whether installed support files exist. First read this copy's `references/hook-integration.md`, then run this copy's `scripts/jev_hooks.py status` with the delivered registration's `--host` and `--scope`; add `--project-root` only for project scope. Use absolute paths or that skill directory as the command working directory. Require an active registration and `advice_consent.status: recorded`; a key or native hook trust does not establish processing consent. Never install or grant consent to repair a missing prerequisite during ordinary advice.
+
+Read the [capture procedure](references/hook-catalog.md) before judging catalog availability. A prebuilt JSON export or complete inventory is not required: construct a bounded bare array from the current model-visible skill cards and loaded MCP definitions, keeping only source-backed eligible entries. A missing structured export alone is not a prerequisite failure. Build the hook catalog from current skill cards and actual MCP definitions, excluding built-in host tools. Candidate enrichment may extract name, description and invocation-policy metadata, but must not load candidate workflow instructions before advice. The CLI catalog is a **bare JSON array**, never a `{"capabilities": [...]}` wrapper or a Session frame. Keep current-source snapshots and exclusions in the private [catalog evidence sidecar](references/hook-catalog.md), check it with `scripts/hook_catalog.py`, and retain its declared coverage limits. For a newly generated catalog, follow the [local catalog check](references/hook-integration.md#catalog-shape-and-local-check) with `--offline-candidates` before the separate provider command; this checks input locally, makes no recommendation and needs no credential/network approval. When the active host requires network approval, obtain it through the host's normal route before the first provider command. In Codex, when the active `exec_command` exposes `sandbox_permissions` and network access is restricted, set it to `require_escalated` with a scoped `justification` on the advisor command itself. Prepare local input files separately; shell text cannot request this tool-level approval. Denied or unavailable required approval means native fallback without a provider attempt.
+
+Keep one eligible skill instance's instructions and scripts together; do not concatenate multiple installed versions. If support is unavailable, establish that with a direct read/execution result for this instance before reporting the concrete fallback. Continue with its current-session catalog and configured credentials when prerequisites hold; no setup or workflow-selection question is needed.
 
 ## When to use
 
@@ -30,8 +38,8 @@ Return a task-specific recommendation from capabilities actually available in th
 ## Inputs to inspect
 
 - The requested task, relevant conversation context, and any skills already loaded or services already configured.
-- A current host-supplied catalog of available capability IDs, names, descriptions, and activation restrictions. Installed files alone do not prove availability.
-- Python 3.10+ (`python3`) and an existing credential source. Use an explicitly configured raw-key file when present; otherwise the helper reads `TYPESAFE_API_KEY` from its process environment. A configured file is authoritative and does not fall back to the environment on error. Never request a key in chat.
+- A current host-supplied catalog of available capability IDs, names, descriptions, and activation restrictions. For hooks, capture a bounded skills/MCP subset from the running session using [verified host defaults and exclusions](references/hook-integration.md#capture-a-bounded-current-session-catalog); installed files or another session cannot prove availability.
+- Python 3.10+ (`python3`) and an existing credential source. Installer-managed hook advice reads `scripts/jev_hooks.py status` using the delivered local registration JSON's `host`, `scope` and project-only `project_root`, never guessed values or provider inputs: when status reports a ready `key_file` source, pass its `credentials.key_file` to advisor `--key-file`; when status reports a ready environment source, omit `--key-file` and use `TYPESAFE_API_KEY`. A configured file is authoritative; unavailable or invalid files never fall back to the environment. Never request a key in chat.
 
 ## Workflow
 
@@ -46,12 +54,12 @@ Select and proceed when intent is clear. On a bare invocation, ask which workflo
 
 **Integrate** has two modes; select from clear intent or ask when the host or mode is ambiguous:
 
-- **Hook guidance:** follow the [hook integration contract](references/hook-integration.md). Choose optional new-task guidance through `install|status|uninstall` for Codex CLI or Claude Code, or the [repository-adopted policy](references/hook-integration.md#repository-adopted-policy) through `render --host codex --policy repository-adopted`. Rendering only prints a fragment; it neither reads user configuration nor installs or authorizes processing. The repository policy also covers material task/capability changes, with separate adoption, host activation, processing consent and qualification. Both hints use Recommend `general`/`current`; neither calls Jev itself.
+- **Hook guidance:** follow the [hook integration contract](references/hook-integration.md) for Codex CLI or Claude Code. `install` explicitly enables the selected user/project registration; `status` is read-only; `uninstall` removes only its owned entry. `install --key-file PATH` optionally retains an existing private key-file reference for that host. Disclose task-summary and capability-card processing during opt-in; `install --advice-consent allow` records an explicitly authorized acceptance for that registration, and `--advice-consent revoke` withdraws it. After minimal prerequisite checks, an enabled hook requires Recommend once per new actionable task **before task-specific skill loading, planning or questions**, with `general`/`current` and no new caches. A failed prerequisite requires an immediate concrete fallback line, then native continuation. Alternatively, `render --host codex --policy repository-adopted` prints a separate policy fragment without reading user state or installing anything. That mode covers material task/capability changes under separate adoption, activation, processing authority and qualification. Do not install both variants for one scope. Neither static emitter calls Jev itself.
 - **Owner-process session:** follow the [session integration contract](references/session-integration.md). The owner chooses `selection_profile` at construction; frames cannot change it. Retain one process with fresh eligible inventory per request, reusable HTTPS and a bounded derived index.
 
-Qualify the host callback, current eligible inventory and recommendation delivery before automatic advice. A configured hook or session helper alone is not qualification. Missing prerequisites, stale inventory, timeout or cancellation retain native fallback. Honor explicit-only restrictions, user skill choices, permissions and Plan-mode limits; installing the skill/plugin never enables hooks. Do not export inputs or write receipts when the active mode forbids those writes.
+Qualify the host callback, current eligible inventory and recommendation delivery before automatic advice. A configured hook, ready local credential or historical evidence alone is not current-session qualification. Recorded evidence remains separate from current checks: historical `not_verified` alone is not an unavailable result or a blanket skip. Verify current prerequisites; missing prerequisites, stale inventory, timeout or cancellation retain native fallback. Honor explicit-only restrictions, user skill choices, permissions and Plan-mode limits; installing the skill/plugin never enables hooks. Do not export inputs or write receipts when the active mode forbids those writes.
 
-1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
+1. Reuse an existing current host-supplied catalog when available; export one only if missing or stale, using the [catalog contract](references/contract.md). Use documented defaults only when verified for the active host; exclude unknown availability or invocation restrictions and record bounded/unknown coverage. Do not read the entire catalog into the conversation just to pass its filename to the helper. Keep credentials, filesystem paths, customer content, and tool results out of the metadata sent to the provider.
 2. **Inspect:** run `scripts/jev_advisor.py --offline-candidates` with the catalog and query. This is local retrieval, not a semantic recommendation. The default performs no cache writes; `--index-cache-dir` explicitly enables the [optional local index cache](references/contract.md#optional-local-index-cache).
 3. **Recommend:** run the helper once with `--summary --output /path/to/local-receipt.json`, the catalog, query, and configured credential source. **Recommend next skill:** also pass `--selection-profile next_skill`; it makes at most one provider call. Summaries retain complete selected descriptions, restrictions, coverage and provenance. General compound advice can make conditioned follow-ups for up to three recommendations; keep incomplete proposals provisional. Next-skill advice instead returns `status: next_skill` with `additional_work: unassessed`: do not present it as a complete compound plan. For repeated tasks, explicitly opt in to the [profile-isolated local cache](references/contract.md#local-decision-cache) if wanted.
 4. Keep `--retrieval-policy current` as the default. Use `balanced` only for an explicitly selected experiment, and disclose its bounded coverage tradeoff. Check the returned status and candidate coverage. Preserve `none`, `clarify`, and `error` as different outcomes. A request limit or incomplete selection is not a successful complete answer.
@@ -77,11 +85,12 @@ Run from the skill directory, or resolve the script relative to this `SKILL.md`.
 
 ## References
 
-Read [the contract and commands](references/contract.md) when preparing a catalog or diagnosing incomplete results and limits. A configured Recommend call follows the command above without an additional contract read.
+Read [the contract and commands](references/contract.md) when preparing a catalog or diagnosing incomplete results and limits. For hook advice, first read the [hook reference](references/hook-integration.md) for same-session capture, credential precedence and current qualification checks. A configured Recommend call follows the command above without an additional contract read.
 
 ## Scripts
 
 - `scripts/jev_hooks.py`: explicit hook `install`/`uninstall` mutate the selected host configuration and private ownership state; `status` and `--dry-run` are read-only; `render` prints a repository-policy fragment without accessing user configuration or ownership state. Embeds static guidance; no provider access, dependency installation or trust changes.
+- `scripts/hook_catalog.py`: read-only consistency check for a private current-session catalog sidecar; no discovery, credentials, network, cache or host-attestation claim.
 - `scripts/jev_advisor.py`: recommendation client; network access only for a fresh requested recommendation. `--output` writes the requested local result file; `--cache-dir` opts in to decision-cache writes; `--index-cache-dir` separately enables local index-cache writes, including during offline inspection.
 - `scripts/retrieval.py`: deterministic candidate retrieval, used by the client. No network or installation.
 - `scripts/decision_cache.py`: private, bounded cache used only when explicitly configured. Stores decisions without query text, provider payloads or credentials.
@@ -101,6 +110,6 @@ Recommend/Inspect ends with a concrete recommendation, a scoped no-capability an
 ## Failure modes
 
 - Missing key or network failure: inspect candidates locally and state that semantic selection was not completed.
-- Missing or stale catalog: obtain current host metadata; do not substitute a guessed inventory.
+- Missing or stale catalog: obtain current host metadata; exclude unresolved entries and report limited coverage. If no reliable bounded catalog remains, use native discovery; do not substitute a guessed inventory.
 - Ambiguous task: ask for the missing intent rather than selecting arbitrary capabilities.
 - Candidate/request limit: disclose the incomplete scope and let the host's ordinary discovery continue.
