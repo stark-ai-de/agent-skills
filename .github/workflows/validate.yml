@@ -17,12 +17,12 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
 
     steps:
       - name: ⬇️ Checkout
-        uses: actions/checkout@v6
+        uses: useblacksmith/checkout@v1
         with:
           fetch-depth: 1
 
@@ -135,11 +135,11 @@ jobs:
           failure: Open the failed contract step, fix the owning boundary, and rerun the workflow.
 
   testing-profile:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: useblacksmith/checkout@v1
 
       - name: Setup pnpm and Node
         uses: pnpm/setup@v2
@@ -171,7 +171,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [blacksmith-4vcpu-ubuntu-2404, blacksmith-6vcpu-macos-15, blacksmith-4vcpu-windows-2025]
         python: ["3.10", "3.14"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -193,7 +193,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [blacksmith-4vcpu-ubuntu-2404, blacksmith-6vcpu-macos-15, blacksmith-4vcpu-windows-2025]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -248,11 +248,11 @@ jobs:
 
   archive-identity-compare:
     needs: archive-identity
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - name: ⬇️ Checkout
-        uses: actions/checkout@v6
+        uses: useblacksmith/checkout@v1
         with:
           fetch-depth: 1
 
