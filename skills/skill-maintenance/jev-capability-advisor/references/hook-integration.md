@@ -36,6 +36,35 @@ Use the current running agent's host metadata. The catalog may contain both skil
 4. **Build selection cards.** Follow the [catalog contract](contract.md#catalog) with `kind: skill|tool`, exact names, useful descriptions and source-backed restrictions. Before consultation, use host-provided selection cards. If an already advertised candidate needs enrichment, extract only its name, description and relevant invocation-policy metadata from frontmatter or host metadata files. Do not load the candidate's full `SKILL.md`, workflow body, examples or supporting instructions into the conversation. If that metadata remains insufficient, exclude the candidate and record the coverage gap. Jev's own instructions and prerequisite references are exempt. Load task-specific instructions only after advice and verification of the selected capability. Finding a file cannot establish availability or override restrictions. Include only actual MCP definitions as tool entries; built-in host tools are outside this hook catalog, and no tool entries are required when none are eligible. Keep public applicability text; do not send private paths, secrets, tool arguments or results.
 5. **Record coverage locally.** Alongside the advice receipt, retain the session/turn association, metadata source, included skill/tool counts and exclusion reasons. Mark coverage bounded or unknown when the host list is incomplete, deferred or shortened. Some unknown entries do not prevent advice from a reliable bounded subset; an empty or unusable subset falls back to native discovery. A `none` result covers only the supplied/retrieved candidates. Recheck selected IDs and restrictions before activation; changed availability requires native fallback, not reuse of stale advice.
 
+### Catalog shape and local check
+
+When constructing a fresh CLI catalog, read the [Catalog contract](contract.md#catalog). Write a **bare JSON array** of capability objects. Do not wrap it in `{"capabilities": [...]}`, `{"catalog": [...]}` or an owner-process Session frame. Store the private provenance/coverage record separately. This structural example uses placeholders; replace them with current host metadata and source-backed flags, never fabricated availability:
+
+```json
+[
+  {
+    "id": "skill:<stable-host-id>",
+    "kind": "skill",
+    "name": "<exact-host-invocation-name>",
+    "description": "<public-description-from-the-current-host>",
+    "enabled": true,
+    "explicit_only": false
+  }
+]
+```
+
+Before the first provider attempt, check a newly generated file locally using the existing helper. Preserve `general/current`, omit credentials, `--summary` and both cache options, and keep detailed output private:
+
+```sh
+python3 scripts/jev_advisor.py --catalog /private/catalog.json \
+  --query-file /private/task.txt --selection-profile general \
+  --retrieval-policy current --offline-candidates > /private/catalog-check.json
+```
+
+Read the local result's `status`, `candidate_ids` and coverage fields. Require `status: candidates` and a nonempty eligible subset before continuing. A formatting defect may be corrected from the contract and checked locally before any provider attempt; unresolved input errors or an empty subset require native fallback. This is syntax/retrieval validation, not proof of host availability, semantic selection or permission. Do not report its candidates as a Jev recommendation. Reuse an already valid current catalog without redundant inspection.
+
+Only after the local check succeeds, make a **separate host tool call** for Recommend with the required native network approval described above. Do not combine file creation, the local check and the provider invocation in one shell command. Keep the existing consultation/request budgets and do not replay a failed provider request.
+
 ### Codex CLI
 
 Use the skill list delivered to the running model and the tool metadata actually supplied to that session. For the pinned Codex source below, skill policy defaults `allow_implicit_invocation` to `true`; an absent optional policy is therefore not automatically an unknown restriction on that verified surface. Preserve explicit `false` and any host-supplied restriction. This default establishes invocation policy only, not installation, enablement, account access or tool-call approval. Reverify it for a host whose policy contract differs. [Pinned policy default](https://github.com/openai/codex/blob/00c972ed5d6ff6499317fd41b7f23605b8e6850d/codex-rs/skills/src/model.rs#L22-L28).
