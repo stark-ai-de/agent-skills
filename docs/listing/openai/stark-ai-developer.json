@@ -40,12 +40,7 @@
     }
   },
   "publisher": {
-    "legalName": "servrox solutions UG",
-    "identitySource": "package.json author declaration",
-    "openaiOrganizationId": "org-dz0kZIfZpiaMc7YFjxGcsrk7",
-    "verifiedIdentity": true,
-    "verifiedIdentityKind": "individual",
-    "verifiedIdentityName": "Marcel Michael Mayer"
+    "legalName": "servrox solutions UG"
   },
   "releaseNotes": "Improves Jev’s Codex host guidance: an already allowed TypeSafe endpoint now uses the normal sandbox without a repeated network escalation, while genuinely restricted requests retain native approval and fallback behavior.",
   "skills": [

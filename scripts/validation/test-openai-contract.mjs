@@ -6,10 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { validateOpenAiListing } from "../lib/openai-contract.mjs";
 import { LISTING_PATH } from "../lib/openai-projection.mjs";
-import {
-  OPENAI_WORKSHEET_PATH,
-  renderOpenAiSubmissionWorksheet,
-} from "../lib/openai-worksheet.mjs";
+import { renderOpenAiSubmissionChecklist } from "../lib/openai-worksheet.mjs";
 import {
   PLUGIN_SOURCE_PATH,
   PLUGIN_SOURCE_SCHEMA_PATH,
@@ -60,19 +57,15 @@ function readListing(fixture) {
   return { listing, listingPath };
 }
 
-function writeListingAndWorksheet(fixture, listing, listingPath) {
+function writeListing(fixture, listing, listingPath) {
   fs.writeFileSync(listingPath, `${JSON.stringify(listing, null, 2)}\n`);
-  fs.writeFileSync(
-    path.join(fixture, OPENAI_WORKSHEET_PATH),
-    renderOpenAiSubmissionWorksheet(listing),
-  );
 }
 
 const privateUrlFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(privateUrlFixture);
   listing.plugin.urls.website = "https://127.0.0.1/example";
-  writeListingAndWorksheet(privateUrlFixture, listing, listingPath);
+  writeListing(privateUrlFixture, listing, listingPath);
   const result = validateOpenAiListing(privateUrlFixture);
   assert.ok(
     result.errors.some((error) => /public HTTPS URL/.test(error)),
@@ -86,7 +79,7 @@ const missingAssetFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(missingAssetFixture);
   delete listing.plugin.assets.logo;
-  writeListingAndWorksheet(missingAssetFixture, listing, listingPath);
+  writeListing(missingAssetFixture, listing, listingPath);
   const result = validateOpenAiListing(missingAssetFixture);
   assert.ok(
     result.errors.some((error) => /listing\.plugin\.assets\.logo is required/.test(error)),
@@ -100,7 +93,7 @@ const leftoverAvailabilityFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(leftoverAvailabilityFixture);
   listing.availability = { regions: [], selectionRationale: "stale" };
-  writeListingAndWorksheet(leftoverAvailabilityFixture, listing, listingPath);
+  writeListing(leftoverAvailabilityFixture, listing, listingPath);
   const result = validateOpenAiListing(leftoverAvailabilityFixture);
   assert.ok(
     result.errors.some((error) => /listing\.availability is not a portal field/.test(error)),
@@ -110,36 +103,32 @@ try {
   fs.rmSync(leftoverAvailabilityFixture, { recursive: true, force: true });
 }
 
-const invalidOrganizationIdFixture = createFixture();
+const privatePublisherFixture = createFixture();
 try {
-  const { listing, listingPath } = readListing(invalidOrganizationIdFixture);
-  listing.publisher.openaiOrganizationId = "not-an-org-id";
-  writeListingAndWorksheet(invalidOrganizationIdFixture, listing, listingPath);
-  const result = validateOpenAiListing(invalidOrganizationIdFixture);
+  const { listing, listingPath } = readListing(privatePublisherFixture);
+  listing.publisher.openaiOrganizationId = "synthetic-account-id";
+  writeListing(privatePublisherFixture, listing, listingPath);
+  const result = validateOpenAiListing(privatePublisherFixture);
   assert.ok(
-    result.errors.some((error) =>
-      /openaiOrganizationId must be a public org- identifier/.test(error),
-    ),
+    result.errors.some((error) => /\[PRV-001\]/.test(error)),
     result.errors.join("\n"),
   );
 } finally {
-  fs.rmSync(invalidOrganizationIdFixture, { recursive: true, force: true });
+  fs.rmSync(privatePublisherFixture, { recursive: true, force: true });
 }
 
-const missingVerifiedNameFixture = createFixture();
+const verifiedPublisherFixture = createFixture();
 try {
-  const { listing, listingPath } = readListing(missingVerifiedNameFixture);
+  const { listing, listingPath } = readListing(verifiedPublisherFixture);
   listing.publisher.verifiedIdentity = true;
-  listing.publisher.verifiedIdentityKind = "individual";
-  delete listing.publisher.verifiedIdentityName;
-  writeListingAndWorksheet(missingVerifiedNameFixture, listing, listingPath);
-  const result = validateOpenAiListing(missingVerifiedNameFixture);
+  writeListing(verifiedPublisherFixture, listing, listingPath);
+  const result = validateOpenAiListing(verifiedPublisherFixture);
   assert.ok(
-    result.errors.some((error) => /verifiedIdentityName is required when verified/.test(error)),
+    result.errors.some((error) => /\[PRV-001\]/.test(error)),
     result.errors.join("\n"),
   );
 } finally {
-  fs.rmSync(missingVerifiedNameFixture, { recursive: true, force: true });
+  fs.rmSync(verifiedPublisherFixture, { recursive: true, force: true });
 }
 
 for (const category of ["Education & Research", "Security"]) {
@@ -147,7 +136,7 @@ for (const category of ["Education & Research", "Security"]) {
   try {
     const { listing, listingPath } = readListing(fixture);
     listing.plugin.category = category;
-    writeListingAndWorksheet(fixture, listing, listingPath);
+    writeListing(fixture, listing, listingPath);
     const result = validateOpenAiListing(fixture);
     assert.equal(
       result.errors.filter((error) => /category is unsupported/.test(error)).length,
@@ -164,7 +153,7 @@ for (const category of ["Research", "Education", "Lifestyle"]) {
   try {
     const { listing, listingPath } = readListing(fixture);
     listing.plugin.category = category;
-    writeListingAndWorksheet(fixture, listing, listingPath);
+    writeListing(fixture, listing, listingPath);
     const result = validateOpenAiListing(fixture);
     assert.ok(
       result.errors.some((error) => /category is unsupported/.test(error)),
@@ -199,7 +188,7 @@ const cursorGlyphFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(cursorGlyphFixture);
   listing.skills[0].portalGlyph = "cursor";
-  writeListingAndWorksheet(cursorGlyphFixture, listing, listingPath);
+  writeListing(cursorGlyphFixture, listing, listingPath);
   const result = validateOpenAiListing(cursorGlyphFixture);
   assert.ok(
     result.errors.some((error) =>
@@ -216,7 +205,7 @@ try {
   const { listing, listingPath } = readListing(duplicateGlyphFixture);
   listing.skills[0].portalGlyph = "bolt";
   listing.skills[1].portalGlyph = "bolt";
-  writeListingAndWorksheet(duplicateGlyphFixture, listing, listingPath);
+  writeListing(duplicateGlyphFixture, listing, listingPath);
   const result = validateOpenAiListing(duplicateGlyphFixture);
   assert.ok(
     result.errors.some((error) => /portalGlyph values must be unique/.test(error)),
@@ -227,19 +216,21 @@ try {
 }
 
 const listing = JSON.parse(fs.readFileSync(path.join(repositoryRoot, LISTING_PATH), "utf8"));
-const worksheet = renderOpenAiSubmissionWorksheet(listing);
-const paths = pluginArtifactPaths(repositoryRoot);
-const handoffLink = `${path.posix.relative(path.posix.dirname(paths.worksheet), paths.firstPublication)}#composer-icon-handoff`;
-assert.ok(worksheet.includes(`[Composer icon handoff](${handoffLink})`));
-assert.match(worksheet, /Keep both existing Plugin Info logos unchanged/);
-assert.doesNotMatch(worksheet, /dark Plugin Info logo and Composer icon/);
-
-const relocatedWorksheet = renderOpenAiSubmissionWorksheet(listing, {
-  listing: "docs/example/listing.json",
-  worksheet: "docs/example/submissions/worksheet.md",
-  firstPublication: "docs/example/runbooks/portal.md",
+const checklist = renderOpenAiSubmissionChecklist(listing, {
+  repository: "example/example",
+  tag: "v1.7.1",
+  releaseSha: "a".repeat(40),
+  releaseUrl: "https://github.com/example/example/releases/tag/v1.7.1",
+  openaiAssetUrl: "https://github.com/example/example/releases/download/v1.7.1/openai.zip",
+  openaiSha256: "b".repeat(64),
+  firstPublicationUrl:
+    "https://github.com/example/example/blob/main/docs/listing/openai/first-publication.md#composer-icon-handoff",
 });
-assert.ok(relocatedWorksheet.includes("(../runbooks/portal.md#composer-icon-handoff)"));
+const paths = pluginArtifactPaths(repositoryRoot);
+assert.match(checklist, /\[Composer icon handoff\]/);
+assert.match(checklist, /Keep both existing Plugin Info logos unchanged/);
+assert.match(checklist, /Confirm the successful exact-tag Post-release Evidence run/);
+assert.doesNotMatch(checklist, /organization ID|Verified identity|submission ID/i);
 
 const runbook = fs.readFileSync(path.join(repositoryRoot, paths.firstPublication), "utf8");
 assert.match(runbook, /^### Composer icon handoff$/m);
