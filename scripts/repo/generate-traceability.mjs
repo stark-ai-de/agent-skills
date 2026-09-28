@@ -56,7 +56,7 @@ const REQUIREMENTS = [
   {
     id: "PUB-001",
     contract: "Legal, publisher, portal review, explicit publication",
-    commands: ["generate:openai-worksheet", "validate:openai-worksheet"],
+    commands: ["release:openai-issue"],
   },
   {
     id: "DIR-001",

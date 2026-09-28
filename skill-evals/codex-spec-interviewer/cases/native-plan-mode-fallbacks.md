@@ -52,17 +52,17 @@ the current composer control.
 <original request>`. Combine the command and continuation only if this same
   composer also proves inline argument support.
 - When Codex web control or state evidence is missing or contradictory, report
-  `Planning capability: Indeterminate`, ask for current-composer evidence, and
-  wait. Do not fall back or emit the handoff.
+  `Planning capability: Indeterminate` and continue read-only discovery and
+  questions. Resolve the control state only when a requested handoff or save
+  depends on it; missing evidence alone does not prove Plan is unavailable.
 - When the user positively enumerates current Codex web controls without Plan,
   report `Planning capability: Unavailable` and record the fallback evidence.
 
 ## Expected Behavior
 
-- Run the native Plan-mode preflight before repository exploration or substantive questions.
-- For Variant A, record `Plan-mode fallback: unavailable - <evidence>` with the runtime limitation that made Plan mode unavailable.
-- For Variant B, record `Plan-mode fallback: explicitly declined - <user statement>`; do not keep requesting `/plan`.
-- For Variant C on Codex CLI/IDE/desktop, use the supported-but-inactive `/plan` handoff and wait; never record a fallback from uncertainty. Resume the normal workflow only after the host confirms that native Plan mode is active. Codex web uses its separate observation-gated cases and never emits this handoff from missing evidence.
-- For Variants A and B, continue the full interview conversationally, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
-- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and execution-prompt requirements in all three variants.
-- Do not treat the mode fallback as a persistence decline. Persist after verification unless the user separately declines persistence or a blocker prevents it.
+- Continue the full read-only interview in all three variants, preserving material questions, source challenge, ADR gate and the same final checkpoint.
+- Distinguish proven unavailable from explicitly declined and indeterminate controls; do not claim technical absence from missing evidence.
+- Ask conversationally when structured question tools are unavailable. Do not require a mode switch simply to inspect or discuss requirements.
+- Preserve an explicit refusal without recommending Plan again. A refusal does not exit an already active mode.
+- Unknown Plan or permission state blocks writes, not permissible conversation. Resolve only the relevant state before requested persistence.
+- Explicit chat-only output completes its requested delivery; a blocked requested save stays pending.

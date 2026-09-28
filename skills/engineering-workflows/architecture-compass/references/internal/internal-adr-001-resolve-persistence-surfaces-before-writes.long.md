@@ -35,7 +35,7 @@ Current public authority for this record is provided by:
 - [AC-ADR-004](../ac-adr-004-report-staged-evidence-and-protect-public-outputs.long.md), which keeps evidence stages and public-output limits explicit.
 - [AC-ADR-036](../ac-adr-036-keep-architecture-compass-portable-through-host-adapters.long.md), which keeps host translation inside adapters and preserves one portable outcome contract.
 - [AC-ADR-038](../ac-adr-038-gate-optional-capabilities-and-tool-side-effects.long.md), which keeps optional capabilities and side effects approval-gated.
-- [AC-ADR-048](../ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.long.md), which bounds post-Plan persistence to the approved governance slice.
+- [AC-ADR-064](../ac-adr-064-preserve-approved-scope-through-capability-aware-planning.long.md), which bounds approved governance persistence to the approved governance slice.
 - [AC-ADR-052](../ac-adr-052-persist-agent-governance-through-host-neutral-repository-surfaces.long.md), which makes repository-native artifacts canonical and host instruction surfaces evidence-driven adapters.
 
 [AC-ADR-001](../ac-adr-001-route-architecture-compass-through-canonical-adr-triplets.long.md) remains linked only as superseded historical context for the canonical triplet contract; it is not a current routing authority.

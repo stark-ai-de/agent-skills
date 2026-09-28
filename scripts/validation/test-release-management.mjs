@@ -188,6 +188,7 @@ const bootstrapConfig = JSON.parse(read("release-please-config.v0.21.0.json"));
 const manifest = JSON.parse(read(".release-please-manifest.json"));
 const rootPackage = JSON.parse(read("package.json"));
 assert.equal(config["release-type"], "node");
+assert.equal(config["changelog-type"], "github");
 assert.equal(config["skip-github-release"], true);
 assert.equal(config["include-v-in-tag"], true);
 assert.equal(config["include-component-in-tag"], false);
@@ -257,6 +258,46 @@ assert.equal(
 );
 assert.equal(automatedReleaseVersionSupported("0.20.2"), false);
 assert.equal(automatedReleaseVersionSupported(FIRST_AUTOMATED_RELEASE_VERSION), true);
+
+const githubNotes = [
+  "## What's Changed",
+  "* Add capability advice by @contributor in https://github.com/example/repo/pull/90",
+  "",
+  "## New Contributors",
+  "* @contributor made their first contribution.",
+  "",
+  "**Full Changelog**: https://github.com/example/repo/compare/v0.22.0...v0.23.0",
+].join("\n");
+const githubBaseline = [
+  "# Changelog",
+  "",
+  "## Unreleased",
+  "",
+  "## Maintenance notes",
+  "Preserve these unreleased notes.",
+  "",
+  "## v0.22.0 - 2026-09-08",
+  "",
+  "## What's Changed",
+  "* Preserve the previous release byte-for-byte.",
+  "",
+].join("\n");
+const githubReleaseSection = `## 0.23.0 (2026-09-25)\n\n${githubNotes}\n\n`;
+const githubChangelog = githubBaseline.replace("## v0.22.0", `${githubReleaseSection}## v0.22.0`);
+assert.equal(extractChangelogReleaseNotes(githubChangelog, "0.23.0"), githubNotes);
+assert.equal(removeChangelogReleaseSection(githubChangelog, "0.23.0"), githubBaseline);
+assert.deepEqual(changelogReleaseOrder(githubChangelog), ["0.23.0", "0.22.0"]);
+assert.deepEqual([...changelogReleaseVersions(githubChangelog)], ["0.23.0", "0.22.0"]);
+assert.equal(
+  splitChangelogSections(githubChangelog).get("Unreleased"),
+  splitChangelogSections(githubBaseline).get("Unreleased"),
+);
+assert.equal(
+  splitChangelogSections(githubChangelog).get("0.22.0"),
+  splitChangelogSections(githubBaseline).get("0.22.0"),
+);
+assert.equal(removeChangelogReleaseSection(githubChangelog, "0.24.0"), null);
+assert.equal(removeChangelogReleaseSection(githubChangelog + githubReleaseSection, "0.23.0"), null);
 
 assert.equal(
   isGeneratedReleaseMerge({
@@ -337,6 +378,24 @@ try {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.githubOutput.contract_kind, "release-pr");
 
+  const githubReleaseChangelog = releaseChangelog("0.21.0").replace(
+    "### Features\n\n* add release automation",
+    "## What's Changed\n\n* add release automation\n\n## New Contributors\n\n* @contributor",
+  );
+  fs.writeFileSync(path.join(releaseFixture.root, "CHANGELOG.md"), githubReleaseChangelog);
+  const githubResult = runImpact(releaseFixture.root, releaseFixture.base);
+  assert.equal(githubResult.status, 0, githubResult.stderr || githubResult.stdout);
+  assert.equal(githubResult.githubOutput.contract_kind, "release-pr");
+
+  fs.writeFileSync(
+    path.join(releaseFixture.root, "CHANGELOG.md"),
+    githubReleaseChangelog.replace("- Baseline.", "- Rewritten history."),
+  );
+  const rewrittenHistoryResult = runImpact(releaseFixture.root, releaseFixture.base);
+  assert.notEqual(rewrittenHistoryResult.status, 0);
+  assert.match(rewrittenHistoryResult.stderr, /all existing bytes must remain unchanged/);
+  fs.writeFileSync(path.join(releaseFixture.root, "CHANGELOG.md"), githubReleaseChangelog);
+
   git(releaseFixture.root, ["add", ...GENERATED_RELEASE_FILES]);
   git(releaseFixture.root, ["commit", "--quiet", "-m", "chore(release): release 0.21.0"]);
   const output = path.join(releaseFixture.root, "github-output.txt");
@@ -405,6 +464,18 @@ for (const [name, prepare, expected] of [
     (root) => prepareGeneratedRelease(root, "0.21.0", { afterBaseline: true }),
     /newest CHANGELOG\.md release heading/,
   ],
+  ...["0.22.0-rc.1", "[0.22.x](https://github.com/example/repo/releases)"].map((heading) => [
+    `generated changelog unsupported version heading ${heading}`,
+    (root) => {
+      prepareGeneratedRelease(root, "0.21.0");
+      const changelogPath = path.join(root, "CHANGELOG.md");
+      fs.writeFileSync(
+        changelogPath,
+        fs.readFileSync(changelogPath, "utf8").replace("### Features", `## ${heading}`),
+      );
+    },
+    /all existing bytes must remain unchanged/,
+  ]),
 ]) {
   const fixture = createReleaseFixture();
   try {
@@ -1266,17 +1337,31 @@ const candidateVerifier = read("scripts/release/verify-main-release-candidate.mj
 const releaseProvenanceVerifier = read("scripts/release/verify-release-please-merge.mjs");
 const recoveryVerifier = read("scripts/release/verify-prepublication-release-recovery.mjs");
 const recoverySubjectVerifier = read("scripts/release/verify-release-recovery-subjects.mjs");
+const actionlintConfig = read(".github/actionlint.yaml");
 const formatIgnore = read(".oxfmtignore");
 assert.match(
   formatIgnore,
   /^CHANGELOG\.md$/m,
   "the Release Please-owned root changelog must remain outside formatter ownership",
 );
-assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v2/);
+assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v3/);
+assert.match(releasePleaseWorkflow, /client-id: \$\{\{ vars\.RELEASE_PLEASE_APP_CLIENT_ID \}\}/);
+assert.doesNotMatch(releasePleaseWorkflow, /^\s+app-id:/m);
+assert.match(actionlintConfig, /actionlint 1\.7\.12 embeds the pre-client-id v3 metadata/);
+assert.equal(
+  occurrences(actionlintConfig, /missing input "app-id" which is required/g),
+  2,
+  "the temporary actionlint exception must stay scoped to the two token workflows",
+);
+assert.equal(
+  occurrences(actionlintConfig, /input "client-id" is not defined/g),
+  2,
+  "the temporary actionlint exception must stay scoped to the two token workflows",
+);
 for (const permission of ["contents", "pull-requests", "issues"]) {
   assert.match(releasePleaseWorkflow, new RegExp(`permission-${permission}: write`));
 }
-assert.match(releasePleaseWorkflow, /googleapis\/release-please-action@v4/);
+assert.match(releasePleaseWorkflow, /googleapis\/release-please-action@v5/);
 assert.match(releasePleaseWorkflow, /classify-release-please-trigger\.mjs --github-output/);
 assert.match(releasePleaseWorkflow, /id: release-config/);
 assert.match(
@@ -1296,9 +1381,9 @@ assert.match(releasePleaseWorkflow, /expected_workflow_ref=.*release-please\.yml
 assert.match(releasePleaseWorkflow, /branches\/main" --jq '\.protected'/);
 assert.ok(
   releasePleaseWorkflow.indexOf("Verify trusted protected-main source") <
-    releasePleaseWorkflow.indexOf("actions/create-github-app-token@v2") &&
+    releasePleaseWorkflow.indexOf("actions/create-github-app-token@v3") &&
     releasePleaseWorkflow.indexOf("classify-release-please-trigger.mjs") <
-      releasePleaseWorkflow.indexOf("actions/create-github-app-token@v2"),
+      releasePleaseWorkflow.indexOf("actions/create-github-app-token@v3"),
   "trusted main and merged release PRs must be verified before creating a write token",
 );
 
@@ -1374,10 +1459,11 @@ assert.match(
 const readiness = publishWorkflow.split("\n  publish:")[0];
 assert.doesNotMatch(readiness, /^\s+(?:contents|actions|attestations|id-token): write$/m);
 assert.doesNotMatch(readiness, /actions\/attest@|reconcile-github-release\.mjs apply/);
-const publishJob = publishWorkflow.split("\n  publish:")[1];
+const publishJob = publishWorkflow.split("\n  publish:")[1].split("\n  release-completion:")[0];
+const completionJob = publishWorkflow.split("\n  release-completion:")[1];
 const environmentCheckIndex = publishJob.indexOf("check-release-environment.mjs");
 assert.ok(environmentCheckIndex >= 0, "publish must preflight the protected environment");
-assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm/setup@v2"));
+assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm/setup@v3"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm install"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("actions/attest@v4"));
 assert.ok(environmentCheckIndex < publishJob.indexOf("reconcile-github-release.mjs apply"));
@@ -1390,6 +1476,43 @@ assert.match(
 );
 assert.match(publishJob, /autorelease: tagged/);
 assert.match(publishJob, /autorelease%3A%20pending/);
+assert.match(publishJob, /permission-issues: write/);
+assert.match(publishJob, /client-id: \$\{\{ vars\.RELEASE_PLEASE_APP_CLIENT_ID \}\}/);
+assert.doesNotMatch(publishJob, /^\s+app-id:/m);
+assert.match(publishJob, /reconcile-openai-plugin-issue\.mjs apply/);
+assert.match(publishJob, /--subject-file release-subjects\/release-subject\.json/);
+assert.match(
+  publishJob,
+  /success\(\) && steps\.reconciliation-apply\.outputs\.release_published == 'true'/,
+);
+assert.ok(
+  publishJob.indexOf("Complete the generated release-PR lifecycle") <
+    publishJob.indexOf("Reconcile OpenAI plugin handoff"),
+  "the public handoff issue must follow release-PR lifecycle labels",
+);
+assert.match(publishJob, /id: openai-handoff/);
+assert.match(publishJob, /--github-output "\$GITHUB_OUTPUT"/);
+for (const output of [
+  "status",
+  "reason",
+  "plugin_version_changed",
+  "issue_url",
+  "issue_state",
+  "marker",
+]) {
+  assert.match(publishJob, new RegExp(`steps\\.openai-handoff\\.outputs\\.${output}`));
+}
+assert.match(completionJob, /needs: \[publication-trigger, release-readiness, publish\]/);
+assert.match(completionJob, /if: \$\{\{ needs\.publish\.result == 'success' \}\}/);
+for (const permission of ["actions", "contents", "issues", "pull-requests"]) {
+  assert.match(completionJob, new RegExp(`^\\s+${permission}: read$`, "m"));
+}
+assert.doesNotMatch(completionJob, /^\s+\S+: write$/m);
+assert.doesNotMatch(completionJob, /^\s+environment:/m);
+assert.match(completionJob, /^\s+timeout-minutes: 12$/m);
+assert.match(completionJob, /verify-release-completion\.mjs/);
+assert.match(completionJob, /--max-wait-seconds 600/);
+assert.match(completionJob, /--poll-interval-seconds 15/);
 assert.match(validateWorkflow, /Verify generated release-PR provenance/);
 assert.match(validateWorkflow, /verify-release-please-merge\.mjs/);
 assert.doesNotMatch(validateWorkflow.split("\nconcurrency:")[0], /issues: read/);
@@ -1408,6 +1531,7 @@ assert.match(
 );
 
 const managerScript = read("scripts/release/manage-release.mjs");
+const completionVerifier = read("scripts/release/verify-release-completion.mjs");
 assert.match(managerScript, /tagName,isLatest,isDraft,publishedAt/);
 assert.doesNotMatch(managerScript, /tagName,isLatest,isDraft,publishedAt,url/);
 assert.match(managerScript, /repos\/\$\{repository\}\/releases\/latest/);
@@ -1426,6 +1550,10 @@ assert.match(managerScript, /\.github\/workflows\/publish-release\.yml/);
 assert.match(managerScript, /pending_deployments/);
 assert.match(managerScript, /repos\/\$\{repository\}\/labels\?per_page=100/);
 assert.match(managerScript, /Release Please lifecycle labels are missing/);
+assert.match(managerScript, /RELEASE_PLEASE_APP_CLIENT_ID", "token creation"/);
+assert.match(managerScript, /RELEASE_PLEASE_APP_ID", "release provenance"/);
+assert.match(completionVerifier, /"--method", "GET"/);
+assert.doesNotMatch(completionVerifier, /"--method", "(?:POST|PATCH|PUT|DELETE)"/);
 assert.match(managerScript, /--recovery-release-sha/);
 assert.match(managerScript, /Publish Release · recovery/);
 assert.match(managerScript, /verify-prepublication-release-recovery\.mjs/);

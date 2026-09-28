@@ -12,6 +12,66 @@
 
 ### Removed
 
+## 0.25.2 (2026-09-28)
+
+## What's Changed
+* fix(release): verify post-release completion by @servrox in https://github.com/stark-ai-de/agent-skills/pull/117
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.1...v0.25.2
+
+## 0.25.1 (2026-09-28)
+
+## What's Changed
+* fix(release): allowlist manual handoff issue authors by @servrox in https://github.com/stark-ai-de/agent-skills/pull/113
+* fix(release): avoid redundant publication retries by @servrox in https://github.com/stark-ai-de/agent-skills/pull/115
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.0...v0.25.1
+
+## 0.25.0 (2026-09-28)
+
+## What's Changed
+* feat(release): create OpenAI plugin handoff issue by @servrox in https://github.com/stark-ai-de/agent-skills/pull/109
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.24.0...v0.25.0
+
+## 0.24.0 (2026-09-26)
+
+## What's Changed
+* docs(jev): qualify released runtime with fresh benchmarks by @servrox in https://github.com/stark-ai-de/agent-skills/pull/95
+* ci(actions): retire broken directory monitor and add workflow emojis by @servrox in https://github.com/stark-ai-de/agent-skills/pull/94
+* feat(site): publish Luna Low Dev9 partial results by @servrox in https://github.com/stark-ai-de/agent-skills/pull/97
+* feat(architecture-compass): add measurable testing ADRs and qualification by @servrox in https://github.com/stark-ai-de/agent-skills/pull/84
+* feat(site): add per-skill bars to Luna Low Dev9 results by @servrox in https://github.com/stark-ai-de/agent-skills/pull/98
+* fix(site): show selector candidates in the comparison chart by @servrox in https://github.com/stark-ai-de/agent-skills/pull/100
+* feat(jev): add adoptable Compass host-advice policy by @servrox in https://github.com/stark-ai-de/agent-skills/pull/101
+* .github/workflows: Migrate workflows to Blacksmith runners by @blacksmith-sh[bot] in https://github.com/stark-ai-de/agent-skills/pull/103
+* feat(jev): add scoped hook consent and session catalog evidence by @servrox in https://github.com/stark-ai-de/agent-skills/pull/102
+* fix(site): restore release comparison with six measured selectors by @servrox in https://github.com/stark-ai-de/agent-skills/pull/105
+* fix(jev): harden credential source validation by @servrox in https://github.com/stark-ai-de/agent-skills/pull/104
+* feat(architecture-compass): default local development to Portless by @servrox in https://github.com/stark-ai-de/agent-skills/pull/99
+* feat(skills): modernize planning and reuse scoped approvals by @servrox in https://github.com/stark-ai-de/agent-skills/pull/87
+
+## New Contributors
+* @blacksmith-sh[bot] made their first contribution in https://github.com/stark-ai-de/agent-skills/pull/103
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.23.0...v0.24.0
+
+## 0.23.0 (2026-09-25)
+
+## What's Changed
+* fix(site): use project branding for catalog logos and icons by @servrox in https://github.com/stark-ai-de/agent-skills/pull/80
+* feat(site): add Product Hunt launch badge by @servrox in https://github.com/stark-ai-de/agent-skills/pull/82
+* fix(site): keep Product Hunt badge visible when images are blocked by @servrox in https://github.com/stark-ai-de/agent-skills/pull/83
+* Add Agent Skills logo assets by @servrox in https://github.com/stark-ai-de/agent-skills/pull/85
+* feat(jev): add capability advice and qualify lower-input next-skill selection by @servrox in https://github.com/stark-ai-de/agent-skills/pull/90
+* fix(release): generate changelog notes from merged pull requests by @servrox in https://github.com/stark-ai-de/agent-skills/pull/93
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.22.0...v0.23.0
+
 ## [0.22.0](https://github.com/stark-ai-de/agent-skills/compare/v0.21.0...v0.22.0) (2026-09-08)
 
 

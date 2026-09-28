@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.22.0",
+  "version": "0.25.2",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -55,7 +55,7 @@
   "scripts": {
     "list": "bun --bun scripts/catalog/list-skills.mjs",
     "list:incubator": "bun --bun scripts/catalog/list-incubator-skills.mjs",
-    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:site\"",
+    "validate": "bun exec \"pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:jev && pnpm run validate:site\"",
     "release:prepare": "bun --bun scripts/release/prepare-release.mjs",
     "release:intent": "bun --bun scripts/release/check-release-intent.mjs",
     "release:validate": "bun --bun scripts/release/validate-release.mjs",
@@ -68,12 +68,11 @@
     "validate:runtime-matrix": "bun --bun scripts/validation/test-runtime-evidence-matrix.mjs",
     "validate:ownership": "bun --bun scripts/validation/test-validation-ownership.mjs",
     "validate:bundles": "bun exec \"bun --bun scripts/plugin/validate-bundles.mjs && bun --bun scripts/validation/test-bundle-contract.mjs\"",
-    "validate:openai": "bun exec \"bun --bun scripts/plugin/validate-openai-listing.mjs && bun --bun scripts/plugin/validate-openai-marketplace.mjs && bun --bun scripts/validation/test-openai-contract.mjs && bun --bun scripts/validation/test-openai-directory.mjs && bun --bun scripts/validation/test-listing-identity.mjs && bun --bun scripts/validation/test-openai-icons.mjs\"",
-    "generate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs",
-    "validate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs --check",
+    "validate:openai": "bun exec \"bun --bun scripts/plugin/validate-openai-listing.mjs && bun --bun scripts/plugin/validate-openai-marketplace.mjs && bun --bun scripts/validation/test-openai-contract.mjs && bun --bun scripts/validation/test-openai-documentation.mjs && bun --bun scripts/validation/test-openai-directory.mjs && bun --bun scripts/validation/test-listing-identity.mjs && bun --bun scripts/validation/test-openai-icons.mjs && bun --bun scripts/validation/test-openai-release-issue.mjs\"",
+    "release:openai-issue": "bun --bun scripts/release/reconcile-openai-plugin-issue.mjs",
     "validate:projections": "bun exec \"bun --bun scripts/plugin/sync-agent-plugin.mjs --check && bun --bun scripts/plugin/validate-agent-plugin.mjs && bun --bun scripts/validation/test-plugin-projections.mjs\"",
     "validate:archives": "bun --bun scripts/release/validate-archives.mjs",
-    "validate:network-endpoints": "bun --bun scripts/plugin/validate-network-endpoints.mjs",
+    "validate:network-endpoints": "bun exec \"bun --bun scripts/plugin/validate-network-endpoints.mjs && bun --bun scripts/validation/test-network-endpoints.mjs\"",
     "validate:release-proof": "bun exec \"pnpm run validate:archives && pnpm run verify:release-reproducibility && pnpm run validate:network-endpoints && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run verify:supply-chain\"",
     "sync:agent-plugin": "bun --bun scripts/plugin/sync-agent-plugin.mjs",
     "sync:openai-plugin": "bun --bun scripts/plugin/sync-openai-plugin.mjs",
@@ -95,7 +94,7 @@
     "validate:release-subject": "bun --bun scripts/validation/test-release-subject.mjs",
     "validate:release-management": "bun exec \"bun --bun scripts/validation/test-release-environment.mjs && bun --bun scripts/validation/test-release-management.mjs\"",
     "validate:release-subject-file": "bun --bun scripts/release/validate-release-subject.mjs",
-    "test:post-release-receipt": "bun exec \"bun --bun scripts/validation/test-post-release-receipt.mjs && bun --bun scripts/validation/test-release-reconciler.mjs\"",
+    "test:post-release-receipt": "bun exec \"bun --bun scripts/validation/test-post-release-receipt.mjs && bun --bun scripts/validation/test-release-reconciler.mjs && bun --bun scripts/validation/test-release-completion.mjs\"",
     "package:agent-plugin": "bun --bun scripts/plugin/package-agent-plugin.mjs",
     "package:openai-plugin": "bun --bun scripts/plugin/package-openai-plugin.mjs",
     "package:standalone-skills": "bun --bun scripts/plugin/package-standalone-skills.mjs",
@@ -103,7 +102,7 @@
     "verify:openai-directory": "bun --bun scripts/plugin/verify-openai-directory.mjs",
     "build:release-subjects": "bun --bun scripts/release/verify-release-reproducibility.mjs --subjects-dir dist/release-subjects",
     "generate:release-evidence": "bun --bun scripts/release/verify-release-reproducibility.mjs --evidence docs/listing/openai/stark-ai-developer-release-evidence.json",
-    "validate:architecture-compass": "bun --bun scripts/validation/architecture-compass/validate.mjs",
+    "validate:architecture-compass": "bun exec \"bun --bun scripts/validation/architecture-compass/validate.mjs && bun --bun scripts/validation/architecture-compass/validate-contract.test.mjs\"",
     "validate:codegraph-ast-grep": "bun --bun scripts/validation/codegraph-ast-grep/validate-contract.mjs",
     "validate:drawio": "bun exec \"bun --bun scripts/validation/drawio-diagrams/validate-fixtures.mjs && bun --bun scripts/validation/drawio-diagrams/validate-visual-evals.mjs\"",
     "validate:animated-readme-logo": "bun exec \"bun --bun scripts/validation/animated-readme-logo/validate-runtime.mjs && bun --bun scripts/validation/animated-readme-logo/validate-evals.mjs\"",
@@ -119,7 +118,8 @@
     "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check .",
     "lint": "oxlint --config oxlint.json scripts",
     "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
-    "lint:fix": "oxlint --config oxlint.json --fix scripts"
+    "lint:fix": "oxlint --config oxlint.json --fix scripts",
+    "validate:jev": "bun --bun scripts/validation/jev-capability-advisor/validate.mjs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

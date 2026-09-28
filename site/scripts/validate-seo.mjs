@@ -1,14 +1,13 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SITE_ORIGIN, SITE_BASE_PATH, SITE_BUILD } from "../src/lib/site-build.mjs";
 
 import {
   listingArtifactPaths,
   listingIdentityFromSource,
 } from "../../scripts/lib/listing-identity.mjs";
 
-const SITE_ORIGIN = "https://stark-ai-de.github.io";
-const SITE_BASE_PATH = "/agent-skills";
 const SITE_URL_PREFIX = `${SITE_ORIGIN}${SITE_BASE_PATH}/`;
 const LOOPLATCH_URL = "https://loop-latch-opal.vercel.app/";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -271,20 +270,21 @@ function validateHtmlPage(filePath) {
   assert(description.length <= 160, `${relativePath}: meta description exceeds 160 characters`);
   assert(canonicalUrl?.startsWith(SITE_URL_PREFIX), `${relativePath}: invalid canonical URL`);
   assert(
-    getLinkHref(linkTags, "icon") === "/agent-skills/agent-skills-head.svg",
+    getLinkHref(linkTags, "icon") === `${SITE_BASE_PATH}/agent-skills-head.svg`,
     `${relativePath}: missing SVG favicon link`,
   );
   assert(
-    getLinkHref(linkTags, "sitemap") === `${SITE_URL_PREFIX}sitemap-index.xml`,
-    `${relativePath}: missing sitemap link`,
+    getLinkHref(linkTags, "sitemap") ===
+      (SITE_BUILD.isPreview ? undefined : `${SITE_URL_PREFIX}sitemap-index.xml`),
+    `${relativePath}: invalid sitemap link for build target`,
   );
   assert(
-    getLinkHref(linkTags, "manifest") === "/agent-skills/site.webmanifest",
+    getLinkHref(linkTags, "manifest") === `${SITE_BASE_PATH}/site.webmanifest`,
     `${relativePath}: missing manifest link`,
   );
   const robots = getMetaContent(metaTags, "name", "robots");
   const expectedRobots =
-    relativePath === "404.html"
+    SITE_BUILD.isPreview || relativePath === "404.html"
       ? "noindex, nofollow"
       : relativePath === "incubator/index.html" || relativePath.startsWith("incubator/")
         ? "noindex, follow"
@@ -560,15 +560,23 @@ for (const htmlFile of htmlFiles) {
 const robotsPath = path.join(distRoot, "robots.txt");
 const sitemapPath = path.join(distRoot, "sitemap-index.xml");
 assert(existsSync(robotsPath), "robots.txt was not generated.");
-assert(existsSync(sitemapPath), "sitemap-index.xml was not generated.");
-assert(
-  readFileSync(robotsPath, "utf8").includes(`${SITE_URL_PREFIX}sitemap-index.xml`),
-  "robots.txt does not point to the generated sitemap.",
-);
+if (SITE_BUILD.isPreview) {
+  assert(!existsSync(sitemapPath), "Preview must not publish a sitemap.");
+  assert(
+    readFileSync(robotsPath, "utf8").trim() === "User-agent: *\nDisallow: /",
+    "Preview robots must block indexing.",
+  );
+} else {
+  assert(existsSync(sitemapPath), "sitemap-index.xml was not generated.");
+  assert(
+    readFileSync(robotsPath, "utf8").includes(`${SITE_URL_PREFIX}sitemap-index.xml`),
+    "robots.txt does not point to the generated sitemap.",
+  );
+}
 validateManifest();
 validateCatalogCoverage();
 validateLoopLatchBacklinks(htmlFiles);
-const sitemapUrls = validateSitemaps(sitemapPath);
+const sitemapUrls = SITE_BUILD.isPreview ? [] : validateSitemaps(sitemapPath);
 validateSitemapCoverage(htmlFiles, sitemapUrls);
 validateLlmsTxt();
 

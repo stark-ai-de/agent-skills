@@ -21,20 +21,10 @@ Yes.
 Use Codex Spec Interviewer to define a safe migration from polling to webhook
 delivery. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Explicitly declined
-- contains: Plan-mode fallback: explicitly declined
-- contains: Do not switch modes; continue the interview here.
-- contains: continue conversationally
-- not_contains: Planning capability: Unavailable
-- not_contains: Plan-mode fallback: unavailable
-- not_contains: ask whether Plan is available
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-Preserve the explicit refusal as evidence, continue the interview
-conversationally, and do not request Plan again. A refusal is not proof that the
-capability is unavailable and must never receive that label or an unavailable
-fallback record.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Honor the explicit Plan refusal even when surface/experience/control evidence is incomplete; do not request Plan again or label it technically unavailable.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

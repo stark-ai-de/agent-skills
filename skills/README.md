@@ -10,3 +10,4 @@ Candidate skills start in [`../incubator/skills/`](../incubator/README.md) and m
 - [Cursor operations](cursor-operations/README.md)
 - [Claude operations](claude-operations/README.md)
 - [Engineering workflows](engineering-workflows/README.md)
+- [Skill maintenance](skill-maintenance/README.md)

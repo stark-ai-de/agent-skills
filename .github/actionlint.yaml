@@ -1,0 +1,16 @@
+self-hosted-runner:
+  labels:
+    - blacksmith-4vcpu-ubuntu-2404
+    - blacksmith-6vcpu-macos-15
+    - blacksmith-4vcpu-windows-2025
+paths:
+  .github/workflows/publish-release.yml:
+    ignore:
+      # actionlint 1.7.12 embeds the pre-client-id v3 metadata; upstream issue #669.
+      - 'missing input "app-id" which is required by action "actions/create-github-app-token@v3"'
+      - 'input "client-id" is not defined in action "actions/create-github-app-token@v3"'
+  .github/workflows/release-please.yml:
+    ignore:
+      # Keep this narrow until actionlint ships refreshed create-github-app-token metadata.
+      - 'missing input "app-id" which is required by action "actions/create-github-app-token@v3"'
+      - 'input "client-id" is not defined in action "actions/create-github-app-token@v3"'

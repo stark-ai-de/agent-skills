@@ -332,6 +332,61 @@
         "Does not claim a backend, connector, or public-directory status."
       ],
       "tags": ["listing-fidelity", "no-invention"]
+    },
+    {
+      "id": "positive-jev-capability-advisor-inspect",
+      "kind": "positive",
+      "skill": "jev-capability-advisor",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use $jev-capability-advisor to inspect candidates for reviewing a change from this current synthetic catalog; make no provider request.",
+      "expected": [
+        "Selects Inspect and uses the host-supplied catalog.",
+        "Returns bounded candidate IDs and coverage without reading credentials or making a provider request.",
+        "Does not load or execute the selected capabilities."
+      ],
+      "expectedResultShape": [
+        "A candidates result with zero provider requests and explicit coverage."
+      ],
+      "fixtures": [
+        "A synthetic catalog with a review skill, a read-only tool and one disabled entry."
+      ],
+      "passCriteria": [
+        "The disabled entry is excluded, no provider request occurs, and candidate presence is not called semantic selection."
+      ],
+      "tags": ["output-contract", "no-invention", "mutation-approval"]
+    },
+    {
+      "id": "negative-jev-ordinary-task",
+      "kind": "negative",
+      "skill": "jev-capability-advisor",
+      "surface": "CODEX",
+      "discovery": "implicit",
+      "request": "Translate this supplied sentence into German: The draft is ready.",
+      "expected": [
+        "Answers the self-contained request without routing it through Jev.",
+        "Makes no TypeSafe request and does not request an API key."
+      ],
+      "reason": "Ordinary tasks with a clear path do not need capability-selection advice.",
+      "passCriteria": [
+        "The request is handled directly without provider calls or unnecessary routing."
+      ],
+      "tags": ["no-invention", "product-boundary"]
+    },
+    {
+      "id": "negative-jev-chat-runtime",
+      "kind": "negative",
+      "skill": "jev-capability-advisor",
+      "surface": "CHAT",
+      "discovery": "direct",
+      "request": "Execute the Jev CLI here although this chat has no Python execution or local catalog access.",
+      "expected": [
+        "Does not claim to have run the Python helper or contacted TypeSafe.",
+        "Explains the missing runtime and current catalog requirements."
+      ],
+      "reason": "This release targets Codex execution; packaging does not establish ChatGPT CLI support.",
+      "passCriteria": ["No execution or recommendation result is invented."],
+      "tags": ["product-boundary", "no-invention"]
     }
   ],
   "listingMappings": [
@@ -358,6 +413,10 @@
     {
       "skill": "drawio-diagrams",
       "capability": "Create editable draw.io diagrams from system context."
+    },
+    {
+      "skill": "jev-capability-advisor",
+      "capability": "Recommend available skills and tools for a supplied task with Jev in Codex."
     }
   ]
 }

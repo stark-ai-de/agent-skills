@@ -2,6 +2,8 @@
 
 Embed this structure in the `Plan` section of the selected route's chat result or single file record when the user needs to approve individual memory cleanup actions. Do not persist it as a second curation artifact.
 
+Populate approval fields from the actual current or earlier approval; the unapproved values below are placeholders. Record approval evidence and actual host write permission alongside the plan, and preserve approval across mode changes unless the approved action materially changed.
+
 An explicit `--backup-root` also requires a stable non-sensitive `--backup-root-alias` for the portable storage locator.
 
 ```json

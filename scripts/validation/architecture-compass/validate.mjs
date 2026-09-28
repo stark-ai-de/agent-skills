@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inventory.mjs";
+
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
 
@@ -31,7 +33,7 @@ const decisionLineageFile = path.join(
 );
 const repositoryAdrsDir = path.join(root, "docs", "adrs");
 const errors = [];
-const expectedAdrIds = Array.from({ length: 58 }, (_, index) => index + 1);
+const expectedAdrIds = [...PUBLIC_ARCHITECTURE_ADR_IDS];
 const expectedAdrIdSet = new Set(expectedAdrIds);
 
 const variants = ["short", "long", "guide"];
@@ -79,7 +81,7 @@ const allowedCategories = new Set([
 ]);
 const internalAllowedCategories = new Set([...allowedCategories, "implementation-policy"]);
 const allowedStatuses = new Set(["Accepted", "Superseded"]);
-const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53]);
+const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53, 64]);
 const expectedCategories = new Map([
   [1, "governance"],
   [2, "governance"],
@@ -139,6 +141,14 @@ const expectedCategories = new Map([
   [56, "quality-delivery"],
   [57, "quality-delivery"],
   [58, "stack-tooling"],
+  [59, "quality-delivery"],
+  [60, "quality-delivery"],
+  [61, "quality-delivery"],
+  [62, "quality-delivery"],
+  [63, "stack-tooling"],
+  [64, "governance"],
+  [65, "governance"],
+  [66, "stack-tooling"],
 ]);
 const expectedStems = new Map([
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
@@ -208,6 +218,14 @@ const expectedStems = new Map([
   [56, "ac-adr-056-preserve-release-candidates-through-verified-protected-history"],
   [57, "ac-adr-057-separate-metadata-repair-from-installable-artifact-provenance"],
   [58, "ac-adr-058-use-pnpm-for-package-management-and-bun-for-execution"],
+  [59, "ac-adr-059-own-repository-validation-through-discoverable-framework-tests"],
+  [60, "ac-adr-060-isolate-test-execution-by-effects-and-runtime-contracts"],
+  [61, "ac-adr-061-shard-tests-as-complete-fail-closed-evidence-sets"],
+  [62, "ac-adr-062-cache-test-transforms-without-reusing-correctness"],
+  [63, "ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint"],
+  [64, "ac-adr-064-preserve-approved-scope-through-capability-aware-planning"],
+  [65, "ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption"],
+  [66, "ac-adr-066-use-portless-for-local-development-endpoints"],
 ]);
 const expectedInternalStems = new Map([
   [1, "internal-adr-001-resolve-persistence-surfaces-before-writes"],
@@ -236,6 +254,15 @@ const baselineEvalCases = [
   "audit-strict-read-only.md",
   "refactor-governance-boundary.md",
   "plan-mode-lifecycle.md",
+  "plan-inactive-conversation.md",
+  "approval-reused-after-transition.md",
+  "approval-still-active.md",
+  "native-final-approval-scope.md",
+  "approval-target-drift.md",
+  "approval-bounded-revision.md",
+  "planning-chat-only.md",
+  "async-question-no-consent.md",
+  "mode-toggle-not-approval.md",
   "plan-mode-unavailable-fallback.md",
   "plan-mode-indeterminate-stop.md",
   "plan-mode-declined-stop.md",
@@ -272,12 +299,20 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "portless-compatible-default.md",
+  "portless-existing-routing-migration.md",
+  "portless-no-local-endpoint.md",
+  "portless-technical-exception.md",
+  "portless-worktree-collision.md",
+  "portless-local-adr-conflict.md",
   "adr-catalog-short-first-inventory.md",
   "selective-frontend-routing.md",
   "selective-backend-routing.md",
   "cross-category-adr-routing.md",
   "instruction-adr-authority-conflict.md",
   "setup-adoptable-only.md",
+  "jev-policy-adoption-prerequisites.md",
+  "jev-policy-audit-read-only.md",
   "stale-subagent-reconciliation.md",
   "evidence-stage-claim-limits.md",
   "invalid-missing-triplet.md",
@@ -312,7 +347,35 @@ const routedLibraryEvalCases = [
   "internal-public-adr-namespace-separation.md",
   "receipt-accessibility-fallback.md",
 ];
-const expectedEvalCases = [...baselineEvalCases, ...routedLibraryEvalCases];
+const measurableTestingEvalCases = [
+  "testing-tiny-ts.md",
+  "testing-monorepo-cost.md",
+  "testing-bun-product.md",
+  "testing-runtime-fallback.md",
+  "testing-native-framework.md",
+  "testing-local-conflict.md",
+  "testing-public-validator.md",
+  "testing-file-inputs.md",
+  "testing-isolation-faults.md",
+  "testing-shard-faults.md",
+  "testing-cache-faults.md",
+  "testing-metric-truth.md",
+  "testing-selective-routing.md",
+  "testing-promotion-integrity.md",
+];
+const shadcnLintEvalCases = [
+  "shadcn-lint-default-profile.md",
+  "shadcn-lint-ownership-and-compatibility.md",
+  "shadcn-lint-staged-enforcement.md",
+  "shadcn-lint-discovery-and-freshness.md",
+  "shadcn-lint-component-and-evidence-boundaries.md",
+];
+const expectedEvalCases = [
+  ...baselineEvalCases,
+  ...routedLibraryEvalCases,
+  ...measurableTestingEvalCases,
+  ...shadcnLintEvalCases,
+];
 const legacyCaseSourceCommit = "1d454f06375f3b74ba506fef54b664a2517674c0";
 const legacyCaseSources = [
   {
@@ -1328,7 +1391,7 @@ for (const id of expectedAdrIds) {
   if (guide && lineage) {
     const lineageHeadingCount = headingCount(guide.text, "Decision lineage");
     if (lineage.disposition === "independent") {
-      if (lineageHeadingCount !== 0) {
+      if (lineageHeadingCount !== 0 || /^Decision lineage:/im.test(guide.text)) {
         fail(`${guide.rel}: independent disposition must omit Decision lineage`);
       }
     } else {
@@ -1511,13 +1574,62 @@ for (const required of [
   "Setup never authorizes application refactoring, deployment, publication, or production probes.",
   "perform a strictly read-only architecture, ADR-coverage, drift, and validation assessment",
   "Direct refactor never invents a durable decision or silently repairs governance.",
-  "Uncertainty never authorizes fallback.",
+  "Unknown mode or permission state never authorizes writes.",
+  "Prepare the complete reviewable draft and exact delivery/write scope before one approval.",
+  "Preserve approval across required host transitions",
+  "Silence, timeout, and preselected options are not approval.",
   "Write no target repository/workspace artifact while Plan mode is active.",
-  "recheck state after approval and Plan-mode exit",
-  "references/ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.short.md",
+  "Recheck state after approval and Plan-mode exit when required",
+  "references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md",
 ]) {
   if (!skillText.includes(required)) {
     fail(`${skillRel}: missing workflow invariant ${JSON.stringify(required)}`);
+  }
+}
+// Current runtime surfaces must not reintroduce the superseded conversation stop.
+// Historical ADRs and locked evaluation baselines intentionally retain old wording.
+for (const currentFile of [
+  skillFile,
+  path.join(
+    referencesDir,
+    "ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md",
+  ),
+  path.join(
+    referencesDir,
+    "ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
+  ),
+]) {
+  const currentText = readRegularFile(currentFile);
+  for (const obsolete of [
+    "only `Unavailable` permits the portable fallback",
+    "stop before substantive planning",
+    "stop pending confirmed activation",
+    "If supported but inactive or support is indeterminate, stop",
+    "Request the native transition and wait for observed activation.",
+  ]) {
+    if (currentText.includes(obsolete)) {
+      fail(
+        `${relative(currentFile)}: superseded unconditional planning stop ${JSON.stringify(obsolete)}`,
+      );
+    }
+  }
+}
+const lifecycleGuide = readRegularFile(
+  path.join(
+    referencesDir,
+    "ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
+  ),
+);
+for (const required of [
+  "Reuse a prior approval of the same version/scope",
+  "A mode toggle alone is not content approval.",
+  "If content, write scope, destination, or target state changed materially, resolve only the affected change.",
+  "Keep Proposed ADR persistence separate from acceptance.",
+  "Explicit chat-only delivery completes that delivery",
+  "While a required answer is pending, continue only independent authorized work.",
+]) {
+  if (!lifecycleGuide.includes(required)) {
+    fail(`AC-ADR-064 Guide: missing approval or capability boundary ${JSON.stringify(required)}`);
   }
 }
 const conditionalSelector = sectionText(skillText, "Conditional stable-skill selector instruction");
@@ -1698,6 +1810,7 @@ const receiptAssetNames = new Set([
   "setup-report-template.md",
   "refactor-report-template.md",
   "new-repo-adoption-plan-template.md",
+  "testing-outcome-receipt-template.md",
 ]);
 const evidenceStageContract =
   "Evidence stage: source/static | local | CI | publication/install | deployed/production | external/third-party";
@@ -1983,8 +2096,58 @@ const legacyCaseLineage = validateLegacyCaseLineage({
 });
 errors.push(...legacyCaseLineage.errors);
 
+// New exposed testing decisions keep their measurement contract in canonical Longs.
+for (const id of [59, 60, 61, 62]) {
+  const stem = expectedStems.get(id);
+  const file = path.join(referencesDir, `${stem}.long.md`);
+  const text = readRegularFile(file);
+  for (const heading of [
+    "Intent",
+    "Invariants",
+    "Measurable outcomes",
+    "Adoption evidence",
+    "Failure and exceptions",
+    "Revisit",
+  ]) {
+    if (!sectionText(text, heading))
+      fail(`${relative(file)}: missing measurable testing section ${heading}`);
+  }
+  // A blank line ends a Markdown table even though its detached pipe rows match inventory regexes.
+  for (const [tableFile, tableText] of [
+    [catalogFile, readRegularFile(catalogFile)],
+    [setupReportFile, setupReportText],
+  ]) {
+    const lines = tableText.split("\n");
+    const index = lines.findIndex((line) =>
+      new RegExp(`^\\|\\s*AC-ADR-${String(id).padStart(3, "0")}\\s*\\|`).test(line),
+    );
+    let start = index;
+    while (start > 0 && lines[start - 1].startsWith("|")) start--;
+    if (index < 0 || !lines.slice(start, index).some((line) => /^\|[ :|-]+\|$/.test(line))) {
+      fail(
+        `${relative(tableFile)}: AC-ADR-${String(id).padStart(3, "0")} must be inside its headed Markdown table`,
+      );
+    }
+  }
+}
+const testingReceiptFile = path.join(assetsDir, "testing-outcome-receipt-template.md");
+const testingReceipt = readRegularFile(testingReceiptFile);
+for (const field of [
+  "canonical content digest",
+  "Population/denominator",
+  "Approved target/direction",
+  "Measurement state",
+  "waived",
+  "not-applicable",
+  "expiry",
+  "replacement evidence",
+]) {
+  if (!testingReceipt.includes(field))
+    fail(`${relative(testingReceiptFile)}: missing testing evidence field ${field}`);
+}
+
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
+export const validationSummary = `Architecture Compass validated: ${canonicalRecords.size} public ADRs, ${records.length} public triplet files, ${internalRecords.length} internal triplet files, ${decisionLineage.size} lineage dispositions, ${baselineEvalCases.length} lifecycle cases, ${routedLibraryEvalCases.length} routed-library cases, ${measurableTestingEvalCases.length} measurable-testing cases, ${shadcnLintEvalCases.length} shadcn-lint cases, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${legacyReferenceEvidence.summary.files} legacy-reference files, ${legacyReferenceEvidence.summary.units} no-loss units, ${legacyReferenceEvidence.summary.codeBlocks} historical code examples (${legacyReferenceEvidence.summary.dispositions.preserved} preserved, ${legacyReferenceEvidence.summary.dispositions.adapted} adapted, ${legacyReferenceEvidence.summary.dispositions["explicitly-rejected"]} explicitly rejected).`;
 
 const isMain =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));

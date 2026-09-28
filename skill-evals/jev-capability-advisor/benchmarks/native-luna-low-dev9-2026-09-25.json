@@ -1,0 +1,201 @@
+{
+  "schema": "jev-native-dev9-evidence/v1",
+  "evidence_date": "2026-09-25",
+  "stage": "dev9",
+  "selection_profile": "next_skill",
+  "requested": {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low"
+  },
+  "resolved_backend_model": null,
+  "execution": {
+    "client": "Codex Native CLI",
+    "codex_cli_version": "codex-cli 0.157.0",
+    "environment": "NixOS inside WSL2",
+    "planned_dev9_observations": 9,
+    "completed_model_turns": 9,
+    "turns_with_reported_usage": 9,
+    "errors": 0
+  },
+  "campaign": {
+    "planned_live_observations": 329,
+    "attempted_live_observations": 9,
+    "remaining_not_run": 320,
+    "stop_reason": "dev9_quality_gate_failed",
+    "matched_cohort_started": false,
+    "confirmation_cohort_started": false
+  },
+  "quality_gate": {
+    "passed": false,
+    "required_correct": 9,
+    "actual_correct": 8,
+    "all_usage_known": true,
+    "reason": "The preregistered Dev9 gate required exact 9/9 correctness; one skill task returned clarify."
+  },
+  "inputs_previously_used": true,
+  "comparison_claim": "none",
+  "method": {
+    "timing": "Codex turn.started to turn.completed, reconstructed from raw JSONL events.",
+    "p95": "Nearest rank.",
+    "scoring": "Independently reconstructed from frozen task labels, raw model outputs, and Native event records."
+  },
+  "summary": {
+    "all": {
+      "n": 9,
+      "correct": 8,
+      "accuracy": 0.8888888888888888
+    },
+    "skill": {
+      "n": 8,
+      "correct": 7,
+      "accuracy": 0.875
+    },
+    "none": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": 1.0
+    },
+    "errors": 0,
+    "model_turn_ms": {
+      "n": 9,
+      "median": 2720.3591950019472,
+      "p95_nearest_rank": 4480.07122999843
+    },
+    "all_input_tokens": {
+      "n": 9,
+      "missing": 0,
+      "total": 149279,
+      "median": 16582
+    },
+    "skill_input_tokens": {
+      "n": 8,
+      "missing": 0,
+      "total": 132687,
+      "median": 16576.0
+    }
+  },
+  "source_integrity": {
+    "independent_audit_sha256": "cbebba0d145e3d8ce2f85c6332037cc6ee1aa24be4f03c3ba96175edda15e339",
+    "protocol_sha256": "db35154fca9aae36d87e5001735e42c20b24e2d6323ea912863ae09195ecc295"
+  },
+  "evidence_path": "skill-evals/jev-capability-advisor/benchmarks/native-luna-low-dev9-2026-09-25.json",
+  "observations": [
+    {
+      "case_id": "nextdev-h008",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 4480.07122999843,
+      "input_tokens": 16570,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c001",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2491.1485289994744,
+      "input_tokens": 16549,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c002",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2880.450265998661,
+      "input_tokens": 16545,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c003",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2475.4651999974158,
+      "input_tokens": 16680,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c004",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2551.318434001587,
+      "input_tokens": 16532,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c005",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2863.0526829947485,
+      "input_tokens": 16582,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c006",
+      "rep": 0,
+      "category": "skill",
+      "status": "next_skill",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2405.466735996015,
+      "input_tokens": 16618,
+      "output_tokens": 21
+    },
+    {
+      "case_id": "nextdev-stressv5c007",
+      "rep": 0,
+      "category": "none",
+      "status": "none",
+      "correct": true,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 2720.3591950019472,
+      "input_tokens": 16592,
+      "output_tokens": 18
+    },
+    {
+      "case_id": "nextdev-stressv5c008",
+      "rep": 0,
+      "category": "skill",
+      "status": "clarify",
+      "correct": false,
+      "attempted": true,
+      "model_turn_completed": true,
+      "error": null,
+      "model_turn_ms": 3166.8968129961286,
+      "input_tokens": 16611,
+      "output_tokens": 19
+    }
+  ]
+}

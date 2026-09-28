@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../lib/architecture-compass-inventory.mjs";
+
 import {
   assertExactPublicSkillSet,
   copyGitCandidateRepository,
@@ -69,6 +71,11 @@ const smokeEnvironment = {
 const skillsCommand = configuredSkillsCli || "pnpm";
 const skillsPrefixArguments = configuredSkillsCli ? [] : ["dlx", "skills@1.5.23"];
 const installCases = [
+  {
+    agent: "codex",
+    destination: path.join(".agents", "skills", "jev-capability-advisor"),
+    skill: "jev-capability-advisor",
+  },
   {
     agent: "codex",
     destination: path.join(".agents", "skills", "codex-spec-interviewer"),
@@ -199,7 +206,7 @@ function runSkills(arguments_, cwd) {
 }
 
 function architectureManifest(skillDir) {
-  const expectedPublicAdrCount = 58;
+  const expectedPublicAdrCount = PUBLIC_ARCHITECTURE_ADR_IDS.length;
   const expectedVariantCount = expectedPublicAdrCount * 3;
   const catalog = path.join(skillDir, "references", "adr-catalog.md");
   if (!fs.existsSync(catalog)) {
@@ -233,11 +240,7 @@ function architectureManifest(skillDir) {
       `Installed architecture-compass payload does not contain ${expectedPublicAdrCount} complete public triplets.`,
     );
   }
-  const expectedIds = new Set(
-    Array.from({ length: expectedPublicAdrCount }, (_, index) =>
-      String(index + 1).padStart(3, "0"),
-    ),
-  );
+  const expectedIds = new Set(PUBLIC_ARCHITECTURE_ADR_IDS.map((id) => String(id).padStart(3, "0")));
   const actualIds = new Set(
     [...variantsByStem.keys()].map((stem) => /^ac-adr-(\d{3})-/.exec(stem)?.[1]).filter(Boolean),
   );
@@ -329,6 +332,8 @@ function architectureManifest(skillDir) {
   }
 
   for (const required of [
+    "assets/testing-outcome-receipt-template.md",
+    "assets/vitest4-testing-profile.md",
     "assets/adr-template.short.md",
     "assets/adr-template.long.md",
     "assets/adr-template.guide.md",

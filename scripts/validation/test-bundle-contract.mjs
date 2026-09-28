@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 
 import {
   DEFAULT_BUNDLE_PATH,
+  EXPECTED_CODEX_SKILL_SOURCES,
   validateAllBundles,
   validateBundleFile,
 } from "../lib/bundle-contract.mjs";
@@ -117,7 +118,10 @@ try {
     const bundle = readBundle(membershipFixture);
     bundle.skills.pop();
     writeBundle(membershipFixture, bundle);
-    assertBundleFails(membershipFixture, /exactly 6 skills/);
+    assertBundleFails(
+      membershipFixture,
+      new RegExp(`exactly ${EXPECTED_CODEX_SKILL_SOURCES.length} skills`),
+    );
   } finally {
     fs.rmSync(membershipFixture, { recursive: true, force: true });
   }

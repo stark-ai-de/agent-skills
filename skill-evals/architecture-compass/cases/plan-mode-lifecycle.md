@@ -6,7 +6,7 @@ Yes.
 
 ## Prompt
 
-Run `plan-run-refactor` on a host where native Plan mode is supported but currently inactive.
+Run `plan-run-refactor` on a host where native Plan mode is supported but currently inactive. I explicitly request native Plan and its transition.
 
 ## Deterministic Assertions
 

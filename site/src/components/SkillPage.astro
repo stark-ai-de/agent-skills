@@ -3,6 +3,8 @@ import Breadcrumbs from "./Breadcrumbs.astro";
 import CommandBlock from "./CommandBlock.astro";
 import OperationBadge from "./OperationBadge.astro";
 import SkillFileTree from "./SkillFileTree.astro";
+import JevBenchmarkPromo from "./JevBenchmarkPromo.astro";
+import JevBenchmarkLink from "./JevBenchmarkLink.astro";
 import type { CatalogSkill } from "../lib/skills";
 import { collectionLabel, installHostLabel } from "../lib/skills";
 import { withBase } from "../lib/site";
@@ -12,6 +14,7 @@ interface Props {
 }
 
 const { skill } = Astro.props;
+const hasJevBenchmarks = skill.kind === "public" && skill.name === "jev-capability-advisor";
 const indexHref = skill.kind === "public" ? "/skills/" : "/incubator/";
 const defaultInstallHost = installHostLabel(skill.defaultInstallHost);
 const targetRuntime = skill.targetRuntime ? installHostLabel(skill.targetRuntime) : undefined;
@@ -35,6 +38,8 @@ const installContext = !targetRuntime
     ? `The ${targetRuntime} target contract stays unchanged when installed into another supported execution host.`
     : `This ${targetRuntime} target contract currently supports installation into ${defaultInstallHost} only.`;
 ---
+
+{hasJevBenchmarks && <JevBenchmarkLink />}
 
 <section class="skill-hero" data-reveal data-tracing-hero>
   <Breadcrumbs
@@ -65,6 +70,13 @@ const installContext = !targetRuntime
       <p>{skill.sourcePath}</p>
       <a href={skill.sourceUrl} rel="noreferrer" target="_blank">Open on GitHub</a>
     </section>
+    {skill.documentationUrl && (
+      <section>
+        <h2>Guide</h2>
+        <p>Usage, examples, and evaluation notes.</p>
+        <a href={skill.documentationUrl} rel="noreferrer" target="_blank">Read the guide on GitHub</a>
+      </section>
+    )}
     <section class="detail-panel__command">
       <h2>{installSectionTitle}</h2>
       <p>{installContext}</p>
@@ -118,12 +130,19 @@ const installContext = !targetRuntime
     <SkillFileTree tree={skill.fileTree} />
   </aside>
 
-  <article class="skill-content" data-tracing-content>
-    <div class="markdown" set:html={skill.html} />
-  </article>
+  <div class="skill-main" data-tracing-content>
+    <article class="skill-content" id="skill-guide">
+      <div class="markdown" set:html={skill.html} />
+    </article>
+  </div>
 </div>
 
+{hasJevBenchmarks && <div class="skill-promotion"><JevBenchmarkPromo /></div>}
+
 <style>
+  .skill-main { min-width: 0; }
+  .skill-promotion { width: min(1440px, calc(100% - 1.5rem)); margin: 1.25rem auto 4rem; }
+  #skill-guide { scroll-margin-top: 7rem; }
   .install-option {
     display: grid;
     gap: 0.35rem;

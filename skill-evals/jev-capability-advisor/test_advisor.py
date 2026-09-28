@@ -1,0 +1,290 @@
+"""Offline invariants for recommendation-only routing; no API or secret access."""
+import json
+from contextlib import redirect_stdout
+import io
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+sys.dont_write_bytecode = True
+from advisor_test_support import SCRIPTS
+sys.path.insert(0, str(SCRIPTS))
+import jev_advisor as advisor
+
+
+def item(identifier, name=None, **extra):
+    return dict(id=identifier, name=name or identifier, kind='skill',
+                description='Performs the named task directly.', **extra)
+
+
+def answer(**choices):
+    return {'answers': {key: {'type': 'choice', 'choice': value} for key, value in choices.items()},
+            'usage': {'input_tokens': 10, 'output_tokens': 1}}
+
+
+class Scripted:
+    def __init__(self, *steps):
+        self.steps = list(steps)
+        self.payloads = []
+
+    def __call__(self, payload):
+        self.payloads.append(payload)
+        step = self.steps.pop(0)
+        return step(payload) if callable(step) else step
+
+
+def code(payload, name):
+    question = payload['questions'].get('primary') or payload['questions']['next']
+    return next(key for key, value in payload['state']['available_capabilities'].items()
+                if key in question['criteria'] and value.startswith('skill | ' + name + ' |'))
+
+
+class AdvisorTests(unittest.TestCase):
+    def setUp(self):
+        self.catalog = [item('alpha'), item('beta'), item('gamma')]
+
+    def test_invalid_catalog_flags_and_kinds_never_dispatch(self):
+        malformed = [dict(item('bad'), kind='other')]
+        for field in ('enabled', 'explicit_only'):
+            malformed.extend(dict(item('bad'), **{field: value})
+                             for value in ('false', 0, 1, None, []))
+        malformed.append(dict(item('bad'), kind='other', enabled=False))
+        for profile in ('general', 'next_skill'):
+            for invalid in malformed:
+                with self.subTest(profile=profile, invalid=invalid):
+                    transport = Scripted()
+                    result = advisor.advise('Use alpha', [item('alpha'), invalid], transport,
+                                            selection_profile=profile)
+                    self.assertEqual(result['status'], 'error')
+                    self.assertEqual(result['selected'], [])
+                    self.assertEqual(result['error'], 'invalid_catalog_item')
+                    self.assertEqual(result['request_count'], 0)
+                    self.assertEqual(transport.payloads, [])
+
+    def test_disabled_duplicate_ids_are_rejected_before_filtering(self):
+        for catalog in ([item('alpha'), item('alpha', enabled=False)],
+                        [item('alpha', enabled=False), item('alpha')],
+                        [item('alpha', enabled=False), item('alpha', enabled=False)]):
+            with self.subTest(catalog=catalog):
+                transport = Scripted()
+                result = advisor.advise('Use alpha', catalog, transport)
+                self.assertEqual(result['error'], 'duplicate_candidate_id')
+                self.assertEqual(result['selected'], [])
+                self.assertEqual(transport.payloads, [])
+
+    def test_disabled_malformed_descriptions_are_rejected_before_dispatch(self):
+        for field in ('description', 'brief'):
+            for value in (None, False, 42, [], {}):
+                with self.subTest(field=field, value=value):
+                    catalog = [item('alpha'), dict(item('disabled', enabled=False), **{field: value})]
+                    transport = Scripted()
+                    result = advisor.advise('Use alpha', catalog, transport)
+                    self.assertEqual(result['error'], 'invalid_description')
+                    self.assertEqual(result['selected'], [])
+                    self.assertEqual(transport.payloads, [])
+
+    def test_cli_invalid_catalog_precedes_credentials_and_offline_inspection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            catalog = Path(directory) / 'catalog.json'
+            catalog.write_text(json.dumps([item('alpha', enabled='false')]))
+            for profile in ('general', 'next_skill'):
+                for offline in ([], ['--offline-candidates']):
+                    with self.subTest(profile=profile, offline=offline):
+                        output = io.StringIO()
+                        with patch.object(advisor, 'make_transport', side_effect=AssertionError('network forbidden')) as network:
+                            with redirect_stdout(output):
+                                status = advisor.main(['--catalog', str(catalog), '--query', 'Use alpha',
+                                                       '--selection-profile', profile,
+                                                       '--key-file', str(Path(directory) / 'missing-key'), *offline])
+                        self.assertEqual(status, 1)
+                        result = json.loads(output.getvalue())
+                        self.assertEqual(result['error'], 'invalid_catalog_item')
+                        self.assertEqual(result['request_count'], 0)
+                        network.assert_not_called()
+
+    def test_single_is_one_request_and_one_result(self):
+        transport = Scripted(lambda payload: answer(mode='SINGLE', primary=code(payload, 'alpha')))
+        result = advisor.advise('Use alpha for the next step', self.catalog, transport)
+        self.assertEqual((result['status'], result['selected'], result['request_count']),
+                         ('selected', ['alpha'], 1))
+        self.assertEqual(len(transport.payloads), 1)
+
+    def test_pair_conditions_followup_on_primary(self):
+        transport = Scripted(lambda p: answer(mode='PAIR', primary=code(p, 'alpha')),
+                             lambda p: answer(next=code(p, 'beta')))
+        result = advisor.advise('Use alpha and beta for independent tasks', self.catalog, transport)
+        self.assertEqual(result['selected'], ['alpha', 'beta'])
+        followup = transport.payloads[1]
+        self.assertEqual(followup['state']['already_selected'][0]['name'], 'alpha')
+        self.assertEqual(followup['state']['already_selected'][0]['brief'], 'Performs the named task directly.')
+        self.assertNotIn('alpha (skill)', followup['questions']['next']['criteria'].values())
+        self.assertEqual(result['request_count'], 2)
+
+    def test_pair_retains_uncovered_capability_when_primary_order_changes(self):
+        transport = Scripted(lambda p: answer(mode='PAIR', primary=code(p, 'beta')),
+                             lambda p: answer(next=code(p, 'alpha')))
+        result = advisor.advise('Use alpha and beta independently', self.catalog, transport)
+        self.assertEqual(result['selected'], ['beta', 'alpha'])
+        following = transport.payloads[1]
+        self.assertEqual(following['state']['already_selected'][0]['name'], 'beta')
+        self.assertIn('alpha (skill)', following['questions']['next']['criteria'].values())
+        self.assertNotIn('beta (skill)', following['questions']['next']['criteria'].values())
+        self.assertEqual(result['request_count'], 2)
+
+    def test_followup_clarification_preserves_only_provisional_advice(self):
+        transport = Scripted(lambda p: answer(mode='TRIPLE', primary=code(p, 'alpha')),
+                             answer(next='CLARIFY'))
+        result = advisor.advise('Three independent tasks with an unclear remaining step',
+                                self.catalog, transport)
+        self.assertEqual(result['status'], 'clarify')
+        self.assertEqual(result['selected'], [])
+        self.assertEqual(result['selected_ids'], [])
+        self.assertEqual(result['provisional_selected'], ['alpha'])
+        self.assertEqual(result['stopped_reason'], 'model_clarify')
+        self.assertEqual(result['request_count'], 2)
+        self.assertEqual(len(transport.payloads), 2)
+
+    def test_triple_completes_within_three_requests(self):
+        transport = Scripted(lambda p: answer(mode='TRIPLE', primary=code(p, 'alpha')),
+                             lambda p: answer(next=code(p, 'beta')), lambda p: answer(next=code(p, 'gamma')))
+        result = advisor.advise('Use alpha, beta, and gamma independently', self.catalog, transport)
+        self.assertEqual(result['status'], 'selected')
+        self.assertEqual(result['selected'], ['alpha', 'beta', 'gamma'])
+        self.assertEqual(result['request_count'], 3)
+
+    def test_none_and_clarify_remain_distinct(self):
+        for mode in ('NONE', 'CLARIFY'):
+            with self.subTest(mode=mode):
+                result = advisor.advise('Task data', self.catalog, Scripted(answer(mode=mode, primary=mode)))
+                self.assertEqual(result['status'], mode.lower())
+                self.assertEqual(result['selected'], [])
+                self.assertEqual(result['request_count'], 1)
+
+    def test_empty_and_disabled_catalog_need_no_transport(self):
+        def forbidden(_): raise AssertionError('transport must not be called')
+        for catalog in ([], [item('disabled', enabled=False)]):
+            result = advisor.advise('Task data', catalog, forbidden)
+            self.assertEqual(result['status'], 'none')
+            self.assertEqual(result['request_count'], 0)
+
+    def test_malformed_or_inconsistent_answers_fail_closed(self):
+        for response in ({}, answer(mode='SINGLE', primary='NONE'),
+                         answer(mode='NONE', primary='CLARIFY'),
+                         answer(mode='SINGLE', primary='invented')):
+            with self.subTest(response=response):
+                result = advisor.advise('Task data', self.catalog, Scripted(response))
+                self.assertEqual(result['status'], 'error')
+                self.assertEqual(result['selected'], [])
+                self.assertIsNotNone(result['error'])
+                self.assertEqual(result['requests'][0]['response'], response)
+
+    def test_early_stop_does_not_claim_complete_or_none(self):
+        transport = Scripted(lambda p: answer(mode='PAIR', primary=code(p, 'alpha')), answer(next='STOP'))
+        result = advisor.advise('Task data', self.catalog, transport)
+        self.assertEqual(result['status'], 'clarify')
+        self.assertEqual(result['selected'], [])
+        self.assertEqual(result['provisional_selected'], ['alpha'])
+        self.assertEqual(result['stopped_reason'], 'incomplete_cardinality_plan')
+
+    def test_verified_bundles_are_excluded_from_followup(self):
+        proof = dict(skill_identity='same-name', bundle_sha256='a' * 64)
+        catalog = [item('one', 'same-name', **proof),
+                   item('alias', 'plugin:same-name', **proof),
+                   item('different'), item('unproven', 'Same Name'),
+                   item('changed', 'same-name', skill_identity='same-name', bundle_sha256='b' * 64)]
+        payload, mapping = advisor.build_request('Task', catalog, selected=[catalog[0]],
+                                                 phase='followup', planned_count=2)
+        self.assertEqual(set(mapping.values()), {'different', 'unproven', 'changed'})
+
+    def test_card_metadata_is_shared_but_paths_stay_local(self):
+        path = '/private/test-skill/SKILL.md'
+        catalog = [item('one', 'Restricted skill', explicit_only=True, source_paths=[path],
+                        brief='Read ' + path + ' for workflow instructions.')]
+        payload, mapping = advisor.build_request('Task', catalog)
+        cards = payload['state']['available_capabilities']
+        self.assertIn('Restricted skill', cards[next(iter(mapping))])
+        self.assertIn('explicit_only=true', cards[next(iter(mapping))])
+        self.assertNotIn(path, advisor.encode(payload).decode())
+        self.assertEqual(advisor.local_card(catalog[0])['source_paths'], [path])
+        self.assertEqual(set(payload['questions']), {'mode', 'primary'})
+
+    def test_shortlist_none_reports_coverage_limits(self):
+        catalog = [item(str(i)) for i in range(241)]
+        result = advisor.advise('Task', catalog, Scripted(answer(mode='NONE', primary='NONE')))
+        self.assertEqual(result['eligible_count'], 241)
+        self.assertEqual(result['candidate_count'], 240)
+        self.assertTrue(result['catalog_truncated'])
+        self.assertEqual(result['none_scope'], 'retrieved_candidates')
+
+    def test_usage_and_receipts_account_for_each_attempt_without_headers(self):
+        transport = Scripted(lambda p: answer(mode='PAIR', primary=code(p, 'alpha')),
+                             lambda p: answer(next=code(p, 'beta')))
+        result = advisor.advise('Task', self.catalog, transport)
+        self.assertEqual(result['usage_total'], {'input_tokens': 20, 'output_tokens': 2})
+        self.assertEqual(len(result['receipt_digest']), 64)
+        for receipt in result['requests']:
+            self.assertEqual(receipt['request_sha256'], advisor.digest(receipt['request']))
+            self.assertEqual(receipt['response_sha256'], advisor.digest(receipt['response']))
+            self.assertNotIn('Authorization', json.dumps(receipt))
+
+    def test_transport_error_has_no_retry_and_does_not_echo_secret(self):
+        def forbidden(_): raise RuntimeError('secret-like-error-body')
+        result = advisor.advise('Task', self.catalog, forbidden)
+        self.assertEqual(result['status'], 'error')
+        self.assertEqual(result['request_count'], 1)
+        self.assertNotIn('secret-like-error-body', json.dumps(result))
+
+    def test_query_and_payload_bounds_fail_before_transport(self):
+        result = advisor.advise('x' * (advisor.MAX_QUERY_CHARS + 1), self.catalog,
+                                lambda _: self.fail('unexpected transport'))
+        self.assertEqual(result['error'], 'invalid_query')
+        catalog = [item(str(i), name='Capability ' + str(i), brief='long description ' * 100)
+                   for i in range(300)]
+        payload, mapping = advisor.build_request('Task', catalog)
+        self.assertEqual(len(mapping), 240)
+        self.assertLessEqual(len(advisor.encode(payload)), advisor.MAX_REQUEST_BYTES)
+        self.assertLessEqual(advisor._criteria_state_bytes(payload), advisor.MAX_CRITERIA_STATE_BYTES)
+        self.assertTrue(all(len(q['criteria']) <= 255 for q in payload['questions'].values()))
+
+    def test_compaction_preserves_late_intent_under_full_catalog_pressure(self):
+        catalog = [item(str(i), name='Capability ' + str(i), brief='Detailed task guidance. ' * 20,
+                        explicit_only=i % 7 == 0) for i in range(240)]
+        for ending in ('Use Capability 0.', 'Use Capability 239.'):
+            query = 'ä' * (advisor.MAX_QUERY_CHARS - len(ending)) + ending
+            for phase in ('initial', 'followup'):
+                prior = [catalog[1]] if phase == 'followup' else []
+                payload, mapping = advisor.build_request(query, catalog, selected=prior,
+                                                         phase=phase, planned_count=2)
+                self.assertEqual(payload['state']['query'], query)
+                self.assertEqual(set(mapping.values()), {str(i) for i in range(240)} -
+                                 ({'1'} if prior else set()))
+                self.assertLessEqual(len(advisor.encode(payload)), advisor.MAX_REQUEST_BYTES)
+                self.assertLessEqual(advisor._criteria_state_bytes(payload), advisor.MAX_CRITERIA_STATE_BYTES)
+                for key, identifier in mapping.items():
+                    if int(identifier) % 7 == 0:
+                        self.assertIn('explicit_only=true', payload['state']['available_capabilities'][key])
+
+    def test_initial_compaction_keeps_negative_guidance_and_followup_detail(self):
+        catalog = [item('done'), item('remaining', brief='a' * 220 + ' UNIQUE FOLLOWUP DETAIL',
+                                     explicit_only=True)]
+        catalog += [item('filler-' + str(i)) for i in range(15)]
+        # Negative guidance must survive even in a compact, lower-ranked card.
+        catalog += [item('guarded', use_when='Read public reports. ' * 100,
+                         avoid_when='Never delete records. ' * 100)]
+        initial, mapping = advisor.build_request('Read reports and use remaining independently.', catalog)
+        guarded = next(key for key, identifier in mapping.items() if identifier == 'guarded')
+        self.assertIn('avoid_when: Never delete', initial['state']['available_capabilities'][guarded])
+        self.assertIn('explicit_only=true', initial['state']['available_capabilities']['c001'])
+        following, mapping = advisor.build_request('Read reports and use remaining independently.', catalog,
+                                                   selected=[catalog[0]], phase='followup', planned_count=2)
+        key = next(key for key, identifier in mapping.items() if identifier == 'remaining')
+        self.assertIn('UNIQUE FOLLOWUP', following['state']['available_capabilities'][key])
+        self.assertEqual(following['questions']['next']['criteria'][key], 'remaining (skill)')
+        self.assertEqual(following['state']['already_selected'][0]['name'], 'done')
+
+
+
+if __name__ == '__main__':
+    unittest.main()

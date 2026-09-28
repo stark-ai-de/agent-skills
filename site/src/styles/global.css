@@ -2510,7 +2510,9 @@ main {
   padding: 0.8rem 0 0;
 }
 
-.detail-panel__command h2 {
+.detail-panel__command > h2,
+.detail-panel__command > p,
+.detail-panel__command .install-option > p {
   padding-inline: 0.8rem;
 }
 

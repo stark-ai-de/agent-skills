@@ -1,0 +1,16 @@
+{
+  "name": "architecture-compass-testing-qualification",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:run": "bun --bun vitest run --project contracts",
+    "typecheck": "tsc --noEmit",
+    "qualify": "bun --bun qualification.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "packageManager": "pnpm@11.24.0"
+}

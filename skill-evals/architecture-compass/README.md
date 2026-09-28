@@ -11,11 +11,15 @@ Passing behavior must:
 - limit agent-initiated selection to a relevant read-only audit unless the user's existing request authorizes the mutating outcome and scope;
 - use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
 - keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
-- use native Plan mode for plan workflows when supported, block on indeterminate state, fall back only when native Plan is definitely unavailable, exit before writes, and recheck state before execution;
+- treat AC-ADR-065 as an optional adoptable target policy, record local mapping/authorized hosts/prerequisite gaps, and keep installed, configured, active/trusted, processing-authorized, current-inventory, and qualified states distinct;
+- audit adopted Jev policies from existing evidence without provider requests or repair, preserve native fallback with visible unmet obligations, and require fresh exact host/runtime/configuration/model/reasoning evidence for qualification;
+- respect active/explicitly requested native Plan, continue permitted no-write planning with inactive, unavailable, declined, or indeterminate controls, reuse unchanged content/write approval, exit active Plan before writes, and recheck state before execution; unknown control state blocks only an action that depends on resolving that state;
+- distinguish execution-host control evidence from target runtime and actual permission; unknown evidence permits no writes and does not invent transition commands;
 - distinguish ChatGPT web Chat/Work from Codex web: only an observed inactive
-  Codex web `/plan` may receive the Codex `$` handoff, while missing evidence is
-  `Indeterminate`, explicit `unknown` surface or experience values stop before
-  every outcome branch, and a positive no-control enumeration permits fallback;
+  Codex web `/plan` may receive the Codex `$` handoff. Missing evidence remains
+  `Indeterminate` while read-only discovery continues; explicit `unknown`
+  surface or experience values block host-specific actions that depend on them,
+  and a positive no-control enumeration permits fallback;
 - route from `references/adr-catalog.md` to Short variants first, then load only applicable canonical Long ADRs and optional Guides;
 - preserve accepted local ADR identity and history, use repository-native provider mapping, and keep skill-runtime ADRs outside target adoption matrices;
 - rank architecture evidence through AC-ADR-046 independently from operational authority and stop the affected scope when same-rank accepted decisions conflict;
@@ -36,7 +40,7 @@ Passing behavior must:
 
 - `activation-cases.md`: activation and intent-routing examples.
 - `rubric.md`: quality and lifecycle hard gates.
-- `cases/`: focused text-only cases with deterministic assertions.
+- `cases/`: focused text-only cases with deterministic assertions. These define expected behavior; structural validation does not execute model conversations or establish native UI behavior.
 - [`legacy-case-lineage.json`](legacy-case-lineage.json): machine-checked disposition and material-expectation mapping for the ten cases removed from the reviewed HEAD snapshot.
 - `legacy-case-baseline/1d454f06375f3b74ba506fef54b664a2517674c0/`: byte-locked source copies outside the installed skill payload.
 - `runs/YYYY-MM-DD-summary.md`: dated evidence only after the named checks actually ran.
@@ -44,6 +48,16 @@ Passing behavior must:
 The owning validator binds the lineage to the exact staged-deletion path set and independent HEAD SHA-256 values. Every legacy assertion and expected-behavior bullet maps exactly once to an existing target heading and marker; missing, duplicate, unknown, drifted, or leaked evidence fails validation.
 
 Focused workflow and lifecycle cases:
+
+- `cases/plan-inactive-conversation.md`
+- `cases/approval-reused-after-transition.md`
+- `cases/approval-still-active.md`
+- `cases/native-final-approval-scope.md`
+- `cases/approval-target-drift.md`
+- `cases/approval-bounded-revision.md`
+- `cases/planning-chat-only.md`
+- `cases/async-question-no-consent.md`
+- `cases/mode-toggle-not-approval.md`
 
 - `cases/clear-setup-intent.md`
 - `cases/clear-audit-intent.md`
@@ -103,6 +117,8 @@ Focused routed-library cases:
 - `cases/legacy-input-routing.md`
 - `cases/instruction-adr-authority-conflict.md`
 - `cases/setup-adoptable-only.md`
+- `cases/jev-policy-adoption-prerequisites.md`
+- `cases/jev-policy-audit-read-only.md`
 - `cases/stale-subagent-reconciliation.md`
 - `cases/evidence-stage-claim-limits.md`
 - `cases/invalid-missing-triplet.md`
@@ -140,10 +156,59 @@ Focused adaptive-output and governance-boundary cases:
 
 Clear task intent is selection evidence, not a new approval. The skill exposes all five workflows, announces the matching route and rationale, and proceeds within the user's existing authority. Bare activation, conflicting cues, or ambiguity about outcome, scope, persistence, governance, or mutation authority requires a question. Selection never grants destructive, paid, irreversible, external, deployment, publication, production, or scope-expanding authority.
 
-Plan cases are multi-turn. While native Plan mode is active, repository/workspace artifacts remain read-only. Supported-inactive and indeterminate states require a host transition and confirmed Plan mode; only definitive unavailability permits a portable in-chat fallback for the selected Plan workflow; an explicit refusal uses the documented compatible-workflow-or-stop route. Approved content is persisted only after Plan-mode exit. `plan-run-refactor` then rechecks repository and external state before executing an unchanged plan. ChatGPT Chat, Work, and mobile Plan-required cases must switch, wait, or ask rather than treating ChatGPT identity, missing Codex Plan state, a missing `/plan` slash, or an explicit `unknown` surface or experience as unavailability.
+Plan cases are multi-turn. While native Plan mode is active, repository/workspace artifacts remain read-only. Respect an active or explicitly requested native mode and recommend it for substantial ambiguous work; inactive, missing, declined, or indeterminate controls alone do not stop safe discovery and conversation. Unknown state never permits writes. Preserve an unchanged approval across any required Plan exit and permission transition, then recheck target state before persistence. `plan-run-refactor` persists required governance and rechecks state before executing the unchanged approved plan. Product identity, missing commands, and unknown surface or experience never prove control absence or justify an invented transition. Native transition scenarios explicitly request that host control; ordinary planning cases do not require one.
 
 Audit cases perform no repository, untracked, ignored, index, generated-artifact, install, or external mutation. Direct refactor is available only for bounded, reversible work fully governed by accepted local ADRs. Missing governance routes to setup; unresolved durable decisions or broad implementation route to a Plan workflow.
 
 Routed-library cases use the catalog and Short variants for discovery, canonical Long variants for decisions, and Guides only for implementation help. Invalid-library cases are static negative contracts and never authorize repair of their fixture.
 
-The 2026-09-08 adapter cases cover complete-record proven absence, separate native control and inline parsing evidence, busy composers, and independent read-only enforcement. Codex Spec Interviewer also covers refusal before capability evidence while preserving the earlier routing gate. These are behavioral evaluation scenarios; static inventory validation does not execute live client turns.
+The 2026-09-08 adapter cases cover complete-record proven absence, separate native control and inline parsing evidence, busy composers, and independent read-only enforcement. Codex Spec Interviewer also covers refusal before capability evidence while preserving the earlier routing gate. Current lifecycle cases preserve control evidence without making its collection a prerequisite for safe planning. These are behavioral evaluation scenarios; static inventory validation does not execute live client turns.
+
+## Evaluation verdicts
+
+Case `contains` and `not_contains` entries are lexical diagnostics, not semantic verdicts. Review the response against Expected Behavior and the rubric before scoring: “Do not install Vitest” preserves the native-framework boundary even though it contains the diagnostic phrase “install Vitest”. Record lexical results and the semantic verdict separately with a short justification for differences. File inventory or structural validation proves that an evaluation contract exists; only an observed agent response supports a behavior verdict.
+
+## Measurable testing evaluation
+
+The fourteen scenario contracts below cover AC-ADR-059 through AC-ADR-062. They are static expectations; passing structural validation is not an agent-behavior run. The [executable qualification fixtures](fixtures/measurable-testing/README.md) exercise runtime, input discovery, isolation, aggregation, cache and measurement mechanisms outside the installed payload.
+
+- `cases/testing-tiny-ts.md`
+- `cases/testing-monorepo-cost.md`
+- `cases/testing-bun-product.md`
+- `cases/testing-runtime-fallback.md`
+- `cases/testing-native-framework.md`
+- `cases/testing-local-conflict.md`
+- `cases/testing-public-validator.md`
+- `cases/testing-file-inputs.md`
+- `cases/testing-isolation-faults.md`
+- `cases/testing-shard-faults.md`
+- `cases/testing-cache-faults.md`
+- `cases/testing-metric-truth.md`
+- `cases/testing-selective-routing.md`
+- `cases/testing-promotion-integrity.md`
+
+## Tailwind design-system lint cases
+
+These cases cover AC-ADR-063. Structural validation is not an executed agent
+behavior or plugin-runtime pass. Required-concept assertions complement semantic
+review of Expected Behavior; they do not classify a quoted unsafe suggestion as
+an endorsement, nor prove correctness merely because keywords are present.
+
+- `cases/shadcn-lint-default-profile.md`
+- `cases/shadcn-lint-ownership-and-compatibility.md`
+- `cases/shadcn-lint-staged-enforcement.md`
+- `cases/shadcn-lint-discovery-and-freshness.md`
+- `cases/shadcn-lint-component-and-evidence-boundaries.md`
+
+## Portless local-development cases
+
+These six scenarios cover AC-ADR-066 applicability, migration preference,
+technical exceptions, worktree identity and local decision authority. They are
+static contracts, not executed agent turns or Portless runtime tests.
+
+- `cases/portless-compatible-default.md`
+- `cases/portless-existing-routing-migration.md`
+- `cases/portless-no-local-endpoint.md`
+- `cases/portless-technical-exception.md`
+- `cases/portless-worktree-collision.md`
+- `cases/portless-local-adr-conflict.md`

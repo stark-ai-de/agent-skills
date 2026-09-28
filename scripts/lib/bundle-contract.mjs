@@ -24,6 +24,7 @@ export const EXPECTED_CODEX_SKILL_SOURCES = [
   "skills/engineering-workflows/architecture-compass",
   "skills/engineering-workflows/codegraph-ast-grep",
   "skills/engineering-workflows/drawio-diagrams",
+  "skills/skill-maintenance/jev-capability-advisor",
 ];
 export const OPENAI_PRODUCTS = new Set(["CHAT", "CODEX"]);
 
@@ -269,7 +270,7 @@ function validateBundleSemantics(root, bundle, bundleFile, errors) {
       );
     } else if (JSON.stringify(sources) !== JSON.stringify(EXPECTED_CODEX_SKILL_SOURCES)) {
       errors.push(
-        `${bundleFile}: codex skill order/membership must match the canonical six-skill allowlist`,
+        `${bundleFile}: codex skill order/membership must match the canonical skill allowlist`,
       );
     }
   }
