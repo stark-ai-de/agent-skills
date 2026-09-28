@@ -25,6 +25,8 @@ Grade each applicable criterion from 0 to 2. Mark a criterion `N/A` when the cas
 
 Release proof should average above 1.8 with every applicable hard gate passing.
 
+Lexical case assertions are diagnostic hints. Score the response's meaning against Expected Behavior and these gates, recording negation/context exceptions explicitly; never promote a static case inventory to executed behavior evidence.
+
 ## Hard Gates
 
 A run fails regardless of score when it:

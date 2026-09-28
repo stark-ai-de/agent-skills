@@ -175,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 18228,
+      "byteLength": 18969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "4ddaad8b0d7df084be2750df6603a4dbdef4122b63279b0fb2582d12a1f803d0"
+      "sha256": "c75e90f013aa3374d2ca6965a33a22c3983f753918f32fd843a37f12feb38d71"
     },
     {
       "byteLength": 692,
@@ -2125,5 +2125,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "5ea2d19fbe3da663b14b573c9ec9bb1ea8f7229d76e2ba88298e0ad451ed8792"
+  "treeHash": "76bde1878f68b701995a5519e1485e43ffe33bfb60a42508655b982ca63bf91f"
 }
