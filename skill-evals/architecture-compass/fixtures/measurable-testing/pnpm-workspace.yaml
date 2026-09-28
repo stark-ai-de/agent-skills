@@ -1,0 +1,7 @@
+packages:
+  - "."
+overrides:
+  vite: 8.2.2
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true

@@ -1,21 +1,21 @@
 ---
 name: cursor-spec-interviewer
-description: Interview fuzzy Cursor Agent coding requests into user-verified, Cursor-ready implementation specs. Use when the user asks for a spec, implementation plan, PRD, requirements, or a plan before coding for a feature, bugfix, refactor, migration, repo-wide change, or architecture task, or needs acceptance criteria, validation commands, ADR decisions, or rollout notes. Saves the spec and a Cursor execution prompt. Do not use for fully specified tasks or direct implementation requests.
+description: Turn ambiguous coding requests into verified Cursor Agent implementation specs. Use when the user wants requirements, an implementation plan, or a spec before coding; include source checks, needed ADRs, and agreed delivery. Do not use for already specified direct implementation or memory cleanup.
 license: Apache-2.0
-compatibility: Targets Cursor Agent evidence and execution output while keeping specs and ADRs repository-owned. Use the current execution host's Plan Mode and lifecycle controls when supported; use Cursor-only controls only when Cursor executes the skill. Works best with repo-local AGENTS.md, .cursor/rules, and project docs.
+compatibility: Targets Cursor Agent evidence and execution prompts across Agent Skills hosts. Use the current execution host's available controls and permissions, with conversational support for older hosts.
 metadata:
   author: stark-ai-de
   category: cursor-operations
-  version: "0.2.4"
+  version: "0.3.0"
 ---
 
 # Cursor Spec Interviewer
 
 ## Goal
 
-Produce a user-verified implementation spec that Cursor Agent can execute with minimal ambiguity, minimal scope creep, explicit validation, explicit assumptions, a bounded source challenge, and ADRs for durable architectural decisions when needed. Save every final spec using the repo's clear convention or a confirmed destination; save ADR files only when the ADR gate requires one.
+Produce a user-verified implementation spec with bounded scope, testable acceptance criteria, source-backed decisions, validation, and any required ADRs. Deliver it to the agreed repository path, or in chat when explicitly requested. One approval covers the unchanged result and its concrete authorized writes.
 
-This is one end-to-end outcome, not a public multi-workflow skill. Do not invent review/save variants or add a workflow-selection checkpoint.
+This is one end-to-end workflow. A clear request selects it; do not invent review/save variants or add a workflow-selection checkpoint. For a bare invocation, ask for the task to specify.
 
 ## When to use
 
@@ -44,55 +44,36 @@ This is one end-to-end outcome, not a public multi-workflow skill. Do not invent
 - Error messages, screenshots, logs, PR feedback, or example files the user supplied.
 - Cursor project skill folders such as `.agents/skills/` or `.cursor/skills/` only when the spec depends on local Cursor skill behavior.
 
-## Execution-host Plan Mode preflight
-
-Before repo inspection or substantive questions, identify the current execution host and use only its planning, structured-question, transition, and plan-exit controls. The Cursor Agent target determines evidence and output contracts, not which host controls are available.
-
-1. Classify the current host state as `active`, `supported-inactive`, `definitely-unavailable`, or `indeterminate`. Treat `indeterminate` as `supported-inactive`; uncertainty is never fallback authority.
-2. If active, continue in the main conversation and use the current host's structured-question control for material decisions when available. In Cursor, that control is `AskQuestion` when the active surface exposes it.
-3. If supported but inactive and not explicitly declined, invoke the current host's Plan Mode transition control and wait for host confirmation. If the current host exposes no transition control, give accurate manual activation instructions for that host, ask the user to reply `continue`, and wait. When Cursor is the execution host, tell editor users to press Shift+Tab and Cursor CLI users to use `/plan` or start with `--mode=plan`. Do not ask the user to resend the request or claim the skill changed modes.
-4. Never fork the interview. Use conversational fallback only when Plan Mode is definitely unavailable or explicitly declined, recording `Plan Mode fallback: unavailable` or `Plan Mode fallback: declined` plus the reason. An indeterminate state must transition or wait under step 3 instead.
-5. Keep repository and workspace artifacts read-only in Plan Mode. Inspection and non-mutating validation are allowed; only a plan artifact created by the current host's plan-exit control is permitted.
-
 ## Workflow
 
-1. Run the execution-host Plan Mode preflight above before any substantive interview. Do not apply it to requests outside the skill's trigger boundary.
-2. Classify the requested effort as `compact`, `standard`, or `deep` using the mode table in `references/spec-rubric.md`.
-3. Inspect only the minimum repo context needed to avoid low-value questions. During this pass, note spec and ADR destinations by following `references/artifact-destinations.md`; defer destination confirmation to the final checkpoint unless that reference requires earlier confirmation.
-4. Ask one high-impact question at a time when the answer affects the next decision; batch up to 3 questions only when they are independent and low-friction. In Plan Mode, use the current execution host's structured-question control when available; in Cursor, that control is `AskQuestion` when exposed. Prefer answering discoverable questions from repo files, ADRs, code search, MCP tools, or web sources instead of asking the user. Use `references/question-bank.md` for question selection.
-5. After each answer or evidence pass, summarize the current understanding, explicit assumptions, and remaining unknowns.
-6. Continue until every material requirement, non-goal, edge case, validation path, rollout concern, and ADR implication is source-backed, answered by the user, or explicitly accepted as non-blocking.
-7. Draft a spec hypothesis, then challenge it against sources using `references/source-challenge.md`. Challenge only decisions that materially affect correctness, safety, maintainability, or implementation strategy.
-8. Run the ADR gate using `references/adr-gate.md`. If a durable architectural decision is required, draft the ADR, identify the required ADR path, and mark implementation blocked until acceptance when the spec depends on that decision.
-9. If the challenge invalidates a requirement or prior assumption, revise the spec, mark the conflict, or propose a preceding ADR or spec step before implementation.
-10. Present a final checkpoint with scope, non-goals, assumptions, open questions, risks, validation plan, ADR result, and artifact path basis. Ask whether anything material is missing or wrong, and wait for explicit verification. Continue interviewing if a material gap appears.
-11. Produce the approved spec from `assets/spec-template.compact.md`, `assets/spec-template.standard.md`, or `assets/spec-template.deep.md`. Convert ambiguous requirements into testable acceptance criteria; prefer EARS-like phrasing when behavior must be testable. For compact specs, use `artifact_path` as the only persisted artifact field and report verification and persistence status in the final response unless risk requires a fuller section.
-12. While Plan Mode is active, write no repository or workspace artifact and mark persistence pending. Use the current execution host's plan-exit control with a save-only plan for the approved repository-owned spec, any required ADR, and the minimal ADR index entry required by the repository's existing convention. That plan must also validate and report the saved paths, emit the Cursor-targeted execution prompt, and stop without implementing the feature. A plan artifact created by the host control is allowed. If the current host exposes no plan-exit control, give accurate manual exit instructions for that host, ask the user to reply `continue`, and wait before the same save-only handoff; do not issue a generic manual-exit command when a host control exists.
-13. After the current host confirms Plan Mode exit, save only the approved repository-owned spec, any required ADR, and the convention-required minimal ADR index entry. Do not implement the feature or make other repo-facing documentation changes. Validate and report the artifact paths, produce the Cursor-targeted execution prompt using `assets/cursor-execution-prompt.md`, run the final self-check against `references/spec-rubric.md`, and stop.
-14. In a recorded conversational fallback, complete the same interview and save-only finalization after checkpoint verification when writes are allowed. If persistence is declined, blocked, or unavailable, write nothing, return the save-ready artifacts with proposed repository paths, and mark the workflow incomplete.
+Follow [workflow-details.md](references/workflow-details.md) for the shared interview, approval and delivery lifecycle. Use [host-adapters.md](references/host-adapters.md) only when a host control or transition matters.
 
-## Cursor integration
-
-Cursor-native controls apply only when Cursor executes the skill; other hosts follow the preflight and workflow above. If Cursor exposes no plan-exit control, tell editor users to toggle out of Plan Mode with Shift+Tab and wait for `continue`; on other Cursor surfaces, use only a documented client-visible mode switch. Treat `.cursor/rules/**/*.mdc` as target evidence, not the artifact format. Specs, ADRs, and index entries remain repository-owned; emit a Cursor-targeted execution prompt after persistence.
+1. Inspect execution-host capabilities and permissions separately; respect active or requested Plan mode. Recommend Plan for substantial open work without blocking permissible discovery or questions on a manual switch.
+2. Inspect relevant repository context and prior answers. Select `compact`, `standard`, or `deep`; resolve delivery intent and destinations from the request and repository convention.
+3. Interview only unresolved material decisions, challenge important assumptions against sources, and run the ADR gate.
+4. Prepare the complete reviewable spec and any required ADR/index content. Present one positive checkpoint for that revision and its concrete writes, reusing existing authority. A native plan approval can serve as this checkpoint.
+5. Preserve approval across any required Plan exit. Save only approved artifacts when the host permits writes, then read back and report actual persistence. Explicit chat-only delivery completes without a save.
+6. Emit the Cursor Agent execution prompt and run the rubric. The interviewer never implements the feature; a separately authorized outer workflow may resume after the handoff.
 
 ## Safety rules
 
-- Do not invent repo facts, file paths, commands, APIs, or architecture. Mark them as `unspecified` when unknown.
-- Do not hide uncertainty. State assumptions explicitly.
-- Do not broaden scope beyond what the user asked for; prefer minimal, reversible implementation scope when intent is unclear.
-- Do not prescribe destructive migrations, data rewrites, or secret handling without explicit callouts and rollback notes.
-- Do not include secrets, credentials, private identifiers, or internal-only data in examples.
-- Do not use an ambiguous destination, overwrite existing files, create new artifact directories, or write ADR files without confirmation.
-- Do not use web or MCP lookup as ceremony. Use it when current facts can materially change the spec, and prefer official documentation, primary sources, repo-local docs, and source code over secondary commentary.
-- Follow `references/adr-gate.md` for when ADRs must and must not be created. Do not silently override an existing ADR; propose a superseding ADR when a durable decision changes.
+- Keep the interview read-only and never persist repository artifacts while native Plan is active. Unknown mode or write permission state does not permit writes.
+- Reuse prior answers and approval of unchanged content and writes. Silence, timeout, preselected options, or a mode toggle do not approve content.
+- Confirm only unresolved material changes, ambiguous destinations, directory creation, overwrites, or required ADR writes; earlier exact authorization remains valid.
+- Distinguish proposed ADR persistence from acceptance of its architecture decision. Block dependent implementation until required acceptance.
+- Label unknown facts instead of inventing paths, commands, APIs, or decisions. Avoid secrets and private identifiers in artifacts.
+- Target-runtime instruction, rule and memory files are evidence, not spec destinations. Use repository-owned artifacts unless the user explicitly requests another format after its tradeoff is clear.
+- Preserve user scope. Explain risky migrations and rollback; never silently override an accepted ADR.
 
 ## References
 
-Read only when needed:
+Read only the reference needed for the current step:
 
-- Interview: `references/question-bank.md`, `references/spec-rubric.md`, and `references/source-challenge.md`.
-- Persistence and architecture: `references/adr-gate.md`, `references/artifact-destinations.md`, and `references/rollout-checklist.md`.
-- Output: the matching `assets/spec-template.*.md`, `assets/cursor-execution-prompt.md`, and the bundled example specs.
+- [workflow-details.md](references/workflow-details.md): interview, single checkpoint, save-only handoff and completion.
+- [host-adapters.md](references/host-adapters.md): execution-host controls and capability evidence.
+- [question-bank.md](references/question-bank.md), [spec-rubric.md](references/spec-rubric.md), and [source-challenge.md](references/source-challenge.md): unresolved questions, depth, final self-check and source challenge.
+- [artifact-destinations.md](references/artifact-destinations.md), [adr-gate.md](references/adr-gate.md), and [rollout-checklist.md](references/rollout-checklist.md): destinations, durable decisions and risky delivery.
+- Matching `assets/spec-template.*.md`, bundled example specs and [execution prompt](assets/cursor-execution-prompt.md): output formats.
 
 ## Scripts
 
@@ -100,42 +81,16 @@ No bundled scripts.
 
 ## Output format
 
-While the verified interview is still in Plan Mode, return the approved repository artifact paths and `Persistence: pending`; invoke the current execution host's plan-exit control with the save-only plan or give the host-accurate manual handoff from step 12. Do not report persisted paths or include the Cursor-targeted execution prompt as though persistence already happened.
-
-After successful persistence, return in this order:
-
-1. Persisted artifact paths
-2. Interview summary and verification result
-3. Assumptions and unresolved questions
-4. Source challenge summary
-5. ADR gate result
-6. ADR draft or path when needed
-7. Saved spec path plus a concise summary, or full save-ready markdown when file persistence is blocked
-8. Cursor execution prompt
-9. Validation commands
-10. Risk and rollout notes
-
-Do not paste the full final spec or ADR by default after they are saved. Print full artifact contents only when the user asks, when the environment cannot write files, or when the user needs a review before approval.
+Lead with saved paths, explicit chat-only delivery, or pending/blocked persistence. Include the verification result, material assumptions, source challenge, ADR status, validation, risks, and the Cursor Agent execution prompt. Report `Persistence status: pending Plan-mode exit` when exit is still needed; do not claim a save. Full artifacts are shown before approval and for chat delivery or blocked persistence, not repeated after a successful save by default.
 
 ## Completion criteria
 
-- The final artifact is a saved, concrete markdown spec with explicit scope, constraints, testable acceptance criteria, validation, and done-when criteria; report its repository path.
-- Required ADRs follow repo conventions or block implementation; missing facts remain `unspecified`, and no blocking decision is hidden.
-- Important decisions were challenged against relevant repo evidence and current sources, or the reason for skipping the challenge is stated.
-- A required ADR is indexed during save-only persistence when the repository convention requires it; all other repo-facing documentation changes are captured in the spec for the later implementation task.
-- Include the Cursor execution prompt. The Plan Mode interview changes no repository or workspace artifact apart from a plan artifact created by the host's plan-exit control; save-only finalization changes only the approved spec, required ADR, and minimal convention-required ADR index entry and never implements the feature.
+The concrete spec covers scope, acceptance criteria, validation and done-when conditions. The user approved its current content and required writes once. Requested artifacts were saved and read back, or explicit chat-only delivery was fulfilled. Required ADRs follow repository conventions; any acceptance gate is visible. Verification and persistence are separate records. Save-only finalization never implements the feature.
 
 ## Failure modes
 
-- If the repository context is unavailable, produce a repo-agnostic spec and mark repo-specific details as `unspecified`.
-- If the user's goal is internally inconsistent, stop and surface the conflict clearly.
-- If validation commands cannot be determined, include a placeholder section labeled `unspecified`.
-- If the requested scope is too large for one safe spec, split it into phases and say so.
-- If persistence is declined or blocked, return the spec and any ADR draft with the proposed path and reason; mark the workflow incomplete.
-- If a proposed artifact path already exists, ask before overwriting it.
-- If current external docs cannot be reached, continue with repo evidence and mark the external-source check as unavailable.
-- If a prior ADR or named requirement appears stale or wrong, propose a preceding ADR, spec update, or explicit maintainer decision instead of silently overriding it.
-- If the ADR gate is uncertain, produce the spec with `ADR required: unresolved` and make implementation blocked on a maintainer decision.
-- If the checkpoint is not verified, keep interviewing or stop with the spec uncreated.
-- If the specs or ADR folder does not exist and the user does not approve creating or selecting one, stop before creating final artifacts.
-- If transition, fallback, or exit cannot proceed, follow the preflight and step 12 exactly; keep persistence pending and write nothing until the host confirms exit.
+- Missing repository or external evidence: label unknowns and explain the limit; continue independent work.
+- Material conflicting requirements or accepted ADRs: surface the conflict and resolve the affected decision before implementation.
+- Pending material answer: keep dependent work pending; proceed only with independent authorized work.
+- Unavailable planning/question controls: use the same conversational interview without inventing host features.
+- Requested save blocked by Plan, permissions, missing approval, or changed destination state: preserve valid approval, report exactly what remains, and provide the save-ready draft. Do not call pending persistence complete.

@@ -38,14 +38,14 @@ Keep host product names and exact transition commands in a verified adapter tabl
 
 Planning capability and read-only enforcement are independent. Resolve each from observed host state:
 
-| Planning state           | Action for a Plan workflow                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------- |
-| `Active`                 | Continue planning without repository mutation; do not request another Plan transition.         |
-| `Available but inactive` | Request the native transition and wait for observed activation.                                |
-| `Unavailable`            | Use the documented conversational checkpoint with the same approval and no-write contract.     |
-| `Explicitly declined`    | Honor the refusal; use a compatible non-Plan workflow or stop, and do not ask again unchanged. |
-| `Indeterminate`          | Stop and verify capability; do not assume the fallback lane.                                   |
-| `Not applicable`         | Continue only on a workflow that does not require planning.                                    |
+| Planning state           | Action for a Plan workflow                                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Active`                 | Continue planning without repository mutation; do not request another Plan transition.                                             |
+| `Available but inactive` | Recommend native Plan for substantial ambiguous work; continue safe discovery/conversation. Honor an explicit native-mode request. |
+| `Unavailable`            | Use the documented conversational checkpoint with the same approval and no-write contract.                                         |
+| `Explicitly declined`    | Honor the refusal without repeating it; continue the same safe conversational planning contract.                                   |
+| `Indeterminate`          | Report uncertainty; continue no-write conversation and proven reads. Resolve actual mode and permission before any write.          |
+| `Not applicable`         | Continue only on a workflow that does not require planning.                                                                        |
 
 | Read-only state          | Action for `audit` or planning inspection                                                          |
 | ------------------------ | -------------------------------------------------------------------------------------------------- |
@@ -60,12 +60,12 @@ Planning capability and read-only enforcement are independent. Resolve each from
 
 Select the lane from host_runtime_context before classifying Planning capability. This Guide is the verified adapter table for host product names and exact transition commands; keep them out of the portable Long contract.
 
-- **Codex CLI, IDE, and Codex in ChatGPT desktop:** when exposed, `/plan` selects native planning, `/permissions` selects a separate read-only control, and `/review` is preferred for PR, branch, or diff findings. Request and confirm planning and read-only transitions independently; if Read Only cannot be activated, record the enforcement limitation. The skill does not claim to perform host transitions. Do not require the ChatGPT observation record. Missing slash-menu dump is not proof that `/plan` is absent on this lane.
+- **Codex CLI, IDE, and Codex in ChatGPT desktop:** when exposed, `/plan` selects native planning, `/permissions` selects a separate read-only control, and `/review` is preferred for PR, branch, or diff findings. When needed, request and confirm planning and read-only transitions independently; if Read Only cannot be activated, record the enforcement limitation. The skill does not claim to perform host transitions. Do not require the ChatGPT observation record. Missing slash-menu dump is not proof that `/plan` is absent on this lane.
 - **Codex web:** fill the observation record with `surface: web`, `experience: codex`, then use the ordered gates and handoff below. A visible control does not prove CLI-style inline parsing. Keep this lane distinct from ChatGPT web.
 - **Cursor:** use the current surface's visible Plan and read-only controls when exposed. `--plan` or a Plan system reminder proves planning capability only, not read-only enforcement. A requested `--sandbox enabled` flag or helper preflight is not enforcement proof when command-level runtime evidence reports the sandbox unavailable or disabled; record that limitation and preserve the behavioral gate. Do not assume a particular command, shortcut, or mode exists across all Cursor versions.
 - **Claude Code:** use the current surface's exposed Plan permission mode or transition control. Do not assume a particular command or flag. Host-managed plan artifacts are not target-repository writes.
 - **ChatGPT Chat, Work, or mobile:** never report `Planning capability: Unavailable` from ChatGPT identity, missing Codex Plan state, or a missing `/plan` slash. Fill the ChatGPT observation record below, then apply its handoff. `/goal` does not satisfy Plan preflight. The bundled plan skill does not satisfy Plan preflight.
-- **Unknown host:** report `Planning capability: Indeterminate`. Ask which host and which Plan control exist, then wait. Do not emit a Codex `/plan` handoff. Do not claim ChatGPT has no Plan.
+- **Unknown host:** report `Planning capability: Indeterminate`. Use the no-write conversational lane. Ask about a host/control only when it is necessary for an actual transition or write boundary. Do not emit a Codex `/plan` handoff. Do not claim ChatGPT has no Plan.
 
 Preserve the target repository's existing agent-instruction convention. For a new repository with no selected runtime or convention, default to `AGENTS.md`; create Cursor- or Claude-specific instruction files only when the user selects that target.
 
@@ -89,46 +89,17 @@ context, never proof of this turn's control, state, or positive absence.
 
 Use `experience: chat|work` for ChatGPT and `experience: codex` for Codex web.
 Include `host_version` in the evidence; `unknown` is valid for that field.
-Evaluate the following in order:
+Use the record only to resolve a material capability or an actual transition. Do not turn seven fields into mandatory interview questions before safe discovery. An unknown host version is valid.
 
-1. Before every active, web, non-web, refusal, fallback, or handoff branch,
-   missing/contradictory routing fields, `surface: unknown`, or
-   `experience: unknown` mean `Planning capability: Indeterminate`. Ask for the
-   distinguishable value and wait without a transition handoff.
-2. If the user explicitly declines Plan, apply the `Explicitly declined` row
-   above before demanding native-control evidence. Preserve the refusal and
-   use a compatible non-Plan workflow or stop; do not invent a workflow choice,
-   claim Plan technically unavailable, or ask again unchanged. A refusal does
-   not exit an active host mode or grant persistence/execution authority.
-3. Unless current evidence already proves Plan active, a running turn or
-   temporarily disabled composer means `Planning capability: Indeterminate`:
-   explain the temporary condition, wait for the turn to finish, and re-observe.
-   A busy-turn menu cannot establish `none_proven`. An observed active mode
-   still passes the evidence gate below and does not need another transition.
-4. Before capability classification, require all seven fields. Missing fields,
-   contradictions, `evidence_source: official_docs_for_this_surface`,
-   `evidence_source: none`, or `confidence: inferred` or `confidence: absent` mean
-   `Planning capability: Indeterminate`. Ask for current-composer evidence and
-   wait without fallback or a transition handoff. `none_proven` plus an active
-   state is contradictory; `none_proven` plus an unknown state is valid.
-5. A positive current enumeration by the host or user establishing
-   `plan_control: none_proven` yields `Planning capability: Unavailable` and
-   permits the portable in-chat planning fallback, even with
-   `plan_state: unknown`. Missing `/plan` alone is not positive enumeration.
-6. Observed active Plan yields `Planning capability: Active`: continue read-only
-   and do not toggle Plan again.
-7. An observed native control with `plan_state: unknown` yields `Planning
-capability: Indeterminate`: ask how to confirm its state and wait without
-   fallback or a transition handoff.
-8. An observed inactive control yields `Planning capability: Available but
-inactive`: use its handoff below and wait for confirmed activation on the
-   next turn.
-9. Remaining uncertainty yields `Planning capability: Indeterminate`, a bounded
-   question, and a wait without fallback or a generated transition command.
+- Current observed active Plan yields `Active`; a busy composer does not invalidate it.
+- An observed inactive control yields `Available but inactive`. Recommend a transition when helpful; safe planning conversation can continue. If the user explicitly requested native Plan, retain that pending request until activation is observed.
+- A positive current enumeration proving no control yields `Unavailable`. Product identity, missing `/plan`, documentation alone, or a temporarily busy composer do not prove absence.
+- Missing or contradictory evidence, unknown routing fields, or an observed control whose state is unknown yields `Indeterminate`. Keep the same no-write conversation, without inventing a control or transition command. Resolve only facts needed for a requested transition or later write.
+- An explicit refusal yields `Explicitly declined`, without implying mode exit or write permission. Do not ask the same unchanged recommendation again.
 
-`/goal`, a bundled plan skill, and prompt text do not activate native Plan.
-Do not apply the observation-completeness rule to Codex CLI, IDE, or Codex in
-ChatGPT desktop; do apply it to Codex web and every ChatGPT/mobile lane.
+`/goal` does not satisfy Plan preflight. The bundled plan skill does not satisfy Plan preflight. Neither activates native Plan; permissible read-only discovery and conversation can still continue. A transition is not needed merely to improve the evidence record. A busy composer may require waiting for the turn to finish before a chosen transition, not before independent no-write work.
+
+Do not apply this ChatGPT/Codex-web observation record to Codex CLI, IDE, or Codex in ChatGPT desktop. Keep capability classification distinct from permission and actual execution state.
 
 ### Native transition and skill continuation
 
@@ -149,7 +120,7 @@ $architecture-compass to continue this request: <original request>` only if
 - **Any observed non-slash control:** name that control, request selection, and
   wait; do not invent a slash command.
 
-Every preflight result reports `Planning capability: <state> - <evidence>` and
+When material, a preflight result reports `Planning capability: <state> - <evidence>` and
 `Read-only enforcement: <state> - <scope and permission evidence>` separately,
 including uncertainty/refusal/transition stops. Use the read-only state table
 above. With known writable permissions, report `available but inactive` only
@@ -163,12 +134,17 @@ workflow's no-mutation contract for those tools as well.
 
 ### Official mechanism and evidence boundary
 
-Reviewed 2026-09-08:
+Host mechanism sources reviewed 2026-09-08; the following lifecycle-specific sources were rechecked on 2026-09-21:
 
 - [Developer commands](https://learn.chatgpt.com/docs/developer-commands)
   distinguishes ChatGPT web's composer menu from desktop/CLI commands. Codex CLI
   supports `/plan` with an optional inline prompt; it is temporarily unavailable
   while Codex works, so wait for the running turn to end before transitioning.
+- [Claude permission modes](https://code.claude.com/docs/en/permission-modes) distinguishes leaving Plan via a mode switch from accepting a plan; approval can also transition permissions. Reuse its content approval only for the scope actually confirmed.
+- [Cursor Plan Mode](https://cursor.com/docs/agent/plan-mode) recommends planning for complex or unclear work and separates host-managed plans from saving to the workspace. A host plan artifact alone does not prove repository-spec persistence.
+
+The following adapter references retain their 2026-09-08 review date:
+
 - [Desktop slash commands](https://learn.chatgpt.com/docs/reference/slash-commands)
   documents selecting `/plan` to toggle Plan, with availability varying by
   environment/access. It does not establish inline parsing in every composer.
@@ -184,6 +160,12 @@ Reviewed 2026-09-08:
 
 These sources do not prove a live account's web/mobile controls. Report
 unverified client behavior honestly and recheck actual mode after a transition.
+
+## Questions and approval reuse
+
+Ask only unresolved material questions after inspecting discoverable facts and existing answers. Prefer exposed structured question controls where suitable; missing tools use a concise conversational checkpoint. An asynchronous question permits only independent authorized work while its required answer is pending. Silence, timeout, and preselected options never establish consent.
+
+Prepare the complete reviewable result and named persistence scope before the final checkpoint. If the native approval confirms both, use it as the same approval. If it changes only mode, preserve any existing content approval and wait solely for the transition. Do not request approval again after mode exit for the same unchanged result. Recheck target state and permissions before writing; material drift requires resolving only the affected change. Proposed ADR persistence remains distinct from decision acceptance. Record what was approved separately from what was actually persisted.
 
 ## Index-safe state evidence
 
@@ -203,13 +185,13 @@ Record staged, unstaged, untracked, ignored, and external state separately. A ne
 
 ## Bounded continuation examples
 
-| Workflow            | Portable continuation boundary                                                                                                           |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `setup`             | Persist only the selected repository-native governance artifacts, validate them, report mappings and dispositions, then stop.            |
-| `audit`             | Inspect read-only, return prioritized findings and evidence limits, and do not repair them.                                              |
-| `refactor`          | Recheck state and authority, edit only the governed paths, validate the bounded slice, then report.                                      |
-| `plan-refactor`     | Approve in Plan mode; after exit, persist only the approved spec plus required ADR/index artifacts, validate and report them, then stop. |
-| `plan-run-refactor` | Persist the same approved governance slice, recheck state, then implement only the unchanged approved plan.                              |
+| Workflow            | Portable continuation boundary                                                                                                                                                |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setup`             | Persist only the selected repository-native governance artifacts, validate them, report mappings and dispositions, then stop.                                                 |
+| `audit`             | Inspect read-only, return prioritized findings and evidence limits, and do not repair them.                                                                                   |
+| `refactor`          | Recheck state and authority, edit only the governed paths, validate the bounded slice, then report.                                                                           |
+| `plan-refactor`     | Approve in native or conversational planning; after any required exit, persist only the approved spec plus required ADR/index artifacts, validate and report them, then stop. |
+| `plan-run-refactor` | Persist the same approved governance slice, recheck state, then implement only the unchanged approved plan.                                                                   |
 
 ## Split check
 
@@ -227,7 +209,7 @@ Use [AC-ADR-037](ac-adr-037-preserve-target-contracts-and-gate-gateway-extractio
 - [ChatGPT and Codex developer commands](https://learn.chatgpt.com/docs/developer-commands)
 - [ChatGPT Plugins](https://learn.chatgpt.com/docs/plugins)
 - [ChatGPT Skills and Plugins](https://learn.chatgpt.com/docs/skills-and-plugins)
-- [AC-ADR-048 workflow routing Guide](ac-adr-048-persist-approved-governance-before-planned-architecture-refactors.guide.md)
+- [AC-ADR-064 workflow routing Guide](ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md)
 
 ## Revisit
 

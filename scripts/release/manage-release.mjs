@@ -133,9 +133,14 @@ function setupCheck(repository) {
   ]) {
     if (!fs.existsSync(path.join(root, workflow))) throw new Error(`${workflow} is missing`);
   }
-  const variable = ghJson(["api", `repos/${repository}/actions/variables/RELEASE_PLEASE_APP_ID`]);
-  if (variable.name !== "RELEASE_PLEASE_APP_ID" || !String(variable.value ?? "").trim()) {
-    throw new Error("RELEASE_PLEASE_APP_ID repository variable is missing");
+  for (const [name, purpose] of [
+    ["RELEASE_PLEASE_APP_CLIENT_ID", "token creation"],
+    ["RELEASE_PLEASE_APP_ID", "release provenance"],
+  ]) {
+    const variable = ghJson(["api", `repos/${repository}/actions/variables/${name}`]);
+    if (variable.name !== name || !String(variable.value ?? "").trim()) {
+      throw new Error(`${name} repository variable for ${purpose} is missing`);
+    }
   }
   const secrets = ghJson([
     "api",
@@ -167,7 +172,7 @@ function setupCheck(repository) {
     throw new Error(`Release environment preflight failed: ${environmentErrors.join("; ")}`);
   }
   console.log(
-    "Release setup is present: App variable, private-key secret, Release Please lifecycle labels, required reviewer, a single custom main branch policy, protected main, and disabled admin bypass. Confirm the App installation still grants only Contents, Pull requests, and Issues write with no webhooks.",
+    "Release setup is present: GitHub App client ID for token creation, numeric App ID for release provenance, private-key secret, Release Please lifecycle labels, required reviewer, a single custom main branch policy, protected main, and disabled admin bypass. Confirm the App installation still grants only Contents, Pull requests, and Issues write with no webhooks.",
   );
 }
 
@@ -394,7 +399,7 @@ function openAiHandoff(repository, tag) {
       `${postReleaseEvidenceTitle(tag)} passed at ${evidence.url}.`,
       `${tag} is ready for the manual OpenAI handoff: ${release.html_url}`,
       `Download exact asset: gh release download ${tag} --repo ${repository} --pattern openai.zip`,
-      "Portal checks: verify all six skill icons; restore portal glyphs if package metadata is ignored; upload site/public/logo.png as the light Plugin Info logo; upload site/public/logo-dark.png as the dark Plugin Info logo and Composer icon; verify light/dark rendering and directory identity after propagation.",
+      "Portal checks: complete the generated Release OpenAI Plugin issue after successful post-release evidence; verify every packaged skill, restore reviewed glyphs when needed, preserve both Plugin Info logos, follow docs/listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff for separate light/dark Composer PNGs, and verify light/dark rendering plus directory identity after propagation.",
     ].join("\n"),
   );
 }

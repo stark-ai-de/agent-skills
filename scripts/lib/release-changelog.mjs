@@ -11,16 +11,30 @@ export function normalizeChangelogSection(text) {
   return `${text.replace(/[ \t]+$/gm, "").trim()}\n`;
 }
 
+function changelogSections(text) {
+  const headings = [...text.matchAll(/^##\s+(\S.*)$/gm)]
+    .map((match) => ({
+      key:
+        changelogHeadingVersion(match[1]) ??
+        (/^Unreleased\b/i.test(match[1].trim()) ? "Unreleased" : null),
+      unsupportedVersion: /^(?:v?\d|\[v?\d)/i.test(match[1].trim()),
+      start: match.index,
+    }))
+    // Keep unsupported version headings as boundaries so release validation
+    // cannot remove them together with an otherwise valid inserted release.
+    .filter((heading) => heading.key !== null || heading.unsupportedVersion);
+  return headings.map((heading, index) => ({
+    ...heading,
+    end: headings[index + 1]?.start ?? text.length,
+  }));
+}
+
 export function splitChangelogSections(text) {
   const sections = new Map();
   if (!text) return sections;
-  for (const chunk of text.split(/^(?=## )/m)) {
-    const heading = chunk.match(/^##\s+(\S.*)$/m)?.[1]?.trim();
-    if (!heading) continue;
-    const normalized = normalizeChangelogSection(chunk);
-    const version = changelogHeadingVersion(heading);
-    if (version) sections.set(version, normalized);
-    else if (/^Unreleased\b/i.test(heading)) sections.set("Unreleased", normalized);
+  for (const section of changelogSections(text)) {
+    if (section.key === null) continue;
+    sections.set(section.key, normalizeChangelogSection(text.slice(section.start, section.end)));
   }
   return sections;
 }
@@ -41,16 +55,7 @@ export function changelogReleaseOrder(text) {
 
 export function removeChangelogReleaseSection(text, version) {
   if (!text || !/^\d+\.\d+\.\d+$/.test(version ?? "")) return null;
-  const headings = [...text.matchAll(/^##\s+(\S.*)$/gm)].map((match) => ({
-    heading: match[1],
-    start: match.index,
-  }));
-  const matches = headings
-    .map((heading, index) => ({
-      ...heading,
-      end: headings[index + 1]?.start ?? text.length,
-    }))
-    .filter((heading) => changelogHeadingVersion(heading.heading) === version);
+  const matches = changelogSections(text).filter((section) => section.key === version);
   if (matches.length !== 1) return null;
   const [section] = matches;
   return `${text.slice(0, section.start)}${text.slice(section.end)}`;

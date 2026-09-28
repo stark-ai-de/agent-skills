@@ -99,11 +99,11 @@ phases: ["phase-1", "phase-2"]
 
 ## User verification
 
-- Final checkpoint confirmed by:
-- Confirmation date:
-- Verified scope/non-goals:
-- Verified rollout/rollback assumptions:
-- Non-blocking open questions accepted:
+- Reviewed revision and approval evidence:
+- Approved scope, assumptions, risks and validation:
+- Accepted non-blocking questions:
+- Approved delivery, paths and concrete write actions:
+- ADR decision acceptance, distinct from draft persistence:
 
 ## File and module plan
 
@@ -125,11 +125,11 @@ phases: ["phase-1", "phase-2"]
 
 - Spec path:
 - Destination basis: existing convention/suggested/user-provided/declined
-- Explicit confirmation needed: yes/no
-- Spec persistence: saved/declined/blocked
+- Outstanding write decisions, if any:
+- Spec persistence: pending/saved/not requested/blocked
 - Existing file overwrite needed: yes/no
 - ADR paths:
-- ADR persistence: none/saved/declined/blocked
+- ADR persistence: none/pending/saved/not requested/blocked
 - ADR index updates needed:
 - Companion execution prompt path or embedding:
 
@@ -169,18 +169,6 @@ phases: ["phase-1", "phase-2"]
 - Regression hotspots:
 - Security review points:
 - Migration sanity checks:
-
-## Verification checkpoint
-
-- Scope and non-goals confirmed: yes/no
-- Assumptions reviewed:
-- Non-blocking unknowns accepted: yes/no
-- Blocking decisions:
-- Risks and rollout reviewed: yes/no
-- Validation plan reviewed: yes/no
-- ADR result reviewed: yes/no
-- Spec saved: yes/no
-- ADR persistence needed: yes/no
 
 ## Rollout and rollback
 

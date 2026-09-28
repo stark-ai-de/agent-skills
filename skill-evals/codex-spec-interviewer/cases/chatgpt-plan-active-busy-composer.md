@@ -20,15 +20,10 @@ Yes.
 
 Use Codex Spec Interviewer to define a safe polling-to-webhook migration. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Active
-- contains: Read-only enforcement: indeterminate
-- contains: behavioral no-write
-- not_contains: Planning capability: Indeterminate
-- not_contains: Planning capability: Unavailable
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-Continue the read-only workflow in the observed active mode without requesting another transition. A temporarily disabled composer does not invalidate current host evidence that Plan is active. Keep enforcement independent and stop before potentially mutating checks.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Keep observed Plan active without toggling again; a busy composer does not invalidate active-mode evidence.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

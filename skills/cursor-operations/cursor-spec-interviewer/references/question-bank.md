@@ -1,6 +1,6 @@
 # Question Bank
 
-Ask one high-impact question at a time when the answer can change the next question. Use a small batch only when the questions are independent and low-friction. Start with the highest-impact unknowns, summarize after each answer or evidence pass, and continue until every material aspect is covered, source-backed, or explicitly accepted by the user as non-blocking.
+Ask one high-impact question at a time when the answer can change the next question. Use a small batch only when the questions are independent and low-friction. Reuse prior answers, inspect discoverable facts, and ask only unresolved material questions. Summarize at useful milestones and continue until material aspects are resolved or explicitly accepted as non-blocking.
 
 ## Discovery
 
@@ -40,8 +40,8 @@ Ask one high-impact question at a time when the answer can change the next quest
 
 ## Artifact Persistence
 
-- Should I save specs under the default `docs/specs/` folder?
-- Should I save ADRs under the default `docs/adrs/` folder?
+- If neither the request nor repository establishes a destination, propose `docs/specs/<slug>-spec.md` in the checkpoint.
+- Use the existing ADR convention; ask only when its destination is materially ambiguous.
 - The default specs or ADR folder is missing. Can I create `<suggested-folder>/`, or should I use a different path?
 - The selected specs folder is ignored by git. Should this spec stay local-only, should I unignore that path, or should I use a tracked docs path?
 - The proposed spec path is `<path>`. Should I overwrite it, choose a new slug, or update the existing spec?
@@ -62,10 +62,13 @@ Ask one high-impact question at a time when the answer can change the next quest
 - If a new ADR is needed, what is the one-sentence decision?
 - Is implementation blocked until the ADR is accepted?
 
-## Final Verification
+## Final verification
 
-- I found `<existing-spec-dir>` for specs and will use that convention unless you want a different destination.
-- I need confirmation for `<suggested-spec-dir-or-adr-path>` because the destination is missing, ambiguous, public/private sensitive, an overwrite, or an ADR write.
-- Here is the scope, non-goals, assumptions, risks, validation plan, ADR result, final spec path, and any required ADR path. Is anything material missing or wrong before I save the spec?
-- Which remaining unknowns are acceptable as non-blocking, and which should block implementation?
-- Do you approve saving the spec to `<spec-path>` and any ADR to `<adr-path>` when confirmation is required?
+Prepare the full reviewable draft before this checkpoint. Reuse answers and authority already in the conversation. Ask only the material decisions still open; the discovery and repository-fit prompts above should normally be answered from inspection.
+
+- “Approve this version and save it to `<spec-path>` with the listed required ADR/index writes?” Include previously unapproved directory creation or overwrite in that same question.
+- When saving and paths were already authorized: “Approve this version for the agreed destination?” Do not separately ask whether to save it again.
+- If a required ADR remains proposed: distinguish approval to save the draft from acceptance of the architectural decision.
+- If chat-only delivery was requested: verify the content when needed and deliver it in chat without offering an unwanted save.
+
+A native plan approval may provide this checkpoint. Ask no duplicate chat question. Unambiguous “change A and save” replies authorize that bounded revision; only additional material uncertainty needs another question.

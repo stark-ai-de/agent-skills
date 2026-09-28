@@ -24,7 +24,6 @@ import {
   readOpenAiListing,
   withOpenAiStage,
 } from "../lib/openai-projection.mjs";
-import { OPENAI_WORKSHEET_PATH } from "../lib/openai-worksheet.mjs";
 import {
   SOURCE_TREE_HASH_RECIPE,
   SOURCE_TREE_INPUTS,
@@ -307,7 +306,6 @@ function buildEvidence(firstBuild, checksums, differences) {
     openAiSourceManifest: firstBuild.openAiProjection.sourceManifestSha256,
   };
   const listingPath = path.join(firstBuild.root, LISTING_PATH);
-  const worksheetPath = path.join(firstBuild.root, OPENAI_WORKSHEET_PATH);
   const archives = Object.fromEntries(
     Object.entries(firstBuild.archives)
       .sort(([firstName], [secondName]) => comparePosixPaths(firstName, secondName))
@@ -321,7 +319,7 @@ function buildEvidence(firstBuild, checksums, differences) {
       ]),
   );
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     package: {
       name: listing.plugin.name,
       version: listing.plugin.version,
@@ -356,8 +354,6 @@ function buildEvidence(firstBuild, checksums, differences) {
     listing: {
       sourcePath: LISTING_PATH,
       sourceSha256: hash(listingPath),
-      worksheetPath: OPENAI_WORKSHEET_PATH,
-      worksheetSha256: hash(worksheetPath),
     },
     archives,
     reproducibility: {

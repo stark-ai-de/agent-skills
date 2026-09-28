@@ -53,8 +53,12 @@ const description =
           answer: `ChatGPT: open ${listing.plugin.urls.chatgptPlugin} and install. Codex 0.147.0 or later: run ${marketplaceAddCommand}, then ${pluginInstallCommand}.`,
         },
         {
-          question: "How do I install the six skills without the plugin?",
+          question: "How do I install the bundled skills without the plugin?",
           answer: `Use the skills CLI only when you want the catalog skills in a host, not the plugin. Run ${skillsCliCommand}.`,
+        },
+        {
+          question: "What does Jev Capability Advisor need?",
+          answer: "Codex with Python and a native command runner. Offline candidate inspection needs no API key. Fresh recommendations use your TypeSafe key to send the task and public capability cards; the helper does not execute tools or send tool results. It does not run in ChatGPT.",
         },
         {
           question: "What should a support report include?",
@@ -114,12 +118,21 @@ const description =
 
     <h2>Standalone skills</h2>
     <p>
-      Use <code>npx skills</code> only when you want the six catalog skills in a host, not the
+      Use <code>npx skills</code> only when you want the bundled catalog skills in a host, not the
       plugin. The portable <code>plugins/stark-ai-developer/</code> tree is for clients that
       support that contract and for local testing. A <code>dist/openai</code> zip from{" "}
       <code>npm run package:openai-plugin</code> is a submission archive, not an install tree.
     </p>
-    <CommandBlock command={skillsCliCommand} label="Install the six skills without the plugin" />
+    <CommandBlock command={skillsCliCommand} label="Install the bundled skills without the plugin" />
+
+    <h2>Jev Capability Advisor</h2>
+    <p>
+      Use Codex with Python and a native command runner. Offline candidate inspection needs
+      no API key. Fresh recommendations use your TypeSafe key and send the task and public
+      capability cards to TypeSafe. The helper does not execute tools or send tool results,
+      and it does not run in ChatGPT. Keep keys and private task text out of support reports.
+      The repository package version does not establish availability in the Plugins Directory.
+    </p>
 
     <h2>What to include</h2>
     <p>

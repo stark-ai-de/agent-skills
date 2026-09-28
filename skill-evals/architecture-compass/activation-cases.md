@@ -38,7 +38,7 @@ Select `refactor` only when accepted local decisions already govern the complete
 Plan and persist a repository architecture migration, but do not implement it.
 ```
 
-Select `plan-refactor`. Use native Plan mode when supported, approve the bounded specification while repository artifacts remain read-only, exit Plan mode, persist and validate only the approved planning/ADR artifacts, then stop.
+Select `plan-refactor`. Respect active or requested native Plan, recommend it when useful, and keep discovery and conversation available without mandatory activation. Approve the complete specification and exact save scope once; after any required exit and permission/state checks, persist and validate only approved planning/ADR artifacts, then stop.
 
 ### Plan and run
 
@@ -46,7 +46,7 @@ Select `plan-refactor`. Use native Plan mode when supported, approve the bounded
 Plan and implement this broad multi-package architecture migration; ownership decisions are unresolved.
 ```
 
-Select `plan-run-refactor`. Resolve decisions in Plan mode, exit before persistence, recheck state, and execute only the unchanged approved plan.
+Select `plan-run-refactor`. Resolve decisions through the native or conversational planning lane, retain approval across any required host transition, persist and validate required governance, recheck state, and execute only the unchanged approved plan.
 
 ### Bare activation
 

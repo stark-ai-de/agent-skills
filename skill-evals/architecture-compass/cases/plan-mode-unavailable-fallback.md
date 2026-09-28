@@ -17,4 +17,4 @@ Run `plan-refactor` on a host proven not to support native Plan mode.
 
 ## Expected Behavior
 
-Use the portable fallback only from definitive unavailability evidence and preserve the same approval, no-write, and post-planning persistence boundaries.
+Use the portable fallback with the same approval, no-write, and post-planning persistence boundaries. This case proves unavailability; separate inactive, declined, and indeterminate cases also permit safe no-write conversation without changing their capability classification.

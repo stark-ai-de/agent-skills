@@ -438,7 +438,10 @@ const conflictingUpload = plan({
 });
 assert.equal(conflictingUpload.status, "blocked", "a conflicting upload race must fail closed");
 
-function applySequence(observations, { failOperations = [] } = {}) {
+function applySequence(
+  observations,
+  { failOperations = [], maxObservationRetries = 5, waitBeforeObserve = () => {} } = {},
+) {
   const remaining = [...observations];
   const executed = [];
   const result = applyReleaseReconciliation({
@@ -455,6 +458,8 @@ function applySequence(observations, { failOperations = [] } = {}) {
         throw new Error("simulated mutation race");
       }
     },
+    maxObservationRetries,
+    waitBeforeObserve,
   });
   return { result, executed, remaining };
 }
@@ -508,6 +513,28 @@ assert.deepEqual(
 );
 assert.equal(metadataRepairApply.result.postReleaseDispatchRequired, true);
 
+const observationRetryWaits = [];
+const eventuallyVisibleDraft = applySequence(
+  [
+    validObservation({ tagCommit: releaseSha }),
+    validObservation({ tagCommit: releaseSha }),
+    validObservation({ tagCommit: releaseSha, release: release() }),
+    validObservation({ tagCommit: releaseSha, release: release({ draft: false }) }),
+  ],
+  {
+    maxObservationRetries: 2,
+    waitBeforeObserve: (retry, operation) =>
+      observationRetryWaits.push({ retry, operation: operation.type }),
+  },
+);
+assert.deepEqual(
+  eventuallyVisibleDraft.executed.map((operation) => operation.type),
+  ["create_draft", "publish_draft"],
+  "a stale post-create observation must not repeat the draft creation",
+);
+assert.deepEqual(observationRetryWaits, [{ retry: 1, operation: "create_draft" }]);
+assert.equal(eventuallyVisibleDraft.result.status, "satisfied");
+
 const jsonRepairWithoutAttestationApply = applySequence([
   validObservation({
     tagCommit: releaseSha,
@@ -534,30 +561,29 @@ assert.deepEqual(jsonRepairWithoutAttestationApply.executed, [
 assert.equal(jsonRepairWithoutAttestationApply.result.status, "satisfied");
 assert.equal(jsonRepairWithoutAttestationApply.result.postReleaseDispatchRequired, true);
 
-assert.throws(
-  () =>
-    applySequence(
-      [
-        {
-          tagCommit: releaseSha,
-          tagAnnotated: true,
-          release: release({ draft: false, openai: "missing" }),
-          attestationStatus: "valid",
-          latestRelease: { id: 42, tagName: tag },
-        },
-        {
-          tagCommit: releaseSha,
-          tagAnnotated: true,
-          release: release({ draft: false, openai: "missing" }),
-          attestationStatus: "valid",
-          latestRelease: { id: 42, tagName: tag },
-        },
-      ],
-      { failOperations: [0] },
-    ),
-  /safely incomplete.*simulated mutation race/,
-  "a failed upload with unchanged safe state must remain retryable",
-);
+const persistentObservation = {
+  tagCommit: releaseSha,
+  tagAnnotated: true,
+  release: release({ draft: false, openai: "missing" }),
+  attestationStatus: "valid",
+  latestRelease: { id: 42, tagName: tag },
+};
+const persistentWaits = [];
+let persistentFailure;
+try {
+  applySequence(
+    [persistentObservation, persistentObservation, persistentObservation, persistentObservation],
+    {
+      failOperations: [0],
+      maxObservationRetries: 2,
+      waitBeforeObserve: (retry) => persistentWaits.push(retry),
+    },
+  );
+} catch (error) {
+  persistentFailure = error;
+}
+assert.match(persistentFailure?.message ?? "", /safely incomplete.*simulated mutation race/);
+assert.deepEqual(persistentWaits, [1, 2]);
 
 const concurrentRepair = applySequence(
   [

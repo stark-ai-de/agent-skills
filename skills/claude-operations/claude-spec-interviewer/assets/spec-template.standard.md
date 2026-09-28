@@ -112,20 +112,21 @@ source_request: "<original request>"
 
 ## User verification
 
-- Final checkpoint confirmed by:
-- Confirmation date:
-- Verified scope/non-goals:
-- Non-blocking open questions accepted:
+- Reviewed revision and approval evidence:
+- Approved scope, assumptions, risks and validation:
+- Accepted non-blocking questions:
+- Approved delivery, paths and concrete write actions:
+- ADR decision acceptance, distinct from draft persistence:
 
 ## Artifact plan
 
 - Spec path:
 - Destination basis: existing convention/suggested/user-provided/declined
-- Explicit confirmation needed: yes/no
-- Spec persistence: saved/declined/blocked
+- Outstanding write decisions, if any:
+- Spec persistence: pending/saved/not requested/blocked
 - Existing file overwrite needed: yes/no
 - ADR paths:
-- ADR persistence: none/saved/declined/blocked
+- ADR persistence: none/pending/saved/not requested/blocked
 - ADR index updates needed:
 
 ## Validation
@@ -142,18 +143,6 @@ source_request: "<original request>"
 - Verify:
 - Verify:
 - Verify:
-
-## Verification checkpoint
-
-- Scope and non-goals confirmed: yes/no
-- Assumptions reviewed:
-- Non-blocking unknowns accepted: yes/no
-- Blocking decisions:
-- Risks and rollout reviewed: yes/no
-- Validation plan reviewed: yes/no
-- ADR result reviewed: yes/no
-- Spec saved: yes/no
-- ADR persistence needed: yes/no
 
 ## Risks and rollout
 

@@ -15,16 +15,11 @@ Yes.
 Use Codex Spec Interviewer to define a safe migration from polling to webhook
 delivery. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Available but inactive
-- contains: select the observed `/plan` item
-- not_contains: ```text
-- not_contains: /plan Use $codex-spec-interviewer
-- not_contains: Plan-mode fallback: unavailable
-- not_contains: Open the `@` menu and select Codex Spec Interviewer
-
 ## Expected Behavior
 
-Use the observed web composer item and wait. Do not generate a copy-ready
-`/plan` handoff for the web surface.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- For a requested or necessary transition, use only the observed control and real client syntax; this optional transition does not block independent reads or the interview.
+- No inline parsing is proved: use a separate continuation if a mode command is needed. On ChatGPT web select the composer item instead of generating a CLI combined command.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

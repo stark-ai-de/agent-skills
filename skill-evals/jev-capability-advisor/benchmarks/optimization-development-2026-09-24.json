@@ -1,0 +1,288 @@
+{
+  "schema": "jev-token-development-ledger/v1",
+  "generated_at_utc": "2026-09-24T09:50:33.431362+00:00",
+  "evidence_role": "provider_stopped_development",
+  "wire_auditor_sha256": "3848b04c2935cecb8647ec22cfed8a05874ae6364f7a03d8dcc9693b30a9fc10",
+  "reporter_sha256": "a3f7677ae9d130b394e304d42465767b535b9c99b67980dce75da33392ccb192",
+  "studies": [
+    {
+      "study_id": "dev-v8-format9",
+      "evidence_role": "provider_stopped_development",
+      "original_phase": "development",
+      "outcome": "http_402_refusal_on_first_dispatch",
+      "classification": "provider_stopped_invalid_comparison",
+      "comparison_valid": false,
+      "candidate_qualified_by_this_evidence": false,
+      "task_count": 9,
+      "repetitions": 2,
+      "arms": [
+        "jev_baseline",
+        "jev_candidate_v7",
+        "jev_probe_order",
+        "jev_probe_named",
+        "jev_probe_policy",
+        "jev_probe_reference"
+      ],
+      "by_arm": {
+        "jev_baseline": {
+          "planned": 18,
+          "completed": 0,
+          "missing": 18,
+          "errors": 0,
+          "provider_failure_observations": 0,
+          "recorded_api_attempts": 0,
+          "requests_without_reported_input_tokens": 0,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        },
+        "jev_candidate_v7": {
+          "planned": 18,
+          "completed": 0,
+          "missing": 18,
+          "errors": 0,
+          "provider_failure_observations": 0,
+          "recorded_api_attempts": 0,
+          "requests_without_reported_input_tokens": 0,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        },
+        "jev_probe_order": {
+          "planned": 18,
+          "completed": 0,
+          "missing": 18,
+          "errors": 0,
+          "provider_failure_observations": 0,
+          "recorded_api_attempts": 0,
+          "requests_without_reported_input_tokens": 0,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        },
+        "jev_probe_named": {
+          "planned": 18,
+          "completed": 1,
+          "missing": 17,
+          "errors": 1,
+          "provider_failure_observations": 1,
+          "recorded_api_attempts": 1,
+          "requests_without_reported_input_tokens": 1,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        },
+        "jev_probe_policy": {
+          "planned": 18,
+          "completed": 0,
+          "missing": 18,
+          "errors": 0,
+          "provider_failure_observations": 0,
+          "recorded_api_attempts": 0,
+          "requests_without_reported_input_tokens": 0,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        },
+        "jev_probe_reference": {
+          "planned": 18,
+          "completed": 0,
+          "missing": 18,
+          "errors": 0,
+          "provider_failure_observations": 0,
+          "recorded_api_attempts": 0,
+          "requests_without_reported_input_tokens": 0,
+          "quality_assessed": false,
+          "correct": null,
+          "median_ms": null,
+          "input_tokens": null
+        }
+      },
+      "attempted_observation": {
+        "arm": "jev_probe_named",
+        "case_id": "stressv5c001",
+        "repetition": 0,
+        "status": "error",
+        "error_code": "http_402",
+        "correct": false,
+        "http_status": 402,
+        "request_dispatched": true,
+        "response_body_retained": false,
+        "provider_input_tokens": null
+      },
+      "all_recorded_invariants_passed": true,
+      "planned_executions": 108,
+      "completed_executions": 1,
+      "missing_executions": 107,
+      "recorded_api_attempts": 1,
+      "confirmed_dispatched_requests": 1,
+      "orphan_attempts_without_completed_observation": 0,
+      "halt_reason": "provider_http_402",
+      "provider_http_status_counts": {
+        "402": 1
+      },
+      "error_codes": {
+        "http_402": 1
+      },
+      "requested_model": "jev-1.13.0",
+      "response_reported_models": {},
+      "window": {
+        "started_at": "2026-09-24T09:41:46.942373+00:00",
+        "last_attempt_recorded_at": "2026-09-24T09:41:46.997357+00:00",
+        "summary_written_at": "2026-09-24T09:41:47.813924+00:00",
+        "end_basis": "Summary modification time approximates completion; attempt timestamps precede dispatch."
+      },
+      "provenance": {
+        "freeze_sha256": "cc046402a33d9a52bd15d953c3fe65d631cc46e8416f1a7692c5eecafa1996b2",
+        "runner_sha256": "3095ad018926b37a7fe4078a399f790b97ffddecb71ab0e8acdbc9e688cb5126",
+        "runner_family": "default_session_memory_index",
+        "tasks_sha256": "4f6c106268dee65d9770535b3de3812dd15d19f68f98fff69542c7cebb778e09",
+        "original_catalog_sha256": "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
+        "normalized_catalog_sha256": "4f7b6e2d7a71d495bce85cae62eaf0a104289f156eab9e948ef96b9e1f93759e",
+        "runtime_sha256": {
+          "baseline": {
+            "jev_advisor.py": "17b570a8c71a156d4d9fe9c1301a1c577f07dc46bdcf2a8ae41b956d63314a78",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          },
+          "candidate_v7": {
+            "jev_advisor.py": "43a85def374b2b1da6a66b8eb12cf7f5632c7a3b29b1bb6009021063bfaa7a7a",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          },
+          "probe_named": {
+            "jev_advisor.py": "0b64722c2731279607d4acd54c0495ab2b46c84308bd242de2b70e55b14a4e79",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          },
+          "probe_order": {
+            "jev_advisor.py": "673047db421b0ff0dea3f0f3d6c32dc8056ba93b2dc2c5070ad55c66b7065bda",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          },
+          "probe_policy": {
+            "jev_advisor.py": "dce824b13c6d3aad19a536b2c422ab2e3f9e02a17ade6de50a84fdf7ecc0fc39",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          },
+          "probe_reference": {
+            "jev_advisor.py": "93f0aa12c48137edbaf538aacb149eccbdb696a491b06221b91186533e307b05",
+            "retrieval.py": "b0d55bb85cb93812f1630ebc1143953d442c194da10d6f6bf961106b351e655a",
+            "routing_metadata.py": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6",
+            "index_cache.py": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1",
+            "decision_cache.py": "9137cca1125ef5718206a8ade1557abb5c06db1ba47a2ed374e0889b5ae50daa",
+            "https_transport.py": "e1e30a5b228d1269747fa185eca0ab3975c9a5a79e23bbaa78af44cb38192c5f",
+            "jev_session.py": "de8d4c3045f53ab0600cae28026b9e2dd69e144cfff5af2c1943769c9f6d410c"
+          }
+        },
+        "product_support_sha256": "bbe02f9d9b8bb95260efc3d9bc392b74ce599fa1cdc7ca4c4e157afa6ec8df4e",
+        "compare_support_sha256": "5ab2f8d62d9629f8c21fd2e4683fc1fe42b183b79f449b3f73401608003fe6b1",
+        "results_sha256": "48cf5479228510bd3d648dbb66e34f5516e353230ab008bdc678cdb5d7f38b41",
+        "ledger_sha256": "71bc265ea31dce44a1f7244b7eb9fbfb881875f38aa3a6b5169fd420a591b076",
+        "summary_sha256": "e9f25bf7be61893b6eff8831b8ac374d2d50f7852bfcebdf943576a3217b5444",
+        "hussi_revision": null
+      }
+    }
+  ],
+  "excluded_unexecuted_preparations": [],
+  "totals": {
+    "planned_executions": 108,
+    "completed_executions": 1,
+    "missing_executions": 107,
+    "recorded_api_attempts": 1,
+    "confirmed_dispatched_requests": 1,
+    "orphan_attempts_without_completed_observation": 0,
+    "errors": 1
+  },
+  "qualification_claim": false,
+  "comparative_metrics_available": false,
+  "provider_refusal": {
+    "http_status": 402,
+    "response_body_retained": false,
+    "response_usage_available": false,
+    "inference_limit": "The transport recorded HTTP402 without a retained response body. The specific provider-side cause is not independently observable."
+  },
+  "prior_campaign": {
+    "completed_executions": 3302,
+    "recorded_api_attempts": 3872,
+    "cohorts": 23,
+    "audited_artifacts": [
+      {
+        "artifact": "development-ledger.json",
+        "sha256": "a43309506d3994947fc2e33e1e1e1dc62687a5d740ac14ce424ad6121b97fa51",
+        "schema": "jev-token-development-ledger/v1"
+      },
+      {
+        "artifact": "primary-development-ledger.json",
+        "sha256": "908d6927651666625cc2d9ba764a4694c5bc1cb9a4b72d21528fe679e920d211",
+        "schema": "jev-token-development-ledger/v1"
+      },
+      {
+        "artifact": "v2-rejected-report.json",
+        "sha256": "41e8961c1b933d5eee9312e54ed45e244875b195a0fb213be002dd1f09bcf3be",
+        "schema": "jev-selection-token-kpi/v1"
+      },
+      {
+        "artifact": "v3-rejected-mixed-report.json",
+        "sha256": "e2451dcc11993b74c806eb590f14590e19dc6045ac8e74702cb79786a16863b8",
+        "schema": "jev-selection-token-kpi/v1"
+      },
+      {
+        "artifact": "v4-rejected-report.json",
+        "sha256": "8642b3e7d76fcda768ab0d97325d3983fe85817dabeb610395672dcb1e59d085",
+        "schema": "jev-selection-token-qualification/v2"
+      },
+      {
+        "artifact": "v5-rejected-stress-ledger.json",
+        "sha256": "56c564fedf52035e56b041e1996ad3c7c91d57a6a6ac0c6a4c28b9738e78ad20",
+        "schema": "jev-token-development-ledger/v1"
+      },
+      {
+        "artifact": "v6-rejected-stress-ledger.json",
+        "sha256": "d60e365f1f6a0140458d4456025383665775a3da97191a37fdd329198fa09f5c",
+        "schema": "jev-token-development-ledger/v1"
+      },
+      {
+        "artifact": "v7-rejected-stress-ledger.json",
+        "sha256": "ad03443a024545504e31cb552ee23af5a2fd6932fef17862b11aa991ea3edb22",
+        "schema": "jev-token-development-ledger/v1"
+      }
+    ]
+  },
+  "campaign": {
+    "completed_executions": 3303,
+    "recorded_api_attempts": 3873,
+    "missing_planned_executions": 107
+  },
+  "counting_rule": "One provider-refused scheduled observation completed with an error and is counted once; it is not a passed selection. The107 unexecuted slots are missing and count as neither completed nor passed. No comparative median, quality rate or token total is computed for this interrupted diagnostic. Prior reports remain unchanged.",
+  "continuation": {
+    "retry_performed": false,
+    "resume_existing_cohort": false,
+    "next_action": "After the provider condition is resolved, prepare a new uniquely named frozen diagnostic cohort with the same fixed tasks, arms and declared schedule policy; retain this stopped cohort separately. Do not overwrite its freeze, results, ledgers or wire receipts, and do not pool its refusal into successful comparative timing."
+  }
+}

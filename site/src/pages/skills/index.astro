@@ -1,6 +1,8 @@
 ---
 import CategoryNav from "../../components/CategoryNav.astro";
 import CategorySection from "../../components/CategorySection.astro";
+import FeaturedSkill from "../../components/FeaturedSkill.astro";
+import JevBenchmarkLink from "../../components/JevBenchmarkLink.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   breadcrumbStructuredData,
@@ -11,6 +13,7 @@ import { getPublicSkills, groupByCategory } from "../../lib/skills";
 import { absoluteSiteUrl, PUBLIC_SKILLS_DESCRIPTION } from "../../lib/site";
 
 const skills = await getPublicSkills();
+const featuredSkill = skills.find((skill) => skill.featured);
 const groups = groupByCategory(skills);
 const description = PUBLIC_SKILLS_DESCRIPTION;
 const canonicalUrl = absoluteSiteUrl("/skills/");
@@ -35,6 +38,9 @@ const structuredData = [
   canonicalPath="/skills/"
   structuredData={structuredData}
 >
+  <Fragment slot="announcement">
+    {featuredSkill?.name === "jev-capability-advisor" && <JevBenchmarkLink placement="announcement" />}
+  </Fragment>
   <section class="collection-hero">
     <p class="eyebrow">Promoted public catalog</p>
     <h1>Public skills</h1>
@@ -43,6 +49,7 @@ const structuredData = [
       versioned metadata, source links, and available eval proof.
     </p>
   </section>
+  {featuredSkill && featuredSkill.name !== "jev-capability-advisor" && <FeaturedSkill skill={featuredSkill} />}
   <CategoryNav groups={groups} label="Public skill categories" />
   <div class="collection-stack">
     {groups.map((group) => <CategorySection group={group} />)}

@@ -334,7 +334,7 @@ const result = await verifyListingAgainstDirectory({
 });
 assert.deepEqual(result.errors, []);
 assert.equal(JSON.stringify(result.directory).includes("user-should-never-be-logged"), false);
-assert.equal(result.expectedIdentity.skillRecords.length, 6);
+assert.equal(result.expectedIdentity.skillRecords.length, liveListing.skills.length);
 assert.equal(
   result.expectedIdentity.skillRecords.find((skill) => skill.name === "codex-spec-interviewer")
     ?.portalGlyph,
