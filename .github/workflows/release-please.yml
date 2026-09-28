@@ -30,7 +30,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: .bun-version
 
       - name: 🛡️ Verify trusted protected-main source
         env:
@@ -73,7 +73,7 @@ jobs:
             COMMIT_TITLE="$(git log -1 --pretty=%s)" \
             bun --bun scripts/release/classify-release-please-trigger.mjs --github-output
 
-      - name: 🎯 Select the one-time v0.21.0 manifest config
+      - name: 🎯 Select release preparation configuration
         if: ${{ steps.classify.outputs.skip != 'true' }}
         id: release-config
         run: |
@@ -84,6 +84,46 @@ jobs:
           else
             echo "config_file=release-please-config.json" >> "$GITHUB_OUTPUT"
           fi
+          if [ "${manifest_version}" = "0.25.2" ]; then
+            echo "forward_recovery=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "forward_recovery=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🔎 Verify unpublished release incident
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: bun --bun scripts/release/prepare-forward-release.mjs --preflight
+
+      - name: 🟢 Setup isolated release preparation runtime
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: 📦 Install pinned one-time Release Please library
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        run: |
+          set -euo pipefail
+          tool_dir="$RUNNER_TEMP/release-please-forward"
+          mkdir -p "$tool_dir"
+          printf '%s\n' '{"private":true,"dependencies":{"release-please":"17.6.0"}}' > "$tool_dir/package.json"
+          pnpm --dir "$tool_dir" install --ignore-scripts --no-frozen-lockfile
+
+      - name: 🔎 Preview forward release without writes
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: node scripts/release/prepare-forward-release.mjs --plan
 
       - name: 🔑 Create repository-scoped release App token
         if: ${{ steps.classify.outputs.skip != 'true' }}
@@ -96,8 +136,17 @@ jobs:
           permission-pull-requests: write
           permission-issues: write
 
+      - name: 📝 Create forward release PR with Release Please
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: node scripts/release/prepare-forward-release.mjs --apply
+
       - name: 📝 Create or update draft release PR
-        if: ${{ steps.classify.outputs.skip != 'true' }}
+        if: ${{ steps.classify.outputs.skip != 'true' && steps.release-config.outputs.forward_recovery != 'true' }}
         uses: googleapis/release-please-action@v5
         with:
           token: ${{ steps.app-token.outputs.token }}
@@ -110,5 +159,5 @@ jobs:
         uses: ./.github/actions/write-run-summary
         with:
           title: Release Please
-          success: Release Please either updated the draft version PR or intentionally skipped its own merged release PR.
-          failure: Check the repository-scoped GitHub App configuration and the release preparation contract.
+          success: Release Please updated the draft version PR or intentionally skipped its own merged release PR. Publication still requires the protected Publish Release workflow.
+          failure: Inspect the failed preflight or preparation step. For unpublished v0.25.2 follow docs/release-recovery-0.25.2.md; do not create a substitute tag.
