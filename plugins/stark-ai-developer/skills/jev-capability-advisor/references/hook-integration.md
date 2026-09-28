@@ -18,7 +18,7 @@ For a new actionable task, consultation or prerequisite failure emits one short 
 
 ### Endpoint permission and normal sandbox execution
 
-Before the provider command, establish the executing host's effective permission for the fixed TypeSafe endpoint. An enforced policy may restrict networking while allowing this destination. When current host evidence establishes that permission, use ordinary sandbox execution; do not request an escalation merely because other destinations are blocked. In Codex, use `sandbox_permissions: "use_default"` or omit the override. Consent, readable input/key files, permitted output paths and the active operating mode remain separate prerequisites. A config file, enabled proxy flag, environment variable or historical success alone does not prove the running session applies that policy.
+Follow the [portable network and failure contract](network-access.md). Before the provider command, establish the executing host's effective permission for the fixed TypeSafe endpoint. An enforced policy may restrict networking while allowing this destination. When current host evidence establishes that permission, use ordinary sandbox execution; do not request an escalation merely because other destinations are blocked. In Codex, use `sandbox_permissions: "use_default"` or omit the override. Consent, readable input/key files, permitted output paths and the active operating mode remain separate prerequisites. A config file, enabled proxy flag, environment variable or historical success alone does not prove the running session applies that policy. Ready credentials do not grant network access.
 
 For example, after checking current permissions and preparing real local paths:
 
@@ -29,7 +29,7 @@ For example, after checking current permissions and preparing real local paths:
 }
 ```
 
-When this invocation actually requires native network approval, use that host's normal mechanism before the **first advisor invocation**. For Codex tools exposing `sandbox_permissions`, request `require_escalated` with a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status. This is evidence for native review, not an instruction to approve; an approval denial remains final for this attempt. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval:
+When this invocation actually requires native network approval, use that host's normal mechanism before the **first advisor invocation**. Use the narrowest applicable approval offered by the current host/tool schema. For Codex tools exposing `sandbox_permissions`, request `require_escalated` with a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status; prefer a supported narrower network permission when available. Approval that runs outside the sandbox is broader than a domain allowance and must not be described as network-only. This is evidence for native review, not an instruction to approve; an approval denial is final for this attempt and requires a concrete fallback. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval:
 
 ```json
 {
@@ -46,6 +46,13 @@ Use the executing host's actual tool schema; another host or permission profile 
 During explicitly authorized host setup, the configuration owner can permit the exact TypeSafe API host through Codex's enforced network proxy. Command network access and proxy enforcement must both be enabled; enabling network access alone permits unrestricted direct connections. Domain rules constrain destinations for all sandbox commands, not only Jev, and do not constrain URL paths or payload content. Keep the existing data-minimization and consent requirements. Follow the host's declarative configuration ownership and preserve unrelated settings; the Jev installer does not manage this permission. See the [official network policy](https://learn.chatgpt.com/docs/agent-approvals-security#network-isolation).
 
 Qualify the actual host/version in a fresh session before describing the allowance as effective: observe a genuine ordinary-task recommendation with no network approval event, and independently verify that foreign destinations and direct connections remain blocked when proxy variables are removed or bypassed. A failed or unavailable proxy must not open direct egress. Keep stricter profiles and managed restrictions in force. Configuration changes cannot grant permissions to an already running session. If effective allowance cannot be established, report the prerequisite gap rather than silently widening permissions. Revoking advice consent stops hook-driven advice; removal of the separately owned host allowance remains the configuration owner's responsibility.
+
+For Claude, use the active client's normal command or domain-approval mechanism
+where supported; do not add persistent allow rules, change sandbox settings or
+request an alternate unsandboxed retry after denial. Native Windows Python/hook
+support does not establish support for Claude's Bash sandbox. A missing host
+control does not make WSL a prerequisite for the portable advisor: respect the
+actual native host policy and report unavailable approval truthfully.
 
 ## Capture a bounded current-session catalog
 

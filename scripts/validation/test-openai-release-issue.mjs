@@ -71,7 +71,11 @@ const created = buildOpenAiReleasePlan({
 assert.equal(created.status, "create");
 assert.equal(created.pluginVersionChanged, true);
 assert.equal(created.title, "Release OpenAI Plugin");
-assert.match(created.body, /openai-plugin-release:stark-ai-developer@1\.7\.1/);
+assert.ok(
+  created.body.startsWith(
+    `<!-- openai-plugin-release:stark-ai-developer@${listing.plugin.version} -->`,
+  ),
+);
 assert.match(created.body, /Post-release Evidence/);
 assert.match(created.body, /does not assert an OpenAI upload, approval, or public portal state/);
 assert.match(created.body, /openai\.zip/);
