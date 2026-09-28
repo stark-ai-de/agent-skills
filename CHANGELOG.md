@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.25.2 (2026-09-28)
+
+## What's Changed
+* fix(release): verify post-release completion by @servrox in https://github.com/stark-ai-de/agent-skills/pull/117
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.1...v0.25.2
+
 ## 0.25.1 (2026-09-28)
 
 ## What's Changed
