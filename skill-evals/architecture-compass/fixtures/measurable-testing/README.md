@@ -9,7 +9,7 @@ pnpm --dir skill-evals/architecture-compass/fixtures/measurable-testing install 
 pnpm --dir skill-evals/architecture-compass/fixtures/measurable-testing run qualify --output /tmp/testing-qualification.json
 ```
 
-`qualify` creates and removes a uniquely owned temporary target and dependency copy, runs bounded subprocesses, and writes only the explicitly selected receipt outside this fixture directory. Negative tests modify disposable files. The source fingerprint must remain unchanged. Persistent install is the separate command above. Reports, caches and Python bytecode never enter the source inventory.
+`qualify` creates and removes a uniquely owned temporary target and dependency copy, runs bounded subprocesses, and writes only the explicitly selected receipt outside this fixture directory. Negative tests modify disposable files. Signal cancellation exits nonzero after terminating owned process groups and removing the temporary target. A verified receipt is published only after cleanup succeeds; task and cleanup failures remain separately attributable. The source fingerprint must remain unchanged. Persistent install is the separate command above. Reports, caches and Python bytecode never enter the source inventory.
 
 ## Targets and local adoption records
 
