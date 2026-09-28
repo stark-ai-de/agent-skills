@@ -6802,8 +6802,10 @@ test("orchestrator and standalone runner preserve atomic-publication parity", as
         { expected: { kind: "absent" }, label: `${implementation.name} receipt` },
       );
       const sameContent = await fs.promises.readFile(target);
+      const replacementPath = `${target}.replacement`;
+      await fs.promises.writeFile(replacementPath, sameContent, { mode: 0o600 });
       await fs.promises.unlink(target);
-      await fs.promises.writeFile(target, sameContent, { mode: 0o600 });
+      await fs.promises.rename(replacementPath, target);
       await assert.rejects(
         implementation.write(
           target,
