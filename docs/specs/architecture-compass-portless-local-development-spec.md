@@ -92,7 +92,7 @@ inventory explicit rather than deriving identity from the count.
    for missing 066 variants and unexpected complete 064 payloads.
 4. Keep the Architecture Compass version at 0.9.1 after main's 0.9.0 release and
    raise the bundled plugin source from main's 1.6.1 to 1.6.2. Align the local
-   listing, submission worksheet and version badge at 1.6.2. Leave root release
+   listing, public release handoff issue and version badge at 1.6.2. Leave root release
    versions unchanged. Generate
    projections with `pnpm run sync:agent-plugin` and review the diff.
 5. Run the scoped validation below and record actual outcomes separately.

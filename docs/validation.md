@@ -141,12 +141,12 @@ recreates the build.
 The endpoint scan permits only the W3C namespace URLs and the draw.io endpoints
 documented by the draw.io skill; new executable endpoints fail the gate.
 
-The OpenAI submission worksheet is generated from the listing contract and is
-checked for drift by `pnpm run validate:openai` (or directly with
-`pnpm run validate:openai-worksheet`). Portal and product-surface observations
-after first publication live in
+The OpenAI handoff checklist is rendered from the listing contract by
+`pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>`
+after a published plugin release. Portal
+and product-surface observations after first publication live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md)
-and are not inferred from freeze evidence or the worksheet.
+and are not inferred from release evidence or the public handoff issue.
 
 Validate the routed Architecture Compass ADR library and its eval contract:
 

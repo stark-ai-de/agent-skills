@@ -129,7 +129,7 @@ Read the [skill instructions](../../../skills/skill-maintenance/jev-capability-a
 | stark AI Developer     | `1.6.0`                             | Seven skills in the portable and OpenAI plugin packages; Jev targets CODEX       |
 | Catalog                | Next generated minor after `0.22.0` | Release Please owns the final version and changelog; no manual root version bump |
 
-The source allowlist, generated portable copy, OpenAI listing and submission worksheet already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection and index reuse need a retained process.
+The source allowlist, generated portable copy, OpenAI listing and public release handoff issue already include Jev. The skill needs Python 3.10+, a current host-supplied catalog and the user's TypeSafe key for fresh recommendations. Offline inspection needs no key. Installation does not install an automatic prompt hook; Session's connection and index reuse need a retained process.
 
 ### Maintainer steps
 
