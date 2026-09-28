@@ -420,11 +420,12 @@ Both turns completed and the host exited zero. The confirmation triggered no com
 
 ## Portable network contract — 2026-09-28
 
-Skill revision `0.3.2` adds descriptive API compatibility, a shared network/failure
-contract, narrower host-specific approval guidance, and a safe `error_message`
-for failed summaries. It does not change selection, transport, permissions,
-request budgets, credentials or caches. Historical benchmark observations above
-remain historical; no new speed or provider-quality claim is made.
+Candidate revision `0.3.3` adds descriptive API compatibility, a shared
+network/failure contract, narrower host-specific approval guidance, and a safe
+`error_message` for failed summaries, relative to the released `0.3.2` baseline.
+It does not change selection, transport, permissions, request budgets,
+credentials or caches. Historical benchmark observations above remain
+historical; no new speed or provider-quality claim is made.
 
 `test_network_contract.py` runs the real helper with injected replies and checks
 no replay, credential precedence, secret-free error presentation, valid `none`,
