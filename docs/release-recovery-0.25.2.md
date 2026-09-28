@@ -9,7 +9,8 @@ The existing 0.25.2 changelog section is retained as generated history, not as
 proof that this version was published.
 
 This is a bounded application of
-[ADR-0050](adrs/0050-generate-release-prs-and-protect-publication.long.md),
+<!-- prettier-ignore -->
+[ADR-0050](adrs/0050-generate-release-prs-and-protect-publication.short.md) ([Long, canonical](adrs/0050-generate-release-prs-and-protect-publication.long.md) · [Guide](adrs/0050-generate-release-prs-and-protect-publication.guide.md)),
 not a new publication or historical-artifact recovery lane. Release Please
 still generates the root manifest, package version and changelog. Publication,
 its single protected environment approval, direct artifacts, provenance,
