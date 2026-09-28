@@ -142,7 +142,8 @@ The endpoint scan permits only the W3C namespace URLs and the draw.io endpoints
 documented by the draw.io skill; new executable endpoints fail the gate.
 
 The OpenAI handoff checklist is rendered from the listing contract by
-`pnpm run release:openai-issue plan` after a published plugin release. Portal
+`pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>`
+after a published plugin release. Portal
 and product-surface observations after first publication live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md)
 and are not inferred from release evidence or the public handoff issue.

@@ -201,7 +201,7 @@ release impact:
 
 ```bash
 npm run sync:agent-plugin
-pnpm run release:openai-issue -- plan
+pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>
 npm run validate:skills
 npm run validate:architecture-compass
 npm run validate:projections

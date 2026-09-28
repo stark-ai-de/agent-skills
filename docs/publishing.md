@@ -508,6 +508,18 @@ When the published plugin version changes, `Publish Release` also creates one
 manually after the exact-tag evidence run; existing open or closed issues are
 left unchanged.
 
+If that issue is missing after a successful publication, first inspect the
+read-only plan from trusted current code and the exact release commit:
+
+```bash
+pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>
+```
+
+Only when no `Publish Release` run or other retry is active, repeat the handoff
+with the same arguments and `apply`. The command checks all open and closed
+issue pages again before it writes, so a retry after a lost response preserves
+the existing issue.
+
 ### Before a listing update
 
 - Re-read the official plugin documents listed in the plugin spec Appendix C.

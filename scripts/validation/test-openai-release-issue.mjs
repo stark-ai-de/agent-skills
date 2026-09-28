@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  applyOpenAiReleasePlan,
   buildOpenAiReleasePlan,
   concurrentPublicationRuns,
   selectPreviousPluginRelease,
@@ -174,5 +175,116 @@ assert.throws(
     }),
   /decreased/,
 );
+
+function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_runs: [] }] } = {}) {
+  const pages = issuePages.map((page) => page.map((issue) => ({ ...issue })));
+  let postCount = 0;
+  let loseNextPostResponse = false;
+
+  return {
+    jsonRequest(args) {
+      const endpoint = args.find(
+        (value) => typeof value === "string" && value.startsWith("repos/"),
+      );
+      if (endpoint?.includes("/issues?state=all")) return pages;
+      if (endpoint?.includes("/actions/runs?")) return runPages;
+      if (endpoint?.endsWith("/issues") && args.includes("POST")) {
+        postCount += 1;
+        const body = args.find((value) => value.startsWith("body="))?.slice(5) ?? "";
+        const created = {
+          number: 100 + postCount,
+          state: "open",
+          body,
+          html_url: `https://github.com/example/example/issues/${100 + postCount}`,
+        };
+        pages.at(-1).push(created);
+        if (loseNextPostResponse) {
+          loseNextPostResponse = false;
+          throw new Error("simulated lost POST response");
+        }
+        return created;
+      }
+      throw new Error(`Unexpected simulated GitHub request: ${args.join(" ")}`);
+    },
+    loseNextPostResponse() {
+      loseNextPostResponse = true;
+    },
+    get postCount() {
+      return postCount;
+    },
+  };
+}
+
+const transportContext = {
+  repository: "example/example",
+  tag: release.tag_name,
+  releaseSha,
+  release,
+  listing,
+  subject,
+  previousRelease,
+  previousSubject,
+  issues: [],
+};
+
+const paginatedTransport = simulatedGitHubTransport({
+  issuePages: [
+    [{ number: 8, state: "open", body: "unrelated" }],
+    [
+      {
+        number: 9,
+        state: "closed",
+        body: `${created.marker}\n\nmanual completion retained`,
+        html_url: "https://github.com/example/example/issues/9",
+      },
+    ],
+  ],
+});
+const paginatedRetry = applyOpenAiReleasePlan(transportContext, {
+  jsonRequest: paginatedTransport.jsonRequest,
+});
+assert.equal(paginatedRetry.reason, "issue_already_exists");
+assert.equal(paginatedRetry.issue.state, "closed");
+assert.equal(paginatedTransport.postCount, 0);
+
+const successfulTransport = simulatedGitHubTransport();
+const applied = applyOpenAiReleasePlan(transportContext, {
+  jsonRequest: successfulTransport.jsonRequest,
+});
+assert.equal(applied.status, "created");
+assert.equal(successfulTransport.postCount, 1);
+const repeatedApply = applyOpenAiReleasePlan(transportContext, {
+  jsonRequest: successfulTransport.jsonRequest,
+});
+assert.equal(repeatedApply.reason, "issue_already_exists");
+assert.equal(successfulTransport.postCount, 1);
+
+const lostResponseTransport = simulatedGitHubTransport();
+lostResponseTransport.loseNextPostResponse();
+assert.throws(
+  () =>
+    applyOpenAiReleasePlan(transportContext, {
+      jsonRequest: lostResponseTransport.jsonRequest,
+    }),
+  /simulated lost POST response/,
+);
+const recoveredAfterLostResponse = applyOpenAiReleasePlan(transportContext, {
+  jsonRequest: lostResponseTransport.jsonRequest,
+});
+assert.equal(recoveredAfterLostResponse.reason, "issue_already_exists");
+assert.equal(lostResponseTransport.postCount, 1);
+
+const concurrentTransport = simulatedGitHubTransport({
+  runPages: [{ workflow_runs: [{ id: 501, status: "in_progress" }] }],
+});
+assert.throws(
+  () =>
+    applyOpenAiReleasePlan(transportContext, {
+      jsonRequest: concurrentTransport.jsonRequest,
+      currentRunId: "500",
+    }),
+  /Another publication or release retry is active/,
+);
+assert.equal(concurrentTransport.postCount, 0);
 
 console.log("OpenAI plugin release issue fixtures passed.");

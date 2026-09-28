@@ -1434,7 +1434,7 @@ pnpm run validate:plugin-evals
 pnpm run package:agent-plugin
 pnpm run package:openai-plugin
 pnpm run package:standalone-skills
-pnpm run release:openai-issue -- plan
+pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>
 pnpm run generate:release-evidence
 pnpm run validate:archives
 pnpm run validate:network-endpoints

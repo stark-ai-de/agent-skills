@@ -142,8 +142,8 @@ function subjectFromRelease(repository, release) {
   }
 }
 
-function listAllIssues(repository) {
-  const pages = ghJson([
+export function listAllIssues(repository, jsonRequest = ghJson) {
+  const pages = jsonRequest([
     "--paginate",
     "--slurp",
     `repos/${repository}/issues?state=all&per_page=100`,
@@ -151,8 +151,8 @@ function listAllIssues(repository) {
   return pages.flatMap((page) => (Array.isArray(page) ? page : []));
 }
 
-function listActivePublicationRuns(repository) {
-  const pages = ghJson([
+export function listActivePublicationRuns(repository, jsonRequest = ghJson) {
+  const pages = jsonRequest([
     "--paginate",
     "--slurp",
     `repos/${repository}/actions/runs?workflow_id=publish-release.yml&per_page=100`,
@@ -169,14 +169,50 @@ export function concurrentPublicationRuns(runs, currentRunId = process.env.GITHU
   );
 }
 
-function assertNoConcurrentPublication(repository) {
-  const active = concurrentPublicationRuns(listActivePublicationRuns(repository));
+function assertNoConcurrentPublication(
+  repository,
+  jsonRequest = ghJson,
+  currentRunId = process.env.GITHUB_RUN_ID ?? "",
+) {
+  const active = concurrentPublicationRuns(
+    listActivePublicationRuns(repository, jsonRequest),
+    currentRunId,
+  );
   if (active.length > 0) {
     const ids = active.map((run) => String(run.id)).join(", ");
     throw new Error(
       `Another publication or release retry is active (${ids}); retry after it completes`,
     );
   }
+}
+
+export function applyOpenAiReleasePlan(
+  context,
+  { jsonRequest = ghJson, currentRunId = process.env.GITHUB_RUN_ID ?? "" } = {},
+) {
+  const currentIssues = listAllIssues(context.repository, jsonRequest);
+  const currentPlan = buildOpenAiReleasePlan({ ...context, issues: currentIssues });
+  if (currentPlan.status === "noop") return currentPlan;
+
+  assertNoConcurrentPublication(context.repository, jsonRequest, currentRunId);
+  const created = jsonRequest([
+    "--method",
+    "POST",
+    `repos/${context.repository}/issues`,
+    "-f",
+    `title=${currentPlan.title}`,
+    "-f",
+    `body=${currentPlan.body}`,
+  ]);
+  return {
+    ...currentPlan,
+    status: "created",
+    issue: {
+      number: created.number ?? null,
+      url: created.html_url ?? null,
+      state: created.state ?? "open",
+    },
+  };
 }
 
 function stableReleaseVersion(tag) {
@@ -376,32 +412,7 @@ export function runCli(argv = process.argv.slice(2)) {
     console.log(JSON.stringify(plan, null, 2));
     return plan;
   }
-  const currentIssues = listAllIssues(options.repository);
-  const currentPlan = buildOpenAiReleasePlan({ ...context, issues: currentIssues });
-  if (currentPlan.status === "noop") {
-    appendGithubOutput(options.githubOutput, currentPlan);
-    console.log(JSON.stringify(currentPlan, null, 2));
-    return currentPlan;
-  }
-  assertNoConcurrentPublication(options.repository);
-  const created = ghJson([
-    "--method",
-    "POST",
-    `repos/${options.repository}/issues`,
-    "-f",
-    `title=${currentPlan.title}`,
-    "-f",
-    `body=${currentPlan.body}`,
-  ]);
-  const result = {
-    ...currentPlan,
-    status: "created",
-    issue: {
-      number: created.number ?? null,
-      url: created.html_url ?? null,
-      state: created.state ?? "open",
-    },
-  };
+  const result = applyOpenAiReleasePlan(context);
   appendGithubOutput(options.githubOutput, result);
   console.log(JSON.stringify(result, null, 2));
   return result;
