@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.25.0 (2026-09-28)
+
+## What's Changed
+* feat(release): create OpenAI plugin handoff issue by @servrox in https://github.com/stark-ai-de/agent-skills/pull/109
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.24.0...v0.25.0
+
 ## 0.24.0 (2026-09-26)
 
 ## What's Changed
