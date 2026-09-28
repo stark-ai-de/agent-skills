@@ -131,10 +131,7 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
       surface = "package:root:native-oxc";
     } else if (name === "validate:memory-curators" && /^node\b/.test(command)) {
       surface = "package:root:validate-memory-curators";
-    } else if (
-      ["validate:site", "qualify:shadcn-lint"].includes(name) &&
-      /^pnpm\b/.test(command)
-    ) {
+    } else if (["validate:site", "qualify:shadcn-lint"].includes(name) && /^pnpm\b/.test(command)) {
       surface = "package:root:pnpm-orchestration";
     } else if (/^(?:bun --bun\b|bun exec ")/.test(command)) {
       surface = "package:root:bun-default";
