@@ -28,9 +28,11 @@ jobs:
         uses: useblacksmith/checkout@v1
         with:
           persist-credentials: false
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v3
         with:
-          bun-version-file: .bun-version
+          runtime: node@24.18.0
+          cache: false
+          install: false
       - name: Test incident guards and preparation-only contract
-        run: bun --bun scripts/validation/test-forward-release.mjs
+        run: node scripts/validation/test-forward-release.mjs
