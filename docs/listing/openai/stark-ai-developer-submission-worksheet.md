@@ -8,7 +8,7 @@ freeze evidence or a portal draft identifier.
 ## Listing
 
 - Package name: `stark-ai-developer`
-- Version: `1.7.0`
+- Version: `1.7.1`
 - Display name: stark AI Developer
 - Short description: Harness-first toolkit
 - Developer name: servrox solutions UG
@@ -19,7 +19,7 @@ freeze evidence or a portal draft identifier.
 - Support: https://stark-ai-de.github.io/agent-skills/support/
 - Security: https://stark-ai-de.github.io/agent-skills/security/
 - ChatGPT plugin: https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
-- Release notes: Adds AC-ADR-064 capability-aware planning to Architecture Compass and aligns the Codex, Claude, and Cursor memory curators and spec interviewers around scope-bound approval reuse. Adds accepted AC-ADR-065 for qualified Jev host advice, opt-in static host hooks, and a write-free Codex policy renderer; adoption, host activation, processing consent, and qualification remain separate, with general automatic host qualification pending. Adds accepted AC-ADR-066, defaulting compatible local HTTP and WebSocket endpoints to Portless and HTTPS, with evidence-backed exceptions and authorized migration of existing routing. Hardens Jev credential validation for file and environment sources and fails closed for invalid configured files; native selection remains available.
+- Release notes: Improves Jev’s Codex host guidance: an already allowed TypeSafe endpoint now uses the normal sandbox without a repeated network escalation, while genuinely restricted requests retain native approval and fallback behavior.
 
 ## Capabilities
 
