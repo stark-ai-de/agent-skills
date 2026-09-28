@@ -1337,6 +1337,7 @@ const candidateVerifier = read("scripts/release/verify-main-release-candidate.mj
 const releaseProvenanceVerifier = read("scripts/release/verify-release-please-merge.mjs");
 const recoveryVerifier = read("scripts/release/verify-prepublication-release-recovery.mjs");
 const recoverySubjectVerifier = read("scripts/release/verify-release-recovery-subjects.mjs");
+const actionlintConfig = read(".github/actionlint.yaml");
 const formatIgnore = read(".oxfmtignore");
 assert.match(
   formatIgnore,
@@ -1344,6 +1345,19 @@ assert.match(
   "the Release Please-owned root changelog must remain outside formatter ownership",
 );
 assert.match(releasePleaseWorkflow, /actions\/create-github-app-token@v3/);
+assert.match(releasePleaseWorkflow, /client-id: \$\{\{ vars\.RELEASE_PLEASE_APP_CLIENT_ID \}\}/);
+assert.doesNotMatch(releasePleaseWorkflow, /^\s+app-id:/m);
+assert.match(actionlintConfig, /actionlint 1\.7\.12 embeds the pre-client-id v3 metadata/);
+assert.equal(
+  occurrences(actionlintConfig, /missing input "app-id" which is required/g),
+  2,
+  "the temporary actionlint exception must stay scoped to the two token workflows",
+);
+assert.equal(
+  occurrences(actionlintConfig, /input "client-id" is not defined/g),
+  2,
+  "the temporary actionlint exception must stay scoped to the two token workflows",
+);
 for (const permission of ["contents", "pull-requests", "issues"]) {
   assert.match(releasePleaseWorkflow, new RegExp(`permission-${permission}: write`));
 }
@@ -1445,7 +1459,8 @@ assert.match(
 const readiness = publishWorkflow.split("\n  publish:")[0];
 assert.doesNotMatch(readiness, /^\s+(?:contents|actions|attestations|id-token): write$/m);
 assert.doesNotMatch(readiness, /actions\/attest@|reconcile-github-release\.mjs apply/);
-const publishJob = publishWorkflow.split("\n  publish:")[1];
+const publishJob = publishWorkflow.split("\n  publish:")[1].split("\n  release-completion:")[0];
+const completionJob = publishWorkflow.split("\n  release-completion:")[1];
 const environmentCheckIndex = publishJob.indexOf("check-release-environment.mjs");
 assert.ok(environmentCheckIndex >= 0, "publish must preflight the protected environment");
 assert.ok(environmentCheckIndex < publishJob.indexOf("pnpm/setup@v3"));
@@ -1461,6 +1476,43 @@ assert.match(
 );
 assert.match(publishJob, /autorelease: tagged/);
 assert.match(publishJob, /autorelease%3A%20pending/);
+assert.match(publishJob, /permission-issues: write/);
+assert.match(publishJob, /client-id: \$\{\{ vars\.RELEASE_PLEASE_APP_CLIENT_ID \}\}/);
+assert.doesNotMatch(publishJob, /^\s+app-id:/m);
+assert.match(publishJob, /reconcile-openai-plugin-issue\.mjs apply/);
+assert.match(publishJob, /--subject-file release-subjects\/release-subject\.json/);
+assert.match(
+  publishJob,
+  /success\(\) && steps\.reconciliation-apply\.outputs\.release_published == 'true'/,
+);
+assert.ok(
+  publishJob.indexOf("Complete the generated release-PR lifecycle") <
+    publishJob.indexOf("Reconcile OpenAI plugin handoff"),
+  "the public handoff issue must follow release-PR lifecycle labels",
+);
+assert.match(publishJob, /id: openai-handoff/);
+assert.match(publishJob, /--github-output "\$GITHUB_OUTPUT"/);
+for (const output of [
+  "status",
+  "reason",
+  "plugin_version_changed",
+  "issue_url",
+  "issue_state",
+  "marker",
+]) {
+  assert.match(publishJob, new RegExp(`steps\\.openai-handoff\\.outputs\\.${output}`));
+}
+assert.match(completionJob, /needs: \[publication-trigger, release-readiness, publish\]/);
+assert.match(completionJob, /if: \$\{\{ needs\.publish\.result == 'success' \}\}/);
+for (const permission of ["actions", "contents", "issues", "pull-requests"]) {
+  assert.match(completionJob, new RegExp(`^\\s+${permission}: read$`, "m"));
+}
+assert.doesNotMatch(completionJob, /^\s+\S+: write$/m);
+assert.doesNotMatch(completionJob, /^\s+environment:/m);
+assert.match(completionJob, /^\s+timeout-minutes: 12$/m);
+assert.match(completionJob, /verify-release-completion\.mjs/);
+assert.match(completionJob, /--max-wait-seconds 600/);
+assert.match(completionJob, /--poll-interval-seconds 15/);
 assert.match(validateWorkflow, /Verify generated release-PR provenance/);
 assert.match(validateWorkflow, /verify-release-please-merge\.mjs/);
 assert.doesNotMatch(validateWorkflow.split("\nconcurrency:")[0], /issues: read/);
@@ -1479,6 +1531,7 @@ assert.match(
 );
 
 const managerScript = read("scripts/release/manage-release.mjs");
+const completionVerifier = read("scripts/release/verify-release-completion.mjs");
 assert.match(managerScript, /tagName,isLatest,isDraft,publishedAt/);
 assert.doesNotMatch(managerScript, /tagName,isLatest,isDraft,publishedAt,url/);
 assert.match(managerScript, /repos\/\$\{repository\}\/releases\/latest/);
@@ -1497,6 +1550,10 @@ assert.match(managerScript, /\.github\/workflows\/publish-release\.yml/);
 assert.match(managerScript, /pending_deployments/);
 assert.match(managerScript, /repos\/\$\{repository\}\/labels\?per_page=100/);
 assert.match(managerScript, /Release Please lifecycle labels are missing/);
+assert.match(managerScript, /RELEASE_PLEASE_APP_CLIENT_ID", "token creation"/);
+assert.match(managerScript, /RELEASE_PLEASE_APP_ID", "release provenance"/);
+assert.match(completionVerifier, /"--method", "GET"/);
+assert.doesNotMatch(completionVerifier, /"--method", "(?:POST|PATCH|PUT|DELETE)"/);
 assert.match(managerScript, /--recovery-release-sha/);
 assert.match(managerScript, /Publish Release · recovery/);
 assert.match(managerScript, /verify-prepublication-release-recovery\.mjs/);

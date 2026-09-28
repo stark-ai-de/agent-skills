@@ -28,7 +28,9 @@ function groupIsRunning(group: number): boolean {
 
 export class ProcessOwner {
   active = new Map<ChildProcess, Promise<void>>();
+  private closed = false;
   spawn(executable: string, args: string[], options: SpawnOptions) {
+    if (this.closed) throw new Error("qualification process owner is closed");
     if (process.platform === "win32")
       throw new Error("Qualification requires POSIX process groups");
     const child = spawn(executable, args, { ...options, detached: true });
@@ -50,6 +52,15 @@ export class ProcessOwner {
         };
         reap().then(resolve, reject);
       };
+      // Descendants can keep inherited pipes open after their leader exits.
+      // Terminate that group at exit so close can drain and finish ownership.
+      child.once("exit", () => {
+        try {
+          this.signal(child);
+        } catch (error) {
+          reject(error);
+        }
+      });
       child.once("close", finish);
       child.once("error", finish);
     });
@@ -90,6 +101,7 @@ export class ProcessOwner {
     }
   }
   async close() {
+    this.closed = true;
     const results = await Promise.allSettled(
       [...this.active.keys()].map((child) => this.stop(child)),
     );

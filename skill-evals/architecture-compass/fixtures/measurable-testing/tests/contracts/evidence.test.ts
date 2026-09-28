@@ -1,5 +1,11 @@
 import { expect, test } from "vitest";
-import { assertComplete, measurement, type Plan, type Report } from "../../src/evidence.ts";
+import {
+  assertComplete,
+  measurement,
+  observedPeakRss,
+  type Plan,
+  type Report,
+} from "../../src/evidence.ts";
 const identity = {
   subject: "tree-a",
   config: "config-a",
@@ -117,4 +123,63 @@ test("offset waiver timestamps use chronological expiry", () => {
       now: "2026-09-14T00:00:00Z",
     }),
   ).toBe("unmet");
+});
+
+test("percentile measurements reject malformed confidence inputs", () => {
+  const base = {
+    baseline: 10,
+    denominator: 10,
+    observed: 5,
+    target: 6,
+    now: "2026-09-21",
+    percentile: 95,
+    samples: 100,
+  };
+  expect(measurement(base)).toBe("met");
+  for (const percentile of [NaN, Infinity, -1, 0, 101])
+    expect(measurement({ ...base, percentile })).toBe("unmeasured");
+  for (const samples of [NaN, Infinity, -1, 0, 99, 100.5, undefined])
+    expect(measurement({ ...base, samples })).toBe("unmeasured");
+});
+
+test("memory budgets require complete finite process telemetry", () => {
+  const harness = { role: "harness", pid: 1, maxRssKiB: 100 };
+  const worker = { role: "worker", pid: 2, file: "a.ts", maxRssKiB: 200 };
+  const expected = ["a.ts"];
+  expect(observedPeakRss([harness, worker, { role: "configuration" }], expected)).toBe(300);
+  for (const identities of [[], [harness], [worker], [harness, { role: "worker", file: "a.ts" }]])
+    expect(() => observedPeakRss(identities, expected)).toThrow("memory telemetry");
+  for (const maxRssKiB of [NaN, Infinity, -1, 0])
+    expect(() => observedPeakRss([harness, { ...worker, maxRssKiB }], expected)).toThrow(
+      "memory telemetry",
+    );
+  for (const pid of [undefined, NaN, Infinity, -1, 0, 1.5])
+    expect(() => observedPeakRss([harness, { ...worker, pid }], expected)).toThrow(
+      "memory telemetry",
+    );
+  expect(() =>
+    observedPeakRss(
+      [
+        { ...harness, maxRssKiB: Number.MAX_VALUE },
+        { ...worker, maxRssKiB: Number.MAX_VALUE },
+      ],
+      expected,
+    ),
+  ).toThrow("telemetry total");
+});
+
+test("memory telemetry covers every completed file and counts reused process peaks once", () => {
+  const harness = { role: "harness", pid: 1, maxRssKiB: 100 };
+  const first = { role: "worker", pid: 2, file: "a.ts", maxRssKiB: 200 };
+  const second = { role: "worker", pid: 2, file: "b.ts", maxRssKiB: 250 };
+  const expected = ["a.ts", "b.ts"];
+  expect(observedPeakRss([harness, first, second], expected)).toBe(350);
+  expect(observedPeakRss([harness, first, { ...second, pid: 3 }], expected)).toBe(550);
+  expect(() => observedPeakRss([harness, first], expected)).toThrow("memory telemetry");
+  expect(() => observedPeakRss([harness, first, { ...second, file: "a.ts" }], expected)).toThrow(
+    "memory telemetry",
+  );
+  expect(() =>
+    observedPeakRss([harness, first, { ...second, file: "foreign.ts" }], expected),
+  ).toThrow("memory telemetry");
 });
