@@ -189,6 +189,39 @@ jobs:
       - name: Test opt-in hooks and catalog evidence
         run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_hook*.py' -v
 
+  shadcn-lint-profile:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: useblacksmith/checkout@v1
+
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Install isolated lint profile
+        run: pnpm --dir skill-evals/architecture-compass/fixtures/shadcn-lint install --frozen-lockfile
+
+      - name: Qualify Guide lint recipes
+        run: pnpm run qualify:shadcn-lint --output "$RUNNER_TEMP/shadcn-lint-outcome.json"
+
+      - name: Upload exact-run lint evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: shadcn-lint-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/shadcn-lint-outcome.json
+          if-no-files-found: warn
+
   archive-identity:
     strategy:
       fail-fast: false

@@ -1,0 +1,7 @@
+packages:
+  - "."
+strictDepBuilds: true
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+trustPolicy: no-downgrade

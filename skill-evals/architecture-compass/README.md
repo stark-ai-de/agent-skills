@@ -208,3 +208,10 @@ static contracts, not executed agent turns or Portless runtime tests.
 - `cases/portless-technical-exception.md`
 - `cases/portless-worktree-collision.md`
 - `cases/portless-local-adr-conflict.md`
+
+The [isolated recipe qualification](fixtures/shadcn-lint/README.md) adds executed
+plugin-runtime evidence for both linter examples. Run `pnpm run qualify:shadcn-lint`
+after its frozen install. Keep its receipt separate from response-only scenario
+evaluations and target adoption evidence. Semantic evaluation must distinguish
+an unsafe recommendation from a quoted or negated warning; keyword presence alone
+cannot establish that the agent endorsed the behavior.

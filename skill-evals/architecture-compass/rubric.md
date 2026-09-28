@@ -81,3 +81,9 @@ A setup run passes only when it:
 - Distinguish consumers from component definitions, preserving remaining checks inside the shared UI package.
 - Reject registration-only, discovery-fallback and stale-cache success claims; qualify the real command with positive and negative fixtures.
 - Preserve visual, accessibility, compiler and runtime evidence as separate obligations.
+
+- Evaluate recommendations in context: quoting or rejecting an unsafe command is
+  not endorsing it. Required-concept checks are routing aids; review negation,
+  authority, selected action, and evidence claims semantically.
+- Keep pinned synthetic plugin execution, response-only agent probes, and real
+  target adoption separate; carry forward none as a substitute for another.

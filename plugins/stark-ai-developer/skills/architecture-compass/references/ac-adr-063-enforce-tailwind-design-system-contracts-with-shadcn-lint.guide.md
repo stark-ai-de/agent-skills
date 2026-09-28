@@ -263,7 +263,30 @@ outcomes; account for report-only versus blocking stages. A print-config result
 or successful plugin import is not behavioral proof. A fixture that never
 resolves its component cannot establish component enforcement.
 
+## Executed recipe qualification
+
+The repository maintains an [isolated qualification fixture](https://github.com/stark-ai-de/agent-skills/tree/main/skill-evals/architecture-compass/fixtures/shadcn-lint)
+outside the installed skill payload. It extracts the shared profile and both
+linter configurations directly from this Guide, then checks diagnostic rule IDs
+and process outcomes using pinned dependencies. The fixture runs under Bun and
+covers all six rules, component-definition exceptions, contracts, warning caps,
+shared-package discovery, missing stylesheet dependencies, and an unchanged
+consumer after a theme edit with and without ESLint's file cache.
+
+This is execution evidence for these synthetic recipes, not qualification of a
+consumer repository. Record the actual receipt's source hashes, dependency
+versions, runtime, and result; a changed Guide invalidates older recipe evidence.
+Target adoption still requires the target's own invocation and representative
+files. The fixture does not test persistent editor processes or Node execution.
+
 ## Limits and troubleshooting
+
+`require-static-classes` checks classes passed to recognized design-system
+components and supported forwarding wrappers. It is not a general ban on dynamic
+DOM class names: ``<Button className={`bg-${color}`} />`` is rejected when Button
+is recognized, but ``<div className={`bg-${color}`} />`` is outside that rule's
+scope. Keep Tailwind generation/build checks separate and do not infer that a
+clean lint result proves those dynamic DOM classes exist.
 
 The plugin does not lint plain CSS declarations or `@apply`, and it cannot fully
 trace every imported class value, unreadable prop spread, or parent selector.

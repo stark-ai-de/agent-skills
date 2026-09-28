@@ -1387,10 +1387,10 @@
       "sha256": "bdc916731983178de134f2487a1d4b5e6c9080cae2671b28211df0f6263f4635"
     },
     {
-      "byteLength": 15720,
+      "byteLength": 17233,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.guide.md",
-      "sha256": "733e5424b9921e3756196dbf806747bc327c3229d0ef76e1d49c3e2ca49e88fb"
+      "sha256": "eb3d0dd090132261953ee17fa84849294efc1bb389958ea1be6cfa5a3c47a85d"
     },
     {
       "byteLength": 7427,
@@ -2125,5 +2125,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "5ea2d19fbe3da663b14b573c9ec9bb1ea8f7229d76e2ba88298e0ad451ed8792"
+  "treeHash": "4c8fc4ffb155af253cb2fb6b0c4992abcaad7a28d68cf1a148ef1a08a8771b19"
 }
