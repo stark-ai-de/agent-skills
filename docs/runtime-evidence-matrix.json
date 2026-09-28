@@ -152,8 +152,13 @@
         }
       ],
       "winner": "pnpm",
-      "evidenceRefs": ["package.json#scripts.validate:site", "pnpm-workspace.yaml"],
-      "rationale": "pnpm owns workspace selection and delegates to the site package, whose script selects Bun explicitly.",
+      "evidenceRefs": [
+        "package.json#scripts.validate:site",
+        "package.json#scripts.qualify:shadcn-lint",
+        "skill-evals/architecture-compass/fixtures/shadcn-lint/package.json",
+        "pnpm-workspace.yaml"
+      ],
+      "rationale": "pnpm owns workspace selection for the site build and selects the isolated shadcn-lint fixture package; each package script selects its qualified runtime explicitly.",
       "fallbackOrder": ["pnpm"],
       "revisit": "Revisit if persistent package or workspace ownership changes."
     },
