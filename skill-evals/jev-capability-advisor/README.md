@@ -407,7 +407,10 @@ remain historical; no new speed or provider-quality claim is made.
 
 `test_network_contract.py` runs the real helper with injected replies and checks
 no replay, credential precedence, secret-free error presentation, valid `none`,
-and no-write offline inspection. Text checks cover the declared host approval
+and no-write offline inspection. A regression also exercises the actual
+`JsonClient` through a truncated HTTP 200 response, checking completion
+uncertainty, secret-free summaries, and one dispatch without replay.
+Text checks cover the declared host approval
 states; they are not execution evidence for an actual approval dialog. The
 portable-network workflow runs these tests on native Windows, macOS and Linux
 with Python 3.10 and 3.14. Use the exact current CI run for observed results;

@@ -2059,10 +2059,10 @@
       "sha256": "48c19390fb713d5bd64dca6509a5ea0dfd3d61a98dbec57fbf6793f5632b2a99"
     },
     {
-      "byteLength": 6633,
+      "byteLength": 6760,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/references/network-access.md",
-      "sha256": "cc9832576eea72fd9344d633b075102aef4e934cf8dd7e3d670098f099e67469"
+      "sha256": "81c63d08f1ffc6454652bc6ae816ab9864aa34f5985ad2ce1855c69d00f510e5"
     },
     {
       "byteLength": 11002,
@@ -2095,10 +2095,10 @@
       "sha256": "6f574e59549f78603ad625e944473422915529dd58f810370fd5482f00b784c1"
     },
     {
-      "byteLength": 49320,
+      "byteLength": 49340,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/jev_advisor.py",
-      "sha256": "bbde551f817f2840708d552062699ca28899fcbd028a49ba6521352fb83b633e"
+      "sha256": "21cad3fe64b4bf50c04374b3f7518881a17d3108d4c30e4effd8e0af2d6d401b"
     },
     {
       "byteLength": 41761,
@@ -2131,5 +2131,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7d4cd15660d7e28a6ae036fb7efbf71752fa9e4b355e24f1003b31a010d19469"
+  "treeHash": "2952d6d66846597a908c8fa45621b0fed322f580e98f13789b115cfa5dbac55d"
 }

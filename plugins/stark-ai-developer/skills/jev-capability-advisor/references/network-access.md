@@ -46,6 +46,8 @@ status and error code; the summary's `error_message` is safe presentation, not
 proof of a host-policy decision. Only explicit host evidence establishes a denial.
 HTTP 403, DNS/TLS errors, timeout and generic `network_error` do not establish one.
 Credential configuration/authentication failures are distinct from network access.
+A generic transport failure can occur after dispatch or while reading a response;
+do not infer that the API was never reached.
 
 Examples below are message semantics, not mandatory English UI text:
 
@@ -53,7 +55,7 @@ Examples below are message semantics, not mandatory English UI text:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Explicit user denial            | “Jev was not used: you declined TypeSafe API access. Without it, Jev cannot recommend a capability.”                                                                 |
 | Confirmed host-policy block     | “Jev is unavailable here: the active policy blocks api.typesafe.ai. Jev requires that API access to be allowed in the agent client, possibly by your administrator.” |
-| Unknown connection failure      | “Jev could not reach the TypeSafe API; the cause is unknown. No Jev recommendation was produced.”                                                                    |
+| Unknown transport failure       | “The TypeSafe request failed; completion is unknown. No Jev recommendation is available. Do not automatically retry.”                                                |
 | Missing or rejected credentials | “Jev could not use the configured TypeSafe credential. No Jev recommendation was produced.”                                                                          |
 
 After an explicit denial, do not append another permission pitch. Recommend a

@@ -48,14 +48,14 @@ to make a qualification test pass. Do not port host-specific deployment helpers
 to other operating systems as part of the portable advisor.
 
 **ADR required: no.** This specification works within
-[ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md),
+[ADR-0057](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.short.md) ([Long, canonical](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) · [Guide](../adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.guide.md)),
 which preserves host permissions, invocation restrictions, native fallback, and
 independent qualification of opt-in advice. It does not change that accepted
 decision or introduce universal prompt interception. Public persistence follows
 [the specification policy](../specs.md) and
-[ADR-0056](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md).
+[ADR-0056](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.short.md) ([Long, canonical](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md) · [Guide](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.guide.md)).
 Validation selection follows
-[ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md).
+[ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)).
 Any future conflicting architectural change requires the normal accepted
 adaptation/successor process before implementation.
 
@@ -158,8 +158,9 @@ Required message semantics, illustrated in German:
 - **Confirmed policy block:** “Jev ist in dieser Umgebung nicht verfügbar: Die
   aktive Richtlinie blockiert api.typesafe.ai. Für Jev muss dieser API-Zugriff im
   Agent-Client freigegeben werden, gegebenenfalls durch deinen Administrator.”
-- **Unknown connection failure:** “Jev konnte die TypeSafe-API nicht erreichen.
-  Die Ursache ist nicht eindeutig festgestellt. Es wurde keine Jev-Empfehlung erstellt.”
+- **Unknown transport failure:** “Die TypeSafe-Anfrage ist fehlgeschlagen.
+  Ob sie abgeschlossen wurde, ist unbekannt. Es liegt kein nutzbares Jev-Ergebnis
+  vor. Die Anfrage wird nicht automatisch wiederholt.”
 
 For automatic use, “Die normale Skill-Auswahl übernimmt.” is an appropriate
 suffix. After an explicit denial, do not append another permission sales pitch.

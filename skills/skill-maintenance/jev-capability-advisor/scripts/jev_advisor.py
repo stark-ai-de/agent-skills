@@ -718,7 +718,7 @@ def _failure_message(code):
     and supplies observed approval facts; this helper cannot inspect its policy.
     """
     messages = {
-        'network_error': 'Jev could not reach the TypeSafe API; the cause is unknown. No Jev recommendation was produced.',
+        'network_error': 'The TypeSafe request failed; completion is unknown. No Jev recommendation is available. Do not automatically retry.',
         'request_timeout': 'The TypeSafe request timed out; completion is unknown. No Jev recommendation was produced. Do not automatically retry.',
         'missing_api_key': 'Jev requires existing TypeSafe credentials. No Jev recommendation was produced.',
         'credential_unavailable': 'The configured TypeSafe credential file is unavailable. No fallback credential was used; no Jev recommendation was produced.',

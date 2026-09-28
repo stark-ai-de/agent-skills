@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SKILL = ROOT / "skills/skill-maintenance/jev-capability-advisor"
 sys.path.insert(0, str(SKILL / "scripts"))
 import jev_advisor as advisor
+import https_transport
 
 CATALOG = [{"id": "skill:review", "kind": "skill", "name": "review",
             "description": "Review Python source code and tests", "enabled": True,
@@ -59,6 +60,46 @@ class NetworkContractTests(unittest.TestCase):
                 self.assertIn("No Jev recommendation", summary["error_message"])
                 self.assertNotIn(SECRET, json.dumps(summary))
                 self.assertNotIn("active policy blocks", summary["error_message"])
+
+    def test_truncated_response_preserves_completion_uncertainty_without_replay(self):
+        # A 200 response can end early after the POST was dispatched. Exercise
+        # JsonClient's real body-read and exception-sanitization path, not an
+        # exception injected directly into advise(). Never open a real socket.
+        body = b'{"answers":"' + SECRET.encode("utf-8")
+        response = mock.Mock(status=200, length=1)
+        response.read1.side_effect = [body, b""]
+        connection = mock.Mock()
+        connection.getresponse.return_value = response
+        with mock.patch.object(socket, "create_connection", side_effect=AssertionError("unexpected network")):
+            with mock.patch.object(https_transport.urllib.request, "getproxies", return_value={}):
+                with mock.patch.object(https_transport, "_Connection", return_value=connection) as factory:
+                    with https_transport.JsonClient(SECRET) as client:
+                        result = advisor.advise(QUERY, CATALOG, transport=client)
+                        receipt = dict(client.last_receipt)
+        factory.assert_called_once()
+        connection.connect.assert_called_once()
+        connection.request.assert_called_once()
+        self.assertEqual(connection.request.call_args.args[:2], ("POST", https_transport.API_PATH))
+        connection.getresponse.assert_called_once()
+        self.assertEqual(response.read1.call_count, 2)
+        response.close.assert_called_once()
+        self.assertTrue(receipt["request_dispatched"])
+        self.assertEqual(receipt["http_status"], 200)
+        self.assertEqual(receipt["response_bytes"], len(body))
+        self.assertEqual(receipt["error"], "network_error")
+        self.assertEqual(result["request_count"], 1)
+        summary = advisor.summarize(result, CATALOG)
+        self.assertEqual(summary["status"], "error")
+        self.assertEqual(summary["error"], "network_error")
+        self.assertEqual(summary["selected"], [])
+        self.assertNotIn(SECRET, json.dumps({"summary": summary, "receipt": receipt}))
+        self.assertIn("completion is unknown", summary["error_message"])
+        self.assertIn("No Jev recommendation is available", summary["error_message"])
+        self.assertIn("Do not automatically retry", summary["error_message"])
+        self.assertNotIn("could not reach", summary["error_message"])
+        self.assertNotIn("active policy blocks", summary["error_message"])
+        reference = (SKILL / "references/network-access.md").read_text(encoding="utf-8")
+        self.assertIn(summary["error_message"], reference)
 
     def test_missing_key_never_constructs_transport(self):
         with mock.patch.dict(os.environ, {}, clear=True):
