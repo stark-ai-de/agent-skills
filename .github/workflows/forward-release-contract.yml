@@ -34,5 +34,9 @@ jobs:
           runtime: node@24.18.0
           cache: false
           install: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
       - name: Test incident guards and preparation-only contract
-        run: node scripts/validation/test-forward-release.mjs
+        run: bun --bun scripts/validation/test-forward-release.mjs

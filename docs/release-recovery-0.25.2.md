@@ -33,20 +33,23 @@ While the real root manifest is exactly 0.25.2, the existing trusted
 `release-please.yml` selects an incident-specific preparation helper. Its
 GET-only preflight requires protected current main containing the abandoned
 merge, the known published baseline, absent 0.25.2 and 0.25.3 tags/releases,
-and the authenticated original generated PR. The operator must retire #118's
-pending label, without falsely marking it tagged.
+and the authenticated original generated PR. The preview may inspect #118 while its pending label remains. The operator
+must retire that label only after a successful real preview, without falsely
+marking the abandoned version tagged.
 
 The helper uses `release-please@17.6.0` and the ordinary manifest configuration.
 Only its in-memory `releasedVersions["."]` becomes 0.25.1 and the next
-`releaseAs` becomes 0.25.3. A read-only preview precedes creation of the existing
-repository-scoped App token. The helper only calls `createPullRequests`, never
+`releaseAs` becomes 0.25.3. A non-persisting preview uses the existing repository-scoped App token
+after token creation: GitHub requires Contents write permission for Generate
+Release Notes even though the generated notes are not saved. The helper only calls `createPullRequests`, never
 `createReleases`. The normal three-file provenance/CI checks remain mandatory.
 After the manifest advances, the normal Release Please action is selected.
 
 The package is installed outside the checkout in the runner's temporary
 directory, without lifecycle scripts, before the App token is created. The
-root dependency is pinned; this temporary install does not claim a frozen
-transitive dependency graph. No repository dependency or plugin is changed.
+root dependency is pinned and the temporary workspace retains the existing
+strict build, exotic dependency, release-age and no-downgrade trust policy.
+This temporary install does not claim a frozen transitive dependency graph. No repository dependency or plugin is changed.
 
 Upstream implementation references:
 
@@ -56,19 +59,23 @@ Upstream implementation references:
 
 ## Operator sequence
 
-1. Read the fix PR, run `node scripts/validation/test-forward-release.mjs`,
+1. Read the fix PR, run `bun --bun scripts/validation/test-forward-release.mjs`,
    formatting, lint, release-management, post-release-receipt and the mandatory
    repository validation. Require green current-head hosted checks and resolved
    review findings before merge. The new contract workflow tests the guards;
    it does not claim an actual upstream API preview or release publication.
-2. Immediately before the fix merge, verify that v0.25.2 and v0.25.3 are still
-   absent and no old publisher is active. Comment on #118 that 0.25.2 was
-   abandoned in favor of the reviewed forward recovery; remove only its
-   `autorelease: pending` label. Never add `autorelease: tagged` to #118.
+2. Verify that v0.25.2 and v0.25.3 are still absent and no old publisher is
+   active. Keep #118 pending until the actual library preview succeeds.
+   The GET-only preflight and plan allow pending; apply still refuses it.
 3. Merge the fix normally. Its main push selects the forward preparation lane.
    If needed, dispatch `release-please.yml` on current protected main. Do not
    rerun the old immutable failing workflow definition.
-4. Inspect the real read-only preview and the App-generated 0.25.3 draft.
+4. Inspect the real non-persisting preview. After success, comment on #118
+   that 0.25.2 was abandoned in favor of this recovery; remove only its
+   `autorelease: pending` label, never add `autorelease: tagged`. If the first
+   run stopped at this apply guard, rerun that current-main preparation job
+   only after verifying that main has not moved. Inspect the App-generated
+   0.25.3 draft.
    Require exactly the three root release files, an unchanged old changelog,
    notes covering changes since v0.25.1, and green signature/provenance checks.
    Do not hand-edit its generated commit. Mark it ready and merge normally.
@@ -86,10 +93,11 @@ push, manual version write, fabricated evidence, tag creation or asset clobber.
 
 ## Updated plugin baseline
 
-The observed main already contains plugin **1.7.2** from subsequent Jev work.
+The rechecked main `1e04e0cf370bd19ec119da9d6e297ceaf5ed2b1c` contains
+plugin **1.7.3** after the subsequent Jev and Architecture Compass merges.
 Keep it unchanged by this recovery. The earlier snapshot's 1.7.1/no-new-issue
 expectation is no longer applicable. Compare actual release metadata and let
-the existing reconciler produce a legitimate 1.7.2 handoff when necessary.
+the existing reconciler produce a legitimate current-version handoff when necessary.
 Do not reopen or repurpose the closed older handoff #114. GitHub publication
 does not establish a completed OpenAI portal upload or listing update.
 
@@ -102,3 +110,20 @@ retrying; do not manufacture a second release PR. Once 0.25.3 is merged, this
 helper must not be used again. Use the normal publisher retry semantics for
 later transient failures. Remove dormant incident machinery in a separately
 reviewed cleanup after the complete release receipt is recorded.
+
+## Follow-up verification before merge
+
+The 2026-09-28 review found and corrected the 17.6.0 property spelling
+`skipGithubRelease` and the assumption that the package entry point exports
+`Version`. The helper now uses the parsed version instance's constructor.
+Plain-script contract tests use the repository Bun runtime instead of
+`node:test`, and both workflows use the required quoted Bun version path.
+These corrections do not constitute a successful real library preview.
+
+An isolated strict dependency probe in run `36454589916`, job `109037572191`,
+refused `@octokit/endpoint@9.0.6` with `ERR_PNPM_TRUST_DOWNGRADE`. That is a
+provenance-policy failure, not proof of malicious code. Qualify a frozen
+transitive graph under the existing supply-chain policy before executing the
+library with the release App token. Do not silently omit the policy or
+replace the package with 9.0.5, which is affected by GHSA-x4c5-c7rf-jjgv.
+PR #120 is a duplicate bootstrap effort, not a second recovery to merge.

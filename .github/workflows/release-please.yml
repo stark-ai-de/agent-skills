@@ -30,7 +30,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: .bun-version
+          bun-version-file: ".bun-version"
 
       - name: 🛡️ Verify trusted protected-main source
         env:
@@ -114,16 +114,8 @@ jobs:
           tool_dir="$RUNNER_TEMP/release-please-forward"
           mkdir -p "$tool_dir"
           printf '%s\n' '{"private":true,"dependencies":{"release-please":"17.6.0"}}' > "$tool_dir/package.json"
+          printf '%s\n' 'packages: ["."]' 'strictDepBuilds: true' 'blockExoticSubdeps: true' 'minimumReleaseAge: 1440' 'minimumReleaseAgeStrict: true' 'trustPolicy: no-downgrade' > "$tool_dir/pnpm-workspace.yaml"
           pnpm --dir "$tool_dir" install --ignore-scripts --no-frozen-lockfile
-
-      - name: 🔎 Preview forward release without writes
-        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
-          WORKFLOW_REF: ${{ github.workflow_ref }}
-          WORKFLOW_SHA: ${{ github.workflow_sha }}
-        run: node scripts/release/prepare-forward-release.mjs --plan
 
       - name: 🔑 Create repository-scoped release App token
         if: ${{ steps.classify.outputs.skip != 'true' }}
@@ -136,6 +128,15 @@ jobs:
           permission-pull-requests: write
           permission-issues: write
 
+      - name: 🔎 Preview forward release without writes
+        if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: bun --bun scripts/release/prepare-forward-release.mjs --plan
+
       - name: 📝 Create forward release PR with Release Please
         if: ${{ steps.release-config.outputs.forward_recovery == 'true' }}
         env:
@@ -143,7 +144,7 @@ jobs:
           EXPECTED_APP_ID: ${{ vars.RELEASE_PLEASE_APP_ID }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
           WORKFLOW_SHA: ${{ github.workflow_sha }}
-        run: node scripts/release/prepare-forward-release.mjs --apply
+        run: bun --bun scripts/release/prepare-forward-release.mjs --apply
 
       - name: 📝 Create or update draft release PR
         if: ${{ steps.classify.outputs.skip != 'true' && steps.release-config.outputs.forward_recovery != 'true' }}
