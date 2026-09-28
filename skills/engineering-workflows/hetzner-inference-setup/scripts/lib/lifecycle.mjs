@@ -739,7 +739,15 @@ export async function startOwnedGateway(
       try {
         receipt = await readReceipt(paths, host);
       } catch (error) {
-        if (error.code === "ENOENT" || error.code === "invalid_json") continue;
+        if (["ENOENT", "invalid_json", "process_receipt_invalid"].includes(error?.code)) {
+          assertCurrentHostStorageBoundaries(paths, host);
+          const current = await inspectPath(paths.processReceipt, { hash: false });
+          assertCurrentHostStorageBoundaries(paths, host);
+          if (current.kind === "absent") {
+            if (Date.now() < deadline) continue;
+            break;
+          }
+        }
         throw error;
       }
       if (receipt?.processToken !== processToken) continue;

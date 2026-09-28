@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   atomicJson as runnerAtomicJson,
+  normalizeRunnerPath,
   removeTokenBoundStopRequest,
   runGatewayRunner,
 } from "../../../skills/engineering-workflows/hetzner-inference-setup/assets/templates/gateway-runner.mjs";
@@ -23,6 +24,7 @@ import {
   readProtectedGatewaySecret,
   secureAndVerifyCurrentUserFileAsync,
   windowsAclAccessRulesScript,
+  windowsAclSnapshot,
 } from "../../../skills/engineering-workflows/hetzner-inference-setup/assets/templates/protected-file.mjs";
 
 import {
@@ -783,6 +785,46 @@ test("PowerShell passes hostile filenames as data without source interpolation",
       assert.deepEqual(JSON.parse(result.stdout.replace(/^\uFEFF/u, "")), selectedValues);
     }
   }
+});
+
+test("runner PATH normalization removes empty and quoted Windows entries", () => {
+  assert.equal(
+    normalizeRunnerPath(' ; "C:\\Program Files\\Tools" ; ; C:\\Windows\\System32 ;; ', ";"),
+    "C:\\Program Files\\Tools;C:\\Windows\\System32",
+  );
+  assert.equal(normalizeRunnerPath("/usr/bin::/bin:", ":"), "/usr/bin:/bin");
+});
+
+test("Windows ACL subprocess errors expose stable codes without subprocess details", () => {
+  const target = path.join(os.tmpdir(), "sensitive-acl-target");
+  const timeout = Object.assign(new Error("C:\\private\\powershell.exe ETIMEDOUT"), {
+    code: "ETIMEDOUT",
+  });
+  assert.throws(
+    () =>
+      windowsAclSnapshot(target, {
+        spawnSync: () => ({
+          error: timeout,
+          signal: "SIGTERM",
+          status: null,
+          stderr: "private output",
+        }),
+      }),
+    (error) =>
+      error.code === "windows_acl_timeout" &&
+      error.message === "unable to verify Windows credential ACL" &&
+      !/private|powershell|output/iu.test(error.message),
+  );
+
+  assert.throws(
+    () =>
+      windowsAclSnapshot(target, {
+        spawnSync: () => ({ status: 7, stderr: "private output" }),
+      }),
+    (error) =>
+      error.code === "windows_acl_nonzero_exit" &&
+      error.message === "unable to verify Windows credential ACL",
+  );
 });
 
 test("Windows ACL snapshots preserve raw SIDs and explicit or inherited rule flags", (context) => {
@@ -2634,6 +2676,63 @@ test("lifecycle mocks exercise complete spawn identity and token-bound stop", as
     );
     assert.equal(runnerEnvironment.HETZNER_INFERENCE_API_KEY, undefined);
     assert.equal(runnerEnvironment.LITELLM_MASTER_KEY, undefined);
+
+    let transientReceiptReads = 0;
+    let retryReceipt;
+    const untrackedChild = new EventEmitter();
+    untrackedChild.unref = () => {};
+    const retriedStart = await startOwnedGateway(
+      { host, manifest, paths, plan, now },
+      {
+        delay: async () => {},
+        loopbackPortOpen: async () => false,
+        readProcessReceipt: async () => {
+          transientReceiptReads += 1;
+          if (transientReceiptReads === 1) return null;
+          if (transientReceiptReads === 2) {
+            throw new SetupError("process_receipt_invalid", "receipt vanished during replacement");
+          }
+          return retryReceipt;
+        },
+        spawn(_executable, args) {
+          const token = args[args.indexOf("--token") + 1];
+          retryReceipt = {
+            ...readyReceipt,
+            processToken: token,
+            heartbeatAt: new Date().toISOString(),
+          };
+          return untrackedChild;
+        },
+      },
+    );
+    assert.equal(retriedStart.changed, true);
+    assert.equal(transientReceiptReads, 3);
+
+    let malformedReceiptReads = 0;
+    const malformedChild = new EventEmitter();
+    malformedChild.unref = () => {};
+    await assert.rejects(
+      startOwnedGateway(
+        { host, manifest, paths, plan, now },
+        {
+          delay: async () => {},
+          loopbackPortOpen: async () => false,
+          readProcessReceipt: async () => {
+            malformedReceiptReads += 1;
+            if (malformedReceiptReads === 1) return null;
+            throw new SetupError("process_receipt_invalid", "present receipt is malformed");
+          },
+          spawn() {
+            fs.writeFileSync(paths.processReceipt, "{\n");
+            return malformedChild;
+          },
+        },
+      ),
+      (error) => error.code === "process_receipt_invalid",
+    );
+    assert.equal(malformedReceiptReads, 3);
+    await fs.promises.unlink(paths.processReceipt);
+
     const runningManifest = {
       ...manifest,
       process: {

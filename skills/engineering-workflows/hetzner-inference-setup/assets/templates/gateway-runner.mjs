@@ -732,6 +732,21 @@ function defaultRunnerPath(source) {
   return [path.win32.join(systemRoot, "System32"), systemRoot].join(path.delimiter);
 }
 
+export function normalizeRunnerPath(value, delimiter = path.delimiter) {
+  if (typeof value !== "string") return value;
+  return value
+    .split(delimiter)
+    .map((entry) => {
+      const trimmed = entry.trim();
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+        return trimmed.slice(1, -1).trim();
+      }
+      return trimmed;
+    })
+    .filter(Boolean)
+    .join(delimiter);
+}
+
 function minimalEnvironment(extra, source = process.env, dependencies = {}) {
   const allowed = [
     "HOME",
@@ -769,7 +784,9 @@ function minimalEnvironment(extra, source = process.env, dependencies = {}) {
   env.TMP ??= effectiveTemp;
   env.TMPDIR ??= effectiveTemp;
   env.PATH ??= dependencies.defaultPath ?? defaultRunnerPath(source);
-  return { ...env, ...extra };
+  const result = { ...env, ...extra };
+  result.PATH = normalizeRunnerPath(result.PATH);
+  return result;
 }
 
 function assertAbsoluteEnvironmentPath(value, label, assertPath, boundaryOptions) {

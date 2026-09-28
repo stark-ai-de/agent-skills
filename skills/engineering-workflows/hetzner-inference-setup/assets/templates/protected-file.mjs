@@ -399,12 +399,49 @@ function parseWindowsAclSnapshot(value) {
   };
 }
 
-function windowsAclSnapshot(target, options = {}) {
+function windowsAclFailureCode(cause) {
+  const error = cause?.error ?? cause;
+  const code = error?.code;
+  const message = typeof error?.message === "string" ? error.message : "";
+  if (
+    code === "ETIMEDOUT" ||
+    cause?.signal === "SIGTERM" ||
+    cause?.signal === "SIGKILL" ||
+    message.includes("lifecycle deadline exceeded")
+  ) {
+    return "windows_acl_timeout";
+  }
+  if (code === "ENOENT") return "windows_acl_powershell_missing";
+  if (code === "EACCES") return "windows_acl_powershell_access_denied";
+  if (code === "protected_acl_termination_unconfirmed") {
+    return "windows_acl_termination_unconfirmed";
+  }
+  if (cause?.kind === "invalid_output") return "windows_acl_invalid_output";
+  if (cause?.signal) return "windows_acl_terminated";
+  if (Number.isInteger(cause?.status) && cause.status !== 0) return "windows_acl_nonzero_exit";
+  return "windows_acl_query_failed";
+}
+
+function windowsAclFailure(cause) {
+  const error = new Error("unable to verify Windows credential ACL");
+  error.code = windowsAclFailureCode(cause);
+  return error;
+}
+
+export function windowsAclSnapshot(target, options = {}) {
   assertProtectedPathBoundary(target, "protected Windows path", options);
   const command = windowsAclCommand(target);
-  const result = spawnSync(command.executable, command.args, command.options);
-  if (result.status !== 0) throw new Error("unable to verify Windows credential ACL");
-  return parseWindowsAclSnapshot(result.stdout);
+  const result = (options.spawnSync ?? spawnSync)(
+    command.executable,
+    command.args,
+    command.options,
+  );
+  if (result.error || result.status !== 0) throw windowsAclFailure(result);
+  try {
+    return parseWindowsAclSnapshot(result.stdout);
+  } catch {
+    throw windowsAclFailure({ kind: "invalid_output" });
+  }
 }
 
 function windowsAclSnapshotAsync(target, options = {}) {
@@ -415,8 +452,11 @@ function windowsAclSnapshotAsync(target, options = {}) {
       try {
         return parseWindowsAclSnapshot(stdout);
       } catch {
-        throw new Error("unable to verify Windows credential ACL");
+        throw windowsAclFailure({ kind: "invalid_output" });
       }
+    },
+    (cause) => {
+      throw windowsAclFailure(cause);
     },
   );
 }
