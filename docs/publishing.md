@@ -325,6 +325,16 @@ Historical `v0.19.1` is explicitly retrospective and not
 pre-publication-attested; no current branch output may be used to upgrade that
 historical status.
 
+After the protected `publish` job succeeds, its read-only `release-completion`
+job polls for up to ten minutes at 15-second intervals. It checks the annotated
+tag and exact release commit, the three direct assets and their subject-bound
+digests, successful exact-tag Post-release Evidence after the latest release
+mutation, final Release Please labels, and the duplicate-free OpenAI handoff.
+It has no write permissions and does not use the `release` environment. A red
+completion job does not roll back an already-published release: repair or retry
+Post-release Evidence, then rerun only failed jobs with
+`gh run rerun <run-id> --failed`.
+
 Use the [post-release receipt schema](../skill-evals/stark-ai-developer/evidence/post-release-receipt.schema.json)
 and `pnpm run validate:post-release-receipt -- --file <receipt.json>` when
 reviewing a receipt. Receipts remain workflow artifacts and are not committed.
@@ -348,7 +358,7 @@ The maintained workflows shown in Actions are:
 | [✅ Validate](../.github/workflows/validate.yml)                           | Repository checks and release-subject preparation | Pull request, push to `main`, manual    |
 | [🌐 GitHub Pages](../.github/workflows/pages.yml)                          | Build and deploy the skill catalog                | Relevant push to `main`, manual         |
 | [📝 Release Please](../.github/workflows/release-please.yml)               | Create or update the draft release PR             | Push to `main`, manual                  |
-| [🚀 Publish Release](../.github/workflows/publish-release.yml)             | Verify and publish an approved release            | Release-manifest push to `main`, manual |
+| [🚀 Publish Release](../.github/workflows/publish-release.yml)             | Publish, then verify the complete release handoff | Release-manifest push to `main`, manual |
 | [🧾 Post-release Evidence](../.github/workflows/post-release-evidence.yml) | Verify published archives and attestations        | Publisher dispatch or manual            |
 | [🔏 Attest Release Archives](../.github/workflows/attest-release.yml)      | Attest archives for an exact tag                  | Manual                                  |
 
@@ -361,17 +371,17 @@ them exactly, including historical runs.
 All local commands dispatch hosted workflows or APIs; none creates a local tag
 or release. Hosted mutations require `--confirm`.
 
-| CLI                                                                                     | GitHub web equivalent                                                                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm run release:manage -- status`                                                     | Open **Actions** and **Releases**.                                                                                                                                                                                                           |
-| `pnpm run release:manage -- setup-check`                                                | Configure the App variable/private-key secret, create `autorelease: pending` and `autorelease: tagged`, then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
-| `pnpm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]`        | Review the feature diff and affected component versions.                                                                                                                                                                                     |
-| `pnpm run release:manage -- release-pr --confirm`                                       | **Actions → 📝 Release Please → Run workflow**.                                                                                                                                                                                              |
-| `pnpm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                           |
-| `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                  |
-| `pnpm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                 |
-| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → 🧾 Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                    |
-| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                        |
+| CLI                                                                                     | GitHub web equivalent                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run release:manage -- status`                                                     | Open **Actions** and **Releases**.                                                                                                                                                                                                                                                                                                     |
+| `pnpm run release:manage -- setup-check`                                                | Configure `RELEASE_PLEASE_APP_CLIENT_ID` for token creation, numeric `RELEASE_PLEASE_APP_ID` for provenance, and the private-key secret; create `autorelease: pending` and `autorelease: tagged`; then configure **Settings → Environments → release** with a required reviewer, one custom `main` branch policy, and no admin bypass. |
+| `pnpm run release:manage -- impact --kind patch\|minor\|breaking [--skill NAME]`        | Review the feature diff and affected component versions.                                                                                                                                                                                                                                                                               |
+| `pnpm run release:manage -- release-pr --confirm`                                       | **Actions → 📝 Release Please → Run workflow**.                                                                                                                                                                                                                                                                                        |
+| `pnpm run release:manage -- publish-plan [--recovery-release-sha SHA] --confirm`        | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=true`; paste the original full release SHA only for ADR-0053 controller-defect recovery.                                                                                                                                                                                     |
+| `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                                                                                                            |
+| `pnpm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                                                                                                           |
+| `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → 🧾 Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                                                                                                              |
+| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                                                                                                                  |
 
 Equivalent local release validation:
 
@@ -399,9 +409,11 @@ pnpm run generate:release-evidence
 
 `plugins/stark-ai-developer/` is the portable Agent Plugins projection.
 `pnpm run sync:openai-plugin` does not write a repository adapter tree.
-`dist/openai/stark-ai-developer-1.6.0.zip` is the local OpenAI-native
-harness-first submission fallback, generated from ephemeral adapter staging at
-package time. The normal portal handoff source is the direct `openai.zip` asset
+The exact local OpenAI-native harness-first fallback path is
+`outputs.openaiArchive` in
+[`plugins/stark-ai-developer.source.json`](../plugins/stark-ai-developer.source.json).
+It is generated from ephemeral adapter staging at package time. The normal
+portal handoff source is the direct `openai.zip` asset
 from the verified GitHub Release; its bytes came unchanged from successful
 hosted `Validate` for the exact release commit.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
@@ -621,6 +633,7 @@ security routes return HTTP 200.
 12. Let Release Please create the draft root release PR and merge it after review.
 13. Inspect automatic Publish readiness; optionally dispatch `dry_run: true` again.
 14. Approve the waiting `release` environment deployment.
-15. Inspect the pre-publication receipt and the explicitly dispatched `Post-release Evidence`
-    receipt, or dispatch the latter with the exact tag when a repeat is needed.
+15. Wait for the read-only `release-completion` job and inspect its linked
+    Post-release Evidence receipt. If Evidence needs a repeat, dispatch it with
+    the exact tag and rerun only the failed completion job.
 16. Complete [Operator follow-up](#operator-follow-up), including the manual OpenAI handoff.

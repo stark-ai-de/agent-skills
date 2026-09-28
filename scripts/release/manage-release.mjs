@@ -133,9 +133,14 @@ function setupCheck(repository) {
   ]) {
     if (!fs.existsSync(path.join(root, workflow))) throw new Error(`${workflow} is missing`);
   }
-  const variable = ghJson(["api", `repos/${repository}/actions/variables/RELEASE_PLEASE_APP_ID`]);
-  if (variable.name !== "RELEASE_PLEASE_APP_ID" || !String(variable.value ?? "").trim()) {
-    throw new Error("RELEASE_PLEASE_APP_ID repository variable is missing");
+  for (const [name, purpose] of [
+    ["RELEASE_PLEASE_APP_CLIENT_ID", "token creation"],
+    ["RELEASE_PLEASE_APP_ID", "release provenance"],
+  ]) {
+    const variable = ghJson(["api", `repos/${repository}/actions/variables/${name}`]);
+    if (variable.name !== name || !String(variable.value ?? "").trim()) {
+      throw new Error(`${name} repository variable for ${purpose} is missing`);
+    }
   }
   const secrets = ghJson([
     "api",
@@ -167,7 +172,7 @@ function setupCheck(repository) {
     throw new Error(`Release environment preflight failed: ${environmentErrors.join("; ")}`);
   }
   console.log(
-    "Release setup is present: App variable, private-key secret, Release Please lifecycle labels, required reviewer, a single custom main branch policy, protected main, and disabled admin bypass. Confirm the App installation still grants only Contents, Pull requests, and Issues write with no webhooks.",
+    "Release setup is present: GitHub App client ID for token creation, numeric App ID for release provenance, private-key secret, Release Please lifecycle labels, required reviewer, a single custom main branch policy, protected main, and disabled admin bypass. Confirm the App installation still grants only Contents, Pull requests, and Issues write with no webhooks.",
   );
 }
 
