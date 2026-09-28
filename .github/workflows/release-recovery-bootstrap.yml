@@ -25,20 +25,29 @@ jobs:
           runtime: node@24.18.0
           cache: false
           install: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
       - name: Resolve the isolated pinned recovery dependency
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/recovery-tooling"
           printf '%s\n' '{"private":true,"dependencies":{"release-please":"17.6.0"}}' > "$RUNNER_TEMP/recovery-tooling/package.json"
-          pnpm --dir "$RUNNER_TEMP/recovery-tooling" --ignore-workspace install --lockfile-only --ignore-scripts
+          printf '%s\n' 'packages: ["."]' 'strictDepBuilds: true' 'blockExoticSubdeps: true' 'minimumReleaseAge: 1440' 'minimumReleaseAgeStrict: true' 'trustPolicy: no-downgrade' > "$RUNNER_TEMP/recovery-tooling/pnpm-workspace.yaml"
+          pnpm --dir "$RUNNER_TEMP/recovery-tooling" install --ignore-scripts
+          pnpm --filter . install --frozen-lockfile --ignore-scripts
+          tar -czf "$RUNNER_TEMP/recovery-tooling.tgz" -C "$RUNNER_TEMP" recovery-tooling
+          tar -czf "$RUNNER_TEMP/recovery-tools.tgz" node_modules
+          cp "$(command -v bun)" "$RUNNER_TEMP/recovery-bun"
           git bundle create "$RUNNER_TEMP/recovery-source.bundle" --all
       - uses: actions/upload-artifact@v7
         with:
           name: recovery-preparation
           path: |
-            ${{ runner.temp }}/recovery-tooling/package.json
-            ${{ runner.temp }}/recovery-tooling/pnpm-lock.yaml
+            ${{ runner.temp }}/recovery-tooling.tgz
+            ${{ runner.temp }}/recovery-tools.tgz
+            ${{ runner.temp }}/recovery-bun
             ${{ runner.temp }}/recovery-source.bundle
           if-no-files-found: error
           retention-days: 3
