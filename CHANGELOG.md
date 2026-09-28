@@ -12,6 +12,31 @@
 
 ### Removed
 
+## 0.25.2 (2026-09-28)
+
+## What's Changed
+* fix(release): verify post-release completion by @servrox in https://github.com/stark-ai-de/agent-skills/pull/117
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.1...v0.25.2
+
+## 0.25.1 (2026-09-28)
+
+## What's Changed
+* fix(release): allowlist manual handoff issue authors by @servrox in https://github.com/stark-ai-de/agent-skills/pull/113
+* fix(release): avoid redundant publication retries by @servrox in https://github.com/stark-ai-de/agent-skills/pull/115
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.0...v0.25.1
+
+## 0.25.0 (2026-09-28)
+
+## What's Changed
+* feat(release): create OpenAI plugin handoff issue by @servrox in https://github.com/stark-ai-de/agent-skills/pull/109
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.24.0...v0.25.0
+
 ## 0.24.0 (2026-09-26)
 
 ## What's Changed

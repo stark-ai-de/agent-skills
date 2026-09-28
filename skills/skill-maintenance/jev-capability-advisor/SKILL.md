@@ -2,10 +2,13 @@
 name: jev-capability-advisor
 description: Recommend available skills or MCP tools using TypeSafe Jev, or explicitly choose one next skill. Use when the user requests capability advice, candidate inspection, selection evaluation, or reusable host integration. Native client selection remains the default and fallback.
 license: Apache-2.0
+compatibility: >-
+  Requires Python 3.10+, TypeSafe API credentials, and host-authorized
+  HTTPS access to api.typesafe.ai for recommendations.
 metadata:
   author: stark-ai-de
   category: skill-maintenance
-  version: "0.3.1"
+  version: "0.3.3"
 ---
 
 # Jev Capability Advisor
@@ -14,11 +17,27 @@ metadata:
 
 Return a task-specific recommendation from capabilities actually available in the current client. The default `general` profile can recommend one to three capabilities; explicit `next_skill` recommends one skill without assessing remaining work. The client retains discovery, activation, permissions, and execution.
 
+## Network prerequisite
+
+Recommendations need host-authorized HTTPS access to `api.typesafe.ai:443` and
+existing TypeSafe credentials. Installation, hook trust, processing consent and
+network permission are separate. The user or administrator owns permissions;
+the skill never edits sandbox, firewall, proxy or approval policy. Use an
+applicable native approval route only when needed. A denial ends the attempt:
+no alternate route, repeated prompt or automatic retry. Follow the
+[network and failure contract](references/network-access.md) for actionable,
+secret-free messages. Without usable API access, no Jev recommendation was
+produced; native selection and local `Inspect` are not Jev advice.
+
+The contract is the same on native Windows, macOS and Linux; WSL is a separate
+environment, not a prerequisite. Use the installed OS-native Python interpreter.
+Concrete host approval controls belong in the [hook reference](references/hook-integration.md).
+
 ## Enabled-hook entry
 
 Hook guidance requests **Recommend**, `general/current`. First distinguish the delivered mode. A `repository-adopted` reminder follows the [repository policy prerequisites](references/hook-integration.md#repository-adopted-policy), including adoption, scoped host-owner processing authority and qualification; it has no installer binding and must not invent one. The following bound-status and receipt steps apply to the optional installer-managed reminder. Resolve this `SKILL.md` from its current eligible host card. Use that exact directory for every reference and script; a repository/workspace search cannot establish whether installed support files exist. First read this copy's `references/hook-integration.md`, then run this copy's `scripts/jev_hooks.py status` with the delivered registration's `--host` and `--scope`; add `--project-root` only for project scope. Use absolute paths or that skill directory as the command working directory. Require an active registration and `advice_consent.status: recorded`; a key or native hook trust does not establish processing consent. Never install or grant consent to repair a missing prerequisite during ordinary advice.
 
-Read the [capture procedure](references/hook-catalog.md) before judging catalog availability. A prebuilt JSON export or complete inventory is not required: construct a bounded bare array from the current model-visible skill cards and loaded MCP definitions, keeping only source-backed eligible entries. A missing structured export alone is not a prerequisite failure. Build the hook catalog from current skill cards and actual MCP definitions, excluding built-in host tools. Candidate enrichment may extract name, description and invocation-policy metadata, but must not load candidate workflow instructions before advice. The CLI catalog is a **bare JSON array**, never a `{"capabilities": [...]}` wrapper or a Session frame. Keep current-source snapshots and exclusions in the private [catalog evidence sidecar](references/hook-catalog.md), check it with `scripts/hook_catalog.py`, and retain its declared coverage limits. For a newly generated catalog, follow the [local catalog check](references/hook-integration.md#catalog-shape-and-local-check) with `--offline-candidates` before the separate provider command; this checks input locally, makes no recommendation and needs no credential/network approval. When the active host requires network approval, obtain it through the host's normal route before the first provider command. In Codex, when the active `exec_command` exposes `sandbox_permissions` and network access is restricted, set it to `require_escalated` with a scoped `justification` on the advisor command itself. Prepare local input files separately; shell text cannot request this tool-level approval. Denied or unavailable required approval means native fallback without a provider attempt.
+Read the [capture procedure](references/hook-catalog.md) before judging catalog availability. A prebuilt JSON export or complete inventory is not required: construct a bounded bare array from the current model-visible skill cards and loaded MCP definitions, keeping only source-backed eligible entries. A missing structured export alone is not a prerequisite failure. Build the hook catalog from current skill cards and actual MCP definitions, excluding built-in host tools. Candidate enrichment may extract name, description and invocation-policy metadata, but must not load candidate workflow instructions before advice. The CLI catalog is a **bare JSON array**, never a `{"capabilities": [...]}` wrapper or a Session frame. Keep current-source snapshots and exclusions in the private [catalog evidence sidecar](references/hook-catalog.md), check it with `scripts/hook_catalog.py`, and retain its declared coverage limits. For a newly generated catalog, follow the [local catalog check](references/hook-integration.md#catalog-shape-and-local-check) with `--offline-candidates` before the separate provider command; this checks input locally, makes no recommendation and needs no credential/network approval. Follow the [portable network and failure contract](references/network-access.md). Check the active host's effective permission for the TypeSafe endpoint. If its enforced network policy already allows that destination, run the advisor in the normal sandbox; in Codex use `use_default` or omit the override. Restricted networking alone does not require escalation. Only when this invocation actually requires native approval, and the active tool exposes it, use the host's normal approval route on the advisor command itself. Prepare permitted local inputs separately. Denied, unavailable or unverifiable required permission means native fallback without a provider attempt; never replay a failed provider request with higher permissions.
 
 Keep one eligible skill instance's instructions and scripts together; do not concatenate multiple installed versions. If support is unavailable, establish that with a direct read/execution result for this instance before reporting the concrete fallback. Continue with its current-session catalog and configured credentials when prerequisites hold; no setup or workflow-selection question is needed.
 
@@ -101,7 +120,7 @@ Read [the contract and commands](references/contract.md) when preparing a catalo
 
 ## Output format
 
-Return status, selected capability names/IDs, why the selection fits the requested first step, and any unresolved ambiguity or coverage limit. For `next_skill`, preserve `selection_profile: next_skill` and `additional_work: unassessed`; assess no completion beyond the one next recommendation. Explanations must follow the catalog and request; Jev does not generate explanations. Distinguish measured selection latency from unmeasured client-loading speed.
+Return status, selected capability names/IDs, why the selection fits the requested first step, and any unresolved ambiguity or coverage limit. On failure, use the safe summary `error_message` with the observed error category and localize it to the user. Only the host can establish an approval denial; no Python error implies one. Keep an explicit Jev failure separate from any native advice. For `next_skill`, preserve `selection_profile: next_skill` and `additional_work: unassessed`; assess no completion beyond the one next recommendation. Explanations must follow the catalog and request; Jev does not generate explanations. Distinguish measured selection latency from unmeasured client-loading speed.
 
 ## Completion criteria
 
@@ -109,7 +128,7 @@ Recommend/Inspect ends with a concrete recommendation, a scoped no-capability an
 
 ## Failure modes
 
-- Missing key or network failure: inspect candidates locally and state that semantic selection was not completed.
+- Missing credentials or API access: follow the [network and failure contract](references/network-access.md). Report no Jev result and the evidenced cause; do not relabel a generic connection failure as a sandbox denial. Automatic hooks may continue natively; explicit Jev-only requests remain unfulfilled. Local inspection is a separate available workflow, not an automatic substitute.
 - Missing or stale catalog: obtain current host metadata; exclude unresolved entries and report limited coverage. If no reliable bounded catalog remains, use native discovery; do not substitute a guessed inventory.
 - Ambiguous task: ask for the missing intent rather than selecting arbitrary capabilities.
 - Candidate/request limit: disclose the incomplete scope and let the host's ordinary discovery continue.

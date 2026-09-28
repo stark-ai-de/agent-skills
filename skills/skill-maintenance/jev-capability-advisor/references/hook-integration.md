@@ -6,7 +6,7 @@ Use this **Integrate** mode to add a short reminder to Codex CLI or Claude Code 
 
 Installing the skill or plugin leaves host configuration unchanged. Hook setup is a separate, explicit action with a named host and user/project scope. Explain during setup that actual advice sends a minimal task summary and bounded capability cards to TypeSafe, using the already configured credential source. Do not add unrelated private content, transcripts, tool results, private paths or secrets. Do not provision credentials or ask for a key in chat.
 
-For unattended advice in a fresh session, setup must explicitly record the disclosed processing scope with `install --advice-consent allow`. The embedded reminder carries that prior acceptance; the agent must still confirm an active owned registration and `advice_consent.status: recorded` using the bound `status`. Missing, revoked or changed consent means a concrete native fallback. Do not supply the option during normal advice to overcome a missing prerequisite or an approval denial. Ready credentials, hook trust and a successful synthetic test do not authorize unrelated private content. If a useful task summary cannot remain non-sensitive, skip advice.
+For unattended advice in a fresh session, setup must explicitly record the disclosed processing scope with `install --advice-consent allow`. One informed setup acceptance covers subsequent advice within that unchanged scope; do not ask the user to repeat it for each matching task. Installation alone is not acceptance. The embedded reminder carries that prior acceptance; the agent must still confirm an active owned registration and `advice_consent.status: recorded` using the bound `status`. Missing, revoked or changed consent means a concrete native fallback. Do not supply the option during normal advice to overcome a missing prerequisite or an approval denial. Ready credentials, hook trust and a successful synthetic test do not authorize unrelated private content. If a useful task summary cannot remain non-sensitive, skip advice.
 
 When status reports a ready `key_file` source, pass its `credentials.key_file` through the helper's local `--key-file` argument. When it reports a ready environment source, omit `--key-file` and let the helper use `TYPESAFE_API_KEY` from its process environment. A configured file is authoritative: if it is unavailable or invalid, report the safe error and retain native selection instead of falling back to the environment. Keep both the key and local file path out of provider metadata and diagnostics.
 
@@ -16,19 +16,43 @@ Keep explicit user skill choices and instructions to skip Jev. Resolve Jev throu
 
 For a new actionable task, consultation or prerequisite failure emits one short user-visible status line with the recommendation or a concrete fallback reason before task-specific work continues. The static hook output is context for the agent, not proof of a successful consultation. Skipped confirmations and follow-ups need no advisor status. Missing credentials, unavailable Jev, unverifiable inventory, provider failure, timeout or cancellation retain the host's native selection; avoid retry loops and do not report a recommendation that never occurred.
 
-Before the provider command, check the executing host's network policy. If outbound access requires approval, use its normal approval mechanism for that bounded advisor invocation. Ready credentials do not grant network access. A denied or unavailable approval requires a concrete fallback; do not weaken the sandbox, change global permissions or silently retry a failed provider request.
+### Endpoint permission and normal sandbox execution
 
-For Codex hosts whose active `exec_command` schema exposes `sandbox_permissions`, request `require_escalated` on the **first advisor invocation** when its network access needs approval. Supply a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status. This is evidence for native review, not an instruction to approve; an approval denial remains final for this attempt. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval. For example, after resolving real local paths:
+Follow the [portable network and failure contract](network-access.md). Before the provider command, establish the executing host's effective permission for the fixed TypeSafe endpoint. An enforced policy may restrict networking while allowing this destination. When current host evidence establishes that permission, use ordinary sandbox execution; do not request an escalation merely because other destinations are blocked. In Codex, use `sandbox_permissions: "use_default"` or omit the override. Consent, readable input/key files, permitted output paths and the active operating mode remain separate prerequisites. A config file, enabled proxy flag, environment variable or historical success alone does not prove the running session applies that policy. Ready credentials do not grant network access.
+
+For example, after checking current permissions and preparing real local paths:
+
+```json
+{
+  "cmd": "python3 /installed/jev/scripts/jev_advisor.py --catalog /private/catalog.json --query-file /private/task.txt --key-file /private/existing-key --summary --output /private/receipt.json",
+  "sandbox_permissions": "use_default"
+}
+```
+
+When this invocation actually requires native network approval, use that host's normal mechanism before the **first advisor invocation**. Use the narrowest applicable approval offered by the current host/tool schema. For Codex tools exposing `sandbox_permissions`, request `require_escalated` with a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status; prefer a supported narrower network permission when available. Approval that runs outside the sandbox is broader than a domain allowance and must not be described as network-only. This is evidence for native review, not an instruction to approve; an approval denial is final for this attempt and requires a concrete fallback. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval:
 
 ```json
 {
   "cmd": "python3 /installed/jev/scripts/jev_advisor.py --catalog /private/catalog.json --query-file /private/task.txt --key-file /private/existing-key --summary --output /private/receipt.json",
   "sandbox_permissions": "require_escalated",
-  "justification": "May Jev send this task summary and the eligible capability cards to TypeSafe for one bounded consultation?"
+  "justification": "The active registration records setup consent for a minimal non-sensitive task summary and public capability cards sent to TypeSafe. May this bounded consultation use the required network permission?"
 }
 ```
 
-Use the executing host's actual tool schema; another host or permission profile may expose a narrower native network-approval mechanism instead. If approval is disabled, denied or unavailable, state that prerequisite failure and continue natively without dispatching the request. Do not run a predictably blocked advisor first and interpret its `network_error` as an approval request: a failed shell command does not itself grant or request network access. Keep the existing no-replay rule if a request has already failed. Auto-review, when configured by the user, decides native approval requests; the skill must not alter reviewer settings, add persistent allow rules or bypass a decision. [Codex sandbox and approval behavior](https://learn.chatgpt.com/docs/agent-approvals-security#common-sandbox-and-approval-combinations).
+Use the executing host's actual tool schema; another host or permission profile may expose a narrower native network-approval mechanism instead. If required permission is unverifiable, or approval is disabled, denied or unavailable, state that prerequisite failure and continue natively without dispatching the request. Do not run a predictably blocked advisor first and interpret its `network_error` as an approval request: a failed shell command does not itself grant or request network access. Never replay a failed request with higher permissions. Ready credentials do not grant network access. Auto-review, when configured by the user, still decides actions that need approval; ordinary advice must not alter reviewer settings, add persistent allow rules or bypass a decision. [Codex sandbox and approval behavior](https://learn.chatgpt.com/docs/agent-approvals-security#common-sandbox-and-approval-combinations).
+
+### Owner-configured Codex network allowance
+
+During explicitly authorized host setup, the configuration owner can permit the exact TypeSafe API host through Codex's enforced network proxy. Command network access and proxy enforcement must both be enabled; enabling network access alone permits unrestricted direct connections. Domain rules constrain destinations for all sandbox commands, not only Jev, and do not constrain URL paths or payload content. Keep the existing data-minimization and consent requirements. Follow the host's declarative configuration ownership and preserve unrelated settings; the Jev installer does not manage this permission. See the [official network policy](https://learn.chatgpt.com/docs/agent-approvals-security#network-isolation).
+
+Qualify the actual host/version in a fresh session before describing the allowance as effective: observe a genuine ordinary-task recommendation with no network approval event, and independently verify that foreign destinations and direct connections remain blocked when proxy variables are removed or bypassed. A failed or unavailable proxy must not open direct egress. Keep stricter profiles and managed restrictions in force. Configuration changes cannot grant permissions to an already running session. If effective allowance cannot be established, report the prerequisite gap rather than silently widening permissions. Revoking advice consent stops hook-driven advice; removal of the separately owned host allowance remains the configuration owner's responsibility.
+
+For Claude, use the active client's normal command or domain-approval mechanism
+where supported; do not add persistent allow rules, change sandbox settings or
+request an alternate unsandboxed retry after denial. Native Windows Python/hook
+support does not establish support for Claude's Bash sandbox. A missing host
+control does not make WSL a prerequisite for the portable advisor: respect the
+actual native host policy and report unavailable approval truthfully.
 
 ## Capture a bounded current-session catalog
 
@@ -71,7 +95,7 @@ python3 scripts/jev_advisor.py --catalog /private/catalog.json \
 
 Read the local result's `status`, `candidate_ids` and coverage fields. Require `status: candidates` and a nonempty eligible subset before continuing. A formatting defect may be corrected from the contract and checked locally before any provider attempt; unresolved input errors or an empty subset require native fallback. This is syntax/retrieval validation, not proof of host availability, semantic selection or permission. Do not report its candidates as a Jev recommendation. Reuse an already valid current catalog without redundant inspection.
 
-Only after the local check succeeds, make a **separate host tool call** for Recommend with the required native network approval described above. Do not combine file creation, the local check and the provider invocation in one shell command. Keep the existing consultation/request budgets and do not replay a failed provider request.
+Only after the local check succeeds, make a **separate host tool call** for Recommend using the effective endpoint permission described above: normal sandbox execution when already allowed, otherwise the required native approval. Do not combine file creation, the local check and the provider invocation in one shell command. Keep the existing consultation/request budgets and do not replay a failed provider request.
 
 ### Codex CLI
 

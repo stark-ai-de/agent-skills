@@ -9,6 +9,7 @@ if (output)
       path.join(output, `harness-${process.pid}.json`),
       JSON.stringify({
         role: "harness",
+        pid: process.pid,
         versions: process.versions,
         executable: path.basename(process.execPath),
         maxRssKiB: process.resourceUsage().maxRSS,

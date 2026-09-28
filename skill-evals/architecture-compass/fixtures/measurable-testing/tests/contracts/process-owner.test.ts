@@ -23,24 +23,28 @@ test("owned cancellation reaps worker processes holding inherited pipes", async 
   }
 });
 
-test("normal leader exit terminates unreferenced descendants with ignored stdio", async () => {
-  const owner = new ProcessOwner();
-  const code =
-    'const {spawn}=require("node:child_process");const child=spawn(process.execPath,["-e","setTimeout(()=>{},10000)"],{stdio:"ignore"});child.unref();console.log(child.pid);';
-  const child = owner.spawn(process.execPath, ["-e", code], { stdio: ["ignore", "pipe", "pipe"] });
-  let output = "";
-  child.stdout!.on("data", (data) => {
-    output += data;
-  });
-  try {
-    await new Promise<void>((resolve, reject) => {
-      child.once("close", () => resolve());
-      child.once("error", reject);
+test.each(["ignore", "inherit"])(
+  "normal leader exit terminates descendants with %s stdio",
+  async (stdio) => {
+    const owner = new ProcessOwner();
+    const code = `const {spawn}=require("node:child_process");const child=spawn(process.execPath,["-e","setTimeout(()=>{},10000)"],{stdio:${JSON.stringify(stdio)}});child.unref();console.log(child.pid);`;
+    const child = owner.spawn(process.execPath, ["-e", code], {
+      stdio: ["ignore", "pipe", "pipe"],
     });
-    await owner.wait(child);
-    expect(Number(output.trim())).toBeGreaterThan(0);
-    expect(owner.active.size).toBe(0);
-  } finally {
-    await owner.close();
-  }
-});
+    let output = "";
+    child.stdout!.on("data", (data) => {
+      output += data;
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        child.once("close", () => resolve());
+        child.once("error", reject);
+      });
+      await owner.wait(child);
+      expect(Number(output.trim())).toBeGreaterThan(0);
+      expect(owner.active.size).toBe(0);
+    } finally {
+      await owner.close();
+    }
+  },
+);

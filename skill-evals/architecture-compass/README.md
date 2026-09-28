@@ -164,6 +164,10 @@ Routed-library cases use the catalog and Short variants for discovery, canonical
 
 The 2026-09-08 adapter cases cover complete-record proven absence, separate native control and inline parsing evidence, busy composers, and independent read-only enforcement. Codex Spec Interviewer also covers refusal before capability evidence while preserving the earlier routing gate. Current lifecycle cases preserve control evidence without making its collection a prerequisite for safe planning. These are behavioral evaluation scenarios; static inventory validation does not execute live client turns.
 
+## Evaluation verdicts
+
+Case `contains` and `not_contains` entries are lexical diagnostics, not semantic verdicts. Review the response against Expected Behavior and the rubric before scoring: “Do not install Vitest” preserves the native-framework boundary even though it contains the diagnostic phrase “install Vitest”. Record lexical results and the semantic verdict separately with a short justification for differences. File inventory or structural validation proves that an evaluation contract exists; only an observed agent response supports a behavior verdict.
+
 ## Measurable testing evaluation
 
 The fourteen scenario contracts below cover AC-ADR-059 through AC-ADR-062. They are static expectations; passing structural validation is not an agent-behavior run. The [executable qualification fixtures](fixtures/measurable-testing/README.md) exercise runtime, input discovery, isolation, aggregation, cache and measurement mechanisms outside the installed payload.

@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.24.0",
+  "version": "0.25.2",
   "private": true,
   "description": "Public Agent Skills catalog for Codex operations, Cursor operations, Claude operations, repo maintenance, skill maintenance, productivity, and engineering workflows.",
   "keywords": [
@@ -68,9 +68,8 @@
     "validate:runtime-matrix": "bun --bun scripts/validation/test-runtime-evidence-matrix.mjs",
     "validate:ownership": "bun --bun scripts/validation/test-validation-ownership.mjs",
     "validate:bundles": "bun exec \"bun --bun scripts/plugin/validate-bundles.mjs && bun --bun scripts/validation/test-bundle-contract.mjs\"",
-    "validate:openai": "bun exec \"bun --bun scripts/plugin/validate-openai-listing.mjs && bun --bun scripts/plugin/validate-openai-marketplace.mjs && bun --bun scripts/validation/test-openai-contract.mjs && bun --bun scripts/validation/test-openai-directory.mjs && bun --bun scripts/validation/test-listing-identity.mjs && bun --bun scripts/validation/test-openai-icons.mjs\"",
-    "generate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs",
-    "validate:openai-worksheet": "bun --bun scripts/plugin/generate-openai-submission-worksheet.mjs --check",
+    "validate:openai": "bun exec \"bun --bun scripts/plugin/validate-openai-listing.mjs && bun --bun scripts/plugin/validate-openai-marketplace.mjs && bun --bun scripts/validation/test-openai-contract.mjs && bun --bun scripts/validation/test-openai-documentation.mjs && bun --bun scripts/validation/test-openai-directory.mjs && bun --bun scripts/validation/test-listing-identity.mjs && bun --bun scripts/validation/test-openai-icons.mjs && bun --bun scripts/validation/test-openai-release-issue.mjs\"",
+    "release:openai-issue": "bun --bun scripts/release/reconcile-openai-plugin-issue.mjs",
     "validate:projections": "bun exec \"bun --bun scripts/plugin/sync-agent-plugin.mjs --check && bun --bun scripts/plugin/validate-agent-plugin.mjs && bun --bun scripts/validation/test-plugin-projections.mjs\"",
     "validate:archives": "bun --bun scripts/release/validate-archives.mjs",
     "validate:network-endpoints": "bun exec \"bun --bun scripts/plugin/validate-network-endpoints.mjs && bun --bun scripts/validation/test-network-endpoints.mjs\"",
@@ -95,7 +94,7 @@
     "validate:release-subject": "bun --bun scripts/validation/test-release-subject.mjs",
     "validate:release-management": "bun exec \"bun --bun scripts/validation/test-release-environment.mjs && bun --bun scripts/validation/test-release-management.mjs\"",
     "validate:release-subject-file": "bun --bun scripts/release/validate-release-subject.mjs",
-    "test:post-release-receipt": "bun exec \"bun --bun scripts/validation/test-post-release-receipt.mjs && bun --bun scripts/validation/test-release-reconciler.mjs\"",
+    "test:post-release-receipt": "bun exec \"bun --bun scripts/validation/test-post-release-receipt.mjs && bun --bun scripts/validation/test-release-reconciler.mjs && bun --bun scripts/validation/test-release-completion.mjs\"",
     "package:agent-plugin": "bun --bun scripts/plugin/package-agent-plugin.mjs",
     "package:openai-plugin": "bun --bun scripts/plugin/package-openai-plugin.mjs",
     "package:standalone-skills": "bun --bun scripts/plugin/package-standalone-skills.mjs",
