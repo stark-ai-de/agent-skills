@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.10.0"
+  version: "0.10.1"
 ---
 
 # Architecture Compass
@@ -38,6 +38,8 @@ Every direct invocation exposes exactly these public workflows:
 - `refactor`: execute explicit bounded work already governed by accepted local ADRs.
 - `plan-refactor`: collaborate on and persist an approved bounded refactoring specification without implementing it.
 - `plan-run-refactor`: plan, persist, recheck, and execute an approved broad or decision-bearing refactor.
+
+Begin activation with a compact line exposing `setup | audit | refactor | plan-refactor | plan-run-refactor`, then name the selected route, rationale and authorized scope. Keep this disclosure in response-only assessments too; a short answer still exposes all five choices.
 
 There is no `auto` workflow. Route by task evidence:
 
@@ -77,7 +79,7 @@ For provider mechanics, resolve the applicable public AC-ADR and load its Long f
 
 Use the catalog for namespace authority, lineage, canonical Long variants, and task-specific decisions. AC-ADR-001 is superseded historical context only.
 
-For testing work, use the catalog to select AC-ADR-059 for repository validation ownership, AC-ADR-060 for runtime/state effects, AC-ADR-061 for distributed proof, and AC-ADR-062 for transform-cache evaluation. Select only applicable candidates; keep the seven-decision evidence-empty foundation unchanged. Map existing equivalent local decisions instead of duplicating them. Audit adopted outcomes without writes and distinguish `met`, `unmet`, `unmeasured`, `waived`, and `not-applicable` from execution statuses. Use the [testing receipt](assets/testing-outcome-receipt-template.md) within the target's existing evidence convention.
+For testing work, use the catalog to select AC-ADR-059 for repository validation ownership, AC-ADR-060 for runtime/state effects, AC-ADR-061 for distributed proof, and AC-ADR-062 for transform-cache evaluation. Select only applicable candidates; keep the seven-decision evidence-empty foundation unchanged. Map existing equivalent local decisions instead of duplicating them. Audit adopted outcomes without writes and distinguish `met`, `unmet`, `unmeasured`, `waived`, and `not-applicable` from execution statuses. Use the [testing receipt](assets/testing-outcome-receipt-template.md) within the target's existing evidence convention. Before promoting testing changes, derive public ADR, triplet and adoptable counts from the current catalog; reconcile the complete adoption matrix, decision locks/lineage and eval inventory, then verify regenerated/clean-installed skill byte identity and exclusion of fixture/eval files from installed payloads. Apply the AC-ADR-049 `high` risk floor when promotion changes a public governance or distribution contract, including changes expressed in documentation.
 
 ## Inputs to inspect
 

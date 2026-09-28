@@ -89,8 +89,48 @@ export function measurement(input: {
     ![input.baseline, input.denominator, input.observed, input.target].every(
       (value) => typeof value === "number" && Number.isFinite(value) && value >= 0,
     ) ||
-    (input.percentile && (input.samples ?? 0) < 100)
+    (input.percentile !== undefined &&
+      (!Number.isFinite(input.percentile) ||
+        input.percentile <= 0 ||
+        input.percentile > 100 ||
+        !Number.isInteger(input.samples) ||
+        (input.samples ?? 0) < 100))
   )
     return "unmeasured";
   return input.observed! <= input.target ? "met" : "unmet";
+}
+
+export function observedPeakRss(
+  identities: { role?: string; pid?: number; file?: string; maxRssKiB?: number }[],
+  expectedFiles: string[],
+): number {
+  const processes = identities.filter(
+    (identity) => identity.role === "harness" || identity.role === "worker",
+  );
+  const workers = processes.filter((identity) => identity.role === "worker");
+  if (
+    !processes.some((identity) => identity.role === "harness") ||
+    !workers.length ||
+    processes.some(
+      (identity) =>
+        !Number.isInteger(identity.pid) ||
+        identity.pid! <= 0 ||
+        !Number.isFinite(identity.maxRssKiB) ||
+        identity.maxRssKiB! <= 0,
+    ) ||
+    workers.some((identity) => typeof identity.file !== "string" || !identity.file) ||
+    !expectedFiles.length ||
+    !sameSet(
+      expectedFiles,
+      workers.map((identity) => identity.file!),
+    )
+  )
+    throw new Error("missing or invalid runtime memory telemetry");
+  // A reused process can report multiple completed files; count its peak once.
+  const peaks = new Map<number, number>();
+  for (const identity of processes)
+    peaks.set(identity.pid!, Math.max(peaks.get(identity.pid!) ?? 0, identity.maxRssKiB!));
+  const total = [...peaks.values()].reduce((sum, peak) => sum + peak, 0);
+  if (!Number.isFinite(total)) throw new Error("invalid runtime memory telemetry total");
+  return total;
 }
