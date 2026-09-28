@@ -56,7 +56,6 @@ const sharedPaths = listingArtifactPaths(identity);
 const releasePaths = pluginArtifactPaths(repoRoot);
 for (const key of [
   "listing",
-  "worksheet",
   "firstPublication",
   "portableTarget",
   "retiredOpenAiAdapter",

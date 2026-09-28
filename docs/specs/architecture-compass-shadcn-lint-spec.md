@@ -107,7 +107,7 @@ boundary: publish no local checkout paths or private comparison provenance.
 Update the canonical skill references/catalog/setup asset, skill metadata,
 Architecture Compass validator/integrity records/evals, install smoke inventory,
 spec index, plugin source descriptor and current listing/version surfaces.
-Generate the submission worksheet and portable projection with repository scripts.
+Generate the public release handoff issue and portable projection with repository scripts.
 Bump Architecture Compass 0.7.0 to 0.8.0 and plugin 1.3.0 to 1.4.0. Do not change
 root package version, root changelog, or Release Please manifest.
 
