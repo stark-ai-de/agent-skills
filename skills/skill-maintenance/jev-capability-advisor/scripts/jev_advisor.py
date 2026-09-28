@@ -711,6 +711,26 @@ def advise(query, catalog, transport=None, *, cache_dir=None, cache_scope=None, 
     return result
 
 
+def _failure_message(code):
+    """Constant, secret-free presentation; transport errors never prove denial.
+
+    The existing error code remains authoritative. The host localizes this text
+    and supplies observed approval facts; this helper cannot inspect its policy.
+    """
+    messages = {
+        'network_error': 'Jev could not reach the TypeSafe API; the cause is unknown. No Jev recommendation was produced.',
+        'request_timeout': 'The TypeSafe request timed out; completion is unknown. No Jev recommendation was produced. Do not automatically retry.',
+        'missing_api_key': 'Jev requires existing TypeSafe credentials. No Jev recommendation was produced.',
+        'credential_unavailable': 'The configured TypeSafe credential file is unavailable. No fallback credential was used; no Jev recommendation was produced.',
+        'credential_invalid': 'The configured TypeSafe credential is invalid. No Jev recommendation was produced.',
+        'invalid_api_key': 'The configured TypeSafe credential is invalid. No Jev recommendation was produced.',
+        'http_401': 'TypeSafe rejected authentication. Check the configured credential; this is not evidence of a sandbox denial. No Jev recommendation was produced.',
+        'http_403': 'The API request was refused (HTTP 403); this alone does not establish a sandbox denial. No Jev recommendation was produced.',
+        'http_404': 'The API request returned HTTP 404, not a valid Jev result. No Jev recommendation was produced.',
+    }
+    return messages.get(code, 'The Jev request failed. No Jev recommendation was produced; the failure does not establish a sandbox denial.')
+
+
 def summarize(result, catalog=()):
     """Keep the host's decision boundary visible without repeating the full catalog.
 
@@ -726,6 +746,8 @@ def summarize(result, catalog=()):
               'catalog_truncated', 'none_scope', 'candidate_digest', 'receipt_digest')
     summary = {key: result[key] for key in fields if key in result}
     summary['format'] = 'recommendation_summary'
+    if result.get('status') == 'error':
+        summary['error_message'] = _failure_message(result.get('error'))
     by_id = {item['id']: item for item in result.get('candidates', [])}
     card_fields = ('id', 'name', 'kind', 'brief', 'explicit_only', 'source_paths',
                    'use_when', 'avoid_when', 'keywords', 'parameter_descriptions')

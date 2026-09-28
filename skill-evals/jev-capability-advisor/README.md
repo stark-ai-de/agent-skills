@@ -396,3 +396,27 @@ The control retained Codex 0.157.1 / WSL, `gpt-6-luna` with medium reasoning, th
 The agent read the catalog guidance and observed configured registration, recorded consent and ready local credentials. It nevertheless declared current invocation restrictions and a complete session catalog unverified, then loaded Spec Interviewer through native fallback. It prepared **no catalog or provenance**, ran neither local checker, and made **zero advisor, provider or MCP calls**. There was no native provider-approval request or denial in this control. Consequently, the effect of the explicit user permission on approval was **not exercised**; the result neither proves nor rejects that permission mechanism. A combined prerequisite shell command returned one because its trailing search found no workspace files; the embedded status command had succeeded.
 
 Both turns completed and the host exited zero. The confirmation triggered no commands, MCP calls or repeated advice. This preserved, unsteered result shows continuing variability in agent-mediated catalog preparation even after the bounded-subset guidance. No further attempt was made, and the automatic provider/adoption flow remains unqualified.
+
+
+## Portable network contract — 2026-09-28
+
+Skill revision `0.3.2` adds descriptive API compatibility, a shared network/failure
+contract, narrower host-specific approval guidance, and a safe `error_message`
+for failed summaries. It does not change selection, transport, permissions,
+request budgets, credentials or caches. Historical benchmark observations above
+remain historical; no new speed or provider-quality claim is made.
+
+`test_network_contract.py` runs the real helper with injected replies and checks
+no replay, credential precedence, secret-free error presentation, valid `none`,
+and no-write offline inspection. Text checks cover the declared host approval
+states; they are not execution evidence for an actual approval dialog. The
+portable-network workflow runs these tests on native Windows, macOS and Linux
+with Python 3.10 and 3.14. Use the exact current CI run for observed results;
+a configured matrix is not a passing result.
+
+Live host approval/denial, provider results, fresh-session eligible inventory,
+and automatic hook delivery/use for this revision remain `not_run` until a
+separately authorized qualification records them. WSL is qualified separately.
+No live TypeSafe request or credential was used for this implementation. Changed
+guidance invalidates relevant installed-registration evidence; review and
+explicitly refresh an existing registration rather than silently reinstalling.

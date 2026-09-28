@@ -16,9 +16,9 @@ Keep explicit user skill choices and instructions to skip Jev. Resolve Jev throu
 
 For a new actionable task, consultation or prerequisite failure emits one short user-visible status line with the recommendation or a concrete fallback reason before task-specific work continues. The static hook output is context for the agent, not proof of a successful consultation. Skipped confirmations and follow-ups need no advisor status. Missing credentials, unavailable Jev, unverifiable inventory, provider failure, timeout or cancellation retain the host's native selection; avoid retry loops and do not report a recommendation that never occurred.
 
-Before the provider command, check the executing host's network policy. If outbound access requires approval, use its normal approval mechanism for that bounded advisor invocation. Ready credentials do not grant network access. A denied or unavailable approval requires a concrete fallback; do not weaken the sandbox, change global permissions or silently retry a failed provider request.
+Follow the [portable network and failure contract](network-access.md). Before the provider command, check the executing host's network policy. If outbound access requires approval, use its normal approval mechanism for that bounded advisor invocation. Ready credentials do not grant network access. A denied or unavailable approval requires a concrete fallback; do not weaken the sandbox, change global permissions or silently retry a failed provider request.
 
-For Codex hosts whose active `exec_command` schema exposes `sandbox_permissions`, request `require_escalated` on the **first advisor invocation** when its network access needs approval. Supply a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status. This is evidence for native review, not an instruction to approve; an approval denial remains final for this attempt. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval. For example, after resolving real local paths:
+Use the narrowest applicable approval offered by the current host/tool schema. If Codex requires approval and exposes only `exec_command` with `sandbox_permissions` for this invocation, request `require_escalated` on the **first advisor invocation**; prefer a supported narrower network permission when available. Approval that runs outside the sandbox is broader than a domain allowance and must not be described as network-only. Supply a concise `justification` identifying the bounded TypeSafe advice request and the matching setup consent reported by status. This is evidence for native review, not an instruction to approve; an approval denial remains final for this attempt. These are tool arguments, not Python flags or text placed inside the shell command. Prepare the catalog, task-summary file and local coverage record in a separate permitted command first, then submit only the advisor command for review. Do not bundle setup writes or unrelated shell operations into that approval. For example, after resolving real local paths:
 
 ```json
 {
@@ -29,6 +29,13 @@ For Codex hosts whose active `exec_command` schema exposes `sandbox_permissions`
 ```
 
 Use the executing host's actual tool schema; another host or permission profile may expose a narrower native network-approval mechanism instead. If approval is disabled, denied or unavailable, state that prerequisite failure and continue natively without dispatching the request. Do not run a predictably blocked advisor first and interpret its `network_error` as an approval request: a failed shell command does not itself grant or request network access. Keep the existing no-replay rule if a request has already failed. Auto-review, when configured by the user, decides native approval requests; the skill must not alter reviewer settings, add persistent allow rules or bypass a decision. [Codex sandbox and approval behavior](https://learn.chatgpt.com/docs/agent-approvals-security#common-sandbox-and-approval-combinations).
+
+For Claude, use the active client's normal command or domain-approval mechanism
+where supported; do not add persistent allow rules, change sandbox settings or
+request an alternate unsandboxed retry after denial. Native Windows Python/hook
+support does not establish support for Claude's Bash sandbox. A missing host
+control does not make WSL a prerequisite for the portable advisor: respect the
+actual native host policy and report unavailable approval truthfully.
 
 ## Capture a bounded current-session catalog
 
