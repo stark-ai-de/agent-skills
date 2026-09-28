@@ -1,6 +1,6 @@
 # stark AI Developer listing values review
 
-Status: plugin 1.3.0 prepared with Jev's optional advice and inspection scope accepted for promotion; publication is pending. The existing 1.2.0 portal observation remains historical evidence. Directory identity is a manual
+Status: Public listing values remain derived from the machine-readable listing. Dated portal observations remain historical evidence. Directory identity is a manual
 `pnpm run verify:openai-directory` diagnostic (`DIR-001` document, `DIR-002` category catalog).
 See [manual directory observation](../../publishing.md#manual-directory-observation)
 for the current limitations and dated evidence.
@@ -11,9 +11,9 @@ public release handoff issues must be derived from that file. Portal and product
 observations after the first listing live in
 [`stark-ai-developer-first-publication.md`](stark-ai-developer-first-publication.md).
 
-## Accepted addition awaiting publication
+## Accepted capability addition
 
-Jev Capability Advisor adds a seventh, Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. No updated portal submission, approval, or publication is asserted by this candidate.
+Jev Capability Advisor adds a seventh, Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. This document does not assert a portal submission, approval, or publication state.
 
 ## Recommended values
 

@@ -390,6 +390,13 @@ jobs:
     environment: release
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 20
+    outputs:
+      openai_handoff_status: ${{ steps.openai-handoff.outputs.status }}
+      openai_handoff_reason: ${{ steps.openai-handoff.outputs.reason }}
+      openai_plugin_version_changed: ${{ steps.openai-handoff.outputs.plugin_version_changed }}
+      openai_issue_url: ${{ steps.openai-handoff.outputs.issue_url }}
+      openai_issue_state: ${{ steps.openai-handoff.outputs.issue_state }}
+      openai_issue_marker: ${{ steps.openai-handoff.outputs.marker }}
     permissions:
       contents: write
       actions: write
@@ -628,7 +635,7 @@ jobs:
         id: release-label-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_PLEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
           permission-contents: read
           permission-issues: write
@@ -662,8 +669,9 @@ jobs:
               >/dev/null
           fi
 
-      - name: 🧩 Create OpenAI plugin handoff issue
+      - name: Reconcile OpenAI plugin handoff
         if: ${{ success() && steps.reconciliation-apply.outputs.release_published == 'true' }}
+        id: openai-handoff
         env:
           GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
@@ -674,7 +682,8 @@ jobs:
             --repository "$GITHUB_REPOSITORY" \
             --tag "$RELEASE_TAG" \
             --release-sha "$RELEASE_SHA" \
-            --subject-file release-subjects/release-subject.json
+            --subject-file release-subjects/release-subject.json \
+            --github-output "$GITHUB_OUTPUT"
 
       - name: 📣 Print post-release verification
         run: |
@@ -687,5 +696,58 @@ jobs:
         uses: ./.github/actions/write-run-summary
         with:
           title: GitHub Release publication
-          success: Inspect the dispatched Post-release Evidence run, then complete docs/publishing.md#operator-follow-up.
+          success: Publication finished. The read-only release-completion job now waits for exact Post-release Evidence and reports the final handoff state.
           failure: No release hand-off is complete; inspect the failed gate and rerun after correction.
+
+  release-completion:
+    needs: [publication-trigger, release-readiness, publish]
+    if: ${{ needs.publish.result == 'success' }}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 12
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      pull-requests: read
+
+    steps:
+      - name: ⬇️ Checkout published release verifier
+        uses: useblacksmith/checkout@v1
+        with:
+          ref: ${{ needs.release-readiness.outputs.release_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 🔎 Verify complete release handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HANDOFF_MARKER: ${{ needs.publish.outputs.openai_issue_marker }}
+          HANDOFF_REASON: ${{ needs.publish.outputs.openai_handoff_reason }}
+          HANDOFF_STATUS: ${{ needs.publish.outputs.openai_handoff_status }}
+          ISSUE_STATE: ${{ needs.publish.outputs.openai_issue_state }}
+          ISSUE_URL: ${{ needs.publish.outputs.openai_issue_url }}
+          PLUGIN_VERSION_CHANGED: ${{ needs.publish.outputs.openai_plugin_version_changed }}
+          RELEASE_PULL_REQUEST: ${{ needs.publication-trigger.outputs.release_pull_request }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          RELEASE_TAG: v${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          bun --bun scripts/release/verify-release-completion.mjs \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --release-sha "$RELEASE_SHA" \
+            --release-pr "$RELEASE_PULL_REQUEST" \
+            --handoff-status "$HANDOFF_STATUS" \
+            --handoff-reason "$HANDOFF_REASON" \
+            --plugin-version-changed "$PLUGIN_VERSION_CHANGED" \
+            --issue-url "$ISSUE_URL" \
+            --issue-state "$ISSUE_STATE" \
+            --marker "$HANDOFF_MARKER" \
+            --max-wait-seconds 600 \
+            --poll-interval-seconds 15 \
+            --summary-file "$GITHUB_STEP_SUMMARY"

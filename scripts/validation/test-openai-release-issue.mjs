@@ -15,8 +15,22 @@ const reproducibilitySource = fs.readFileSync(
   path.join(repositoryRoot, "scripts/release/verify-release-reproducibility.mjs"),
   "utf8",
 );
+const reconcilerSource = fs.readFileSync(
+  path.join(repositoryRoot, "scripts/release/reconcile-openai-plugin-issue.mjs"),
+  "utf8",
+);
 assert.match(reproducibilitySource, /schemaVersion: 2/);
 assert.doesNotMatch(reproducibilitySource, /worksheetPath|worksheetSha256/);
+for (const output of [
+  "status",
+  "reason",
+  "plugin_version_changed",
+  "issue_url",
+  "issue_state",
+  "marker",
+]) {
+  assert.match(reconcilerSource, new RegExp(`${output}=`));
+}
 const listing = JSON.parse(
   fs.readFileSync(path.join(repositoryRoot, "docs/listing/openai/stark-ai-developer.json"), "utf8"),
 );
@@ -55,6 +69,7 @@ const created = buildOpenAiReleasePlan({
   issues: [],
 });
 assert.equal(created.status, "create");
+assert.equal(created.pluginVersionChanged, true);
 assert.equal(created.title, "Release OpenAI Plugin");
 assert.match(created.body, /openai-plugin-release:stark-ai-developer@1\.7\.1/);
 assert.match(created.body, /Post-release Evidence/);
@@ -198,6 +213,32 @@ const unchanged = buildOpenAiReleasePlan({
 });
 assert.equal(unchanged.status, "noop");
 assert.equal(unchanged.reason, "plugin_version_unchanged");
+assert.equal(unchanged.pluginVersionChanged, false);
+
+for (const state of ["open", "closed"]) {
+  const issue = {
+    number: 114,
+    state,
+    user: { type: "Bot" },
+    body: `${created.marker}\n\nmanual state`,
+    html_url: "https://github.com/example/example/issues/114",
+  };
+  const unchangedWithIssue = buildOpenAiReleasePlan({
+    repository: "example/example",
+    tag: release.tag_name,
+    releaseSha,
+    release,
+    listing,
+    subject,
+    previousRelease,
+    previousSubject: { pluginVersion: listing.plugin.version },
+    issues: [issue],
+  });
+  assert.equal(unchangedWithIssue.status, "noop");
+  assert.equal(unchangedWithIssue.reason, "plugin_version_unchanged");
+  assert.equal(unchangedWithIssue.pluginVersionChanged, false);
+  assert.equal(unchangedWithIssue.issue.state, state);
+}
 
 assert.equal(
   selectPreviousPluginRelease(
