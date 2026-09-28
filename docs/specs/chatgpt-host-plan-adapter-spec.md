@@ -182,7 +182,7 @@ silently edit the host's permissions/configuration.
   embedded text, and known-name prefixes remain valid prompt prose.
 - Increase affected skill patch versions from the current base; advance plugin
   `1.1.0` to `1.1.1`, update listing/badge/current archive guidance, and regenerate
-  the worksheet and portable projection from canonical inputs.
+  the public release handoff issue and portable projection from canonical inputs.
 - Preserve current icons, historical release evidence, and root release files.
   OpenAI archives remain ignored build artifacts, not committed adapters.
 
@@ -201,7 +201,7 @@ release impact:
 
 ```bash
 npm run sync:agent-plugin
-npm run generate:openai-worksheet
+pnpm run release:openai-issue -- plan
 npm run validate:skills
 npm run validate:architecture-compass
 npm run validate:projections

@@ -662,6 +662,20 @@ jobs:
               >/dev/null
           fi
 
+      - name: 🧩 Create OpenAI plugin handoff issue
+        if: ${{ success() && steps.reconciliation-apply.outputs.release_published == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          RELEASE_TAG: v${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          bun --bun scripts/release/reconcile-openai-plugin-issue.mjs apply \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --release-sha "$RELEASE_SHA" \
+            --subject-file release-subjects/release-subject.json
+
       - name: 📣 Print post-release verification
         run: |
           echo "Complete operator follow-up in docs/publishing.md#operator-follow-up."

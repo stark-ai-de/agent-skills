@@ -42,7 +42,6 @@ export function listingArtifactPaths(identity) {
 
   return {
     listing: `docs/listing/openai/${listingId}.json`,
-    worksheet: `docs/listing/openai/${listingId}-submission-worksheet.md`,
     firstPublication: `docs/listing/openai/${listingId}-first-publication.md`,
     portableTarget: portableProjection,
     retiredOpenAiAdapter: `adapters/openai/${pluginId}`,
