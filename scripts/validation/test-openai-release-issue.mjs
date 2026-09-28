@@ -277,6 +277,7 @@ assert.throws(
 
 function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_runs: [] }] } = {}) {
   const pages = issuePages.map((page) => page.map((issue) => ({ ...issue })));
+  const requestedEndpoints = [];
   let postCount = 0;
   let loseNextPostResponse = false;
 
@@ -285,8 +286,9 @@ function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_ru
       const endpoint = args.find(
         (value) => typeof value === "string" && value.startsWith("repos/"),
       );
+      requestedEndpoints.push(endpoint);
       if (endpoint?.includes("/issues?state=all")) return pages;
-      if (endpoint?.includes("/actions/runs?")) return runPages;
+      if (endpoint?.includes("/actions/workflows/publish-release.yml/runs?")) return runPages;
       if (endpoint?.endsWith("/issues") && args.includes("POST")) {
         postCount += 1;
         const body = args.find((value) => value.startsWith("body="))?.slice(5) ?? "";
@@ -312,6 +314,9 @@ function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_ru
     },
     get postCount() {
       return postCount;
+    },
+    get requestedEndpoints() {
+      return requestedEndpoints;
     },
   };
 }
@@ -356,6 +361,12 @@ const applied = applyOpenAiReleasePlan(transportContext, {
 });
 assert.equal(applied.status, "created");
 assert.equal(successfulTransport.postCount, 1);
+assert.ok(
+  successfulTransport.requestedEndpoints.includes(
+    "repos/example/example/actions/workflows/publish-release.yml/runs?per_page=100",
+  ),
+  "concurrency checks must query only Publish Release runs",
+);
 const repeatedApply = applyOpenAiReleasePlan(transportContext, {
   jsonRequest: successfulTransport.jsonRequest,
 });

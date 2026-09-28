@@ -157,7 +157,7 @@ export function listActivePublicationRuns(repository, jsonRequest = ghJson) {
   const pages = jsonRequest([
     "--paginate",
     "--slurp",
-    `repos/${repository}/actions/runs?workflow_id=publish-release.yml&per_page=100`,
+    `repos/${repository}/actions/workflows/publish-release.yml/runs?per_page=100`,
   ]);
   const activeStatuses = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
   return pages

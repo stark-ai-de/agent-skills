@@ -293,6 +293,8 @@ export function applyReleaseReconciliation({
   observe,
   execute,
   maxTransitions = 12,
+  maxObservationRetries = 5,
+  waitBeforeObserve = () => {},
 }) {
   let postReleaseDispatchRequired = false;
   try {
@@ -301,6 +303,14 @@ export function applyReleaseReconciliation({
     }
     if (!Number.isInteger(maxTransitions) || maxTransitions < 1) {
       throw new Error("Release reconciliation maxTransitions must be a positive integer");
+    }
+    if (!Number.isInteger(maxObservationRetries) || maxObservationRetries < 0) {
+      throw new Error(
+        "Release reconciliation maxObservationRetries must be a non-negative integer",
+      );
+    }
+    if (typeof waitBeforeObserve !== "function") {
+      throw new Error("Release reconciliation waitBeforeObserve must be a function");
     }
 
     let observation = observe();
@@ -341,24 +351,34 @@ export function applyReleaseReconciliation({
         mutationError = error;
       }
 
-      const nextObservation = observe();
-      const nextPlan = planReleaseReconciliation({
-        tag,
-        releaseSha,
-        expectedRelease,
-        ...nextObservation,
-      });
-      if (nextPlan.status === "blocked") {
-        throw new Error(
-          `Reconciliation conflict after ${operation.type}: ${nextPlan.reason}${mutationError ? `; ${mutationError.message}` : ""}`,
-        );
-      }
-      if (nextPlan.status === "satisfied") {
-        return {
-          ...nextPlan,
-          postReleaseDispatchRequired:
-            postReleaseDispatchRequired || nextPlan.postReleaseDispatchRequired === true,
-        };
+      let nextObservation;
+      let nextPlan;
+      for (
+        let observationRetry = 0;
+        observationRetry <= maxObservationRetries;
+        observationRetry += 1
+      ) {
+        if (observationRetry > 0) waitBeforeObserve(observationRetry, operation);
+        nextObservation = observe();
+        nextPlan = planReleaseReconciliation({
+          tag,
+          releaseSha,
+          expectedRelease,
+          ...nextObservation,
+        });
+        if (nextPlan.status === "blocked") {
+          throw new Error(
+            `Reconciliation conflict after ${operation.type}: ${nextPlan.reason}${mutationError ? `; ${mutationError.message}` : ""}`,
+          );
+        }
+        if (nextPlan.status === "satisfied") {
+          return {
+            ...nextPlan,
+            postReleaseDispatchRequired:
+              postReleaseDispatchRequired || nextPlan.postReleaseDispatchRequired === true,
+          };
+        }
+        if (operationIdentity(nextPlan.operations[0]) !== previousIdentity) break;
       }
       if (operationIdentity(nextPlan.operations[0]) === previousIdentity) {
         throw new Error(
