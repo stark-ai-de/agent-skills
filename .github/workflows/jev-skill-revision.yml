@@ -1,0 +1,46 @@
+name: Assemble bounded Jev portable implementation
+
+on:
+  push:
+    branches: [codex/jev-portable-network-contract]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jev-portable-implementation-once
+  cancel-in-progress: false
+
+jobs:
+  assemble:
+    if: ${{ github.repository == 'stark-ai-de/agent-skills' && github.ref == 'refs/heads/codex/jev-portable-network-contract' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup repository toolchain
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Install locked development dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply preimage-checked source changes
+        run: python3 -B .github/jev-skill-revision.py apply
+      - name: Format only changed Markdown and workflow
+        run: pnpm exec oxfmt --write skills/skill-maintenance/jev-capability-advisor/SKILL.md skills/skill-maintenance/jev-capability-advisor/references/network-access.md skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md
+      - name: Generate the canonical portable plugin projection
+        run: pnpm run sync:agent-plugin
+      - name: Validate new offline contract
+        run: python3 -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_network_contract.py -v
+      - name: Record only the reviewed canonical and generated files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: python3 -B .github/jev-skill-revision.py publish
