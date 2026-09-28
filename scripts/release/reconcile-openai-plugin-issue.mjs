@@ -11,6 +11,10 @@ import valid from "semver/functions/valid.js";
 import { pluginArtifactPaths } from "../lib/release-descriptor.mjs";
 import { resolveTagCommit } from "../lib/github-release-reconciliation.mjs";
 import {
+  matchingOpenAiReleaseIssues,
+  openAiReleaseIssueReference,
+} from "../lib/openai-release-handoff.mjs";
+import {
   automatedReleaseVersionSupported,
   FIRST_AUTOMATED_RELEASE_VERSION,
 } from "../lib/release-please.mjs";
@@ -24,8 +28,6 @@ const ISSUE_MARKER_PATTERN =
   /^<!-- openai-plugin-release:([A-Za-z0-9_.-]+)@([0-9]+\.[0-9]+\.[0-9]+) -->$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/;
-// Organization membership alone does not authorize a manual release handoff.
-const TRUSTED_ISSUE_AUTHORS = new Set(["servrox"]);
 
 function argument(argv, name) {
   const index = argv.indexOf(name);
@@ -252,16 +254,6 @@ function assertPublicListing(listing) {
   }
 }
 
-function trustedIssueAuthor(issue) {
-  if (issue?.user?.type === "Bot") return true;
-  const login = issue?.user?.login;
-  return (
-    issue?.user?.type === "User" &&
-    typeof login === "string" &&
-    TRUSTED_ISSUE_AUTHORS.has(login.toLowerCase())
-  );
-}
-
 function validateCurrentSubject(subject, options) {
   const errors = validateReleaseSubjectDocument(subject, {
     schemaPath: path.join(repositoryRoot, RELEASE_SUBJECT_SCHEMA_PATH),
@@ -305,27 +297,26 @@ export function buildOpenAiReleasePlan({
     throw new Error(`Plugin version decreased from ${previousVersion} to ${subject.pluginVersion}`);
   }
   const marker = openAiIssueMarker(listing.plugin.name, subject.pluginVersion);
-  const existing = (Array.isArray(issues) ? issues : []).find(
-    (issue) =>
-      !issue?.pull_request &&
-      trustedIssueAuthor(issue) &&
-      typeof issue.body === "string" &&
-      issue.body.split(/\r?\n/, 1)[0] === marker,
-  );
+  const existing = matchingOpenAiReleaseIssues(issues, marker)[0] ?? null;
+  const pluginVersionChanged =
+    !previousVersion || compare(subject.pluginVersion, previousVersion) !== 0;
+  if (!pluginVersionChanged) {
+    return {
+      status: "noop",
+      reason: "plugin_version_unchanged",
+      pluginVersionChanged: false,
+      marker,
+      ...(existing ? { issue: openAiReleaseIssueReference(existing) } : {}),
+    };
+  }
   if (existing) {
     return {
       status: "noop",
       reason: "issue_already_exists",
+      pluginVersionChanged: true,
       marker,
-      issue: {
-        number: existing.number,
-        url: existing.html_url ?? null,
-        state: existing.state ?? null,
-      },
+      issue: openAiReleaseIssueReference(existing),
     };
-  }
-  if (previousVersion && compare(subject.pluginVersion, previousVersion) === 0) {
-    return { status: "noop", reason: "plugin_version_unchanged", marker };
   }
   const openAi = releaseAsset(release, "openai.zip");
   if (typeof openAi.browser_download_url !== "string" || !openAi.browser_download_url) {
@@ -351,6 +342,7 @@ export function buildOpenAiReleasePlan({
   return {
     status: "create",
     reason: previousVersion ? "plugin_version_changed" : "first_automated_plugin_release",
+    pluginVersionChanged: true,
     marker,
     title: ISSUE_TITLE,
     body,
@@ -410,8 +402,10 @@ function appendGithubOutput(filePath, result) {
     [
       `status=${result.status}`,
       `reason=${result.reason}`,
+      `plugin_version_changed=${result.pluginVersionChanged === true ? "true" : "false"}`,
       `marker=${result.marker}`,
       `issue_url=${result.issue?.url ?? ""}`,
+      `issue_state=${result.issue?.state ?? ""}`,
     ].join("\n") + "\n",
   );
 }
