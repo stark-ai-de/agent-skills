@@ -503,14 +503,31 @@ before claiming that publication or installation is available.
 GitHub Actions job summaries point here after a run. These checks are product
 and portal work. Directory identity is a [manual observation](#manual-directory-observation).
 Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence`.
+When the published plugin version changes, `Publish Release` also creates one
+**Release OpenAI Plugin** issue with the public checklist. Complete that issue
+manually after the exact-tag evidence run; existing open or closed issues are
+left unchanged.
+
+If that issue is missing after a successful publication, first inspect the
+read-only plan from trusted current code and the exact release commit:
+
+```bash
+pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>
+```
+
+Only when no `Publish Release` run or other retry is active, repeat the handoff
+with the same arguments and `apply`. The command checks all open and closed
+issue pages again before it writes, so a retry after a lost response preserves
+the existing issue.
 
 ### Before a listing update
 
 - Re-read the official plugin documents listed in the plugin spec Appendix C.
 - Confirm legal publisher name, support contact, privacy controller, terms
   jurisdiction, security-report address, and domain ownership.
-- Submit listing updates from Platform organization `org-dz0kZIfZpiaMc7YFjxGcsrk7`
-  with Apps Management: Write.
+- Submit listing updates from the maintainer's authorized publishing
+  organization with Apps Management: Write. Keep its account identifier and
+  authenticated portal URL outside the repository and generated issue.
 - Review new validation warnings before publishing.
 
 ### After Publish Release or Post-release Evidence
@@ -552,8 +569,8 @@ security routes return HTTP 200.
 5. Install from the repository marketplace on a clean clone and test direct and
    implicit invocation on each supported surface.
 6. Test standalone skills in the Codex IDE extension.
-7. Open every public URL and confirm publisher organization, verified identity,
-   prompts, tests, and release notes.
+7. Open every public URL and confirm the public developer name, prompts, tests,
+   and release notes. Verify account-level identity privately in the portal.
 8. Verify `.agents/plugins/marketplace.json` still points to
    `./plugins/stark-ai-developer` after OpenAI-adapter tests.
 

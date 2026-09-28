@@ -1461,6 +1461,18 @@ assert.match(
 );
 assert.match(publishJob, /autorelease: tagged/);
 assert.match(publishJob, /autorelease%3A%20pending/);
+assert.match(publishJob, /permission-issues: write/);
+assert.match(publishJob, /reconcile-openai-plugin-issue\.mjs apply/);
+assert.match(publishJob, /--subject-file release-subjects\/release-subject\.json/);
+assert.match(
+  publishJob,
+  /success\(\) && steps\.reconciliation-apply\.outputs\.release_published == 'true'/,
+);
+assert.ok(
+  publishJob.indexOf("Complete the generated release-PR lifecycle") <
+    publishJob.indexOf("Create OpenAI plugin handoff issue"),
+  "the public handoff issue must follow release-PR lifecycle labels",
+);
 assert.match(validateWorkflow, /Verify generated release-PR provenance/);
 assert.match(validateWorkflow, /verify-release-please-merge\.mjs/);
 assert.doesNotMatch(validateWorkflow.split("\nconcurrency:")[0], /issues: read/);

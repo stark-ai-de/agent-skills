@@ -394,7 +394,7 @@ function openAiHandoff(repository, tag) {
       `${postReleaseEvidenceTitle(tag)} passed at ${evidence.url}.`,
       `${tag} is ready for the manual OpenAI handoff: ${release.html_url}`,
       `Download exact asset: gh release download ${tag} --repo ${repository} --pattern openai.zip`,
-      "Portal checks: verify every packaged skill and restore reviewed glyphs using docs/listing/openai/stark-ai-developer-submission-worksheet.md; preserve both Plugin Info logos; follow docs/listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff for the separate light/dark Composer PNGs; verify light/dark rendering and directory identity after propagation.",
+      "Portal checks: complete the generated Release OpenAI Plugin issue after successful post-release evidence; verify every packaged skill, restore reviewed glyphs when needed, preserve both Plugin Info logos, follow docs/listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff for separate light/dark Composer PNGs, and verify light/dark rendering plus directory identity after propagation.",
     ].join("\n"),
   );
 }

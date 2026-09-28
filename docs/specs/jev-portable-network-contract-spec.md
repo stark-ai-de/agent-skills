@@ -338,8 +338,9 @@ At the recorded implementation baseline, PR #111 adds the shared network
 reference, compatibility guidance, both bounded hook reminders, and sanitized
 `error_message` presentation while preserving existing result statuses and
 error codes. It adds eight offline contract tests and a Windows/macOS/Linux
-matrix on Python 3.10 and 3.14. The skill metadata is `0.3.2` and the bundle is
-`1.7.1`, with aligned listing and generated metadata. These are implementation
+matrix on Python 3.10 and 3.14. The inspected main baseline was Jev `0.3.2` and
+plugin `1.7.1`; the approved next-release candidate is Jev `0.3.3` and plugin
+`1.7.2`, with aligned listing and generated metadata. These are implementation
 facts, not proof that every acceptance scenario has been exercised. The
 [implementation and validation record][implementation-record] distinguishes
 actual runs, simulated outcomes, and untested live behavior; consult checks for

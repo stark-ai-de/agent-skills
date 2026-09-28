@@ -1,5 +1,26 @@
 # Jev capability advisor evaluation
 
+## Owner-configured endpoint allowance — 2026-09-27
+
+Three fresh Codex CLI 0.157.1 processes on NixOS WSL completed ordinary synthetic tasks with one successful TypeSafe recommendation each. The sessions inherited GPT-6 Astra with ultra reasoning, `workspace-write`, `on-request`, and `auto_review`. The owner-configured policy enabled command networking through the enforced proxy and allowed exactly `api.typesafe.ai`. Actual same-thread native permission context reported enabled networking; all three provider commands omitted sandbox overrides. There were **zero approval-review events, native approval requests, or provider retries**.
+
+| Ordinary task               | Provider selection       | Observed followthrough                                                                                                         |
+| --------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Saved filters specification | `codex-spec-interviewer` | Selected skill read and applied                                                                                                |
+| Empty-input mean function   | `tdd`                    | Recommendation evaluated; a full TDD workflow was judged unnecessary and the correction plus three tests was returned natively |
+| Book-loan domain model      | `domain-modeling`        | Selected skill read and applied                                                                                                |
+
+Each model constructed its own bounded catalog from current-session skill cards with permitted public-frontmatter enrichment: two skills, zero MCP tools, and `agent_asserted_current_session` provenance. Each made one local offline catalog check followed by one Recommend invocation containing one provider request. Independent observer inventories were not injected into the model's catalog. A subsequent confirmation in every session produced no command and no additional advice.
+
+Separate credential-free controls reached the allowed host and denied a foreign domain, direct public-IP TCP, `NO_PROXY`, removed proxy variables, and an unavailable proxy. An additional app-server `command/exec` control with legacy `networkAccess: false` still reached the allowed host through the enabled proxy. That control is **not evidence of offline enforcement** or a full named-profile test; stricter profiles require their own effective-policy verification. The successful default-session tests do not justify widening another profile.
+
+The owner temporarily rolled back the allowance, added explicit proxy-off guards to the three WSL offline profiles, and reapplied it with the guards installed first. A subsequent actual `codex --no-daemon exec --profile implementation` run denied its single credential-free HEAD: curl exited 6, DNS resolution was blocked, and no HTTP connection occurred. That run explicitly skipped Jev and supplied no model, effort, or permission overrides. Input configuration hashes remained unchanged during the run. Fresh default-session network controls then passed again. The two review profiles received the same proxy-off guard and static validation; their complete live workflows were not exercised. This correction preserves named-profile isolation; it does not fix the separate app-server legacy-override behavior.
+
+This is bounded endpoint and ordinary-task evidence, not complete automatic-host qualification or a routing benchmark. Missing/revoked consent, changed availability, incomplete metadata, Plan mode, missing keys, provider failure, timeout, and cancellation were not exercised live in these runs. Local tests cover separate behavior and cannot replace those observations. Private logs, catalogs, receipts, runtime paths, and session identifiers remain outside the repository. Historical blocked runs below remain unchanged.
+
+Integration SHA-256: `3242df2c14b4b9ded58627da5df6d3b5d133748e1c95b3c5c766aff05ebd8e73`.
+Registration SHA-256: `de89f82fa86302713209420d9fb9a2db48f5c7b4e84bc2bd726cc353ee9a6275`.
+
 ## Seven-participant comparison — 2026-09-26
 
 The [audited comparison](benchmarks/selector-comparison-2026-09-26.json) contains 448 selected observations from 520 retained attempts, with six complete timing series and Skill Suggester in details only. It uses 132 frozen skill texts, 24 skill tasks and eight no-match tasks, each repeated twice. Native requests GPT-6 Luna with low reasoning; the other products keep their own Jev settings and source algorithms.
