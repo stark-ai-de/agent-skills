@@ -1507,10 +1507,10 @@
       "sha256": "0282f00a5c522ac6c1578a13cb5e4ac2c1d6e0d92f3e6d0ebd5bb9357d3abb18"
     },
     {
-      "byteLength": 12319,
+      "byteLength": 12633,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/SKILL.md",
-      "sha256": "a2220d0a43638303311602cc540e84ffeb3de31efe8f91ddc83f55cd0ab70134"
+      "sha256": "582cbcda64baff599c3c84b6a88647fe730e5ec7256e99be76eadc22ba6f0833"
     },
     {
       "byteLength": 704,
@@ -2131,5 +2131,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "804469a86c0fc93d3a06a283c24021f87ae12040100e5ae03792f5ec882fb1fe"
+  "treeHash": "6caa67393e0dc4faa3909bcd14eefd551419fc37bc74c62ea1d16aeda5672c48"
 }

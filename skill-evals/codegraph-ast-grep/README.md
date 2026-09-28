@@ -1,15 +1,15 @@
 # codegraph-ast-grep Evals and Captured Behavior
 
 This folder contains the public `codegraph-ast-grep` scenario catalog,
-deterministic contract checks, a current internal reviewer capture, and
+deterministic contract checks, an unchanged historical internal reviewer capture, and
 reproducible historical behavioral evidence. It is maintainer evidence, not
 installed runtime content.
 
 ## Current contract coverage
 
 - The finite public workflows are `setup`, `update`, and `doctor`; there is no recursive `auto` workflow.
-- Clear setup/update/broken-state intent selects and announces the matching workflow without another selection checkpoint.
-- Bare or ambiguous invocation exposes all three workflows and asks.
+- Clear setup/update/broken-state intent announces only the matching workflow without another selection checkpoint.
+- Bare or ambiguous invocation exposes all three workflows and asks; an explicit options request also receives the complete inventory without execution.
 - Agent-initiated activation can select only read-only `doctor`.
 - Doctor never repairs and needs exact-root approval before a graph-opening diagnostic that may migrate generated metadata.
 - Setup leads with the benefit of Semantic Code Intelligence and structural search, then idempotently persists repository guidance for automatic CodeGraph semantic scope plus ast-grep CLI structural evidence.
@@ -17,7 +17,7 @@ installed runtime content.
 - Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
 - Normal setup excludes the experimental ast-grep MCP server.
 
-Current cases are the files named in the deterministic validator. The five cases
+Current v0.3.4 routing is checked by source-contract assertions and the maintained scenario catalog; there is no new behavioral capture. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, reused internal clean-context reviewer outputs, historical
 independent gradings, and provenance to the exact v0.3.3 behavioral runtime payload. The
@@ -45,12 +45,14 @@ behaviors and remains separate from the v0.3.3 result.
 Run:
 
 ```bash
-npm run validate:codegraph-ast-grep
+pnpm run validate:codegraph-ast-grep
 ```
 
 The validator checks the installed runtime contract, current scenario structure,
-all current source/prompt/output/grading/provenance hashes, exact runtime-payload
+all historical source/prompt/output/grading/provenance hashes, historical runtime-payload
 binding, the 5/35/0 independent review result, target-guidance persistence,
 provenance-preserving setup/update behavior, doctor authority, current/legacy
 command safety, and historical capture integrity. Validation itself is offline:
 it does not invoke a reviewer, query the network, or execute CodeGraph/ast-grep.
+
+- [Explicit options request](cases/explicit-options-request.md): complete inventory without execution authority.

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.3"
+  version: "0.3.4"
 ---
 
 # CodeGraph + ast-grep
@@ -26,11 +26,13 @@ Do not activate this skill merely because a coding task can benefit from an alre
 
 ## Workflow selection
 
-Always expose these finite workflows in plain, benefit-first language when the skill is invoked directly:
+The complete finite workflow inventory, in plain, benefit-first language, is:
 
 - `setup`: supercharge the repository with Semantic Code Intelligence and structural code search, helping coding agents answer faster with fewer tool calls. Install missing pieces, connect the coding client, build the code index, add repository guidance, and safely reuse or repair any existing setup.
 - `update`: bring an existing setup to current stable versions without changing how it was installed. Migrate configuration or index data when needed, reconnect the coding client, and verify that everything still works.
 - `doctor`: diagnose setup health and report analytics without repairing anything.
+
+Show the complete finite workflow inventory in its documented order for a bare or materially ambiguous invocation, or an explicit options request. An options request alone does not authorize execution. For clear authorized intent, announce only the selected workflow and rationale, with material scope and evidence fields, and proceed.
 
 There is no `auto` workflow. Select by intent:
 
@@ -39,7 +41,7 @@ There is no `auto` workflow. Select by intent:
 - “Something is broken,” a health check, or a request for setup analytics selects `doctor`.
 - A bare invocation or ambiguous intent requires showing all three workflows and asking the user to choose.
 
-For clear direct intent, state the selected workflow, rationale, root, expected writes/artifacts, and protected state, then proceed. Agent-initiated activation may select and announce only `doctor`; it must not infer setup or update authority. Selecting `setup` or `update` is allowed only when the user already requested that outcome for the stated root. Privileged/global installation, paid or external services, publication/deployment, destructive replacement, telemetry changes, and scope expansion retain separate approval.
+For clear direct intent, state only the selected workflow, rationale, root, expected writes/artifacts, and protected state, then proceed. Agent-initiated activation may select and announce only `doctor`; it must not infer setup or update authority. Selecting `setup` or `update` is allowed only when the user already requested that outcome for the stated root. Privileged/global installation, paid or external services, publication/deployment, destructive replacement, telemetry changes, and scope expansion retain separate approval.
 
 ## Inputs to inspect
 

@@ -1509,7 +1509,7 @@ const extensions = runtime.get(extensionPath);
 const openAiPath = runtimePaths[1];
 const openAi = runtime.get(openAiPath);
 
-requirePattern(skillPath, skill, /version:\s*"0\.3\.3"/, "metadata.version must be 0.3.3");
+requirePattern(skillPath, skill, /version:\s*"0\.3\.4"/, "metadata.version must be 0.3.4");
 const workflowSection = /## Workflow selection([\s\S]*?)(?=\n## Inputs to inspect)/.exec(skill);
 const expectedWorkflows = ["setup", "update", "doctor"];
 const listedWorkflows = workflowSection
@@ -1521,7 +1521,7 @@ if (JSON.stringify(listedWorkflows) !== JSON.stringify(expectedWorkflows)) {
 requirePattern(
   skillPath,
   skill,
-  /expose these finite workflows in plain, benefit-first language/i,
+  /complete finite workflow inventory, in plain, benefit-first language/i,
   "direct workflow disclosure must be plain and benefit-first",
 );
 requirePattern(
@@ -2082,6 +2082,7 @@ if (unexpectedRuntimeFiles.length > 0) {
 }
 
 const requiredEvalCases = [
+  "explicit-options-request.md",
   "clear-setup-intent.md",
   "clear-update-intent.md",
   "broken-setup-doctor-routing.md",
@@ -2192,12 +2193,35 @@ const legacyCaseLineage = validateLegacyCaseLineage({
 errors.push(...legacyCaseLineage.errors);
 
 const behavioralRoot = "skill-evals/codegraph-ast-grep/behavioral";
+for (const marker of [
+  "For clear direct intent, state only the selected workflow, rationale",
+  "an explicit options request",
+  "An options request alone does not authorize execution",
+]) {
+  if (!skill.includes(marker))
+    fail(`${skillPath}: missing conditional disclosure contract ${marker}`);
+}
+if (/Always expose|state all three workflows/i.test(skill)) {
+  fail(`${skillPath}: unconditional menu disclosure conflicts with the active contract`);
+}
 const currentContractRoot = `${behavioralRoot}/current-contract`;
 const currentContractManifestPath = `${currentContractRoot}/manifest.json`;
 const currentContractManifest = requireJson(currentContractManifestPath);
 const currentRuntimeCandidateHash = hashRuntimeCandidate(skillDir, {
   excludedRelativePaths: ["agents/openai.yaml", "assets/openai-icon.png"],
 });
+// The existing capture is historical. Verify its original source bytes instead
+// of rebinding old reviewer claims to a changed runtime contract.
+const historicalBaselineRoot = "skill-evals/codegraph-ast-grep/behavioral-baseline/v0.3.3";
+const historicalRuntimeCandidateHash = hashRuntimeCandidate(
+  path.join(root, historicalBaselineRoot, "runtime"),
+);
+if (
+  historicalRuntimeCandidateHash !==
+  "991c2cec9b1d5966f7c65ece3d0879eb58ddff50094a4224a6f00c3a6d43f324"
+) {
+  fail(`${historicalBaselineRoot}: historical runtime bytes drifted from the original capture`);
+}
 let currentContractCases = 0;
 let currentContractPassed = 0;
 let currentContractFailed = 0;
@@ -2215,11 +2239,11 @@ if (currentContractManifest) {
     currentContractManifest.candidate?.skill_path !==
       "skills/engineering-workflows/codegraph-ast-grep" ||
     currentContractManifest.candidate?.skill_version !== "0.3.3" ||
-    currentContractManifest.candidate?.sha256 !== currentRuntimeCandidateHash ||
+    currentContractManifest.candidate?.sha256 !== historicalRuntimeCandidateHash ||
     currentContractManifest.candidate?.hash_recipe !== currentContractHashRecipe
   ) {
     fail(
-      `${currentContractManifestPath}: current contract is not bound to runtime payload ${currentRuntimeCandidateHash}`,
+      `${currentContractManifestPath}: historical capture is not bound to its source baseline ${historicalRuntimeCandidateHash}`,
     );
   }
 
@@ -2261,7 +2285,7 @@ if (currentContractManifest) {
     captureProvenance?.captured_at !== currentContractManifest.reviewed_at ||
     captureProvenance?.capture_kind !== "local-nonbehavioral-refresh" ||
     captureProvenance?.reviewer_role !== "repository-maintainer-authorized-receipt-refresh" ||
-    captureProvenance?.candidate_sha256 !== currentRuntimeCandidateHash ||
+    captureProvenance?.candidate_sha256 !== historicalRuntimeCandidateHash ||
     captureProvenance?.network !== false ||
     captureProvenance?.tools_executed !== false ||
     captureProvenance?.output_normalization !==
@@ -2357,7 +2381,9 @@ if (currentContractManifest) {
       seenOutputs.add(outputPath);
       seenGradings.add(gradingPath);
 
-      const sourceArtifact = readUtf8Artifact(sourcePath);
+      const sourceArtifact = readUtf8Artifact(
+        `${historicalBaselineRoot}/cases/${path.basename(sourcePath)}`,
+      );
       const promptArtifact = readUtf8Artifact(promptPath);
       const outputArtifact = readUtf8Artifact(outputPath);
       const gradingArtifact = readJsonArtifact(gradingPath);
@@ -2541,7 +2567,7 @@ if (currentContractManifest) {
     "skill-evals/codegraph-ast-grep/runs/2026-08-26-v0.3.3-local-nonbehavioral-refresh.md";
   const currentContractRun = requireFile(currentContractRunPath);
   for (const marker of [
-    currentRuntimeCandidateHash,
+    historicalRuntimeCandidateHash,
     `${currentContractRoot}/capture-provenance.json`,
     `${currentContractRoot}/grade-provenance.json`,
     "35 passed, 0 failed",
@@ -2929,7 +2955,7 @@ requirePattern(
 );
 
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} hash-bound v0.3.3 local nonbehavioral refresh captures, and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
+export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} historical hash-bound v0.3.3 local nonbehavioral refresh captures (not current behavioral proof), and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
 const isMain = entrypoint === path.resolve(fileURLToPath(import.meta.url));
