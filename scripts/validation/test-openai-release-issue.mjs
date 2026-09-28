@@ -101,13 +101,68 @@ const manualMaintainerIssue = buildOpenAiReleasePlan({
     {
       number: 13,
       state: "open",
-      user: { type: "User" },
+      user: { type: "User", login: "servrox" },
       author_association: "MEMBER",
       body: `${created.marker}\n\nmanual retry`,
     },
   ],
 });
+assert.equal(manualMaintainerIssue.status, "noop");
 assert.equal(manualMaintainerIssue.reason, "issue_already_exists");
+
+for (const state of ["open", "closed"]) {
+  for (const authorAssociation of ["MEMBER", "OWNER", "COLLABORATOR"]) {
+    for (const login of ["unapproved-maintainer", undefined]) {
+      const unauthorizedManualIssue = buildOpenAiReleasePlan({
+        repository: "example/example",
+        tag: release.tag_name,
+        releaseSha,
+        release,
+        listing,
+        subject,
+        previousRelease,
+        previousSubject,
+        issues: [
+          {
+            number: 15,
+            state,
+            user: { type: "User", login },
+            author_association: authorAssociation,
+            body: `${created.marker}\n\nunauthorized manual match`,
+          },
+        ],
+      });
+      assert.equal(
+        unauthorizedManualIssue.status,
+        "create",
+        `${state} ${authorAssociation} issue from ${login ?? "a missing login"} must not suppress the handoff`,
+      );
+      assert.notEqual(unauthorizedManualIssue.reason, "issue_already_exists");
+    }
+  }
+}
+
+const caseInsensitiveMaintainerIssue = buildOpenAiReleasePlan({
+  repository: "example/example",
+  tag: release.tag_name,
+  releaseSha,
+  release,
+  listing,
+  subject,
+  previousRelease,
+  previousSubject,
+  issues: [
+    {
+      number: 16,
+      state: "closed",
+      user: { type: "User", login: "ServRox" },
+      author_association: "NONE",
+      body: `${created.marker}\n\ncompleted manual handoff`,
+    },
+  ],
+});
+assert.equal(caseInsensitiveMaintainerIssue.status, "noop");
+assert.equal(caseInsensitiveMaintainerIssue.reason, "issue_already_exists");
 
 const spoofedPublicIssue = buildOpenAiReleasePlan({
   repository: "example/example",
@@ -238,7 +293,7 @@ function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_ru
         const created = {
           number: 100 + postCount,
           state: "open",
-          user: { type: "User" },
+          user: { type: "User", login: "servrox" },
           author_association: "MEMBER",
           body,
           html_url: `https://github.com/example/example/issues/${100 + postCount}`,
