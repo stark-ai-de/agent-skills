@@ -397,7 +397,6 @@ The agent read the catalog guidance and observed configured registration, record
 
 Both turns completed and the host exited zero. The confirmation triggered no commands, MCP calls or repeated advice. This preserved, unsteered result shows continuing variability in agent-mediated catalog preparation even after the bounded-subset guidance. No further attempt was made, and the automatic provider/adoption flow remains unqualified.
 
-
 ## Portable network contract — 2026-09-28
 
 Skill revision `0.3.2` adds descriptive API compatibility, a shared network/failure

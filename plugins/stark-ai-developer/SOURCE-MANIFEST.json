@@ -2017,10 +2017,10 @@
       "sha256": "35ba491bf0dfb7d900f5cb5c48ef45c51dd1db0d6748f809bdefd2202063d09f"
     },
     {
-      "byteLength": 1477,
+      "byteLength": 1102,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/assets/hook-guidance.txt",
-      "sha256": "7132188eee07336738c4f252cc9f749493ffb159698bc8152ec8a3d494530da3"
+      "sha256": "4d26c9a7ca17f611653db04bc5188a4fd188215f27d1d84e6f7fe5e54bfb102a"
     },
     {
       "byteLength": 15526,
@@ -2035,10 +2035,10 @@
       "sha256": "c1dba3ffca100e9c6361cd5f7ee59dbe0982efba1e7ec67665bb4d133ef6a8a0"
     },
     {
-      "byteLength": 1729,
+      "byteLength": 1238,
       "mode": "0644",
       "path": "skills/jev-capability-advisor/assets/repository-hook-guidance.txt",
-      "sha256": "3b1b80cace7b454338d9b609606b5bf12e76c3bf8b09dbbadc99042186fe2279"
+      "sha256": "f978d1eafd29981d1979daf19dec56ce5f08779558f357839f3e517e26583b40"
     },
     {
       "byteLength": 25425,
@@ -2131,5 +2131,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "08db2456d72a662fccb6a18f4371829c107a96e99d1701bb17f548c008489a3d"
+  "treeHash": "2a90e7ce1b0efb476ec46a7a53a4f58d65bbc44eed12f195aef9b42376128193"
 }
