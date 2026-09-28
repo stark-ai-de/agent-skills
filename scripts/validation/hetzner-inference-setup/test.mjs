@@ -2112,6 +2112,90 @@ test("installed Windows ACL commands retain the child through bounded kill confi
   assert.deepEqual(unconfirmed.killSignals, ["SIGTERM", "SIGKILL"]);
 });
 
+test("asynchronous ACL subprocess failures preserve stable metadata without details", async () => {
+  const command = {
+    args: ["-NoProfile"],
+    executable: "powershell.exe",
+    options: { encoding: "utf8", maxBuffer: 65_536, timeout: 1_000, windowsHide: true },
+  };
+  function commandChild() {
+    const child = new EventEmitter();
+    Object.assign(child, {
+      exitCode: null,
+      signalCode: null,
+      killSignals: [],
+      kill(signal) {
+        child.killSignals.push(signal);
+        return true;
+      },
+    });
+    return child;
+  }
+  async function rejectsSafely(operation, expected) {
+    await assert.rejects(operation, (error) => {
+      assert.equal(error.message, "safe ACL command label");
+      assert.equal(error.code, expected.code);
+      assert.equal(error.signal, expected.signal);
+      assert.equal(error.status, expected.status);
+      assert.doesNotMatch(error.message, /private|powershell|credential|query/iu);
+      assert.equal(Object.hasOwn(error, "cause"), false);
+      return true;
+    });
+  }
+
+  const accessDenied = commandChild();
+  const accessDeniedOperation = executeFileAsync(command, "safe ACL command label", {
+    execFile: () => accessDenied,
+  });
+  accessDenied.emit(
+    "error",
+    Object.assign(new Error("C:\\private\\powershell.exe could not start"), { code: "EACCES" }),
+  );
+  accessDenied.emit("close", null, null);
+  await rejectsSafely(accessDeniedOperation, {
+    code: "EACCES",
+    signal: undefined,
+    status: undefined,
+  });
+
+  const nonzeroExit = commandChild();
+  let completeNonzeroExit;
+  const nonzeroExitOperation = executeFileAsync(command, "safe ACL command label", {
+    execFile(_executable, _args, _options, callback) {
+      completeNonzeroExit = callback;
+      return nonzeroExit;
+    },
+  });
+  nonzeroExit.exitCode = 7;
+  completeNonzeroExit(Object.assign(new Error("private command output"), { code: 7 }), "");
+  nonzeroExit.emit("close", 7, null);
+  await rejectsSafely(nonzeroExitOperation, {
+    code: 7,
+    signal: undefined,
+    status: 7,
+  });
+
+  const signaled = commandChild();
+  let completeSignaled;
+  const signaledOperation = executeFileAsync(command, "safe ACL command label", {
+    execFile(_executable, _args, _options, callback) {
+      completeSignaled = callback;
+      return signaled;
+    },
+  });
+  signaled.signalCode = "SIGTERM";
+  completeSignaled(
+    Object.assign(new Error("private command output"), { code: null, signal: "SIGTERM" }),
+    "",
+  );
+  signaled.emit("close", null, "SIGTERM");
+  await rejectsSafely(signaledOperation, {
+    code: null,
+    signal: "SIGTERM",
+    status: undefined,
+  });
+});
+
 test("credential-bearing CLI checks reject Node environment-proxy mode before secret reads", async () => {
   assert.throws(
     () => assertProxyIndependentTransport({ env: {}, execArgv: ["--use-env-proxy"] }),

@@ -522,6 +522,19 @@ function childTerminal(child) {
   );
 }
 
+function sanitizedProcessError(message, error) {
+  const failure = new Error(message);
+  if (typeof error?.code === "string" || Number.isInteger(error?.code) || error?.code === null) {
+    failure.code = error.code;
+  }
+  if (typeof error?.signal === "string" && /^SIG[A-Z0-9]+$/u.test(error.signal)) {
+    failure.signal = error.signal;
+  }
+  if (Number.isInteger(error?.status)) failure.status = error.status;
+  else if (Number.isInteger(error?.code)) failure.status = error.code;
+  return failure;
+}
+
 export function executeFileAsync(command, message, options = {}) {
   return new Promise((resolve, reject) => {
     const hasDeadline = options.deadlineAt !== undefined && options.deadlineAt !== null;
@@ -641,8 +654,9 @@ export function executeFileAsync(command, message, options = {}) {
         (error, stdout) => {
           callbackResult = { error, stdout };
           if (error && !failure) {
-            if (closed || childTerminal(child)) failure = new Error(message);
-            else terminate(new Error(message));
+            const processFailure = sanitizedProcessError(message, error);
+            if (closed || childTerminal(child)) failure = processFailure;
+            else terminate(processFailure);
           }
           finishFromCallback();
         },
@@ -657,7 +671,7 @@ export function executeFileAsync(command, message, options = {}) {
       return;
     }
     child.once("error", (error) => {
-      if (!failure) terminate(new Error(`${message}: ${error.message}`));
+      if (!failure) terminate(sanitizedProcessError(message, error));
     });
     child.once("close", () => {
       closed = true;
