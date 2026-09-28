@@ -24,6 +24,7 @@ const ISSUE_MARKER_PATTERN =
   /^<!-- openai-plugin-release:([A-Za-z0-9_.-]+)@([0-9]+\.[0-9]+\.[0-9]+) -->$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const COMMIT_PATTERN = /^[0-9a-f]{40}$/;
+const TRUSTED_ISSUE_ASSOCIATIONS = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 
 function argument(argv, name) {
   const index = argv.indexOf(name);
@@ -250,6 +251,12 @@ function assertPublicListing(listing) {
   }
 }
 
+function trustedIssueAuthor(issue) {
+  return (
+    issue?.user?.type === "Bot" || TRUSTED_ISSUE_ASSOCIATIONS.has(issue?.author_association ?? "")
+  );
+}
+
 function validateCurrentSubject(subject, options) {
   const errors = validateReleaseSubjectDocument(subject, {
     schemaPath: path.join(repositoryRoot, RELEASE_SUBJECT_SCHEMA_PATH),
@@ -296,6 +303,7 @@ export function buildOpenAiReleasePlan({
   const existing = (Array.isArray(issues) ? issues : []).find(
     (issue) =>
       !issue?.pull_request &&
+      trustedIssueAuthor(issue) &&
       typeof issue.body === "string" &&
       issue.body.split(/\r?\n/, 1)[0] === marker,
   );

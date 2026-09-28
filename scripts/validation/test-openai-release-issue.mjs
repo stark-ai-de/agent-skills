@@ -77,6 +77,8 @@ for (const state of ["open", "closed"]) {
       {
         number: 12,
         state,
+        user: { type: "Bot" },
+        author_association: "NONE",
         body: `${created.marker}\n\nmanual work`,
         html_url: "https://github.com/example/example/issues/12",
       },
@@ -85,6 +87,48 @@ for (const state of ["open", "closed"]) {
   assert.equal(existing.status, "noop");
   assert.equal(existing.reason, "issue_already_exists");
 }
+
+const manualMaintainerIssue = buildOpenAiReleasePlan({
+  repository: "example/example",
+  tag: release.tag_name,
+  releaseSha,
+  release,
+  listing,
+  subject,
+  previousRelease,
+  previousSubject,
+  issues: [
+    {
+      number: 13,
+      state: "open",
+      user: { type: "User" },
+      author_association: "MEMBER",
+      body: `${created.marker}\n\nmanual retry`,
+    },
+  ],
+});
+assert.equal(manualMaintainerIssue.reason, "issue_already_exists");
+
+const spoofedPublicIssue = buildOpenAiReleasePlan({
+  repository: "example/example",
+  tag: release.tag_name,
+  releaseSha,
+  release,
+  listing,
+  subject,
+  previousRelease,
+  previousSubject,
+  issues: [
+    {
+      number: 14,
+      state: "open",
+      user: { type: "User" },
+      author_association: "NONE",
+      body: `${created.marker}\n\nuntrusted marker`,
+    },
+  ],
+});
+assert.equal(spoofedPublicIssue.status, "create");
 
 const unchanged = buildOpenAiReleasePlan({
   repository: "example/example",
@@ -194,6 +238,8 @@ function simulatedGitHubTransport({ issuePages = [[]], runPages = [{ workflow_ru
         const created = {
           number: 100 + postCount,
           state: "open",
+          user: { type: "User" },
+          author_association: "MEMBER",
           body,
           html_url: `https://github.com/example/example/issues/${100 + postCount}`,
         };
@@ -234,6 +280,8 @@ const paginatedTransport = simulatedGitHubTransport({
       {
         number: 9,
         state: "closed",
+        user: { type: "Bot" },
+        author_association: "NONE",
         body: `${created.marker}\n\nmanual completion retained`,
         html_url: "https://github.com/example/example/issues/9",
       },
