@@ -84,7 +84,7 @@ jobs:
               'plugins/stark-ai-developer.source.json',
               'docs/listing/openai/stark-ai-developer.json',
               'docs/listing/openai/stark-ai-developer-submission-worksheet.md',
-              'plugins/stark-ai-developer/.plugin/plugin.json',
+              'plugins/stark-ai-developer/plugin.json',
               'plugins/stark-ai-developer/SOURCE-MANIFEST.json',
               'plugins/stark-ai-developer/README.md',
               '.agents/plugins/marketplace.json',
