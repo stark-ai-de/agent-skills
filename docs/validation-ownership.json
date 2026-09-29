@@ -105,6 +105,13 @@
       "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
       "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
       "cadence": "every aggregate run"
+    },
+    {
+      "id": "hetzner-inference",
+      "command": "pnpm run validate:hetzner-inference",
+      "owner": "scripts/validation/hetzner-inference-setup/validate.mjs",
+      "proof": "Standalone skill contract, local lifecycle, remote ownership, manual no-access routing, and client credential isolation",
+      "cadence": "every aggregate run; hosted Linux/macOS/Windows compatibility"
     }
   ]
 }

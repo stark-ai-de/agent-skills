@@ -352,6 +352,29 @@
       "rationale": "The existing SkillOpt setup validator explicitly launches Python helpers. This newly discovered inventory entry records source-level ownership only; it does not claim a new SkillOpt execution result.",
       "fallbackOrder": ["python3"],
       "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
+    },
+    {
+      "id": "hetzner-node-cli-compatibility",
+      "surfaces": ["internal:validate-hetzner:node-children"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "cliFixtures": "pass",
+            "hostedLinux": "unknown",
+            "hostedMacos": "unknown",
+            "hostedWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/hetzner-inference-setup/validate.mjs",
+        "pnpm run validate:hetzner-inference"
+      ],
+      "rationale": "The Bun validator launches Node.js compatibility tests for the public Node CLI and installed Node launchers, including process ownership, signal cancellation and secret-source boundaries. Hosted platform evidence remains separate.",
+      "fallbackOrder": ["node"],
+      "revisit": "Revisit if the public helper runtime contract changes."
     }
   ]
 }

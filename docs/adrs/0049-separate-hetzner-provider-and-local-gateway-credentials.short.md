@@ -1,35 +1,42 @@
-# ADR-0049: Separate Hetzner provider and local gateway credentials
+# ADR-0049: Separate Hetzner provider, management, and client credentials
 
 ID: ADR-0049
-Title: Separate Hetzner provider and local gateway credentials
-Status: Proposed
+Title: Separate Hetzner provider, management, and client credentials
+Status: Accepted
 Date: 2026-08-26
 Owner: stark-ai-de
 Scope: repository
 Category: security-data
 Tags: credentials, hetzner, least-privilege, litellm, local-gateway, secrets
-Applies when: Storing, launching, exposing, rotating, or removing credentials for the local Hetzner Inference gateway.
+Applies when: Reading, storing, transmitting, rotating or removing Hetzner and LiteLLM credentials.
 Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
 Superseded by: None
-Guide verified: 2026-08-26
-Gist: Keep the upstream token behind the gateway, use a protected machine-local administrative gateway key, bind to loopback, and make rotation and cleanup explicit.
+Guide verified: 2026-09-21
+Gist: Keep provider, management, and client credentials separate, preserve protected storage, and disclose the distinct local and remote trust boundaries.
 
 Variants: **Short** · [Long, canonical](0049-separate-hetzner-provider-and-local-gateway-credentials.long.md) · [Guide](0049-separate-hetzner-provider-and-local-gateway-credentials.guide.md)
 
 ## Decision
 
-The Hetzner setup skill will keep the upstream Hetzner token and local LiteLLM master key as separate secrets; store neither value in repositories, generated client profiles, command arguments, logs, shell startup files, roaming profiles, or global environment state; and bind the gateway to loopback by default. The portable baseline will use protected machine-local per-user secret files, inject values only into the minimum child environment, verify host-specific permissions before use, redact all evidence, preserve credentials during ordinary rollback, and describe the database-free LiteLLM master key as an administrative gateway credential rather than a scoped client key.
+The Hetzner setup skill will keep the provider token, gateway management credential and client inference credential distinct. The database-free local baseline uses a separate protected administrative LiteLLM master key on loopback and discloses its scope; remote clients never receive the remote management key. Read only authorized protected credential sources, transmit provider credentials only to the selected authenticated remote gateway over encrypted transport, and distinguish remote secret references from local sources. Keep values out of command arguments, logs, plans, receipts, client configuration, repositories and automatic backups. Preserve credentials during ordinary rollback and leave manual-mode credential entry to the user.
 
 ## Context
 
-The provider token grants upstream Hetzner access, while the database-free LiteLLM master key administrates the local proxy. Reusing the provider token in clients would unnecessarily expose the stronger credential. Calling the local key scoped would also be misleading because LiteLLM virtual keys require database-backed key management, which is outside the workstation baseline.
+A provider token, remote administrator credential and inference key authorize different operations. Reusing management access in clients unnecessarily widens exposure. A remote environment reference is meaningful only on that server.
 
 ## Consequences
 
-- Good: Clients never receive the upstream token, and both credentials can rotate independently.
-- Good: Secrets stay in machine-local storage rather than roaming profiles, repositories, generated config, or shell history.
-- Tradeoff: Selected clients receive an administrative key to a loopback-only proxy instead of per-client least-privilege keys.
-- Risk: Processes running as the same operating-system user can still read per-user secrets; permissions and minimal exposure reduce but do not remove that risk.
+- Benefit: clear target, ownership and evidence boundaries.
+- Tradeoff: installed versions and operating systems require current verification.
+- Risk: provider and client contracts may change; unsupported paths must remain visibly unverified or blocked.
+
+## Follow-up
+
+Implement and verify the approved [Hetzner setup specification](../specs/hetzner-inference-setup-skill-spec.md).
+
+## Revisit
+
+Create a reciprocal successor ADR when the accepted decision changes.

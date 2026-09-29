@@ -1,0 +1,9 @@
+interface:
+  display_name: "Hetzner Inference Setup"
+  short_description: "Connect Hetzner through local or remote LiteLLM"
+  default_prompt: "Use Hetzner Inference Setup to connect Hetzner Inference through my local or existing remote LiteLLM gateway."
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "linux-xdg",
+      "platform": "linux",
+      "home": "/home/alice",
+      "env": {
+        "XDG_CONFIG_HOME": "/srv/alice/config",
+        "XDG_STATE_HOME": "/srv/alice/state"
+      },
+      "expected": {
+        "kind": "linux",
+        "configRoot": "/srv/alice/config/stark-ai/hetzner-inference",
+        "stateRoot": "/srv/alice/state/stark-ai/hetzner-inference",
+        "codexHome": "/home/alice/.codex"
+      }
+    },
+    {
+      "name": "wsl-nixos",
+      "platform": "linux",
+      "home": "/home/alice",
+      "env": {
+        "WSL_DISTRO_NAME": "nixos"
+      },
+      "expected": {
+        "kind": "wsl",
+        "configRoot": "/home/alice/.config/stark-ai/hetzner-inference",
+        "stateRoot": "/home/alice/.local/state/stark-ai/hetzner-inference",
+        "codexHome": "/home/alice/.codex",
+        "wslDistribution": "nixos"
+      }
+    },
+    {
+      "name": "macos-application-support",
+      "platform": "darwin",
+      "home": "/Users/alice",
+      "env": {},
+      "expected": {
+        "kind": "macos",
+        "configRoot": "/Users/alice/Library/Application Support/stark-ai/hetzner-inference",
+        "stateRoot": "/Users/alice/Library/Application Support/stark-ai/hetzner-inference",
+        "codexHome": "/Users/alice/.codex"
+      }
+    },
+    {
+      "name": "windows-localappdata",
+      "platform": "win32",
+      "home": "C:\\Users\\alice",
+      "env": {
+        "LOCALAPPDATA": "C:\\Users\\alice\\AppData\\Local"
+      },
+      "expected": {
+        "kind": "windows",
+        "configRoot": "C:\\Users\\alice\\AppData\\Local\\stark-ai\\hetzner-inference",
+        "stateRoot": "C:\\Users\\alice\\AppData\\Local\\stark-ai\\hetzner-inference",
+        "codexHome": "C:\\Users\\alice\\.codex"
+      }
+    }
+  ]
+}

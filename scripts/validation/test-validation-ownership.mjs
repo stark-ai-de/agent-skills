@@ -15,6 +15,7 @@ const ids = plan.gates.map((gate) => gate.id);
 assert.equal(new Set(ids).size, ids.length, "validation gate ids must be unique");
 const requiredIds = new Set([
   "repository-aggregate",
+  "hetzner-inference",
   "adrs",
   "runtime-matrix",
   "listing-identity",
