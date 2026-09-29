@@ -290,8 +290,11 @@ export function powershellCommand(script, values) {
   ) {
     throw new TypeError("PowerShell requires a trusted script and string arguments");
   }
+  // Node can inherit PowerShell 7 module paths while launching Windows PowerShell 5.1.
+  // Resolve only this executable's built-in modules, before the JSON prelude autoloads any.
   const invocation = [
     "$ErrorActionPreference='Stop'",
+    "$env:PSModulePath=[IO.Path]::Combine($PSHOME,'Modules')",
     "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)",
     "$OutputEncoding=[Console]::OutputEncoding",
     "[string[]]$hetznerArguments=ConvertFrom-Json -InputObject ([Environment]::GetEnvironmentVariable('HETZNER_POWERSHELL_ARGUMENTS','Process'))",
@@ -305,7 +308,12 @@ export function powershellCommand(script, values) {
       "-EncodedCommand",
       Buffer.from(invocation, "utf16le").toString("base64"),
     ],
-    environment: { HETZNER_POWERSHELL_ARGUMENTS: JSON.stringify(values) },
+    environment: {
+      HETZNER_POWERSHELL_ARGUMENTS: JSON.stringify(values),
+      // Microsoft's documented cache opt-out avoids discovery hangs and shared cache writes.
+      // It is child-only and does not change ACLs, execution policy, or the user's environment.
+      PSModuleAnalysisCachePath: "NUL",
+    },
   };
 }
 
