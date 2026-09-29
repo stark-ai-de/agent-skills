@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: hetzner-diagnosis-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: hetzner-diagnosis-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   reproduce:
@@ -30,16 +30,26 @@ jobs:
         with:
           runtime: node@24.18.0
           install: false
-      - name: Archive exact public reproducer input
+      - name: Prepare pinned offline validation tools
         if: runner.os == 'Linux'
         shell: bash
-        run: git archive --format=zip --output="$RUNNER_TEMP/hetzner-source.zip" HEAD
-      - name: Upload exact reproducer source
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          tools="$RUNNER_TEMP/hetzner-tools"
+          mkdir -p "$tools/bin" "$tools/node_modules/@oxfmt" "$tools/node_modules/@oxlint"
+          cp -L "$(command -v node)" "$tools/bin/node"
+          cp -LR node_modules/oxfmt "$tools/node_modules/oxfmt"
+          cp -LR node_modules/oxlint "$tools/node_modules/oxlint"
+          cp -LR node_modules/.pnpm/tinypool@2.1.0/node_modules/tinypool "$tools/node_modules/tinypool"
+          cp -LR node_modules/.pnpm/@oxfmt+binding-linux-x64-gnu@0.63.0/node_modules/@oxfmt/binding-linux-x64-gnu "$tools/node_modules/@oxfmt/binding-linux-x64-gnu"
+          cp -LR node_modules/.pnpm/@oxlint+binding-linux-x64-gnu@1.78.0/node_modules/@oxlint/binding-linux-x64-gnu "$tools/node_modules/@oxlint/binding-linux-x64-gnu"
+          tar -czf "$RUNNER_TEMP/hetzner-tools.tar.gz" -C "$tools" .
+      - name: Upload pinned validation tools
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v7
         with:
-          name: hetzner-source-${{ github.run_id }}
-          path: ${{ runner.temp }}/hetzner-source.zip
+          name: hetzner-tools-${{ github.run_id }}
+          path: ${{ runner.temp }}/hetzner-tools.tar.gz
           retention-days: 7
           if-no-files-found: error
       - name: Reproduce native ACL boundary without credentials
