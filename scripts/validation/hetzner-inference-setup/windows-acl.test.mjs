@@ -14,15 +14,16 @@ test("native Windows ACL staged diagnosis", { skip: process.platform !== "win32"
   const target = path.join(root, "synthetic-ä.txt");
   fs.writeFileSync(target, "synthetic test input");
   const powershell = path.join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  const moduleRoot = path.join(path.dirname(powershell), "Modules");
   const templateEnvironment = Object.fromEntries(
     ["PATH", "SystemRoot", "TEMP", "TMP", "WINDIR"]
       .filter((key) => process.env[key] !== undefined)
       .map((key) => [key, process.env[key]]),
   );
   const environments = [
-    ["template-minimum", templateEnvironment],
-    ["orchestrator-minimum", minimalCommandEnvironment()],
-    ["native-reference", { ...process.env }],
+    ["template-native-modules", { ...templateEnvironment, PSModulePath: moduleRoot }],
+    ["orchestrator-native-modules", { ...minimalCommandEnvironment(), PSModulePath: moduleRoot }],
+    ["reference-native-modules", { ...process.env, PSModulePath: moduleRoot }],
   ];
   const getAcl = "$acl=Get-Acl -LiteralPath $args[0];$acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value";
   const queries = [
