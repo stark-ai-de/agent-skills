@@ -292,6 +292,9 @@ export function powershellCommand(script, values) {
   }
   const invocation = [
     "$ErrorActionPreference='Stop'",
+    // Only built-in modules are needed. Avoid discovering installed/user modules
+    // when PowerShell reconstructs PSModulePath in a restricted child environment.
+    "$env:PSModulePath=[IO.Path]::Combine($PSHOME,'Modules')",
     "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)",
     "$OutputEncoding=[Console]::OutputEncoding",
     "[string[]]$hetznerArguments=ConvertFrom-Json -InputObject ([Environment]::GetEnvironmentVariable('HETZNER_POWERSHELL_ARGUMENTS','Process'))",
