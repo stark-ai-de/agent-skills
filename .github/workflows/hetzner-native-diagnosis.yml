@@ -1,0 +1,46 @@
+name: Hetzner native diagnosis
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/hetzner-native-diagnosis.yml"
+      - "scripts/validation/hetzner-inference-setup/**"
+      - "skills/engineering-workflows/hetzner-inference-setup/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hetzner-diagnosis-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          install: false
+      - name: Archive exact public reproducer input
+        if: runner.os == 'Linux'
+        shell: bash
+        run: git archive --format=zip --output="$RUNNER_TEMP/hetzner-source.zip" HEAD
+      - name: Upload exact reproducer source
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: hetzner-source-${{ github.run_id }}
+          path: ${{ runner.temp }}/hetzner-source.zip
+          retention-days: 7
+          if-no-files-found: error
+      - name: Reproduce native ACL boundary without credentials
+        run: node --test scripts/validation/hetzner-inference-setup/windows-acl.test.mjs
