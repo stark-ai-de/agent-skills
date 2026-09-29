@@ -832,18 +832,22 @@ async function check(options) {
     max_tokens: maxTokens,
     stream: false,
   });
+  // Visible partial output does not turn an exhausted budget into a completed probe.
+  if (
+    Array.isArray(data?.choices) &&
+    data.choices.some((choice) => choice?.finish_reason === "length")
+  )
+    fail(
+      "inference_budget_exhausted",
+      "Inference exhausted the bounded output-token budget. The result is inconclusive, including any partial text; select a suitable bounded --max-tokens value and retry.",
+    );
   if (
     !Array.isArray(data?.choices) ||
     !data.choices.some(
       (choice) => typeof choice?.message?.content === "string" && choice.message.content.trim(),
     )
   )
-    fail(
-      data?.choices?.some?.((choice) => choice.finish_reason === "length")
-        ? "inference_budget_exhausted"
-        : "inference_invalid",
-      "Inference returned no nonempty assistant response. A length-limited reasoning completion is inconclusive; select a suitable bounded --max-tokens value and retry the inference check.",
-    );
+    fail("inference_invalid", "Inference returned no nonempty assistant response.");
   return {
     ok: true,
     target: "remote",

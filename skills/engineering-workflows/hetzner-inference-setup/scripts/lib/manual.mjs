@@ -68,6 +68,14 @@ export function manualCommand(command = "setup", options = {}) {
     options["inference-url"],
     target === "local" ? "http://127.0.0.1:4000/v1" : "<LITELLM_INFERENCE_URL>",
   );
+  const cursorHost = options["inference-url"]
+    ? new URL(inferenceUrl).hostname.replace(/\.$/, "")
+    : null;
+  const cursorLocal =
+    target === "local" ||
+    cursorHost === "localhost" ||
+    cursorHost === "[::1]" ||
+    /^127\./.test(cursorHost ?? "");
   const clients = options.clients ? options.clients.split(",") : [];
   if (clients.some((client) => !["codex", "claude-code", "cursor"].includes(client)))
     reject("Select codex, claude-code or cursor.");
@@ -182,11 +190,15 @@ export function manualCommand(command = "setup", options = {}) {
     clientGuidance: clients.map((client) => ({
       client,
       reference: `references/client-${client}.md`,
-      endpoint: inferenceUrl,
+      endpoint: client === "cursor" && cursorLocal ? null : inferenceUrl,
       model: alias,
       credential:
-        target === "local" ? "local administrative loopback key" : "separate remote inference key",
-      state: "verification_required",
+        client === "cursor" && cursorLocal
+          ? "Do not enter the local administrative key in Cursor."
+          : target === "local"
+            ? "local administrative loopback key"
+            : "separate remote inference key",
+      state: client === "cursor" && cursorLocal ? "blocked" : "verification_required",
     })),
   };
 }

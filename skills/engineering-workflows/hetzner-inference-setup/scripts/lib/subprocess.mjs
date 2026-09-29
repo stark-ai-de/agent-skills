@@ -68,8 +68,9 @@ export async function runBoundedCommand(executable, args, options = {}, dependen
       return;
     }
 
-    let stdout = "";
-    let stderr = "";
+    const stdout = { chunks: [], bytes: 0 };
+    const stderr = { chunks: [], bytes: 0 };
+    const decode = (capture) => Buffer.concat(capture.chunks).toString("utf8").trim();
     let failure = null;
     let settled = false;
     let timeoutTimer;
@@ -132,25 +133,26 @@ export async function runBoundedCommand(executable, args, options = {}, dependen
         confirmationTimer = setTimeout(rejectUnconfirmedTermination, confirmationDelay);
       }, escalationDelay);
     };
-    const collect = (current, chunk) => {
-      const next = current + chunk;
-      if (Buffer.byteLength(next) > maxBytes) {
+    const collect = (capture, chunk) => {
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      if (capture.bytes + bytes.byteLength > maxBytes) {
         terminate(
           new SetupError(
             failureCode,
             `${label} output exceeded its bounded capture: ${displayExecutable}`,
           ),
         );
-        return current;
+        return;
       }
-      return next;
+      capture.bytes += bytes.byteLength;
+      capture.chunks.push(bytes);
     };
 
     child.stdout.on("data", (chunk) => {
-      stdout = collect(stdout, chunk);
+      collect(stdout, chunk);
     });
     child.stderr.on("data", (chunk) => {
-      stderr = collect(stderr, chunk);
+      collect(stderr, chunk);
     });
     child.once("error", (error) => {
       if (failure) return;
@@ -178,12 +180,12 @@ export async function runBoundedCommand(executable, args, options = {}, dependen
           new SetupError(failureCode, `${label} failed: ${displayExecutable}`, {
             code,
             signal,
-            stderr: stderr.trim().slice(0, 4_096),
+            stderr: decode(stderr).slice(0, 4_096),
           }),
         );
         return;
       }
-      settle(resolve, { stdout: stdout.trim(), stderr: stderr.trim() });
+      settle(resolve, { stdout: decode(stdout), stderr: decode(stderr) });
     });
     timeoutTimer = setTimeout(
       () => {

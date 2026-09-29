@@ -268,17 +268,17 @@ export function cursorGuidance() {
     component: "cursor",
     state: "blocked",
     reason:
-      "Current public Cursor BYOK documentation does not define a durable custom loopback base-URL contract.",
+      "A visible custom-base field does not establish a safe Cursor request path to the local administrative gateway.",
     safeInspection: [
-      "Open Cursor Settings > Models.",
-      "Confirm the installed version visibly exposes an OpenAI-compatible custom base URL and model entry.",
-      `If it does, enter http://${GATEWAY_HOST}:${GATEWAY_PORT}/v1, ${GATEWAY_ALIAS}, and only the local administrative key.`,
-      "Click Verify manually and record the exact Cursor version and result.",
+      "Inspect Cursor Settings > Models and record the installed version without entering a key.",
+      "Verify the actual Cursor request path; a terminal request or visible base-URL field is not evidence of backend reachability.",
+      "Use an explicitly selected reachable remote gateway with a separate inference key for guided standard chat; do not expose the local administrative gateway.",
     ],
     warnings: [
       "Custom API keys apply only to standard chat.",
-      "Cursor documents that BYOK requests pass through Cursor servers for final prompt construction.",
-      "Never enter the Hetzner provider token.",
+      "Cursor sends BYOK keys to its backend with requests for final prompt construction.",
+      "Never send the local administrative key to Cursor or expose its loopback endpoint publicly.",
+      "Never enter the Hetzner provider token or a remote management credential.",
       "Do not edit Cursor databases or opaque state.",
     ],
   };
