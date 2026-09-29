@@ -272,7 +272,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: ⬇️ Checkout
+<<<<<<< Updated upstream
         uses: useblacksmith/checkout@v1
+=======
+        uses: actions/checkout@v7
+>>>>>>> Stashed changes
         with:
           fetch-depth: 1
 
@@ -289,7 +293,11 @@ jobs:
           bun-version-file: ".bun-version"
 
       - name: 📥 Download identity reports
+<<<<<<< Updated upstream
         uses: actions/download-artifact@v8
+=======
+        uses: actions/download-artifact@v7
+>>>>>>> Stashed changes
         with:
           pattern: archive-identity-*
           path: dist/archive-identities
