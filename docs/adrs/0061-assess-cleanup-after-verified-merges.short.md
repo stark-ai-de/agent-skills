@@ -1,6 +1,6 @@
-# ADR-0060: Assess cleanup after verified merges
+# ADR-0061: Assess cleanup after verified merges
 
-ID: ADR-0060
+ID: ADR-0061
 Title: Assess cleanup after verified merges
 Status: Proposed
 Date: 2026-09-24
@@ -17,7 +17,7 @@ Superseded by: None
 Guide verified: 2026-09-24
 Gist: Assess cleanup after verified merges and promote the policy through Architecture Compass after acceptance.
 
-Variants: **Short** · [Long, canonical](0060-assess-cleanup-after-verified-merges.long.md) · [Guide](0060-assess-cleanup-after-verified-merges.guide.md)
+Variants: **Short** · [Long, canonical](0061-assess-cleanup-after-verified-merges.long.md) · [Guide](0061-assess-cleanup-after-verified-merges.guide.md)
 
 ## Decision
 

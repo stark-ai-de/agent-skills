@@ -1,6 +1,6 @@
-# ADR-0060: Assess cleanup after verified merges
+# ADR-0061: Assess cleanup after verified merges
 
-ID: ADR-0060
+ID: ADR-0061
 Title: Assess cleanup after verified merges
 Status: Proposed
 Date: 2026-09-24
@@ -17,7 +17,7 @@ Superseded by: None
 Guide verified: 2026-09-24
 Gist: Assess cleanup after verified merges and promote the policy through Architecture Compass after acceptance.
 
-Variants: [Short](0060-assess-cleanup-after-verified-merges.short.md) · **Long, canonical** · [Guide](0060-assess-cleanup-after-verified-merges.guide.md)
+Variants: [Short](0061-assess-cleanup-after-verified-merges.short.md) · **Long, canonical** · [Guide](0061-assess-cleanup-after-verified-merges.guide.md)
 
 ## Decision
 
@@ -61,6 +61,6 @@ Reference searches are evidence inputs, not a complete liveness proof. CI config
 
 This is a repository-local Proposed decision about a future Compass capability. Its `Adoptable: false` metadata is required by the repository ADR contract; it does not preclude a later, separately accepted public provider decision with `Scope: target-repository` and `Adoptable: true`.
 
-The [proposal specification](../specs/architecture-compass-post-merge-cleanup-spec.md) preserves the original idea, source challenge, rollout stages and acceptance scenarios. The [Guide](0060-assess-cleanup-after-verified-merges.guide.md) describes the intended application and verification path without activating it.
+The [proposal specification](../specs/architecture-compass-post-merge-cleanup-spec.md) preserves the original idea, source challenge, rollout stages and acceptance scenarios. The [Guide](0061-assess-cleanup-after-verified-merges.guide.md) describes the intended application and verification path without activating it.
 
 Before implementation, accept or revise this proposal, resolve the provider identity and lineage, and qualify the new observed-merge behavior. Until then, do not change active `AGENTS.md` instructions, the shipped Compass catalog, generated projections or release metadata to enforce it.

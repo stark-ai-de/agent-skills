@@ -1,7 +1,7 @@
 # Architecture Compass post-merge cleanup proposal
 
 Status: Proposal; documentation only, not activated
-Decision: [ADR-0060](../adrs/0060-assess-cleanup-after-verified-merges.short.md) ([Long, canonical](../adrs/0060-assess-cleanup-after-verified-merges.long.md) · [Guide](../adrs/0060-assess-cleanup-after-verified-merges.guide.md))
+Decision: [ADR-0061](../adrs/0061-assess-cleanup-after-verified-merges.short.md) ([Long, canonical](../adrs/0061-assess-cleanup-after-verified-merges.long.md) · [Guide](../adrs/0061-assess-cleanup-after-verified-merges.guide.md))
 
 ## Original idea
 
@@ -11,7 +11,7 @@ The motivating pattern is a completed service retirement: the original PR remove
 
 ## Evaluation and refinements
 
-The idea is useful as a lifecycle trigger because some cleanup becomes justified only after integration or a subsequent transition. The normative proposal is in ADR-0060; this specification explains its intended implementation.
+The idea is useful as a lifecycle trigger because some cleanup becomes justified only after integration or a subsequent transition. The normative proposal is in ADR-0061; this specification explains its intended implementation.
 
 | Initial expectation                            | Refined behavior and reason                                                                                                                                                               |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +36,7 @@ Existing accepted decisions already supply much of the removal reasoning:
 
 The missing element is the verified-merge assessment trigger and its closure/revisit lifecycle. The proposal supplements these decisions instead of rewriting accepted history. Cleanup outcomes reuse the target's existing finding and evidence record; they do not require a second status ledger. Under an adopted AC-ADR-049 contract, its finding dispositions, ownership and evidence requirements remain authoritative.
 
-ADR-0060 remains Proposed and unlocked. This PR does not accept the future public rule or change any active instruction, provider catalog, skill, validator, release artifact or consuming repository.
+ADR-0061 remains Proposed and unlocked. This PR does not accept the future public rule or change any active instruction, provider catalog, skill, validator, release artifact or consuming repository.
 
 ## Future Compass delivery
 
