@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "snapshotDigest": "550e4f5c9df724baac00a8f786bf64fab46b8316a75648bafd2939577956a559",
+  "status": "incomplete",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "candidateId": "c175a5c99462ed206ddc59ed",
+      "path": "tools/import.mjs",
+      "startLine": 1,
+      "fileHash": "10ea4206c093138078becce97d0a6ce4513d9606198c3052010f26e48e1b1d80",
+      "status": "confirmed",
+      "reason": "Import deduplication still identifies projects by name alone. A bounded check with north/demo and south/demo preserved only south/demo, although the updated sameProject identifies them as distinct projects. Deduplication must account for both organization and name.",
+      "quote": "return [...new Map(rows.map((row) => [row.name, row])).values()];",
+      "evidence": [
+        {
+          "path": "src/projects.mjs",
+          "side": "before",
+          "quote": "export const sameProject = (a, b) => a.name === b.name;"
+        },
+        {
+          "path": "src/projects.mjs",
+          "side": "after",
+          "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "behavior-1",
+      "candidateId": "7e692a84e88b137a2109158b",
+      "path": "docs/onboarding.de.md",
+      "startLine": 1,
+      "fileHash": "41e833957d577683adb316b606d915af3a1c273d33619487de18eed8f0934674",
+      "status": "confirmed",
+      "reason": "Current onboarding guidance requires choosing a name unused by other organizations. This contradicts organization-scoped project identity. Update the guidance to scope name uniqueness to the project's own organization.",
+      "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+      "evidence": [
+        {
+          "path": "src/projects.mjs",
+          "side": "before",
+          "quote": "export const sameProject = (a, b) => a.name === b.name;"
+        },
+        {
+          "path": "src/projects.mjs",
+          "side": "after",
+          "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "reviewed": [
+    {
+      "contractId": "behavior-1",
+      "candidateId": "c175a5c99462ed206ddc59ed",
+      "path": "tools/import.mjs",
+      "startLine": 1,
+      "fileHash": "10ea4206c093138078becce97d0a6ce4513d9606198c3052010f26e48e1b1d80",
+      "status": "confirmed",
+      "reason": "Import deduplication still identifies projects by name alone. A bounded check with north/demo and south/demo preserved only south/demo, although the updated sameProject identifies them as distinct projects. Deduplication must account for both organization and name.",
+      "quote": "return [...new Map(rows.map((row) => [row.name, row])).values()];",
+      "evidence": [
+        {
+          "path": "src/projects.mjs",
+          "side": "before",
+          "quote": "export const sameProject = (a, b) => a.name === b.name;"
+        },
+        {
+          "path": "src/projects.mjs",
+          "side": "after",
+          "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "behavior-1",
+      "candidateId": "7e692a84e88b137a2109158b",
+      "path": "docs/onboarding.de.md",
+      "startLine": 1,
+      "fileHash": "41e833957d577683adb316b606d915af3a1c273d33619487de18eed8f0934674",
+      "status": "confirmed",
+      "reason": "Current onboarding guidance requires choosing a name unused by other organizations. This contradicts organization-scoped project identity. Update the guidance to scope name uniqueness to the project's own organization.",
+      "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+      "evidence": [
+        {
+          "path": "src/projects.mjs",
+          "side": "before",
+          "quote": "export const sameProject = (a, b) => a.name === b.name;"
+        },
+        {
+          "path": "src/projects.mjs",
+          "side": "after",
+          "quote": "export const sameProject = (a, b) => a.org === b.org && a.name === b.name;"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "coverage": {
+    "enumeratedFiles": 16,
+    "collectedFiles": 16,
+    "candidates": 16,
+    "bytes": 4189,
+    "omissions": [],
+    "reviewedPairs": 2,
+    "pendingPairs": 14,
+    "unresolvedPairs": 0
+  },
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4738,
+      "estimatedCostUsd": 0.000198996,
+      "costComplete": true,
+      "elapsedMs": 1091
+    },
+    "errors": []
+  },
+  "meaning": "Confirmed findings are host judgments with source evidence, not a completeness or runtime-correctness guarantee."
+}

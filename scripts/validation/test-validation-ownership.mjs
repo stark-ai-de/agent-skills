@@ -29,6 +29,7 @@ const requiredIds = new Set([
   "scripts",
   "manual-directory",
   "jev-capability-advisor",
+  "change-impact",
 ]);
 assert.deepEqual(
   new Set(ids),

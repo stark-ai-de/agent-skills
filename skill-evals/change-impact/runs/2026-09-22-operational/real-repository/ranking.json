@@ -1,0 +1,1063 @@
+{
+  "schemaVersion": 1,
+  "packetDigest": "c35cdd2ca4bdb21eb505fc6490fa5de6fe5c8d2ef8d15b9beda43b55f7944e3a",
+  "snapshotDigest": "40db518d325bc98bb2bc644f6a2b8f319f1b1c5e6cea5e5e3015a771399444fd",
+  "model": "jev-1.13.0",
+  "status": "ranked",
+  "records": [
+    {
+      "candidateId": "17479447996f861025aa8bfb",
+      "contractId": "github-comparison-head",
+      "relation": "old_assumption",
+      "probabilities": {
+        "unrelated": 0,
+        "compatible": 0.04,
+        "uncertain": 0,
+        "old_assumption": 0.96
+      },
+      "confidence": 0.94,
+      "priority": 0.96
+    },
+    {
+      "candidateId": "eb4c852c91122563a0893c5d",
+      "contractId": "github-comparison-head",
+      "relation": "old_assumption",
+      "probabilities": {
+        "uncertain": 0.12,
+        "unrelated": 0.03,
+        "compatible": 0.25,
+        "old_assumption": 0.6
+      },
+      "confidence": 0.46,
+      "priority": 0.6599999999999999
+    },
+    {
+      "candidateId": "c3290bc60b74061b3f1146bd",
+      "contractId": "github-comparison-head",
+      "relation": "uncertain",
+      "probabilities": {
+        "old_assumption": 0.32,
+        "compatible": 0.17,
+        "uncertain": 0.44,
+        "unrelated": 0.07
+      },
+      "confidence": 0.26,
+      "priority": 0.54
+    },
+    {
+      "candidateId": "d0d8cac40caebf99ad54c2c1",
+      "contractId": "github-comparison-head",
+      "relation": "uncertain",
+      "probabilities": {
+        "uncertain": 0.59,
+        "compatible": 0.18,
+        "old_assumption": 0.1,
+        "unrelated": 0.13
+      },
+      "confidence": 0.46,
+      "priority": 0.395
+    },
+    {
+      "candidateId": "9b6183b3e18fffd621a89f7b",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.29,
+        "unrelated": 0.22,
+        "compatible": 0.33999999999999997,
+        "uncertain": 0.15
+      },
+      "confidence": 0.13,
+      "priority": 0.365
+    },
+    {
+      "candidateId": "24a1680b265671a8cf375578",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.19,
+        "uncertain": 0.28,
+        "old_assumption": 0.22,
+        "unrelated": 0.31
+      },
+      "confidence": 0.08,
+      "priority": 0.36
+    },
+    {
+      "candidateId": "5aef801de729f79744b53cb1",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.33,
+        "uncertain": 0.27,
+        "old_assumption": 0.22,
+        "unrelated": 0.18
+      },
+      "confidence": 0.11,
+      "priority": 0.355
+    },
+    {
+      "candidateId": "2e395abce8901ff8d10ccbc8",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.46,
+        "old_assumption": 0.22,
+        "compatible": 0.11,
+        "uncertain": 0.21
+      },
+      "confidence": 0.27,
+      "priority": 0.325
+    },
+    {
+      "candidateId": "bf7669e1f276f9d4f18b1395",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.49,
+        "uncertain": 0.13,
+        "old_assumption": 0.2,
+        "unrelated": 0.18
+      },
+      "confidence": 0.33,
+      "priority": 0.265
+    },
+    {
+      "candidateId": "36497ab58c6a7a1a6023bb90",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.02,
+        "compatible": 0.04,
+        "uncertain": 0.44,
+        "unrelated": 0.5
+      },
+      "confidence": 0.34,
+      "priority": 0.24
+    },
+    {
+      "candidateId": "d660b589b13131617e005e58",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.17,
+        "unrelated": 0.62,
+        "compatible": 0.06,
+        "old_assumption": 0.15
+      },
+      "confidence": 0.48,
+      "priority": 0.235
+    },
+    {
+      "candidateId": "0208c01f2ac8a47e6673226f",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.28,
+        "unrelated": 0.57,
+        "compatible": 0.06,
+        "old_assumption": 0.09
+      },
+      "confidence": 0.43,
+      "priority": 0.23
+    },
+    {
+      "candidateId": "9c62456244c14671c289f959",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.42,
+        "uncertain": 0.19,
+        "old_assumption": 0.13,
+        "unrelated": 0.26
+      },
+      "confidence": 0.22,
+      "priority": 0.225
+    },
+    {
+      "candidateId": "ebaa00c0944592522cb965c3",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.18,
+        "unrelated": 0.22,
+        "compatible": 0.51,
+        "uncertain": 0.09
+      },
+      "confidence": 0.34,
+      "priority": 0.22499999999999998
+    },
+    {
+      "candidateId": "a6c339799d05302db95d9043",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.54,
+        "compatible": 0.13,
+        "uncertain": 0.23,
+        "old_assumption": 0.1
+      },
+      "confidence": 0.39,
+      "priority": 0.21500000000000002
+    },
+    {
+      "candidateId": "57582fcb4189c5030ea3ff01",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.62,
+        "old_assumption": 0.07,
+        "compatible": 0.05,
+        "uncertain": 0.26
+      },
+      "confidence": 0.5,
+      "priority": 0.2
+    },
+    {
+      "candidateId": "cfd967538c6f48fc07c3f555",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.26,
+        "old_assumption": 0.04,
+        "compatible": 0.15,
+        "unrelated": 0.55
+      },
+      "confidence": 0.39,
+      "priority": 0.17
+    },
+    {
+      "candidateId": "02063bbdcbf1a8c12f86f4e0",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.13,
+        "unrelated": 0.59,
+        "compatible": 0.18,
+        "old_assumption": 0.1
+      },
+      "confidence": 0.44,
+      "priority": 0.165
+    },
+    {
+      "candidateId": "f1b3f830ae57a75f029601e2",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.77,
+        "uncertain": 0.03,
+        "old_assumption": 0.15,
+        "unrelated": 0.05
+      },
+      "confidence": 0.68,
+      "priority": 0.16499999999999998
+    },
+    {
+      "candidateId": "9e04f208750900b5cbc91cd3",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.84,
+        "old_assumption": 0.14,
+        "uncertain": 0.01,
+        "unrelated": 0.01
+      },
+      "confidence": 0.79,
+      "priority": 0.14500000000000002
+    },
+    {
+      "candidateId": "df8b0f1afcf89a0593c10555",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.61,
+        "old_assumption": 0.07,
+        "compatible": 0.17,
+        "uncertain": 0.15
+      },
+      "confidence": 0.49,
+      "priority": 0.14500000000000002
+    },
+    {
+      "candidateId": "42c9637ac176805508bbe12a",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.12,
+        "unrelated": 0.57,
+        "compatible": 0.26,
+        "uncertain": 0.05
+      },
+      "confidence": 0.42,
+      "priority": 0.145
+    },
+    {
+      "candidateId": "4a7f41f7642f12442af338f9",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.7,
+        "old_assumption": 0.04,
+        "compatible": 0.08,
+        "uncertain": 0.18
+      },
+      "confidence": 0.61,
+      "priority": 0.13
+    },
+    {
+      "candidateId": "da8a5632450519bdc8acc0e0",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.21,
+        "uncertain": 0.17,
+        "old_assumption": 0.04,
+        "unrelated": 0.58
+      },
+      "confidence": 0.44,
+      "priority": 0.125
+    },
+    {
+      "candidateId": "d8d972fed9ed9c59603da8c1",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.74,
+        "old_assumption": 0.04,
+        "compatible": 0.08,
+        "uncertain": 0.14
+      },
+      "confidence": 0.65,
+      "priority": 0.11000000000000001
+    },
+    {
+      "candidateId": "173107b8a38071dd60535ef0",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.26,
+        "old_assumption": 0.1,
+        "uncertain": 0.02,
+        "unrelated": 0.62
+      },
+      "confidence": 0.49,
+      "priority": 0.11
+    },
+    {
+      "candidateId": "8cdb0cc41b26da793a5547bb",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.13,
+        "unrelated": 0.8,
+        "compatible": 0.03,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.73,
+      "priority": 0.10500000000000001
+    },
+    {
+      "candidateId": "87f77318a7dd4843412fc1cc",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.07,
+        "uncertain": 0.1,
+        "old_assumption": 0.05,
+        "unrelated": 0.78
+      },
+      "confidence": 0.71,
+      "priority": 0.1
+    },
+    {
+      "candidateId": "09c7f327b6cde874d28b3e7e",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.79,
+        "old_assumption": 0.06,
+        "compatible": 0.09,
+        "uncertain": 0.06
+      },
+      "confidence": 0.72,
+      "priority": 0.09
+    },
+    {
+      "candidateId": "1a3b37335ffcbc4bd87c4c8e",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.06,
+        "old_assumption": 0.06,
+        "compatible": 0.29,
+        "unrelated": 0.59
+      },
+      "confidence": 0.46,
+      "priority": 0.09
+    },
+    {
+      "candidateId": "3eb05adfac97276b41b718dc",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.8,
+        "compatible": 0.07,
+        "old_assumption": 0.05,
+        "uncertain": 0.08
+      },
+      "confidence": 0.73,
+      "priority": 0.09
+    },
+    {
+      "candidateId": "d13b144e86f371dcc2b89ad5",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.79,
+        "old_assumption": 0.05,
+        "compatible": 0.09,
+        "uncertain": 0.07
+      },
+      "confidence": 0.72,
+      "priority": 0.085
+    },
+    {
+      "candidateId": "5358e13585b1659611d13684",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.77,
+        "compatible": 0.12,
+        "uncertain": 0.05,
+        "old_assumption": 0.06
+      },
+      "confidence": 0.71,
+      "priority": 0.08499999999999999
+    },
+    {
+      "candidateId": "83d56e940fd8a5ec4c3039e7",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.1,
+        "uncertain": 0.09,
+        "old_assumption": 0.04,
+        "unrelated": 0.77
+      },
+      "confidence": 0.71,
+      "priority": 0.08499999999999999
+    },
+    {
+      "candidateId": "e4bbc3e6936e7b8ac1d97cba",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.82,
+        "compatible": 0.07,
+        "old_assumption": 0.05,
+        "uncertain": 0.06
+      },
+      "confidence": 0.77,
+      "priority": 0.08
+    },
+    {
+      "candidateId": "f868c12c09d3ff7fda3ad7d2",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.17,
+        "old_assumption": 0.06,
+        "uncertain": 0.03,
+        "unrelated": 0.74
+      },
+      "confidence": 0.65,
+      "priority": 0.075
+    },
+    {
+      "candidateId": "902d311ab6ebf84dd6a91119",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.06,
+        "compatible": 0.83,
+        "unrelated": 0.09,
+        "uncertain": 0.02
+      },
+      "confidence": 0.77,
+      "priority": 0.06999999999999999
+    },
+    {
+      "candidateId": "7e5caa10f06a8ab38636d5eb",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.05,
+        "compatible": 0.06,
+        "unrelated": 0.86,
+        "uncertain": 0.03
+      },
+      "confidence": 0.82,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "95edb1e64299ab8fb49eea30",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.05,
+        "unrelated": 0.75,
+        "compatible": 0.17,
+        "uncertain": 0.03
+      },
+      "confidence": 0.68,
+      "priority": 0.065
+    },
+    {
+      "candidateId": "716323b45a16422ad50797d3",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.13,
+        "uncertain": 0.04,
+        "old_assumption": 0.04,
+        "unrelated": 0.79
+      },
+      "confidence": 0.72,
+      "priority": 0.06
+    },
+    {
+      "candidateId": "ae4fc183eeec9dcbf1cab557",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.89,
+        "compatible": 0.04,
+        "uncertain": 0.03,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.85,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "b2be50cdfdef104f3ed7cdfa",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.05,
+        "unrelated": 0.85,
+        "compatible": 0.07,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.79,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "b446bc750307d3bfc9995840",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.88,
+        "old_assumption": 0.03,
+        "compatible": 0.04,
+        "uncertain": 0.05
+      },
+      "confidence": 0.84,
+      "priority": 0.055
+    },
+    {
+      "candidateId": "07d269565ee3fd42de19a51d",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.04,
+        "unrelated": 0.91,
+        "compatible": 0.02,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.89,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "2f0bbfee11570891e9ab4653",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.94,
+        "old_assumption": 0.05,
+        "uncertain": 0,
+        "unrelated": 0.01
+      },
+      "confidence": 0.92,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "b82d1e823ad1875bd6bb8abc",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.89,
+        "compatible": 0.05,
+        "old_assumption": 0.04
+      },
+      "confidence": 0.85,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "e4a4216d48767307fa35c812",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "old_assumption": 0.04,
+        "compatible": 0.06,
+        "unrelated": 0.88
+      },
+      "confidence": 0.85,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "f0d0811688c18fddbf123ef7",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0.01,
+        "uncertain": 0.08,
+        "unrelated": 0.9
+      },
+      "confidence": 0.88,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "fb6360d106109d43ae8224f4",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.04,
+        "old_assumption": 0.03,
+        "compatible": 0.06,
+        "unrelated": 0.87
+      },
+      "confidence": 0.83,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "371e29624cfb81431d7778e8",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.04,
+        "compatible": 0.91,
+        "uncertain": 0.01
+      },
+      "confidence": 0.88,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "515e5c894cfdcdf4786490f8",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.92,
+        "compatible": 0.02,
+        "uncertain": 0.03,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.9,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "5df72b7fde87f9cfdd8f323e",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.12,
+        "uncertain": 0.01,
+        "old_assumption": 0.04,
+        "unrelated": 0.83
+      },
+      "confidence": 0.77,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "73486cf6506f1c4c4517b8d5",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.88,
+        "compatible": 0.07,
+        "uncertain": 0.01
+      },
+      "confidence": 0.83,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "8decdab8a216c54d8d8aad04",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "compatible": 0.03,
+        "unrelated": 0.92,
+        "uncertain": 0.01
+      },
+      "confidence": 0.9,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "932a653282bfc8be433f2d23",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.03,
+        "old_assumption": 0.03,
+        "compatible": 0.08,
+        "unrelated": 0.86
+      },
+      "confidence": 0.82,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "b0b8afc2bffc237f93c022ca",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.04,
+        "unrelated": 0.89,
+        "compatible": 0.06,
+        "uncertain": 0.01
+      },
+      "confidence": 0.84,
+      "priority": 0.045
+    },
+    {
+      "candidateId": "0474ecd415c549ee86b95a7c",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.42,
+        "old_assumption": 0.03,
+        "uncertain": 0.02,
+        "unrelated": 0.53
+      },
+      "confidence": 0.38,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "401b6ddf28c55bfafaace196",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.05,
+        "old_assumption": 0.03,
+        "uncertain": 0.02,
+        "unrelated": 0.9
+      },
+      "confidence": 0.88,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "4be5f4f6cb525967f9631dac",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.79,
+        "old_assumption": 0.02,
+        "uncertain": 0.04,
+        "unrelated": 0.15
+      },
+      "confidence": 0.72,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "6957fd4cdc5f9ea0e320f7ab",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "compatible": 0.94,
+        "old_assumption": 0.03,
+        "uncertain": 0.02,
+        "unrelated": 0.01
+      },
+      "confidence": 0.92,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "91bdd9d171f0802a9b484050",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0.01,
+        "uncertain": 0.06,
+        "unrelated": 0.92
+      },
+      "confidence": 0.89,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "bdd32f5781178fec7e743fc2",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.02,
+        "compatible": 0.02,
+        "uncertain": 0.04,
+        "unrelated": 0.92
+      },
+      "confidence": 0.89,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "ede8180143b75da0bbb67e40",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "unrelated": 0.91,
+        "compatible": 0.04,
+        "old_assumption": 0.03
+      },
+      "confidence": 0.87,
+      "priority": 0.04
+    },
+    {
+      "candidateId": "6e6f8ac443238928a9f16418",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.08,
+        "uncertain": 0.03,
+        "old_assumption": 0.02,
+        "unrelated": 0.87
+      },
+      "confidence": 0.82,
+      "priority": 0.035
+    },
+    {
+      "candidateId": "c1d450cc8638b7e08510750f",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.03,
+        "uncertain": 0.05,
+        "old_assumption": 0.01,
+        "unrelated": 0.91
+      },
+      "confidence": 0.89,
+      "priority": 0.035
+    },
+    {
+      "candidateId": "2a51d8cbbb0803ed2b322bfb",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "unrelated": 0.93,
+        "compatible": 0.03,
+        "old_assumption": 0.03,
+        "uncertain": 0.01
+      },
+      "confidence": 0.9,
+      "priority": 0.034999999999999996
+    },
+    {
+      "candidateId": "543ee5b95f0a2ad7f7043418",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0.01,
+        "uncertain": 0.04,
+        "unrelated": 0.94
+      },
+      "confidence": 0.93,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "558288e6ee5705ed243250df",
+      "contractId": "github-comparison-head",
+      "relation": "compatible",
+      "probabilities": {
+        "old_assumption": 0.03,
+        "unrelated": 0,
+        "compatible": 0.97,
+        "uncertain": 0
+      },
+      "confidence": 0.95,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "5986eaf95367c01774e92249",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0.01,
+        "uncertain": 0.04,
+        "unrelated": 0.94
+      },
+      "confidence": 0.92,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "7c4cc214e7cff4a3a9fc10e3",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.02,
+        "uncertain": 0.02,
+        "old_assumption": 0.02,
+        "unrelated": 0.94
+      },
+      "confidence": 0.93,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "d70fc043b396b1784baae7d6",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.02,
+        "old_assumption": 0.02,
+        "compatible": 0.07,
+        "unrelated": 0.89
+      },
+      "confidence": 0.86,
+      "priority": 0.03
+    },
+    {
+      "candidateId": "13b3dad9aeab9a5ea657796a",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.29,
+        "old_assumption": 0.02,
+        "unrelated": 0.68,
+        "uncertain": 0.01
+      },
+      "confidence": 0.56,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "19c5273242bffd49cc11b525",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "old_assumption": 0.02,
+        "compatible": 0.08,
+        "unrelated": 0.89
+      },
+      "confidence": 0.85,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "408ead37eb606a3de850bb24",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.02,
+        "unrelated": 0.94,
+        "compatible": 0.03,
+        "uncertain": 0.01
+      },
+      "confidence": 0.93,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "e4073b58a551a454c2570c64",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0.01,
+        "old_assumption": 0.02,
+        "compatible": 0.03,
+        "unrelated": 0.94
+      },
+      "confidence": 0.91,
+      "priority": 0.025
+    },
+    {
+      "candidateId": "76394dce4fe42d63fe021015",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "old_assumption": 0.01,
+        "compatible": 0.02,
+        "uncertain": 0.02,
+        "unrelated": 0.95
+      },
+      "confidence": 0.94,
+      "priority": 0.02
+    },
+    {
+      "candidateId": "290678895e6b8e3dc7a6a838",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.07,
+        "old_assumption": 0.01,
+        "uncertain": 0.01,
+        "unrelated": 0.91
+      },
+      "confidence": 0.9,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "aef37ab36bf505f8a1034a99",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.03,
+        "uncertain": 0.01,
+        "old_assumption": 0.01,
+        "unrelated": 0.95
+      },
+      "confidence": 0.94,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "06a75855da92694b65d711c3",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.01,
+        "uncertain": 0,
+        "old_assumption": 0,
+        "unrelated": 0.99
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "5ad92f58c2443b965b3ec77e",
+      "contractId": "github-comparison-head",
+      "relation": "unrelated",
+      "probabilities": {
+        "compatible": 0.02,
+        "old_assumption": 0,
+        "uncertain": 0,
+        "unrelated": 0.98
+      },
+      "confidence": 0.96,
+      "priority": 0
+    }
+  ],
+  "errors": [],
+  "coverage": {
+    "plannedPairs": 80,
+    "evaluatedPairs": 80,
+    "pendingPairs": 0
+  },
+  "usage": {
+    "attempts": 11,
+    "inputTokens": 61254,
+    "outputTokens": 4415,
+    "estimatedCostUsd": 0.002572668,
+    "costComplete": true,
+    "elapsedMs": 5767
+  }
+}

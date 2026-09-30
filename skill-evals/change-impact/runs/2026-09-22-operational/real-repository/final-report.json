@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "snapshotDigest": "40db518d325bc98bb2bc644f6a2b8f319f1b1c5e6cea5e5e3015a771399444fd",
+  "source": {
+    "base": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+    "head": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+    "target": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586"
+  },
+  "status": "incomplete",
+  "findings": [],
+  "reviewed": [
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "9e04f208750900b5cbc91cd3",
+      "path": "scripts/lib/release-management.mjs",
+      "startLine": 1,
+      "endLine": 40,
+      "fileHash": "4e66b9da5ee8e386a03f8b590f788b46a701e530cefa29ea49864eb1af89af90",
+      "status": "dismissed",
+      "reason": "The selected head implements the new contract directly: advanced main requires the last commits entry to match observed main; identical revisions require an empty commit list and zero distances. This excerpt contains the implementation change, not a forgotten old assumption.",
+      "quote": "const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "17479447996f861025aa8bfb",
+      "path": "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+      "startLine": 1,
+      "endLine": 40,
+      "fileHash": "a7c49b92af271f6a26a0200e1977d6554df7b6cb976b4f9bb562a9accfae9fc5",
+      "status": "unresolved",
+      "reason": "This unchanged guide does not explain that observed head is now established from the last commits entry, or how identical revisions use an empty list. However, it never explicitly names head_commit, and the canonical Long ADR only requires binding the exact candidate and observed branch SHAs. The wording merits clarification, but this source review cannot establish that it specifically requires the removed head_commit field.",
+      "quote": "descendant. Verify the compare base and head fields exactly.",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "eb4c852c91122563a0893c5d",
+      "path": "scripts/release/manage-release.mjs",
+      "startLine": 201,
+      "endLine": 240,
+      "fileHash": "135fd63e385797f0c388a01a0d06010511f0caee474e08765c4a15c4fed99c54",
+      "status": "dismissed",
+      "reason": "The approval command passes the raw comparison response to approvalRunErrors imported from the changed release-management module. That function delegates to mainCandidateContainmentErrors. There is no separate head_commit extraction or old comparison fixture here, so the caller inherits the corrected interpretation.",
+      "quote": "const runErrors = approvalRunErrors(run, containment);",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "c3290bc60b74061b3f1146bd",
+      "path": "scripts/release/verify-main-release-candidate.mjs",
+      "startLine": 41,
+      "endLine": 65,
+      "fileHash": "f06ec094e445dd76e12510ab7696123aaec3973a9acfe4e634b57556a6939edb",
+      "status": "dismissed",
+      "reason": "The standalone verifier fetches the comparison for the exact candidate and observed main SHA, then delegates its interpretation to the corrected helper. Its output uses comparison.status rather than head_commit. No stale field requirement was found in this caller.",
+      "quote": "const errors = mainCandidateContainmentErrors({ candidateSha, branch, comparison });",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "6957fd4cdc5f9ea0e320f7ab",
+      "path": "scripts/validation/test-release-management.mjs",
+      "startLine": 601,
+      "endLine": 640,
+      "fileHash": "c5e3ec3c5674c9f2285378c75026aa68ec5cc3bd6f9ebbfc773ae32710484457",
+      "status": "dismissed",
+      "reason": "The head revision updates both positive fixtures: identical revisions use commits: [] with zero distances, and advanced main uses a commits entry matching advancedMainSha. Assertions expect both supported containment paths to succeed. The fixtures no longer rely on head_commit.",
+      "quote": "commits: [{ sha: advancedMainSha }],",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "2f0bbfee11570891e9ab4653",
+      "path": "scripts/validation/test-release-management.mjs",
+      "startLine": 641,
+      "endLine": 680,
+      "fileHash": "c5e3ec3c5674c9f2285378c75026aa68ec5cc3bd6f9ebbfc773ae32710484457",
+      "status": "dismissed",
+      "reason": "This negative test deliberately substitutes the wrong final commits SHA and expects the comparison-head rejection. Surrounding tests also reject inconsistent identical and advanced distances. These are updated rejection witnesses for the new contract, not obsolete expectations.",
+      "quote": "commits: [{ sha: \"e\".repeat(40) }],",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "ebaa00c0944592522cb965c3",
+      "path": "docs/publishing.md",
+      "startLine": 201,
+      "endLine": 240,
+      "fileHash": "7c4800fc5f3ce57ce902a5d762e74d35eb74a91d2fb35ba1457c567cd1e1749d",
+      "status": "dismissed",
+      "reason": "The publishing guide states the unchanged ancestry and protected-main requirement without prescribing head_commit. Its original-run retry instructions remain compatible with the corrected comparison interpretation.",
+      "quote": "must remain equal to or an ancestor of the currently observed protected `main`;",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    },
+    {
+      "contractId": "github-comparison-head",
+      "candidateId": "24a1680b265671a8cf375578",
+      "path": ".github/workflows/publish-release.yml",
+      "startLine": 121,
+      "endLine": 160,
+      "fileHash": "ef87d8abb0caab65a33b20a7177742128c2c9a0ca36c8aa1f1f70c4ca486b48d",
+      "status": "dismissed",
+      "reason": "The workflow invokes the standalone containment verifier with the exact release SHA. Inspection of that verifier and the changed shared helper shows that comparison interpretation follows the corrected implementation. This workflow excerpt does not parse or require head_commit.",
+      "quote": "node scripts/release/verify-main-release-candidate.mjs \\",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ],
+      "confirmationBy": "host-agent"
+    }
+  ],
+  "coverage": {
+    "enumeratedFiles": 10,
+    "collectedFiles": 10,
+    "candidates": 80,
+    "bytes": 256296,
+    "omissions": [],
+    "reviewedPairs": 8,
+    "pendingPairs": 72,
+    "unresolvedPairs": 1
+  },
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "usage": {
+      "attempts": 11,
+      "inputTokens": 61254,
+      "outputTokens": 4415,
+      "estimatedCostUsd": 0.002572668,
+      "costComplete": true,
+      "elapsedMs": 5767
+    },
+    "errors": []
+  },
+  "meaning": "Confirmed findings are host judgments with source evidence, not a completeness or runtime-correctness guarantee."
+}

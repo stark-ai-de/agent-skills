@@ -105,6 +105,13 @@
       "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
       "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
       "cadence": "Pull requests with Jev validation changes; full 3 OS × 2 Python matrix on matching main pushes and manual dispatch"
+    },
+    {
+      "id": "change-impact",
+      "command": "pnpm run validate:change-impact",
+      "owner": "scripts/validation/change-impact/validate.mjs",
+      "proof": "Offline change-impact collection, API failure handling, source provenance, and comparison integrity",
+      "cadence": "every aggregate run"
     }
   ]
 }
