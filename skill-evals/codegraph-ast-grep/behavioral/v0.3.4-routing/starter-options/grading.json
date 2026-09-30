@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "case_id": "starter-options",
+  "checks": {
+    "ordered_full_menu": true,
+    "no_selected_workflow": true,
+    "no_execution_claim": true,
+    "no_state_inspection": true,
+    "no_non_skill_tool_calls": true,
+    "question_boundary": true
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6
+  }
+}

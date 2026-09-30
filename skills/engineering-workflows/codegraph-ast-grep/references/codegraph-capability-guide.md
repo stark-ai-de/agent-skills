@@ -4,7 +4,7 @@ Use this reference for semantic exploration, graph freshness, current/legacy com
 
 Use it only for a known repository root. In `doctor`, project-opening diagnostics still need exact-root approval because generated metadata may migrate. A selected `setup` or `update` workflow already covers required in-root initialization/migration when that write scope was announced.
 
-Reviewed upstream baseline: CodeGraph 1.4.1 on 2026-07-12. This date is a maintenance checkpoint, not a runtime version floor.
+Reviewed command baseline: CodeGraph 1.4.1 on 2026-07-12. A separate [v1.6.0 release-note check](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) was made on 2026-09-30; it is not a live command or project-index test. Neither date sets a runtime version floor. Verify installed help and MCP exposure before using a version-specific capability.
 
 ## Contents
 
@@ -172,6 +172,7 @@ If output is broad, narrow the question, symbol, path, or depth rather than dump
 
 ## Primary sources
 
+- [CodeGraph v1.6.0 release notes](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0)
 - [CodeGraph 1.4.1 README](https://github.com/colbymchenry/codegraph/blob/v1.4.1/README.md)
 - [CodeGraph CLI reference](https://github.com/colbymchenry/codegraph/blob/v1.4.1/site/src/content/docs/reference/cli.md)
 - [CodeGraph indexing guide](https://github.com/colbymchenry/codegraph/blob/v1.4.1/site/src/content/docs/guides/indexing.md)

@@ -10,7 +10,7 @@ Update this repository's CodeGraph and ast-grep setup to supported stable versio
 
 ## Expected Behavior
 
-- Expose all three workflows, select and announce `update`, and proceed without a redundant workflow confirmation.
+- Announce only `update` and its rationale, and proceed without a redundant workflow confirmation.
 - Preserve each tool's installer channel and global/project/declarative scope while checking authoritative stable targets once.
 - Itemize tool versions, commands, writes, migrations, reconnect, verification, and rollback in an execution manifest.
 - Run required configuration/index/schema migrations and verify version/PATH, MCP exposure, graph readiness, semantic/structural queries, and persisted guidance.
