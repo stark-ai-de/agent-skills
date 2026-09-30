@@ -34,7 +34,7 @@ Existing accepted decisions already supply much of the removal reasoning:
 - [AC-ADR-018](../../skills/engineering-workflows/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.short.md) ([Long, canonical](../../skills/engineering-workflows/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.long.md) · [Guide](../../skills/engineering-workflows/architecture-compass/references/ac-adr-018-validate-behavior-at-the-owning-boundary-and-promote-enforcement-gradually.guide.md)) governs behavioral proof and gradual enforcement.
 - [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)) applies owning-boundary validation in this repository.
 
-The missing element is the verified-merge assessment trigger and its closure/revisit lifecycle. The proposal supplements these decisions instead of rewriting accepted history. Cleanup outcomes reuse the target's existing finding and evidence record; they do not require a second status ledger. Under an adopted AC-ADR-049 contract, its finding dispositions, ownership and evidence requirements remain authoritative.
+The missing element is the verified-merge assessment trigger and its closure/revisit lifecycle. The proposal supplements these decisions instead of rewriting accepted history. Record `remove`, `retain`, `defer` or `unresolved` as a cleanup outcome in the target's existing assessment or finding record, not as a replacement finding disposition or a second status ledger. Under an adopted AC-ADR-049 contract, give every relevant finding exactly one of its required dispositions, with its ownership and evidence requirements. An authorized removal may be `fix-and-prove-now`; a removal awaiting authority or rollout may be `defer-recorded`; missing evidence may require `verify-now`. Choose the disposition from the required next action, rather than assuming a one-to-one mapping from cleanup outcomes.
 
 ADR-0061 remains Proposed and unlocked. This PR does not accept the future public rule or change any active instruction, provider catalog, skill, validator, release artifact or consuming repository.
 
@@ -68,11 +68,26 @@ The guarantee is therefore an explicit, auditable agent obligation within observ
 | Cleanup follow-up itself is merged                                | Apply the same bounded assessment; stop with no further artifact when nothing remains.                                           |
 | Compass setup is rerun in an adopting repository                  | Reconcile provider/local identity and effective instructions without rewriting accepted history.                                 |
 | Compass audit finds no local rule or no execution evidence        | Report the specific gap without writing or claiming automatic enforcement.                                                       |
+| Target has adopted AC-ADR-049                                     | Record the cleanup outcome separately and give each relevant finding exactly one AC-ADR-049 disposition in the existing record.  |
 
 ## Validation and completion boundaries
 
-For this documentation-only proposal, validate the local ADR triplet, grouped index, links, Proposed status, unchanged accepted decision locks and unchanged runtime/projection paths. Run the repository ADR validator and formatting checks on the changed files. Hosted PR validation remains required under ADR-0041. No new application test harness or local release aggregate is justified by writing the proposal.
+For this documentation-only proposal, validate the local ADR triplet, grouped index, links, Proposed status, unchanged accepted decision locks and unchanged runtime/projection paths. Run these repository commands from the root of the checkout:
 
-Future implementation needs both deterministic contract checks and representative agent-behavior evaluations of the acceptance scenarios. Measure missed or unsafe removals, repeated unnecessary checks and no-finding overhead before considering stronger automation.
+```sh
+pnpm run validate:adrs
+pnpm exec oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check \
+  docs/adrs.md \
+  docs/adrs/0061-assess-cleanup-after-verified-merges.short.md \
+  docs/adrs/0061-assess-cleanup-after-verified-merges.long.md \
+  docs/adrs/0061-assess-cleanup-after-verified-merges.guide.md \
+  docs/roadmap.md \
+  docs/specs/architecture-compass-post-merge-cleanup-spec.md
+git diff --check
+```
+
+Inspect the diff for scope and unchanged accepted decision locks and runtime/projection paths. Hosted PR validation remains required under ADR-0041. No new application test harness or local release aggregate is justified by writing the proposal.
+
+Future implementation needs both deterministic contract checks and representative agent-behavior evaluations of the acceptance scenarios. After changing Compass source and regenerating projections, run `pnpm run validate:architecture-compass` and `pnpm run validate:projections` alongside the affected ADR and formatting checks. Measure missed or unsafe removals, repeated unnecessary checks and no-finding overhead before considering stronger automation.
 
 The current request authorizes a publishable proposal and PR with evaluation and refinements. It does not accept the ADR, release a skill, install it elsewhere, change all target repositories or run future cleanup on their behalf. This phase is done when the original idea, evaluated policy, integration path, limitations and reviewable proposal are present and validated.
