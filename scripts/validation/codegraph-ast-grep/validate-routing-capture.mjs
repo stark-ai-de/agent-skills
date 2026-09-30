@@ -71,6 +71,10 @@ function json(root, relative, errors) {
 
 function candidateHash(root, errors) {
   const directory = path.join(root, skill);
+  if (!fs.existsSync(directory) || !fs.lstatSync(directory).isDirectory()) {
+    errors.push(`${skill}: missing candidate directory`);
+    return "";
+  }
   const files = [];
   function visit(dir) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

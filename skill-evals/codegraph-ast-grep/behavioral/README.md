@@ -11,7 +11,7 @@ This directory stores fresh v0.3.4 routing captures and the historical reproduci
 [`current-contract/`](current-contract/README.md) is the separate historical v0.3.3
 local nonbehavioral-refresh suite. It binds five prompts, reused internal
 clean-context reviewer outputs, historical independent gradings, and provenance
-to the exact current runtime hash. All 35 reviewed assertions pass; no new
+to the exact historical v0.3.3 runtime hash. All 35 reviewed assertions pass; no new
 reviewer or client run is implied.
 
 The fixtures are synthetic and public-safe. They do not claim that the named
