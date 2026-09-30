@@ -103,6 +103,7 @@ function scriptSources() {
   );
 }
 
+/** Classify root and site package scripts against their declared runtime surfaces. */
 function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
   const findings = [];
   const occurrences = [];
@@ -118,6 +119,12 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
   if (rootScripts["validate:site"] !== "pnpm --filter ./site run build") {
     findings.push("validate:site must delegate through explicit pnpm workspace orchestration");
   }
+  if (
+    rootScripts["qualify:shadcn-lint"] !==
+    "pnpm --dir skill-evals/architecture-compass/fixtures/shadcn-lint run qualify"
+  ) {
+    findings.push("qualify:shadcn-lint must use pnpm to select its isolated fixture package");
+  }
 
   for (const [name, command] of Object.entries(rootScripts)) {
     let surface;
@@ -125,7 +132,7 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
       surface = "package:root:native-oxc";
     } else if (name === "validate:memory-curators" && /^node\b/.test(command)) {
       surface = "package:root:validate-memory-curators";
-    } else if (name === "validate:site" && /^pnpm\b/.test(command)) {
+    } else if (["validate:site", "qualify:shadcn-lint"].includes(name) && /^pnpm\b/.test(command)) {
       surface = "package:root:pnpm-orchestration";
     } else if (/^(?:bun --bun\b|bun exec ")/.test(command)) {
       surface = "package:root:bun-default";

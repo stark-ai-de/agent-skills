@@ -1,0 +1,17 @@
+{
+  "name": "architecture-compass-shadcn-lint-qualification",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "qualify": "bun --bun qualification.mjs"
+  },
+  "devDependencies": {
+    "@shadcn/lint": "0.1.0",
+    "@typescript-eslint/parser": "8.70.0",
+    "eslint": "10.10.0",
+    "oxlint": "1.83.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@11.24.0"
+}

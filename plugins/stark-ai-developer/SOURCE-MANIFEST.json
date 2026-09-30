@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "690d3bfcd1628370c2f9de41b0b0853b582b2fd7886a3c146419cf7820a8023b"
+      "sha256": "1fcc52b7d4a2be942f80887b01c701b8fe5da2a7df8563f9fdb8db57c1bcaa9e"
     },
     {
       "byteLength": 13030,
@@ -178,7 +178,7 @@
       "byteLength": 18969,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "34a5bd9dc348d78c99bd039cf6892a2814e2ecbb94edcf4f957b02046511f454"
+      "sha256": "87a3823da12174827723b0e40eb5728f52155949dad74fae064469d469df0333"
     },
     {
       "byteLength": 692,
@@ -1387,10 +1387,10 @@
       "sha256": "bdc916731983178de134f2487a1d4b5e6c9080cae2671b28211df0f6263f4635"
     },
     {
-      "byteLength": 15720,
+      "byteLength": 17233,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-063-enforce-tailwind-design-system-contracts-with-shadcn-lint.guide.md",
-      "sha256": "733e5424b9921e3756196dbf806747bc327c3229d0ef76e1d49c3e2ca49e88fb"
+      "sha256": "eb3d0dd090132261953ee17fa84849294efc1bb389958ea1be6cfa5a3c47a85d"
     },
     {
       "byteLength": 7427,
@@ -2127,9 +2127,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.7.4"
+    "version": "1.7.5"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "3f735d36f7f943801b4f7022d4d44cdcd47800338006fea256debc0aab9c1f28"
+  "treeHash": "617cbfbef6d0f7b13b02d886a1020f3f3b2ab27b1302fde85c21ca5d011f537e"
 }

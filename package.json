@@ -120,6 +120,7 @@
     "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
     "lint:fix": "oxlint --config oxlint.json --fix scripts",
     "validate:jev": "bun --bun scripts/validation/jev-capability-advisor/validate.mjs",
+    "qualify:shadcn-lint": "pnpm --dir skill-evals/architecture-compass/fixtures/shadcn-lint run qualify",
     "validate:change-impact": "bun --bun scripts/validation/change-impact/validate.mjs",
     "eval:change-impact": "bun --bun scripts/validation/change-impact/evaluate.mjs"
   },
