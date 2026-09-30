@@ -123,7 +123,8 @@ class Tests(unittest.TestCase):
         receipts=[];clients=[];original=advisor.advise
         def capture(*args,**values):
             result=original(*args,**values);receipts.append(result);return result
-        self.enterContext(patch.object(advisor,'advise',side_effect=capture))
+        advisor_patch=patch.object(advisor,'advise',side_effect=capture)
+        advisor_patch.start();self.addCleanup(advisor_patch.stop)
         class Client:
             def __init__(self,credential,timeout_seconds):self.calls=0;self.closed=False;clients.append(self)
             def __call__(self,payload,*,timeout_seconds=None):

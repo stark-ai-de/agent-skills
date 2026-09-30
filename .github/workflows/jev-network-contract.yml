@@ -1,19 +1,28 @@
-name: Jev portable network contract
+name: Jev skill validation matrix
 
 on:
-  pull_request:
   push:
     branches: [main]
+    paths:
+      - ".github/workflows/jev-network-contract.yml"
+      - ".github/workflows/validate.yml"
+      - "docs/validation-ownership.json"
+      - "package.json"
+      - "scripts/validation/jev-capability-advisor/**"
+      - "skill-evals/jev-capability-advisor/**"
+      - "skills/skill-maintenance/jev-capability-advisor/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: jev-network-contract-${{ github.ref }}
-  cancel-in-progress: true
+  group: jev-validation-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
-  offline-contract:
+  jev-validation:
+    name: Jev validation (${{ matrix.os }}, Python ${{ matrix.python }})
     strategy:
       fail-fast: false
       matrix:
@@ -30,5 +39,14 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - name: Run real helper with injected replies, without provider credentials
-        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p test_network_contract.py -v
+      - name: Test hook portability without provider credentials
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_hook*.py' -v
+      - name: Test the offline network contract without provider credentials
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_network_contract.py' -v
+      - name: 🧭 Summarize Jev validation
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Jev capability advisor · ${{ matrix.os }} · Python ${{ matrix.python }}
+          success: The Jev hook-portability and offline network-contract suites passed for this operating system and Python version.
+          failure: Inspect the Jev tests for this operating system and Python version, fix the owning contract, and rerun.
