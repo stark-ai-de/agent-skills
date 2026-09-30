@@ -1,6 +1,14 @@
 import { digest, integer, requireValue, text, verifyPacket } from "./collect.mjs";
 import { validateRanking } from "./rank.mjs";
 
+function validateReviewRanking(packet, ranking) {
+  try {
+    validateRanking(packet, ranking);
+  } catch {
+    throw new Error("Invalid ranking");
+  }
+}
+
 export function confirmationsFor(packet, confirmations = []) {
   const pairs = packet.candidates.length * packet.contracts.length;
   requireValue(
@@ -46,7 +54,7 @@ export function confirmationsFor(packet, confirmations = []) {
 export function report(input) {
   const { packet, ranking, confirmations = [] } = input;
   verifyPacket(packet);
-  if (ranking) validateRanking(packet, ranking);
+  if (ranking) validateReviewRanking(packet, ranking);
   const rows = confirmationsFor(packet, confirmations);
   const pendingPairs = packet.candidates.length * packet.contracts.length - rows.length;
   const unresolvedPairs = rows.filter((row) => row.status === "unresolved").length;
@@ -90,7 +98,7 @@ export function queue(input) {
     preferredCandidateIds = [],
   } = input;
   verifyPacket(packet);
-  if (ranking) validateRanking(packet, ranking);
+  if (ranking) validateReviewRanking(packet, ranking);
   const rows = confirmationsFor(packet, confirmations);
   const limit = integer(input.limit, 10, 50);
   const knownPaths = new Set(packet.candidates.map((candidate) => candidate.path));

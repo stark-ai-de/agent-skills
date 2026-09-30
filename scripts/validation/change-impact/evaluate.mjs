@@ -392,7 +392,12 @@ export async function main(args = process.argv.slice(2)) {
     requireValue(rest[i].startsWith("--"), "Invalid option");
     const key = rest[i].slice(2);
     requireValue(!Object.hasOwn(flags, key), "Duplicate option");
-    flags[key] = key === "live" ? true : rest[++i];
+    if (key === "live") flags[key] = true;
+    else {
+      const value = rest[++i];
+      requireValue(value !== undefined && !value.startsWith("-"), `Option --${key} needs a value`);
+      flags[key] = value;
+    }
   }
   let result;
   if (command === "prepare") {

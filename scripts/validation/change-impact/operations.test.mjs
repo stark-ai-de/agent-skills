@@ -24,6 +24,7 @@ const cli = fileURLToPath(
     import.meta.url,
   ),
 );
+const evalCli = fileURLToPath(new URL("./evaluate.mjs", import.meta.url));
 export async function runOperationsChecks() {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "change-impact-operations-"));
   let count = 0;
@@ -268,6 +269,70 @@ export async function runOperationsChecks() {
         }),
       );
       assert.equal(first.items.length, 2);
+    });
+    check("review CLI classifies ranking failures and unrelated input distinctly", () => {
+      const invalidRanking = structuredClone(ranking);
+      invalidRanking.records[0].relation = "compatible";
+      for (const operation of ["queue", "report"])
+        assert.throws(
+          () =>
+            execFileSync(process.execPath, [cli, operation], {
+              input: JSON.stringify({ packet, ranking: invalidRanking }),
+              encoding: "utf8",
+              stdio: "pipe",
+            }),
+          (error) =>
+            error.status === 2 && JSON.parse(error.stderr).error.code === "invalid-ranking",
+        );
+      assert.throws(
+        () =>
+          execFileSync(process.execPath, [cli, "report"], {
+            input: JSON.stringify({
+              packet,
+              confirmations: [{ candidateId: "unknown", contractId: packet.contracts[0].id }],
+            }),
+            encoding: "utf8",
+            stdio: "pipe",
+          }),
+        (error) =>
+          error.status === 2 &&
+          JSON.parse(error.stderr).error.code === "invalid-input-or-repository",
+      );
+      assert.throws(
+        () => execFileSync(process.execPath, [cli, "queue", "--unknown"], { stdio: "pipe" }),
+        (error) => error.status === 2 && JSON.parse(error.stderr).error.code === "invalid-option",
+      );
+    });
+    check("collector ignores inherited Git repository and object locations", () => {
+      const env = {
+        ...process.env,
+        GIT_DIR: path.join(temporary, "wrong-git-dir"),
+        GIT_WORK_TREE: path.join(temporary, "wrong-work-tree"),
+        GIT_INDEX_FILE: path.join(temporary, "wrong-index"),
+        GIT_OBJECT_DIRECTORY: path.join(temporary, "wrong-objects"),
+        GIT_ALTERNATE_OBJECT_DIRECTORIES: path.join(temporary, "wrong-alternates"),
+        GIT_COMMON_DIR: path.join(temporary, "wrong-common-dir"),
+      };
+      const result = JSON.parse(
+        execFileSync(process.execPath, [cli, "collect"], {
+          env,
+          input: JSON.stringify(packet.options),
+          encoding: "utf8",
+          stdio: "pipe",
+        }),
+      );
+      assert.equal(result.snapshot.digest, packet.snapshot.digest);
+    });
+    check("evaluation CLI rejects missing and option-like flag values", () => {
+      for (const args of [
+        ["rank", "--live", "--input", "packet.json", "--max-requests"],
+        ["rank", "--live", "--input", "--output", "result.json"],
+      ])
+        assert.throws(
+          () =>
+            execFileSync(process.execPath, [evalCli, ...args], { encoding: "utf8", stdio: "pipe" }),
+          (error) => error.status === 2 && error.stderr.includes("needs a value"),
+        );
     });
     check(
       "fresh operational fixtures retain exact source contracts and independent anchors",

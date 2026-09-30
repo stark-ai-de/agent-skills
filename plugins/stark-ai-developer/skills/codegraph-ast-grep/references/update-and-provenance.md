@@ -111,6 +111,8 @@ Do not treat a package-manager command as authoritative if the resolved executab
 
 Use the installed channel's official metadata when possible, then the upstream official release as corroboration. Apply repository pins/freshness policy before deciding an update is eligible.
 
+Dated upstream check (2026-09-30): the latest stable releases listed by the projects were [CodeGraph v1.6.0](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) and [ast-grep 0.45.3](https://github.com/ast-grep/ast-grep/releases/tag/0.45.3). These are observations, not permanent pins or evidence of an installed version. Recheck the selected installer channel when an actual setup or update runs.
+
 | Tool/channel                                | Read-only stable source                                                                      |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | CodeGraph with current upgrade capability   | Existing MCP/status notice, then `codegraph upgrade --check` when external lookup is allowed |
@@ -261,7 +263,7 @@ Use only the version, channel, permissions, and sandbox/dry-run behavior approve
 
 The selected `update` workflow includes configuration/index/schema migration and client reconnect when the installed-to-target version requires them and they stay within the announced root and runtime scope.
 
-After a CodeGraph update, inspect current generated/runtime config and diff it against existing config. Include every required migration in the execution receipt. Reviewed CodeGraph 1.4.1 `install --refresh` can rewrite multiple previously configured targets and locations; `--target` does not reliably narrow that refresh path. Prefer a runtime-native, reviewed MCP-only change when narrower behavior is required.
+After a CodeGraph update, inspect current generated/runtime config and diff it against existing config. Include every required migration in the execution receipt. The [CodeGraph v1.6.0 release notes](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) direct users upgrading an existing project to run `codegraph index` once in each project so graph fixes take effect. Treat that as an announced generated-index write within the approved root, verify the installed command/help and index result, and do not perform it during an options-only request or unapproved `doctor` check. Reviewed CodeGraph 1.4.1 `install --refresh` can rewrite multiple previously configured targets and locations; `--target` does not reliably narrow that refresh path. Prefer a runtime-native, reviewed MCP-only change when narrower behavior is required.
 
 Report these as distinct effects and ask again only when they exceed the announced update scope:
 

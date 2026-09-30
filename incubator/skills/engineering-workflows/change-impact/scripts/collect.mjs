@@ -92,7 +92,22 @@ export function collect(input) {
         timeout: 10000,
         killSignal: "SIGKILL",
         env: {
-          ...process.env,
+          ...Object.fromEntries(
+            Object.entries(process.env).filter(
+              ([name]) =>
+                ![
+                  "GIT_DIR",
+                  "GIT_WORK_TREE",
+                  "GIT_INDEX_FILE",
+                  "GIT_OBJECT_DIRECTORY",
+                  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+                  "GIT_COMMON_DIR",
+                  "GIT_NAMESPACE",
+                  "GIT_CEILING_DIRECTORIES",
+                  "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+                ].includes(name),
+            ),
+          ),
           GIT_NO_LAZY_FETCH: "1",
           GIT_OPTIONAL_LOCKS: "0",
           GIT_TERMINAL_PROMPT: "0",

@@ -118,7 +118,13 @@ function failure(error) {
   } else if (/requires --live/.test(error.message)) {
     code = "live-opt-in-required";
     message = "Use rank --live only within existing authority to send the chosen excerpts.";
-  } else if (/Unknown|option/.test(error.message)) {
+  } else if (
+    [
+      "Unknown operation",
+      "Unknown or duplicate option",
+      "Network options only apply to rank or doctor",
+    ].includes(error.message)
+  ) {
     code = "invalid-option";
     message = "Run --help for supported operations and options.";
   }

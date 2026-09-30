@@ -1,0 +1,42 @@
+name: Forward release preparation contract
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/forward-release-contract.yml
+      - .github/workflows/release-please.yml
+      - scripts/release/prepare-forward-release.mjs
+      - scripts/validation/test-forward-release.mjs
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/forward-release-contract.yml
+      - .github/workflows/release-please.yml
+      - scripts/release/prepare-forward-release.mjs
+      - scripts/validation/test-forward-release.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  forward-release-contract:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: useblacksmith/checkout@v1
+        with:
+          persist-credentials: false
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+      - name: Test incident guards and preparation-only contract
+        run: bun --bun scripts/validation/test-forward-release.mjs

@@ -54,3 +54,4 @@ ADR-0056	0056-allow-reviewed-public-comparisons-while-protecting-private-provena
 ADR-0057	0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts	7aa836655e849d5b29a013df9f847bd197aae485113382f5fb58967d23000a10
 ADR-0058	0058-require-qualified-jev-host-advice-after-repository-adoption	953cf39640befc354dbe57b8cde3f7ff442a0f69866482a201128559e2b9cd20
 ADR-0059	0059-separate-public-listing-metadata-from-private-submission-records	2894144c623c7b46536d85b0df7d05b32cef8157f9da8287cb8c1e621c8caff7
+ADR-0060	0060-allow-intent-bound-workflow-disclosure	2cb6b00dfe37479a8e520de45f153088b167a1f97d5bf1caf0108c7436276efa

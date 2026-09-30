@@ -104,7 +104,7 @@
       "command": "pnpm run validate:jev",
       "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
       "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
-      "cadence": "every aggregate run"
+      "cadence": "Pull requests with Jev validation changes; full 3 OS × 2 Python matrix on matching main pushes and manual dispatch"
     },
     {
       "id": "change-impact",
