@@ -42,7 +42,7 @@
   "publisher": {
     "legalName": "servrox solutions UG"
   },
-  "releaseNotes": "Architecture Compass 0.10.1 clarifies all five workflow choices during activation and strengthens testing-promotion guidance with current ADR, lineage, evaluation, and installed-skill integrity checks. No accepted ADR decision text changed.",
+  "releaseNotes": "CodeGraph + ast-grep 0.3.4 routes clear authorized requests directly and shows every workflow for bare, ambiguous, or options-only requests. Dated upstream release guidance covers CodeGraph 1.6.0 and ast-grep 0.45.3. ADR-0060 updates disclosure while preserving action-approval boundaries.",
   "skills": [
     {
       "name": "codex-memory-curator",

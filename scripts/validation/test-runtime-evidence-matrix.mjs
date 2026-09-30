@@ -103,6 +103,7 @@ function scriptSources() {
   );
 }
 
+/** Classify root and site package scripts against their declared runtime surfaces. */
 function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
   const findings = [];
   const occurrences = [];

@@ -1,0 +1,36 @@
+{
+  "root": "<local-checkout-of-public-agent-skills>",
+  "base": "7b7962a912b5f4b086c0ad0c889f40395c51518a",
+  "head": "c08079fe29df7c9ced3d86f1f7d8df3dcd67c586",
+  "scope": [
+    "scripts/lib/release-management.mjs",
+    "scripts/validation/test-release-management.mjs",
+    "scripts/release/verify-main-release-candidate.mjs",
+    "scripts/release/manage-release.mjs",
+    "docs/publishing.md",
+    "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.long.md",
+    "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.short.md",
+    "docs/adrs/0051-preserve-release-candidates-through-verified-main-history.guide.md",
+    ".github/workflows/publish-release.yml",
+    ".github/workflows/post-release-evidence.yml"
+  ],
+  "contracts": [
+    {
+      "id": "github-comparison-head",
+      "before": "Protected-main release-candidate containment requires comparison.head_commit.sha to equal the observed main SHA, including when the candidate and main are identical.",
+      "after": "Protected-main release-candidate containment no longer requires comparison.head_commit: when main advanced, the last comparison.commits entry must identify observed main; identical revisions use an empty commit list and zero distances.",
+      "evidence": [
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "before",
+          "quote": "  if (comparison?.head_commit?.sha !== mainSha) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        },
+        {
+          "path": "scripts/lib/release-management.mjs",
+          "side": "after",
+          "quote": "  const commits = Array.isArray(comparison?.commits) ? comparison.commits : null;\n  if (!candidateIsObservedMain && (commits === null || commits.at(-1)?.sha !== mainSha)) {\n    errors.push(\"comparison head is not the observed main revision\");\n  }"
+        }
+      ]
+    }
+  ]
+}

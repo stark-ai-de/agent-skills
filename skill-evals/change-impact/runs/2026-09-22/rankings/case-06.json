@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "packetDigest": "c3481fdeec0151ba11e88754ed62942da04091d25827b5ab6bab88c0a027b7a4",
+  "snapshotDigest": "39a970921f4c9cbe13094b39e4c1e57212dda7f9e9dc90646e7920a11daf6499",
+  "model": "jev-1.13.0",
+  "status": "ranked",
+  "records": [
+    {
+      "candidateId": "05f4d29f960604dcfd436551",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.02,
+        "old_assumption": 0.22,
+        "unrelated": 0.76
+      },
+      "confidence": 0.68,
+      "priority": 0.22
+    },
+    {
+      "candidateId": "e2a5d4276c2847bb89f6e6b6",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.08,
+        "old_assumption": 0.05,
+        "unrelated": 0.87
+      },
+      "confidence": 0.81,
+      "priority": 0.05
+    },
+    {
+      "candidateId": "083ffcaab1ee5fca1539cf0b",
+      "contractId": "behavior-1",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0.01,
+        "compatible": 0.96,
+        "old_assumption": 0.01,
+        "unrelated": 0.02
+      },
+      "confidence": 0.95,
+      "priority": 0.015
+    },
+    {
+      "candidateId": "494e5c2ded5a39d2ce1f01f3",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0.01,
+        "compatible": 0.03,
+        "unrelated": 0.96
+      },
+      "confidence": 0.96,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "7eaa57e484b9dbd5fdd507c9",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0.01,
+        "compatible": 0.03,
+        "unrelated": 0.96
+      },
+      "confidence": 0.95,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "c2f4a5d7dc9d7496b847a55c",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0.01,
+        "compatible": 0.06,
+        "unrelated": 0.93
+      },
+      "confidence": 0.91,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "f823312458d6d6ef31e42b0c",
+      "contractId": "behavior-1",
+      "relation": "compatible",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.99,
+        "old_assumption": 0.01,
+        "unrelated": 0
+      },
+      "confidence": 0.97,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "f9ca1ec1974b2286980b24e8",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.03,
+        "old_assumption": 0.01,
+        "unrelated": 0.96
+      },
+      "confidence": 0.95,
+      "priority": 0.01
+    },
+    {
+      "candidateId": "24b0dd3caf7c3a765d9d247b",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0,
+        "compatible": 0.03,
+        "unrelated": 0.97
+      },
+      "confidence": 0.95,
+      "priority": 0
+    },
+    {
+      "candidateId": "25fe2fe20bc257618efb2321",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0,
+        "old_assumption": 0,
+        "unrelated": 1
+      },
+      "confidence": 0.99,
+      "priority": 0
+    },
+    {
+      "candidateId": "b5336236f0916f1bb2e90adc",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.01,
+        "old_assumption": 0,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "c685f9fdf28baf62d0413114",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.02,
+        "old_assumption": 0,
+        "unrelated": 0.98
+      },
+      "confidence": 0.96,
+      "priority": 0
+    },
+    {
+      "candidateId": "d841310168e624d3faa98782",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0,
+        "compatible": 0.02,
+        "unrelated": 0.98
+      },
+      "confidence": 0.97,
+      "priority": 0
+    },
+    {
+      "candidateId": "e0734896144f5357e5c8d8a3",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "old_assumption": 0,
+        "compatible": 0.01,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "ebccb776b3d391815168cdf7",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.01,
+        "old_assumption": 0,
+        "unrelated": 0.99
+      },
+      "confidence": 0.98,
+      "priority": 0
+    },
+    {
+      "candidateId": "f2ae7dbe44496fad204eaba0",
+      "contractId": "behavior-1",
+      "relation": "unrelated",
+      "probabilities": {
+        "uncertain": 0,
+        "compatible": 0.02,
+        "old_assumption": 0,
+        "unrelated": 0.98
+      },
+      "confidence": 0.96,
+      "priority": 0
+    }
+  ],
+  "errors": [],
+  "coverage": {
+    "plannedPairs": 16,
+    "evaluatedPairs": 16,
+    "pendingPairs": 0
+  },
+  "usage": {
+    "attempts": 1,
+    "inputTokens": 4636,
+    "outputTokens": 885,
+    "estimatedCostUsd": 0.00019471200000000002,
+    "costComplete": true,
+    "elapsedMs": 460
+  }
+}

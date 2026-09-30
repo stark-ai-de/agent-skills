@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-01",
+  "caseDigest": "6295ec5dc6ce147d4638915b2fc624c4dd1ea54d49e7ce604148cf5e11ff1e5d",
+  "arm": "ordinary",
+  "snapshotDigest": "550e4f5c9df724baac00a8f786bf64fab46b8316a75648bafd2939577956a559",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "tools/import.mjs",
+      "quote": "return [...new Map(rows.map((row) => [row.name, row])).values()];",
+      "rationale": "The updated sameProject identifies projects by both org and name, but import deduplication still uses name alone. Importing north/demo and south/demo silently discards one distinct project. Deduplication must preserve distinct organization/name pairs."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "docs/onboarding.de.md",
+      "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+      "rationale": "This current onboarding instruction requires choosing a name unused by any other organization. That contradicts the new organization-scoped project identity. Update the guidance to scope name uniqueness to the selected organization."
+    }
+  ],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "tools/import.mjs",
+    "checks/smoke.mjs",
+    "docs/onboarding.de.md",
+    "docs/navigation.de.md",
+    "docs/import-format.md",
+    "docs/search.md"
+  ],
+  "reviewedCandidates": 7,
+  "metrics": {
+    "elapsedMs": 55195,
+    "modelCostUsd": null,
+    "inputTokens": 119684,
+    "outputTokens": 1358,
+    "cachedInputTokens": 93824,
+    "hostOutputTokens": 1358,
+    "hostInputTokens": 119684,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review of the specified commit diff and seven current artifacts; no tests executed. Navigation, import-format syntax, and search behavior are unrelated to project identity. The existing smoke assertion remains valid but does not exercise cross-organization identity."
+  ]
+}

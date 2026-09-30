@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-08",
+  "caseDigest": "511687d90ef24e368808026f9c61dd6e5b9854bf9472520c0144bad874a56889",
+  "arm": "ordinary",
+  "snapshotDigest": "0b4e842a00e1d999371af6af83dbf4c64d4ede38c408b5326ee406ee07d19a12",
+  "findings": [],
+  "investigatedPaths": [
+    "src/pages.mjs",
+    "checks/pages.mjs",
+    "docs/results.de.md",
+    "docs/search.md",
+    "docs/accessibility.md",
+    "docs/translations.md",
+    "ui/layout.css"
+  ],
+  "reviewedCandidates": 7,
+  "metrics": {
+    "elapsedMs": 50407,
+    "modelCostUsd": null,
+    "inputTokens": 120558,
+    "outputTokens": 1300,
+    "cachedInputTokens": 115456,
+    "hostOutputTokens": 1300,
+    "hostInputTokens": 120558,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": null,
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Static review of the specified commit diff and seven artifacts; checks were not executed."
+  ]
+}

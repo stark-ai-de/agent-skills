@@ -41,6 +41,7 @@ assert.ok(
 );
 const output = args[1] && path.resolve(args[1]);
 const rows = [];
+/** Return the SHA-256 digest of an input file for the qualification receipt. */
 const hash = (file) => createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const versions = {};
 const receipt = {
@@ -84,11 +85,13 @@ const receipt = {
   ],
 };
 
+/** Write a generated fixture file below the temporary qualification workspace. */
 function write(relative, value) {
   const file = path.join(temporary, relative);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
 }
+/** Link an installed pinned dependency into the isolated fixture workspace. */
 function linkDependency(name, destination = `node_modules/${name}`) {
   const source = path.join(fixture, "node_modules", name);
   assert.ok(fs.existsSync(source), `Install the isolated fixture first: missing ${name}`);
@@ -96,6 +99,7 @@ function linkDependency(name, destination = `node_modules/${name}`) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.symlinkSync(source, target, "junction");
 }
+/** Run one linter in a fresh process and normalize its diagnostics. */
 function execute(linter, file, flags = []) {
   const entry = linter === "eslint" ? "eslint/bin/eslint.js" : "oxlint/bin/oxlint";
   const result = spawnSync(
@@ -125,6 +129,7 @@ function execute(linter, file, flags = []) {
     stderr: result.stderr,
   };
 }
+/** Verify the expected exit status, rule diagnostics, and discovery warning. */
 function check(
   linter,
   name,
