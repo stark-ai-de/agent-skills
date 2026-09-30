@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-01",
+  "caseDigest": "6295ec5dc6ce147d4638915b2fc624c4dd1ea54d49e7ce604148cf5e11ff1e5d",
+  "arm": "host",
+  "snapshotDigest": "550e4f5c9df724baac00a8f786bf64fab46b8316a75648bafd2939577956a559",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "tools/import.mjs",
+      "quote": "return [...new Map(rows.map((row) => [row.name, row])).values()];",
+      "rationale": "Import deduplication still keys projects solely by name. A runtime check with north/demo and south/demo retained only south/demo, although sameProject now identifies them as distinct projects. Deduplicate by both organization and name to preserve both projects."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "docs/onboarding.de.md",
+      "quote": "Wählen Sie einen Projektnamen, den noch keine andere Organisation verwendet.",
+      "rationale": "This current project-creation guidance requires a name unused by other organizations, contradicting organization-scoped identity. Update it to require uniqueness only within the project's organization."
+    }
+  ],
+  "investigatedPaths": [
+    "src/projects.mjs",
+    "tools/import.mjs",
+    "docs/onboarding.de.md",
+    "checks/smoke.mjs"
+  ],
+  "reviewedCandidates": 4,
+  "metrics": {
+    "elapsedMs": 72493,
+    "modelCostUsd": null,
+    "inputTokens": 108468,
+    "outputTokens": 1909,
+    "cachedInputTokens": 79616,
+    "hostOutputTokens": 1909,
+    "hostInputTokens": 108468,
+    "providerInputTokens": 0,
+    "providerOutputTokens": 0
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "5e17e4c9d5b2a5e798849687122ba388ddfc707e2fe9c0c9dab4596be6de811f",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "The existing smoke test passes but covers only matching organization/name pairs; its assertion remains valid and is not a contradiction."
+  ]
+}

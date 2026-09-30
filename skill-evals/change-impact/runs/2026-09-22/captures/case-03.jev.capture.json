@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-03",
+  "caseDigest": "8c921bd5b39bf70a710dac507c78b622f44f2b18d17ce4a25b9a1894df858ed7",
+  "arm": "jev",
+  "snapshotDigest": "b0d2e977254acc440769d583101aec258e523d19ce69d589d62640828eaaae5f",
+  "findings": [
+    {
+      "contractId": "behavior-1",
+      "path": "ui/preferences.de.txt",
+      "quote": "E-Mail-Benachrichtigungen sind ausgeschaltet, bis Sie sie aktivieren.",
+      "rationale": "This says email notifications remain disabled until activated, contradicting the verified default of enabled when no preference exists. Update the wording to describe enabled-by-default behavior while preserving explicit opt-out."
+    },
+    {
+      "contractId": "behavior-1",
+      "path": "checks/preferences.mjs",
+      "quote": "assert.equal(emailEnabled({}), false);",
+      "rationale": "This assertion retains the old default. Running the check fails because the helper now returns true. Change this expectation to true and retain the explicit-false assertion, which remains correct."
+    }
+  ],
+  "investigatedPaths": [
+    "src/notifications.mjs",
+    "ui/preferences.de.txt",
+    "checks/preferences.mjs",
+    "docs/translations.md",
+    "docs/security.md",
+    "docs/themes.md"
+  ],
+  "reviewedCandidates": 6,
+  "metrics": {
+    "elapsedMs": 52579,
+    "modelCostUsd": null,
+    "inputTokens": 118725,
+    "outputTokens": 2214,
+    "cachedInputTokens": 83968,
+    "hostOutputTokens": 1323,
+    "hostInputTokens": 113879,
+    "providerInputTokens": 4846,
+    "providerOutputTokens": 891
+  },
+  "provenance": {
+    "kind": "live",
+    "runner": "codex-exec-ephemeral",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "ultra",
+    "protocolDigest": "00f0a6e211478bbbe9cd668ea2cf044724fc755ce6b44236dd1fba0a9a8f5fb3",
+    "candidateDigest": "8e6f3a583e30a67338310e44db34b701680f1a316ed85b34a18687276d0399c5",
+    "independentlyGraded": true,
+    "matchedProtocol": true
+  },
+  "limitations": [
+    "Six artifacts were deeply investigated; remaining inventory entries were scanned only. Translation guidance, mandatory security messages, and theme preferences concern separate behavior.",
+    "The commit diff and direct runtime assertions confirmed the supplied contract. UI wording was reviewed from source; UI rendering was not tested."
+  ],
+  "ranking": {
+    "model": "jev-1.13.0",
+    "status": "ranked",
+    "snapshotDigest": "b0d2e977254acc440769d583101aec258e523d19ce69d589d62640828eaaae5f",
+    "packetDigest": "1735b5ea5766f0b1412056b3f51e025e4ccbb5cf58cab6ba0c367609f2cd25b5",
+    "usage": {
+      "attempts": 1,
+      "inputTokens": 4846,
+      "outputTokens": 891,
+      "estimatedCostUsd": 0.000203532,
+      "costComplete": true,
+      "elapsedMs": 905
+    },
+    "coverage": {
+      "plannedPairs": 16,
+      "evaluatedPairs": 16,
+      "pendingPairs": 0
+    }
+  }
+}

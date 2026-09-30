@@ -1,0 +1,82 @@
+{
+  "priorPilotAttempts": 10,
+  "qualificationAttempts": 25,
+  "taskLimit": 100,
+  "calls": [
+    {
+      "operation": "doctor-local",
+      "attempts": 0,
+      "status": "configured"
+    },
+    {
+      "operation": "doctor-live",
+      "attempts": 1,
+      "status": "connected"
+    },
+    {
+      "operation": "op-17",
+      "attempts": 6,
+      "status": "ranked",
+      "usage": {
+        "attempts": 6,
+        "inputTokens": 37330,
+        "outputTokens": 6678,
+        "estimatedCostUsd": 0.0015678600000000001,
+        "costComplete": true,
+        "elapsedMs": 3399
+      }
+    },
+    {
+      "operation": "op-28",
+      "attempts": 3,
+      "status": "ranked",
+      "usage": {
+        "attempts": 3,
+        "inputTokens": 17961,
+        "outputTokens": 3383,
+        "estimatedCostUsd": 0.0007543620000000001,
+        "costComplete": true,
+        "elapsedMs": 2079
+      }
+    },
+    {
+      "operation": "op-39",
+      "attempts": 3,
+      "status": "ranked",
+      "usage": {
+        "attempts": 3,
+        "inputTokens": 18593,
+        "outputTokens": 3219,
+        "estimatedCostUsd": 0.000780906,
+        "costComplete": true,
+        "elapsedMs": 2324
+      }
+    },
+    {
+      "operation": "real-repository",
+      "attempts": 11,
+      "status": "ranked",
+      "usage": {
+        "attempts": 11,
+        "inputTokens": 61254,
+        "outputTokens": 4415,
+        "estimatedCostUsd": 0.002572668,
+        "costComplete": true,
+        "elapsedMs": 5767
+      }
+    },
+    {
+      "operation": "doctor-final-live",
+      "attempts": 1,
+      "status": "connected",
+      "usage": {
+        "attempts": 1,
+        "inputTokens": 510,
+        "outputTokens": 56,
+        "estimatedCostUsd": 2.142e-5,
+        "costComplete": true,
+        "elapsedMs": 709
+      }
+    }
+  ]
+}

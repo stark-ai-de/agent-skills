@@ -17,6 +17,7 @@ Use this folder for:
 - [`architecture-compass`](architecture-compass/README.md)
 - [`claude-memory-curator`](claude-memory-curator/README.md)
 - [`claude-spec-interviewer`](claude-spec-interviewer/README.md)
+- [`change-impact`](change-impact/README.md)
 - [`codegraph-ast-grep`](codegraph-ast-grep/README.md)
 - [`codex-memory-curator`](codex-memory-curator/README.md)
 - [`codex-spec-interviewer`](codex-spec-interviewer/README.md)

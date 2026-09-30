@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "status": "configured",
+  "runtime": {
+    "node": "24.20.0",
+    "bun": null,
+    "nodeSupported": true,
+    "gitAvailable": true
+  },
+  "credential": {
+    "configured": true,
+    "source": "file",
+    "reason": null
+  },
+  "model": "jev-1.13.0",
+  "networkAttempted": false,
+  "meaning": "Local configuration only; a credential's presence is not authentication or authority to send project data."
+}
