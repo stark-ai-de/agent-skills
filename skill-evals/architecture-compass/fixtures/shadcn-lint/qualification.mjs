@@ -116,7 +116,21 @@ function execute(linter, file, flags = []) {
   );
   assert.ifError(result.error);
   assert.equal(result.signal, null, `${linter} terminated by a signal`);
-  const parsed = JSON.parse(result.stdout);
+  let parsed;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch (error) {
+    const diagnostic = [
+      result.stderr.trim() && `stderr: ${result.stderr.trim()}`,
+      result.stdout.trim() && `stdout: ${result.stdout.trim()}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    throw new Error(
+      `${linter} produced non-JSON output (exit ${result.status ?? "unknown"}): ${diagnostic || "<no output>"}`,
+      { cause: error },
+    );
+  }
   const diagnostics =
     linter === "eslint" ? parsed.flatMap((item) => item.messages) : parsed.diagnostics;
   const rules = diagnostics
