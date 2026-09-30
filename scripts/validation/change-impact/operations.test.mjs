@@ -323,6 +323,70 @@ export async function runOperationsChecks() {
       );
       assert.equal(result.snapshot.digest, packet.snapshot.digest);
     });
+    check("fixture creation cannot redirect Git writes through inherited locations", () => {
+      const outer = path.join(temporary, "outer.git");
+      execFileSync("git", ["init", "--bare", "--quiet", outer], { stdio: "pipe" });
+      const before = execFileSync("git", ["--git-dir", outer, "symbolic-ref", "HEAD"], {
+        encoding: "utf8",
+      });
+      const output = path.join(temporary, "isolated-fixture");
+      const moduleUrl = new URL("./evaluate.mjs", import.meta.url).href;
+      const script = [
+        `import { createFixture, loadCases } from ${JSON.stringify(moduleUrl)};`,
+        `createFixture(loadCases().cases[0], ${JSON.stringify(output)});`,
+      ].join("\n");
+      const env = {
+        ...process.env,
+        GIT_DIR: outer,
+        GIT_WORK_TREE: temporary,
+        GIT_INDEX_FILE: path.join(temporary, "wrong-index"),
+        GIT_OBJECT_DIRECTORY: path.join(outer, "objects"),
+        GIT_ALTERNATE_OBJECT_DIRECTORIES: path.join(outer, "objects"),
+        GIT_COMMON_DIR: outer,
+      };
+      execFileSync(process.execPath, ["--input-type=module", "-e", script], {
+        env,
+        encoding: "utf8",
+        stdio: "pipe",
+      });
+      assert.equal(
+        execFileSync("git", ["--git-dir", outer, "symbolic-ref", "HEAD"], { encoding: "utf8" }),
+        before,
+      );
+      assert.equal(fs.existsSync(path.join(outer, "refs/heads/fixture")), false);
+      assert.equal(fs.existsSync(path.join(output, "repo/.git")), true);
+    });
+    check("evaluation ranking loads a key file without live network access", () => {
+      const marker = path.join(temporary, "mock-credential-used");
+      const output = path.join(temporary, "mock-ranking.json");
+      const moduleUrl = new URL("./evaluate.mjs", import.meta.url).href;
+      const script = [
+        'import fs from "node:fs";',
+        `import { main } from ${JSON.stringify(moduleUrl)};`,
+        "globalThis.fetch = async (_url, options) => {",
+        '  if (options.headers.Authorization !== "Bearer synthetic-fixture-credential") throw new Error("wrong fixture key");',
+        `  fs.writeFileSync(${JSON.stringify(marker)}, "used");`,
+        '  return new Response("", { status: 401 });',
+        "};",
+        `await main(["rank", "--live", "--input", ${JSON.stringify(path.join(temporary, "repo-fixture/packet.json"))}, "--output", ${JSON.stringify(output)}, "--max-requests", "1"]);`,
+      ].join("\n");
+      const env = { ...process.env, TYPESAFE_API_KEY_FILE: keyPath };
+      delete env.TYPESAFE_API_KEY;
+      assert.throws(
+        () =>
+          execFileSync(process.execPath, ["--input-type=module", "-e", script], {
+            env,
+            encoding: "utf8",
+            stdio: "pipe",
+          }),
+        (error) => error.status === 2,
+      );
+      assert.equal(fs.readFileSync(marker, "utf8"), "used");
+      const result = JSON.parse(fs.readFileSync(output, "utf8"));
+      assert.equal(result.errors[0].reason, "provider-error");
+      assert.equal(result.errors[0].status, 401);
+      assert.equal(result.usage.attempts, 1);
+    });
     check("evaluation CLI rejects missing and option-like flag values", () => {
       for (const args of [
         ["rank", "--live", "--input", "packet.json", "--max-requests"],

@@ -5,6 +5,23 @@ import { createHash } from "node:crypto";
 
 export const hash = (value) => createHash("sha256").update(value).digest("hex");
 export const digest = (value) => hash(JSON.stringify(value));
+const inheritedGitLocations = new Set([
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_COMMON_DIR",
+  "GIT_NAMESPACE",
+  "GIT_CEILING_DIRECTORIES",
+  "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+]);
+export function gitSubprocessEnv(overrides = {}, env = process.env) {
+  return {
+    ...Object.fromEntries(Object.entries(env).filter(([name]) => !inheritedGitLocations.has(name))),
+    ...overrides,
+  };
+}
 export function requireValue(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -91,27 +108,11 @@ export function collect(input) {
         stdio: ["ignore", "pipe", "pipe"],
         timeout: 10000,
         killSignal: "SIGKILL",
-        env: {
-          ...Object.fromEntries(
-            Object.entries(process.env).filter(
-              ([name]) =>
-                ![
-                  "GIT_DIR",
-                  "GIT_WORK_TREE",
-                  "GIT_INDEX_FILE",
-                  "GIT_OBJECT_DIRECTORY",
-                  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-                  "GIT_COMMON_DIR",
-                  "GIT_NAMESPACE",
-                  "GIT_CEILING_DIRECTORIES",
-                  "GIT_DISCOVERY_ACROSS_FILESYSTEM",
-                ].includes(name),
-            ),
-          ),
+        env: gitSubprocessEnv({
           GIT_NO_LAZY_FETCH: "1",
           GIT_OPTIONAL_LOCKS: "0",
           GIT_TERMINAL_PROMPT: "0",
-        },
+        }),
       },
     );
   requireValue(

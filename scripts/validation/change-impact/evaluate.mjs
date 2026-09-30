@@ -6,9 +6,11 @@ import { execFileSync } from "node:child_process";
 import {
   collect,
   digest,
+  gitSubprocessEnv,
   relative,
   requireValue,
 } from "../../../incubator/skills/engineering-workflows/change-impact/scripts/collect.mjs";
+import { credential } from "../../../incubator/skills/engineering-workflows/change-impact/scripts/credentials.mjs";
 import {
   MODEL,
   rank,
@@ -35,15 +37,14 @@ export function createFixture(testCase, output) {
       input,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
-      env: {
-        ...process.env,
+      env: gitSubprocessEnv({
         GIT_AUTHOR_NAME: "Synthetic Fixture",
         GIT_AUTHOR_EMAIL: "fixture@example.invalid",
         GIT_COMMITTER_NAME: "Synthetic Fixture",
         GIT_COMMITTER_EMAIL: "fixture@example.invalid",
         GIT_AUTHOR_DATE: "2000-01-01T00:00:00Z",
         GIT_COMMITTER_DATE: "2000-01-01T00:00:00Z",
-      },
+      }),
     }).trim();
   git(["init", "--quiet"]);
   function commit(files, parent) {
@@ -421,7 +422,9 @@ export async function main(args = process.argv.slice(2)) {
       flags.live && flags.input && flags.output && !fs.existsSync(flags.output),
       "rank requires --live, --input and a new --output file",
     );
+    const auth = credential();
     result = await rank(JSON.parse(fs.readFileSync(flags.input, "utf8")), {
+      apiKey: auth.key ?? "",
       maxRequests: Number(flags["max-requests"] ?? 16),
     });
     fs.writeFileSync(flags.output, JSON.stringify(result, null, 2) + "\n", {
