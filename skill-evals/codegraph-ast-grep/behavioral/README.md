@@ -1,14 +1,14 @@
 # Captured Behavioral Evals
 
-This directory stores the historical reproducible, machine-regraded v0.2
-behavior samples for the public `codegraph-ast-grep` skill. Each historical
-capture case contains:
+This directory stores fresh v0.3.4 routing captures and the historical reproducible, machine-regraded v0.2 behavior samples for the public `codegraph-ast-grep` skill. Each historical v0.2 capture case contains:
 
 - `prompt.md`: the exact clean-turn harness prompt and synthetic fixture facts;
 - `captured-output.md`: the final assistant message from the recorded run;
 - `grading.json`: deterministic assertions over that final message.
 
-[`current-contract/`](current-contract/README.md) is the separate current v0.3.3
+[`v0.3.4-routing/`](v0.3.4-routing/README.md) contains six fresh, synthetic Codex CLI routing captures for direct and starter-prompt entry points, with 36/36 machine-recomputed assertions. The composed starter path is not a native UI observation.
+
+[`current-contract/`](current-contract/README.md) is the separate historical v0.3.3
 local nonbehavioral-refresh suite. It binds five prompts, reused internal
 clean-context reviewer outputs, historical independent gradings, and provenance
 to the exact current runtime hash. All 35 reviewed assertions pass; no new
@@ -23,7 +23,7 @@ manually inspected before accepting each final message to confirm those reads
 and the absence of disallowed tool actions. The committed final-message artifacts
 alone do not independently prove those facts.
 
-## Capture command
+## Historical v0.2 capture command
 
 From the repository root, replace `<isolated-home>` with an empty temporary
 directory, `<codex-home>` with the Codex home that supplies authentication, and

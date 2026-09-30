@@ -17,7 +17,7 @@ installed runtime content.
 - Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
 - Normal setup excludes the experimental ast-grep MCP server.
 
-Current v0.3.4 routing is checked by source-contract assertions and the maintained scenario catalog; these checks do not execute a skill response, and there is no new behavioral capture. The explicit-options case is a scenario for a future capture, not a graded current result. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
+Current v0.3.4 routing has source-contract assertions, the maintained scenario catalog, and [six fresh Codex CLI captures](behavioral/v0.3.4-routing/README.md) with 36/36 machine-recomputed routing assertions. The captures cover direct setup/update requests, the canonical Codex starter prompt with clear setup/update additions, the bare starter, and an explicit options request. They use synthetic project facts and a composed starter prompt; they do not prove native Codex UI behavior or a real tool installation. The explicit-options case now has a captured and graded current counterpart. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, reused internal clean-context reviewer outputs, historical
 independent gradings, and provenance to the exact v0.3.3 behavioral runtime payload. The
@@ -35,7 +35,7 @@ to an existing target heading/marker.
 
 ## Dated upstream release check
 
-On 2026-09-30, official releases listed [CodeGraph v1.6.0](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) and [ast-grep 0.45.3](https://github.com/ast-grep/ast-grep/releases/tag/0.45.3) as latest stable. The skill resolves an eligible stable version at execution rather than pinning these dated observations. CodeGraph v1.6.0 asks existing projects to run `codegraph index` once after upgrading; the update reference records that required generated-index effect. No local installation or live tool run is claimed here.
+On 2026-09-30, official releases listed [CodeGraph v1.6.0](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) and [ast-grep 0.45.3](https://github.com/ast-grep/ast-grep/releases/tag/0.45.3) as latest stable. The skill resolves an eligible stable version at execution rather than pinning these dated observations. CodeGraph v1.6.0 asks existing projects to run `codegraph index` once after upgrading; the update reference records that required generated-index effect. No local CodeGraph or ast-grep installation or live query is claimed here.
 
 ## Captured behavioral suite
 
@@ -53,10 +53,10 @@ pnpm run validate:codegraph-ast-grep
 ```
 
 The validator checks the installed runtime contract, current scenario structure,
-all historical source/prompt/output/grading/provenance hashes, historical runtime-payload
+all new and historical source/prompt/output/grading/provenance hashes, the v0.3.4 skill-and-starter-prompt candidate binding, six fresh routing captures with 36/36 assertions, historical runtime-payload
 binding, the 5/35/0 independent review result, target-guidance persistence,
 provenance-preserving setup/update behavior, doctor authority, current/legacy
 command safety, and historical capture integrity. Validation itself is offline:
 it does not invoke a reviewer, query the network, or execute CodeGraph/ast-grep.
 
-- [Explicit options request](cases/explicit-options-request.md): complete inventory without execution authority.
+- [Explicit options request](cases/explicit-options-request.md): complete inventory without execution authority; captured in the new v0.3.4 routing suite.

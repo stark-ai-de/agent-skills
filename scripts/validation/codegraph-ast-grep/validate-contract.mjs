@@ -4,7 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 
+import { load } from "js-yaml";
+
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
+import { starterPromptFindings } from "./starter-prompt-contract.mjs";
+import { validateRoutingCapture } from "./validate-routing-capture.mjs";
 
 const root = process.cwd();
 const skillDir = path.join(root, "skills", "engineering-workflows", "codegraph-ast-grep");
@@ -1939,12 +1943,20 @@ requirePattern(
   "optional extension evaluation must not broaden version lookup",
 );
 
-requirePattern(
-  openAiPath,
-  openAi,
-  /default_prompt:\s*"[^"]*\$codegraph-ast-grep[^"]*"/,
-  "default prompt must mention the skill",
-);
+let openAiMetadata;
+try {
+  openAiMetadata = load(openAi);
+} catch (error) {
+  fail(`${openAiPath}: invalid YAML (${error.message})`);
+}
+for (const finding of starterPromptFindings(openAiMetadata?.interface?.default_prompt)) {
+  fail(`${openAiPath}: ${finding}`);
+}
+const priorPromptPath =
+  "skill-evals/codegraph-ast-grep/validator-fixtures/unconditional-starter-prompt.txt";
+if (starterPromptFindings(requireFile(priorPromptPath).trim()).length === 0) {
+  fail(`${priorPromptPath}: previous unconditional starter prompt must fail validation`);
+}
 requirePattern(
   openAiPath,
   openAi,
@@ -2872,6 +2884,7 @@ if (behavioralManifest) {
     "README.md",
     "manifest.json",
     "current-contract",
+    "v0.3.4-routing",
     ...expectedCapturedCases.keys(),
   ]);
   const unexpectedBehavioralEntries = fs
@@ -2954,8 +2967,11 @@ requirePattern(
   "pnpm run validate must execute the contract validator",
 );
 
+const routingCapture = validateRoutingCapture(root);
+errors.push(...routingCapture.errors);
+
 export const validationErrors = [...new Set(errors)].sort();
-export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} historical hash-bound v0.3.3 local nonbehavioral refresh captures (not current behavioral proof), and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
+export const validationSummary = `Validated CodeGraph + ast-grep runtime contract, ${routingCapture.passed}/${routingCapture.total} assertions across ${routingCapture.cases} fresh v0.3.4 routing captures, ${requiredEvalCases.length} scenario schemas, ${legacyCaseLineage.summary.cases} legacy-case dispositions covering ${legacyCaseLineage.summary.sourceUnits} material units, ${currentContractPassed}/${currentContractPassed + currentContractFailed} assertions across ${currentContractCases} historical hash-bound v0.3.3 local nonbehavioral refresh captures (not current behavioral proof), and ${capturedBehaviorAssertions} assertions across ${capturedBehaviorCases} historical captured v0.2 cases.`;
 
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";
 const isMain = entrypoint === path.resolve(fileURLToPath(import.meta.url));

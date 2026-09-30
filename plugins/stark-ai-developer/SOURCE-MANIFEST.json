@@ -1513,10 +1513,10 @@
       "sha256": "00c31971bc10fc98227f622bb24024605db1a678bcff9f76cfe7f9727e32705e"
     },
     {
-      "byteLength": 704,
+      "byteLength": 967,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/agents/openai.yaml",
-      "sha256": "c2ae6c4bfe34236538f6a19fcef019b684a3f91685dfd0039c9bf386024dc98d"
+      "sha256": "c2f5da2a61bc79c986a47fe68ef0c90aaeda608f334793ba0451e42a0b8a65b2"
     },
     {
       "byteLength": 66967,
@@ -2131,5 +2131,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7ce67a00f924bdaa26fa9ff304569d1db3e7cb40bc25900f5023b8ebfd0f6895"
+  "treeHash": "3f735d36f7f943801b4f7022d4d44cdcd47800338006fea256debc0aab9c1f28"
 }
