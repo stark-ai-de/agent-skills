@@ -2,7 +2,7 @@
 
 ID: ADR-0038
 Title: Expose finite skill workflows and permit intent-bound agent selection
-Status: Accepted
+Status: Superseded
 Date: 2026-07-29
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0037
-Superseded by: None
+Superseded by: ADR-0060
 Guide verified: 2026-07-29
 Gist: Multi-workflow skills disclose finite choices while agents may route from clear intent and existing authority.
 

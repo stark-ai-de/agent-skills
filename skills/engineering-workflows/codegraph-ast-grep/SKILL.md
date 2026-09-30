@@ -32,7 +32,7 @@ The complete finite workflow inventory, in plain, benefit-first language, is:
 - `update`: bring an existing setup to current stable versions without changing how it was installed. Migrate configuration or index data when needed, reconnect the coding client, and verify that everything still works.
 - `doctor`: diagnose setup health and report analytics without repairing anything.
 
-Show the complete finite workflow inventory in its documented order for a bare or materially ambiguous invocation, or an explicit options request. An options request alone does not authorize execution. For clear authorized intent, announce only the selected workflow and rationale, with material scope and evidence fields, and proceed.
+Show the complete finite workflow inventory in its documented order for a bare or materially ambiguous invocation, or an explicit options request. An options request alone does not authorize execution or repository/tool inspection; answer from the documented inventory. For clear authorized intent, announce only the selected workflow and rationale, with material scope and evidence fields, and proceed.
 
 There is no `auto` workflow. Select by intent:
 

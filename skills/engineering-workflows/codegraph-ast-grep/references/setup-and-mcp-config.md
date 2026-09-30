@@ -250,7 +250,7 @@ env = { CODEGRAPH_DIR = "<approved-state-directory>", CODEGRAPH_TELEMETRY = "0" 
 
 Codex also supports an MCP `cwd`, but the exact absolute shim above does not depend on launch-directory behavior and binds execution to the reviewed project dependency. Project `.codex/config.toml` is loaded only for a trusted project.
 
-Do not use CodeGraph's first-party Codex installer for project-scope or MCP-only intent without inspecting its current target/scope behavior; reviewed 1.4.1 treats Codex setup as user/global and can touch more than the MCP entry.
+CodeGraph v1.6.0 adds `codegraph install --location=local` for project-scoped Codex setup. Its [release notes](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) say this writes the project `.codex/config.toml` and a CodeGraph block in `AGENTS.md`; `--init` additionally builds the project index. Inspect installed help, the target files, and the full write scope before choosing that installer. For MCP-only intent, prefer the reviewed runtime-native entry above. Earlier reviewed 1.4.1 Codex installer behavior was user/global, so do not assume the newer flag exists on an older installation.
 
 ### Cursor
 

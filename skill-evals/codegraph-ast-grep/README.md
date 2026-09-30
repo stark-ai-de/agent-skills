@@ -17,7 +17,7 @@ installed runtime content.
 - Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
 - Normal setup excludes the experimental ast-grep MCP server.
 
-Current v0.3.4 routing is checked by source-contract assertions and the maintained scenario catalog; there is no new behavioral capture. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
+Current v0.3.4 routing is checked by source-contract assertions and the maintained scenario catalog; these checks do not execute a skill response, and there is no new behavioral capture. The explicit-options case is a scenario for a future capture, not a graded current result. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, reused internal clean-context reviewer outputs, historical
 independent gradings, and provenance to the exact v0.3.3 behavioral runtime payload. The
@@ -32,6 +32,10 @@ byte-locked sources live under
 payload. The owning validator binds the exact deletion set and independent
 HEAD SHA-256 values and requires every material legacy behavior bullet to map once
 to an existing target heading/marker.
+
+## Dated upstream release check
+
+On 2026-09-30, official releases listed [CodeGraph v1.6.0](https://github.com/colbymchenry/codegraph/releases/tag/v1.6.0) and [ast-grep 0.45.3](https://github.com/ast-grep/ast-grep/releases/tag/0.45.3) as latest stable. The skill resolves an eligible stable version at execution rather than pinning these dated observations. CodeGraph v1.6.0 asks existing projects to run `codegraph index` once after upgrading; the update reference records that required generated-index effect. No local installation or live tool run is claimed here.
 
 ## Captured behavioral suite
 
