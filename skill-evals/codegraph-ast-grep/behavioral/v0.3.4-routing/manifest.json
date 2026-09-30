@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "suite_id": "codegraph-ast-grep-v0.3.4-routing-2026-09-30",
+  "candidate": {
+    "skill_path": "skills/engineering-workflows/codegraph-ast-grep",
+    "skill_version": "0.3.4",
+    "sha256": "375de4e532c4d20febd934ee5e378f964e0427f3c05c35feebccbdfcf6a780d9",
+    "hash_recipe": "For each canonical skill file in bytewise lexicographic path order, excluding assets/openai-icon.png: relative path, NUL, file bytes, NUL; then SHA-256. Includes SKILL.md and agents/openai.yaml."
+  },
+  "capture": {
+    "captured_at": "2026-09-30",
+    "runtime": "codex-cli 0.159.0",
+    "model": "gpt-6.1-sol",
+    "model_selection": "explicit -m argument",
+    "mode": "fresh-codex-exec-final-message",
+    "sandbox": "read-only",
+    "ephemeral": true,
+    "ignore_user_config": true,
+    "ignore_rules": true,
+    "command_template": "HOME=<isolated-home> CODEX_HOME=<auth-home> codex exec --ephemeral --ignore-user-config --ignore-rules -m gpt-6.1-sol -s read-only --json -C <candidate-worktree> - < <prompt.md>",
+    "entrypoint": "CLI-composed default_prompt plus user addition; not a native Codex UI run",
+    "output_normalization": "Final agent message normalized only by repository Markdown formatting and trailing newline; no words or claims edited."
+  },
+  "cases": [
+    {
+      "id": "direct-setup",
+      "kind": "clear",
+      "expected_workflow": "setup",
+      "thread_id": "01a0f1fa-d774-71a0-89fe-0eddc1b1abeb",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-setup/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-setup/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-setup/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-setup/grading.json"
+      },
+      "sha256": {
+        "prompt": "4d378645f446e41e6f1c13b178a91899dd6a1d205e80754275ca9e1d2036cd4c",
+        "output": "08e7884d9b1629b411410279b72c4869fb8d93c82b7d3129728da62d998b2617",
+        "events": "3ff9214a84059ea4bc0951d2e52b171acbf8a0684ab807e031b70662386f678e",
+        "grading": "d1b042c14d5ad3932a71fe3c325beea64687219091c2bd4de033070e837ac390"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "direct-update",
+      "kind": "clear",
+      "expected_workflow": "update",
+      "thread_id": "01a0f1fb-cca7-7e32-ade2-321382871e21",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-update/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-update/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-update/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/direct-update/grading.json"
+      },
+      "sha256": {
+        "prompt": "42bf637c3858979dab1ba01792374b6b9c035c6b352ee3f64089b9dd45681c23",
+        "output": "7a60ba8ede29ebb5e4fcd958931f36820750ea28f697062820dcdce6cc27b03a",
+        "events": "cf140cd5a05055790385e4bb74c0280a4d4cdc7c014f4243588e89b446a041f9",
+        "grading": "4237dd4d850ae54e0ef08f6a86c7f84f873ed0dd299114492a6c84c25c2f8544"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "starter-setup",
+      "kind": "clear",
+      "expected_workflow": "setup",
+      "thread_id": "01a0f1fb-c883-7420-bf14-24d35be48f2a",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-setup/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-setup/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-setup/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-setup/grading.json"
+      },
+      "sha256": {
+        "prompt": "94018d8f1fc3b0a5b3ab0fc793f322d2e45362df08606dd7e04b19d12a8482b5",
+        "output": "b9825689c670f3f74588c8a62c5f1d22743514e61ce1a4204e8dce45d37b099c",
+        "events": "e6b1711c503a9d59ee6500b550a678aab6f6730fc98df08c0b2fc4dc75b8a354",
+        "grading": "2285e114ae21392f20f651db88cdc47cbbe69d755dc930cd3ef9228ff1ebad0c"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "starter-update",
+      "kind": "clear",
+      "expected_workflow": "update",
+      "thread_id": "01a0f1fb-cb1d-7b91-b989-dc669b8d7718",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-update/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-update/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-update/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-update/grading.json"
+      },
+      "sha256": {
+        "prompt": "0be5bfa21e68a3a998c96c8661549a4176a9dedbdbaf94e008b21cecd71ed742",
+        "output": "a0a20fecd622e0e6425cdad70f7f01409e33a01b6ecd7454cfb816a86a2dc607",
+        "events": "5bde1fe4df9afb016353f02dd2fcc7e7d83487425ce8d9d98a8a5bef7a518275",
+        "grading": "f8fa4843becfdd8ed8b68488473d32b3b5cb2258c1d58b415eecd73689d12b3c"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "starter-bare",
+      "kind": "menu",
+      "expected_workflow": null,
+      "thread_id": "01a0f1fc-b47d-74a3-9435-89e431f1adf0",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-bare/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-bare/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-bare/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-bare/grading.json"
+      },
+      "sha256": {
+        "prompt": "1c392adf94e10f3351b919a63525439f310ad7ff635971057fcab166db2cf654",
+        "output": "483a2c8b87e6e02f6212d1a8585b25fc3b3faef0b48e8114f71bf66a8cb82bfa",
+        "events": "1a0ffbd19b29d90a1b335ab8e198d6a5ad3e5ed61f1cad6119f5cf52da469380",
+        "grading": "d3b0893f6fb86358473a827a229228f9995ea1001c26d32dc9988f61d0d0dca8"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    },
+    {
+      "id": "starter-options",
+      "kind": "menu",
+      "expected_workflow": null,
+      "thread_id": "01a0f1fc-b8a4-7151-89af-75649e349cce",
+      "paths": {
+        "prompt": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-options/prompt.md",
+        "output": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-options/captured-output.md",
+        "events": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-options/events.json",
+        "grading": "skill-evals/codegraph-ast-grep/behavioral/v0.3.4-routing/starter-options/grading.json"
+      },
+      "sha256": {
+        "prompt": "739c3a50648b5cc51d496f8c3e2c50a1b8aee192e04062e5b74aa7fbc3102dc6",
+        "output": "fa3784fb48a7e9e051c9059f7636957c54d33464f6bd9cc8814caf21c90063f6",
+        "events": "78af26b1c7fb25767f0e1a86feee859e117cfa57b27ebf568fc25b6ac2ac1750",
+        "grading": "97cd14c74b411c2d227d4ae47182e35ab0219889253ad8e6a5f73b4bd1c1eaa8"
+      },
+      "summary": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    }
+  ],
+  "summary": {
+    "cases": 6,
+    "passed": 36,
+    "failed": 0,
+    "total": 36
+  },
+  "limitations": [
+    "Synthetic routing-only fixtures; no real project or tool installation/update occurred.",
+    "The starter prompt was composed from canonical YAML and a user addition for Codex CLI; this does not prove native Codex UI behavior.",
+    "The public event summaries are derived from local JSONL streams; raw streams are not committed.",
+    "One model run per case is not statistical reliability evidence."
+  ]
+}

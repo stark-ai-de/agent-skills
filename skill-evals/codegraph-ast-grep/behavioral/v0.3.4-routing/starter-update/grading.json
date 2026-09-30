@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "case_id": "starter-update",
+  "checks": {
+    "selected_expected_workflow": true,
+    "no_unselected_menu": true,
+    "no_redundant_choice": true,
+    "root_named": true,
+    "no_completion_claim": true,
+    "tools_read_only": true
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6
+  }
+}

@@ -5,7 +5,7 @@ Grade only the assertions applicable to the selected public workflow or internal
 ## Routing and authority
 
 - Exposes exactly `setup`, `update`, and `doctor`, with no `auto` workflow.
-- Selects and announces a matching workflow when user intent and root authority are clear; asks only for bare or ambiguous invocation.
+- Selects and announces only the matching workflow when user intent and root authority are clear, including when a Codex starter prompt precedes the clear request. Shows the full inventory for bare, ambiguous, or explicit options requests; options-only grants no inspection or execution authority.
 - Routes setup/install intent to `setup`, stable refresh/migration intent to `update`, and broken/health-check intent to `doctor`.
 - Limits agent-initiated activation to read-only `doctor`.
 - Runs mutating workflows only for the user-requested outcome/root and retains separate approval for privilege, global/channel expansion, telemetry, destructive replacement, paid/external actions, or unrelated writes.

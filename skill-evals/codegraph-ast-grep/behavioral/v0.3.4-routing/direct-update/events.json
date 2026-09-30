@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "thread_id": "01a0f1fb-cca7-7e32-ade2-321382871e21",
+  "run_completed": true,
+  "command_count": 2,
+  "files_read": [
+    "skills/engineering-workflows/codegraph-ast-grep/SKILL.md",
+    "skills/engineering-workflows/codegraph-ast-grep/references/update-and-provenance.md"
+  ],
+  "non_read_tool_calls": 0,
+  "raw_jsonl_sha256": "75898dfe779c60589429dbdc1e112f45ce287816d737cabdf08c4095ae5ed972",
+  "raw_jsonl_retained": "local only; not committed"
+}
