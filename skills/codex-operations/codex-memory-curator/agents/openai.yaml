@@ -3,7 +3,7 @@ interface:
   short_description: "Audits, prunes, and rewrites Codex memory state"
   icon_small: "./assets/openai-icon.png"
   icon_large: "./assets/openai-icon.png"
-  default_prompt: "Use $codex-memory-curator for my Codex memories. Show all eight workflows with plan-run-cleanup-file first and Recommended; select and announce the intent-bound route when my outcome and authority are clear, otherwise ask me to choose."
+  default_prompt: "Use $codex-memory-curator for my Codex memories. Show all eight workflows compactly, including plan-run-cleanup-file, and recommend the route matching my requested outcome; select and announce the intent-bound route when my outcome and authority are clear, otherwise ask me to choose."
 policy:
   products:
     - CODEX

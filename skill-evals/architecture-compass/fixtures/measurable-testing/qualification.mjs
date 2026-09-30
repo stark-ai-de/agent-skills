@@ -3,9 +3,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { ProcessOwner } from "./process-owner.ts";
+import { withQualificationResources } from "./qualification-lifecycle.ts";
 import { fileURLToPath } from "node:url";
-import { assertComplete } from "./src/evidence.ts";
+import { assertComplete, observedPeakRss } from "./src/evidence.ts";
 import { restoreTrustedCache } from "./src/cache.ts";
 
 // This fixture-only experiment driver runs the selected framework. It is not a
@@ -15,315 +15,320 @@ const outputIndex = process.argv.indexOf("--output");
 assert(outputIndex >= 0 && process.argv[outputIndex + 1], "Pass --output <receipt.json>");
 const output = path.resolve(process.argv[outputIndex + 1]);
 assert(!output.startsWith(`${fixture}${path.sep}`), "Write evidence outside the fixture source");
-const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "ac-testing-"));
-const subject = path.join(temporary, "target");
-const processes = new ProcessOwner();
-const samples = [];
-const faults = [];
-const observations = [];
-const sha = (text) => crypto.createHash("sha256").update(text).digest("hex");
-const filesUnder = (root) =>
-  fs
-    .readdirSync(root, { withFileTypes: true })
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .flatMap((entry) => {
-      if (["node_modules", ".cache", "reports", "__pycache__"].includes(entry.name)) return [];
-      const file = path.join(root, entry.name);
-      return entry.isDirectory() ? filesUnder(file) : [file];
-    });
-const fingerprint = (root) =>
-  sha(
-    filesUnder(root)
-      .map((file) => `${path.relative(root, file)}\0${sha(fs.readFileSync(file))}`)
-      .join("\n"),
-  );
-const sourceDigest = fingerprint(fixture);
-const started = new Date().toISOString();
-const repository = path.resolve(fixture, "../../../..");
-const providerRoot = path.join(repository, "skills/engineering-workflows/architecture-compass");
-const provider = {
-  name: "architecture-compass",
-  version: fs
-    .readFileSync(path.join(providerRoot, "SKILL.md"), "utf8")
-    .match(/version: "([^"]+)"/)[1]
-    .trim(),
-  decisions: ["059", "060", "061", "062"].map((id) => {
-    const file = fs
-      .readdirSync(path.join(providerRoot, "references"))
-      .find((name) => name.startsWith(`ac-adr-${id}-`) && name.endsWith(".long.md"));
-    assert(file, `missing canonical provider ${id}`);
-    return {
-      id: `AC-ADR-${id}`,
-      path: `skills/engineering-workflows/architecture-compass/references/${file}`,
-      sha256: sha(fs.readFileSync(path.join(providerRoot, "references", file))),
-    };
-  }),
-};
-// These are the fixture's declared rule families, not a census of production rules.
-const ruleInventory = [
-  { id: "record-parser", file: "tests/contracts/domain.test.ts" },
-  { id: "filesystem-discovery-and-selection", file: "tests/contracts/inputs.test.ts" },
-  {
-    id: "complete-partition-evidence",
-    file: "tests/contracts/evidence.test.ts",
-    prefix: "rejects ",
-  },
-  { id: "measurement-truth", file: "tests/contracts/evidence.test.ts", prefix: "measurements " },
-  { id: "resource-isolation", file: "tests/contracts/isolation.test.ts" },
-  { id: "process-tree-ownership", file: "tests/contracts/process-owner.test.ts" },
-  { id: "cache-trust-admission", file: "tests/contracts/cache-admission.test.ts" },
-];
-const declaredNegativeRuns = [
-  "input-add-rejection",
-  "input-rename-rejection",
-  "required-root-rejection",
-  "native-bun-incompatibility",
-  "real-failure-warm",
-  "real-failure-off",
-  "corrupt-cache-source-failure",
-  "one-recovery-source-failure",
-  "untrusted-restore-bypassed",
-];
-const inputInventory = ["inputs", "schemas"].flatMap((directory) =>
-  filesUnder(path.join(fixture, directory)).map((file) => ({
-    path: path.relative(fixture, file),
-    sha256: sha(fs.readFileSync(file)),
-  })),
-);
-const budget = {
-  declaredBeforeSamples: started,
-  owner: "synthetic qualification fixture",
-  latencySeconds: 30,
-  runnerSeconds: 90,
-  sumProcessPeakRssKiB: 4 * 1024 * 1024,
-  maximumRunnerRatio: 2,
-  samplesPerCandidate: 5,
-};
-fs.cpSync(fixture, subject, {
-  recursive: true,
-  filter: (source) =>
-    !source
-      .split(path.sep)
-      .some((part) => ["node_modules", ".cache", "reports", "__pycache__"].includes(part)),
-});
-fs.cpSync(path.join(fixture, "node_modules"), path.join(subject, "node_modules"), {
-  recursive: true,
-  verbatimSymlinks: true,
-  filter: (source) => !source.split(path.sep).includes(".vite-temp"),
-});
-const vitest = path.join(subject, "node_modules/vitest/vitest.mjs");
-const relative = (file) => path.relative(subject, file).split(path.sep).join("/");
-let sequence = 0;
-const sanitize = (value) =>
-  String(value)
-    .replaceAll(subject, "<fixture>")
-    .replaceAll(fixture, "<fixture-source>")
-    .replaceAll(temporary, "<temporary>");
-async function command(executable, args, env = {}) {
-  const begin = performance.now();
-  return await new Promise((resolve, reject) => {
-    const child = processes.spawn(executable, args, {
-      cwd: subject,
-      env: { ...process.env, ...env },
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let stdout = "",
-      stderr = "",
-      timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      processes.stop(child).catch(reject);
-    }, 120000);
-    child.stdout.on("data", (data) => {
-      stdout += data;
-    });
-    child.stderr.on("data", (data) => {
-      stderr += data;
-    });
-    child.on("error", (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.on("close", async (exit, signal) => {
-      clearTimeout(timer);
-      try {
-        await processes.wait(child);
-      } catch (error) {
-        reject(error);
-        return;
-      }
-      resolve({
-        exit,
-        signal,
-        timedOut,
-        seconds: (performance.now() - begin) / 1000,
-        stdout,
-        stderr,
+async function qualify(temporary, processes) {
+  const subject = path.join(temporary, "target");
+  const samples = [];
+  const faults = [];
+  const observations = [];
+  const sha = (text) => crypto.createHash("sha256").update(text).digest("hex");
+  const filesUnder = (root) =>
+    fs
+      .readdirSync(root, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .flatMap((entry) => {
+        if (["node_modules", ".cache", "reports", "__pycache__"].includes(entry.name)) return [];
+        const file = path.join(root, entry.name);
+        return entry.isDirectory() ? filesUnder(file) : [file];
       });
-    });
-  });
-}
-async function run(
-  project,
-  {
-    runtime = "bun",
-    cache = "off",
-    shard,
-    extra = [],
-    env = {},
-    label = project,
-    expectExit = 0,
-    blob = false,
-  } = {},
-) {
-  const id = `${++sequence}-${label}`;
-  const dir = path.join(temporary, id);
-  fs.mkdirSync(dir);
-  const report = path.join(dir, "native.json");
-  const runtimeDir = path.join(dir, "runtime");
-  const args = [
-    ...(runtime === "bun" ? ["--bun"] : []),
-    vitest,
-    "run",
-    "--project",
-    project,
-    ...(shard ? [`--shard=${shard}`] : []),
-    "--reporter=json",
-    `--outputFile.json=${report}`,
-    ...(blob ? ["--reporter=blob", `--outputFile.blob=${path.join(dir, "blob.json")}`] : []),
-    ...extra,
-  ];
-  const result = await command(runtime, args, {
-    TEST_TRANSFORM_CACHE: cache,
-    VITEST_FS_MODULE_CACHE_PATH: path.join(temporary, "cache"),
-    QUALIFICATION_RUNTIME_DIR: runtimeDir,
-    QUALIFICATION_NATIVE: "off",
-    EXPECT_PLUGIN_VALUE: "7",
-    ...env,
-  });
-  assert.equal(result.timedOut, false, `${id}: timed out`);
-  if (expectExit === 0)
-    assert.equal(result.exit, 0, `${id}: ${sanitize(result.stderr)} ${sanitize(result.stdout)}`);
-  else assert.notEqual(result.exit, 0, `${id}: expected the injected failure`);
-  const native = fs.existsSync(report) ? JSON.parse(fs.readFileSync(report, "utf8")) : null;
-  if (expectExit === 0) assert.equal(native?.success, true, `${id}: no successful native report`);
-  assert.equal(result.signal, null, `${id}: signal termination is not expected fault detection`);
-  assert(native, `${id}: missing native report`);
-  const nativeCases = native.testResults.flatMap((file) => file.assertionResults);
-  const diagnostics =
-    native.testResults
-      .map(
-        (file) =>
-          file.message +
-          "\n" +
-          file.assertionResults.flatMap((test) => test.failureMessages ?? []).join("\n"),
-      )
-      .join("\n") + result.stderr;
-  if (expectExit !== 0) {
-    if (project === "fallback") {
-      assert.match(
-        result.stderr,
-        /module\.registerHooks.*not supported/,
-        `${id}: unrelated fallback failure`,
-      );
-      assert(
-        nativeCases.some(
-          (test) => test.fullName === "native-loader module mocking" && test.status === "pending",
-        ),
-      );
-    } else {
-      const name =
-        project === "cache"
-          ? "plugin-read input invalidates the transformed module"
-          : "checks current repository inputs";
-      const failed = nativeCases.filter((test) => test.status === "failed");
-      if (label === "corrupt-cache-source-failure" && failed.length === 0) {
-        assert(
-          diagnostics.includes(path.join(temporary, "cache")),
-          `${id}: failure not attributable to injected cache`,
-        );
-        assert.match(diagnostics, /SyntaxError|ParseError|Unexpected|corrupt/);
-      } else {
-        assert.equal(failed.length, 1, `${id}: unexpected failure set: ${sanitize(diagnostics)}`);
-        assert.equal(failed[0].fullName, name, `${id}: unrelated failed case`);
-        assert.match(
-          failed[0].failureMessages.join("\n"),
-          project === "cache"
-            ? /expected 9 to be 7/
-            : label === "required-root-rejection"
-              ? /ENOENT/
-              : /invalid Markdown input/,
-        );
-        assert(
-          nativeCases
-            .filter((test) => test.fullName !== name)
-            .every((test) => test.status === "passed"),
-          `${id}: unfinished independent cases`,
-        );
-      }
-    }
-  } else {
-    assert(
-      nativeCases.length > 0 && nativeCases.every((test) => test.status === "passed"),
-      `${id}: missing or incomplete cases`,
+  const fingerprint = (root) =>
+    sha(
+      filesUnder(root)
+        .map((file) => `${path.relative(root, file)}\0${sha(fs.readFileSync(file))}`)
+        .join("\n"),
     );
-  }
-  const identities = fs.existsSync(runtimeDir)
-    ? fs
-        .readdirSync(runtimeDir)
-        .map((name) => JSON.parse(fs.readFileSync(path.join(runtimeDir, name), "utf8")))
-    : [];
-  const caseResults = (native?.testResults ?? []).flatMap((file) =>
-    file.assertionResults.map((test) => ({
-      id: `${relative(file.name)}::${test.fullName}`,
-      status: test.status,
+  const sourceDigest = fingerprint(fixture);
+  const started = new Date().toISOString();
+  const repository = path.resolve(fixture, "../../../..");
+  const providerRoot = path.join(repository, "skills/engineering-workflows/architecture-compass");
+  const provider = {
+    name: "architecture-compass",
+    version: fs
+      .readFileSync(path.join(providerRoot, "SKILL.md"), "utf8")
+      .match(/version: "([^"]+)"/)[1]
+      .trim(),
+    decisions: ["059", "060", "061", "062"].map((id) => {
+      const file = fs
+        .readdirSync(path.join(providerRoot, "references"))
+        .find((name) => name.startsWith(`ac-adr-${id}-`) && name.endsWith(".long.md"));
+      assert(file, `missing canonical provider ${id}`);
+      return {
+        id: `AC-ADR-${id}`,
+        path: `skills/engineering-workflows/architecture-compass/references/${file}`,
+        sha256: sha(fs.readFileSync(path.join(providerRoot, "references", file))),
+      };
+    }),
+  };
+  // These are the fixture's declared rule families, not a census of production rules.
+  const ruleInventory = [
+    { id: "record-parser", file: "tests/contracts/domain.test.ts" },
+    { id: "filesystem-discovery-and-selection", file: "tests/contracts/inputs.test.ts" },
+    {
+      id: "complete-partition-evidence",
+      file: "tests/contracts/evidence.test.ts",
+      prefix: "rejects ",
+    },
+    { id: "measurement-truth", file: "tests/contracts/evidence.test.ts", prefix: "measurements " },
+    { id: "resource-isolation", file: "tests/contracts/isolation.test.ts" },
+    { id: "process-tree-ownership", file: "tests/contracts/process-owner.test.ts" },
+    { id: "qualification-lifecycle", file: "tests/contracts/qualification-lifecycle.test.ts" },
+    { id: "cache-trust-admission", file: "tests/contracts/cache-admission.test.ts" },
+  ];
+  const declaredNegativeRuns = [
+    "input-add-rejection",
+    "input-rename-rejection",
+    "required-root-rejection",
+    "native-bun-incompatibility",
+    "real-failure-warm",
+    "real-failure-off",
+    "corrupt-cache-source-failure",
+    "one-recovery-source-failure",
+    "untrusted-restore-bypassed",
+  ];
+  const inputInventory = ["inputs", "schemas"].flatMap((directory) =>
+    filesUnder(path.join(fixture, directory)).map((file) => ({
+      path: path.relative(fixture, file),
+      sha256: sha(fs.readFileSync(file)),
     })),
   );
-  const row = {
-    id,
-    project,
-    runtime,
-    cache,
-    shard: shard ?? "1/1",
-    command: [runtime, ...args.map(sanitize)],
-    exit: result.exit,
-    seconds: result.seconds,
-    files: (native?.testResults ?? []).map((file) => relative(file.name)).sort(),
-    cases: caseResults,
-    identities,
-    sumProcessPeakRssKiB: identities.reduce((total, x) => total + (x.maxRssKiB ?? 0), 0),
-    diagnostic: expectExit === 0 ? null : sanitize(diagnostics + result.stdout).slice(-8000),
+  const budget = {
+    declaredBeforeSamples: started,
+    owner: "synthetic qualification fixture",
+    latencySeconds: 30,
+    runnerSeconds: 90,
+    sumProcessPeakRssKiB: 4 * 1024 * 1024,
+    maximumRunnerRatio: 2,
+    samplesPerCandidate: 5,
   };
-  samples.push(row);
-  if (project === "cache")
-    same(
-      row.cases.map((c) => c.id),
-      ["tests/cache/plugin.test.ts::plugin-read input invalidates the transformed module"],
-    );
-  return { row, native, dir };
-}
-async function listing(project, shard) {
-  const destination = path.join(
-    temporary,
-    `list-${project}-${shard?.replace("/", "-") ?? "all"}.json`,
-  );
-  const result = await command("bun", [
-    "--bun",
-    vitest,
-    "list",
-    "--project",
+  fs.cpSync(fixture, subject, {
+    recursive: true,
+    filter: (source) =>
+      !source
+        .split(path.sep)
+        .some((part) => ["node_modules", ".cache", "reports", "__pycache__"].includes(part)),
+  });
+  fs.cpSync(path.join(fixture, "node_modules"), path.join(subject, "node_modules"), {
+    recursive: true,
+    verbatimSymlinks: true,
+    filter: (source) => !source.split(path.sep).includes(".vite-temp"),
+  });
+  const vitest = path.join(subject, "node_modules/vitest/vitest.mjs");
+  const relative = (file) => path.relative(subject, file).split(path.sep).join("/");
+  let sequence = 0;
+  const sanitize = (value) =>
+    String(value)
+      .replaceAll(subject, "<fixture>")
+      .replaceAll(fixture, "<fixture-source>")
+      .replaceAll(temporary, "<temporary>");
+  async function command(executable, args, env = {}) {
+    const begin = performance.now();
+    return await new Promise((resolve, reject) => {
+      const child = processes.spawn(executable, args, {
+        cwd: subject,
+        env: { ...process.env, ...env },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "",
+        stderr = "",
+        timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        processes.stop(child).catch(reject);
+      }, 120000);
+      child.stdout.on("data", (data) => {
+        stdout += data;
+      });
+      child.stderr.on("data", (data) => {
+        stderr += data;
+      });
+      child.on("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.on("close", async (exit, signal) => {
+        clearTimeout(timer);
+        try {
+          await processes.wait(child);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+        resolve({
+          exit,
+          signal,
+          timedOut,
+          seconds: (performance.now() - begin) / 1000,
+          stdout,
+          stderr,
+        });
+      });
+    });
+  }
+  async function run(
     project,
-    `--json=${destination}`,
-    ...(shard ? [`--shard=${shard}`] : []),
-  ]);
-  assert.equal(result.exit, 0, sanitize(result.stderr));
-  return JSON.parse(fs.readFileSync(destination, "utf8")).map((item) => ({
-    file: relative(item.file),
-    id: `${relative(item.file)}::${item.name}`,
-  }));
-}
-const same = (a, b) => assert.deepEqual([...a].sort(), [...b].sort());
-try {
+    {
+      runtime = "bun",
+      cache = "off",
+      shard,
+      extra = [],
+      env = {},
+      label = project,
+      expectExit = 0,
+      blob = false,
+    } = {},
+  ) {
+    const id = `${++sequence}-${label}`;
+    const dir = path.join(temporary, id);
+    fs.mkdirSync(dir);
+    const report = path.join(dir, "native.json");
+    const runtimeDir = path.join(dir, "runtime");
+    const args = [
+      ...(runtime === "bun" ? ["--bun"] : []),
+      vitest,
+      "run",
+      "--project",
+      project,
+      ...(shard ? [`--shard=${shard}`] : []),
+      "--reporter=json",
+      `--outputFile.json=${report}`,
+      ...(blob ? ["--reporter=blob", `--outputFile.blob=${path.join(dir, "blob.json")}`] : []),
+      ...extra,
+    ];
+    const result = await command(runtime, args, {
+      TEST_TRANSFORM_CACHE: cache,
+      VITEST_FS_MODULE_CACHE_PATH: path.join(temporary, "cache"),
+      QUALIFICATION_RUNTIME_DIR: runtimeDir,
+      QUALIFICATION_NATIVE: "off",
+      EXPECT_PLUGIN_VALUE: "7",
+      ...env,
+    });
+    assert.equal(result.timedOut, false, `${id}: timed out`);
+    if (expectExit === 0)
+      assert.equal(result.exit, 0, `${id}: ${sanitize(result.stderr)} ${sanitize(result.stdout)}`);
+    else assert.notEqual(result.exit, 0, `${id}: expected the injected failure`);
+    const native = fs.existsSync(report) ? JSON.parse(fs.readFileSync(report, "utf8")) : null;
+    if (expectExit === 0) assert.equal(native?.success, true, `${id}: no successful native report`);
+    assert.equal(result.signal, null, `${id}: signal termination is not expected fault detection`);
+    assert(native, `${id}: missing native report`);
+    const nativeCases = native.testResults.flatMap((file) => file.assertionResults);
+    const diagnostics =
+      native.testResults
+        .map(
+          (file) =>
+            file.message +
+            "\n" +
+            file.assertionResults.flatMap((test) => test.failureMessages ?? []).join("\n"),
+        )
+        .join("\n") + result.stderr;
+    if (expectExit !== 0) {
+      if (project === "fallback") {
+        assert.match(
+          result.stderr,
+          /module\.registerHooks.*not supported/,
+          `${id}: unrelated fallback failure`,
+        );
+        assert(
+          nativeCases.some(
+            (test) => test.fullName === "native-loader module mocking" && test.status === "pending",
+          ),
+        );
+      } else {
+        const name =
+          project === "cache"
+            ? "plugin-read input invalidates the transformed module"
+            : "checks current repository inputs";
+        const failed = nativeCases.filter((test) => test.status === "failed");
+        if (label === "corrupt-cache-source-failure" && failed.length === 0) {
+          assert(
+            diagnostics.includes(path.join(temporary, "cache")),
+            `${id}: failure not attributable to injected cache`,
+          );
+          assert.match(diagnostics, /SyntaxError|ParseError|Unexpected|corrupt/);
+        } else {
+          assert.equal(failed.length, 1, `${id}: unexpected failure set: ${sanitize(diagnostics)}`);
+          assert.equal(failed[0].fullName, name, `${id}: unrelated failed case`);
+          assert.match(
+            failed[0].failureMessages.join("\n"),
+            project === "cache"
+              ? /expected 9 to be 7/
+              : label === "required-root-rejection"
+                ? /ENOENT/
+                : /invalid Markdown input/,
+          );
+          assert(
+            nativeCases
+              .filter((test) => test.fullName !== name)
+              .every((test) => test.status === "passed"),
+            `${id}: unfinished independent cases`,
+          );
+        }
+      }
+    } else {
+      assert(
+        nativeCases.length > 0 && nativeCases.every((test) => test.status === "passed"),
+        `${id}: missing or incomplete cases`,
+      );
+    }
+    const identities = fs.existsSync(runtimeDir)
+      ? fs
+          .readdirSync(runtimeDir)
+          .map((name) => JSON.parse(fs.readFileSync(path.join(runtimeDir, name), "utf8")))
+      : [];
+    const caseResults = (native?.testResults ?? []).flatMap((file) =>
+      file.assertionResults.map((test) => ({
+        id: `${relative(file.name)}::${test.fullName}`,
+        status: test.status,
+      })),
+    );
+    const row = {
+      id,
+      project,
+      runtime,
+      cache,
+      shard: shard ?? "1/1",
+      command: [runtime, ...args.map(sanitize)],
+      exit: result.exit,
+      seconds: result.seconds,
+      files: (native?.testResults ?? []).map((file) => relative(file.name)).sort(),
+      cases: caseResults,
+      identities,
+      sumProcessPeakRssKiB:
+        expectExit === 0
+          ? observedPeakRss(
+              identities,
+              native.testResults.map((file) => file.name),
+            )
+          : null,
+      diagnostic: expectExit === 0 ? null : sanitize(diagnostics + result.stdout).slice(-8000),
+    };
+    samples.push(row);
+    if (project === "cache")
+      same(
+        row.cases.map((c) => c.id),
+        ["tests/cache/plugin.test.ts::plugin-read input invalidates the transformed module"],
+      );
+    return { row, native, dir };
+  }
+  async function listing(project, shard) {
+    const destination = path.join(
+      temporary,
+      `list-${project}-${shard?.replace("/", "-") ?? "all"}.json`,
+    );
+    const result = await command("bun", [
+      "--bun",
+      vitest,
+      "list",
+      "--project",
+      project,
+      `--json=${destination}`,
+      ...(shard ? [`--shard=${shard}`] : []),
+    ]);
+    assert.equal(result.exit, 0, sanitize(result.stderr));
+    return JSON.parse(fs.readFileSync(destination, "utf8")).map((item) => ({
+      file: relative(item.file),
+      id: `${relative(item.file)}::${item.name}`,
+    }));
+  }
+  const same = (a, b) => assert.deepEqual([...a].sort(), [...b].sort());
   const typecheck = await command("pnpm", ["run", "typecheck"]);
   assert.equal(typecheck.exit, 0, typecheck.stdout + typecheck.stderr);
   observations.push({
@@ -889,19 +894,18 @@ try {
       "No external service, deployment, publication or agent-behavior success is inferred.",
     ],
   };
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, JSON.stringify(receipt, null, 2) + "\n");
-  console.log(
-    JSON.stringify({
-      output,
-      subject: sourceDigest,
-      samples: samples.length,
-      selected,
-      cacheSummary,
-      faults: faults.length,
-    }),
-  );
-} finally {
-  await processes.close();
-  fs.rmSync(temporary, { recursive: true, force: true });
+  return receipt;
 }
+const receipt = await withQualificationResources(qualify);
+fs.mkdirSync(path.dirname(output), { recursive: true });
+fs.writeFileSync(output, JSON.stringify(receipt, null, 2) + "\n");
+console.log(
+  JSON.stringify({
+    output,
+    subject: receipt.subject,
+    samples: receipt.samples.length,
+    selected: receipt.selected,
+    cacheSummary: receipt.cacheSummary,
+    faults: receipt.faults.length,
+  }),
+);

@@ -833,7 +833,7 @@
               "markers": [
                 "Project scope: trusted .codex/config.toml.",
                 "User scope: ~/.codex/config.toml or codex mcp add after approval.",
-                "Do not use CodeGraph's first-party Codex installer for project-scope or MCP-only intent without inspecting its current target/scope behavior;"
+                "Inspect installed help, the target files, and the full write scope before choosing that installer."
               ]
             }
           ]

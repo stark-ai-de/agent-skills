@@ -2,6 +2,8 @@
 
 Read this reference from `SKILL.md` when authoring, repairing, reviewing, or exporting a diagram. The main skill file is the concise contract; this file contains detailed capability, routing, icon, safety, and receipt guidance.
 
+Keep the activation receipt compact. Reuse the selected workflow, styling decisions and exact prior approvals from the conversation; the detailed steps below do not require repeating an unchanged announcement or asking the same approval again. Material changes to scope, destination, renderer, content transfer or cost require the corresponding decision before proceeding.
+
 ## First response contract
 
 For the first substantive response, expose the available presentation choices before authoring:

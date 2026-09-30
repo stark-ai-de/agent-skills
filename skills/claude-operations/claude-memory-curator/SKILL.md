@@ -1,12 +1,12 @@
 ---
 name: claude-memory-curator
-description: Audit, review, clean up, and prune Claude Code durable context. Use when the user asks about CLAUDE.md, CLAUDE.local.md, .claude/rules, user Claude rules, Claude Code auto memory, /memory, stale instructions, memory pollution, sensitive context, settings such as autoMemoryEnabled or claudeMdExcludes, or where a Claude instruction should live. Do not use for Codex memory, Cursor rules, Claude app memory, Anthropic API Memory Stores, or generic docs cleanup.
+description: Audit and safely curate Claude Code instructions, rules, auto memory, and memory settings. Use when reviewing stale or misplaced Claude Code context, not Claude app memory or API memory stores.
 license: Apache-2.0
 compatibility: Designed for Claude Code and Claude Code skills. Works in other agents when inspecting Claude Code instruction files, settings, rules, and auto-memory markdown stores.
 metadata:
   author: stark-ai-de
   category: claude-operations
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # Claude Memory Curator
@@ -15,7 +15,7 @@ metadata:
 
 Audit Claude Code durable context as user-owned agent state: expose stale, unsafe, duplicated, over-broad, conflicting, misplaced, or unenforceable entries; propose better destinations; and route review, planning, persistence, and cleanup through one explicit contract.
 
-Keep the subject scoped to Claude Code surfaces: `CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/`, user-level Claude rules, settings, hooks, managed policy evidence, and auto memory files. Do not treat this as a Codex, Cursor, Claude app, or Anthropic API Memory Stores curator.
+Keep the subject scoped to Claude Code surfaces: `CLAUDE.md`, `CLAUDE.local.md`, conditionally loaded `AGENTS.md`, `.claude/rules/`, user-level Claude rules, settings, hooks, managed policy evidence, and auto memory files. Do not treat this as a Codex, Cursor, Claude app, or Anthropic API Memory Stores curator.
 
 ## When to use
 
@@ -29,18 +29,18 @@ Keep the subject scoped to Claude Code surfaces: `CLAUDE.md`, `CLAUDE.local.md`,
 
 ## Workflow selection
 
-Always expose these workflows in this order. `plan-run-cleanup-file` is always first and Recommended:
+Expose all eight workflows in this stable order, compactly when intent is clear. Recommend the route matching the requested outcome and delivery; for a bare invocation recommend `review-chat` while asking the user to choose:
 
-| Workflow                              | Delivery                             | Result                                                                                   |
-| ------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `plan-run-cleanup-file` (Recommended) | One redacted file record             | Full review, user-approved cleanup plan, backup, execution, and verification.            |
-| `review-chat`                         | Chat only                            | Full read-only review and recommendations.                                               |
-| `review-file`                         | One redacted file record             | Full read-only review and recommendations.                                               |
-| `cleanup-chat`                        | Chat plus backup                     | Full review followed by direct high-confidence atomic cleanup and verification.          |
-| `cleanup-file`                        | One redacted file record plus backup | Persist the review, then directly apply high-confidence atomic cleanup and verification. |
-| `plan-cleanup-chat`                   | Chat only                            | Full review and user-approved cleanup plan; no cleanup.                                  |
-| `plan-cleanup-file`                   | One redacted file record             | Full review and user-approved cleanup plan; no cleanup.                                  |
-| `plan-run-cleanup-chat`               | Chat plus backup                     | Full review, user-approved cleanup plan, backup, execution, and verification.            |
+| Workflow                | Delivery and result                                                          |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `plan-run-cleanup-file` | One record: review, approved plan, backup, cleanup, verification.            |
+| `review-chat`           | Chat: read-only review and recommendations.                                  |
+| `review-file`           | One record: read-only review and recommendations.                            |
+| `cleanup-chat`          | Chat and backup: review, high-confidence atomic cleanup, verification.       |
+| `cleanup-file`          | One record and backup: review, high-confidence atomic cleanup, verification. |
+| `plan-cleanup-chat`     | Chat: review and approved plan; no cleanup.                                  |
+| `plan-cleanup-file`     | One record: review and approved plan; no cleanup.                            |
+| `plan-run-cleanup-chat` | Chat and backup: review, approved plan, cleanup, verification.               |
 
 Route from intent instead of adding an `auto` workflow:
 
@@ -51,19 +51,20 @@ Route from intent instead of adding an `auto` workflow:
 - A bare invocation, conflicting cues, or ambiguity about review versus cleanup, chat versus file, execution, target paths, or mutation authority exposes the table and asks the user to choose.
 - A mutating route may be selected only when the user already requested cleanup of the identified Claude context scope.
 
-Before substantive inspection, show the complete table plus `Selected`, `Reason`, target paths, write scope, expected artifacts, protected state, Plan-mode capability, and remaining separate approvals. If selection is unambiguous, announce it and proceed. If it is ambiguous, stop before inventory and ask.
+Before substantive inspection, disclose the complete finite options once and state `Selected`, `Reason`, target paths, write scope, expected artifacts, protected state, Plan-mode capability, and unresolved approvals. Reuse facts and exact authority already established in the task; combine known fields into a short announcement. If selection is unambiguous, announce it and proceed. If it is ambiguous, stop before inventory and ask only the unresolved choice. Do not repeat the selector or ask for an unchanged selection again.
 
 Workflow selection does not authorize whole-file deletion, destructive recovery, managed-policy edits, paid or external actions, deployment, publication, or scope expansion.
 
 ## Inputs to inspect
 
+- When `AGENTS.md` is relevant, read `references/context-surface-anatomy.md`. Inventory presence separately from effective loading: confirm Claude version, provider/feature availability, settings, hook/plugin restrictions, and session loading evidence. Keep a working `@AGENTS.md` import for older or restricted hosts.
 - Resolve the repo, Claude home, configured auto-memory directory, and only the applicable project/user instruction, rule, setting, hook, managed-policy, and memory surfaces.
 - Inspect current repository evidence only as needed to verify a disputed claim.
 - Load the placement, classification, conflict, enforcement, and safe-editing references below only when their decision is active. Load the report or plan asset whenever producing that artifact.
 
 ## Workflow
 
-Every route performs the same full-depth review before planning or cleanup:
+Every route applies the same review quality to the explicitly requested scope before planning or cleanup. A request about one file or claim does not authorize inspecting the entire store: use targeted reads instead of whole-root inventory/scanner commands, and consult other evidence only to resolve an in-scope conflict. Delivery never reduces review quality:
 
 1. Resolve the selected route, target repo, Claude home, auto-memory path, persistence path when applicable, and protected state.
 2. Inventory Claude context without dumping contents:
@@ -92,7 +93,7 @@ Every route performs the same full-depth review before planning or cleanup:
 11. Assign exactly one primary classification per atomic claim: `KEEP`, `KEEP BUT REWRITE`, `MOVE TO CLAUDE.md`, `MOVE TO CLAUDE.local.md`, `MOVE TO CLAUDE RULE`, `MOVE TO AUTO MEMORY TOPIC`, `MOVE TO AGENTS.md`, `MOVE TO REPO DOCS`, `MOVE TO SKILL`, `MOVE TO SETTINGS`, `MOVE TO HOOK`, `MOVE TO MANAGED POLICY`, `DELETE`, or `ASK USER`.
 12. Tag high-risk entries as useful context only: `stale`, `duplicated`, `too-broad`, `too-specific`, `repo-specific`, `workflow`, `config`, `sensitive`, `conflicting`, `unenforced`, `managed-policy`, or `useful`.
 13. Add confidence (`high`, `medium`, or `low`) and a proposed action to every entry.
-14. Produce the complete review before planning or editing. Route delivery must not reduce review depth.
+14. Produce the complete review before planning or editing. Route delivery must not reduce review quality or expand the requested scope.
 
 ## Route execution
 
@@ -103,16 +104,11 @@ Every route performs the same full-depth review before planning or cleanup:
 - `plan-cleanup-chat` and `plan-cleanup-file`: enter the Plan lifecycle, resolve the cleanup plan with the user, and stop after approval without changing Claude context.
 - `plan-run-cleanup-chat` and `plan-run-cleanup-file`: enter the Plan lifecycle, resolve and approve the complete cleanup plan, recheck state, exit Plan mode, back up exact files, execute only the unchanged plan, and verify. Do not ask a generic second cleanup question after plan approval.
 
-Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence atomic edits, moves, or entry deletion in existing, editable, runtime-owned Claude context. Defer whole-file deletion, new context files, settings, hooks, managed policy, `AGENTS.md`, repository docs, skills, UI-only User/Team settings, uncertain schemas, medium/low-confidence changes, and any scope expansion. A plan-run route may execute broader curation changes only when the approved plan names each destination, write path, backup, rollback, and separate approval boundary.
+Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence atomic edits, moves, or entry deletion in existing, editable, runtime-owned Claude context. Defer whole-file deletion, shared `AGENTS.md`, new context files, settings, hooks, managed policy, `AGENTS.md`, repository docs, skills, UI-only User/Team settings, uncertain schemas, medium/low-confidence changes, and any scope expansion. A plan-run route may execute broader curation changes only when the approved plan names each destination, write path, backup, rollback, and separate approval boundary.
 
 ## Plan lifecycle
 
-The four `plan-*` routes require native Plan mode when the host supports it:
-
-1. Detect support before substantive planning.
-2. If supported and active, plan there. If supported but inactive, or support is indeterminate, stop and ask the user to enter or confirm Plan mode.
-3. Use an in-chat portable fallback only when native Plan mode is definitely unavailable.
-4. Before execution, record plan approval, recheck target files and protected state, stop on material drift, and exit Plan mode before mutation.
+Respect active/requested native Plan mode and actual write permissions on every route: no report, backup, or cleanup write while Plan is active or permission is unknown. Planning may continue read-only without a manual mode switch. For `plan-*` routes or pending material questions, read [references/plan-lifecycle.md](references/plan-lifecycle.md). Reuse unchanged approval; mode exit alone is not approval, and unanswered questions grant no authority. Recheck state before writes and reconfirm only material changes. Plan-only routes never authorize cleanup.
 
 Do not invoke `claude-spec-interviewer` inside this curation workflow. If findings require a broader durable rule, repository spec, or unresolved product decision, finish the selected curation route and offer the interviewer as a separate follow-up.
 
@@ -156,11 +152,11 @@ node scripts/backup-claude-memory.mjs [--repo PATH] [--claude-home PATH] [--memo
 ```
 
 - Inventory is read-only. The scanner is read-only, redacts by default, bounds findings, and uses exit `1` for findings rather than execution failure.
-- `backup-claude-memory.mjs` creates a no-clobber backup plus `backup-manifest.json`. Unredacted backup payloads and manifests stay outside Git worktrees; the backup scripts default to deterministic user state and reject an unsafe `--backup-root` before copying. One or more repeatable `--include PATH` values select exact-only mode; zero includes retain legacy context discovery. Selected paths and explicit discovery roots must exist and be readable; every symlink path component and legacy traversal error fails before root creation. A malformed discovered settings file or present invalid `autoMemoryDirectory` also fails before root creation. Only an absent key permits the documented derived auto-memory path. It does not edit or delete context files.
+- `backup-claude-memory.mjs` creates a no-clobber backup plus `backup-manifest.json` without editing sources. Unredacted backup payloads and manifests stay outside Git worktrees. Preflight rejects unsafe roots and every symlink path component; any traversal error fails before root creation. Use exact `--include` paths for edits; zero includes retains legacy discovery. Before invoking it, read `references/safe-editing-procedure.md` for root safety, preflight, manifest reconciliation, and recovery.
 
 ## Output format
 
-Start with the selected workflow, rationale, target paths, write scope, expected artifacts, protected state, Plan-mode state, persistence path or `chat only`, and remaining approvals.
+Use the workflow announcement above; report only unresolved approval gates.
 
 Before producing a report, load and follow [`assets/review-report-template.md`](assets/review-report-template.md) as the canonical heading and field contract. File routes copy that complete template into the one curation record; chat routes render only applicable sections in chat and create no report file. Populate every applicable field, use `not applicable` with a reason for skipped phases, and redact sensitive values.
 

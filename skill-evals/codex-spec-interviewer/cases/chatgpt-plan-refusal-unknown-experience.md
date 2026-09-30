@@ -1,4 +1,4 @@
-# Unknown Experience Still Blocks Refusal Routing
+# Unknown Experience Preserves Explicit Refusal
 
 ## Should Trigger
 
@@ -20,14 +20,10 @@ Yes.
 
 Use Codex Spec Interviewer to define a safe polling-to-webhook migration. Interview me before producing the spec.
 
-## Deterministic Assertions
-
-- contains: Planning capability: Indeterminate
-- contains: Read-only enforcement: indeterminate
-- not_contains: Planning capability: Explicitly declined
-- not_contains: continue conversationally
-- not_contains: /plan Use $codex-spec-interviewer
-
 ## Expected Behavior
 
-Keep the early routing gate before refusal; ask only for the missing surface/experience and wait without asking for Plan again.
+- Continue permissible repository discovery and the material requirements conversation without requiring a manual Plan switch or complete UI enumeration.
+- Keep planning capability and read-only enforcement separate; no interview mutations or writes while native Plan is active or state/permissions are unknown.
+- Prepare the complete draft before a single positive checkpoint; retain unchanged approval across any required host exit.
+- Honor the explicit Plan refusal even when surface/experience/control evidence is incomplete; do not request Plan again or label it technically unavailable.
+- Missing filesystem evidence remains indeterminate; do not probe enforcement with a write.

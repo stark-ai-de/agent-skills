@@ -23,7 +23,7 @@ This guide is non-normative. [Long](0042-optimize-github-actions-with-owned-gate
 
 ## How to apply
 
-- Use `pnpm/setup@v2` after checkout with `runtime: node@24.18.0`, `cache: true`, and `install: false`; install Bun from `.bun-version` with `oven-sh/setup-bun@v2`; then run `pnpm install --frozen-lockfile --prefer-offline` explicitly.
+- Use `pnpm/setup@v3` after checkout with `runtime: node@24.18.0`, `cache: true`, and `install: false`; install Bun from `.bun-version` with `oven-sh/setup-bun@v2`; then run `pnpm install --frozen-lockfile --prefer-offline` explicitly.
 - Keep checkout shallow. On pull requests, fetch only `pull_request.base.sha` so release-intent scripts can diff without cloning full history.
 - After `pnpm run validate` (which already includes `validate:network-endpoints`), run `validate:archives` and `verify:release-reproducibility` in Validate. Keep the full `validate:release-proof` chain on `Publish Release`, which does not run the local aggregate.
 - Keep the required `Validate` workflow unfiltered for pull requests, add per-event concurrency cancellation for pull requests and pushes, and leave manual dispatches independent.

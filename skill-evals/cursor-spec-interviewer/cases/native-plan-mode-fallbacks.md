@@ -39,10 +39,9 @@ Use $cursor-spec-interviewer to define a safe migration from polling to webhook 
 
 ## Expected Behavior
 
-- Run the Plan Mode preflight before repository exploration or substantive questions.
-- For Variant A, record `Plan Mode fallback: unavailable` and the runtime evidence or limitation that made Plan Mode unavailable; do not offer Shift+Tab or `/plan` as if they were usable.
-- For Variant B, record `Plan Mode fallback: declined` and the user's explicit choice; do not keep requesting a mode transition.
-- For Variant C, treat the state as supported-but-inactive, request the host-accurate transition or manual handoff, and wait; never record a fallback from uncertainty. Resume the normal workflow only after the host confirms that Plan Mode is active.
-- For Variants A and B, continue the full interview conversationally, asking one material question at a time and waiting for the answer instead of inferring a complete spec in one response.
-- Preserve source challenge, ADR gate, verification checkpoint, artifact-path, validation, and Cursor execution-prompt requirements in all three variants.
-- Do not treat the mode fallback as a persistence decline. Persist after verification unless the user separately declines persistence or a blocker prevents it.
+- Continue the full read-only interview in all three variants, preserving material questions, source challenge, ADR gate and the same final checkpoint.
+- Distinguish proven unavailable from explicitly declined and indeterminate controls; do not claim technical absence from missing evidence.
+- Ask conversationally when structured question tools are unavailable. Do not require a mode switch simply to inspect or discuss requirements.
+- Preserve an explicit refusal without recommending Plan again. A refusal does not exit an already active mode.
+- Unknown Plan or permission state blocks writes, not permissible conversation. Resolve only the relevant state before requested persistence.
+- Explicit chat-only output completes its requested delivery; a blocked requested save stays pending.

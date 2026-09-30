@@ -16,12 +16,12 @@ or machine-specific paths here.
 
 ## Jev update handoff
 
-**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The current candidate contains seven skills, including Jev Capability Advisor 0.1.0. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) tracks the remaining publication steps.
+**Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The bundled plugin contains seven skills, including Jev Capability Advisor. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) documents the release process.
 
 After GitHub publication and post-release evidence are complete:
 
 - Update the **existing** plugin using the release's exact direct `openai.zip`; do not create a second listing or upload the portable ZIP.
-- Check all **seven** packaged skill interfaces against the [current submission worksheet](stark-ai-developer-submission-worksheet.md). Jev is **CODEX only**, with implicit invocation allowed and portal glyph **`chart`**. This metadata does not install a pre-prompt hook.
+- Check all **seven** packaged skill interfaces against the generated **Release OpenAI Plugin** issue. Jev is **CODEX only**, with implicit invocation allowed and portal glyph **`chart`**. This metadata does not install a pre-prompt hook.
 - Preserve the six existing glyphs recorded below; use `chart` for Jev. Verify its packaged icon and restore the portal glyph if the upload ignores it.
 - Preserve Plugin Info logos and restore both [Composer icons](#composer-icon-handoff) if the package update resets them. Inspect light and dark modes.
 - Complete the portal's scans/review and explicit publication, then verify directory propagation and a Codex install/update. Record that observation separately from local packaging and CI.
@@ -34,10 +34,10 @@ The public ChatGPT plugin page is:
 
 https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e
 
-The public listing id parsed from that URL is
-`plugins_6a85d98a7bc48191879aedd91610271e`. Observed 2026-08-21: that same
-token is the Platform plugin ID in Apps Management. It is not the portal
-submission ID. The submission ID is `appsub_6a85d98ac104819182577e9e918db23d`.
+The public listing slug parsed from that URL is
+`plugins_6a85d98a7bc48191879aedd91610271e`. Authenticated Platform and
+submission identifiers are private portal evidence and are intentionally not
+recorded here.
 
 That URL is stored as `plugin.urls.chatgptPlugin`. Catalog website, privacy,
 terms, support, and security URLs stay on GitHub Pages. The OpenAI zip
@@ -107,21 +107,13 @@ proof of the logo swap or of the ChatGPT plugin URL.
 
 ### Portal identifiers
 
-Recorded 2026-08-21 from the logged-in Apps Management submission page. This
-URL requires Platform login and is not a public listing URL:
-
-https://platform.openai.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e/submissions/appsub_6a85d98ac104819182577e9e918db23d
-
-| Identifier           | Value                                      |
-| -------------------- | ------------------------------------------ |
-| Platform plugin ID   | `plugins_6a85d98a7bc48191879aedd91610271e` |
-| Portal submission ID | `appsub_6a85d98ac104819182577e9e918db23d`  |
-
-No separate draft ID appeared in that URL. Do not copy this Platform URL into
-public listing fields, README badges, or `.codex-plugin/plugin.json`. The
-submission page shows a visual JSON representation; OpenAI documents no URL
-that exports the saved portal `plugin.json`. That file is not a v1 launch
-gate.
+Authenticated Apps Management URLs, organization identifiers, verified-person
+records, and submission identifiers are private portal evidence. They are
+intentionally omitted from this public repository. The public ChatGPT plugin
+URL remains in the listing source; it is the only portal-facing link required
+for public directory identity. Do not add authenticated portal URLs or account
+identifiers to listing fields, README badges, `.codex-plugin/plugin.json`,
+release evidence, or the public handoff issue.
 
 ### Country picker
 
@@ -240,13 +232,10 @@ archive as `assets/logo.png` and `assets/composer-icon.png` without rewriting.
 
 The catalog PWA `site/public/icon-512.png` was not replaced.
 
-## Recorded identifiers
+## Recorded public identity
 
-- OpenAI organization ID `org-dz0kZIfZpiaMc7YFjxGcsrk7`
-- verified identity: individual, Marcel Michael Mayer
 - public developer name `servrox solutions UG`
-- Platform plugin ID `plugins_6a85d98a7bc48191879aedd91610271e`
-- portal submission ID `appsub_6a85d98ac104819182577e9e918db23d`
+- public Platform plugin slug remains available through the public ChatGPT URL
 
 Directory identity is a manual `pnpm run verify:openai-directory` diagnostic
 covering the directory document (`DIR-001`) and public category-catalog

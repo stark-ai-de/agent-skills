@@ -1,5 +1,34 @@
 # Jev capability advisor evaluation
 
+## Owner-configured endpoint allowance — 2026-09-27
+
+Three fresh Codex CLI 0.157.1 processes on NixOS WSL completed ordinary synthetic tasks with one successful TypeSafe recommendation each. The sessions inherited GPT-6 Astra with ultra reasoning, `workspace-write`, `on-request`, and `auto_review`. The owner-configured policy enabled command networking through the enforced proxy and allowed exactly `api.typesafe.ai`. Actual same-thread native permission context reported enabled networking; all three provider commands omitted sandbox overrides. There were **zero approval-review events, native approval requests, or provider retries**.
+
+| Ordinary task               | Provider selection       | Observed followthrough                                                                                                         |
+| --------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Saved filters specification | `codex-spec-interviewer` | Selected skill read and applied                                                                                                |
+| Empty-input mean function   | `tdd`                    | Recommendation evaluated; a full TDD workflow was judged unnecessary and the correction plus three tests was returned natively |
+| Book-loan domain model      | `domain-modeling`        | Selected skill read and applied                                                                                                |
+
+Each model constructed its own bounded catalog from current-session skill cards with permitted public-frontmatter enrichment: two skills, zero MCP tools, and `agent_asserted_current_session` provenance. Each made one local offline catalog check followed by one Recommend invocation containing one provider request. Independent observer inventories were not injected into the model's catalog. A subsequent confirmation in every session produced no command and no additional advice.
+
+Separate credential-free controls reached the allowed host and denied a foreign domain, direct public-IP TCP, `NO_PROXY`, removed proxy variables, and an unavailable proxy. An additional app-server `command/exec` control with legacy `networkAccess: false` still reached the allowed host through the enabled proxy. That control is **not evidence of offline enforcement** or a full named-profile test; stricter profiles require their own effective-policy verification. The successful default-session tests do not justify widening another profile.
+
+The owner temporarily rolled back the allowance, added explicit proxy-off guards to the three WSL offline profiles, and reapplied it with the guards installed first. A subsequent actual `codex --no-daemon exec --profile implementation` run denied its single credential-free HEAD: curl exited 6, DNS resolution was blocked, and no HTTP connection occurred. That run explicitly skipped Jev and supplied no model, effort, or permission overrides. Input configuration hashes remained unchanged during the run. Fresh default-session network controls then passed again. The two review profiles received the same proxy-off guard and static validation; their complete live workflows were not exercised. This correction preserves named-profile isolation; it does not fix the separate app-server legacy-override behavior.
+
+This is bounded endpoint and ordinary-task evidence, not complete automatic-host qualification or a routing benchmark. Missing/revoked consent, changed availability, incomplete metadata, Plan mode, missing keys, provider failure, timeout, and cancellation were not exercised live in these runs. Local tests cover separate behavior and cannot replace those observations. Private logs, catalogs, receipts, runtime paths, and session identifiers remain outside the repository. Historical blocked runs below remain unchanged.
+
+Integration SHA-256: `3242df2c14b4b9ded58627da5df6d3b5d133748e1c95b3c5c766aff05ebd8e73`.
+Registration SHA-256: `de89f82fa86302713209420d9fb9a2db48f5c7b4e84bc2bd726cc353ee9a6275`.
+
+## Seven-participant comparison — 2026-09-26
+
+The [audited comparison](benchmarks/selector-comparison-2026-09-26.json) contains 448 selected observations from 520 retained attempts, with six complete timing series and Skill Suggester in details only. It uses 132 frozen skill texts, 24 skill tasks and eight no-match tasks, each repeated twice. Native requests GPT-6 Luna with low reasoning; the other products keep their own Jev settings and source algorithms.
+
+The report explicitly distinguishes the original window from 72 authorized corrections (64 Lomesh capture failures and eight Native quota failures). The original missed quota stop and unrecorded per-observation CLI identity remain disclosed deviations. A separate raw-data auditor reconciled timing, mappings, outcomes and usage; a source auditor checked the preserved selection strategies and feature claims. The admission code rejects incomplete timing, unreviewed deviations, mismatched windows and changed factors. Failed and unresolved attempts are never silently repeated.
+
+The [comparison guide](../../docs/skills/jev-capability-advisor/benchmarks/README.md#current-comparison--2026-09-26) describes the resulting factors and limits. Public observations use opaque target identifiers; private task text, target mappings, runtime paths and provider records stay local. Competitor names and their public source revisions remain visible.
+
 This evaluation records the accepted public skill scope and separates its evidence from earlier prototypes. Offline checks establish local behavior; they do not establish native host-loading speed or production routing accuracy.
 
 ## Release recheck, 2026-09-25
@@ -86,6 +115,37 @@ The native utility pilot compared six predeclared regression tasks in twelve pai
 
 A subsequent twelve-turn A/B compared the previous advisor workflow with compact output, with identical corrected response replay and the same requested native model configuration. Both scored 6/6. Helper calls fell 12→6 and median emitted helper bytes 528,722→1,512, but native turn median rose 25.134→26.535 s (process median 25.999→27.549 s). Reported native input tokens, including cached input, fell 599,882→487,965 (18.7%); no billing inference is made. The median paired ratio was 1.036; this small mixed timing result supports no speed claim. All twelve read the contract and five compact turns redundantly reread selected metadata. All commands passed, no replay internals were inspected, no TypeSafe call occurred and no process group remained. The final prose revision addresses those repeated reads; the A/B is evidence for its preceding frozen instruction snapshot, not a speed qualification of that final revision.
 
+## Hook integration qualification
+
+The optional [hook integration](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md) adds static agent guidance, not a selector benchmark or a complete native inventory export. Existing release observations above remain bound to their original source and selection scope. They do not qualify these hook paths. The implementation targets below need independent, source-bound evidence before being advertised as qualified automatic advice.
+
+| Host        | Platform       | Hook registration/delivery                | Eligible inventory and actual advice/adoption                       |
+| ----------- | -------------- | ----------------------------------------- | ------------------------------------------------------------------- |
+| Codex CLI   | Linux          | Pending live evidence                     | Pending live evidence                                               |
+| Codex CLI   | WSL            | Delivery observed; owned hook now removed | Ordered error fallback observed; remote advice/adoption unqualified |
+| Codex CLI   | macOS          | Pending live evidence                     | Pending live evidence                                               |
+| Codex CLI   | Native Windows | Pending live evidence                     | Pending live evidence                                               |
+| Claude Code | Linux          | Pending live evidence                     | Pending live evidence                                               |
+| Claude Code | WSL            | Pending live evidence                     | Pending live evidence                                               |
+| Claude Code | macOS          | Pending live evidence                     | Pending live evidence                                               |
+| Claude Code | Native Windows | Pending live evidence                     | Pending live evidence                                               |
+
+Use isolated host configuration, known skills and harmless MCP tools. Capture catalog entries from that same executing session; do not substitute a second SDK or CLI session. Document verified host defaults, exclusions and bounded/unknown coverage. Use synthetic tasks and retain private source-bound catalog evidence. Record the tested host/Python versions, OS and shell, source hashes, opt-in scope, normal trust review, and sanitized outcomes. Never publish credentials, private prompts, inventories or user paths. A controlled eligible test catalog proves that catalog's flow; it does not establish machine-wide native inventory completeness. Separate credential accessibility from authentication, and recorded evidence from current-session checks. The [private qualification record](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#record-controlled-qualification) binds host/version, platform, source/registration fingerprints, skill/MCP counts and individual scenario outcomes; matching file/platform records remain historical; status does not execute a host version command, and current-session qualification stays unverified.
+
+1. **Registration and rollback:** preview, install twice, inspect, submit a prompt, then uninstall. Preserve unrelated hooks/settings and later user edits. Verify the configured event actually reaches the agent, rather than only replaying its command. Repeat with user and project scopes; check configuration overrides and host policy/trust blocks.
+2. **Task selection:** with qualified current metadata and configured credentials, submit a new actionable task. Use an ordinary blind task without Jev, skill-selection or test instructions. Observe a real bounded `general`/`current` Recommend call before task-specific skill loading, planning or questions, returned IDs checked against the same current inventory, authorized capability use and one status line. A concrete prerequisite failure must instead be reported before native work; historical `not_verified` alone is not a failure reason. A late manual call does not satisfy this order. Follow with “thanks”, an explanation question and a continuation; none should trigger a second consultation. A distinct new task should.
+3. **Authority and inventory:** repeat with explicit user skill selection, explicit-only or disabled capabilities, stale/partial/deferred metadata and a Plan-mode write prohibition. Verify documented native defaults only on their applicable host, excluding unknown availability/invocation rules. Keep usable bounded entries and report omissions; if no reliable subset remains, use native fallback. No restriction may be guessed or bypassed, and a recommended capability grants no argument-specific permission.
+4. **Failure and cancellation:** exercise missing credentials, configured-file precedence over the environment, unreadable files, malformed private settings, interrupted key-reference updates and explicit recovery, a provider error, the existing advice deadline and cancellation. Verify bounded work, no retry loop, no false successful-advice status and normal host continuation. Separately timeout the five-second static hook; it must not block the user's task. Injected failures must be labeled simulated; unavailable or unexecuted scenarios remain not_run. A cancellation scenario passes only when the intended cancellation and cleanup behavior is actually observed, not merely because an unrelated run was interrupted.
+5. **Platforms and launchers:** exercise Python paths containing spaces, apostrophes, Unicode and shell metacharacters. Test Codex native Windows through cmd, PowerShell and Git Bash; test Claude's direct executable form. Record final encoded command lengths and prove clean failure for unsupported launchers. Passing platform fixtures does not replace these host observations.
+
+Run only the hook regression module from the repository root:
+
+```sh
+python3 -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_hooks*.py' -v
+```
+
+The focused CI matrix runs these offline tests on Linux, macOS and Windows. It exercises configuration ownership, static output and launcher construction without provider keys. The general evaluator below also discovers hook tests. Keep automated regression results, real hook delivery, agent judgment, eligible inventory, fresh provider calls and recommendation adoption as separate evidence; no hook latency or whole-task speed benefit is claimed.
+
 ## Offline regression suite
 
 Run the repository-owned evaluator from the repository root:
@@ -103,3 +163,284 @@ node site/scripts/test-jev-benchmarks.mjs
 ```
 
 The site build includes this benchmark gate. The retained reports remain dated evidence; passing their consistency checks is not a fresh live benchmark or a production-promotion decision.
+
+### Isolated hook discovery check — 2026-09-25
+
+These observations predate the September 26 credential/catalog extension and remain bound to the fingerprints below. They are historical evidence, not a qualification of changed guidance or manager code.
+
+Codex CLI 0.157.0 on Linux/WSL, using a separate temporary home and state directory with no credentials, discovered the generated registration through the experimental app-server `hooks/list` method. It reported `eventName: userPromptSubmit`, `source: user`, `timeoutSec: 5`, synchronous execution, no parse errors or warnings, and `trustStatus: untrusted`. Uninstall then removed the owned registration. No trust bypass, agent turn or provider call was used. This proves configuration discovery and preservation of the trust boundary; delivery, agent adoption, eligible inventory and genuine advice remain unqualified.
+
+The local hook tests exercise both command forms as subprocesses on Linux. Separate native Windows execution used Python 3.11.15 and Windows PowerShell 5.1.26100.9492 in temporary Windows directories. After the approved version-controlled-home exception, all 39 hook tests completed: 30 passed, seven POSIX-only home-repository cases skipped, and two symbolic-link cases skipped because that account lacked symlink-creation rights. Windows junction rejection passed. Cmd, PowerShell and Git Bash preserved the emitted JSON, including multilingual guidance; an existing interpreter copied into a path containing spaces, Unicode, apostrophe, percent, dollar, backtick and semicolon also worked. No Windows host application or provider was invoked. macOS, actual agent delivery/adoption and eligible-inventory/advice qualification remain pending; no CI execution is claimed.
+
+PowerShell creates empty profile directories on its first isolated launch even with `-NoProfile`. The tests allow only those empty startup directories, require existing configuration/state to remain unchanged, and verify that subsequent prompt-bearing calls create no runtime state. The emitter itself is separately tested with all file/network access forbidden.
+
+At that revision, the Linux/WSL Jev suite completed 217 tests: 215 passed and two native-Windows cases skipped. The home-repository tests verify real Git exclusion, rejection of already tracked state, preservation of conflicting ignore files, read-only inspection and repair without rewriting a trusted hook command. Local user-scope installation also succeeded and was idempotent; Codex discovered the entry as enabled but untrusted. This still does not prove delivery or automatic consultation.
+
+Source identities for the repeated native Windows observation (SHA-256):
+
+- Manager: `35e508b98c0a0f3c593f5d0cf924fbc1d0d7abf97cf15e80f7a42d3e998db649`
+- Guidance: `85a8a9e141cdb834a204b9a251ed893e04591ccf3740171adc78ffad70b426e3`
+- Tests: `d5ea7f06de05eb0aad6f1fbb3edfa58280a28d054abbef1e3d72bc6298db486c`
+
+### Credential and catalog follow-up checks — 2026-09-26
+
+At the preceding revision identified below, the implementation completed 236 offline Jev tests on Linux/WSL: 234 passed and two native-Windows cases skipped. Its focused hook suite contained 58 tests, including private key-reference precedence, unreadable files, unchanged sibling settings, interrupted-update recovery, concurrent edits, secret-output protection and historical-evidence handling. Read-only status does not launch a host. File-preservation assertions compare write identity and deliberately exclude access time, which legitimate reads can update.
+
+`validate:skills`, `lint`, `lint:actions`, changed-file formatting and whitespace checks also passed. The official projection generator and `validate:projections` / `validate:plugin-evals` ran against an isolated candidate because the new release inputs were then unstaged. All 1,852 candidate files and executable bits were checked against the working tree; the user's staged entries remained unchanged. These are historical local results for that frozen revision, not current corrected-candidate checks, hosted CI or publication evidence.
+
+The same frozen skill and test files also ran natively on Windows 10.0.26220 with Python 3.11.15 and Windows PowerShell 5.1.26100.9492: 48 passed and 10 skipped (seven POSIX-only home-repository cases and three unavailable symbolic-link privileges). Cmd, PowerShell, Git Bash, junction rejection and hostile interpreter paths passed. All 17 copied fixture files matched before and after execution. No credentials, host configuration or execution-policy changes were needed. This is offline portability evidence; macOS and the hosted CI matrix have not been run for this candidate.
+
+A separately initiated live Codex CLI 0.157.0 probe on WSL used an ephemeral thread, a private fixture working directory and process-local harmless MCP configuration. It retained the existing native approval policy and the already trusted user hook. Native hook notifications independently proved delivery of the **previously installed guidance**, not the changed guidance in this candidate. No trust bypass or global hook update occurred.
+
+The explicitly prompted controlled agent turn used the configured `gpt-6-luna` model with process-local medium reasoning. From its own model-visible metadata it supplied one fixture skill and one MCP tool, with exact IDs and invocation restrictions. A genuine `general/current` advice invocation made one provider request, returned `SINGLE` for the MCP tool, and was followed by that tool's successful execution. Native approval review authorized the bounded advice command. A confirmation turn completed without another consultation or command. This proves the bounded explicit probe's catalog, advice and adoption; it does not prove automatic consultation under the revised hook or exhaustive machine inventory.
+
+Two earlier development attempts remain distinct: an initial max-reasoning probe was interrupted at its time limit after observing delivery and native fixture use, without a provider request; a malformed test catalog omitted IDs, produced `invalid_catalog_item` with zero provider requests, and still continued through native tool selection. Its confirmation also caused no repeated advice. The corrected schema was tested in a separate attempt. These are observed development/fallback results, not simulated provider failures or successful cancellation qualification.
+
+The guidance identified below was subsequently installed and trusted through normal host review; the first blind run below failed automatic consultation. The reapproved ordering/binding revision also failed in a second run; the subsequent skill-path run reached an automatic invocation but failed ordering and transport; the final metadata/permission run demonstrated ordered error fallback but no successful remote recommendation. Disabled/explicit-only policy changes, stale or incomplete metadata, Plan mode, missing-key, provider error, timeout and intended cancellation scenarios remain unqualified at the live-host layer. Claude Code and the other platform combinations likewise remain unqualified. Private raw receipts are retained outside the repository; no private paths, keys or session identifiers are included here.
+
+Frozen implementation identities (SHA-256):
+
+- Integration content: `e037fc5cf4f6bdd2c4e59e4ba04fa24c43859ba2e181a2c721cd9f2b3aa7e7bb`
+- Manager: `c5904f0af9f087aa8bdf43b6894cd2119208eec0352346d62c8beb61d291ce22`
+- Updated guidance: `c2b5fb32bfef75071c1a5ebc8ebe0a2ed5026d5bda60a9ef32ff3c4456a5bb08`
+- Hook tests: `be1de4810652769af0e326b3ba0b0826fdb1ec1e676545f7d81e594ea14b4940`
+- Copied Windows fixture aggregate: `49cf9fe6eb0f0795ae4d1726ea92bd04fd5ff2d946400f6da14c9fe59dc6686d`
+- Native hash of the older trusted hook used in the explicit live probe: `sha256:c1d5b7469fdbca168c8d0be186056580e3369a86e677166e3e95dc43c64ad7e4`
+
+### Blind automatic consultation runs — 2026-09-26
+
+The runs use Codex CLI 0.157.0 app-server stdio on WSL2/NixOS, `gpt-6-luna` and process-local medium reasoning. The ordinary synthetic prompt asks for an implementation plan for reusable saved filter templates without mentioning Jev, skills or testing. There is no prompt/base capability coaching, precomputed catalog or forced provider wrapper. Configured unrelated MCP servers are disabled only for the process; native local skills and host permissions remain. Private harness/log files are separate from the neutral working directory.
+
+| Run                                        | Observed behavior                                                                                                                                                                             | Result                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1: initial guidance                        | Trusted hook delivered context; the agent loaded Spec Interviewer first, with no Jev status, catalog, provider request or fallback line.                                                      | **Failed automatic consultation.**                                              |
+| 2: ordered guidance and bound registration | Trusted hook delivered context; Jev was read before task-specific work, but unsupported missing-file claims caused native continuation. No hook status, catalog or provider request occurred. | **Failed automatic consultation; not a valid prerequisite fallback.**           |
+| 3: single-instance installed-path check    | Installed status succeeded and Recommend ran automatically, but full candidate instructions were read first; the attempted request returned `network_error`.                                  | **Failed ordering; no successful provider response.**                           |
+| 4: metadata-only preparation               | Recommend ran before task-specific instructions; one request attempt returned `network_error`, followed by truthful native fallback. Both turns completed.                                    | **Ordering/failure fallback observed; remote advice and adoption unqualified.** |
+
+Run 2 searched only the empty workspace for support files and read both the current installed Jev skill and an older plugin copy. It claimed the manager and hook reference were missing without checking their installed paths. Both files actually existed and were readable; an independent harness status check exited zero. The fallback line preceded native Spec Interviewer loading and its surface/Plan-mode question, so ordering improved but its prerequisite diagnosis was false. The captured protocol does not establish why the two skill copies were chosen.
+
+The first two failed runs made zero provider requests. Their confirmation turns made no commands or MCP calls; run 2 repeated the native interviewer's pending Plan-mode question. Neither demonstrates no-repeat-after-advice because neither initial turn obtained advice. No late manual call, replay or explicit earlier advice/adoption probe repairs these automatic failures. Other live negative scenarios and host/platform combinations remain unqualified.
+
+Run 3 reached the installed manager after correcting an invalid user-scope project-root argument. Its catalog contained three skills and two built-in host tools, rather than MCP tools; no catalog-provenance sidecar was recorded. The advisor used `general/current` and the configured key file, attempted one request, returned `network_error` with no selected IDs, and was followed by a truthful fallback without a retry. No successful remote response or native approval-review event was observed. The sandbox had network access disabled, but the exact transport cause was not captured. The full Spec Interviewer body was read before advice, so ordering failed. The first turn reached the 175-second harness deadline and was interrupted; confirmation was not run.
+
+Run 4 completed both turns within the separately declared 300-second per-turn cap, using the same ordinary prompt/model/effort and unchanged advisor limits. It corrected an initial invalid literal `--project-root null` argument for user scope, then prepared a bounded catalog of one host-advertised skill, zero MCP tools and zero built-in tools. No separate provenance/omissions record was written, so this does not establish full eligible-inventory coverage.
+
+The automatic `general/current` invocation preceded the candidate workflow body. It attempted one provider request with caches disabled and returned `network_error`, zero successful provider responses and no selected IDs. No native approval review occurred; sandbox network access was disabled and the exact transport cause was unavailable. The truthful fallback preceded the full Spec Interviewer read and its Plan-mode question. This proves ordered attempted consultation and failure fallback, not successful remote advice or recommendation adoption. The confirmation made zero commands, MCP calls or Jev attempts and only acknowledged the user. The increased harness cap does not repair interrupted run 3 or support a cross-run latency comparison.
+
+Source binding:
+
+- Run 1: integration `e037fc5cf4f6bdd2c4e59e4ba04fa24c43859ba2e181a2c721cd9f2b3aa7e7bb`, registration `928cc23e8297f8150148af609a8c0588cb97fb6e9a1902f4fd7accc993813146`, trusted native definition `sha256:3b054193b76259242f0186bdad9de79d39d822bf4ca3ded682749b39785824ad`. Hook events completed in 23 ms and 20 ms.
+- Run 2: integration `49e4d7668ad935ed23a6ecab4eeb828619100c66e90da0e513f81145a05b44b9`, registration `a120ac316ee811e68708f45b864073363ab0bbca428e04a8b0a034973ecfaeac`, trusted native definition `sha256:2ed28ee41d9b6bb3dcca0a8743f805d02e361b89853582dbe0f6e832bbeea426`. Hook events completed in 19 ms and 24 ms.
+- Run 3: integration `26ad942793b8a3f800e94371745fa44bbdc86ffd4ed1e25e17141b8ec8dce3f2`; manager, asset and hook trust unchanged from run 2.
+- Run 4: integration `affcc3ea469e519c067edc0661912e8492c873d0a8e80f772cf067303e53b8ea`; manager, asset, registration and hook trust were unchanged from run 2. Hook events completed in 21 ms and 19 ms. The compact provider-error summary digest is `162cccb4d3a03dc19cc5c6e55d729829c715d2c94c13652650cab900c1725551`; no raw provider receipt was requested.
+
+Individual event durations prove observed delivery, not a latency benchmark. Raw sessions remain private.
+
+### Corrected ordering and registration binding — 2026-09-26
+
+The ordering/binding candidate identified below completed a focused hook suite of **61 tests**. On Linux/WSL, 58 passed and three native-Windows cases skipped. On native Windows 10.0.26220 with Python 3.11.15 and Windows PowerShell 5.1.26100.9492, 51 passed and 10 skipped: seven POSIX-only home-repository cases and three unavailable symbolic-link privileges. No failures occurred. The native Windows run exercised cmd, Windows PowerShell and Git Bash; fixture sources remained unchanged and the copied manager/guidance matched that candidate. This is offline portability evidence, not host adoption.
+
+The ordering/binding hook was installed and reapproved through native `/hooks` review for the recorded runs. Later skill-path and metadata/permission corrections used the same manager, asset and trusted definition. The owned hook has since been removed through the approved rollback below. No new Claude, macOS or other live-host qualification is claimed.
+
+Direct validation passed on the rebased candidate in its assigned worktree: `validate:jev` completed 239 tests (236 passed, three native-Windows cases skipped); `validate:skills`, `validate:projections`, `validate:plugin-evals`, whole-tree `format:check`, `lint` and `lint:actions` all passed. These checks apply to that rebased candidate and are separate from the earlier isolated-candidate results; they do not claim hosted CI or live-host qualification. The subsequent timestamp correction and final checks are recorded below.
+
+Ordering/binding candidate identities (SHA-256):
+
+- Integration content: `49e4d7668ad935ed23a6ecab4eeb828619100c66e90da0e513f81145a05b44b9`
+- Manager: `52bf3e4fd7eae4d711330accac796ed2e08b274df90a3e7bbe9bf9bf44d64fd3`
+- Guidance: `a3263ef7b51d3764a9eeaf4445b58deaa5bdb3ec52efd70317bbb371b3828d7c`
+- Hook tests: `f7dfcaabbcc8d99a75cc3a0859da1b3385e2367c10913b0b84b90e533f060cb9`
+- Copied Windows fixture aggregate: `623429e8056f6f09802d4f237ee6b8fd84e5fc36c1c96a4c91968d466f182f07`
+- Reapproved native hook definition: `sha256:2ed28ee41d9b6bb3dcca0a8743f805d02e361b89853582dbe0f6e832bbeea426`
+
+### Rollback and remaining qualification — 2026-09-26
+
+After run 4, the approved rollback removed only the unchanged owned hook. Read-only status reported the registration absent; a fresh native `hooks/list` independently returned zero hooks with no errors or warnings. Sibling configuration and the configured key-file reference were preserved. Private backups and the installed skill remain. Automatic advice is therefore no longer activated by this registration. Successful automatic remote recommendation, adoption, broader Skills+MCP coverage and the outstanding negative scenarios remain unqualified.
+
+The draft pull request's initial CI passed five of six offline portability combinations and all archive-identity checks. Windows/Python 3.14 failed on a filesystem timestamp discrepancy; the ADR check also found companion-link errors. The ADR links were repaired and `validate:adrs` passed locally. The Windows failure was reproduced with official isolated Python 3.14.7: only `st_ctime_ns` differed between path and descriptor queries; creation time, identity, size, modification time and mode agreed. The manager now compares consistent creation time on Windows and preserves POSIX change-time checks. The focused regression covers stable snapshots, preservation of other identity checks and refusal of concurrent POSIX permission changes. This later manager correction has no new live-host qualification.
+
+The final Linux/WSL Jev suite completed **243 tests: 240 passed and three native-Windows cases skipped**. Its hook suite contains 65 tests. `validate:skills`, `validate:projections`, `validate:plugin-evals` and `validate:adrs` passed after the fixes. Whole-tree formatting, script/workflow lint, catalog discovery, smoke fingerprint and install smoke also passed. The final manager and test bytes additionally passed 11 focused tests under native official Python 3.14.7, with one POSIX-only case skipped. The final hosted checks are attached to [PR #102](https://github.com/stark-ai-de/agent-skills/pull/102); portability results remain distinct from live-host qualification.
+
+Final source identities (SHA-256):
+
+- Integration content: `1c7ee92e085783189d3e60372eb48393c70dc59ce1c6a0c7365b90da413a5464`
+- Manager: `2bd0dc29ed6b81c0c7fedb01e50ea8c3d3b8dd72bc4651943b3dafe555c5ec05`
+- Hook tests: `f5ea7807676b0f6bda9e4cb05c0fc5de411c1db6b18cc27881fd212006983614`
+
+The feature release-impact gate also passed after preparing Jev `0.2.0` and plugin `1.5.0`, with matching listing/archive metadata and generated projections. Release-descriptor, bundle, OpenAI listing, archive and reproducibility checks passed for the prepared versions. The root release files remain unchanged. These version changes do not requalify any earlier live observation.
+
+### Network approval and skill-entry follow-up — 2026-09-26
+
+A credential-free direct DNS/TLS probe to the documented TypeSafe endpoint failed in the restricted Codex execution environment with `gaierror` / errno `-3` (1.4 ms). The identical probe, submitted through normal native command approval, completed verified TLS (106.8 ms). It sent neither a key nor a task/catalog request. This isolates the current sandbox boundary; it does not recover the exact exception from earlier sanitized `network_error` results, prove proxy parity or prove successful Jev advice.
+
+The skill now identifies the concrete Codex tool arguments for required network approval before the first provider invocation, prepares local inputs separately, and preserves denied/unavailable-approval fallback without request replay or permission changes. Approval remains conditional on the active host policy. The independent contract review found no remaining actionable issue in these changes.
+
+**Automatic run 5** used Codex 0.157.1, `gpt-6-luna`/medium, the byte-identical ordinary feature prompt and 300-second per-turn cap. The same trusted hook delivered context; both turns completed. After one environment/workspace/memory inspection command, the agent claimed Jev was unavailable as a callable tool and continued with Spec Interviewer. It had not read Jev's skill, hook reference or status. There were zero advisor invocations, provider attempts, native approval events and pending client-approval requests. The confirmation made no further command or advice call, but repeated the unsupported unavailable status after a native planning draft, so quiet skipped-message behavior also failed. This is another failed automatic consultation; the revised network instructions were never reached.
+
+The harness captured native `skills/list` before and after on the same app-server connection and working directory, without supplying those snapshots to the model. The inventory grew from 75 to 174 entries; both relevant unqualified skill names were enabled, with no discovery errors. Read-only policy metadata for the advertised Jev and Spec Interviewer paths permitted implicit invocation. The API has no thread-ID parameter and does not expose the rendered model cards or implicit policy itself. These observations therefore do not establish a fixed, complete model-visible inventory or replace agent-side catalog provenance.
+
+Run 5 integration fingerprint: `abcf418a7ffd50f342933975d924f1e6f6284692e6729d3c187f498676325eb0`. Installed source hashes matched before/after. Its native hook definition remained `sha256:2ed28ee41d9b6bb3dcca0a8743f805d02e361b89853582dbe0f6e832bbeea426`; delivery took 22 ms on each turn. Raw traces and policy snapshots remain private. No historical failed run is counted as successful advice.
+
+The subsequent static hint explicitly identifies Jev as a skill with a Python helper and requires resolving its current host skill card and reading `SKILL.md` before judging availability. Absence of a Jev-named MCP tool is not a prerequisite failure. The reviewed candidate has integration fingerprint `cee689631571064b3005474311cf830c1dd9cc17578a42e686a6fee5a4605516` and registration fingerprint `60abc864354c0208f894c61c81f87689121ae988a43ea5ea6062dfb1048f885e`. It was installed for the next controlled test; the initial native inspection reported the changed definition `sha256:9c9b6fcc10bd7164cb19fdc97fdff6ca3573143d89b12463fafaaf3bce4578d4` as `modified`, requiring native approval before that test could run. The user subsequently reapproved it for run 6 below. This supersedes the earlier local absence observation without erasing its rollback evidence. It is not yet live-qualified.
+
+Local regression validation on this candidate passed **243 tests: 240 passed, three native-Windows cases skipped**. The first rerun inherited a restrictive `077` umask from private-artifact preparation and failed an existing cache test's deliberately public-directory fixture; repeating with the normal `022` test environment passed without changing the cache implementation or tests. Skill, projection, plugin-evaluation, formatting and lint checks passed. Successful automatic advice/adoption, bounded catalog provenance and the remaining live negative scenarios are still open.
+
+### Bare-array catalog correction — 2026-09-26
+
+**Automatic run 6** followed the user's native reapproval of `sha256:9c9b6fcc10bd7164cb19fdc97fdff6ca3573143d89b12463fafaaf3bce4578d4`. The host confirmed that exact definition as trusted, and all 16 installed skill files matched candidate `2ee28084a446d66324c43183a1009da66bddb434` before and after. The integration fingerprint remained `cee689631571064b3005474311cf830c1dd9cc17578a42e686a6fee5a4605516`.
+
+Codex 0.157.1 / `gpt-6-luna` with medium reasoning, the same ordinary feature prompt, a 300-second per-turn cap, and native on-request/auto-review with restricted network access were retained. Both hook events completed in 19 ms, both turns completed and the owned host exited zero. The agent resolved the installed Jev skill, read its instructions and ran the correct user-scope status. It then invoked Recommend automatically before loading Spec Interviewer, but supplied `{"capabilities": [...]}` where the CLI requires a bare JSON array. The helper returned `invalid_catalog` before credentials or transport: **zero provider requests, no selected IDs and no remote recommendation**. A truthful fallback preceded the task-specific skill read. Confirmation made no commands, MCP calls or repeat consultation and did not repeat a Jev status.
+
+The attempted catalog held eight skill entries and no tools. Their field names and JSON types were valid. An in-memory differential against the real parser rejected the captured wrapper and accepted only its unwrapped array, yielding eight eligible/represented candidates. It made no credential read, provider call or cache write. This isolates the serialization defect; it does not certify availability, rewritten descriptions or invocation restrictions. Native same-process/cwd snapshots corroborated the eight names as enabled but grew from 75 to 174 skills; no rendered model catalog or agent-side provenance record was captured.
+
+No native approval request/response was observed. Input creation and the failed Recommend invocation shared a shell command, so the separate-command/network-approval path remained unexercised. Independent raw-event review confirmed these limitations. The failed run and its private full error receipt are preserved.
+
+The next candidate explicitly documents the bare-array CLI schema at the hook entry and adds a local `--offline-candidates` check for newly generated catalogs before the separate provider command. This reuses existing validation/retrieval without credentials, network access or caches; it is not a recommendation or a permission grant. Local format correction stays before the first provider attempt, with the existing provider budget and no-replay rule preserved. Previously valid current catalogs need no redundant inspection. No parser, transport, manager or embedded hook definition changed.
+
+The next candidate's integration fingerprint is `215bcd9f29ee459ec3607631120f8d926f542d388a962710beea5dffa31e2f37`; registration and approved native hook identity remain unchanged. Its embedded documentation example passed the real parser. Local `validate:jev` passed 243 tests (240 passed, three native-Windows skips), and skill, projection, plugin-evaluation, formatting and lint checks passed. Independent contract review found no actionable issue. These checks do not qualify live advice.
+
+### Native authorization boundary — 2026-09-26
+
+**Automatic run 7** used integration `215bcd9f29ee459ec3607631120f8d926f542d388a962710beea5dffa31e2f37`, the unchanged trusted hook, Codex 0.157.1 and the same `gpt-6-luna`/medium prompt/permission/cap protocol. The agent built a valid bare array of four skills, passed one local `--offline-candidates` check and submitted Recommend as a separate command before task-specific instructions. Native Auto-review denied that command before process creation, classifying the authenticated transmission of task and capability metadata to TypeSafe as high risk with unknown user authorization. The exact denial rationale is retained in private `guardianWarning` and `item/autoApprovalReview/completed` events; this is an observed authorization rejection, not a network error.
+
+Thus **one Recommend command was requested, zero advisor processes or provider requests executed, and no provider receipt or selected recommendation exists**. The agent truthfully reported the rejection and continued with Spec Interviewer. The confirmation performed no commands or advice calls and did not repeat a Jev status. Both turns completed, the owned host exited zero, all 16 installed files matched before/after and no test processes remained. There was no retry, automatic client-approval response or permission change.
+
+The four names are corroborated by the same-process native discovery snapshot, but the catalog remains bounded to skills with zero tools. Its descriptions were rewritten; no agent-side provenance/omissions record was produced. The discovery API still does not prove the exact rendered model catalog or effective restrictions. This demonstrates local preparation, automatic submission and denied-approval fallback, not successful remote advice, adoption or full catalog qualification.
+
+**Version correction:** immutable `initialize` responses identify runs 1–4 as Codex 0.157.0 and runs 5–7 as Codex 0.157.1. The original run 5 entry and initial private summaries for runs 6/7 inherited a stale 0.157.0 label. Those labels are corrected from raw evidence; private originals and correction addenda are retained. No source/runtime identity is inferred from a later installed version.
+
+The earlier outer conversation contains explicit integration, TypeSafe processing and live-test authorization, while these ephemeral ordinary-task threads did not carry that opt-in history. A separate diagnostic with that established authority explicitly present in its initial context can test this hypothesis. Such a run is a disclosed context variant: it must retain native Auto-review, keep the ordinary task prompt unchanged and preserve the denied baseline. It cannot retroactively qualify the context-free run or manufacture approval from installation, credentials or a hook hash.
+
+### Successful bounded consent-context diagnostic — 2026-09-26
+
+A separate fresh diagnostic carried the already authorized synthetic-test data-sharing scope through `thread/start.developerInstructions`. It limited authenticated processing to one bounded consultation containing the synthetic filter-template task summary and public eligible capability descriptions at the documented TypeSafe endpoint. It prohibited private paths, secrets in metadata, transcripts and unrelated data, did not request a particular capability selection and retained all native approval controls. The context's SHA-256 is `b4002eda6e3954ec53fe3506b0f108634c0f52ce404dea3a386911f95dc4ff6b`. This context variant was declared and reviewed before launch. It records prior authorization as scoped test context and is reported separately from run 7's original denial.
+
+The ordinary task prompt and confirmation remained byte-identical. Codex 0.157.1 was verified from the actual `initialize` response and executable before/after, with `gpt-6-luna`, medium reasoning and the same 300-second turn cap. The trusted hook, integration `215bcd9f29ee459ec3607631120f8d926f542d388a962710beea5dffa31e2f37`, all 16 source files, native on-request/Auto-review and restricted sandbox policy were unchanged. There was no precomputed catalog, forced provider wrapper, approval response injection or persistent permission change.
+
+**The bounded sequence succeeded:** one local catalog check, native approval of the separate Recommend command, one real HTTPS request, a successful TypeSafe response selecting `skill:codex-spec-interviewer`, an advice status, then loading and using the selected skill. The recorded native decision was approved with medium risk and low assessed user authorization. The `general/current` receipt and raw stdout agree on the selection; usage was 1,436 input and 123 output tokens, with decision/index caches disabled and no retry. The inspected payload contained only a synthetic task summary and three public skill descriptions, without private paths, key metadata or transcripts. The confirmation made zero commands, MCP calls or repeat consultations. Both turns completed; the owned host exited zero and no test processes remained.
+
+The catalog was bounded to three skills and zero tools. Same-process native snapshots corroborate their names as enabled, but descriptions were rewritten, restrictions defaulted and no agent-side catalog provenance/omissions sidecar was produced. This leaves full eligible-catalog qualification incomplete. Independent raw-event/payload review confirmed both the successful sequence and these limits.
+
+This proves successful automatic advice/adoption in the declared consent-context scenario; it does not establish deterministic interception, qualify the earlier context-free failures or cover the remaining host/platform and live negative-scenario matrix. The native denial and successful context variant demonstrate why hook trust, local credential readiness and actual processing authority must remain separate. Real consent must be available to the executing host; an installation, credential or hook cannot manufacture it. The authorized hook remains installed and natively trusted for continued evaluation. The PR remains draft while broader qualification is open.
+
+### Fresh-session consent and catalog evidence implementation — 2026-09-26
+
+The follow-up makes disclosed setup consent explicit with `install --advice-consent allow|revoke`. A versioned acceptance record stays in the per-registration ownership transaction and its compact scope is delivered by the static hook. The agent must confirm current status before provider access. Existing keys, native hook trust and historical synthetic-test authorization do not manufacture acceptance. Reinstall preserves only active matching acceptance; revocation, uninstall and changed terms prevent reuse. Native command approval remains independent.
+
+A separate read-only `hook_catalog.py` checker now validates the private provenance sidecar against the exact bare catalog: complete metadata snapshots, canonical digest, skill/MCP source kinds, invocation-restriction evidence, explicit-request references, bounded coverage and omissions. It makes no provider request or cache write and emits no private references. Its success explicitly retains `host_attestation: not_verified`; self-consistent agent assertions are not proof of source truth or freshness. A harmless MCP fixture and independent same-thread metadata capture are prepared for live verification without a test-injected consent instruction.
+
+The combined local suite passed **265 tests: 262 passed and three native-Windows tests skipped**. The eight added consent regressions cover fresh-process status/emission, legacy installs, host/project isolation, dry-run, revocation, disclosure change, interrupted before/after writes, credential exclusion and final Windows command length. Fourteen new catalog tests cover mixed catalogs, drift, restrictions, omissions, bounded parsing, finite numbers and output privacy. An independent contract review found no consent issue; a catalog-review finding about JSON numeric overflow was corrected and regression-tested. The existing CI portability matrix now runs both hook and catalog tests on Linux, macOS and Windows with Python 3.10/3.14.
+
+`validate:skills`, `validate:projections`, `validate:plugin-evals`, `validate:adrs`, `format:check`, `lint`, `lint:actions` and diff whitespace checks passed. New inputs were staged under the maintainer's existing commit/push/PR authorization before the official projection generator; no substitute candidate or canonical-checkout mutation was used. The installed 18-file candidate matches integration fingerprint `773c143448d500d4ffd69c81c3017ad5230c8c7efda616d20a5138753d25ebe1`; current status reports configured registration, recorded consent and ready local credentials. This is implementation and local readiness evidence. At that checkpoint, fresh-session advice awaited native review of the changed hook and a new live run; the later attempt is recorded below. Broader host/platform qualification remains open.
+
+## Repository policy qualification
+
+The repository-adopted renderer extends the reviewed hook dependency at `39c77a0e0ddc9cc6bc631b35f571eaee49a87058`. It does not change the original optional new-task installer guidance. Its separate fixed reminder evaluates repository adoption and covers material task/capability changes as well as new tasks. See the [repository policy contract](../../skills/skill-maintenance/jev-capability-advisor/references/hook-integration.md#repository-adopted-policy).
+
+Local regression on Linux/WSL with Python 3.14.7 ran **222 tests: 220 passed and two native-Windows tests were skipped**. The hook module contributes 44 tests, including the five new renderer cases: only its packaged policy asset can be read, installer/state access is forbidden, corrupt user configuration is ignored, invalid option combinations have no side effects, and arbitrary event bytes produce only fixed output. The complete suite initially hit a sandbox denial in an existing local-socket fixture; rerunning the same offline suite with local sockets allowed passed. No provider credentials or live model requests are used by that suite. Prior Windows observations below remain tied to their recorded source hashes.
+
+Native CLI qualification is tracked separately from these local checks. Current eligibility and the declared inventory coverage need evidence; a synthetic catalog can establish only its bounded fixture flow and cannot prove a complete host export. Installation, render output, command replay and unit tests do not establish actual agent delivery, consultation ordering or task minimization. Required observations include two repository contexts, new tasks and material capability changes, unchanged continuations, missing adoption/processing authority, invocation restrictions, failures, timeout, removal, and captured synthetic outgoing payloads. The separately bounded real TypeSafe smoke must retain `general`/`current`; neither fixture replies nor a direct helper call replace native advice evidence.
+
+### Native observations, 2026-09-26
+
+**General automatic repository-policy integration remains unqualified.** The observations establish actual reminder delivery, a bounded explicitly requested consultation, and native fallback behavior. They do not establish automatic consultations on new/materially changed tasks against a generally eligible host inventory.
+
+The fixed environment was Codex CLI **0.157.0**, Linux/NixOS on WSL, Bash, Python **3.14.7**, model **gpt-6-astra**, reasoning **max**. Native batch turns used approval `never`, sandbox `workspace-write` and explicitly allowed network access; the read-only case overrode the sandbox to `read-only`. An isolated user-level fragment was reviewed through the normal `/hooks` trust interface. Fresh `hooks/list` observations showed it enabled and trusted in both repository contexts. No real global activation was performed.
+
+Final observed source identities, relative to the Jev skill root:
+
+| Source                                | SHA-256                                                            |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| `scripts/jev_hooks.py`                | `142726bbc009d85b075da488c43287fe34f876d5fccad49cae5c601fc16d81a0` |
+| `assets/repository-hook-guidance.txt` | `d142fc3e86c27f31a3504558904a0ec40ffc2ace85b460c5c1f36523eb18a5c7` |
+| `scripts/jev_advisor.py`              | `e20dfce9dd66b032f1990681c0e93f0b51af8bc630dc67bfb0f8a3e369434bec` |
+| Rendered fragment                     | `0926b85833bfbc069a2db53a29dc7a805b850223feb5894049b64f9f7b04d4da` |
+
+All **13 native turns** completed with CLI exit zero and the fixed model/reasoning. The exact final reminder appeared as developer context in the 12 turns with the fragment present and was absent after removal. Exit zero describes host continuation; it does not convert failed advice or unavailable qualification into a pass.
+
+| Observation                                     | Result and evidence boundary                                                                                                                                                                                                             |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adopted repository without processing authority | Native result and unmet-obligation notice; no helper/provider call.                                                                                                                                                                      |
+| Unchanged continuation                          | No repeated consultation or Jev status message.                                                                                                                                                                                          |
+| Material task change                            | Native result and unmet-obligation notice; positive automatic reconsultation unavailable.                                                                                                                                                |
+| Capability restriction                          | An explicit per-turn user prohibition was respected. This did not exercise a persistent host enable/disable toggle.                                                                                                                      |
+| Non-adopting repository                         | Native result without policy-driven consultation or Jev status message.                                                                                                                                                                  |
+| Read-only sandbox                               | Native result and unmet-obligation notice; no preparation writes or helper/provider call. Native Plan collaboration mode was not exercised.                                                                                              |
+| Authorized processing, unverified inventory     | Read-only bootstrap inspection followed by native fallback; no invented complete export or provider call.                                                                                                                                |
+| Bounded genuine TypeSafe smoke                  | Exactly one native helper invocation and one actual provider request, explicitly `general/current`; `selected`, with the explicitly requested, currently native-enabled synthetic skill selected before the final uppercase task result. |
+| Controlled provider error and timeout           | One injected-transport helper call per case, helper exit one, followed by native task completion and the specific failure notice. No actual TypeSafe request.                                                                            |
+| Controlled cancellation                         | One injected `KeyboardInterrupt`, helper exit 130 and no completed advice receipt; native work continued. This was not a real host user interruption.                                                                                    |
+| Missing credential file                         | One actual helper invocation failed before transport creation; native work continued with a credential-gap notice. The receipt's attempt count of one is not a network request.                                                          |
+| Fragment removal                                | Fresh `hooks/list` returned zero in both contexts; the next native turn contained no reminder and made no helper call. The adopting repository's unmet-obligation notice remained applicable.                                            |
+
+The real smoke used an explicitly authorized synthetic subset, not automatic discovery of a complete inventory. The helper's HTTPS receipt captured the serialized request object, response and transport identity. Its query matched the approved synthetic input exactly and the outgoing object contained no private paths. This is helper-level transport evidence, not a separate packet capture. Private-output inspection found neither the TypeSafe key nor Codex authentication tokens. Total genuine TypeSafe traffic for this protocol was **one consultation, one request**, with no retry or model substitution.
+
+Separately, **16 direct helper fixture cases passed** without credentials or network. Captures preserved the exact minimal query and approved metadata while excluding disabled candidates, local source paths and private arbitrary fields. These fixtures covered selected/none/clarify/error outcomes, timeouts, cancellation propagation, missing credentials, partial results and explicit-only metadata. A deliberately inconsistent explicit-only recommendation remained locally selected: the host must still recheck restrictions; provider advice grants no invocation authority. Direct fixtures are not native restriction-enforcement evidence.
+
+Remaining acceptance gaps are positive automatic new-task/material-task/material-inventory consultations, reliable current restrictions for the claimed host inventory, a persistent host capability-toggle observation, native Plan mode, real host interruption, and native minimization from a raw prompt containing all specified canaries. The preapproved smoke payload and direct fixture captures do not demonstrate arbitrary model-mediated redaction. Current `skills/list` enabled metadata does not expose all invocation or tool/account restrictions; this observation cannot establish a complete host export. These gaps prevent a general qualification claim; the bounded smoke remains valid within its stated scope.
+
+Setup failures remain recorded separately: a sandboxed TUI discovery attempt failed before a model turn; the authorized network run succeeded. Two early introspection wrappers timed out during process shutdown after returning responses; the final probe closed stdin and exited normally. Neither event was treated as an advice observation. Cleanup removed the temporary authentication copy and policy fragment and stopped the remaining owned process. Original authentication, configuration and provider-key hashes were unchanged.
+
+Required repository gates passed using their exact Bun script bodies because the local pnpm launcher could not resolve the pinned package-manager version in the restricted environment. Projection generation and its gates used the explicitly authorized disposable validation index; generated files were copied back and compared byte-for-byte. The working checkout's index remained unchanged. These local results do not claim CI execution, publication or host qualification.
+
+### Fresh-session hook-consent attempt and merge reconciliation — 2026-09-26
+
+The ordinary fresh-thread run on Codex 0.157.1 / WSL, `gpt-6-luna` with medium reasoning, used integration `773c143448d500d4ffd69c81c3017ad5230c8c7efda616d20a5138753d25ebe1` and native trusted hook `sha256:0eea8ed484e7637ab314811f6228bd74b990dcf4011ff0fd3215af7a36f5e4f3`. No initial `developerInstructions` consent was injected. The agent observed the active registration and recorded processing consent, then declared a missing verifiable structured catalog. It had not read the new capture reference, prepared provenance, inspected policy metadata or run either local checker. It proceeded to Spec Interviewer with **zero provider requests**. Both turns completed; confirmation caused no commands or repeated advice. All 18 source hashes and the executable/version remained unchanged, and owned processes exited.
+
+The harmless fixture MCP server was connected before and after on the same actual thread, with its exact tool definition present. That observer capture was not injected into the model. Native skill discovery grew from 75 to 174 entries and does not attest the rendered model cards or every restriction. This attempt proves fresh-session delivery and recognition of the recorded consent, not successful automatic consultation or catalog capture. The stated fallback was an agent-declared prerequisite failure, not a native authorization denial or provider failure.
+
+The follow-up clarifies that a prebuilt JSON export and complete machine inventory are not prerequisites: the agent should read the capture procedure and serialize a bounded subset from actual current model-visible cards and loaded MCP definitions. Unknown eligibility still excludes the affected entry, and source truth remains independently assessed. The failed run stays preserved.
+
+Meanwhile, main integrated the separate repository-adopted policy and Blacksmith runner migration. Reconciliation preserves the pure renderer, its distinct adoption/processing/qualification prerequisites and material-change triggers, while the optional installer-managed hint retains bound consent and new-task behavior. Windows path/handle checks preserve upstream stable path-identity checks plus descriptor change-time checks and apply consistently to key readiness. The resulting candidate prepares Jev 0.3.0 / plugin 1.6.0 above main's 0.2.0 / 1.5.0; earlier fingerprints and measurements remain historical.
+
+The merged candidate's local Jev suite passed **275 tests: 272 passed and three native-Windows cases skipped**. Skills, projections, plugin evals, ADRs, Architecture Compass, repository scripts, release descriptors, OpenAI listing/contract checks, whole-tree formatting, both linters, candidate fingerprint and install smoke all passed. The release-impact gate confirms Jev 0.2.0 → 0.3.0 and plugin 1.5.0 → 1.6.0 against the updated main. The installed 19-file candidate matches integration `cf9184562325af1e777f1088908b39dd590d90e8f9c63acb1b86125ab512bd8e`. Reinstallation preserved the recorded consent and credential reference and left the hook definition unchanged; the existing native trust remains independently rechecked before a new live attempt.
+
+### Bounded catalog capture with native provider denial — 2026-09-26
+
+A second ordinary fresh-session test used the same synthetic planning request, Codex 0.157.1 / WSL, `gpt-6-luna` with medium reasoning, the trusted hook above, and the merged 19-file integration `cf9184562325af1e777f1088908b39dd590d90e8f9c63acb1b86125ab512bd8e`. Processing consent arrived through the installed hook alone: no initial consent instruction, prebuilt catalog or approval response was injected. Network access remained restricted, with native on-request approval and Auto-review. The per-turn deadline was 300 seconds and the protocol permitted one Recommend invocation.
+
+The agent prepared a bounded **one-MCP-tool, zero-skill** catalog and a provenance sidecar. Its qualified tool name and full description matched the harmless fixture definition captured independently from the same actual thread before and after the turn. Both the existing offline candidate check and the provenance consistency check passed. The sidecar reported unknown host version and incomplete coverage, with explicit skill/tool omissions. Its source references remained agent assertions; successful consistency checking did not establish native host attestation, complete inventory coverage or mixed skills/MCP qualification.
+
+The separate Recommend command was submitted once to native review. Auto-review denied it because the reviewer did not recognize authorization for the specific external disclosure and TypeSafe destination. The command was declined before launch: **zero executed provider requests and no provider receipt**. The agent reported the denial and continued with native selection. A later call to the fixture tool succeeded through that native continuation; it was not adoption of a Jev recommendation.
+
+Both turns completed, the confirmation caused no commands, MCP calls or repeated advice, and the host exited zero. All 19 source hashes and the executable/version stayed unchanged; owned processes were stopped. Independent raw-trace review confirmed these boundaries. This is progress in bounded catalog preparation and truthful fallback. Recognition of recorded hook consent did not establish native reviewer acceptance, and the ordinary automatic provider/adoption flow remains unqualified.
+
+The merged CI independently passed all six Linux/macOS/Windows Python portability jobs and all archive jobs. Its aggregate check found an undeclared endpoint literal in the manager's processing disclosure. The follow-up declares only the exact official TypeSafe URI for that manager file in both source projections; separate regressions still reject changed destinations, other modules and network calls from the hook manager. This static-policy correction does not grant runtime network permission.
+
+### Explicitly authorized manual control — 2026-09-26
+
+After the ordinary attempt's native denial, the maintainer expressly authorized forwarding a one-time processing permission as a real user message. A separate fresh control session received the unchanged synthetic filter-template planning task followed by that permission verbatim, limited to a minimal non-sensitive task description and public capability metadata sent to the official TypeSafe advice endpoint with the existing credential. The prior automatic session had already closed. This is a manual context variant, not a replay or successful qualification of the automatic flow.
+
+The control retained Codex 0.157.1 / WSL, `gpt-6-luna` with medium reasoning, the same trusted hook and 19-file integration above, native on-request Auto-review, restricted network, the harmless MCP fixture, a 300-second turn limit and one permitted Recommend invocation. No `developerInstructions`, prebuilt catalog or native approval response was injected. Independent raw-trace review confirmed that the actual first user message exactly matched the approved task and permission.
+
+The agent read the catalog guidance and observed configured registration, recorded consent and ready local credentials. It nevertheless declared current invocation restrictions and a complete session catalog unverified, then loaded Spec Interviewer through native fallback. It prepared **no catalog or provenance**, ran neither local checker, and made **zero advisor, provider or MCP calls**. There was no native provider-approval request or denial in this control. Consequently, the effect of the explicit user permission on approval was **not exercised**; the result neither proves nor rejects that permission mechanism. A combined prerequisite shell command returned one because its trailing search found no workspace files; the embedded status command had succeeded.
+
+Both turns completed and the host exited zero. The confirmation triggered no commands, MCP calls or repeated advice. This preserved, unsteered result shows continuing variability in agent-mediated catalog preparation even after the bounded-subset guidance. No further attempt was made, and the automatic provider/adoption flow remains unqualified.
+
+## Portable network contract — 2026-09-28
+
+Candidate revision `0.3.3` adds descriptive API compatibility, a shared
+network/failure contract, narrower host-specific approval guidance, and a safe
+`error_message` for failed summaries, relative to the released `0.3.2` baseline.
+It does not change selection, transport, permissions, request budgets,
+credentials or caches. Historical benchmark observations above remain
+historical; no new speed or provider-quality claim is made.
+
+`test_network_contract.py` runs the real helper with injected replies and checks
+no replay, credential precedence, secret-free error presentation, valid `none`,
+and no-write offline inspection. A regression also exercises the actual
+`JsonClient` through a truncated HTTP 200 response, checking completion
+uncertainty, secret-free summaries, and one dispatch without replay.
+Text checks cover the declared host approval
+states; they are not execution evidence for an actual approval dialog. The
+portable-network workflow runs these tests on native Windows, macOS and Linux
+with Python 3.10 and 3.14. Use the exact current CI run for observed results;
+a configured matrix is not a passing result.
+
+Live host approval/denial, provider results, fresh-session eligible inventory,
+and automatic hook delivery/use for this revision remain `not_run` until a
+separately authorized qualification records them. WSL is qualified separately.
+No live TypeSafe request or credential was used for this implementation. Changed
+guidance invalidates relevant installed-registration evidence; review and
+explicitly refresh an existing registration rather than silently reinstalling.

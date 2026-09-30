@@ -3,20 +3,14 @@ import { jevBenchmarks as bench, getJevPromoComparison } from "../lib/jev-benchm
 import { repoUrl } from "../lib/skills";
 import ContextTooltip from "./ContextTooltip.astro";
 import JevFeatureStatus from "./JevFeatureStatus.astro";
-import JevLunaLowDev9 from "./JevLunaLowDev9.astro";
-import JevNextSkillComparison from "./JevNextSkillComparison.astro";
-import { nextSkillComparison } from "../lib/jev-next-skill-benchmarks.mjs";
-import { unmeasuredSelectorCandidates } from "../lib/jev-promo-comparison.mjs";
 
 const comparison = getJevPromoComparison();
-const nextSkill = nextSkillComparison(bench.nextSkillEvidence);
-const confirmation = nextSkill.cohorts[1];
 const confirmedInputSaving = comparison.inputSaving;
 const initial = comparison.rows.find((row) => row.id === comparison.defaultId)!;
-const control = comparison.allRows.find((row) => row.id === "hussi_control")!;
-const chartMax = Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds)));
+const chartMax = Math.max(1, Math.ceil(Math.max(...comparison.rows.map((row) => row.medianSeconds))));
 const chartWidth = 540;
 const featureRows = initial.features.map((feature, index) => ({ ...feature, alternatives: comparison.rows.map((row) => row.features[index].value) }));
+const count = (value: number | null) => value === null ? "Unknown" : value.toLocaleString("en-US");
 ---
 
 <section class="jev-promo" id="benchmarks" aria-labelledby="jev-benchmark-title" data-jev-promo>
@@ -69,7 +63,7 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
             <span class="jev-feature-popover__guide">
               <span><strong>Skills &amp; MCP</strong><span>What the advisor can recommend.</span></span>
               <span><strong>HTTPS &amp; search index</strong><span>Reuses HTTPS + catalog<br />in Session.</span></span>
-              <span class="jev-feature-popover__guide-wide"><strong>16k vs 600 characters</strong><span>More room for Jev to consider details in long tasks before the text limit is reached.</span></span>
+              <span class="jev-feature-popover__guide-wide"><strong>Task length</strong><span>How much of a long request the selector can send to Jev. Unknown limits remain unverified.</span></span>
             </span>
           </span>
         </ContextTooltip>
@@ -93,7 +87,7 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
     </svg>
 
     <figure class="jev-promo__chart" data-jev-chart>
-      <figcaption>Skill decision · median · lower is better<span>Selection-speed factors use Native as the baseline.</span></figcaption>
+      <figcaption>Skill decision · median · lower is better<span>Hover or tap a bar. Your selection stays while you read.</span></figcaption>
       <div class="jev-promo__rows">
         {comparison.rows.map((row) => {
           const Row = row.id === comparison.baselineId ? "div" : "button";
@@ -107,7 +101,7 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
                   <span aria-hidden="true">)</span>
                 </a>
               )}{row.errorLabel && <small class="jev-promo__error">{row.errorLabel}</small>}</span>
-              <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s<small data-jev-row-factor={row.id}>{row.id === comparison.baselineId ? "1.00× baseline" : `${row.factor!.toFixed(2)}× Native`}</small></span>
+              <span class="jev-promo__time">{row.medianSeconds.toFixed(2)} s</span>
               <ContextTooltip id={`jev-info-${row.id}`} label={row.label} align="end">
                 <span>{row.info}</span>
               </ContextTooltip>
@@ -134,62 +128,67 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
         ))}
       </svg>
       <p class="jev-promo__models">Using: {comparison.nativeModel} · reasoning {comparison.nativeReasoning} · {comparison.jevModel} · {comparison.catalogRecords}-skill catalog · {comparison.skillObservations} skill choices</p>
-      <section class="jev-promo__candidates" aria-labelledby="jev-other-selectors">
-        <h3 id="jev-other-selectors">Other selector skills</h3>
-        <ul>
-          {unmeasuredSelectorCandidates.map((candidate) => (
-            <li data-jev-candidate><a href={candidate.sourceUrl} target="_blank" rel="noreferrer">{candidate.label}</a><span>Not benchmarked</span></li>
-          ))}
-        </ul>
-        <p>Comparable measurements are not available for these selectors, so no timing bars or factors are shown.</p>
-      </section>
-      {comparison.excludedRows.map((row) => <p class="jev-promo__excluded">{row.label}: excluded from timing bars ({row.errorLabel ?? "baseline timing error"}). <a href="#jev-speed-method" data-jev-disclosure="jev-speed-details">Recorded results</a>.</p>)}
+      {comparison.measurementNote && <p class="jev-promo__caption">{comparison.measurementNote}</p>}
       <p class="jev-promo__caption"><a href="#jev-speed-method" data-jev-disclosure="jev-speed-details">Method &amp; scope</a></p>
     </figure>
   </div>
 
-  <div class="jev-promo__proof" role="group" aria-label="Selection input">
-    <div><p class="jev-promo__proof-number">{confirmedInputSaving.toFixed(1)}<span>%</span></p><h3>Less selection input <ContextTooltip id="jev-input-saving-info" label="Less selection input" align="start" text={`For the same next-skill tasks, Jev sent ${confirmedInputSaving.toFixed(1)}% fewer provider-reported input tokens than the tested public chooser. That means less selection overhead and can reduce input-token cost; it is not a claim about whole-task token use.`} /></h3><p>Than the tested publicly available competitor.</p></div>
-  </div>
-
-  <details class="jev-promo__details" id="jev-luna-low-dev9">
-    <summary>GPT-6 Luna Low · live development run · quality gate failed</summary>
-    <div class="jev-promo__details-body"><JevLunaLowDev9 /></div>
-  </details>
+  {confirmedInputSaving !== null && <div class="jev-promo__proof" role="group" aria-label="Selection input">
+    <div><p class="jev-promo__proof-number">{Math.abs(confirmedInputSaving).toFixed(1)}<span>%</span></p><h3>{confirmedInputSaving >= 0 ? "Less" : "More"} selection input <ContextTooltip id="jev-input-saving-info" label="Selection input comparison" align="start" text="Provider-reported input tokens across the same 48 skill choices, Jev Capability Advisor compared with Hussi9. This concerns selection input, not whole-task token use or all competitors." /></h3><p>Compared with Hussi9 on the same skill choices.</p></div>
+  </div>}
 
   <details class="jev-promo__details" id="jev-feature-details">
     <summary>Selection modes &amp; scope</summary>
     <div class="jev-promo__details-body">
       <p><code>general</code> can recommend skills and MCP tools for the request. <code>next_skill</code> chooses one skill to load next; it does not assess the remaining work.</p>
-      <p><a href="#skill-guide">Read the usage guide</a> · <a href={repoUrl(bench.readmePath) + "#product-features-and-measured-selection"}>Source notes</a> · <a href={comparison.hussiSource}>Hussi9 chooser source</a></p>
+      <p>The timings cover skill selection. MCP support below is a product feature checked against each pinned source; this is not an MCP performance benchmark.</p>
+      <div class="jev-promo__table-scroll" role="region" aria-label="Verified selector features" tabindex="0">
+        <table><caption>Features at the measured source revisions</caption>
+          <thead><tr><th scope="col">Selector</th>{initial.features.map((feature) => <th scope="col">{feature.label}</th>)}</tr></thead>
+          <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.sourceUrl ? <a href={row.sourceUrl}>{row.label}</a> : row.label}</th>{row.features.map((feature) => <td>{feature.evidence_url ? <a href={feature.evidence_url}>{feature.value}</a> : feature.value}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+      <p><a href="#skill-guide">Read the usage guide</a> · <a href={repoUrl(bench.readmePath)}>Source notes</a></p>
     </div>
   </details>
 
   <details class="jev-promo__details" id="jev-token-details">
-    <summary>Selection input · two cohorts</summary>
-    <div class="jev-promo__details-body"><JevNextSkillComparison comparison={nextSkill} /></div>
+    <summary>Selection input · skills and no match</summary>
+    <div class="jev-promo__details-body">
+      <p>Reported totals include every required selection stage and the product’s own retry attempts. Missing usage stays unknown; it is never counted as zero.</p>
+      {(["skill", "none"] as const).map((category) => <div class="jev-promo__table-scroll" role="region" aria-label={`${category === "skill" ? "Skill" : "No-match"} selection usage`} tabindex="0">
+        <table><caption>{category === "skill" ? "48 skill choices" : "16 separate no-match observations"} per participant</caption>
+          <thead><tr><th scope="col">Participant</th><th scope="col">Input tokens</th><th scope="col">Output tokens</th><th scope="col">API calls</th><th scope="col">Abstentions</th></tr></thead>
+          <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.label}</th><td>{count(row.groups[category].inputTokens)}</td><td>{count(row.groups[category].outputTokens)}</td><td>{count(row.groups[category].requests)}</td><td>{row.groups[category].abstentions}</td></tr>)}</tbody>
+        </table>
+      </div>)}
+    </div>
   </details>
 
   <details class="jev-promo__details" id="jev-speed-details">
     <summary>Speed results &amp; measurement</summary>
     <div class="jev-promo__details-body" id="jev-speed-method">
-      <p>Each variant used the same 32 frozen tasks and 132-entry catalog: 24 skill tasks and eight no-match tasks, each run twice. Jev, Hussi9 and our experiment ran interleaved on {confirmation.date}; Native ran separately. The chart uses all 48 skill observations, including incorrect accepted results.</p>
+      <p>All seven participants received the same frozen 132-skill catalog and 32 tasks: 24 skill tasks and eight no-match tasks, each run twice. The original campaign used a predetermined, interleaved order with one active measurement at a time; separate correction windows are documented in the evidence. The chart shows six participants with complete timing series, using all 48 skill observations for each, including incorrect selections and abstentions.</p>
+      {comparison.excludedRows.map((row) => <p><strong>{row.label}:</strong> {row.exclusionReason} Its recorded outcomes, usage and source-checked features remain in these tables; no bar or performance factor is assigned.</p>)}
       <div class="jev-promo__table-scroll" role="region" aria-label="Complete next-skill results" tabindex="0">
         <table>
-          <caption>{comparison.previouslyExposed ? "Repeated" : "Independent"} next-skill confirmation · 64 observations per variant</caption>
+          <caption>Repeated task set · 64 observations per participant</caption>
           <thead><tr><th scope="col">Variant</th><th scope="col">Skill median</th><th scope="col">Skill p95</th><th scope="col">Correct accepted choices</th><th scope="col">No match correct</th><th scope="col">Errors</th></tr></thead>
-          <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.label}{row.experimental && " (internal, unpublished)"}</th><td>{row.medianSeconds.toFixed(6)} s</td><td>{row.p95Seconds.toFixed(6)} s</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
+          <tbody>{comparison.allRows.map((row) => <tr><th scope="row">{row.label}</th><td>{row.medianSeconds === null ? (row.errors ? "Incomplete" : "Not charted") : `${row.medianSeconds.toFixed(6)} s`}</td><td>{row.p95Seconds === null ? (row.errors ? "Incomplete" : "Not charted") : `${row.p95Seconds.toFixed(6)} s`}</td><td>{row.correct}/{row.observations}</td><td>{row.noneCorrect}/{row.noneObservations}</td><td>{row.errors}</td></tr>)}</tbody>
         </table>
       </div>
       <ul>
-        <li><strong>Scoring:</strong> one next skill or no match. Native received Jev’s next-skill cards and rules; Hussi used its published chooser and 0.8 acceptance gate. A Hussi abstention is not necessarily a wrong guess.</li>
-        <li><strong>Timer:</strong> selection preparation plus the model response. Session process, HTTPS connection and index were reused. Startup, skill loading and task execution were excluded; there were no warmups, retries or decision cache.</li>
-        <li><strong>Measurement windows:</strong> Jev/Hussi {comparison.jevWindow.started_at} – {comparison.jevWindow.summary_written_at}; Native {comparison.nativeWindow.started_at} – {comparison.nativeWindow.summary_written_at}. Provider load and prefix caching were uncontrolled; Native reported cached input in {comparison.nativeCachedTurns}/64 turns.</li>
-        <li><strong>Models:</strong> Native requested {comparison.nativeModel}, reasoning {comparison.nativeReasoning}; Jev variants used {comparison.jevModel}. The backend’s actual model identity is not independently observable.</li>
+        <li><strong>Scoring:</strong> exactly one accepted correct next skill, allowing frozen equivalent aliases, or an explicit no-match result. Original confidence gates and multi-stage selection remain intact. Multiple accepted skills do not count as one correct choice; abstentions are reported separately.</li>
+        <li><strong>Timer:</strong> full selection preparation and every required model stage. Process startup and task execution are excluded. Original connection/index reuse and internal retries remain intact; there are no harness retries, warmups or cached selection decisions.</li>
+        <li><strong>Measurement window:</strong> {comparison.window.started_at} – {comparison.window.completed_at}. Provider load and provider-side prefix caching were uncontrolled.</li>
+        <li><strong>Models:</strong> Native requested {comparison.nativeModel}, reasoning {comparison.nativeReasoning}. Each selector uses its original Jev model setting, listed in the evidence. A missing resolved model identity stays unknown.</li>
       </ul>
-      <p>The table retains every decision return, including failures; a variant with a skill-timing error receives neither a chart bar nor a speed factor. Values use full recorded precision and nearest-rank p95. The internal pooled-HTTPS control measured {control.medianSeconds.toFixed(3)} s versus Jev Session’s {initial.medianSeconds.toFixed(3)} s; it is not a released product. This benchmark covers next-skill selection, not MCP routing or whole-task speed.</p>
+      <p>Each factor is the Native skill median divided by the selector’s skill median, calculated before rounding. Values use recorded precision and nearest-rank p95. Only independently checked, complete timing series qualify for this main comparison; historical attempts remain in the evidence.</p>
+      {comparison.repaired && <p>448 comparison observations were selected from 520 recorded attempts: 376 retained original observations and 72 corrections. Eight Native quota rejections and 64 Lomesh adapter failures remain in the attempt history. Skill Suggester’s 24 incomplete outcomes remain in the comparison details.</p>}
+      {comparison.deviations.length > 0 && <ul>{comparison.deviations.map((deviation) => <li>{deviation.detail}</li>)}</ul>}
+      <p>Original catalog rules remain in effect. Jev and Native use 128 cards after exact-duplicate consolidation. Skill-picker admits 130 of the 132 unchanged texts under its invocation rules. Skill Suggester admits 130 because its own filter excludes two. SkillRanker imports all 132 texts and treats 131 as eligible; plugin-name colons are reversibly encoded in host paths and invocations. Per-selector mappings and eligibility are recorded in the evidence.</p>
       {comparison.previouslyExposed && <p>Release recheck: these tasks were used before. This is a repeated measurement of the published runtime, not a new unseen test set.</p>}
-      <p><a href={repoUrl(comparison.evidencePath)}>Frozen Jev/Hussi evidence</a> · <a href={repoUrl(comparison.nativeEvidencePath)}>Native supplement and audit</a></p>
+      <p><a href={repoUrl(comparison.evidencePath)}>Seven-participant evidence and independent audit</a></p>
     </div>
   </details>
 
@@ -437,18 +436,10 @@ const featureRows = initial.features.map((feature, index) => ({ ...feature, alte
   .jev-promo__feature-heading :global(.context-tip[data-side="above"] .context-tip__card)::before { height: calc(1.3rem + 1px); }
   .jev-promo__chart .jev-promo__axis { display: block; overflow: visible; width: calc(100% - 1rem - 2px); margin: 0 calc(0.5rem + 1px) 0.7rem; }
   .jev-promo__models { font-size: 0.72rem; font-weight: 600; margin: 0 0 0.65rem; }
-  .jev-promo__time small { display: block; color: var(--muted); font-size: .65rem; font-weight: 500; margin-top: .15rem; }
-  .jev-promo__candidates { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: .8rem; }
-  .jev-promo__candidates h3 { margin: 0 0 .35rem; font-size: .8rem; }
-  .jev-promo__candidates ul { list-style: none; padding: 0; margin: 0; }
-  .jev-promo__candidates li { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; padding-block: .4rem; font-size: .75rem; }
-  .jev-promo__candidates a { min-width: 0; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: .15em; }
-  .jev-promo__candidates li span { flex-shrink: 0; color: var(--muted); font-size: .65rem; }
-  .jev-promo__candidates p, .jev-promo__excluded { color: var(--muted); font-size: .72rem; margin: .6rem 0; }
   .jev-promo__track { fill: var(--border); }
-  .jev-promo__bar--jev_session { fill: var(--primary); }
-  .jev-promo__bar--hussi_original { fill: var(--foreground); opacity: 0.65; }
-  .jev-promo__bar--native { fill: var(--muted); }
+  .jev-promo__bar { fill: var(--foreground); opacity: 0.65; }
+  .jev-promo__bar--jev_session { fill: var(--primary); opacity: 1; }
+  .jev-promo__bar--native { fill: var(--muted); opacity: 1; }
   .jev-promo__chart text { fill: var(--muted); font-size: 16px; font-family: var(--font-body); }
   .jev-promo__caption { margin: 0; font-size: 0.75rem; color: var(--muted); }
   .jev-promo--animate .jev-promo__bar { transform-origin: left; transform-box: fill-box; animation: jev-bar-reveal 950ms cubic-bezier(0.22, 1, 0.36, 1) both; }

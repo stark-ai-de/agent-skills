@@ -31,6 +31,12 @@ const schemaPath = path.join(
   repositoryRoot,
   "skill-evals/stark-ai-developer/evidence/release-subject.schema.json",
 );
+const observationRetryWait = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
+
+function waitForReleaseObservation(observationRetry) {
+  const delayMilliseconds = Math.min(1_000 * 2 ** (observationRetry - 1), 8_000);
+  Atomics.wait(observationRetryWait, 0, 0, delayMilliseconds);
+}
 
 function argument(argv, name) {
   const index = argv.indexOf(name);
@@ -526,6 +532,7 @@ function apply(options, localSubjects) {
     observe: () => observe(options, localSubjects),
     execute: (operation, observation) =>
       executeOperation(operation, observation, options, localSubjects),
+    waitBeforeObserve: waitForReleaseObservation,
   });
 }
 

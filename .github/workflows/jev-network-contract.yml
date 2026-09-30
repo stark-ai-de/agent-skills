@@ -1,0 +1,52 @@
+name: Jev skill validation matrix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/jev-network-contract.yml"
+      - ".github/workflows/validate.yml"
+      - "docs/validation-ownership.json"
+      - "package.json"
+      - "scripts/validation/jev-capability-advisor/**"
+      - "skill-evals/jev-capability-advisor/**"
+      - "skills/skill-maintenance/jev-capability-advisor/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jev-validation-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+jobs:
+  jev-validation:
+    name: Jev validation (${{ matrix.os }}, Python ${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        python: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test hook portability without provider credentials
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_hook*.py' -v
+      - name: Test the offline network contract without provider credentials
+        run: python -B -m unittest discover -s skill-evals/jev-capability-advisor -p 'test_network_contract.py' -v
+      - name: 🧭 Summarize Jev validation
+        if: ${{ always() }}
+        uses: ./.github/actions/write-run-summary
+        with:
+          title: Jev capability advisor · ${{ matrix.os }} · Python ${{ matrix.python }}
+          success: The Jev hook-portability and offline network-contract suites passed for this operating system and Python version.
+          failure: Inspect the Jev tests for this operating system and Python version, fix the owning contract, and rerun.

@@ -16,12 +16,12 @@ concurrency:
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
 
     steps:
       - name: ⬇️ Checkout exact main candidate
-        uses: actions/checkout@v6
+        uses: useblacksmith/checkout@v1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -88,9 +88,9 @@ jobs:
       - name: 🔑 Create repository-scoped release App token
         if: ${{ steps.classify.outputs.skip != 'true' }}
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          client-id: ${{ vars.RELEASE_PLEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
@@ -98,7 +98,7 @@ jobs:
 
       - name: 📝 Create or update draft release PR
         if: ${{ steps.classify.outputs.skip != 'true' }}
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           token: ${{ steps.app-token.outputs.token }}
           target-branch: main

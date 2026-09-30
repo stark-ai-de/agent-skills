@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { load } from "js-yaml";
 
+import { validateInterviewerContracts } from "../../skill-evals/codex-spec-interviewer/validate-contract.mjs";
+
 import { containsKnownSkillInvocationToken } from "./skill-invocation-token.mjs";
 
 const root = process.cwd();
@@ -550,6 +552,8 @@ if (!fs.existsSync(publishingPath)) {
 } else {
   validatePortableInstallSets(fs.readFileSync(publishingPath, "utf8"), "docs/publishing.md");
 }
+
+errors.push(...validateInterviewerContracts(root));
 
 if (warnings.length) {
   console.log("Warnings:");

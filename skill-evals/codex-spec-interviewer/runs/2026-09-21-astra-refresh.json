@@ -1,0 +1,620 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-21",
+  "evidence_class": "live-cli-synthetic-conversation",
+  "cli": "codex-cli 0.154.0",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "low",
+  "released_ref": "v0.22.0",
+  "candidate_source_commit": "0ba4273",
+  "fixture_readme": "# Synthetic Widgets API\n\nThis disposable repository exposes GET /widgets returning a JSON array in stable id order. Existing consumers must retain exactly that response when pagination parameters are omitted. The product has no authentication or persistence change in scope.\n\nSpecifications use existing docs/specs/<feature>-spec.md. Do not create an ADR for an additive endpoint option that preserves these boundaries. No public publication is requested.\n\nRelevant validation after implementation: npm test -- widgets. Document the required cases; this fixture has no executable application or dependencies, so do not install packages or pretend to run tests.\n",
+  "fixture_readme_sha256": "756aae7f9080ea29391fee276acef581d1688b40378e0d0382199b4814a5e47c",
+  "method": {
+    "continuation": "codex exec resume with the exact session identifier; no single-response simulator",
+    "selection": "Explicit file-based skill invocation; ordinary catalog discovery disabled. The none arm omits the invocation.",
+    "isolation": "Ignore user configuration; disable memories, apps, plugins, skill_search, hooks and multi_agent; disable all 52 discovered skill paths; project_doc_max_bytes=0; web_search disabled. Prompt preflight and all nine actual session contexts checked. Built-in harness and managed environment instructions remain common to all arms.",
+    "sandbox": "workspace-write in disposable fixture; no Plan transitions or permission bypass",
+    "usage": "Raw CLI usage snapshots per completed turn; continuation totals can be cumulative, so do not sum these into a token saving.",
+    "retry": "One released prior-answer first turn was interrupted by account quota before final output, then restarted after access resumed. The successful replacement is recorded; the interrupted attempt is not scored.",
+    "scoring": "Manual review of synthetic answers, final artifacts, command events and per-turn file hashes; not a statistical benchmark."
+  },
+  "context_isolation": [
+    {
+      "conversation": "approval-once-candidate",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "approval-once-none",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "approval-once-released",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "chat-only-candidate",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "chat-only-none",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "chat-only-released",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "prior-answer-candidate",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "prior-answer-none",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    },
+    {
+      "conversation": "prior-answer-released",
+      "developer_messages": 3,
+      "skills_marker": false,
+      "memory_marker": false,
+      "models": ["gpt-6-astra"]
+    }
+  ],
+  "conversations": [
+    {
+      "case": "approval-once",
+      "arm": "candidate",
+      "skill_file_hashes_sha256": "d78c7e48894cf723c16d7656cef963c7dc9d9ec035fb59da578c9d6be5dcb070",
+      "skill_file_hashes": {
+        "SKILL.md": "08b182b17e245ed628727b9d6d0a22c717c1452e44552113e49f22d2a3af7236",
+        "references/adr-gate.md": "4ee1c127452f04e96a6150bbfa3d590c1069923ad4a1f0cdf0402350c2b6499f",
+        "references/question-bank.md": "1afbe246f58a894edb87ee011f6f6ec4879b61407eb107b8ca91dee58af22e5f",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "fd824eda3cbe916b53ca8c746ec743b4effeb0e33564368de17275d4cd3ddbdf",
+        "references/spec-rubric.md": "3958a2d8eacb2bf80ef995cf94151a80aa098eb7b66175e69cd82d09044766dd",
+        "references/artifact-destinations.md": "7d4729da14da88949a1708ac30856df3bab3ac1e98689c1e4a00e185e5703688",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "references/host-adapters.md": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3",
+        "agents/openai.yaml": "7075a18e6012ff78eed81f24b225a8befa667d8ff9a054c5e73c43c9130318b4",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "5397c2f40d84b062cf8cdad585bd2d46af8945e022d12ddd41a43bd0711d0f13",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "4cbc5a2776256214c151834d1381bb9d8489fd0be434819dcb592aec3e313d46",
+        "assets/spec-template.deep.md": "1764e0f62e462ee0db13e25261925cd636cfb87dd0bd8f93fdce2a5eb878e78e",
+        "assets/codex-execution-prompt.md": "fef9ec1d9873b5e4c567003f71676c5da06045dd7564a874b96b621bd7aec506"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nPrepare a reviewable implementation specification for adding optional limit/offset pagination to GET /widgets. Read README.md for the established API contract and documentation conventions. Preserve existing consumers and keep the implementation bounded. The client exposes no interactive Plan switch in this run; conduct the conversation here. Save the final approved specification to docs/specs/widget-pagination-spec.md. Do not implement the feature.",
+          "assistant_final": "Persistence pending content approval. Below is revision 1, proposed as the complete content of `docs/specs/widget-pagination-spec.md`. Saving will add only that file; its directory already exists. No feature implementation is included.\n\n```markdown\n---\ntitle: \"Optional widget pagination\"\nslug: \"widget-pagination\"\nartifact_path: \"docs/specs/widget-pagination-spec.md\"\nmode: \"compact\"\nstatus: \"approved\"\ncreated: \"2026-09-21\"\nsource_request: \"Add optional limit/offset pagination to GET /widgets while preserving existing consumers.\"\n---\n\n# Optional widget pagination\n\n## Goal\n\nAllow callers to select a portion of GET /widgets results using\noptional limit and offset query parameters while preserving the\nexisting response when both parameters are omitted.\n\n## Scope\n\nImplement parameter validation and pagination for GET /widgets,\nwith focused tests and README documentation.\n\nExclude response envelopes, totals, pagination headers, cursors,\nnew sorting or filtering, dependencies, authentication changes,\npersistence changes, and unrelated refactoring.\n\n## Repository context\n\nREADME.md establishes a JSON array response in stable ID order.\nRequests without pagination parameters must retain exactly the\nexisting response.\n\nThis disposable fixture contains no executable application or\ndependencies. Handler and test paths are unspecified and must be\nidentified in the actual application before implementation.\nDo not scaffold an application or install packages in this fixture.\n\n## Requirements\n\n- With neither parameter present, preserve the existing status,\n  headers, array contents, widget representation, and ordering.\n  Do not introduce a default limit for these requests.\n- With limit alone, return at most limit widgets starting at index 0.\n- With offset alone, skip offset widgets and return the remainder.\n- With both parameters, skip offset widgets, then return at most\n  limit widgets.\n- Offset is zero-based and defaults to 0.\n- An omitted limit means all remaining results.\n- Apply pagination to the existing stable ID order. Do not change\n  the ordering comparator or widget serialization.\n- Paginated success responses retain the existing JSON array shape\n  and success status. Do not add pagination metadata.\n- Return an empty array for an empty collection or an offset at\n  or beyond the collection length.\n- Return a shorter array when fewer than limit widgets remain.\n\n### Parameter validation\n\nValidate decoded query values before applying pagination.\n\n- Each parameter must occur at most once.\n- Values must contain only ASCII decimal digits; leading zeros\n  are allowed.\n- limit must be an integer from 1 through 1000 inclusive.\n- offset must be an integer from 0 through 9007199254740991\n  inclusive.\n- Reject empty values, signs, whitespace, fractions, exponent\n  notation, nonnumeric values, duplicate parameters, and values\n  outside these ranges with HTTP 400.\n- Reject invalid values rather than clamping or silently ignoring\n  them. Use exact range checks without numeric rounding.\n- Validate both parameters when both are supplied.\n- Use the application's existing error response convention and\n  identify the invalid parameter. Its exact schema is unknown in\n  this fixture; inspect it before implementation.\n- Preserve existing handling of unrelated query parameters.\n\n## Design and file plan\n\n1. Locate the actual GET /widgets handler, query parsing conventions,\n   error helpers, and endpoint tests.\n2. Add small local validation and pagination logic using existing\n   abstractions. Preserve the no-parameter behavior.\n3. Apply the offset and limit after establishing stable ID order.\n   Avoid unsafe arithmetic for offset plus limit.\n4. Extend endpoint tests with the cases below.\n5. Update README.md with parameter ranges, omitted-value behavior,\n   examples, and HTTP 400 behavior.\n\nDo not introduce shared pagination infrastructure, change storage,\nor promise a database-level performance improvement.\n\nActual source and test filenames remain unspecified because the\nfixture contains neither. Do not invent paths.\n\n## Acceptance criteria and validation\n\nFor a fixed collection in stable ID order [1, 2, 3, 4, 5], verify:\n\n- No parameters: the complete existing response is unchanged.\n- limit=2: IDs [1, 2].\n- offset=2: IDs [3, 4, 5].\n- limit=2&offset=1: IDs [2, 3].\n- limit=3&offset=4: IDs [5].\n- offset=0: all five IDs.\n- offset=5 and offset=6: empty arrays.\n- Empty collection: empty arrays with valid parameter combinations.\n- Leading zeros, such as limit=02&offset=01: IDs [2, 3].\n- limit boundaries 1 and 1000: accepted; 0 and 1001: HTTP 400.\n- offset boundaries 0 and 9007199254740991: accepted;\n  9007199254740992: HTTP 400.\n- Empty, negative, signed, whitespace, fractional, exponent,\n  nonnumeric, and repeated values for either parameter: HTTP 400.\n- A valid parameter paired with an invalid one: HTTP 400.\n- Repeated requests against unchanged data preserve ordering.\n- Paginated responses preserve widget fields and array shape.\n- Existing unrelated-query behavior remains unchanged.\n\nInclude a regression test comparing the complete unpaginated\nresponse against established behavior.\n\nAfter implementation in the actual application, run:\n\n    npm test -- widgets\n\nThis command is specified by README.md. It cannot be run meaningfully\nin this fixture. Do not install dependencies or report tests as passed\nhere. Additional lint/type-check commands are unspecified.\n\n## Architectural decisions\n\n- ADR required: no.\n- Reason: an additive endpoint option preserves existing boundaries;\n  README.md explicitly excludes an ADR for this change.\n- Existing ADRs consulted: none present.\n- New ADR draft: none.\n- Supersedes: none.\n- Implementation blocked until ADR accepted: no.\n\n## Source challenge\n\n- README.md is the source of the established response contract,\n  specification destination, ADR convention, and validation command.\n- A default limit for every request would break existing consumers,\n  so an omitted limit remains unbounded.\n- A response envelope would change the established array contract,\n  so pagination preserves that shape.\n- Numeric ranges and strict validation are proposed feature choices,\n  approved with this specification rather than inferred from README.md.\n- External documentation lookup is unnecessary: this specification\n  depends on a repository-local contract, not framework behavior.\n- Application implementation details remain unverified because this\n  fixture has no executable source.\n\n## Risks and rollout\n\nOffset pages can shift if the collection changes between requests.\nThis feature provides no cross-request snapshot guarantee.\n\nOmitted limits remain unbounded for compatibility, and large offsets\nmay remain expensive. Performance redesign is outside scope.\n\nShip as an additive option with README examples. If rollback becomes\nnecessary, revert the pagination change and documentation together;\ncallers relying on pagination would then receive legacy behavior.\n\n## Assumptions and open questions\n\nApproval adopts independent optional parameters, an unbounded omitted\nlimit, a maximum explicit limit of 1000, the stated offset range, and\nHTTP 400 for invalid input.\n\nNo product decisions remain open after approval. Before implementation,\nidentify real source/test paths and existing error conventions. Resolve\nany material conflict with this specification before affected changes.\n\n## Done when\n\n- All acceptance cases pass in the actual application.\n- Unpaginated consumers retain the established response.\n- README documents the approved behavior.\n- The final diff contains only endpoint logic, focused tests, and\n  relevant API documentation.\n- No non-goal is implemented.\n\n## Delivery and execution handoff\n\nSave this approved specification only to\ndocs/specs/widget-pagination-spec.md.\n\nSpecification approval authorizes its persistence, not implementation.\n\nFuture execution prompt:\n\n\"When separately authorized to implement, read repository instructions\nand docs/specs/widget-pagination-spec.md. Confirm the required Linux/WSL\nenvironment, locate the actual endpoint and tests, and implement the\nsmallest change satisfying the specification. Preserve the source\nchallenge findings and ADR boundary. Do not scaffold an application in\nthis fixture. Run npm test -- widgets in the actual application, review\nthe diff, and report changed files, validation results, conflicts, and\nremaining risks.\"\n```\n\nApprove revision 1’s content? Your requested save path is already authorized; after approval I’ll save this version and read it back.\n\nThe approval checkpoint comes from the requested [SKILL.md](.test-skill/SKILL.md): “Save only approved artifacts when the host permits writes.” This is the single content approval before persistence.",
+          "exit_code": 0,
+          "elapsed_seconds": 80.61,
+          "cli_reported_usage": {
+            "input_tokens": 60673,
+            "cached_input_tokens": 41600,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2182,
+            "reasoning_output_tokens": 18
+          },
+          "command_executions": 3,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Set the default page size to 50 and the maximum to 100. Everything else in this draft is approved. Save that exact bounded revision to docs/specs/widget-pagination-spec.md now. Do not implement the feature.",
+          "assistant_final": "Saved and read back [widget-pagination-spec.md](docs/specs/widget-pagination-spec.md).\n\nThe approved revision sets the pagination default to **50** and maximum to **100**, preserving the full response when both parameters are omitted. Related acceptance cases are updated.\n\nNo feature implementation or tests were run. The specification includes validation requirements and the future execution prompt; no ADR is required.",
+          "exit_code": 0,
+          "elapsed_seconds": 86.68,
+          "cli_reported_usage": {
+            "input_tokens": 126685,
+            "cached_input_tokens": 100864,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 4608,
+            "reasoning_output_tokens": 56
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widget-pagination-spec.md": "809c4d9d81082509588b6ba0fd4184478b609b9091546abc82ea1171ed8a5fcd"
+          }
+        }
+      ]
+    },
+    {
+      "case": "approval-once",
+      "arm": "none",
+      "skill_file_hashes_sha256": null,
+      "skill_file_hashes": {},
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Prepare a reviewable implementation specification for adding optional limit/offset pagination to GET /widgets. Read README.md for the established API contract and documentation conventions. Preserve existing consumers and keep the implementation bounded. The client exposes no interactive Plan switch in this run; conduct the conversation here. Save the final approved specification to docs/specs/widget-pagination-spec.md. Do not implement the feature.",
+          "assistant_final": "Proposed specification for `docs/specs/widget-pagination-spec.md`:\n\n**Contract**\n\n- `GET /widgets` continues returning a JSON array in stable ID order.\n- With neither pagination parameter present, preserve the existing response exactly, including returning all widgets.\n- `limit` is optional: an integer from `1` through `100`. If omitted, no limit applies.\n- `offset` is optional: an integer from `0` through `9007199254740991`. Defaults to `0`.\n- Apply offset first, then limit, to the existing ordered results. Offset alone returns all remaining widgets.\n- An offset at or beyond the result count returns `[]`. A short final page returns the available widgets.\n- Preserve widget fields and existing success status. Add no response envelope, totals, pagination headers, or links.\n\n**Validation**\n\nAccept only decimal digit strings; leading zeros are allowed. Reject empty values, signs, whitespace, fractions, exponent notation, repeated pagination parameters, and out-of-range values with HTTP `400`. Validate before numeric conversion can lose precision. Preserve existing handling of unrelated query parameters.\n\nUse the application’s existing error response convention. This fixture provides no error schema; establishing a new global error format is outside scope.\n\n**Implementation boundaries**\n\nChange only query validation and selection of the ordered results, with focused tests and endpoint documentation. No authentication, persistence, new dependencies, cursor pagination, or snapshot guarantees across requests. Concurrent data changes may shift subsequent pages.\n\n**Required validation after implementation**\n\nRun `npm test -- widgets`, covering:\n\n- Exact existing behavior when both parameters are absent.\n- Limit alone, offset alone, and both together.\n- Stable ordering, unchanged widget fields, and consecutive pages over unchanged data.\n- Empty results, short final pages, and offsets at or beyond the end.\n- Boundary values and every invalid-input category above.\n- Unchanged handling of unrelated query parameters.\n\nThe fixture has no executable application or dependencies, so no tests will be run or packages installed for this specification.\n\nREADME conventions require this specification path, with no ADR or publication. Environment checks found Linux, WSL distribution `nixos`, and Linux tool paths. The supplied disposable workspace is under `/tmp`, outside your normal development roots, and has no usable Git metadata.\n\n**Do you approve this specification, including the limit cap of 100 and offset-only behavior?** Approval is needed because you explicitly requested saving the *final approved* specification. No files have been changed.",
+          "exit_code": 0,
+          "elapsed_seconds": 33.69,
+          "cli_reported_usage": {
+            "input_tokens": 35038,
+            "cached_input_tokens": 22528,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 868,
+            "reasoning_output_tokens": 86
+          },
+          "command_executions": 2,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Set the default page size to 50 and the maximum to 100. Everything else in this draft is approved. Save that exact bounded revision to docs/specs/widget-pagination-spec.md now. Do not implement the feature.",
+          "assistant_final": "Saved the approved [specification](docs/specs/widget-pagination-spec.md) with default page size **50**, maximum **100**, and unchanged behavior when pagination parameters are omitted.\n\nNo feature implementation or tests were run.",
+          "exit_code": 0,
+          "elapsed_seconds": 34.15,
+          "cli_reported_usage": {
+            "input_tokens": 75226,
+            "cached_input_tokens": 59904,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1707,
+            "reasoning_output_tokens": 104
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widget-pagination-spec.md": "b76b71f4ae7c0d605fc22937b32dd2eca238c35496e15616cb2375d4af2feed5"
+          }
+        }
+      ]
+    },
+    {
+      "case": "approval-once",
+      "arm": "released",
+      "skill_file_hashes_sha256": "950400aefd21c25efa8213e9e77ab90e517fabc3c990dc9f56822798beac1fd3",
+      "skill_file_hashes": {
+        "SKILL.md": "f6a7e362bb710de403fa082210aeeec2ddafcd5a4da66328d659ef112657d859",
+        "references/adr-gate.md": "0c9fc69d12a1c3edba7de4de581078b329519bdf39728606d1b4ed80eac88c69",
+        "references/question-bank.md": "fef64c73333ad6d207f5793f6e25f5856bb1aefae297822fda5706d542bc5243",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "9a25c0335d9ee5d01a81c9294e2a4bf51b439b0f49b1643c7fdd9feccea8d1bf",
+        "references/spec-rubric.md": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99",
+        "references/artifact-destinations.md": "7399f9284ca9ce9c14cbfd3fe476947f193ba795da6331ecf8a83876e1016cbd",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "agents/openai.yaml": "69a2e383bdb2c1024af42a20d8aca796650e1252359d35ae8458c83040b81175",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "9fd35e680b573df083ee17e8d227530f44a95fd7b8731286d6556e27c4c6a952",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "f5af9a08262f5d307478aac52f381b3ba1e60bb6222c2a97362c1ab5dd31a615",
+        "assets/spec-template.deep.md": "d18cc6072f59e6f110f1621efbab938129820b8c9f9d2fa2bf66166d49baa835",
+        "assets/codex-execution-prompt.md": "fb1f52c45d57b74767bddaa4e66dd37b135ae7edd009a147e15096bff2273dfa"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nPrepare a reviewable implementation specification for adding optional limit/offset pagination to GET /widgets. Read README.md for the established API contract and documentation conventions. Preserve existing consumers and keep the implementation bounded. The client exposes no interactive Plan switch in this run; conduct the conversation here. Save the final approved specification to docs/specs/widget-pagination-spec.md. Do not implement the feature.",
+          "assistant_final": "Proposed compact specification for **`docs/specs/widget-pagination-spec.md`**:\n\n- **Compatibility:** With neither parameter supplied, preserve the existing complete JSON array and stable ID order exactly. Paginated responses also remain arrays, without metadata or new headers.\n- **Parameters:** Propose `limit` from **1–100**, default **20** when pagination is requested; `offset` defaults to **0**. Offset alone therefore returns up to 20 items.\n- **Validation:** Accept decimal digit strings representing safe integers. Reject empty, repeated, negative, fractional, nonnumeric, or out-of-range values with **400**; do not silently clamp. Reuse the application’s error format when available; that format is unspecified in this fixture.\n- **Behavior:** Apply offset and then limit to the existing stable ID ordering. Empty collections and offsets beyond the end return `[]`.\n- **Bounded implementation:** Change only endpoint parameter handling, existing retrieval logic as needed, relevant tests, and README examples. Exclude authentication, persistence changes, dependencies, cursors, total counts, and unrelated refactors. Application file paths are unspecified because this fixture contains no application.\n- **Validation after implementation:** `npm test -- widgets`. Cover unchanged legacy responses, each parameter independently, both together, boundary values, invalid and repeated inputs, empty results, and stable ordering. No installation or test execution in this fixture.\n- **Risks and rollout:** Offset pagination can skip or repeat records across requests if the collection changes; snapshot guarantees are outside scope. Deploy additively. Reverting pagination support preserves legacy consumers but requires coordination with consumers that adopt it.\n- **Source challenge:** README rules out a response envelope or default truncation for legacy requests. External research is unnecessary for these product choices. **ADR required: no**, per README’s explicit convention.\n- **Completion:** The eventual implementation meets these cases, passes validation, and documents defaults and errors. This request saves only the approved specification.\n\n**Do you approve these defaults and boundaries, or is anything material missing or wrong?**\n\nThe [requested skill](.test-skill/SKILL.md) requires: “Present a final checkpoint and wait for verification before preparing artifacts.” That is why I’m awaiting approval before saving; no files have been changed.",
+          "exit_code": 0,
+          "elapsed_seconds": 37.56,
+          "cli_reported_usage": {
+            "input_tokens": 49091,
+            "cached_input_tokens": 25472,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 909,
+            "reasoning_output_tokens": 15
+          },
+          "command_executions": 3,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Set the default page size to 50 and the maximum to 100. Everything else in this draft is approved. Save that exact bounded revision to docs/specs/widget-pagination-spec.md now. Do not implement the feature.",
+          "assistant_final": "Saved and verified [widget-pagination-spec.md](docs/specs/widget-pagination-spec.md) with default **50**, maximum **100**, and all other approved boundaries preserved.\n\nNo feature implementation or ADR created. Application tests were not run because this fixture has no executable application.\n\nFuture execution prompt:\n> Implement docs/specs/widget-pagination-spec.md in the actual application. Follow repository instructions, preserve approved scope, add the specified tests and README examples, run `npm test -- widgets`, and report changes, validation, and any conflicts with repository reality.",
+          "exit_code": 0,
+          "elapsed_seconds": 72.35,
+          "cli_reported_usage": {
+            "input_tokens": 124613,
+            "cached_input_tokens": 96128,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2909,
+            "reasoning_output_tokens": 15
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widget-pagination-spec.md": "77f0f5ea02eccebfdd68af67c188294cbb797bc400f3a3697cf03dfc221d601a"
+          }
+        }
+      ]
+    },
+    {
+      "case": "chat-only",
+      "arm": "candidate",
+      "skill_file_hashes_sha256": "d78c7e48894cf723c16d7656cef963c7dc9d9ec035fb59da578c9d6be5dcb070",
+      "skill_file_hashes": {
+        "SKILL.md": "08b182b17e245ed628727b9d6d0a22c717c1452e44552113e49f22d2a3af7236",
+        "references/adr-gate.md": "4ee1c127452f04e96a6150bbfa3d590c1069923ad4a1f0cdf0402350c2b6499f",
+        "references/question-bank.md": "1afbe246f58a894edb87ee011f6f6ec4879b61407eb107b8ca91dee58af22e5f",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "fd824eda3cbe916b53ca8c746ec743b4effeb0e33564368de17275d4cd3ddbdf",
+        "references/spec-rubric.md": "3958a2d8eacb2bf80ef995cf94151a80aa098eb7b66175e69cd82d09044766dd",
+        "references/artifact-destinations.md": "7d4729da14da88949a1708ac30856df3bab3ac1e98689c1e4a00e185e5703688",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "references/host-adapters.md": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3",
+        "agents/openai.yaml": "7075a18e6012ff78eed81f24b225a8befa667d8ff9a054c5e73c43c9130318b4",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "5397c2f40d84b062cf8cdad585bd2d46af8945e022d12ddd41a43bd0711d0f13",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "4cbc5a2776256214c151834d1381bb9d8489fd0be434819dcb592aec3e313d46",
+        "assets/spec-template.deep.md": "1764e0f62e462ee0db13e25261925cd636cfb87dd0bd8f93fdce2a5eb878e78e",
+        "assets/codex-execution-prompt.md": "fef9ec1d9873b5e4c567003f71676c5da06045dd7564a874b96b621bd7aec506"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nHelp me define GET /widgets pagination based on README.md. This is deliberately chat-only: do not save a specification or any other file, and do not implement the feature. Do not switch modes. Ask me about genuinely open product decisions before completing the specification.",
+          "assistant_final": "I’m using [codex-spec-interviewer](.test-skill/SKILL.md). Delivery will stay chat-only, with no files written, implementation, or mode change.\n\n[README.md](README.md) fixes these requirements: requests without pagination parameters must return the existing JSON array unchanged, ordered by ID. Authentication and persistence changes are out of scope. No ADR is needed.\n\nThe open product decisions are:\n\n1. **Pagination model:** use `limit` and `offset`, or cursor pagination? I recommend `limit`/`offset` for simplicity unless clients need reliable traversal while widgets are added or removed.\n2. **Paginated response:** retain an array with pagination metadata in headers, or return an envelope such as `{ items, nextOffset }` only when pagination parameters are supplied? I recommend the envelope. Do clients also need a total count?\n3. **Limits and invalid input:** are default `limit=20`, maximum `100`, and default `offset=0` suitable? I recommend HTTP `400` for malformed, negative, or excessive values, and an empty page for an offset beyond the results.\n\nAfter your answers, I’ll draft the contract and acceptance cases here. The documented validation is `npm test -- widgets`; this fixture has no executable application, so validation will be specified rather than run.",
+          "exit_code": 0,
+          "elapsed_seconds": 26.98,
+          "cli_reported_usage": {
+            "input_tokens": 40789,
+            "cached_input_tokens": 24064,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 543,
+            "reasoning_output_tokens": 24
+          },
+          "command_executions": 3,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Use limit/offset, keep the JSON array with no pagination metadata or total count, default limit 50, maximum 100, and default offset zero. Omitted pagination parameters preserve the exact legacy response. Reject malformed, negative, repeated, or oversized values with 400; limit zero is valid and returns an empty array. Past the end returns 200 with an empty array. Prepare the complete final draft in chat only; do not save files or implement.",
+          "assistant_final": "Chat-only final draft. **Persistence status: not requested.** No files saved or feature implemented.\n\n```yaml\ntitle: GET /widgets pagination\ndepth: compact\nstatus: draft for review\ndelivery: chat-only\n```\n\n**Goal and scope**\n\nAdd optional `limit`/`offset` pagination to `GET /widgets`, preserving its JSON array response and stable ID ordering.\n\nAuthentication, persistence changes, pagination metadata, total counts, and public publication are out of scope.\n\n**API contract**\n\n| Request | Required behavior |\n|---|---|\n| Neither `limit` nor `offset` supplied | Preserve the exact legacy response, without imposing a default limit. |\n| Either parameter supplied | Enable pagination; default omitted `limit` to `50` and omitted `offset` to `0`. |\n| Valid pagination | Return HTTP `200` with a JSON array containing the requested slice in existing stable ID order. |\n| `limit=0` | Return HTTP `200` with `[]`, after validating both parameters. |\n| Offset at or beyond the result count | Return HTTP `200` with `[]`. |\n| Invalid pagination parameter | Return HTTP `400`; do not silently default, clamp, or ignore it. |\n\nApply pagination to the existing ordered results: skip `offset` widgets, then return at most `limit` widgets. Preserve individual widget representations. Add no pagination metadata or total count to the body or headers.\n\n**Parameter validation**\n\n- `limit` accepts integers from `0` through `100`, inclusive.\n- `offset` accepts nonnegative integers.\n- Reject malformed, negative, repeated, or oversized values. Repeated parameters are invalid even when their values match.\n- Validate every supplied pagination parameter before returning results, including when `limit=0`.\n- Use the existing API error format for HTTP `400`, if one exists; this fixture does not establish an error-body schema.\n\nProposed parsing details, made explicit for review: after normal query decoding, values must consist solely of ASCII decimal digits. Empty values, whitespace, signs, fractions, exponent notation, and nonnumeric strings are malformed; leading zeroes are accepted. For deterministic overflow handling, cap `offset` at `9007199254740991` (the largest JavaScript safe integer), checking its range without lossy conversion. This numeric bound is a draft assumption, not a requirement stated in README.\n\n**Acceptance cases**\n\nUse a fixture containing more than 100 widgets, with distinguishable IDs.\n\n| Case | Expected result |\n|---|---|\n| `/widgets` | Exact legacy response, including all results even when there are more than 100. |\n| `?limit=2` | First two widgets. |\n| `?offset=2` | Up to 50 widgets, starting after the first two. |\n| `?limit=2&offset=2` | Third and fourth widgets. |\n| `?limit=100` | Up to 100 widgets. |\n| `?limit=0` | `200`, `[]`. |\n| Offset at or beyond the end | `200`, `[]`. |\n| Valid request against an empty collection | `200`, `[]`. |\n| Page extending beyond the end | Remaining widgets only. |\n| `limit=101`, negative values, or offset above the stated bound | `400`. |\n| Empty, nonnumeric, fractional, signed, whitespace, or exponent values | `400`. |\n| Repeated `limit` or repeated `offset`, including identical values | `400`. |\n| `limit=0&offset=invalid` | `400`. |\n\nAcross successful cases, verify unchanged widget representation, stable ID order, an array response, and absence of pagination metadata or total counts.\n\n**Repository evidence and architectural decisions**\n\n[README.md](README.md) establishes legacy compatibility, stable ordering, scope boundaries, and the validation command. Its specification-directory convention is superseded by the explicit chat-only request.\n\nADR required: **no**. README explicitly excludes an ADR for this additive option preserving existing boundaries. No architectural acceptance gate applies.\n\nSource challenge: applying the default limit to every request would violate legacy compatibility; therefore defaults apply only when pagination is explicitly activated. No external documentation is needed for this product contract. Application files, query-parser behavior, and error conventions remain unverified because the fixture contains no executable application.\n\n**Implementation handoff and validation**\n\nFor a separately authorized implementation:\n\n1. Locate the endpoint, query parser, and existing error conventions in the actual application.\n2. Detect parameter presence and duplicates before coercion; validate supplied values.\n3. Preserve the legacy branch when both parameters are absent; otherwise slice the existing ordered results.\n4. Add the acceptance coverage above and run `npm test -- widgets`.\n\nNo tests were run, and no dependencies were installed. The fixture cannot execute this validation.\n\nOffset pagination does not guarantee a consistent snapshot across requests when the collection changes; insertions or deletions can cause skipped or repeated items. Snapshot guarantees are outside this scope.\n\nDone when the contract and acceptance cases pass in the actual application, including exact legacy-response compatibility.\n\n**Codex execution prompt — for future, separately authorized use**\n\n> Implement the reviewed GET /widgets pagination contract above. First follow the repository’s environment checks and inspect applicable instructions and application code. Preserve the exact legacy response when both pagination parameters are absent. Implement the specified validation, defaults, ordering, and array-only responses; cover the acceptance cases and run `npm test -- widgets` where executable. Do not introduce authentication, persistence changes, metadata, total counts, or an ADR. If operating in this documentation-only fixture, report that implementation and executable validation require the actual application; do not install dependencies or invent application files.\n\nVerification status: the draft incorporates your product decisions; parsing details and the offset bound are explicitly identified for review. It is not yet recorded as user-approved.",
+          "exit_code": 0,
+          "elapsed_seconds": 43.18,
+          "cli_reported_usage": {
+            "input_tokens": 57564,
+            "cached_input_tokens": 40320,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1823,
+            "reasoning_output_tokens": 106
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 3,
+          "user": "Approved as written, including the explicit parsing details. Chat-only delivery is final; do not save anything or implement.",
+          "assistant_final": "The specification is approved, including the parsing rules and offset bound. Chat-only delivery is complete. No files were saved, and nothing was implemented.",
+          "exit_code": 0,
+          "elapsed_seconds": 4.98,
+          "cli_reported_usage": {
+            "input_tokens": 75648,
+            "cached_input_tokens": 56960,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1856,
+            "reasoning_output_tokens": 106
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        }
+      ]
+    },
+    {
+      "case": "chat-only",
+      "arm": "none",
+      "skill_file_hashes_sha256": null,
+      "skill_file_hashes": {},
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Help me define GET /widgets pagination based on README.md. This is deliberately chat-only: do not save a specification or any other file, and do not implement the feature. Do not switch modes. Ask me about genuinely open product decisions before completing the specification.",
+          "assistant_final": "README.md fixes these requirements: `GET /widgets` without pagination parameters must preserve the existing JSON array response exactly, results remain in stable ID order, and authentication and persistence are out of scope.\n\nBefore I complete the specification, please choose these open behaviors. My recommendations are:\n\n1. **Pagination model:** `limit` and `offset` for simple page navigation, or cursor pagination for sequential browsing? I recommend `limit`/`offset` unless consistency across changing data is important.\n2. **Paginated response:** Keep a JSON array, or return an envelope such as `{ \"items\": [...], \"hasMore\": true }`? I recommend the envelope when either pagination parameter is supplied. Do clients also need a total count?\n3. **Limits and invalid input:** I recommend a default limit of 50, maximum 200, default offset 0, and HTTP 400 for malformed, negative, repeated, or out-of-range values, including `limit=0`. Prefer different values or clamping oversized limits?\n4. **Past the end:** I recommend HTTP 200 with empty `items` and `hasMore: false`. Does that fit?\n\nI’ll keep the specification in chat and include required validation cases; no files, implementation, or test execution.",
+          "exit_code": 0,
+          "elapsed_seconds": 21.32,
+          "cli_reported_usage": {
+            "input_tokens": 34331,
+            "cached_input_tokens": 22400,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 409,
+            "reasoning_output_tokens": 25
+          },
+          "command_executions": 2,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Use limit/offset, keep the JSON array with no pagination metadata or total count, default limit 50, maximum 100, and default offset zero. Omitted pagination parameters preserve the exact legacy response. Reject malformed, negative, repeated, or oversized values with 400; limit zero is valid and returns an empty array. Past the end returns 200 with an empty array. Prepare the complete final draft in chat only; do not save files or implement.",
+          "assistant_final": "**GET /widgets pagination — final draft**\n\nAdds optional `limit`/`offset` pagination while preserving the legacy response when both parameters are omitted.\n\n**Request behavior**\n\n| Parameter | Accepted values | Default when pagination is active |\n|---|---|---|\n| `limit` | Integer from 0 through 100 | 50 |\n| `offset` | Nonnegative integer | 0 |\n\nPagination is active when either parameter is present. If neither is present, return the exact legacy response without applying a default limit.\n\nValues must contain only decimal digits (`0`–`9`). Leading zeros are accepted. Empty values, signs, whitespace, fractions, exponent notation, and other nonnumeric values are malformed. Parse values without rounding or integer overflow; a valid large offset is treated as past the end.\n\nReturn HTTP 400 if either parameter:\n\n- Has a malformed or negative value.\n- Appears more than once, even with identical values.\n- Exceeds its allowed range (`limit > 100`).\n\nValidate all supplied pagination parameters before returning results, including when `limit=0`. Error responses follow the API’s existing error convention.\n\n**Successful response**\n\nReturn HTTP 200 with a JSON array using the existing widget representation. Add no pagination metadata or total count.\n\nApply pagination to the existing stable ID ordering: skip `offset` widgets, then return at most `limit` widgets.\n\n- `limit=0` returns `[]`.\n- An offset at or beyond the result count returns `[]`.\n- A final partial page returns the remaining widgets.\n- Pagination adds no snapshot guarantee across separate requests.\n\n**Examples**\n\n| Request | Result |\n|---|---|\n| `/widgets` | Exact legacy response, with no pagination cap |\n| `/widgets?limit=10` | First 10 widgets |\n| `/widgets?offset=10` | Up to 50 widgets after the first 10 |\n| `/widgets?limit=10&offset=20` | Up to 10 widgets after the first 20 |\n| `/widgets?limit=0` | `200`, `[]` |\n| `/widgets?limit=101` | `400` |\n| `/widgets?limit=10&limit=10` | `400` |\n\n**Required validation cases**\n\n- No pagination parameters preserve the exact legacy status, response shape, contents, and ordering, including collections larger than 100 widgets.\n- Limit-only, offset-only, and combined requests apply the specified defaults and slicing.\n- Pagination preserves stable ID order and existing widget representation.\n- Limits 0, 1, and 100 succeed; 101 fails.\n- Offset 0, offsets within the collection, offsets at or beyond its end, and very large valid offsets behave correctly.\n- Empty collections and final partial pages return the appropriate arrays.\n- Malformed, negative, empty, and repeated values for either parameter return 400.\n- Leading zeros are accepted; whitespace, explicit signs, fractions, and exponent notation are rejected.\n- `limit=0` with an invalid offset still returns 400.\n- Successful responses contain no pagination metadata or total count.\n\nAuthentication and persistence changes are out of scope. After implementation, the documented validation command is `npm test -- widgets`. This fixture has no executable application or dependencies, so tests were not run.\n\nNo files were saved and no feature was implemented.",
+          "exit_code": 0,
+          "elapsed_seconds": 24.53,
+          "cli_reported_usage": {
+            "input_tokens": 46350,
+            "cached_input_tokens": 33792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1091,
+            "reasoning_output_tokens": 25
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 3,
+          "user": "Approved as written, including the explicit parsing details. Chat-only delivery is final; do not save anything or implement.",
+          "assistant_final": "Confirmed. The approved specification above is final. No files were saved and nothing was implemented.",
+          "exit_code": 0,
+          "elapsed_seconds": 7.28,
+          "cli_reported_usage": {
+            "input_tokens": 59080,
+            "cached_input_tokens": 45696,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1113,
+            "reasoning_output_tokens": 25
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        }
+      ]
+    },
+    {
+      "case": "chat-only",
+      "arm": "released",
+      "skill_file_hashes_sha256": "950400aefd21c25efa8213e9e77ab90e517fabc3c990dc9f56822798beac1fd3",
+      "skill_file_hashes": {
+        "SKILL.md": "f6a7e362bb710de403fa082210aeeec2ddafcd5a4da66328d659ef112657d859",
+        "references/adr-gate.md": "0c9fc69d12a1c3edba7de4de581078b329519bdf39728606d1b4ed80eac88c69",
+        "references/question-bank.md": "fef64c73333ad6d207f5793f6e25f5856bb1aefae297822fda5706d542bc5243",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "9a25c0335d9ee5d01a81c9294e2a4bf51b439b0f49b1643c7fdd9feccea8d1bf",
+        "references/spec-rubric.md": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99",
+        "references/artifact-destinations.md": "7399f9284ca9ce9c14cbfd3fe476947f193ba795da6331ecf8a83876e1016cbd",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "agents/openai.yaml": "69a2e383bdb2c1024af42a20d8aca796650e1252359d35ae8458c83040b81175",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "9fd35e680b573df083ee17e8d227530f44a95fd7b8731286d6556e27c4c6a952",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "f5af9a08262f5d307478aac52f381b3ba1e60bb6222c2a97362c1ab5dd31a615",
+        "assets/spec-template.deep.md": "d18cc6072f59e6f110f1621efbab938129820b8c9f9d2fa2bf66166d49baa835",
+        "assets/codex-execution-prompt.md": "fb1f52c45d57b74767bddaa4e66dd37b135ae7edd009a147e15096bff2273dfa"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nHelp me define GET /widgets pagination based on README.md. This is deliberately chat-only: do not save a specification or any other file, and do not implement the feature. Do not switch modes. Ask me about genuinely open product decisions before completing the specification.",
+          "assistant_final": "I’m using the **codex-spec-interviewer** skill, with your chat-only instructions taking precedence over its saving workflow.\n\nPlanning capability: explicitly declined—you requested no mode switch.\nRead-only enforcement: indeterminate—the workspace permits writes; I’ll restrict actions to reading and conversation.\n\n[README.md](README.md) establishes that requests without pagination parameters must retain the exact existing JSON array in stable ID order. Authentication and persistence changes are excluded, and no ADR is needed for this additive option.\n\nThree product decisions remain open:\n\n1. **Pagination model:** Should clients use `limit` and `offset` for direct positional access, or `limit` and a cursor for sequential traversal?\n2. **Paginated response:** Should it remain an array with pagination metadata in headers, or use an envelope such as `{ items, nextCursor }`? Do clients need a total count?\n3. **Limits and errors:** Are a default page size of **20**, maximum **100**, and **400 responses for invalid parameters** suitable? I recommend rejecting oversized limits rather than silently capping them.\n\nAfter these choices, I’ll define the edge cases and acceptance criteria for review. Validation will be documented as `npm test -- widgets`; README explicitly says this fixture cannot execute those tests.",
+          "exit_code": 0,
+          "elapsed_seconds": 21.18,
+          "cli_reported_usage": {
+            "input_tokens": 46486,
+            "cached_input_tokens": 28928,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 484,
+            "reasoning_output_tokens": 14
+          },
+          "command_executions": 1,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Use limit/offset, keep the JSON array with no pagination metadata or total count, default limit 50, maximum 100, and default offset zero. Omitted pagination parameters preserve the exact legacy response. Reject malformed, negative, repeated, or oversized values with 400; limit zero is valid and returns an empty array. Past the end returns 200 with an empty array. Prepare the complete final draft in chat only; do not save files or implement.",
+          "assistant_final": "**Final draft: `GET /widgets` pagination**\n\nAdd optional `limit` and `offset` query parameters while preserving the existing response contract.\n\n- When both parameters are absent, return the exact legacy response: the full JSON array in stable ID order. Do not apply the default limit.\n- When either parameter is present, enable pagination. An omitted `limit` defaults to **50**; an omitted `offset` defaults to **0**.\n- Apply pagination to the existing stable ID ordering: skip `offset` widgets, then return at most `limit`.\n- Return a plain JSON array with no pagination metadata or total count.\n- `limit` accepts integers from **0 through 100**, inclusive.\n- `offset` accepts nonnegative integers with no product-defined maximum.\n- `limit=0` returns **200** with `[]`.\n- An offset at or beyond the collection’s end returns **200** with `[]`.\n\nFor precise validation, this draft defines valid values as nonempty ASCII decimal digits after query decoding. Leading zeros are accepted. Empty values, signs, whitespace, fractions, exponent notation, and nonnumeric values are malformed. Repeated occurrences of either pagination parameter are invalid, even when their values match.\n\nReturn **400** for malformed, negative, repeated, or out-of-range parameters. Validate both parameters before returning results, including when `limit=0`. Large offsets must not overflow or lose precision; an offset beyond the collection ends in an empty result. The error-body format is **unspecified** by README and should follow the application’s existing convention when implemented.\n\nExamples:\n\n| Request | Expected behavior |\n|---|---|\n| `/widgets` | Exact legacy array, without a limit |\n| `/widgets?limit=10` | First 10 widgets |\n| `/widgets?offset=10` | Up to 50 widgets after skipping 10 |\n| `/widgets?limit=100&offset=50` | Up to 100 widgets after skipping 50 |\n| `/widgets?limit=0` | `200`, `[]` |\n| `/widgets?limit=101` | `400` |\n| `/widgets?offset=-1` | `400` |\n| `/widgets?limit=` | `400` |\n| `/widgets?limit=5&limit=5` | `400` |\n| `/widgets?limit=0&offset=invalid` | `400` |\n\nAcceptance requires tests covering legacy compatibility with more than 50 widgets; defaults when either parameter is omitted; stable ordering and correct slicing; limits 0, 50, and 100; empty collections; offsets at and beyond the end; very large offsets; and every invalid-input category for both parameters. Confirm that successful responses remain arrays without added pagination metadata or counts.\n\nAuthentication, persistence, ordering changes, and unrelated query-parameter behavior are outside scope. Offset pagination provides no cross-request snapshot guarantee if the collection changes between requests.\n\nSource review: README establishes legacy compatibility and scope; your answers establish pagination behavior. The decimal syntax and leading-zero handling above are explicit draft assumptions. External research is unnecessary for these product choices. **ADR required: no**, consistent with README’s guidance for additive endpoint options.\n\nValidation after implementation: `npm test -- widgets`. This fixture has no executable application or dependencies, so no tests were run. Rollout must preserve unparameterized requests exactly; removing pagination later would affect clients that adopt it.\n\nCompanion execution prompt for future use:\n\n> Implement the GET /widgets pagination contract in this chat draft after accepting its explicit validation assumptions. Preserve the exact legacy response when pagination parameters are absent. Add the listed acceptance tests and run `npm test -- widgets` in an executable application checkout. Do not install dependencies or fabricate application code merely to make this fixture runnable.\n\n**Persistence status: declined.** No files were saved and nothing was implemented. The requested chat-only draft is complete; the skill’s normal saved-artifact completion criterion intentionally remains unmet.",
+          "exit_code": 0,
+          "elapsed_seconds": 29.6,
+          "cli_reported_usage": {
+            "input_tokens": 67748,
+            "cached_input_tokens": 49664,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1290,
+            "reasoning_output_tokens": 14
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 3,
+          "user": "Approved as written, including the explicit parsing details. Chat-only delivery is final; do not save anything or implement.",
+          "assistant_final": "Approved draft is now the final specification, including the parsing details. No files were saved and nothing was implemented.",
+          "exit_code": 0,
+          "elapsed_seconds": 5.03,
+          "cli_reported_usage": {
+            "input_tokens": 89845,
+            "cached_input_tokens": 70784,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1316,
+            "reasoning_output_tokens": 14
+          },
+          "command_executions": 0,
+          "artifact_hashes": {}
+        }
+      ]
+    },
+    {
+      "case": "prior-answer",
+      "arm": "candidate",
+      "skill_file_hashes_sha256": "d78c7e48894cf723c16d7656cef963c7dc9d9ec035fb59da578c9d6be5dcb070",
+      "skill_file_hashes": {
+        "SKILL.md": "08b182b17e245ed628727b9d6d0a22c717c1452e44552113e49f22d2a3af7236",
+        "references/adr-gate.md": "4ee1c127452f04e96a6150bbfa3d590c1069923ad4a1f0cdf0402350c2b6499f",
+        "references/question-bank.md": "1afbe246f58a894edb87ee011f6f6ec4879b61407eb107b8ca91dee58af22e5f",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "fd824eda3cbe916b53ca8c746ec743b4effeb0e33564368de17275d4cd3ddbdf",
+        "references/spec-rubric.md": "3958a2d8eacb2bf80ef995cf94151a80aa098eb7b66175e69cd82d09044766dd",
+        "references/artifact-destinations.md": "7d4729da14da88949a1708ac30856df3bab3ac1e98689c1e4a00e185e5703688",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "references/host-adapters.md": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3",
+        "agents/openai.yaml": "7075a18e6012ff78eed81f24b225a8befa667d8ff9a054c5e73c43c9130318b4",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "5397c2f40d84b062cf8cdad585bd2d46af8945e022d12ddd41a43bd0711d0f13",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "4cbc5a2776256214c151834d1381bb9d8489fd0be434819dcb592aec3e313d46",
+        "assets/spec-template.deep.md": "1764e0f62e462ee0db13e25261925cd636cfb87dd0bd8f93fdce2a5eb878e78e",
+        "assets/codex-execution-prompt.md": "fef9ec1d9873b5e4c567003f71676c5da06045dd7564a874b96b621bd7aec506"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nPrepare an implementation specification for GET /widgets pagination. Read README.md first. I already decided: limit is optional, defaults to 50 when supplied without offset, maximum 100, offset defaults to zero, omitted pagination parameters preserve the existing response exactly, invalid/negative values return 400, and no authentication or storage changes. Use the established documentation path and show the finished draft for approval before saving. Do not implement the feature. Do not switch modes; continue here.",
+          "assistant_final": "Persistence status: awaiting approval. Nothing saved or implemented. Proposed new file: `docs/specs/widgets-pagination-spec.md`; its directory exists, and no overwrite is needed.\n\nFinished draft, revision 1:\n\n```markdown\n---\ntitle: \"GET /widgets pagination\"\nslug: \"widgets-pagination\"\nartifact_path: \"docs/specs/widgets-pagination-spec.md\"\nmode: \"compact\"\nstatus: \"draft\"\ncreated: \"2026-09-21\"\nupdated: \"2026-09-21\"\n---\n\n# GET /widgets pagination\n\n## Goal and scope\n\nAdd optional limit/offset pagination to GET /widgets while preserving\nthe existing response exactly when both parameters are omitted.\n\nNo authentication, storage, dependency, or unrelated endpoint changes.\n\n## Repository context\n\nREADME.md states that GET /widgets returns a JSON array in stable id\norder and establishes docs/specs/<feature>-spec.md for specifications.\n\nThis disposable fixture has no executable application or dependencies.\nHandler and test paths are unspecified; locate them in the actual\napplication before implementation. Do not create a replacement app.\n\n## Requirements\n\n- If neither limit nor offset is present, preserve the existing response\n  exactly, including status, headers, array shape, contents, and ordering.\n  Do not apply an implicit 50-item cap to this request.\n- If either pagination parameter is present, enable pagination.\n- An omitted limit defaults to 50; an omitted offset defaults to zero.\n- Accept integer limits from 0 through 100 inclusive.\n- Accept nonnegative integer offsets.\n- Return 400 for invalid values, negative values, or limit above 100.\n  Do not clamp invalid values or silently substitute defaults.\n- Validate before slicing. Preserve stable id order, skip offset items,\n  and return at most limit items in the existing JSON array shape.\n- Return [] for limit=0, an empty collection, or an offset at or beyond\n  the collection length.\n- Do not add a response envelope, counts, cursors, or pagination metadata.\n- Use the application's existing error response convention for 400s.\n\n## Explicit assumptions for approval\n\nThe request's default wording is interpreted as:\n- limit alone uses the supplied limit and offset=0;\n- offset alone uses limit=50;\n- both absent preserve legacy behavior.\n\nZero is valid because the request rejects negative values without\nspecifying a positive minimum.\n\nFor deterministic parsing, each supplied value must be a single,\nnonempty string of decimal digits. Reject repeated pagination keys,\nfractions, signs, whitespace, exponent notation, and nonnumeric values.\nLeading zeros are allowed. Values beyond the implementation's exact\ninteger range return 400; document that range in the actual application.\nAn empty value is invalid, not equivalent to omission.\n\n## Implementation plan\n\n1. Locate the existing GET /widgets handler, query parsing conventions,\n   error handling, and widget tests in the actual application.\n2. Keep the unpaginated path intact when both parameters are absent.\n3. Validate supplied pagination values, apply defaults, and slice the\n   stable ordered results without changing storage or authentication.\n4. Add regression and pagination tests using existing test conventions.\n\nExact application filenames remain unknown in this fixture.\n\n## Acceptance tests\n\n- No parameters: response matches the legacy response exactly; include\n  a collection larger than 100 to detect accidental default caps.\n- limit=2: first two widgets.\n- offset=2: up to 50 widgets starting at the third widget.\n- limit=2&offset=1: second and third widgets.\n- limit=100: accepted and returns at most 100 widgets.\n- limit=0: empty array.\n- offset=0 alone: first 50 widgets.\n- Short final page: only remaining widgets.\n- Empty collection and offsets at/beyond the end: empty array.\n- Consecutive pages on an unchanged collection preserve stable id order.\n- Negative limit or offset, limit=101, empty values, malformed values,\n  duplicate pagination keys, and out-of-range integers: 400.\n- One invalid parameter alongside one valid parameter: 400.\n\nCompare legacy and paginated error handling against existing conventions.\n\n## Validation\n\nAfter implementation in the actual application:\n\n    npm test -- widgets\n\nInspect the diff for scope and response compatibility. No other validation\ncommands are established by this fixture.\n\nDo not install packages or run tests in this fixture. No tests have been\nexecuted as part of specification preparation.\n\n## Architectural decisions and source challenge\n\nADR required: no.\nReason: additive endpoint options preserve existing boundaries, and\nREADME.md explicitly directs that this change needs no ADR.\nExisting ADRs consulted: none found.\nNew ADR or index writes: none.\nImplementation blocked pending ADR acceptance: no.\n\nSources: user requirements and README.md.\nThe legacy array contract rules out introducing a pagination envelope.\nExternal documentation was unnecessary: no framework-specific or\nversion-dependent decision is being made.\n\n## Risks and rollout\n\nThe primary risk is accidentally paginating existing consumers.\nProtect the no-parameter path with an exact compatibility regression.\n\nOffset pagination can shift between requests if the collection changes;\nsnapshot consistency is outside scope. No migration is required.\nRollback consists of reverting the endpoint and associated tests.\n\n## Done when\n\n- Pagination and all acceptance cases pass in the actual application.\n- Requests without pagination retain the exact existing response.\n- Authentication and storage remain unchanged.\n- The implementation diff contains only scoped code and tests.\n```\n\nFuture Codex execution prompt:\n\n> Only when implementation is separately authorized, read `docs/specs/widgets-pagination-spec.md` and applicable repository instructions. Verify the Linux/WSL environment and locate the actual application; this fixture has no implementation. Implement the approved specification using existing conventions, run `npm test -- widgets`, and report changed files, validation, conflicts, and remaining risks. Specification approval alone does not authorize implementation.\n\nReview result: the draft covers scope, acceptance criteria, validation, and rollback. Parsing assumptions are explicit. Environment checks found Linux, `WSL_DISTRO_NAME=<observed>`, and Linux tool paths; this disposable fixture is not a usable Git checkout.\n\n**Approve revision 1, including its explicit assumptions, for saving to `docs/specs/widgets-pagination-spec.md`?**\n\nThe approval pause follows your request and [the skill’s workflow](.test-skill/references/workflow-details.md): “Present the full draft … before one approval covering the revision and its concrete writes.”",
+          "exit_code": 0,
+          "elapsed_seconds": 63.27,
+          "cli_reported_usage": {
+            "input_tokens": 60601,
+            "cached_input_tokens": 41472,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1768,
+            "reasoning_output_tokens": 17
+          },
+          "command_executions": 4,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Approve the complete draft including its explicit validation clarifications. Save this exact version to the proposed docs/specs/widgets-pagination-spec.md now. Do not implement.",
+          "assistant_final": "Saved the exact approved draft to [docs/specs/widgets-pagination-spec.md](docs/specs/widgets-pagination-spec.md) and verified it by reading it back.\n\nNo feature implementation or tests were run. No ADR was required.\n\nFuture execution prompt: “When separately authorized, implement the approved specification in the actual application, follow repository instructions, run `npm test -- widgets`, and report changes and validation results.”",
+          "exit_code": 0,
+          "elapsed_seconds": 54.55,
+          "cli_reported_usage": {
+            "input_tokens": 123205,
+            "cached_input_tokens": 99328,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 3317,
+            "reasoning_output_tokens": 17
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widgets-pagination-spec.md": "fd0f187c2a8e8130dea4075a704eb4f1ce3740338e1856141e427afcb54f79a8"
+          }
+        }
+      ]
+    },
+    {
+      "case": "prior-answer",
+      "arm": "none",
+      "skill_file_hashes_sha256": null,
+      "skill_file_hashes": {},
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Prepare an implementation specification for GET /widgets pagination. Read README.md first. I already decided: limit is optional, defaults to 50 when supplied without offset, maximum 100, offset defaults to zero, omitted pagination parameters preserve the existing response exactly, invalid/negative values return 400, and no authentication or storage changes. Use the established documentation path and show the finished draft for approval before saving. Do not implement the feature. Do not switch modes; continue here.",
+          "assistant_final": "Draft for `docs/specs/widgets-pagination-spec.md` — **not saved**.\n\n# GET /widgets pagination\n\n## Scope\n\nAdd optional `limit` and `offset` query parameters to `GET /widgets`. No authentication or storage changes.\n\n## Behavior\n\n- When both parameters are omitted, preserve the existing response exactly, including the JSON array shape and stable ID ordering.\n- When either parameter is present, enable pagination:\n  - `limit` is optional and defaults to `50`.\n  - Maximum `limit` is `100`; larger values return `400`.\n  - `offset` defaults to `0`.\n- Apply pagination to the existing stable ID order: skip `offset` widgets, then return at most `limit` widgets.\n- Return a JSON array without a pagination envelope or additional metadata.\n- `limit=0` and offsets at or beyond the collection length return `[]`.\n\n**Draft interpretation:** `?limit=20` uses offset `0`; `?offset=20` uses limit `50`. An explicitly empty value is invalid, rather than omitted.\n\n## Validation\n\nValidate supplied parameters before selecting results. Invalid or negative values return `400`, using the existing error-response convention.\n\nProposed parsing rules:\n\n- Accept decimal nonnegative integers only.\n- Reject empty values, fractions, signs, whitespace, nonnumeric text, exponent notation, and repeated occurrences of either parameter.\n- Reject integers that cannot be represented safely by the implementation.\n- Do not silently truncate, clamp, or substitute defaults for invalid values.\n\n## Examples\n\n| Request | Result |\n|---|---|\n| `/widgets` | Exact existing response |\n| `/widgets?limit=20` | First 20 widgets |\n| `/widgets?offset=20` | Up to 50 widgets after skipping 20 |\n| `/widgets?limit=100&offset=50` | Up to 100 widgets after skipping 50 |\n| `/widgets?limit=0` | `[]` |\n| `/widgets?limit=101` | `400` |\n| `/widgets?offset=-1` | `400` |\n| `/widgets?limit=` | `400` |\n\n## Implementation requirements\n\n1. Distinguish parameter absence from a supplied empty value.\n2. Preserve the existing unpaginated behavior when both parameters are absent.\n3. Validate supplied values and resolve defaults when pagination is enabled.\n4. Select the requested slice in stable ID order and serialize through the existing array-response mechanism.\n\n## Required verification\n\nAfter implementation, run `npm test -- widgets`. Cover:\n\n- Exact backward compatibility when both parameters are absent.\n- Limit-only, offset-only, and combined requests.\n- Default limit `50`, default offset `0`, and maximum limit `100`.\n- Zero limit, zero offset, empty collections, partial final pages, and offsets at or beyond the end.\n- Stable ordering across consecutive pages.\n- Every invalid-input category above, including an excessive limit.\n\nThis fixture has no executable application or dependencies; no tests were run or packages installed.\n\n---\n\nDo you approve this draft for saving to `docs/specs/widgets-pagination-spec.md`? Approval is requested because you explicitly required review before saving.",
+          "exit_code": 0,
+          "elapsed_seconds": 36.06,
+          "cli_reported_usage": {
+            "input_tokens": 35184,
+            "cached_input_tokens": 22784,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 882,
+            "reasoning_output_tokens": 51
+          },
+          "command_executions": 3,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Approve the complete draft including its explicit validation clarifications. Save this exact version to the proposed docs/specs/widgets-pagination-spec.md now. Do not implement.",
+          "assistant_final": "Saved the exact approved draft to [docs/specs/widgets-pagination-spec.md](docs/specs/widgets-pagination-spec.md) and verified its contents. No feature implementation changes made.",
+          "exit_code": 0,
+          "elapsed_seconds": 40.22,
+          "cli_reported_usage": {
+            "input_tokens": 88825,
+            "cached_input_tokens": 73984,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1860,
+            "reasoning_output_tokens": 51
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widgets-pagination-spec.md": "312cec1d0e93f55b049209579fb0ff1cdfc59c8d0842a3877880fd84d3558181"
+          }
+        }
+      ]
+    },
+    {
+      "case": "prior-answer",
+      "arm": "released",
+      "skill_file_hashes_sha256": "950400aefd21c25efa8213e9e77ab90e517fabc3c990dc9f56822798beac1fd3",
+      "skill_file_hashes": {
+        "SKILL.md": "f6a7e362bb710de403fa082210aeeec2ddafcd5a4da66328d659ef112657d859",
+        "references/adr-gate.md": "0c9fc69d12a1c3edba7de4de581078b329519bdf39728606d1b4ed80eac88c69",
+        "references/question-bank.md": "fef64c73333ad6d207f5793f6e25f5856bb1aefae297822fda5706d542bc5243",
+        "references/source-challenge.md": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b",
+        "references/workflow-details.md": "9a25c0335d9ee5d01a81c9294e2a4bf51b439b0f49b1643c7fdd9feccea8d1bf",
+        "references/spec-rubric.md": "77e389ffdb4107cb199ef458c22e827d138ab9a3188a3806d313ad455b10bb99",
+        "references/artifact-destinations.md": "7399f9284ca9ce9c14cbfd3fe476947f193ba795da6331ecf8a83876e1016cbd",
+        "references/rollout-checklist.md": "469769863274f21f583f6bb293ba1a19526d21dcda0ed8d2b2c06781f84b7d7b",
+        "agents/openai.yaml": "69a2e383bdb2c1024af42a20d8aca796650e1252359d35ae8458c83040b81175",
+        "assets/spec-template.compact.md": "b270455efe63540c2ebe96bd5fb2c395cde970a39a7864b32c2a9e75071f2300",
+        "assets/spec-template.standard.md": "9fd35e680b573df083ee17e8d227530f44a95fd7b8731286d6556e27c4c6a952",
+        "assets/openai-icon.png": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d",
+        "assets/example-small-task.spec.md": "a09d0d9461b7bff482ba8adba3fbdb2ce64212366c59023661be22093a52c029",
+        "assets/example-repo-refactor.spec.md": "f5af9a08262f5d307478aac52f381b3ba1e60bb6222c2a97362c1ab5dd31a615",
+        "assets/spec-template.deep.md": "d18cc6072f59e6f110f1621efbab938129820b8c9f9d2fa2bf66166d49baa835",
+        "assets/codex-execution-prompt.md": "fb1f52c45d57b74767bddaa4e66dd37b135ae7edd009a147e15096bff2273dfa"
+      },
+      "turns": [
+        {
+          "turn": 1,
+          "user": "Use the skill at .test-skill/SKILL.md for this request.\n\nPrepare an implementation specification for GET /widgets pagination. Read README.md first. I already decided: limit is optional, defaults to 50 when supplied without offset, maximum 100, offset defaults to zero, omitted pagination parameters preserve the existing response exactly, invalid/negative values return 400, and no authentication or storage changes. Use the established documentation path and show the finished draft for approval before saving. Do not implement the feature. Do not switch modes; continue here.",
+          "assistant_final": "Proposed destination: `docs/specs/widgets-pagination-spec.md`. **Draft only; nothing saved or implemented.**\n\n```markdown\n---\ntitle: \"GET /widgets pagination\"\nslug: \"widgets-pagination\"\nartifact_path: \"docs/specs/widgets-pagination-spec.md\"\nmode: \"compact\"\nstatus: \"draft\"\ncreated: \"2026-09-21\"\n---\n\n# GET /widgets pagination\n\n## Goal\n\nAdd optional limit/offset pagination while preserving the existing\nGET /widgets response exactly when both parameters are omitted.\n\n## Scope\n\nAdd query validation and pagination to GET /widgets, with focused tests\nand endpoint documentation.\n\nNo authentication, storage, dependency, or unrelated endpoint changes.\nNo response envelope, totals, or pagination metadata.\n\n## Repository context\n\nREADME.md establishes that GET /widgets returns a JSON array in stable\nid order and specifies docs/specs/<feature>-spec.md for specifications.\n\nThis fixture contains no executable application or dependencies.\nHandler, validator, and test file paths are unspecified; identify their\nexisting equivalents in the implementation repository.\n\n## Requirements\n\n- If both pagination parameters are absent, preserve existing response\n  behavior exactly, including the complete array and stable id order.\n- If either parameter is present, validate pagination before applying it.\n- limit is optional, has an effective default of 50 for paginated\n  requests, and must not exceed 100.\n- offset is optional and defaults to zero.\n- Return the requested slice of the existing stable id ordering:\n  skip offset items, then return at most limit items.\n- Return a JSON array with the existing widget representation.\n- An offset at or beyond the result count returns [].\n- Invalid or negative parameter values return HTTP 400.\n- Reject limit values above 100 rather than silently clamping them.\n- Preserve existing error response conventions; their exact format is\n  unspecified in this fixture.\n\n## Proposed clarifications for approval\n\nThese details make the validation contract explicit:\n\n- An offset-only request uses limit=50.\n- A limit-only request uses offset=0.\n- “Optional limit” means the key may be absent; an empty supplied value\n  such as ?limit= is invalid.\n- Accept non-negative decimal integers, including zero and leading zeros.\n- Reject empty values, signs, whitespace, fractions, exponent notation,\n  non-numeric values, repeated pagination keys, and values that cannot\n  be represented exactly by the implementation's integer handling.\n- limit=0 returns [] after validating both supplied parameters.\n\nApproval of this draft accepts these clarifications.\n\n## Implementation plan\n\n1. Locate the existing GET /widgets handler, query parsing, error\n   conventions, and endpoint tests.\n2. Detect parameter presence explicitly. Preserve the existing path when\n   neither pagination parameter is present.\n3. Validate supplied values without partial numeric parsing or silent\n   coercion. Apply defaults only after selecting the paginated path.\n4. Apply pagination to the existing stable ordering without changing\n   storage or authentication.\n5. Add focused regression and boundary tests.\n6. Update existing endpoint documentation with defaults, bounds,\n   validation rules, and unpaginated compatibility.\n\nConcrete source and test filenames remain unspecified because this\nfixture has no application code. Do not scaffold an application here.\n\n## Architectural decisions\n\n- ADR required: no.\n- Reason: additive endpoint behavior within existing boundaries;\n  README.md explicitly excludes an ADR for this change.\n- Existing ADRs consulted: none found.\n- New or superseding ADR: none.\n- Implementation blocked on ADR acceptance: no.\n\n## Source challenge\n\nChecked README.md against the user requirements.\n\nThe compatibility requirement means the default limit must never apply\nwhen both pagination parameters are absent. Stable id order must be\npreserved before slicing. The existing documentation convention supplies\nthe destination without a new directory or publication workflow.\n\nNo settled requirement was revised. External research was skipped:\nthis contract depends on product decisions and repository evidence,\nnot current framework behavior.\n\n## Validation\n\nRequired cases:\n\n| Request or condition | Expected result |\n| --- | --- |\n| No pagination parameters, more than 100 widgets | Exact existing full response |\n| limit=10 | First 10 widgets |\n| offset=10 | Up to 50 widgets after the first 10 |\n| limit=10&offset=20 | Widgets at zero-based positions 20 through 29 |\n| limit=100 | Accepted; at most 100 widgets |\n| limit=101 | HTTP 400 |\n| limit=0 | [] |\n| offset=0 | First 50 widgets |\n| Offset at or beyond result count | [] |\n| Final partial page | Remaining widgets only |\n| Empty collection | [] |\n| Negative limit or offset | HTTP 400 |\n| Invalid forms listed above, for either parameter | HTTP 400 |\n| One valid parameter and one invalid parameter | HTTP 400 |\n| Repeated requests over unchanged data | Stable order and identical slices |\n\nAssert that paginated responses retain the array shape and existing\nwidget fields. Include a compatibility regression against existing\nunpaginated status, body, and relevant headers.\n\nAfter implementation, run:\n\n    npm test -- widgets\n\nDo not run this command or install packages in this fixture: README.md\nstates that it has no executable application or dependencies.\nAdditional lint and type-check commands are unspecified.\n\n## Risks, rollout, and rollback\n\nThe principal regression risk is accidentally truncating existing\nunpaginated responses. Explicit parameter-presence detection and a\nfull-response regression test guard against this.\n\nOffset pagination does not promise snapshot consistency across requests\nwhen the collection changes.\n\nRelease through the existing application process, which is unspecified\nhere. No data migration is required. Roll back by reverting the\npagination implementation and related documentation.\n\n## Done when\n\n- All approved requirements and validation cases pass in the actual\n  application repository.\n- Unpaginated behavior remains unchanged.\n- Endpoint documentation describes the approved contract.\n- No authentication, storage, or unrelated changes are introduced.\n```\n\nCompanion execution prompt for later use:\n\n> Implement the approved `docs/specs/widgets-pagination-spec.md` in the application repository. Read repository instructions first, follow existing handler and error conventions, add the specified tests, and run `npm test -- widgets`. Report changes, validation, and conflicts. If only this documentation fixture is available, report the missing application rather than scaffolding one.\n\n**Approve this draft, including the proposed clarifications, for saving to the stated path?**\n\nSaving is pending because you explicitly requested approval first. The requested [skill](.test-skill/SKILL.md) also requires: “Present a final checkpoint and wait for verification before preparing artifacts.”",
+          "exit_code": 0,
+          "elapsed_seconds": 64.14,
+          "cli_reported_usage": {
+            "input_tokens": 49186,
+            "cached_input_tokens": 25600,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1818,
+            "reasoning_output_tokens": 24
+          },
+          "command_executions": 5,
+          "artifact_hashes": {}
+        },
+        {
+          "turn": 2,
+          "user": "Approve the complete draft including its explicit validation clarifications. Save this exact version to the proposed docs/specs/widgets-pagination-spec.md now. Do not implement.",
+          "assistant_final": "Saved [widgets-pagination-spec.md](docs/specs/widgets-pagination-spec.md) and verified it matches the approved draft exactly.\n\nNo feature implementation or tests performed.",
+          "exit_code": 0,
+          "elapsed_seconds": 59.27,
+          "cli_reported_usage": {
+            "input_tokens": 151972,
+            "cached_input_tokens": 124416,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 3340,
+            "reasoning_output_tokens": 24
+          },
+          "command_executions": 2,
+          "artifact_hashes": {
+            "docs/specs/widgets-pagination-spec.md": "fece55cc59c4ecb9d1bd0affddfdd201a356fb5b48743eb477693f05aaef34df"
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "One run per task/arm, nine conversations and 21 completed turns; no statistical improvement claim.",
+    "No native UI transition, real async answer, overwrite, ADR acceptance, or other client exercised. Those are scenario contracts and structural checks only.",
+    "No duplicate save approval reproduced in released or candidate CLI arms. No latency or token reduction demonstrated.",
+    "Host-managed permission UI was not instrumented; no interactive native Plan control was exposed. Parent orchestration approvals are not skill questions.",
+    "Raw session identifiers, complete command logs, local paths, comparison provenance and auth remain local."
+  ]
+}
