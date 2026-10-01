@@ -180,7 +180,11 @@ export async function runCli(argv = process.argv.slice(2)) {
   }
   assert.ok(env.RUNNER_TEMP);
   const require = createRequire(
-    path.join(env.RUNNER_TEMP, "release-please-forward", "package.json"),
+    path.join(
+      env.RUNNER_TEMP,
+      "release-please-forward",
+      "scripts/release/forward-release-tool/package.json",
+    ),
   );
   const library = require("release-please");
   const github = await library.GitHub.create({

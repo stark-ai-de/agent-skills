@@ -112,10 +112,12 @@ jobs:
         run: |
           set -euo pipefail
           tool_dir="$RUNNER_TEMP/release-please-forward"
-          mkdir -p "$tool_dir"
-          printf '%s\n' '{"private":true,"dependencies":{"release-please":"17.6.0"}}' > "$tool_dir/package.json"
-          printf '%s\n' 'packages: ["."]' 'strictDepBuilds: true' 'blockExoticSubdeps: true' 'minimumReleaseAge: 1440' 'minimumReleaseAgeStrict: true' 'trustPolicy: no-downgrade' > "$tool_dir/pnpm-workspace.yaml"
-          pnpm --dir "$tool_dir" install --ignore-scripts --no-frozen-lockfile
+          mkdir -p "$tool_dir/site" "$tool_dir/scripts/release/forward-release-tool"
+          cp package.json pnpm-workspace.yaml pnpm-lock.yaml "$tool_dir/"
+          cp site/package.json "$tool_dir/site/"
+          cp scripts/release/forward-release-tool/package.json "$tool_dir/scripts/release/forward-release-tool/"
+          pnpm --dir "$tool_dir" --filter agent-skills-forward-release-tool install --prod --ignore-scripts --frozen-lockfile
+          bun --bun scripts/validation/test-forward-release-install.mjs "$tool_dir/scripts/release/forward-release-tool"
 
       - name: 🔑 Create repository-scoped release App token
         if: ${{ steps.classify.outputs.skip != 'true' }}

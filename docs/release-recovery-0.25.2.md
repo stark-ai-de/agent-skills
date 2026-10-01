@@ -47,9 +47,11 @@ After the manifest advances, the normal Release Please action is selected.
 
 The package is installed outside the checkout in the runner's temporary
 directory, without lifecycle scripts, before the App token is created. The
-root dependency is pinned and the temporary workspace retains the existing
-strict build, exotic dependency, release-age and no-downgrade trust policy.
-This temporary install does not claim a frozen transitive dependency graph. No repository dependency or plugin is changed.
+tool dependency is pinned in the repository workspace and its transitive graph
+is frozen in the single root `pnpm-lock.yaml`. The temporary workspace uses
+`--frozen-lockfile --ignore-scripts` and retains the repository's strict build,
+exotic dependency, release-age and no-downgrade trust policy. Plugin dependencies
+remain unchanged.
 
 Upstream implementation references:
 
@@ -127,3 +129,43 @@ transitive graph under the existing supply-chain policy before executing the
 library with the release App token. Do not silently omit the policy or
 replace the package with 9.0.5, which is affected by GHSA-x4c5-c7rf-jjgv.
 PR #120 is a duplicate bootstrap effort, not a second recovery to merge.
+
+## Frozen bootstrap qualification
+
+The tool workspace member under
+[`scripts/release/forward-release-tool/`](../scripts/release/forward-release-tool/)
+retains Release Please **17.6.0** in the repository's single root pnpm lockfile,
+so the existing build-toolchain SBOM inventory includes its dependencies.
+The workflow copies the root lockfile, workspace policy and all workspace
+manifests into runner-temporary storage, then installs only the tool member
+with `--prod --frozen-lockfile --ignore-scripts`, preserving strict dependency builds,
+blocked exotic dependencies, the 24-hour release-age guard and the
+`no-downgrade` provenance policy. No new trust-policy exception is added;
+the root policy's existing Astro-only `tinyexec@1.2.2` exception does not
+apply to the release tool graph.
+
+Parent-scoped overrides in the root workspace policy retain the qualified tool graph:
+
+- `@octokit/request@8.4.1` uses `@octokit/endpoint@10.1.4`; do not substitute
+  the vulnerable 9.0.5 or restore the refused 9.0.6.
+- `normalize-package-data@2.5.0` uses `semver@7.8.5`; its old 5.7.2 dependency
+  also fails the provenance policy.
+- `release-please@17.6.0` keeps the previously qualified `js-yaml@4.3.2` instead
+  of reusing the root graph's 4.3.1, affected by
+  [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh).
+
+The [installation contract test](../scripts/validation/test-forward-release-install.mjs)
+loads the actual installed library and checks REST path/query encoding,
+GraphQL methods/variables, valid/invalid version normalization, and the
+repository's Manifest parsing and in-memory forward-baseline configuration.
+All transport responses are offline fixtures. The Release Please workflow
+runs this test before creating the release App token; the forward-contract
+workflow repeats the frozen installation and tests on relevant pull requests.
+
+Local qualification on 2026-10-01 installed 179 dependencies under the retained
+policy. The shared-lock `pnpm audit --prod` reports no known vulnerabilities
+on release-tool dependency paths, but also inventories uninstalled workspace
+members and reports existing site findings; review those separately.
+This is installation and offline API compatibility evidence. The protected-main
+App-backed preview, generated release PR, publication and post-release receipt
+remain separate checks in the operator sequence above.
