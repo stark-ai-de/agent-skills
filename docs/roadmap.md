@@ -1,25 +1,28 @@
 # Roadmap
 
-## V1
+## Current Foundation
 
 - Provide a public, installable Agent Skills repository.
-- Include promoted repo maintenance, Codex operations, skill maintenance, and productivity skills, with engineering workflow candidates incubating separately.
+- Include promoted Codex, Cursor, and Claude operations, skill maintenance, and engineering workflow skills, with other candidates incubating separately.
 - Follow the open Agent Skills specification.
-- Keep skill and ADR validation dependency-free.
+- Run skill and ADR checks through the [repository validation commands](../package.json) with lockfile-managed dependencies.
 - Prefer read-only helper scripts.
-- Document long-lived repo decisions as short ADRs.
+- Document long-lived repo decisions as linked [Short, Long, and Guide ADRs](adrs/README.md), with Long as canonical.
 - Keep `skills/` promoted-only and track candidates under `incubator/skills/`.
 - Keep skill evaluation proof under `skill-evals/` instead of the runtime payload by default.
 
+## Implemented
+
+- Generated skill catalog in [`site/`](../site/), built by the [GitHub Pages workflow](../.github/workflows/pages.yml).
+- Regression tests for validator contracts under [`scripts/validation/`](../scripts/validation/), including [bundle validation fixtures](../scripts/validation/test-bundle-contract.mjs).
+- [Clean-copy install smoke tests](../scripts/repo/smoke-install.mjs) in the [Validate workflow](../.github/workflows/validate.yml).
+- Realistic [prompt cases](../skill-evals/codex-spec-interviewer/cases/webhook-idempotency.md) and [expected behavior](../skill-evals/codex-spec-interviewer/expected/standard-spec-sections.md) under [`skill-evals/`](../skill-evals/README.md).
+- Validation, GitHub Pages, release, and license badges in the [repository README](../README.md).
+
 ## Future Work
 
-- Add a generated skill catalog if it proves useful.
-- Track future public-skill candidates in [Skill Ideas](skill-ideas.md).
-- Add tests for validation scripts.
-- Run clean-copy install smoke tests in CI.
-- Add the first realistic prompt and expected-behavior cases under `skill-evals/`.
+- Evaluate future public-skill candidates tracked in [Skill Ideas](skill-ideas.md).
 - Add GitHub issue and pull request templates.
-- Add badges after CI is active on the public repository.
 - Evaluate Claude plugin metadata only after an ADR makes it a supported publishing surface.
 - Evaluate a candidate ADR for provenance-aware assistant statements across Architecture Compass and `codex-memory-curator`: visibly label current verification, memory-derived claims that may be stale, user-provided facts, and assumptions, with timestamps or sources when freshness matters.
 - Qualify an explicitly enabled Codex `UserPromptSubmit` adapter that can call Jev before normal skill selection, removing Jev's own bootstrap requirement. Revalidate access to the current eligible skill/MCP inventory; fall back to native selection whenever inventory, permissions, hook trust, or Jev availability cannot be confirmed. Measure hook overhead and task outcomes before claiming automatic routing, and qualify Claude and plugin hosts separately. See [ADR-0057](adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.short.md) ([Long, canonical](adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.long.md) · [Guide](adrs/0057-permit-qualified-opt-in-host-advice-while-preserving-target-contracts.guide.md)), the [Jev integration contract](../skills/skill-maintenance/jev-capability-advisor/references/session-integration.md), [Codex hooks](https://learn.chatgpt.com/docs/hooks), and the [Codex app-server](https://learn.chatgpt.com/docs/app-server).
