@@ -316,10 +316,7 @@ test("a wrong-cased skipGitHubRelease field cannot replace the upstream contract
 });
 
 test("temporary dependency installation retains the supply-chain policy", () => {
-  const policyText = fs.readFileSync(
-    new URL("../release/forward-release-tool/pnpm-workspace.yaml", import.meta.url),
-    "utf8",
-  );
+  const policyText = fs.readFileSync(new URL("../../pnpm-workspace.yaml", import.meta.url), "utf8");
   const workflow = fs.readFileSync(
     new URL("../../.github/workflows/release-please.yml", import.meta.url),
     "utf8",
@@ -333,9 +330,42 @@ test("temporary dependency installation retains the supply-chain policy", () => 
   ]) {
     assert.ok(policyText.includes(policy));
   }
-  assert.ok(!policyText.includes("trustPolicyExclude"));
+  assert.ok(policyText.includes('"scripts/release/forward-release-tool"'));
+  assert.ok(
+    !fs.existsSync(new URL("../release/forward-release-tool/pnpm-lock.yaml", import.meta.url)),
+  );
+  assert.ok(
+    !fs.existsSync(new URL("../release/forward-release-tool/pnpm-workspace.yaml", import.meta.url)),
+  );
+  assert.ok(workflow.includes("cp package.json pnpm-workspace.yaml pnpm-lock.yaml"));
+  assert.ok(workflow.includes("--filter agent-skills-forward-release-tool install --prod"));
   assert.ok(workflow.includes("--frozen-lockfile"));
   assert.ok(!workflow.includes("--no-frozen-lockfile"));
+});
+
+test("contract workflow triggers on configuration and every staged workspace input", () => {
+  const workflow = fs.readFileSync(
+    new URL("../../.github/workflows/forward-release-contract.yml", import.meta.url),
+    "utf8",
+  );
+  for (const event of ["pull_request", "push"]) {
+    const section = workflow.split(`  ${event}:`)[1]?.split("\n\n")[0].split("\n  push:")[0];
+    assert.ok(section, `${event} trigger is present`);
+    for (const input of [
+      "release-please-config.json",
+      "package.json",
+      "site/package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      ".bun-version",
+      "scripts/release/forward-release-tool/**",
+    ]) {
+      assert.ok(
+        section.split("\n").some((line) => line.trim() === `- ${input}`),
+        `${event}: ${input}`,
+      );
+    }
+  }
 });
 
 for (const { name, run } of cases) {

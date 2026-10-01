@@ -5,6 +5,12 @@ on:
     paths:
       - .github/workflows/forward-release-contract.yml
       - .github/workflows/release-please.yml
+      - release-please-config.json
+      - package.json
+      - site/package.json
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
+      - .bun-version
       - scripts/release/prepare-forward-release.mjs
       - scripts/release/forward-release-tool/**
       - scripts/validation/test-forward-release.mjs
@@ -15,6 +21,12 @@ on:
     paths:
       - .github/workflows/forward-release-contract.yml
       - .github/workflows/release-please.yml
+      - release-please-config.json
+      - package.json
+      - site/package.json
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
+      - .bun-version
       - scripts/release/prepare-forward-release.mjs
       - scripts/release/forward-release-tool/**
       - scripts/validation/test-forward-release.mjs
@@ -48,7 +60,9 @@ jobs:
         run: |
           set -euo pipefail
           tool_dir="$RUNNER_TEMP/release-please-forward"
-          mkdir -p "$tool_dir"
-          cp scripts/release/forward-release-tool/{package.json,pnpm-workspace.yaml,pnpm-lock.yaml} "$tool_dir/"
-          pnpm --dir "$tool_dir" install --ignore-scripts --frozen-lockfile
-          bun --bun scripts/validation/test-forward-release-install.mjs "$tool_dir"
+          mkdir -p "$tool_dir/site" "$tool_dir/scripts/release/forward-release-tool"
+          cp package.json pnpm-workspace.yaml pnpm-lock.yaml "$tool_dir/"
+          cp site/package.json "$tool_dir/site/"
+          cp scripts/release/forward-release-tool/package.json "$tool_dir/scripts/release/forward-release-tool/"
+          pnpm --dir "$tool_dir" --filter agent-skills-forward-release-tool install --prod --ignore-scripts --frozen-lockfile
+          bun --bun scripts/validation/test-forward-release-install.mjs "$tool_dir/scripts/release/forward-release-tool"
