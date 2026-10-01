@@ -1,0 +1,12 @@
+packages:
+  - "."
+strictDepBuilds: true
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+trustPolicy: no-downgrade
+overrides:
+  # endpoint 9.0.6 has no provenance; 9.0.5 is affected by GHSA-x4c5-c7rf-jjgv.
+  "@octokit/request@8.4.1>@octokit/endpoint": 10.1.4
+  # semver 5.7.2 also fails the provenance policy; exercise normalization with 7.
+  "normalize-package-data@2.5.0>semver": 7.8.5

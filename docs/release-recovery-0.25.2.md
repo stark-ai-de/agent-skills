@@ -127,3 +127,34 @@ transitive graph under the existing supply-chain policy before executing the
 library with the release App token. Do not silently omit the policy or
 replace the package with 9.0.5, which is affected by GHSA-x4c5-c7rf-jjgv.
 PR #120 is a duplicate bootstrap effort, not a second recovery to merge.
+
+## Frozen bootstrap qualification
+
+The isolated tool definition under
+[`scripts/release/forward-release-tool/`](../scripts/release/forward-release-tool/)
+retains Release Please **17.6.0** and checks in its complete pnpm lockfile.
+The workflow copies this definition into runner-temporary storage and installs
+with `--frozen-lockfile --ignore-scripts`, preserving strict dependency builds,
+blocked exotic dependencies, the 24-hour release-age guard and the
+`no-downgrade` provenance policy. There are no trust-policy exceptions.
+
+Two parent-scoped overrides avoid the refused legacy versions:
+
+- `@octokit/request@8.4.1` uses `@octokit/endpoint@10.1.4`; do not substitute
+  the vulnerable 9.0.5 or restore the refused 9.0.6.
+- `normalize-package-data@2.5.0` uses `semver@7.8.5`; its old 5.7.2 dependency
+  also fails the provenance policy.
+
+The [installation contract test](../scripts/validation/test-forward-release-install.mjs)
+loads the actual installed library and checks REST path/query encoding,
+GraphQL methods/variables, valid/invalid version normalization, and the
+repository's Manifest parsing and in-memory forward-baseline configuration.
+All transport responses are offline fixtures. The Release Please workflow
+runs this test before creating the release App token; the forward-contract
+workflow repeats the frozen installation and tests on relevant pull requests.
+
+Local qualification on 2026-10-01 installed 179 dependencies under the retained
+policy and reported no known vulnerabilities from `pnpm audit --prod`.
+This is installation and offline API compatibility evidence. The protected-main
+App-backed preview, generated release PR, publication and post-release receipt
+remain separate checks in the operator sequence above.

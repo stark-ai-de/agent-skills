@@ -6,7 +6,9 @@ on:
       - .github/workflows/forward-release-contract.yml
       - .github/workflows/release-please.yml
       - scripts/release/prepare-forward-release.mjs
+      - scripts/release/forward-release-tool/**
       - scripts/validation/test-forward-release.mjs
+      - scripts/validation/test-forward-release-install.mjs
   push:
     branches:
       - main
@@ -14,7 +16,9 @@ on:
       - .github/workflows/forward-release-contract.yml
       - .github/workflows/release-please.yml
       - scripts/release/prepare-forward-release.mjs
+      - scripts/release/forward-release-tool/**
       - scripts/validation/test-forward-release.mjs
+      - scripts/validation/test-forward-release-install.mjs
 
 permissions:
   contents: read
@@ -40,3 +44,11 @@ jobs:
           bun-version-file: ".bun-version"
       - name: Test incident guards and preparation-only contract
         run: bun --bun scripts/validation/test-forward-release.mjs
+      - name: Qualify frozen bootstrap without release credentials
+        run: |
+          set -euo pipefail
+          tool_dir="$RUNNER_TEMP/release-please-forward"
+          mkdir -p "$tool_dir"
+          cp scripts/release/forward-release-tool/{package.json,pnpm-workspace.yaml,pnpm-lock.yaml} "$tool_dir/"
+          pnpm --dir "$tool_dir" install --ignore-scripts --frozen-lockfile
+          bun --bun scripts/validation/test-forward-release-install.mjs "$tool_dir"
