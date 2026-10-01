@@ -24,15 +24,15 @@
         {
           "id": "node",
           "signals": {
-            "representativeValidators": "pass",
-            "crossPlatformHosted": "pass",
+            "representativeValidators": "unknown",
+            "crossPlatformHosted": "unknown",
             "securityRegression": "not-applicable"
           }
         }
       ],
       "winner": "bun",
       "evidenceRefs": ["package.json#scripts", "pnpm run validate", "ADR-0055"],
-      "rationale": "Bun 1.4.0 passes the representative repository validators and is the accepted starting candidate; command and hosted failures remain authoritative.",
+      "rationale": "Bun remains the accepted starting candidate for unchanged repository validator commands. Current local aggregate proof for the updated dependency graph uses Bun 1.4.2; the declared CI toolchain and cross-platform hosted results remain separate observations.",
       "fallbackOrder": ["bun", "node"],
       "revisit": "Re-evaluate after a Bun runtime regression, a failing mandatory validator, or a changed upstream runtime contract."
     },
@@ -134,7 +134,7 @@
       ],
       "winner": "native",
       "evidenceRefs": ["package.json#scripts.format", "package.json#scripts.lint"],
-      "rationale": "Oxfmt and Oxlint are native executables and do not require a JavaScript runtime wrapper.",
+      "rationale": "Oxfmt 0.71.0 and Oxlint 1.86.0 pass the repository formatter and linter on Linux/WSL (2026-10-01). The commands retain their native execution boundary; hosted checks remain separate.",
       "fallbackOrder": ["native"],
       "revisit": "Revisit if the installed Oxc entrypoints stop being native executables."
     },
@@ -179,13 +179,18 @@
           "signals": {
             "productionBuild": "pass",
             "seoValidation": "pass",
-            "hostedPages": "pass"
+            "hostedPages": "unknown"
           }
         }
       ],
       "winner": "bun",
-      "evidenceRefs": ["site/package.json#scripts", "pnpm run validate:site"],
-      "rationale": "Astro 7.2.7 and its SEO validator complete the 43-page production build under Bun 1.4.0; hosted Pages remains a separate observation.",
+      "evidenceRefs": [
+        "site/package.json#scripts",
+        "pnpm run validate:site",
+        "node node_modules/astro/bin/astro.mjs build (cwd: site)",
+        "node scripts/validate-seo.mjs (cwd: site)"
+      ],
+      "rationale": "On 2026-10-01, Astro 7.3.5 and its SEO validator completed the 46-page production build on Linux/WSL under Bun 1.4.2 and Node.js 24.21.0. The declared CI toolchain and hosted Pages require current hosted observation.",
       "fallbackOrder": ["bun", "node"],
       "revisit": "Re-evaluate after a material Astro, Vite, adapter, or GitHub Pages runtime change."
     },

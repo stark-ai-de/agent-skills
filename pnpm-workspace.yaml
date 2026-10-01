@@ -4,20 +4,19 @@ packages:
   - "scripts/release/forward-release-tool"
 overrides:
   "vite@": 8.2.2
+  # github-actionlint still requests adm-zip 0.5; 0.6.1 fixes its archive advisories.
+  "github-actionlint@1.7.12>adm-zip": 0.6.1
   # endpoint 9.0.6 has no provenance; 9.0.5 is affected by GHSA-x4c5-c7rf-jjgv.
   "@octokit/request@8.4.1>@octokit/endpoint": 10.1.4
   # semver 5.7.2 fails the provenance policy; qualify normalization with 7.
   "normalize-package-data@2.5.0>semver": 7.8.5
-  # Preserve the qualified release-tool parser instead of reusing vulnerable root 4.3.1.
+  # Keep the qualified release-tool parser pinned independently of the root parser.
   "release-please@17.6.0>js-yaml": 4.3.2
 strictDepBuilds: true
 blockExoticSubdeps: true
 minimumReleaseAge: 1440
 minimumReleaseAgeStrict: true
 trustPolicy: no-downgrade
-trustPolicyExclude:
-  # Existing Astro transitive dependency; remove after Astro no longer resolves tinyexec@1.2.2.
-  - tinyexec@1.2.2
 allowBuilds:
   esbuild: true
   sharp: true

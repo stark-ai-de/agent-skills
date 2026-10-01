@@ -140,9 +140,7 @@ The workflow copies the root lockfile, workspace policy and all workspace
 manifests into runner-temporary storage, then installs only the tool member
 with `--prod --frozen-lockfile --ignore-scripts`, preserving strict dependency builds,
 blocked exotic dependencies, the 24-hour release-age guard and the
-`no-downgrade` provenance policy. No new trust-policy exception is added;
-the root policy's existing Astro-only `tinyexec@1.2.2` exception does not
-apply to the release tool graph.
+`no-downgrade` provenance policy. No trust-policy exception is required by the merged workspace graph.
 
 Parent-scoped overrides in the root workspace policy retain the qualified tool graph:
 
@@ -151,7 +149,7 @@ Parent-scoped overrides in the root workspace policy retain the qualified tool g
 - `normalize-package-data@2.5.0` uses `semver@7.8.5`; its old 5.7.2 dependency
   also fails the provenance policy.
 - `release-please@17.6.0` keeps the previously qualified `js-yaml@4.3.2` instead
-  of reusing the root graph's 4.3.1, affected by
+  of the previously used 4.3.1, affected by
   [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh).
 
 The [installation contract test](../scripts/validation/test-forward-release-install.mjs)
@@ -162,10 +160,9 @@ All transport responses are offline fixtures. The Release Please workflow
 runs this test before creating the release App token; the forward-contract
 workflow repeats the frozen installation and tests on relevant pull requests.
 
-Local qualification on 2026-10-01 installed 179 dependencies under the retained
-policy. The shared-lock `pnpm audit --prod` reports no known vulnerabilities
-on release-tool dependency paths, but also inventories uninstalled workspace
-members and reports existing site findings; review those separately.
+Merged-workspace qualification on 2026-10-01 installed 179 tool dependencies
+under the retained policy. The shared-lock `pnpm audit` reported no known
+vulnerabilities across the merged workspace graph.
 This is installation and offline API compatibility evidence. The protected-main
 App-backed preview, generated release PR, publication and post-release receipt
 remain separate checks in the operator sequence above.
