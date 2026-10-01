@@ -117,7 +117,7 @@
     "format": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --write .",
     "format:check": "oxfmt --config oxfmt.json --ignore-path .oxfmtignore --threads=1 --check .",
     "lint": "oxlint --config oxlint.json scripts",
-    "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
+    "lint:actions": "bun exec \"bun --bun scripts/validation/test-actionlint-archive.mjs && bun --bun scripts/repo/lint-actions.mjs\"",
     "lint:fix": "oxlint --config oxlint.json --fix scripts",
     "validate:jev": "bun --bun scripts/validation/jev-capability-advisor/validate.mjs",
     "qualify:shadcn-lint": "pnpm --dir skill-evals/architecture-compass/fixtures/shadcn-lint run qualify",
@@ -128,7 +128,7 @@
     "ajv": "^8.20.0",
     "fflate": "^0.8.3",
     "github-actionlint": "1.7.12",
-    "js-yaml": "5.3.0",
+    "js-yaml": "5.4.2",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "semver": "7.8.5"
