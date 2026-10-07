@@ -1,8 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { parseArgs } from "node:util";
 
 const root = process.cwd();
-const skillsDir = path.join(root, "skills");
+const { values } = parseArgs({ options: { incubator: { type: "boolean" } } });
+const skillsDir = values.incubator
+  ? path.join(root, "incubator", "skills")
+  : path.join(root, "skills");
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
