@@ -276,6 +276,9 @@ This harness-first package contains ${bundle.skills.length} developer workflows 
 bundled MCP server, telemetry or analytics. Jev Capability Advisor optionally
 sends supplied task text and public capability cards to TypeSafe using your own
 API key; offline candidate inspection needs no network or credentials.
+Telegram Serverless uses the official CLI for authorized Telegram operations.
+Deployments and remote tests send selected code, assets or test inputs to Telegram
+and can change live data or send bot messages; installation alone starts none.
 Canonical skill content remains maintained under
 \`skills/<category>/<skill>/\`; this ${kind} copy is generated and must not be edited
 as a source.

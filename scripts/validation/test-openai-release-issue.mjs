@@ -314,7 +314,9 @@ assert.throws(
       listing,
       subject,
       previousRelease,
-      previousSubject: { pluginVersion: "1.8.0" },
+      previousSubject: {
+        pluginVersion: `${Number(listing.plugin.version.split(".")[0]) + 1}.0.0`,
+      },
       issues: [],
     }),
   /decreased/,

@@ -39,9 +39,9 @@ Use:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a cursor -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a claude-code -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
@@ -59,8 +59,8 @@ The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai
 Install Claude Code public skills project-locally or globally with the skills CLI:
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -a claude-code -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams jev-capability-advisor -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a claude-code -y
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.
@@ -473,18 +473,21 @@ npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -a
 npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a codex --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill telegram-serverless -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a codex --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-spec-interviewer -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a cursor --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill telegram-serverless -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a cursor --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill claude-spec-interviewer -a claude-code --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator -a claude-code --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -a claude-code --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -a claude-code --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -a claude-code --copy -y
+npx skills@latest add stark-ai-de/agent-skills --skill telegram-serverless -a claude-code --copy -y
 npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -a claude-code --copy -y
 ```
 
@@ -572,9 +575,9 @@ security routes return HTTP 200.
 ### Before opening a production portal submission
 
 1. Review `plugins/stark-ai-developer.source.json` membership, order, identity,
-   `1.6.0`, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
+   declared plugin version, Node `24.18.0`, Bun `1.4.0`, pnpm `11.24.0`, and `zip-store-v1`.
 2. Review the listing source and the packaged `.codex-plugin/plugin.json`.
-3. Inspect all seven canonical `agents/openai.yaml` files and their byte-identical
+3. Inspect all canonical `agents/openai.yaml` files and their byte-identical
    generated copies.
 4. Run focused and aggregate validation, inspect the ZIP listing, and confirm
    two-build checksum equality.

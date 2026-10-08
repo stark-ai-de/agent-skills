@@ -14,6 +14,12 @@ only from a clean tagged identity.
 Do not add secrets, tokens, cookies, private reviewer messages, customer data,
 or machine-specific paths here.
 
+## Telegram Serverless update handoff
+
+Prepared 2026-10-08 for plugin 1.8.0; no portal upload or publication observation. The canonical bundle adds Telegram Serverless 0.1.0, with CHAT/CODEX discovery enabled, a portable starter prompt, an original packaged icon and portal glyph `code`. Its [offline assessment](../../../skill-evals/telegram-serverless/runs/2026-10-08-offline-promotion.md) records the qualification limits.
+
+For a later authorized release, use the exact post-release OpenAI archive and generated handoff issue, inspect every packaged skill interface, preserve the existing glyphs and add `code` for Telegram Serverless. Verify the new service disclosure and distinguish actual host invocation from local metadata checks. Record hosted discovery, account access and live Telegram evidence separately. The dated Jev and first-publication observations below remain historical.
+
 ## Jev update handoff
 
 **Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The bundled plugin contains seven skills, including Jev Capability Advisor. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) documents the release process.

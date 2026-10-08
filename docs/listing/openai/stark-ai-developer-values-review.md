@@ -11,9 +11,11 @@ public release handoff issues must be derived from that file. Portal and product
 observations after the first listing live in
 [`stark-ai-developer-first-publication.md`](stark-ai-developer-first-publication.md).
 
-## Accepted capability addition
+## Accepted capability additions
 
-Jev Capability Advisor adds a seventh, Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. This document does not assert a portal submission, approval, or publication state.
+Telegram Serverless adds bot and Mini App workflows with CHAT/CODEX discovery enabled and portal glyph `code`. Its official CLI performs cloud operations only within the requested scope; deployment and remote tests can transmit code, assets and test inputs to Telegram and affect live data or messages. The [offline promotion assessment](../../../skill-evals/telegram-serverless/runs/2026-10-08-offline-promotion.md) does not qualify live Telegram behavior or hosted discovery.
+
+Jev Capability Advisor provides a Codex-only workflow. Its optional TypeSafe request uses the user's own API key and transfers supplied task text plus bounded public capability descriptions. Offline inspection remains available. This document does not assert a portal submission, approval, or publication state.
 
 ## Recommended values
 
@@ -49,7 +51,7 @@ directory check. Do not write them into `agents/openai.yaml`.
 
 The package is skills-only. It has no shared backend, bundled MCP server,
 telemetry or analytics. Jev uses an optional, declared TypeSafe connection with
-the user's own API key; offline inspection needs neither network nor credentials. Host, workspace, repository, and tool processing remain subject to
+the user's own API key; offline inspection needs neither network nor credentials. Telegram Serverless guides owner-authorized use of Telegram's CLI and hosting services, with code, asset and test-input transfers described in the public privacy notice. Installation alone initiates neither integration. Host, workspace, repository, and tool processing remain subject to
 the installing client's policies and are not promises made by this package.
 
 Public routes on the existing GitHub Pages site:

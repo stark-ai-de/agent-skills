@@ -1,0 +1,103 @@
+{
+  "sourcesRead": [
+    "skill-evals/telegram-serverless/cases.json \u2014 B1, B2 and B3 prompts and fixtures only",
+    "official-serverless-documentation-capture \u2014 complete captured official https://core.telegram.org/bots/serverless documentation"
+  ],
+  "approxSourceGuidanceBytesRead": 66788,
+  "cases": [
+    {
+      "id": "B1",
+      "response": "The two backend files below count text messages atomically per chat and reply with the new count. Non-text messages cause neither a database write nor a reply. For a future deployment, enable Serverless for the existing bot in BotFather and follow the unexecuted commands in order. Deploy and migrate the schema before activating the new handler; reconcile existing cloud code during review. No Telegram contact or deployment was performed.",
+      "files": {
+        "tgcloud/schema.js": "import { table, integer } from 'sdk/db';\n\nexport const counters = table('counters', {\n  chatId: integer('chat_id').primaryKey(),\n  count: integer('count').notNull().default(0),\n});\n",
+        "tgcloud/handlers/message.js": "import { api, db } from 'sdk';\nimport { sql } from 'sdk/db';\nimport { counters } from '../schema.js';\n\nexport default async function (message) {\n  if (typeof message.text !== 'string') return;\n\n  const [counter] = await db.insert(counters)\n    .values({ chatId: message.chat.id, count: 1 })\n    .onConflictDoUpdate({\n      target: counters.chatId,\n      set: { count: sql`${counters.count} + 1` },\n    })\n    .returning()\n    .run();\n\n  await api.sendMessage({\n    chat_id: message.chat.id,\n    text: `Count: ${counter.count}`,\n  });\n}\n"
+      },
+      "commands": [
+        {
+          "command": "npm create @tgcloud/bot .",
+          "effects": "Optional prerequisite only if this project lacks its local CLI: contacts npm, installs the project-local CLI and scaffolds missing files. Existing files are preserved. Review the resulting project before proceeding.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud login",
+          "effects": "After enabling Serverless for the existing bot in BotFather, interactively validates its separate CLI Access token with Telegram and saves credentials in git-ignored .tgcloud/. Do not use the Bot API token or put a token in source or command arguments.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud fetch",
+          "effects": "Contacts Telegram and refreshes local knowledge of deployed modules without overwriting working source files.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud status",
+          "effects": "Offline comparison with the cached deployed state. Review any existing cloud modules before deploying.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud diff",
+          "effects": "Offline source comparison. Reconcile any pre-existing schema or message-handler logic before the following targeted pushes; do not replace unrelated existing declarations or behavior blindly.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud push tgcloud/schema.js",
+          "effects": "Deploys only the reviewed schema module and reports pending database changes. Does not migrate the database or delete other modules.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud migrate --dry-run",
+          "effects": "Contacts Telegram to preview schema differences against the live database; applies nothing. Confirm that the intended counters table change is the only required migration.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud migrate",
+          "effects": "Changes the live database only after interactive review and confirmation. Stop if the intended table migration fails; do not deploy the new handler until it succeeds.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud push tgcloud/handlers/message.js",
+          "effects": "Deploys the reviewed handler after its table exists. The handler will write counters and send replies for incoming text messages. Other cloud modules are left untouched.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud webhook",
+          "effects": "Contacts Telegram to inspect the platform-managed webhook and allowed update types.",
+          "executed": false
+        },
+        {
+          "command": "npx tgcloud webhook sync",
+          "effects": "Conditional: only if inspection reports an out-of-sync webhook and Serverless is intended to receive this bot's updates. Updates the platform-managed webhook and allowed_updates; does not discard pending updates.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "Only offline JavaScript syntax was checked; SDK execution, database migration, webhook behavior and replies remain unverified.",
+        "Counts represent processed text-message deliveries; no duplicate-update suppression or atomic transaction spanning the database write and Bot API reply is implemented.",
+        "tgcloud run is remote execution and can perform real database writes and send messages; it was neither run nor presented as an offline test."
+      ]
+    },
+    {
+      "id": "B2",
+      "response": "These five files provide a plain-HTML Mini App with no bundler. Both endpoints derive ownership exclusively from platform-verified ctx.initData.user.id; caller-supplied owner IDs are ignored. Creation rejects non-strings, whitespace-only notes and input longer than 2000 JavaScript string units, then stores trimmed text. The browser uses the documented callback API and renders note text safely. public/ is the static hosting source. No Telegram contact or deployment was performed.",
+      "files": {
+        "tgcloud/schema.js": "import { table, integer, text } from 'sdk/db';\n\nexport const notes = table('notes', {\n  id: integer('id').primaryKey({ autoIncrement: true }),\n  ownerId: integer('owner_id').notNull(),\n  body: text('body').notNull(),\n});\n",
+        "tgcloud/endpoints/listNotes.js": "import { db } from 'sdk';\nimport { eq, desc } from 'sdk/db';\nimport { notes } from '../schema.js';\n\nexport default async function (_input, ctx) {\n  return await db.select({ id: notes.id, body: notes.body })\n    .from(notes)\n    .where(eq(notes.ownerId, ctx.initData.user.id))\n    .orderBy(desc(notes.id))\n    .all();\n}\n",
+        "tgcloud/endpoints/createNote.js": "import { db, EndpointError } from 'sdk';\nimport { notes } from '../schema.js';\n\nconst MAX_NOTE_LENGTH = 2000;\n\nexport default async function (input, ctx) {\n  if (typeof input?.body !== 'string' ||\n      input.body.length > MAX_NOTE_LENGTH ||\n      input.body.trim().length === 0) {\n    throw new EndpointError('Enter a non-empty note of at most 2000 characters.', {\n      code: 'INVALID_NOTE',\n    });\n  }\n\n  const [note] = await db.insert(notes)\n    .values({ ownerId: ctx.initData.user.id, body: input.body.trim() })\n    .returning()\n    .run();\n\n  return { id: note.id, body: note.body };\n}\n",
+        "public/index.html": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>My notes</title>\n  <script src=\"https://telegram.org/js/telegram-web-app.js\"></script>\n  <style>\n    body { max-width: 36rem; margin: 2rem auto; padding: 0 1rem; font-family: sans-serif; }\n    textarea { display: block; box-sizing: border-box; width: 100%; margin: .5rem 0; }\n    li { margin-bottom: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; }\n  </style>\n</head>\n<body>\n  <h1>My notes</h1>\n  <form id=\"note-form\">\n    <label for=\"body\">New note (up to 2000 characters)</label>\n    <textarea id=\"body\" name=\"body\" rows=\"4\" maxlength=\"2000\" required></textarea>\n    <button id=\"save\" type=\"submit\" disabled>Save note</button>\n  </form>\n  <p id=\"status\" role=\"status\" aria-live=\"polite\">Loading notes\u2026</p>\n  <ul id=\"notes\"></ul>\n  <script>\n    const form = document.getElementById('note-form');\n    const body = document.getElementById('body');\n    const save = document.getElementById('save');\n    const status = document.getElementById('status');\n    const list = document.getElementById('notes');\n    const serverless = window.Telegram?.WebApp?.Serverless;\n\n    function noteItem(note) {\n      const item = document.createElement('li');\n      item.textContent = note.body;\n      return item;\n    }\n\n    function errorMessage(error, fallback) {\n      return error.type === 'ENDPOINT_ERROR' ? error.message : fallback;\n    }\n\n    if (!serverless) {\n      status.textContent = 'Open this Mini App inside Telegram.';\n    } else {\n      serverless.call('listNotes', {}, function (error, notes) {\n        if (error) {\n          status.textContent = errorMessage(error, 'Could not load notes. Reopen this Mini App inside Telegram.');\n          return;\n        }\n        list.replaceChildren(...notes.map(noteItem));\n        status.textContent = notes.length ? '' : 'No notes yet.';\n        save.disabled = false;\n      });\n    }\n\n    form.addEventListener('submit', function (event) {\n      event.preventDefault();\n      if (!serverless || save.disabled) return;\n      const submittedBody = body.value;\n      save.disabled = true;\n      status.textContent = 'Saving\u2026';\n      serverless.call('createNote', { body: submittedBody }, function (error, note) {\n        save.disabled = false;\n        if (error) {\n          status.textContent = errorMessage(error, 'Could not save the note. Please try again.');\n          return;\n        }\n        list.prepend(noteItem(note));\n        if (body.value === submittedBody) body.value = '';\n        status.textContent = 'Note saved.';\n      });\n    });\n  </script>\n</body>\n</html>\n",
+        "tgcloud.jsonc": "{\n  \"static\": {\n    \"source\": \"public\"\n  }\n}\n"
+      },
+      "commands": [],
+      "limitations": [
+        "Only offline JavaScript syntax and static-config JSON were checked; authentication, owner isolation, validation and hosting have not been exercised on Telegram.",
+        "Before future use, the schema must be deployed and its migration separately reviewed and applied before exposing the endpoints and public/ static files. Configure the hosting URL printed by push as the bot's Mini App URL in BotFather.",
+        "The minimal list endpoint returns all of the owner's notes; pagination is not included."
+      ]
+    },
+    {
+      "id": "B3",
+      "response": "- **P1 \u2014 Schema cannot deploy:** `notes.userId.references(() => users.id)` is unsupported. Telegram Serverless explicitly rejects foreign-key declarations; `.references()` throws during schema declaration.\n- **P1 \u2014 Endpoint uses unavailable runtime facilities:** Static imports from `zod` and `node:fs` cannot resolve; only the SDK and project modules are available. There is no filesystem, and `Buffer` is also unavailable, so the debug expression cannot execute even independently of the import blockers.\n- **P1 \u2014 Invalid relative import:** `../schema` lacks the required `.js` extension, independently preventing module resolution.\n- **P1 \u2014 Caller controls the owner filter:** `eq(notes.userId, input.userId)` trusts a user-controlled ID and ignores verified `ctx.initData.user.id`. Once the load blockers are removed, an authenticated caller could request another user's note.\n- **P2 \u2014 Query result is not awaited:** `.get()` returns a Promise. Returning it nested inside `{ row, ... }` does not await it; after the preceding blockers are addressed, the response will not contain the resolved note and query failures will not be handled by this function.",
+      "files": {},
+      "commands": [],
+      "limitations": []
+    }
+  ]
+}

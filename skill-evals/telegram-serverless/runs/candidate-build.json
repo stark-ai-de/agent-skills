@@ -1,0 +1,149 @@
+{
+  "cases": [
+    {
+      "id": "B1",
+      "response": "Route 3 \u2014 Build or modify a bot. The two backend files count text messages independently per chat using one atomic upsert and return that incremented count in the reply; non-text messages do nothing. Deployment handoff only: in the existing linked project, preserve local work and inspect the current cloud modules/schema, retain unrelated schema declarations, publish only schema.js, review and apply its migration, verify that no required changes remain, then publish the handler. Inspect the webhook and synchronize it only if necessary and separately authorized. Use the already installed local CLI; do not run a full-project mirror from this two-file fixture. Every command below is proposed, not executed.",
+      "files": {
+        "tgcloud/schema.js": "import { table, integer } from 'sdk/db';\n\nexport const chatCounters = table('chat_counters', {\n  chatId: integer('chat_id').primaryKey(),\n  count: integer('count').notNull().default(0),\n});\n",
+        "tgcloud/handlers/message.js": "import { api, db } from 'sdk';\nimport { sql } from 'sdk/db';\nimport { chatCounters } from '../schema.js';\n\nexport default async function (message) {\n  if (typeof message?.text !== 'string') return;\n\n  const chatId = message.chat.id;\n  const [counter] = await db.insert(chatCounters)\n    .values({ chatId, count: 1 })\n    .onConflictDoUpdate({\n      target: chatCounters.chatId,\n      set: { count: sql`${chatCounters.count} + 1` },\n    })\n    .returning()\n    .run();\n\n  await api.sendMessage({\n    chat_id: chatId,\n    text: `Text messages in this chat: ${counter.count}`,\n  });\n}\n"
+      },
+      "commands": [
+        {
+          "command": "node --input-type=module --check < tgcloud/schema.js",
+          "effects": "Offline syntax check; does not load the platform SDK.",
+          "executed": false
+        },
+        {
+          "command": "node --input-type=module --check < tgcloud/handlers/message.js",
+          "effects": "Offline syntax check; does not send messages or access a database.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud fetch",
+          "effects": "Future authorized preflight: contacts the linked bot, refreshes local CLI metadata, preserves working source files. Confirm target identity without exposing credentials.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud status",
+          "effects": "Offline comparison against the last synchronized cloud snapshot; inspect scope and preserve existing work.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud diff",
+          "effects": "Offline diff against that snapshot. Reconcile unrelated existing schema declarations before proceeding; fetch alone does not merge source.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud push tgcloud/schema.js",
+          "effects": "Future separately authorized deployment: uploads only the reviewed schema module. Does not create the table or publish the new handler. Stop on a revision conflict; no force retry.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud migrate --dry-run",
+          "effects": "Future authorized cloud inspection: previews changes against the deployed schema; makes no database writes. Proceed only after reviewing the exact new-table plan.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud migrate",
+          "effects": "Future separately authorized database write: interactively apply the reviewed table/index changes. Do not accept unrelated warnings or infer completion from exit status alone.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud migrate --dry-run",
+          "effects": "Future cloud inspection: confirm the required table exists and no required migration is skipped or manual before publishing dependent code.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud push tgcloud/handlers/message.js",
+          "effects": "Future authorized deployment: publishes only the counter handler after schema readiness. Unrelated modules and hosted static files remain untouched.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud webhook",
+          "effects": "Future authorized cloud inspection: check managed routing, allowed_updates including message, pending count and errors.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud webhook sync",
+          "effects": "Conditional future action only when inspection requires it and authorized: updates routing/allowed_updates while retaining pending updates; does not discard the queue.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "No local SDK execution, cloud contact, deployment, migration, webhook changes or live delivery tests were performed. Project link, CLI availability/version and existing cloud schema remain unverified.",
+        "Before later deployment, require Serverless enabled and an existing project-local CLI/link; a missing link uses interactive login with the separate Serverless CLI token, never a token supplied in chat or source.",
+        "The counter records each successful text-handler increment. Duplicate delivery or a retry after a reply failure can increment again; no exactly-once or combined database/Bot-API transaction guarantee is claimed.",
+        "Later authorized live verification should cover two text messages in one chat, a non-text message causing neither increment nor reply, and a text in another chat with an independent count. A tgcloud run would execute remotely and could change real data/send messages; it was not used as an offline test."
+      ]
+    },
+    {
+      "id": "B2",
+      "response": "Route 4 \u2014 Build or modify a Mini App. These five files provide a plain-HTML notes app with no bundler. Both endpoints derive the owner from platform-verified ctx.initData.user.id; listing filters by that owner, and creation ignores client-supplied identities. Notes are trimmed, must contain non-whitespace text, and cannot exceed 2,000 UTF-16 code units before trimming. The browser uses the official callback API, displays text safely, preserves input on errors, and never retries writes automatically. public/ is already the static output folder; no build step is needed. Apply the schema through a reviewed migration before any later publication of its dependent endpoints. No deployment or Telegram contact was performed.",
+      "files": {
+        "tgcloud/schema.js": "import { table, integer, text, index } from 'sdk/db';\n\nexport const notes = table('notes', {\n  id: integer('id').primaryKey({ autoIncrement: true }),\n  ownerId: integer('owner_id').notNull(),\n  body: text('body').notNull(),\n}, (t) => ({\n  byOwner: index('notes_by_owner').on(t.ownerId),\n}));\n",
+        "tgcloud/endpoints/listNotes.js": "import { db, EndpointError } from 'sdk';\nimport { eq, asc } from 'sdk/db';\nimport { notes } from '../schema.js';\n\nexport default async function (_input, ctx) {\n  const ownerId = ctx?.initData?.user?.id;\n  if (!Number.isSafeInteger(ownerId) || ownerId <= 0) {\n    throw new EndpointError('Open this app in Telegram.', { code: 'UNAUTHORIZED' });\n  }\n\n  const rows = await db.select({ id: notes.id, body: notes.body })\n    .from(notes)\n    .where(eq(notes.ownerId, ownerId))\n    .orderBy(asc(notes.id))\n    .all();\n  return { notes: rows };\n}\n",
+        "tgcloud/endpoints/createNote.js": "import { db, EndpointError } from 'sdk';\nimport { notes } from '../schema.js';\n\nexport default async function (input, ctx) {\n  const ownerId = ctx?.initData?.user?.id;\n  if (!Number.isSafeInteger(ownerId) || ownerId <= 0) {\n    throw new EndpointError('Open this app in Telegram.', { code: 'UNAUTHORIZED' });\n  }\n  if (typeof input?.body !== 'string' || input.body.length > 2000) {\n    throw new EndpointError('Enter a note of at most 2,000 characters.', {\n      code: 'INVALID_NOTE',\n    });\n  }\n  const body = input.body.trim();\n  if (!body) {\n    throw new EndpointError('A note cannot be empty.', { code: 'INVALID_NOTE' });\n  }\n\n  const [note] = await db.insert(notes)\n    .values({ ownerId, body })\n    .returning()\n    .run();\n  return { note: { id: note.id, body: note.body } };\n}\n",
+        "public/index.html": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>My notes</title>\n</head>\n<body>\n  <main>\n    <h1>My notes</h1>\n    <form id=\"note-form\">\n      <label for=\"body\">Note (maximum 2,000 characters)</label><br>\n      <textarea id=\"body\" maxlength=\"2000\" required disabled></textarea><br>\n      <button id=\"save\" type=\"submit\" disabled>Save note</button>\n    </form>\n    <button id=\"reload\" type=\"button\" disabled>Reload notes</button>\n    <p id=\"status\" role=\"status\" aria-live=\"polite\"></p>\n    <ul id=\"notes\"></ul>\n  </main>\n  <script src=\"https://telegram.org/js/telegram-web-app.js\"></script>\n  <script>\n    const form = document.getElementById('note-form');\n    const body = document.getElementById('body');\n    const save = document.getElementById('save');\n    const reload = document.getElementById('reload');\n    const status = document.getElementById('status');\n    const list = document.getElementById('notes');\n    const serverless = window.Telegram?.WebApp?.Serverless;\n\n    function setBusy(busy) {\n      body.disabled = busy;\n      save.disabled = busy;\n      reload.disabled = busy;\n    }\n\n    function showError(error, fallback) {\n      status.textContent = error.type === 'ENDPOINT_ERROR'\n        ? error.message\n        : error.type === 'UNAUTHORIZED'\n          ? 'Reopen this app in Telegram to continue.'\n          : fallback;\n    }\n\n    function appendNote(note) {\n      const item = document.createElement('li');\n      item.textContent = note.body;\n      list.append(item);\n    }\n\n    function loadNotes() {\n      setBusy(true);\n      status.textContent = 'Loading\u2026';\n      serverless.call('listNotes', {}, (error, result) => {\n        setBusy(false);\n        if (error) {\n          showError(error, 'Unable to load notes. Try Reload notes.');\n          return;\n        }\n        list.replaceChildren();\n        result.notes.forEach(appendNote);\n        status.textContent = result.notes.length ? 'Notes loaded.' : 'No notes yet.';\n      });\n    }\n\n    if (typeof serverless?.call !== 'function') {\n      status.textContent = 'Open this app in a Telegram version that supports Serverless.';\n    } else {\n      reload.addEventListener('click', loadNotes);\n      form.addEventListener('submit', (event) => {\n        event.preventDefault();\n        if (!body.value.trim() || body.value.length > 2000) {\n          status.textContent = 'Enter a nonempty note of at most 2,000 characters.';\n          return;\n        }\n        setBusy(true);\n        status.textContent = 'Saving\u2026';\n        serverless.call('createNote', { body: body.value }, (error, result) => {\n          setBusy(false);\n          if (error) {\n            showError(error, 'Save was not confirmed. Reload notes before trying again.');\n            return;\n          }\n          appendNote(result.note);\n          body.value = '';\n          status.textContent = 'Saved.';\n        });\n      });\n      loadNotes();\n    }\n  </script>\n</body>\n</html>\n",
+        "tgcloud.jsonc": "{\n  \"$schema\": \"./node_modules/@tgcloud/cli/schema/tgcloud.json\",\n  \"static\": {\n    \"source\": \"public\"\n  }\n}\n"
+      },
+      "commands": [],
+      "limitations": [
+        "These are proposed artifacts, not files installed in an actual bot project. The project-local CLI, existing bot link and migration must be established separately before a later authorized deployment.",
+        "Local syntax/browser checks, live authentication, database execution, static hosting and Telegram-client behavior were not run. The browser script URL is supplied as code only and was not fetched.",
+        "A lost create response can leave a saved note despite an error; the UI tells the user to reload before retrying. No exactly-once create guarantee is claimed."
+      ]
+    },
+    {
+      "id": "B3",
+      "response": "Route 1 \u2014 Review only.\n\n- [P1] Endpoint ownership: the predicate uses input.userId and never receives verified ctx. Once the endpoint can load, any authenticated caller can select another user\u2019s note by submitting that owner\u2019s ID. Authorization must be tied to ctx.initData.user.id.\n- [P1] Schema deployment blocker: integer(...).references(() => users.id) is unsupported and throws in Telegram Serverless. Foreign keys are not enforced by the platform; this declaration prevents deploying the schema.\n- [P1] Unsupported runtime imports/APIs: zod and node:fs cannot resolve in the backend sandbox. It also has no filesystem or Node Buffer, so fs.readFileSync and Buffer.from cannot run. Installing npm dependencies would not make them available there.\n- [P1] Invalid local import: ../schema lacks the required .js extension, so the endpoint cannot resolve the schema module.\n- [P2] Missing await: .get() returns a Promise, but row is placed inside the returned object without awaiting it. The JSON response therefore does not contain the selected database row, and query errors are not awaited by the handler.",
+      "files": {},
+      "commands": [],
+      "limitations": [
+        "Findings are static review of the supplied snippets against the supplied skill and captured official documentation. No fixes, installations, cloud commands or runtime verification were performed."
+      ]
+    }
+  ],
+  "sourcesRead": [
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/SKILL.md",
+      "scope": "full file",
+      "approxBytesRead": 8152
+    },
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/references/runtime-sdk.md",
+      "scope": "full file",
+      "approxBytesRead": 4498
+    },
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/references/database.md",
+      "scope": "full file",
+      "approxBytesRead": 6129
+    },
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/references/mini-apps.md",
+      "scope": "full file",
+      "approxBytesRead": 5691
+    },
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/references/operations.md",
+      "scope": "full file",
+      "approxBytesRead": 6268
+    },
+    {
+      "path": "incubator/skills/engineering-workflows/telegram-serverless/references/sources.md",
+      "scope": "full file",
+      "approxBytesRead": 6938
+    },
+    {
+      "path": "official-serverless-documentation-capture",
+      "scope": "Selected documentation lines: 35-165, 190-498 and 650-730; some overlapping excerpts reread. Read-only search over the capture also used.",
+      "approxBytesRead": 47903
+    },
+    {
+      "path": "skill-evals/telegram-serverless/cases.json",
+      "scope": "B1, B2, B3 prompts and fixtures only; no rubric or results"
+    }
+  ],
+  "sourceGuidanceBytesApprox": 85579,
+  "sourceGuidanceByteAccounting": "Approximate unique bytes selected from skill guidance and captured documentation; excludes evaluation prompts, rereads and environment inspection. Some larger displayed excerpts were truncated, then relevant sections were reread."
+}

@@ -4,7 +4,7 @@
     "name": "servrox solutions UG",
     "url": "https://stark-ai.de"
   },
-  "description": "stark AI Developer brings practical workflows for implementation-ready specifications, architecture decisions, structural code analysis, editable diagrams, repository visuals, agent memory, and capability recommendations. Its open-source skills expose their instructions and supporting scripts for review and adaptation.\n\nThe package has no shared backend, bundled MCP server, telemetry or analytics. Jev Capability Advisor is an optional Codex workflow: fresh recommendations send your supplied task and public capability descriptions to TypeSafe using your own API key. Offline candidate inspection needs no credential or network. Your host controls discovery, permissions and execution; other tools and services keep their own access requirements.",
+  "description": "stark AI Developer provides practical workflows for specifications, architecture decisions, structural code search, editable diagrams, repository visuals, agent memory, capability recommendations, and Telegram-hosted bots and Mini Apps. Its open-source instructions and scripts are available for review and adaptation.\n\nThe package has no shared backend, bundled MCP server, telemetry or analytics. Jev's optional Codex recommendations send your task and public capability cards to TypeSafe using your key; offline inspection needs no network. Telegram Serverless guides the official CLI: authorized deployment and remote tests send selected code, assets or test inputs to Telegram and can change live data or send bot messages. Installation alone starts neither service. Your host controls discovery, permissions and execution; external services retain their own access requirements.",
   "homepage": "https://stark-ai-de.github.io/agent-skills/plugins/stark-ai-developer/",
   "keywords": [
     "developer-tools",
@@ -16,5 +16,5 @@
   "license": "Apache-2.0",
   "name": "stark-ai-developer",
   "repository": "https://github.com/stark-ai-de/agent-skills",
-  "version": "1.7.5"
+  "version": "1.8.0"
 }

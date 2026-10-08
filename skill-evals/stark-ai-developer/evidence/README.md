@@ -16,6 +16,8 @@ Current evidence is structural and fixture-based:
 Portal identifiers and directory observations live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](../../../docs/listing/openai/stark-ai-developer-first-publication.md).
 
+Telegram Serverless has separate [offline behavioral comparisons and promotion evidence](../../telegram-serverless/runs/2026-10-08-offline-promotion.md). Those text/artifact trials complement this structural inventory; they do not establish hosted CHAT/CODEX discovery or live Telegram behavior.
+
 ## Post-release receipts
 
 The post-release workflows upload sanitized, machine-readable receipts as
