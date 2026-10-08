@@ -103,6 +103,54 @@ Use direct `refactor` only when accepted local ADRs already govern the complete 
 
 If governance is missing, route to `setup`. If durable decisions or broad sequencing remain unresolved, route to `plan-refactor` or `plan-run-refactor`. Never silently combine those workflows under direct refactor.
 
+### Iterative simplification
+
+Use this optional procedure when reducing custom code, unnecessary abstraction, or duplication is part of the authorized `refactor` or approved `plan-run-refactor` execution. A request to repeat "until no optimizations remain" means reaching a supported stopping point within that scope; it does not expand write authority. `audit` can identify candidates without applying them, and plan-only work stops before implementation. Existing local decisions continue to govern ownership, dependencies, compatibility, and proof.
+
+#### Establish the scope and baseline
+
+- Record the starting revision plus relevant dirty-tree identity, exact path/language scope, exclusions, protected changes, and repository formatter/counter. Inspect every file in the agreed inventory; a PR diff is only a starting map when the request covers whole services or a repository. Track inspected and unavailable files without silently narrowing the scope.
+- Inspect manifests, lockfiles, supported runtimes, public exports, callers, tests, and accepted contracts. Use available semantic/AST tools when useful; record their actual coverage. If unavailable, use imports/callers, search, compiler, and tests without claiming an equivalent complete call graph. Static reachability alone cannot prove dynamic consumers absent.
+- Measure before and after with the same scope, counter, and formatting. Unless the repository defines another LOC metric, count physical lines including blank/comment lines and label that choice. Report handwritten production, tests/fixtures, documentation/configuration, and generated/vendor code separately, with the handwritten total. Count new helpers, adapters, manifests, and support code as additions wherever they live; moving code between categories or files is not a saving. Disclose generated/lockfile growth separately.
+- Keep the initial baseline fixed for cumulative savings and identify each pass's starting candidate for incremental deltas. Formatting-only changes, compressed statements, deleted explanations, weakened types, or removed coverage do not qualify as simplification.
+
+#### Find and qualify candidates
+
+Prefer deletion of proven redundant layers and supported capabilities already supplied by the language/runtime, framework, installed libraries, or an existing shared owner. Consider a new dependency only after checking these options and its maintenance, security, license, runtime, bundle/startup, and upgrade costs. A shorter call site alone does not justify a dependency or an adapter layer.
+
+| Candidate                                                                     | Evidence needed before replacement                                                                                                                                                                                                              |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pass-through wrapper, duplicate DTO, defensive branch, or compatibility layer | Callers and supported contracts show it has no remaining ownership, runtime, compatibility, or failure-handling role. Schema/type inference is suitable for internal duplication; preserve independently required public-contract drift checks. |
+| Similar implementation in several consumers                                   | Same semantics and compatible runtime audience, with a real existing owner. Share the smallest coherent capability; do not create a speculative package, options-heavy framework, or cross-runtime import to remove a few lines.                |
+| Handwritten parsing, validation, stream handling, or lifecycle code           | The supported API in the resolved framework/library version covers the actual contract. Inspect installed types/source and version-matched documentation; do not assume latest documentation matches the lockfile.                              |
+| Repeated test fixtures or test cases                                          | A shared fixture or parameterized test preserves every distinct input, assertion, failure scenario, isolation requirement, and useful case name. Similar-looking fixtures may encode intentionally different states.                            |
+
+For each candidate, record the removed responsibility, affected consumers, replacement owner/API/version, expected net saving including support code, proof obligation, and disposition. Keep this compact in the existing task receipt; do not create a permanent optimization framework or a second validation ledger.
+
+Check semantic equivalence where relevant: accepted/rejected inputs, defaults/coercion/unknown keys, serialization and fingerprints, bytes versus characters and split Unicode, body bounds, timeout/cancellation/cleanup, errors and redaction, retry/idempotency/ordering, authentication and ownership checks, and browser/server boundaries. A library may own the mechanism while a small adapter retains necessary product policy. Reject the replacement when preserving that policy costs more complexity than it removes or when required behavior remains unproven.
+
+Examples are candidates, not stack mandates: infer an internal type from its existing schema; reuse an installed strict-object API; replace a hand-built bounded stream collector with a compatible library; or consolidate truly identical fixtures. Do not change validation policy, resource limits, retries, security checks, public DTOs, or failure outcomes merely to use a library.
+
+#### Execute, verify, and repeat
+
+1. Select a coherent reversible slice inside the authorized scope and identify its owning-boundary proof using the existing AC-ADR-049 mapping. Resolve material contract uncertainty before changing it. Routine choices already covered by authority do not need repeated confirmation.
+2. Apply the simplification, update its callers, and remove newly unused code, imports, and dependencies only after checking all consumers. Preserve pre-existing work. Review the integrated diff for behavior changes and abstraction overhead.
+3. Run the repository formatter and the required focused type, lint, build, or behavior checks. Add a regression test only for a changed contract, demonstrated defect, critical boundary, or mandatory gate. Do not run the full suite after every small edit or duplicate valid evidence; an affected receipt must be refreshed and mandatory final gates still apply.
+4. Measure the formatted result against both baselines, including new tests and helpers. Retain a candidate as a code reduction only when the agreed handwritten total falls and maintenance complexity improves with required behavior proved. Report a beneficial but size-increasing correctness change separately; it cannot satisfy a requested net-reduction goal by relabeling its additions.
+5. After retained changes, search again: deletion or centralization can expose another removable layer. Update candidate dispositions and coverage, then repeat while qualifying work remains. Do not stop merely because the first pass or tests succeeded. Revisit a rejected candidate only when new evidence changes its reason.
+
+On failed proof, stop dependent edits, localize the failure, and repair within the same authority or revert only the agent-owned slice without overwriting other work. Do not count an unverified or reverted reduction as achieved. Preserve independent verified improvements; unresolved required validation is a blocker, not convergence.
+
+#### Stop and report
+
+Convergence requires a complete final pass over the agreed inventory and affected consumers that finds no remaining candidate meeting the semantic, maintenance, scope, and measured-reduction criteria. Record retained changes, remaining candidates with rejection/defer reasons, inventory coverage, per-pass and cumulative deltas, proof receipts, and the exact stopping reason in the optional simplification section of the refactor report.
+
+If missing evidence/capability prevents necessary proof, validation fails, scope or accepted decisions conflict, or an explicit resource budget is reached, report the limitation and resumption condition. Those are bounded stops, not evidence that opportunities are exhausted. Do not invent a pass limit for an open-ended repetition request, promise a global optimum, or keep churning on rejected candidates solely to reduce lines.
+
+Reusable request after choosing the appropriate workflow:
+
+> Within `<paths/languages>` and the accepted local decisions, reduce handwritten code and maintenance cost. Prefer compatible runtime/framework/installed-library capabilities and proven shared owners. Preserve public behavior and required proof. Repeat discovery, simplification, validation, and measurement until a complete pass finds no qualifying candidate; report coverage, net deltas, rejected candidates, and any blocking limit.
+
 ## Plan workflows
 
 For both plan routes:

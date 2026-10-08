@@ -112,6 +112,20 @@ Complete this section for `refactor` and the execution phase of `plan-run-refact
 
 For adopted testing decisions, link the target-native measurement record using [testing-outcome-receipt-template.md](testing-outcome-receipt-template.md). Preserve provider revision/content identity and local mapping there; do not create a second ledger. Measurement states (`met`, `unmet`, `unmeasured`, `waived`, `not-applicable`) do not replace execution or evidence statuses.
 
+## Simplification passes
+
+Include only when iterative simplification was requested. Follow the [procedure](../references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md#iterative-simplification); reference existing validation receipts below instead of duplicating them.
+
+- Initial revision/dirty-tree identity, agreed inventory/exclusions, inspected coverage and unavailable evidence:
+- Counter/formatter, baseline counts by category, and added support files included in the total:
+
+| Pass / candidate identity | Retained responsibility removal or replacement API/version | Production / tests / docs-config LOC deltas | Handwritten total delta / cumulative delta | Generated-vendor-lockfile delta | Proof receipt IDs |
+| ------------------------- | ---------------------------------------------------------- | ------------------------------------------- | ------------------------------------------ | ------------------------------- | ----------------- |
+|                           |                                                            |                                             |                                            |                                 |                   |
+
+- Rejected/deferred candidates, reasons, and evidence that would change the decision:
+- Final complete-pass coverage, stopping reason, and any blocker/resumption condition:
+
 ## Validation ledger
 
 Record one AC-ADR-049 receipt per distinct proof obligation and reconcile every delegated receipt against the integrated candidate.

@@ -1,12 +1,12 @@
 ---
 name: architecture-compass
-description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors. Use when work needs binding architecture decisions, provider-to-local mapping, architecture PR review, and durable runtime or source-boundary changes.
+description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors, including repeated simplification and library reuse. Use when work needs architecture PR review, provider-to-local mapping, less custom code across services, or durable runtime/source-boundary changes.
 license: Apache-2.0
 compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex web, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.10.2"
+  version: "0.10.3"
 ---
 
 # Architecture Compass
@@ -123,6 +123,7 @@ Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-throug
 ### `refactor`
 
 - Verify accepted local ADRs govern and the request authorizes the whole bounded change. Stop on missing governance, conflict, unresolved durable choice, scope expansion, or material drift. Direct refactor never invents a durable decision or silently repairs governance.
+- When authorized work seeks less custom code, use the [iterative simplification procedure](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md#iterative-simplification) to inspect the agreed scope, prefer compatible existing capabilities, prove retained changes, and repeat until a complete pass finds no qualifying candidate. Report measured savings and limits; this is not an additional workflow.
 
 ### `plan-refactor`
 

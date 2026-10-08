@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "1fcc52b7d4a2be942f80887b01c701b8fe5da2a7df8563f9fdb8db57c1bcaa9e"
+      "sha256": "e92c74ac753f2694a96dab6de4f39edbdab6223b4a9aeb46593e9d517d2a1ab0"
     },
     {
       "byteLength": 13030,
@@ -175,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 18969,
+      "byteLength": 19457,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "87a3823da12174827723b0e40eb5728f52155949dad74fae064469d469df0333"
+      "sha256": "e43f3e3b7ea8857973422c25f3ac2f89460755738f81f64b2238e04f8c82aa67"
     },
     {
       "byteLength": 692,
@@ -247,10 +247,10 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 9743,
+      "byteLength": 11139,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "2430235cbbbce1e1b5805aafdc6f05b515d96b5606967f8fa20ac058687c4c7e"
+      "sha256": "ac1a9b2c802d607c80fd7893eb5f7a8216e4d2cb1a1f601bd4ab77ee538eab6c"
     },
     {
       "byteLength": 14869,
@@ -1405,10 +1405,10 @@
       "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
     },
     {
-      "byteLength": 12348,
+      "byteLength": 21459,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
-      "sha256": "6b1f375bb19ef5463a269c2264848227f7c42ace63d328ed37902e3f197a8c8e"
+      "sha256": "c4447e310bcce352ac9e80fcd64e093ae7c3ba9e3ff8254343e74d8d2ca51dfd"
     },
     {
       "byteLength": 9221,
@@ -2127,9 +2127,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.7.5"
+    "version": "1.7.6"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "617cbfbef6d0f7b13b02d886a1020f3f3b2ab27b1302fde85c21ca5d011f537e"
+  "treeHash": "6de7537da612ddd85d36bb1fc0735e700339dc3badfca0010bc2bcd21061d7d6"
 }
