@@ -299,6 +299,10 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "simplification-existing-capabilities.md",
+  "simplification-contract-mismatch.md",
+  "simplification-coverage-and-drift.md",
+  "simplification-honest-metrics-and-stop.md",
   "portless-compatible-default.md",
   "portless-existing-routing-migration.md",
   "portless-no-local-endpoint.md",

@@ -52,7 +52,7 @@
       "byteLength": 1289,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "1fcc52b7d4a2be942f80887b01c701b8fe5da2a7df8563f9fdb8db57c1bcaa9e"
+      "sha256": "e794568feb7cdba646827a257fcbeb5c84e4d216dec24beaceacea2e6c739b3c"
     },
     {
       "byteLength": 13030,
@@ -175,10 +175,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 18969,
+      "byteLength": 19329,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "87a3823da12174827723b0e40eb5728f52155949dad74fae064469d469df0333"
+      "sha256": "73e6f6ee5ad5730e5a1604081663fe350a8cea20f65a9d288c1eeb8e53fab222"
     },
     {
       "byteLength": 692,
@@ -247,10 +247,10 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 9743,
+      "byteLength": 11366,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "2430235cbbbce1e1b5805aafdc6f05b515d96b5606967f8fa20ac058687c4c7e"
+      "sha256": "b8168e41a5960521a1462510b408725fe619f89122f61c15a2b1bcb3a18ad01d"
     },
     {
       "byteLength": 14869,
@@ -361,10 +361,10 @@
       "sha256": "74f7e0fb4be9347b1edd6d461ab3534345dcf7a5cdbb02e1f2a52f0034c7c8d3"
     },
     {
-      "byteLength": 4640,
+      "byteLength": 14999,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md",
-      "sha256": "904416fa99387ca7b655836c0e072ea46deeb7e31e10b3c4b643eeef1ad54af4"
+      "sha256": "a57803f60e4ada513b016a03493afbe826ba8af236abd539c3aa374077b4e856"
     },
     {
       "byteLength": 5881,
@@ -2127,9 +2127,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.7.5"
+    "version": "1.8.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "617cbfbef6d0f7b13b02d886a1020f3f3b2ab27b1302fde85c21ca5d011f537e"
+  "treeHash": "cf1456edde2eb10d22a9e98fd53662f64bc687367f9c64804c530ad260607d95"
 }

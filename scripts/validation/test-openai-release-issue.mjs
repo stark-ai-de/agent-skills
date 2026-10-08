@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { inc } from "semver";
 
 import {
   applyOpenAiReleasePlan,
@@ -314,7 +315,7 @@ assert.throws(
       listing,
       subject,
       previousRelease,
-      previousSubject: { pluginVersion: "1.8.0" },
+      previousSubject: { pluginVersion: inc(listing.plugin.version, "minor") },
       issues: [],
     }),
   /decreased/,

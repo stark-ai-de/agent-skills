@@ -107,6 +107,10 @@ Focused workflow and lifecycle cases:
 
 Focused routed-library cases:
 
+- `cases/simplification-existing-capabilities.md`
+- `cases/simplification-contract-mismatch.md`
+- `cases/simplification-coverage-and-drift.md`
+- `cases/simplification-honest-metrics-and-stop.md`
 - `cases/adr-catalog-short-first-inventory.md`
 - `cases/selective-frontend-routing.md`
 - `cases/nextjs-request-routing.md`

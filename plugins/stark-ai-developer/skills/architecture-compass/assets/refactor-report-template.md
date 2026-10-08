@@ -112,6 +112,27 @@ Complete this section for `refactor` and the execution phase of `plan-run-refact
 
 For adopted testing decisions, link the target-native measurement record using [testing-outcome-receipt-template.md](testing-outcome-receipt-template.md). Preserve provider revision/content identity and local mapping there; do not create a second ledger. Measurement states (`met`, `unmet`, `unmeasured`, `waived`, `not-applicable`) do not replace execution or evidence statuses.
 
+## Simplification evidence (when requested)
+
+Use the optional [AC-ADR-006 loop](../references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) only for a requested simplification assessment or implementation. Leave this section out for unrelated work; audit reports observations without persisting an artifact.
+
+- Baseline / final revision or content identity; task delta versus full PR:
+- Scope / inventory coverage / structural scan / semantic review / exclusions:
+- Applied, retained and deferred candidates; alternative APIs/versions and equivalence evidence:
+- Shared-code owner, real consumers, runtime boundaries and remaining custom policy:
+- Dependency changes, integration/upgrade responsibility and exit path:
+- Counting method, paths, rename treatment and binary/generated exclusions:
+
+| Category                                   | Added lines | Deleted lines | Net delta (added - deleted) |
+| ------------------------------------------ | ----------- | ------------- | --------------------------- |
+| Implementation                             |             |               |                             |
+| Tests / fixtures                           |             |               |                             |
+| Other (name docs, config, generated, etc.) |             |               |                             |
+| All changed files                          |             |               |                             |
+
+- Proof: link the existing validation ledger below; keep unmeasured outcomes explicit.
+- Stop reason and remaining candidates / reopen triggers:
+
 ## Validation ledger
 
 Record one AC-ADR-049 receipt per distinct proof obligation and reconcile every delegated receipt against the integrated candidate.
