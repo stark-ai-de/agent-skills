@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.27.0 (2026-10-09)
+
+## What's Changed
+* feat(planning): release Architecture Zoom as a public skill by @servrox in https://github.com/stark-ai-de/agent-skills/pull/141
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.26.0...v0.27.0
+
 ## 0.26.0 (2026-10-09)
 
 ## What's Changed
