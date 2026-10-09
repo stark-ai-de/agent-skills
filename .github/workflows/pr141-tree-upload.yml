@@ -1,0 +1,136 @@
+name: PR 141 temporary source-tree transport
+
+on:
+  pull_request:
+    types: [synchronize]
+    paths:
+      - .github/pr141-tree-payload.3.txt
+
+permissions:
+  contents: read
+
+jobs:
+  upload-objects:
+    if: ${{ github.event.pull_request.number == 141 && github.repository == 'stark-ai-de/agent-skills' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/architecture-zoom-planning-pilot' }}
+    permissions:
+      contents: write
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - uses: useblacksmith/checkout@v1
+        with:
+          ref: adf93aa3baed6550fbd7287f0f793bff1f2b70de
+          persist-credentials: false
+      - name: Prepare isolated transport worktree
+        run: git worktree add --detach .worktrees/agent-skills-worktrees/pr141-upload HEAD
+      - name: Upload verified Git objects only
+        working-directory: .worktrees/agent-skills-worktrees/pr141-upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAYLOAD_REF: ${{ github.event.pull_request.head.sha }}
+          RESULT_DIR: ${{ runner.temp }}/pr141-tree-result
+        run: |
+          python3 - <<'PY'
+          import base64, concurrent.futures, hashlib, json, lzma, os, pathlib, shutil, subprocess, urllib.request
+          repo = 'stark-ai-de/agent-skills'
+          base_commit = 'adf93aa3baed6550fbd7287f0f793bff1f2b70de'
+          expected_tree = '19333a190c549aea169de2ea720bc3068937753c'
+          expected_payload = '9c953077f055660c413c2824c1f7a25e7d425d341fb00fdc55a8bfa130e6cd95'
+          def api(endpoint, data=None):
+              body = None if data is None else json.dumps(data).encode()
+              request = urllib.request.Request('https://api.github.com/repos/' + repo + endpoint, data=body, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+          def git(*args, data=None):
+              return subprocess.check_output(['git', *args], input=data)
+          parts = []
+          for number in (1, 2, 3):
+              response = api('/contents/.github/pr141-tree-payload.' + str(number) + '.txt?ref=' + os.environ['PAYLOAD_REF'])
+              parts.append(base64.b64decode(response['content']).decode().strip())
+          encoded = ''.join(parts) + '\n'
+          assert hashlib.sha256(encoded.encode()).hexdigest() == expected_payload, 'Payload digest mismatch'
+          payload = json.loads(lzma.decompress(base64.b64decode(encoded, validate=False)))
+          assert payload['baseCommit'] == base_commit and payload['expectedTree'] == expected_tree
+          assert git('rev-parse', 'HEAD').decode().strip() == base_commit
+          root = pathlib.Path.cwd().resolve()
+          def safe(name):
+              p = pathlib.PurePosixPath(name)
+              assert not p.is_absolute() and '..' not in p.parts and '.git' not in p.parts, 'Unsafe path'
+              result = root.joinpath(*p.parts)
+              assert result.resolve().is_relative_to(root), 'Path escapes worktree'
+              return result
+          for name in payload['paths']:
+              safe(name)
+          patch = payload['patch'].encode()
+          git('apply', '--check', '--unidiff-zero', '-', data=patch)
+          git('apply', '--unidiff-zero', '-', data=patch)
+          for name, content in payload['writes'].items():
+              assert name in payload['paths']
+              file = safe(name)
+              file.parent.mkdir(parents=True, exist_ok=True)
+              file.write_text(content, encoding='utf-8')
+          for name, source in payload['copies'].items():
+              assert name in payload['paths']
+              file = safe(name)
+              file.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(safe(source), file)
+          for name in payload['deletes']:
+              assert name in payload['paths']
+              safe(name).unlink()
+          entries = {}
+          for row in git('ls-tree', '-r', '-z', 'HEAD').split(b'\0'):
+              if not row:
+                  continue
+              meta, name = row.split(b'\t', 1)
+              mode, kind, sha = meta.decode().split()
+              entries[name.decode()] = (mode, kind, sha)
+          existing = {item[2] for item in entries.values()}
+          blobs = {}
+          delta = []
+          for name in payload['paths']:
+              file = safe(name)
+              if not file.exists():
+                  entries.pop(name, None)
+                  delta.append({'path': name, 'mode': '100644', 'type': 'blob', 'sha': None})
+                  continue
+              content = file.read_bytes()
+              sha = git('hash-object', '-w', '--stdin', data=content).decode().strip()
+              mode = entries.get(name, ('100644', 'blob', None))[0]
+              entries[name] = (mode, 'blob', sha)
+              delta.append({'path': name, 'mode': mode, 'type': 'blob', 'sha': sha})
+              if sha not in existing:
+                  blobs[sha] = content
+          tree = {}
+          for name, value in entries.items():
+              node = tree
+              parts = name.split('/')
+              for part in parts[:-1]:
+                  node = node.setdefault(part, {})
+              node[parts[-1]] = value
+          def build(node):
+              items = []
+              for name, value in node.items():
+                  mode, kind, sha = ('040000', 'tree', build(value)) if isinstance(value, dict) else value
+                  items.append((mode + ' ' + kind + ' ' + sha + '\t' + name + '\0').encode())
+              return git('mktree', '-z', data=b''.join(items)).decode().strip()
+          assert build(tree) == expected_tree, 'Reconstructed tree mismatch; no remote objects uploaded'
+          def upload(item):
+              sha, content = item
+              result = api('/git/blobs', {'encoding': 'base64', 'content': base64.b64encode(content).decode()})
+              assert result['sha'] == sha, 'Uploaded blob mismatch'
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+              list(executor.map(upload, blobs.items()))
+          base_tree = git('rev-parse', 'HEAD^{tree}').decode().strip()
+          result = api('/git/trees', {'base_tree': base_tree, 'tree': delta})
+          assert result['sha'] == expected_tree, 'Remote tree mismatch'
+          out = pathlib.Path(os.environ['RESULT_DIR'])
+          out.mkdir(parents=True, exist_ok=True)
+          (out / 'tree-result.json').write_text(json.dumps({'repository': repo, 'baseCommit': base_commit, 'payloadRef': os.environ['PAYLOAD_REF'], 'tree': expected_tree, 'changedPaths': len(delta), 'uploadedBlobs': len(blobs), 'branchRefsChanged': False, 'payloadSha256': expected_payload}, indent=2) + '\n')
+          print('Verified tree uploaded:', expected_tree, '; no commits, refs, merges or releases were created.')
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pr141-verified-source-tree
+          path: ${{ runner.temp }}/pr141-tree-result/
+          retention-days: 1
+          if-no-files-found: error
