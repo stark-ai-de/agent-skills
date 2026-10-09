@@ -58,7 +58,7 @@ A run fails regardless of score when it:
 
 ## Simplification criteria (when requested)
 
-For the four `simplification-*` cases, assess the optional AC-ADR-006 worksheet:
+For all ten `simplification-*` cases, assess the optional AC-ADR-006 worksheet:
 complete scoped inventory with honest scan/review limits; native/existing-library
 alternatives with exact contract evidence; real consumers and runtime-safe
 ownership; preserved security, failures and application policy; attributable
