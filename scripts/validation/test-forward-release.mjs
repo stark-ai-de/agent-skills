@@ -202,7 +202,7 @@ function producer() {
     releasedVersions: { ".": FixtureVersion.parse("0.25.2") },
     buildPullRequests: async () => {
       calls.push("plan");
-      return [{ pullRequest: pull }];
+      return [pull];
     },
     createPullRequests: async () => {
       calls.push("create-pr");
