@@ -15,6 +15,7 @@ Use this folder for:
 
 - [`animated-readme-logo`](animated-readme-logo/README.md)
 - [`architecture-compass`](architecture-compass/README.md)
+- [`architecture-zoom`](architecture-zoom/README.md)
 - [`claude-memory-curator`](claude-memory-curator/README.md)
 - [`claude-spec-interviewer`](claude-spec-interviewer/README.md)
 - [`change-impact`](change-impact/README.md)

@@ -41,7 +41,7 @@ metadata:
 - Do not include secrets, tokens, customer data, private repo paths, or internal hostnames.
 - Do not copy substantial text from other skill repositories.
 - Do not vendor already-published third-party skills into `skills/` or `incubator/skills/`; use project-local `npx skills` installs instead.
-- Keep `skills/` promoted-only. Draft or experimental public candidates belong in `incubator/skills/` with `metadata.internal: true`; personal and private skills belong in ignored local folders or private repositories.
+- Explicitly requested public releases may be prepared directly under `skills/`, without `metadata.internal`, under [ADR-0065](docs/adrs/0065-allow-explicit-direct-public-skill-releases.short.md) ([Long, canonical](docs/adrs/0065-allow-explicit-direct-public-skill-releases.long.md) · [Guide](docs/adrs/0065-allow-explicit-direct-public-skill-releases.guide.md)). Record maintainer acceptance, the quality/maintenance assessment and actual evidence limits. Draft or experimental candidates without public-admission approval belong in `incubator/skills/` with `metadata.internal: true`; personal and private skills belong in ignored local folders or private repositories.
 - If copying third-party material is explicitly required, verify the license and add source/license attribution before publishing.
 - Prefer read-only scripts.
 - Any script that can modify files must be documented in the owning skill and must require user approval before use.

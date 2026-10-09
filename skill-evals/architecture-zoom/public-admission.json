@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "maintainer-directed-public-release",
+  "skill": "architecture-zoom",
+  "status": "Accepted",
+  "decision": "ADR-0065",
+  "acceptedOn": "2026-10-09",
+  "sourceFingerprint": "6dfc4a92acad238abcdf62a20d9b05602da3b3bad53e0bca11f3ca630b86e37a",
+  "casesFingerprint": "004ecedb97abb1cc7e1463bd3407599fb431c4cb94aef62b785887628f0c0c65",
+  "approval": {
+    "approved": true,
+    "authority": "Explicit maintainer request during PR #141 preparation on 2026-10-09",
+    "scope": "Prepare Architecture Zoom directly as a regular public skill without metadata.internal or an incubator stage, include it in the next developer-plugin release, and accept its specification and ADRs. Merge and publication are separate."
+  },
+  "nativeHostQualification": "not-run",
+  "claimedQualifiedHosts": [],
+  "qualityAssessment": "The self-contained planning workflow covers whole-product readability, scoped module contracts, complete increments and bounded handoffs. It serves product and feature planning without implementation or installation helpers. The maintainer selected public inclusion after the prior PR review. Structural, packaging and installation-smoke checks validate the delivered contract; they do not prove agent-quality improvement or host routing.",
+  "maintenanceOwner": "stark-ai-de",
+  "limitations": "Full paired behavioral runs, human usability review, native installation/discovery and fresh-session routing remain unobserved for this final payload. The earlier single-case comparison used an older revision and is not current qualification evidence. This admission decision must not be submitted as an observed evaluation."
+}

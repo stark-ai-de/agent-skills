@@ -83,7 +83,7 @@ npx skills@latest update
 <summary><strong>Install the Codex bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a codex -y
 ```
 
 Install the portable plugin with Codex CLI 0.147.0 or later:
@@ -101,7 +101,7 @@ See the [plugin documentation](plugins/README.md) for package and distribution d
 <summary><strong>Install the Cursor bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a cursor -y
 ```
 
 </details>
@@ -110,7 +110,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cur
 <summary><strong>Install the Claude Code bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless jev-capability-advisor -g -a claude-code -y
 ```
 
 </details>
@@ -127,6 +127,7 @@ The `-a` option selects the host where a skill is installed; it does not change 
 | <img src="plugins/stark-ai-developer/skills/codex-spec-interviewer/assets/openai-icon.png" alt="" width="24" height="24" /> | [Codex Spec Interviewer](skills/codex-operations/codex-spec-interviewer/SKILL.md)  | Interview, source-challenge, verify, save, and ADR-gate fuzzy coding requests into Codex-ready implementation specs. Use when a feature, bugfix, refactor, migration, repo-wide change, or architecture task needs user-verified requirements, source-backed decisions, durable architecture decisions, acceptance criteria, validation commands, rollout notes, saved spec/ADR files, and a Codex execution prompt. Do not use when already fully specified or when the user wants direct implementation now. |
 |  <img src="plugins/stark-ai-developer/skills/animated-readme-logo/assets/openai-icon.png" alt="" width="24" height="24" />  | [Animated README Logo](skills/engineering-workflows/animated-readme-logo/SKILL.md) | Audit, create, transform, or animate verified logo pipelines for GitHub READMEs. Use when a repository needs a new or reconstructed mark, motion specification, SVG animation master, executable animation recipe, static PNG, animated GIF, README-safe markup, reduced-motion fallback, or compatibility review. Do not use for unrelated app/site motion or generic image generation without a README branding target.                                                                                      |
 |  <img src="plugins/stark-ai-developer/skills/architecture-compass/assets/openai-icon.png" alt="" width="24" height="24" />  | [Architecture Compass](skills/engineering-workflows/architecture-compass/SKILL.md) | Set up ADR governance, audit architecture and drift, or plan and execute bounded refactors and code simplification. Use when work needs binding architecture decisions, library reuse, shared-code ownership, provider-to-local mapping, or architecture PR review.                                                                                                                                                                                                                                            |
+|   <img src="plugins/stark-ai-developer/skills/architecture-zoom/assets/openai-icon.png" alt="" width="24" height="24" />    | [Architecture Zoom](skills/engineering-workflows/architecture-zoom/SKILL.md)       | Plan a readable whole-product blueprint, scoped module contracts and complete usable delivery increments.                                                                                                                                                                                                                                                                                                                                                                                                      |
 |   <img src="plugins/stark-ai-developer/skills/codegraph-ast-grep/assets/openai-icon.png" alt="" width="24" height="24" />   | [CodeGraph + ast-grep](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)   | Set up, update, or diagnose CodeGraph and ast-grep so coding agents can use semantic repository scope and structural syntax evidence automatically. Use when a repository needs an idempotent CodeGraph/ast-grep installation, stable tool and index migrations, MCP reconnection, persisted agent guidance, or a read-only setup diagnosis.                                                                                                                                                                   |
 |    <img src="plugins/stark-ai-developer/skills/drawio-diagrams/assets/openai-icon.png" alt="" width="24" height="24" />     | [Draw.io Diagrams](skills/engineering-workflows/drawio-diagrams/SKILL.md)          | Create, draw, generate, edit, verify, and export draw.io/diagrams.net `.drawio` diagrams. Use when the user asks for editable diagrams, flowcharts, architecture, sequence, ER/UML/state, BPMN, SysML, ML/DL, swimlane, timeline, network, icon-rich technical diagrams, or PNG/SVG/PDF exports; do not use for charts/plots or artistic image generation.                                                                                                                                                     |
 |  <img src="plugins/stark-ai-developer/skills/telegram-serverless/assets/openai-icon.png" alt="" width="24" height="24" />   | [Telegram Serverless](skills/engineering-workflows/telegram-serverless/SKILL.md)   | Build, review, deploy, and troubleshoot Telegram-hosted bots and Mini Apps, with explicit database, authentication, and remote-operation boundaries.                                                                                                                                                                                                                                                                                                                                                           |
@@ -151,7 +152,7 @@ Find relevant available skills and tools for a supplied task, with optional loca
 | [`skill-evals/`](skill-evals/README.md)    | Activation cases, comparisons, and promotion evidence | Maintainer proof only |
 | [`site/`](site/)                           | Astro source for the generated catalog                | GitHub Pages          |
 
-Promotion is a folder move from `incubator/skills/<category>/<skill>/` to `skills/<category>/<skill>/`, backed by demonstrated value, activation tests, a reusable use case, manageable maintenance, and reviewable evaluation proof. See the [spec policy](docs/specs.md#documentation-updates) for public-contract updates.
+An explicit public-release request may start directly in `skills/<category>/<skill>/`; drafts use `incubator/skills/`. Record the maintainer admission, quality/maintenance assessment and actual evidence limits under [ADR-0065](docs/adrs/0065-allow-explicit-direct-public-skill-releases.short.md) ([Long, canonical](docs/adrs/0065-allow-explicit-direct-public-skill-releases.long.md) · [Guide](docs/adrs/0065-allow-explicit-direct-public-skill-releases.guide.md)). Public placement is not a native-host qualification result. See the [spec policy](docs/specs.md#documentation-updates) for public-contract updates.
 
 ## Development
 
@@ -225,3 +226,7 @@ Skills and plugins are executable context. Helper scripts are read-only unless t
 ## License
 
 [Apache-2.0](LICENSE) for the skills and repository material published here.
+
+## Coordinated product planning
+
+Architecture Compass can map the opt-in coordination ADR into a target repository, review module contracts, and preserve scoped handoffs to Codex Spec Interviewer. Architecture Zoom is a public skill included in the developer plugin and provides the whole-product blueprint and delivery map. Read the [integration contract and qualification status](docs/specs/architecture-zoom-orchestration-spec.md) before enabling the complete three-skill route. Skill selection does not grant installation or write permission, and a saved startup pointer is not proof of fresh-session activation.

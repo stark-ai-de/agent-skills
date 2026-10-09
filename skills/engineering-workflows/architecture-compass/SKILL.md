@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.11.0"
+  version: "0.12.0"
 ---
 
 # Architecture Compass
@@ -73,6 +73,7 @@ Route skill behavior through:
 - **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
 - **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md).
 - **Adopted Jev host advice:** [AC-ADR-065 Short](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.short.md) · [Long](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.long.md) · [Guide](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.guide.md); load for local adoption, host prerequisite evidence, or compliance audit.
+- **Product planning:** [AC-ADR-067 Short](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.short.md) · [Long](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.long.md) · [Guide](references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.guide.md); load for coordinated feature planning, module-contract refinement or relevant Setup adoption. Use [AC-ADR-068 Long](references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.long.md) for selected-skill reuse and separately authorized provisioning.
 - **Conflicts:** [AC-ADR-046 Guide](references/ac-adr-046-rank-architecture-evidence-without-expanding-operational-authority.guide.md).
 
 For provider mechanics, resolve the applicable public AC-ADR and load its Long first. Then conditionally read [the internal ADR index](references/internal/internal-adr-index.md) and only `AC-INTERNAL-001` for persistence resolution or `AC-INTERNAL-002` for receipt rendering. Internal ADRs are implementation policy, do not enter target-repository adoption, and cannot relax an accepted public Long decision.
@@ -114,6 +115,8 @@ Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-throug
 For requested code simplification, duplication reduction, or library reuse, load the optional [AC-ADR-006 simplification loop](references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) after selecting the workflow. Use it for read-only audit, planning, or authorized execution within that route's authority; it adds no workflow or target policy.
 
 ### `setup`
+
+- For relevant coordinated product/feature planning, propose AC-ADR-067 conditionally and follow its Guide. Resolve local identity, exact supported startup binding, explicit skill preselection, availability and separate provisioning grants. Preserve the seven-decision foundation; missing or experimental skills block only the dependent handoff.
 
 - Use target evidence for `recommended` or evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation. Setup never authorizes application refactoring, deployment, publication, or production probes.
 - When AC-ADR-065 is selected, record the repository-native adoption mapping, authorized hosts, and prerequisite gaps through its Guide. Adoption does not activate hooks or authorize TypeSafe processing.

@@ -2,7 +2,7 @@
 
 ID: ADR-0008
 Title: Promote skills by quality, utility, and maintenance fit
-Status: Accepted
+Status: Superseded
 Date: 2026-05-21
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0065
 Guide verified: 2026-07-28
 Gist: Promotion requires value and maintainability, not just passing evals.
 

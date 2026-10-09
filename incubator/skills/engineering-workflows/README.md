@@ -1,6 +1,6 @@
 # Engineering Workflows
 
-Incubator skills for implementation work: debugging, test-first changes, plan slicing, PRDs, subsystem mapping, and prototypes.
+Incubator skills for implementation work: architecture blueprints, debugging, test-first changes, plan slicing, PRDs, subsystem mapping, and prototypes.
 
 These candidates are not part of the public catalog until promotion moves them into `skills/`.
 

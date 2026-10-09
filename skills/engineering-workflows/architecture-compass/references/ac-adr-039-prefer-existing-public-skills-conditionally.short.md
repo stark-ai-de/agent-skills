@@ -2,7 +2,7 @@
 
 ID: AC-ADR-039
 Title: Prefer Existing Public Skills Conditionally
-Status: Accepted
+Status: Superseded
 Date: 2026-07-28
 Owner: stark-ai-de
 Scope: skill-runtime
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: none
-Superseded by: none
+Superseded by: AC-ADR-068
 Guide verified: 2026-07-28
 Gist: Propose a fitting existing public skill before bespoke work, but never install or invoke it without explicit selection.
 

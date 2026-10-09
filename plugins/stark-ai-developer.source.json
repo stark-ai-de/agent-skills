@@ -22,6 +22,10 @@
       "source": "skills/engineering-workflows/architecture-compass"
     },
     {
+      "name": "architecture-zoom",
+      "source": "skills/engineering-workflows/architecture-zoom"
+    },
+    {
       "name": "codegraph-ast-grep",
       "source": "skills/engineering-workflows/codegraph-ast-grep"
     },
@@ -44,13 +48,13 @@
     "openaiPlugin": "stark-ai-developer"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.9.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-1.10.0.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {

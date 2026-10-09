@@ -5,6 +5,9 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 import "./simplification-contract.test.mjs";
+import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inventory.mjs";
+
+const unapprovedId = String(Math.max(...PUBLIC_ARCHITECTURE_ADR_IDS) + 1).padStart(3, "0");
 
 const source = process.cwd();
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-contract-"));
@@ -67,7 +70,7 @@ try {
   rejects("missing variant", file(59, "short"), () => null, /missing|triplet/i);
   rejects("missing sparse-ID variant", file(66, "guide"), () => null, /missing|triplet/i);
   const unexpectedFiles = ["short", "long", "guide"].map((variant) =>
-    file(66, variant).replace("ac-adr-066-", "ac-adr-067-"),
+    file(66, variant).replace("ac-adr-066-", `ac-adr-${unapprovedId}-`),
   );
   try {
     for (const [index, variant] of ["short", "long", "guide"].entries()) {
@@ -75,13 +78,16 @@ try {
         path.join(root, unexpectedFiles[index]),
         fs
           .readFileSync(path.join(root, file(66, variant)), "utf8")
-          .replaceAll("AC-ADR-066", "AC-ADR-067")
-          .replaceAll("ac-adr-066-", "ac-adr-067-"),
+          .replaceAll("AC-ADR-066", `AC-ADR-${unapprovedId}`)
+          .replaceAll("ac-adr-066-", `ac-adr-${unapprovedId}-`),
       );
     }
     const result = run();
     assert.notEqual(result.status, 0, "unexpected complete triplet beyond the approved inventory");
-    assert.match(result.stderr, /AC-ADR-067: ID is outside the approved inventory/);
+    assert.match(
+      result.stderr,
+      new RegExp(`AC-ADR-${unapprovedId}: ID is outside the approved inventory`),
+    );
   } finally {
     for (const relative of unexpectedFiles) fs.rmSync(path.join(root, relative));
   }

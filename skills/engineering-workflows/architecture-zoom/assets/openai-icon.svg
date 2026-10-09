@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" shape-rendering="crispEdges">
+  <title>Architecture Zoom: a product view with progressively detailed modules</title>
+  <g fill="#0021c7">
+    <path d="M148 148h180v56H204v124h-56zM696 148h180v180h-56V204H696zM148 696h56v124h124v56H148zM820 696h56v180H696v-56h124z"/>
+    <rect x="280" y="260" width="464" height="120"/>
+    <path d="M492 380h40v28h132v48h-40v-24H400v24h-40v-48h132zM360 576h40v28h224v-28h40v28h36v48h-40v-24H532v24h-40v-24H364v24h-40v-48h36z"/>
+    <rect x="280" y="652" width="128" height="120"/>
+    <rect x="448" y="652" width="128" height="120"/>
+    <rect x="616" y="652" width="128" height="120"/>
+  </g>
+  <g fill="#7fa0ff">
+    <rect x="280" y="456" width="200" height="120"/>
+    <rect x="544" y="456" width="200" height="120"/>
+  </g>
+</svg>

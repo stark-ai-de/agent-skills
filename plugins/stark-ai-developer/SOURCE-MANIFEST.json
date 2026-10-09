@@ -21,6 +21,10 @@
         "source": "skills/engineering-workflows/architecture-compass"
       },
       {
+        "name": "architecture-zoom",
+        "source": "skills/engineering-workflows/architecture-zoom"
+      },
+      {
         "name": "codegraph-ast-grep",
         "source": "skills/engineering-workflows/codegraph-ast-grep"
       },
@@ -38,7 +42,7 @@
       }
     ]
   },
-  "bundleHash": "1461e976254e9acbd2e126d8ba7a1ab1c119bed929cbb9956e9c5f25036581c3",
+  "bundleHash": "c1b2e098b9c1dd01ae55930c5e6dc52178077b002dec6796d6df955689ab82b2",
   "files": [
     {
       "byteLength": 10271,
@@ -50,13 +54,13 @@
       "byteLength": 1028,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "c75564ed210476ad571664f54738dc9e06039ee115e492d893a92715b02b3cef"
+      "sha256": "33f1c83f754878e28f0418a6f54f7d90d2e3cbe6caa9dae2cc2ab538fbb9c230"
     },
     {
-      "byteLength": 1423,
+      "byteLength": 1444,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "3be46573cca089ec17dd0584f3f1ac7e0a9c078d1331639f69c2b4e442fe3e10"
+      "sha256": "d7971f26eff588c247b86c7c4630f18a9881d07164b3ca88f071b2a572f6d05e"
     },
     {
       "byteLength": 13030,
@@ -179,10 +183,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 19360,
+      "byteLength": 20342,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "809d5f017ac7ca3f5443ba79363c0e7fcd6d8829a1daebb11662458f1cd6febb"
+      "sha256": "1c265070ddfe554d3aaeba14e1dc456356c505e80bb8c2c124c1f6032a472784"
     },
     {
       "byteLength": 692,
@@ -239,6 +243,12 @@
       "sha256": "a95674e6e52c1e4286d81d58d2c0d4d38bf515bb2b9425ad8b664f6bd7db6ae3"
     },
     {
+      "byteLength": 2113,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/module-contract-review.md",
+      "sha256": "4980ec56ad627b40ddcf49c3cd328a0052f9769bd510397a5b0601f7c9101f67"
+    },
+    {
       "byteLength": 6897,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/new-repo-adoption-plan-template.md",
@@ -251,16 +261,28 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
+      "byteLength": 3744,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/product-planning-profile.md",
+      "sha256": "34465aefb4ab265c3f3b549da507b5b58740a017c2b9a26c4e71a2dcb6c6393b"
+    },
+    {
+      "byteLength": 2704,
+      "mode": "0644",
+      "path": "skills/architecture-compass/assets/product-planning-work-item.md",
+      "sha256": "f05339c70c0965a6ea5edaa2cd1e347bbe773cbebbf384ae64ad2ed2a51301ca"
+    },
+    {
       "byteLength": 12538,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
       "sha256": "dcaf228aedb426b3f8194a2dbc64cd4d01fc2eae2c49704d35a980763e3c3ae4"
     },
     {
-      "byteLength": 14869,
+      "byteLength": 15410,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/setup-report-template.md",
-      "sha256": "25637282061fc28105433c9b8b80640dc09170bd6f72364d8a510975f97fa0e3"
+      "sha256": "8a823d246f5889c871f376d7f119f3990330a293e3df3ad00170f6c0955b3f2c"
     },
     {
       "byteLength": 6103,
@@ -959,22 +981,22 @@
       "sha256": "703df5dae4335d46fbc065c097430d79cf8f24757cc47b1cd9178776b72f27a3"
     },
     {
-      "byteLength": 2429,
+      "byteLength": 2437,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.guide.md",
-      "sha256": "a27be7c58f3d8d82a5ec08c09d3116b3b66208593dd8e9fc8016ad87b74c39c9"
+      "sha256": "d0bbf0f3fa82f134cc4a142206096d144926bcb3d972863cf9e33d4cf856bbac"
     },
     {
-      "byteLength": 4371,
+      "byteLength": 4379,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.long.md",
-      "sha256": "dc9d2b9f803af0ad1bde8a55c1befe509bb53fe6f94de38e4d330b1ae528b20b"
+      "sha256": "0b652050d1c5253b4d398631adaa6bb5cb9606c903c8ff05762893bf06d9b813"
     },
     {
-      "byteLength": 1862,
+      "byteLength": 1870,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-039-prefer-existing-public-skills-conditionally.short.md",
-      "sha256": "3d1c258c041a9b972577acd7e34178645673ae5b299aa5285c0cb3c31be2c5c6"
+      "sha256": "041400c4700bdfb3453b2adc7fc1cb4e1a50569d88d8c102d0ba319355ae77be"
     },
     {
       "byteLength": 5554,
@@ -1463,10 +1485,46 @@
       "sha256": "846126cf93baa10af4bb1ae76638c19c3bee26a987001c8dbaf0e79c2c28060c"
     },
     {
-      "byteLength": 55568,
+      "byteLength": 5098,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.guide.md",
+      "sha256": "e059ef9ce9b891c530fe6acffd6a048c78d7994d30745e9deb0ac55f45edf026"
+    },
+    {
+      "byteLength": 6597,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.long.md",
+      "sha256": "beb1789116a590db3d77fee462e9793e838ad6d1ae04fdf30fc4c71e19207870"
+    },
+    {
+      "byteLength": 1383,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.short.md",
+      "sha256": "dd100af1af43757b6be608669167bd8bc6184b09292c4467c8ee6c75af7cb22a"
+    },
+    {
+      "byteLength": 3654,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.guide.md",
+      "sha256": "e517ca1830044c73a84956adbf6e76b2c28652fbbfbb22bff875c1a2b852766a"
+    },
+    {
+      "byteLength": 4553,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.long.md",
+      "sha256": "bff618a601714466ccf1fb519ab4dddf3d56336089086ad6a905f681b14783b8"
+    },
+    {
+      "byteLength": 1369,
+      "mode": "0644",
+      "path": "skills/architecture-compass/references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.short.md",
+      "sha256": "16fba1f41aac19375ce0a32a86067e0770795c784edc2aad9e089d3a6ddbce5c"
+    },
+    {
+      "byteLength": 56731,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "56e4732eac9398e9eb571fa40cabc41faf5ef34bdacddecfe532d0a053c438bd"
+      "sha256": "320322da634313a4d051546ef6c35196a88be1370ec46d48506b10f460e610c1"
     },
     {
       "byteLength": 6988,
@@ -1509,6 +1567,54 @@
       "mode": "0644",
       "path": "skills/architecture-compass/references/internal/internal-adr-index.md",
       "sha256": "0282f00a5c522ac6c1578a13cb5e4ac2c1d6e0d92f3e6d0ebd5bb9357d3abb18"
+    },
+    {
+      "byteLength": 8643,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/SKILL.md",
+      "sha256": "69f2312624458bbe7e32aecc5a580178d8ce09edc7e8539ef4453b6f7f4595fc"
+    },
+    {
+      "byteLength": 620,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/agents/openai.yaml",
+      "sha256": "fbe576d5a264d412cbc55c1c5dc4b3e265158226f324b69d97db4b72f396ad36"
+    },
+    {
+      "byteLength": 3777,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/blueprint-template.md",
+      "sha256": "df041e40a306d1b0ce51a9d856c628d904f9a958f0f7fffeddb58e7ab6ab4df0"
+    },
+    {
+      "byteLength": 6111,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/openai-icon.png",
+      "sha256": "4736ebf701424761aba9f6461900ec54eb8b781ddab0586a5275d5d7e40c8255"
+    },
+    {
+      "byteLength": 860,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/openai-icon.svg",
+      "sha256": "f6c84ac3b5b8ea9a17d0706cbe1f4772065fdf06dcdea0e19518979d6e3f7065"
+    },
+    {
+      "byteLength": 2704,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/work-item-template.md",
+      "sha256": "f05339c70c0965a6ea5edaa2cd1e347bbe773cbebbf384ae64ad2ed2a51301ca"
+    },
+    {
+      "byteLength": 5222,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/references/design-contracts.md",
+      "sha256": "5faeabf44ecf066cfbb2b118789a2a18a457335fa83970428d485186c5764b1c"
+    },
+    {
+      "byteLength": 2005,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/references/orchestration.md",
+      "sha256": "a7123c56c7528629676df7cdf8bd003bf1bcf2c8f660b0aabf5801cf56e03422"
     },
     {
       "byteLength": 12701,
@@ -1667,10 +1773,10 @@
       "sha256": "7751f4fe095618cd1ffed693325b4a04095fc7e18346e6699ff108c0d4cefcd3"
     },
     {
-      "byteLength": 7817,
+      "byteLength": 8402,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/SKILL.md",
-      "sha256": "08b182b17e245ed628727b9d6d0a22c717c1452e44552113e49f22d2a3af7236"
+      "sha256": "a35117e945771cb3cc4eb37c3df68836e2b58cde5c08c7ca0806faed2d48fe32"
     },
     {
       "byteLength": 470,
@@ -1701,6 +1807,12 @@
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/openai-icon.png",
       "sha256": "962620390828b703c0202d49cd23fea436d4e8cf878cf81beb26a8497dcb940d"
+    },
+    {
+      "byteLength": 2704,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/assets/product-planning-work-item.md",
+      "sha256": "f05339c70c0965a6ea5edaa2cd1e347bbe773cbebbf384ae64ad2ed2a51301ca"
     },
     {
       "byteLength": 1506,
@@ -1737,6 +1849,12 @@
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/host-adapters.md",
       "sha256": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3"
+    },
+    {
+      "byteLength": 2225,
+      "mode": "0644",
+      "path": "skills/codex-spec-interviewer/references/product-planning-handoffs.md",
+      "sha256": "b6971da63263ff43e9f8ff9925b8decf036bac32347d378e498149899995e428"
     },
     {
       "byteLength": 4929,
@@ -2191,9 +2309,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.9.0"
+    "version": "1.10.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "3e1d84bd2702543f54954119613c6f9479dacd0b7e8aca7661a9daa709e6dc4d"
+  "treeHash": "7b271c54c8639d6bbfd4d5e8f5e51f497c92fe9e1eaa35cedc69fb320a02c2dc"
 }
