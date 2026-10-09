@@ -1,6 +1,6 @@
 # Architecture Zoom evaluation protocol
 
-Status: public release accepted on 2026-10-10; executable contract/evidence checks are provided. Native-host qualification is not implied.
+Status: public release accepted on 2026-10-09; executable contract/evidence checks are provided. Native-host qualification is not implied.
 
 Subject: [public skill](../../skills/engineering-workflows/architecture-zoom/SKILL.md).
 Plan: [integration specification](../../docs/specs/architecture-zoom-orchestration-spec.md).

@@ -3,7 +3,7 @@
 ID: ADR-0065
 Title: Allow explicit direct public skill releases
 Status: Accepted
-Date: 2026-10-10
+Date: 2026-10-09
 Owner: stark-ai-de
 Scope: repository
 Category: governance
@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: ADR-0004, ADR-0006, ADR-0008
 Superseded by: None
-Guide verified: 2026-10-10
+Guide verified: 2026-10-09
 Gist: Explicit public release intent selects the public source tree while evidence claims remain bounded.
 
 Variants: [Short](0065-allow-explicit-direct-public-skill-releases.short.md) · [Long, canonical](0065-allow-explicit-direct-public-skill-releases.long.md) · **Guide**
@@ -23,7 +23,7 @@ This guide is non-normative. Long is canonical.
 
 ## How to apply
 
-The maintainer explicitly requested Architecture Zoom as a regular public skill in the next release and accepted its specification and ADRs on 2026-10-10. That request selects this direct-public route; it does not assert a test outcome. Record the current source fingerprint, release scope and unobserved behavior in the skill's public-admission record. Preserve genuine captures separately.
+The maintainer explicitly requested Architecture Zoom as a regular public skill in the next release and accepted its specification and ADRs on 2026-10-09. That request selects this direct-public route; it does not assert a test outcome. Record the current source fingerprint, release scope and unobserved behavior in the skill's public-admission record. Preserve genuine captures separately.
 
 Move an existing candidate to the single public source, remove the internal marker, update catalog/install entries and the selected bundle/listing, then regenerate projections. An accepted public-admission record can authorize that placement without a fabricated native-host qualification report. The qualification CLI must continue to reject that record as non-observational evidence.
 

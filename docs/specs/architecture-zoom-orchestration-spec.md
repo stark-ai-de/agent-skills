@@ -1,7 +1,7 @@
 # Architecture Zoom and intent-bound skill orchestration
 
 Status: Accepted
-Accepted: 2026-10-10
+Accepted: 2026-10-09
 Release scope: public Architecture Zoom 0.2.0 and the nine-skill developer plugin 1.10.0. Native-host observations remain separately recorded evidence.
 Authority: the maintainer explicitly requested direct public placement without an internal marker or incubator stage, and acceptance of the related specification and ADRs. This authorizes the release-preparation changes; merge, publication, global installations and target-project adoption remain separate actions.
 Baseline: `d3b93d7bb7fff313b42703715a10d93944f653ad` (pilot), on `main` at `060800f3433e08e79524a0beedc7de6b7bb6ef27`.

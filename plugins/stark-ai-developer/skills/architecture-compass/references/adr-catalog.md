@@ -154,7 +154,7 @@ These entries are adoption candidates. Setup records each as `adopt`, `adapt`, `
 | Skill portability              | AC-ADR-035, then AC-ADR-036, AC-ADR-037, or AC-ADR-038                     |
 | Internal/public ADR routing    | AC-ADR-051, then AC-ADR-001 and AC-ADR-044                                 |
 | Host-neutral persistence       | AC-ADR-052, then AC-ADR-064, AC-ADR-036, and AC-ADR-004                    |
-| Public skill reuse             | AC-ADR-039 plus target authority and AC-ADR-004                            |
+| Public skill reuse             | AC-ADR-068 plus target authority and AC-ADR-004                            |
 | New public skill repository    | AC-ADR-040, then its linked component provider ADRs                        |
 | JavaScript/TypeScript tooling  | AC-ADR-058, then AC-ADR-013, AC-ADR-014, and AC-ADR-018                    |
 | Local development endpoints    | AC-ADR-066, then AC-ADR-013/014/019/054 and AC-ADR-058 when applicable     |

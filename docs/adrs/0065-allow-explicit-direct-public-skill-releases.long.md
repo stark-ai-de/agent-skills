@@ -3,7 +3,7 @@
 ID: ADR-0065
 Title: Allow explicit direct public skill releases
 Status: Accepted
-Date: 2026-10-10
+Date: 2026-10-09
 Owner: stark-ai-de
 Scope: repository
 Category: governance
@@ -14,7 +14,7 @@ Variant: Long
 Canonical variant: Long
 Supersedes: ADR-0004, ADR-0006, ADR-0008
 Superseded by: None
-Guide verified: 2026-10-10
+Guide verified: 2026-10-09
 Gist: Explicit public release intent selects the public source tree while evidence claims remain bounded.
 
 Variants: [Short](0065-allow-explicit-direct-public-skill-releases.short.md) · **Long, canonical** · [Guide](0065-allow-explicit-direct-public-skill-releases.guide.md)
@@ -27,7 +27,7 @@ Assess agent-quality improvement, activation fit, utility and maintenance cost f
 
 ## Why
 
-A release-ready authoring request should not create an incubator-only artifact that is absent from the requested release. The maintainer's explicit 2026-10-10 instruction accepts direct public inclusion and the related specification/ADRs. Test outcomes remain separate facts; changing placement must not turn unrun evaluations into passing evidence.
+A release-ready authoring request should not create an incubator-only artifact that is absent from the requested release. The maintainer's explicit 2026-10-09 instruction accepts direct public inclusion and the related specification/ADRs. Test outcomes remain separate facts; changing placement must not turn unrun evaluations into passing evidence.
 
 ## Options
 

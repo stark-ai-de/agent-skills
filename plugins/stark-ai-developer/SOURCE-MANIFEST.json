@@ -1524,7 +1524,7 @@
       "byteLength": 56731,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "e8bbba66aa2892664d65ae3e8d610f0c41ef875aca1db043b0a5c3dd5030b7bc"
+      "sha256": "320322da634313a4d051546ef6c35196a88be1370ec46d48506b10f460e610c1"
     },
     {
       "byteLength": 6988,
@@ -2313,5 +2313,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "699bbe556e1886099a632481a611a82669567bd7cce000f4f4d806886269c1b6"
+  "treeHash": "7b271c54c8639d6bbfd4d5e8f5e51f497c92fe9e1eaa35cedc69fb320a02c2dc"
 }

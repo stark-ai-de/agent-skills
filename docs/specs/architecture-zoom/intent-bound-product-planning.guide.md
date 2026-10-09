@@ -1,7 +1,7 @@
 # Accepted coordination design (guide)
 
 Status: Accepted
-Accepted: 2026-10-10
+Accepted: 2026-10-09
 Authority: maintainer acceptance of the PR #141 specification and ADRs.
 
 This accepted design is implemented by the canonical Architecture Compass [AC-ADR-067 Guide](../../../skills/engineering-workflows/architecture-compass/references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.guide.md). Skill preselection and optional provisioning are governed separately by [AC-ADR-068](../../../skills/engineering-workflows/architecture-compass/references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.short.md).

@@ -3,7 +3,7 @@
 ID: ADR-0065
 Title: Allow explicit direct public skill releases
 Status: Accepted
-Date: 2026-10-10
+Date: 2026-10-09
 Owner: stark-ai-de
 Scope: repository
 Category: governance
@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0004, ADR-0006, ADR-0008
 Superseded by: None
-Guide verified: 2026-10-10
+Guide verified: 2026-10-09
 Gist: Explicit public release intent selects the public source tree while evidence claims remain bounded.
 
 Variants: **Short** · [Long, canonical](0065-allow-explicit-direct-public-skill-releases.long.md) · [Guide](0065-allow-explicit-direct-public-skill-releases.guide.md)
