@@ -103,6 +103,10 @@ Use direct `refactor` only when accepted local ADRs already govern the complete 
 
 If governance is missing, route to `setup`. If durable decisions or broad sequencing remain unresolved, route to `plan-refactor` or `plan-run-refactor`. Never silently combine those workflows under direct refactor.
 
+### Iterative simplification
+
+For authorized code reduction, use the shared [simplification loop](ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop). It combines complete inventory passes, exact-version contract checks, fixed-baseline accounting, owning-boundary proof, and explicit convergence or blocked-stop reporting. Apply it only within the selected workflow: audit remains read-only, planning does not authorize implementation, and execution remains bounded by accepted local decisions.
+
 ## Plan workflows
 
 For both plan routes:

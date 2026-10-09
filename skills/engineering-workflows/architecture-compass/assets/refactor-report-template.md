@@ -112,6 +112,33 @@ Complete this section for `refactor` and the execution phase of `plan-run-refact
 
 For adopted testing decisions, link the target-native measurement record using [testing-outcome-receipt-template.md](testing-outcome-receipt-template.md). Preserve provider revision/content identity and local mapping there; do not create a second ledger. Measurement states (`met`, `unmet`, `unmeasured`, `waived`, `not-applicable`) do not replace execution or evidence statuses.
 
+## Simplification evidence (when requested)
+
+Use the optional [AC-ADR-006 loop](../references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) only for a requested simplification assessment or implementation. Leave this section out for unrelated work; audit reports observations without persisting an artifact.
+
+- Baseline / final revision or content identity; task delta versus full PR:
+- Scope / inventory coverage / structural scan / semantic review / exclusions:
+- Applied, retained and deferred candidates; alternative APIs/versions and equivalence evidence:
+- Shared-code owner, real consumers, runtime boundaries and remaining custom policy:
+- Dependency changes, integration/upgrade responsibility and exit path:
+- Counting method, paths, rename treatment and binary/generated exclusions:
+
+| Category                                   | Added lines | Deleted lines | Net delta (added - deleted) |
+| ------------------------------------------ | ----------- | ------------- | --------------------------- |
+| Implementation                             |             |               |                             |
+| Tests / fixtures                           |             |               |                             |
+| Other (name docs, config, generated, etc.) |             |               |                             |
+| All changed files                          |             |               |                             |
+
+Keep the initial baseline fixed; identify each pass's starting candidate and count all added support files. Separate handwritten production, tests/fixtures, docs/config, and generated/vendor/lockfile changes. Use the same formatter/counter and paths for incremental and cumulative measurements.
+
+| Pass / candidate | Removed responsibility or replacement API/version | Handwritten delta / cumulative delta | Generated/vendor/lockfile delta | Existing proof receipt IDs |
+| ---------------- | ------------------------------------------------- | ------------------------------------ | ------------------------------- | -------------------------- |
+|                  |                                                   |                                      |                                 |                            |
+
+- Proof: link the existing validation ledger below; keep unmeasured outcomes explicit.
+- Final complete-pass coverage, stop reason, remaining candidates / rejection reasons and reopen triggers (distinguish convergence from blocked or incomplete work):
+
 ## Validation ledger
 
 Record one AC-ADR-049 receipt per distinct proof obligation and reconcile every delegated receipt against the integrated candidate.

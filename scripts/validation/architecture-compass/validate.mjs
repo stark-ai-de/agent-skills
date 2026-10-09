@@ -246,6 +246,12 @@ const baselineEvalCases = [
   "clear-setup-intent.md",
   "clear-audit-intent.md",
   "clear-bounded-refactor-intent.md",
+  "simplification-converged-passes.md",
+  "simplification-library-compatibility.md",
+  "simplification-accounting.md",
+  "simplification-shared-boundaries.md",
+  "simplification-proof-failure.md",
+  "simplification-audit-authority.md",
   "clear-plan-refactor-intent.md",
   "clear-plan-run-refactor-intent.md",
   "ambiguous-workflow-selection.md",
@@ -299,6 +305,10 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "simplification-existing-capabilities.md",
+  "simplification-contract-mismatch.md",
+  "simplification-coverage-and-drift.md",
+  "simplification-honest-metrics-and-stop.md",
   "portless-compatible-default.md",
   "portless-existing-routing-migration.md",
   "portless-no-local-endpoint.md",

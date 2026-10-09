@@ -56,7 +56,7 @@
       "byteLength": 1423,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "0d68473c7297aced03e47db122fbf08559d3f0643e3a743a0adfee4a3c04744b"
+      "sha256": "3be46573cca089ec17dd0584f3f1ac7e0a9c078d1331639f69c2b4e442fe3e10"
     },
     {
       "byteLength": 13030,
@@ -179,10 +179,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 18969,
+      "byteLength": 19329,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "87a3823da12174827723b0e40eb5728f52155949dad74fae064469d469df0333"
+      "sha256": "73e6f6ee5ad5730e5a1604081663fe350a8cea20f65a9d288c1eeb8e53fab222"
     },
     {
       "byteLength": 692,
@@ -251,10 +251,10 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 9743,
+      "byteLength": 12295,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "2430235cbbbce1e1b5805aafdc6f05b515d96b5606967f8fa20ac058687c4c7e"
+      "sha256": "4fbd84da4a7c450acc1a849bd0840f80a636efbf77bfbd96dd044a1a6e4139d6"
     },
     {
       "byteLength": 14869,
@@ -365,10 +365,10 @@
       "sha256": "74f7e0fb4be9347b1edd6d461ab3534345dcf7a5cdbb02e1f2a52f0034c7c8d3"
     },
     {
-      "byteLength": 4640,
+      "byteLength": 16797,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md",
-      "sha256": "904416fa99387ca7b655836c0e072ea46deeb7e31e10b3c4b643eeef1ad54af4"
+      "sha256": "2e4cc9d217de5e7e0502f03f04560e5cd94d132f28898e221d6eb84278ffd7a7"
     },
     {
       "byteLength": 5881,
@@ -1409,10 +1409,10 @@
       "sha256": "40890b255471e9e4f21e4c4ee49bf5d2db8da5b1d423b7baf686e0a24d94c988"
     },
     {
-      "byteLength": 12348,
+      "byteLength": 12877,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md",
-      "sha256": "6b1f375bb19ef5463a269c2264848227f7c42ace63d328ed37902e3f197a8c8e"
+      "sha256": "4303b05864e02d8c19fcbb84e679dc554a75516e9b03f78754b1240ee59e4e9e"
     },
     {
       "byteLength": 9221,
@@ -2191,9 +2191,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.8.0"
+    "version": "1.9.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "ad0166fdeb4ff5fd29102de20f16adb20f10672284ad2bec96b955c8fd8784e9"
+  "treeHash": "56efad7a916ebb30084fc9445b4858acab5b289662e7ea799b752917ed7f9e0e"
 }
