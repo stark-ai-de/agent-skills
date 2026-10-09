@@ -64,7 +64,7 @@ jobs:
           PY
   import:
     needs: transfer
-    if: github.repository == 'stark-ai-de/agent-skills' && github.event.head_commit.message == 'chore: verify PR 138 source transfer'
+    if: github.repository == 'stark-ai-de/agent-skills' && contains(github.event.head_commit.message, 'verify PR 138 source transfer')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
