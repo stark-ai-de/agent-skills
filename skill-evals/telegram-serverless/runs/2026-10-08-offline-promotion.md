@@ -1,6 +1,6 @@
 # Offline qualification and promotion assessment
 
-Reviewed: 2026-10-08 UTC (2026-10-09 Europe/Berlin). Decision: promote telegram-serverless 0.1.0 under [ADR-0006](../../../docs/adrs/0006-use-incubator-outside-public-catalog.long.md) and [ADR-0008](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md). Integration checks are recorded separately; this is not publication or live Telegram qualification.
+Reviewed: 2026-10-08 UTC (2026-10-09 Europe/Berlin). Decision: promote telegram-serverless 0.1.0 under [ADR-0006](../../../docs/adrs/0006-use-incubator-outside-public-catalog.short.md) ([Long, canonical](../../../docs/adrs/0006-use-incubator-outside-public-catalog.long.md) · [Guide](../../../docs/adrs/0006-use-incubator-outside-public-catalog.guide.md)) and [ADR-0008](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.short.md) ([Long, canonical](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md) · [Guide](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.guide.md)). Integration checks are recorded separately; this is not publication or live Telegram qualification.
 
 ## Method
 
