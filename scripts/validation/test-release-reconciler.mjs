@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { attestationFailureKind } from "../release/reconcile-github-release.mjs";
+
 import {
   applyReleaseReconciliation,
   classifyReleaseAsset,
@@ -15,6 +17,21 @@ import {
 } from "../lib/github-release-reconciliation.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+
+for (const message of [
+  "API request failed: HTTP 404: Not Found (https://api.github.com/repos/owner/repo/attestations/sha256:abc)",
+  "failed to fetch attestations: status code 404",
+  "API request failed: No attestations found",
+]) {
+  assert.equal(attestationFailureKind({ stderr: message }), "missing");
+}
+for (const message of [
+  "API request failed: HTTP 403: Forbidden",
+  "API request failed: HTTP 500: Internal Server Error",
+  "API request failed: connection reset",
+]) {
+  assert.equal(attestationFailureKind({ stderr: message }), "error");
+}
 const tag = "v0.21.0";
 const releaseSha = "a".repeat(40);
 const expectedRelease = {
