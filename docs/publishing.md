@@ -597,8 +597,8 @@ security routes return HTTP 200.
 3. Enter the public listing and verified developer identity.
 4. Upload the exact direct `openai.zip` asset from the verified GitHub Release.
 5. Verify all packaged skill icons. If the portal ignores package metadata,
-   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`, and `chart`
-   glyphs.
+   restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`,
+   `code`, and `chart` glyphs.
 6. Keep the existing light and dark Plugin Info logos unchanged.
 7. Follow the [Composer icon handoff](listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff)
    to upload the separate light/dark Composer PNGs and restore Plugin Info logos
