@@ -29,12 +29,16 @@
         "source": "skills/engineering-workflows/drawio-diagrams"
       },
       {
+        "name": "telegram-serverless",
+        "source": "skills/engineering-workflows/telegram-serverless"
+      },
+      {
         "name": "jev-capability-advisor",
         "source": "skills/skill-maintenance/jev-capability-advisor"
       }
     ]
   },
-  "bundleHash": "95c343362fa847c56593d88ff87e56abdab91dddcc96224201ec81ee1b98141f",
+  "bundleHash": "1461e976254e9acbd2e126d8ba7a1ab1c119bed929cbb9956e9c5f25036581c3",
   "files": [
     {
       "byteLength": 10271,
@@ -43,16 +47,16 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 788,
+      "byteLength": 1028,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "caec8199236ed995fd3b6454b054ed8831cc3e17b79a7d3158cb8111e346447e"
+      "sha256": "c75564ed210476ad571664f54738dc9e06039ee115e492d893a92715b02b3cef"
     },
     {
-      "byteLength": 1289,
+      "byteLength": 1423,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "1fcc52b7d4a2be942f80887b01c701b8fe5da2a7df8563f9fdb8db57c1bcaa9e"
+      "sha256": "0d68473c7297aced03e47db122fbf08559d3f0643e3a743a0adfee4a3c04744b"
     },
     {
       "byteLength": 13030,
@@ -2123,13 +2127,73 @@
       "mode": "0644",
       "path": "skills/jev-capability-advisor/scripts/routing_metadata.py",
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
+    },
+    {
+      "byteLength": 8929,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/SKILL.md",
+      "sha256": "5093d27e1c34c019ded2b1e650f668dcb8e3aa0b089e37671bba46e3474abb10"
+    },
+    {
+      "byteLength": 530,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/agents/openai.yaml",
+      "sha256": "4dfa21b205c224d8da2018c611e7f6a2c134ede9105bb2a21a25e5820ecf9701"
+    },
+    {
+      "byteLength": 7926,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/assets/openai-icon.png",
+      "sha256": "9c52f6a4b5e3c6282b953b82297deca14aeb05b67dcc97fb9bfad20ad8eda8dd"
+    },
+    {
+      "byteLength": 708,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/assets/openai-icon.svg",
+      "sha256": "57e52cff01aa4c6f127316591de0f3266d84fb991636373343a135bdf37220fc"
+    },
+    {
+      "byteLength": 6399,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/database.md",
+      "sha256": "b2b69d04f45e37d3e77fc1ed67af24613e24007a1331f1cbfc9de32d82677ec7"
+    },
+    {
+      "byteLength": 6583,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/mini-apps.md",
+      "sha256": "b31550aa9d2de68589ea173800c360f2271efbd34ec4e6e0409462055106bd84"
+    },
+    {
+      "byteLength": 7538,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/operations.md",
+      "sha256": "27d9efbc5bb456549e4f6b92a3814fd3293060f1da7f1ea7c99b4875eb341c27"
+    },
+    {
+      "byteLength": 4498,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/runtime-sdk.md",
+      "sha256": "6bdd16b3bed05e9e60e99ba06597e131fe0773c79ef6df1f4a0c0e3b9b011da0"
+    },
+    {
+      "byteLength": 3899,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/setup.md",
+      "sha256": "ec705fc10d93a0898de57183635dc05588ea863feb649e984dea35f1e9c07ae4"
+    },
+    {
+      "byteLength": 13418,
+      "mode": "0644",
+      "path": "skills/telegram-serverless/references/sources.md",
+      "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
     }
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.7.5"
+    "version": "1.8.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "617cbfbef6d0f7b13b02d886a1020f3f3b2ab27b1302fde85c21ca5d011f537e"
+  "treeHash": "ad0166fdeb4ff5fd29102de20f16adb20f10672284ad2bec96b955c8fd8784e9"
 }

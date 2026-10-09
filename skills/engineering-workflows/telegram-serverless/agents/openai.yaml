@@ -1,0 +1,14 @@
+interface:
+  display_name: "Telegram Serverless"
+  short_description: "Build and maintain Telegram-hosted bots and Mini Apps"
+  icon_small: "./assets/openai-icon.png"
+  icon_large: "./assets/openai-icon.png"
+  default_prompt: >-
+    Use Telegram Serverless to complete this bot or Mini App task. Select the route
+    from my requested outcome, preserve existing work, and distinguish local checks,
+    remote tests, deployment, and database migrations.
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true

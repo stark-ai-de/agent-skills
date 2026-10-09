@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "B1",
+      "kind": "build",
+      "prompt": "Create a Telegram Serverless bot that counts text messages per chat, ignores messages without text, and replies with the new count. Include all backend files and the deployment sequence for an existing bot. Do not deploy or contact Telegram.",
+      "fixtures": {
+        "tree": ["tgcloud/schema.js", "tgcloud/handlers/message.js"],
+        "schema": "export {};",
+        "handler": "export default async function (message) {}"
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "build",
+      "prompt": "Build the smallest plain-HTML Telegram Serverless Mini App that lists the current user's saved notes and creates a note. Supply schema, endpoints, browser HTML and static hosting config. Notes must remain private to their owner; empty or excessively long notes must be rejected. Do not contact Telegram or deploy.",
+      "fixtures": {
+        "frontend": "Plain HTML project; no framework or bundler. Use a static public folder.",
+        "existingFiles": {}
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "review",
+      "prompt": "Review these Telegram Serverless backend snippets for concrete problems. Report findings only; do not fix files, install packages, or run cloud commands.",
+      "fixtures": {
+        "schema": "import { table, integer, text } from 'sdk/db'; export const users = table('users', { id: integer('id').primaryKey() }); export const notes = table('notes', { id: integer('id').primaryKey(), userId: integer('user_id').references(() => users.id), body: text('body') });",
+        "endpoint": "import { z } from 'zod'; import fs from 'node:fs'; import { db } from 'sdk'; import { eq } from 'sdk/db'; import { notes } from '../schema'; export default async function (input) { const row = db.select().from(notes).where(eq(notes.userId, input.userId)).get(); return { row, debug: Buffer.from(fs.readFileSync('/etc/hostname')).toString('hex') }; }"
+      }
+    },
+    {
+      "id": "O1",
+      "kind": "operations",
+      "prompt": "I need an offline-only smoke test. Can we use tgcloud run endpoints/getNote with --ctx containing user id 123 and count success as proof that Mini App authentication works? Prepare the appropriate test approach without running anything.",
+      "fixtures": {
+        "endpoint": "export default async function (input, ctx) { return { userId: ctx.initData.user.id }; }"
+      }
+    },
+    {
+      "id": "O2",
+      "kind": "operations",
+      "prompt": "Our CI cannot run interactive tgcloud migrate. Tell me how to handle this migration and whether the result is complete. No live changes are authorized.",
+      "fixtures": {
+        "pending": [
+          {
+            "kind": "add table",
+            "status": "safe"
+          },
+          {
+            "kind": "drop old_sessions",
+            "status": "warning"
+          },
+          {
+            "kind": "change notes.body type",
+            "status": "manual"
+          }
+        ],
+        "lastRun": {
+          "command": "tgcloud migrate --safe",
+          "exitCode": 0,
+          "summary": {
+            "applied": 1,
+            "skipped": 1,
+            "manual": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "O3",
+      "kind": "operations",
+      "prompt": "Diagnose this rejected deployment. I have local uncommitted changes and want to preserve both my work and the remote handler. Do not modify anything or contact the platform.",
+      "fixtures": {
+        "workingFiles": ["tgcloud/schema.js", "tgcloud/handlers/message.js"],
+        "localChanges": ["message.js modified"],
+        "cloudSnapshotRevision": 8,
+        "observedPushError": "remote revision is 9; expected 8",
+        "remoteAddition": "handlers/callback_query",
+        "suggestionFromLog": "fetch then push, pull, or push --force"
+      }
+    },
+    {
+      "id": "O4",
+      "kind": "operations",
+      "prompt": "Review this proposed Mini App deployment and list what must be resolved before publishing. Do not build or deploy.",
+      "fixtures": {
+        "sourceChanged": true,
+        "buildFolder": "dist",
+        "buildOlderThanSource": true,
+        "config": {
+          "static": {
+            "source": "dist",
+            "immutable": ["/*"],
+            "headers": [
+              {
+                "path": "/*",
+                "set": {
+                  "X-Frame-Options": "DENY"
+                }
+              }
+            ]
+          }
+        },
+        "proposal": "Run tgcloud push immediately. To stop managing the site afterwards, set static to false."
+      }
+    },
+    {
+      "id": "O5",
+      "kind": "routing",
+      "prompt": "Show me the Telegram Serverless skill's workflow options. Do not perform any of them.",
+      "fixtures": {}
+    },
+    {
+      "id": "O6",
+      "kind": "operations",
+      "prompt": "Diagnose a bot that stopped receiving callback queries and explain the local layout upgrade. Keep queued updates and don't change anything.",
+      "fixtures": {
+        "legacyFiles": ["schema.js", "handlers/message.js", "handlers/callback_query.js"],
+        "webhook": {
+          "allowed_updates": ["message"],
+          "pending_update_count": 6
+        },
+        "cloudHandlers": ["message", "callback_query"],
+        "localCallbackHandler": "export default async function (query) {}"
+      }
+    },
+    {
+      "id": "O7",
+      "kind": "routing",
+      "prompt": "I have a Telegram bot on Cloudflare Workers and want to fix its webhook there. Keep Cloudflare hosting. Does Telegram Serverless apply?",
+      "fixtures": {}
+    },
+    {
+      "id": "O8",
+      "kind": "routing",
+      "prompt": "Use $telegram-serverless.",
+      "fixtures": {}
+    },
+    {
+      "id": "O9",
+      "kind": "review",
+      "prompt": "Review my Telegram Serverless production design for an external AI API integration. I want to read the provider key from process.env.AI_KEY, wrap writes in a Drizzle transaction, and recover failures with tgcloud backup. Tell me which assumptions are supported; do not implement or contact services.",
+      "fixtures": {}
+    },
+    {
+      "id": "O10",
+      "kind": "routing",
+      "prompt": "This tgcloud project needs attention. I might want an explanation, a fix, or deployment; I have not decided. Help me choose before doing any work.",
+      "fixtures": {
+        "tree": ["tgcloud/schema.js", "tgcloud/handlers/message.js"],
+        "outcome": "Unspecified; no inspection, execution, or mutation requested."
+      }
+    },
+    {
+      "id": "O11",
+      "kind": "setup",
+      "prompt": "Use $telegram-serverless to explain how to link my existing JavaScript project to an already-created Telegram Serverless bot. It has no tgcloud files. Keep the current frontend. I only want the setup instructions; do not install, log in, create a bot, or alter files.",
+      "fixtures": {
+        "packageManager": "pnpm",
+        "frontend": "Existing static frontend under web/; build output under web/dist/",
+        "cli": "No project-local CLI yet",
+        "credentials": "No credentials supplied; do not request tokens in chat."
+      }
+    },
+    {
+      "id": "O12",
+      "kind": "operations",
+      "prompt": "Review an offline-only plan for an already linked Telegram Serverless project. Is tgcloud status safe alongside tgcloud diff? Explain the permitted checks without running commands or changing credentials.",
+      "fixtures": {
+        "cliVersion": "@tgcloud/cli 0.2.0",
+        "credentials": "A saved token or TGCLOUD_TOKEN is available; do not inspect its value.",
+        "sourceObservation": "status calls webhookStatusLine; with a token it requests GET /webhook and silently ignores lookup failures.",
+        "requestedScope": "No network, installation, credential changes, or cloud operations."
+      }
+    }
+  ]
+}

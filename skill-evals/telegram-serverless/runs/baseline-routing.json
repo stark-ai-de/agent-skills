@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "id": "O10",
+      "response": "I recommend starting with an explanation so you can decide whether changes are needed. The supplied filenames show a database schema and message handler, but do not establish a defect or deployment readiness.\n\nChoose the outcome you want next:\n\n1. **Explanation:** A read-only walkthrough of how the project works, its local/cloud boundaries, and any questions worth investigating. This would require inspecting the relevant files after you choose it.\n2. **Fix:** Start from a specific symptom or desired behavior, diagnose it, then make and validate the necessary changes within that scope. Deployment would need to be included explicitly.\n3. **Deployment preparation:** Review the intended local changes, remote synchronization, configuration, tests, and pending database changes. Decide what should be published and whether any migration is needed before authorizing live actions.\n\nWhich option would you like? If you choose a fix, describe the symptom or desired change; if deployment, identify the intended bot/environment and release outcome.\n\nI have not inspected files, run commands, or changed anything.",
+      "commands": [],
+      "limitations": [
+        "Only the supplied file list and undecided outcome are known.",
+        "These are task-scope choices, not a verified inventory of an unavailable skill."
+      ]
+    },
+    {
+      "id": "O11",
+      "response": "The named skill definition is unavailable here; these instructions follow the official Telegram Serverless documentation. Nothing has been executed.\n\nFrom the existing project root, with Node.js 18+ and pnpm available, the future setup sequence is:\n\n```sh\npnpm add -D @tgcloud/cli\npnpm exec tgcloud init\n```\n\nThe first command installs a local development dependency and updates dependency files. The second scaffolds `tgcloud/`, configuration, documentation, and local state while preserving existing files. Keep `web/` in place; do not create another frontend or bot. Review generated files and any added package scripts before proceeding.\n\nIf you want Telegram to host the frontend later, set the root `tgcloud.jsonc` configuration to include:\n\n```json\n{ \"static\": { \"source\": \"web/dist\" } }\n```\n\nThat path is relative to the project root. Linking alone does not require building or publishing the frontend.\n\nTo link the already-created Serverless bot later:\n\n```sh\npnpm exec tgcloud login\n```\n\nIn your local interactive terminal, enter the CLI access token from BotFather \u2192 your existing bot \u2192 Serverless \u2192 CLI Access. This is separate from the Bot API token. Never send it in chat. Login contacts Telegram and saves it in `.tgcloud/credentials`; keep `.tgcloud/` ignored.\n\nFinish with offline `pnpm exec tgcloud status`. Setup/linking does not deploy code or migrate data.\n\n[Official setup documentation](https://core.telegram.org/bots/serverless#1-create-a-project)",
+      "commands": [
+        {
+          "command": "pnpm add -D @tgcloud/cli",
+          "effects": "Future setup only: downloads and installs the project-local CLI, writes dependency artifacts, and updates package.json and the pnpm lockfile.",
+          "executed": false
+        },
+        {
+          "command": "pnpm exec tgcloud init",
+          "effects": "Future setup only: creates missing Serverless project files, config, documentation, and local state without overwriting existing files; may add frontend configuration or an absent deploy script. Does not deploy.",
+          "executed": false
+        },
+        {
+          "command": "pnpm exec tgcloud login",
+          "effects": "Future setup only: requires an interactive local terminal, validates the separate CLI token against Telegram, and saves local credentials. No token should be supplied in chat.",
+          "executed": false
+        },
+        {
+          "command": "pnpm exec tgcloud status",
+          "effects": "Future offline inspection: compares local files with the cached cloud state and reports pending local deployment changes; does not refresh live state or deploy.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "The named skill definition was not available or read; this is a documentation-based setup explanation.",
+        "No project files, package workspace structure, existing scripts, or installed tool versions were inspected.",
+        "The CLI was not installed, credentials were not requested or supplied, and the project was not linked or changed."
+      ]
+    }
+  ],
+  "sourcesRead": [
+    "skill-evals/telegram-serverless/cases.json (O10-O11 only)",
+    "official-serverless-documentation-capture (lines 94-132, 189-205, 284-320, 624-650; prior same-arm documentation context retained)"
+  ],
+  "approximateSourceBytesRead": 14760
+}

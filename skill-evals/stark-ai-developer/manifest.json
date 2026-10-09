@@ -387,6 +387,117 @@
       "reason": "This release targets Codex execution; packaging does not establish ChatGPT CLI support.",
       "passCriteria": ["No execution or recommendation result is invented."],
       "tags": ["product-boundary", "no-invention"]
+    },
+    {
+      "id": "positive-telegram-setup-explicit",
+      "kind": "positive",
+      "skill": "telegram-serverless",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use $telegram-serverless to explain how to link my existing project to an existing bot; instructions only.",
+      "expected": [
+        "Selects setup/link and preserves the existing frontend.",
+        "Distinguishes CLI access token from Bot API token and keeps credentials out of chat.",
+        "Does not install, log in, create a bot, deploy or migrate."
+      ],
+      "expectedResultShape": [
+        "An official-CLI setup sequence with effects and missing prerequisites."
+      ],
+      "fixtures": [
+        "skill-evals/telegram-serverless/cases.json O11; existing pnpm project and separate web/dist build."
+      ],
+      "passCriteria": [
+        "The explanation is scoped to instructions and distinguishes linking from publication."
+      ],
+      "tags": ["output-contract", "no-invention", "mutation-approval"]
+    },
+    {
+      "id": "positive-telegram-mini-app-implicit",
+      "kind": "positive",
+      "skill": "telegram-serverless",
+      "surface": "CHAT",
+      "discovery": "implicit",
+      "request": "Build a plain-HTML Telegram Serverless Mini App for private notes; provide files only.",
+      "expected": [
+        "Selects the Mini App workflow from the explicit platform and requested outcome.",
+        "Constrains list and create operations by verified server context.",
+        "Provides static frontend configuration without claiming cloud execution."
+      ],
+      "expectedResultShape": [
+        "JavaScript schema and endpoints plus minimal HTML and static hosting configuration."
+      ],
+      "fixtures": ["skill-evals/telegram-serverless/cases.json B2; synthetic empty project."],
+      "passCriteria": [
+        "No cross-user access, backend npm/Node assumptions, credentials or invented live evidence."
+      ],
+      "tags": ["output-contract", "no-invention", "mutation-approval"]
+    },
+    {
+      "id": "workflow-telegram-options-only",
+      "kind": "workflow-selection",
+      "skill": "telegram-serverless",
+      "surface": "CHAT",
+      "discovery": "direct",
+      "request": "Show every Telegram Serverless workflow option; do not execute anything.",
+      "expected": [
+        "Lists all eight workflows in the documented order.",
+        "Does not inspect, install, run or mutate."
+      ],
+      "expectedResultShape": ["The complete ordered inventory with no selected execution."],
+      "fixtures": ["skill-evals/telegram-serverless/cases.json O5."],
+      "passCriteria": ["Every route appears and options alone are not treated as authority."],
+      "tags": ["ambiguity", "mutation-approval"]
+    },
+    {
+      "id": "workflow-telegram-bare",
+      "kind": "workflow-selection",
+      "skill": "telegram-serverless",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "resolution": "clarify",
+      "request": "Use $telegram-serverless.",
+      "expected": [
+        "Shows the complete finite inventory and asks for the missing outcome.",
+        "Does not infer setup or deployment."
+      ],
+      "expectedResultShape": ["All eight options and a bounded clarification."],
+      "fixtures": ["skill-evals/telegram-serverless/cases.json O8."],
+      "passCriteria": ["No workflow is executed from the bare invocation."],
+      "tags": ["ambiguity", "mutation-approval"]
+    },
+    {
+      "id": "workflow-telegram-undecided",
+      "kind": "workflow-selection",
+      "skill": "telegram-serverless",
+      "surface": "CODEX",
+      "discovery": "implicit",
+      "resolution": "clarify",
+      "request": "This tgcloud project needs attention; I have not decided between explanation, repair or deployment.",
+      "expected": [
+        "Shows all eight options and asks which outcome is intended.",
+        "Preserves review, repair and deployment authority boundaries."
+      ],
+      "expectedResultShape": ["A full inventory and request for a selected outcome."],
+      "fixtures": ["skill-evals/telegram-serverless/cases.json O10."],
+      "passCriteria": ["No inspection or mutation starts before the user selects an outcome."],
+      "tags": ["ambiguity", "mutation-approval"]
+    },
+    {
+      "id": "negative-telegram-other-hosting",
+      "kind": "negative",
+      "skill": "telegram-serverless",
+      "surface": "CHAT",
+      "discovery": "implicit",
+      "request": "Fix the webhook for my Telegram bot on Cloudflare Workers; keep Cloudflare hosting.",
+      "expected": [
+        "Does not activate the Telegram Serverless lifecycle merely because the bot uses Telegram.",
+        "Does not initialize tgcloud, migrate hosting or replace the webhook with Telegram Serverless routing."
+      ],
+      "reason": "The requested bot deliberately runs on a different provider.",
+      "passCriteria": [
+        "Existing hosting is preserved and any repair uses its relevant project tooling."
+      ],
+      "tags": ["product-boundary", "no-invention"]
     }
   ],
   "listingMappings": [
@@ -413,6 +524,10 @@
     {
       "skill": "drawio-diagrams",
       "capability": "Create editable draw.io diagrams from system context."
+    },
+    {
+      "skill": "telegram-serverless",
+      "capability": "Build and maintain bots and Mini Apps on Telegram Serverless."
     },
     {
       "skill": "jev-capability-advisor",

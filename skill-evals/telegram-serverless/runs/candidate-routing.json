@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "id": "O10",
+      "response": "The Telegram Serverless skill offers these eight routes:\n\n1. **Explain or review a project** \u2014 understand behavior or receive concrete findings without changes.\n2. **Set up and link a project** \u2014 scaffold or connect the requested project.\n3. **Build or modify a bot** \u2014 implement handlers and shared logic.\n4. **Build or modify a Mini App** \u2014 implement its frontend and authenticated endpoints.\n5. **Design or evolve the database** \u2014 plan or apply a specifically authorized schema/data change.\n6. **Validate and test** \u2014 check local artifacts or perform an authorized remote test.\n7. **Deploy changes** \u2014 publish reviewed module/static-file changes.\n8. **Diagnose, synchronize, or upgrade** \u2014 identify an issue and perform only requested recovery.\n\nFor your undecided outcome, I recommend **1: Explain or review** as the first step. Choose **8** for a specific malfunction, **3** for a defined bot change, or **7** when you already have reviewed changes you intend to publish. A diagnosis or review does not authorize a repair or deployment.\n\nWhich route would you like? I have not inspected the project, executed commands, or changed anything.",
+      "commands": [],
+      "limitations": [
+        "The requested outcome remains unspecified; no route has been executed.",
+        "Only the supplied file-tree fixture is known."
+      ]
+    },
+    {
+      "id": "O11",
+      "response": "Route 2: Set up and link a project \u2014 instructions only. Nothing has been installed, changed, or contacted.\n\n1. Use your existing project root and retain `web/`. Before future setup, check project instructions and confirm the existing Node version satisfies the CLI's engine requirement.\n2. When you choose to perform setup, install the official CLI locally with `pnpm add -D @tgcloud/cli`, then run `pnpm exec tgcloud init`. Init scaffolds the backend, configuration, and SDK documentation while preserving existing files. Review the resulting diff and package scripts so your current frontend/build workflow stays intact.\n3. Configure `static.source` as `web/dist` in `tgcloud.jsonc`, matching your existing build output. Keep frontend source where it is. Confirm `.tgcloud/` is ignored; let the CLI manage its contents.\n4. In BotFather, open your existing bot \u2192 Serverless \u2192 CLI Access. Obtain the separate Serverless CLI token, which is not the Bot API token. Run `pnpm exec tgcloud login` yourself in an interactive terminal and enter it there. Never put it in chat, command arguments, or frontend files. Login validates the token and saves local CLI credentials/state.\n\nNo bot creation is needed. Linking does not publish the frontend, deploy handlers, or migrate data. Before any later publication, reconcile existing cloud modules to avoid deleting remote-only work.",
+      "commands": [
+        {
+          "command": "pnpm add -D @tgcloud/cli",
+          "effects": "Instructions for a future authorized installation only: contacts the package registry, installs a project-local development dependency, and updates package/lockfile state. Not executed or currently authorized.",
+          "executed": false
+        },
+        {
+          "command": "pnpm exec tgcloud init",
+          "effects": "Instructions for future authorized scaffolding after local installation: creates tgcloud backend files, configuration, documentation, and potentially package scripts; existing frontend files are to be preserved. Not executed.",
+          "executed": false
+        },
+        {
+          "command": "pnpm exec tgcloud login",
+          "effects": "Instructions for future owner-operated interactive linking after setup: prompts privately for the separate Serverless CLI token, validates it with Telegram, and writes CLI-owned credentials/state. No token argument, deployment, or migration. Not executed.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "No project inspection, installation, scaffolding, login, or configuration edit performed.",
+        "Node compatibility, project scripts, and existing remote bot modules remain unverified.",
+        "Setup instructions reuse the skill references read earlier in this candidate arm."
+      ]
+    }
+  ],
+  "sourcesRead": [
+    "incubator/skills/engineering-workflows/telegram-serverless/SKILL.md (reused from earlier read in this candidate arm)",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/setup.md (reused from earlier read in this candidate arm)",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/mini-apps.md (reused from earlier read in this candidate arm)",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/operations.md (reused from earlier read in this candidate arm)",
+    "skill-evals/telegram-serverless/cases.json (O10 and O11 only)"
+  ],
+  "approximateSourceBytesRead": 24899
+}

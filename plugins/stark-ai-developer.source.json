@@ -30,6 +30,10 @@
       "source": "skills/engineering-workflows/drawio-diagrams"
     },
     {
+      "name": "telegram-serverless",
+      "source": "skills/engineering-workflows/telegram-serverless"
+    },
+    {
       "name": "jev-capability-advisor",
       "source": "skills/skill-maintenance/jev-capability-advisor"
     }
@@ -40,13 +44,13 @@
     "openaiPlugin": "stark-ai-developer"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.7.5",
+  "version": "1.8.0",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.7.5.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-1.8.0.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {

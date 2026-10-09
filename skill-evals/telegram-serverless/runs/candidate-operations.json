@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "id": "O1",
+      "response": "Route 6: Validate and test. No commands run.\n\nNo: `tgcloud run` uploads local modules and executes them on Telegram's platform. It can produce real database, Bot API, and external-service effects. It is unsuitable for an offline-only smoke test, and supplied `--ctx` is unverified.\n\nFor this SDK-free endpoint fixture, prepare a local syntax check and a Node unit test. Pass a synthetic context with user 123 and assert `{ userId: 123 }`; pass a conflicting input `userId` and confirm the returned identity still comes from context. A missing-context test can document the fixture's exception, but that exception is not proof of platform authentication or a platform 401.\n\nThe proposed commands below assume the repository uses ES modules and an existing Node installation. No dependencies or CLI installation are needed.\n\nAuthentication remains unverified. Separately authorized live verification would need a genuine Mini App call with valid init data and rejection checks for absent/invalid init data before endpoint execution. A synthetic-context remote run cannot replace those checks.",
+      "commands": [
+        {
+          "command": "node --check tgcloud/endpoints/getNote.js",
+          "effects": "Proposed offline syntax check of the endpoint; reads local source, does not execute the endpoint or contact Telegram.",
+          "executed": false
+        },
+        {
+          "command": "node --input-type=module <<'JS'\nimport assert from 'node:assert/strict';\nimport getNote from './tgcloud/endpoints/getNote.js';\nconst ctx = { initData: { user: { id: 123 } } };\nassert.deepEqual(await getNote({}, ctx), { userId: 123 });\nassert.deepEqual(await getNote({ userId: 999 }, ctx), { userId: 123 });\nawait assert.rejects(() => getNote({}, {}), TypeError);\nJS",
+          "effects": "Proposed offline test for the supplied SDK-free fixture in an ESM project; uses synthetic context, performs no platform authentication, network calls, or writes.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "No checks executed.",
+        "Only the provided SDK-free fixture is covered; repository ESM settings and source have not been verified.",
+        "Mocked context cannot qualify Mini App authentication."
+      ]
+    },
+    {
+      "id": "O2",
+      "response": "Route 5: Design or evolve the database. The supplied migration result is incomplete despite exit code 0: one safe change applied, one warning skipped, and one manual change remains.\n\nFor non-interactive CI, use explicit migration policy. `--safe` writes safe changes to the live database and skips warnings/manual work. It is suitable only for an authorized additive scope. `--yes` also applies every warning without prompting, including the `old_sessions` drop; it still skips manual work. Do not use it merely to bypass the missing terminal.\n\nBefore any further live action, review a migration preview and exact target. `--dry-run` inspects the live database without applying changes; it is still a remote operation. `--local` selects the local schema, not a local database. Do not combine `--dry-run` with `--safe`/`--yes`; `--safe` and `--yes` are mutually exclusive.\n\nThe drop needs explicit approval and verified recovery. The `notes.body` type change needs a reviewed manual conversion/copy plan and data checks. Sequence schema deployment, migration, and dependent consumers appropriately. CI must mark required skipped/manual work as incomplete rather than trusting the exit code.\n\nNo live changes or previews run. The commands below are future steps requiring their respective authorization.",
+      "commands": [
+        {
+          "command": "./node_modules/.bin/tgcloud migrate --dry-run",
+          "effects": "Future, separately authorized live database inspection against the deployed schema; applies no migration but contacts the platform. Requires an already installed project-local CLI.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud migrate --safe",
+          "effects": "Future, specifically authorized live database write of safe changes only; skips warnings and manual work. Not authorized or executed for this request.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "The last-run summary is supplied evidence, not a new live observation.",
+        "Required warning and manual changes remain incomplete.",
+        "The installed CLI version, recovery method, and manual conversion have not been verified."
+      ]
+    },
+    {
+      "id": "O3",
+      "response": "Route 8: Diagnose, synchronize, or upgrade \u2014 diagnosis only.\n\nThe push was rejected because the CLI expected revision 8 while the cloud is at revision 9. That concurrency check protected newer remote work. Your local files omit the remote `handlers/callback_query`; a full push after merely refreshing the revision could delete that handler because full deployment mirrors the local module set.\n\nPreserve the uncommitted `message.js` change and the remote handler. Do not retry with `--force`, use `reset`, or automatically `pull`: force bypasses protection; reset discards edits using the cached snapshot; pull replaces working modules.\n\nThe proposed local status/diff checks compare against the cached snapshot only, so they cannot reveal all revision-9 content. No command has run and no platform contact is needed for this diagnosis.\n\nIf recovery is later authorized, first preserve local work, then fetch and compare both sides. Fetch updates CLI metadata without merging remote modules into source. Deliberately reconcile the remote callback handler and local message edits before considering a full mirror; a reviewed targeted message-handler push can preserve unrelated remote modules when that is the intended scope. Do not publish schema or other files incidentally.",
+      "commands": [
+        {
+          "command": "git diff -- tgcloud/schema.js tgcloud/handlers/message.js",
+          "effects": "Proposed local read-only view of unstaged changes; does not stage, reset, or change Git index state.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud status",
+          "effects": "Proposed offline comparison to the last synchronized cloud snapshot; requires an already installed CLI and does not fetch revision 9.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud diff",
+          "effects": "Proposed offline module differences against the cached snapshot; no network or recovery mutation.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "Diagnosis uses the supplied revision/error and remote-addition fixtures.",
+        "Revision-9 module contents and the exact local diff have not been inspected.",
+        "No preservation copy, fetch, reconciliation, or deployment performed."
+      ]
+    },
+    {
+      "id": "O4",
+      "response": "Route 1: Explain or review a project. This proposal is not ready to publish.\n\n- **Stale build:** `dist` is older than the changed source. `tgcloud push` never builds; it would publish the previous build. Inspect the existing build/deploy scripts, rebuild with the project's actual build command, and validate the output before a future publication.\n- **Incorrect caching:** `immutable: [\"/*\"]` includes mutable HTML/configuration. Restrict immutability to verified content-hashed assets; otherwise clients can retain stale files for a year.\n- **Blocked embedding:** `X-Frame-Options: DENY` prevents Telegram Web's iframe embedding. Resolve that header and any restrictive `frame-ancestors` policy.\n- **Site removal:** `static: false` removes the deployed site on the next push. To stop managing it while retaining the hosted files, remove the `static` key instead.\n- **Publication scope:** A full push also mirrors modules, including deletions. Review the intended module/static diff and existing cloud state; consider static-only publication if only the site is in scope. Check the build for credentials and accidental `/api/` files.\n\nNo build, configuration change, or deployment performed. Live hosting, embedding, and cache behavior remain unverified; their verification belongs to the eventual authorized publication.",
+      "commands": [],
+      "limitations": [
+        "Review is based only on supplied source/build/configuration facts.",
+        "The existing build script, output contents, cloud revision, and live headers were not inspected."
+      ]
+    },
+    {
+      "id": "O5",
+      "response": "The Telegram Serverless skill provides these eight workflow options:\n\n1. **Explain or review a project** \u2014 explain behavior or report concrete findings without changes.\n2. **Set up and link a project** \u2014 scaffold or connect the requested project.\n3. **Build or modify a bot** \u2014 implement handlers and shared logic.\n4. **Build or modify a Mini App** \u2014 implement the frontend and authenticated endpoints.\n5. **Design or evolve the database** \u2014 plan or apply a specifically authorized schema/data change.\n6. **Validate and test** \u2014 check local artifacts or perform an authorized remote test.\n7. **Deploy changes** \u2014 publish the reviewed module/static-file change.\n8. **Diagnose, synchronize, or upgrade** \u2014 identify an issue and perform only requested recovery.\n\nNo workflow has been performed. Choosing an option does not authorize effects beyond your requested outcome and scope.",
+      "commands": [],
+      "limitations": ["Options only; no project inspection or execution."]
+    },
+    {
+      "id": "O6",
+      "response": "Route 8: Diagnose, synchronize, or upgrade \u2014 diagnosis only.\n\nThe supplied webhook permits only `message`, although deployed handlers include `callback_query`. This mismatch explains why callback queries are not routed. Six updates are queued. A future authorized `webhook sync` rebuilds `allowed_updates` from deployed handlers and restores the platform webhook while retaining the queue. Never add `--drop-pending` here.\n\nThere is also a local application issue: `export default async function (query) {}` is a valid, non-empty module whose function does nothing. If that body is deployed, fixing routing alone will not implement callback behavior or acknowledge the query. A literally empty/missing handler is different: the platform ignores that update type. The deployed callback handler's contents are not supplied.\n\nThe files use the legacy root layout. The local upgrade moves `schema.js` and `handlers/` into `tgcloud/` (and `lib/` if present), retains the bot link, and requires no redeployment. Preview the moves, preserve local work, and obtain upgrade authority before applying them. The documented CLI requires that layout upgrade before other commands work on legacy projects.\n\nNothing changed or contacted the platform. The commands below describe a local preview and separately authorized future repairs; the queued updates remain untouched.",
+      "commands": [
+        {
+          "command": "./node_modules/.bin/tgcloud upgrade --dry-run",
+          "effects": "Proposed local preview of legacy-layout moves; no files moved and no deployment. Requires an already installed compatible CLI.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud upgrade",
+          "effects": "Future local file/layout mutation only after upgrade authorization and preservation of local work. Retains the bot link; does not require or perform a deployment.",
+          "executed": false
+        },
+        {
+          "command": "./node_modules/.bin/tgcloud webhook sync",
+          "effects": "Future separately authorized live webhook repair after the local CLI layout prerequisite is resolved; rebuilds allowed_updates and retains pending updates because --drop-pending is absent.",
+          "executed": false
+        }
+      ],
+      "limitations": [
+        "Webhook and handler-list observations are supplied fixtures, not live inspection.",
+        "Queued update types, delivery errors, and deployed handler contents are unknown.",
+        "No upgrade preview, upgrade, webhook query, or sync executed."
+      ]
+    },
+    {
+      "id": "O7",
+      "response": "No. The Telegram Serverless skill applies to Telegram-hosted Serverless projects and `tgcloud`; your Cloudflare Workers bot is outside its scope.\n\nKeep Cloudflare hosting. The webhook fix belongs in the existing Worker's configuration/code and the Telegram Bot API integration, using that project's tooling. A Telegram Serverless migration or `tgcloud` setup is unnecessary. No changes or service calls performed.",
+      "commands": [],
+      "limitations": [
+        "No Worker configuration, webhook diagnostics, or code was provided or inspected."
+      ]
+    },
+    {
+      "id": "O8",
+      "response": "I will use the Telegram Serverless skill. Choose the workflow you need:\n\n1. **Explain or review a project** \u2014 explain behavior or report concrete findings without changes.\n2. **Set up and link a project** \u2014 scaffold or connect the requested project.\n3. **Build or modify a bot** \u2014 implement handlers and shared logic.\n4. **Build or modify a Mini App** \u2014 implement the frontend and authenticated endpoints.\n5. **Design or evolve the database** \u2014 plan or apply a specifically authorized schema/data change.\n6. **Validate and test** \u2014 check local artifacts or perform an authorized remote test.\n7. **Deploy changes** \u2014 publish the reviewed module/static-file change.\n8. **Diagnose, synchronize, or upgrade** \u2014 identify an issue and perform only requested recovery.\n\nWhich route should I use? No inspection, installation, or operation has started.",
+      "commands": [],
+      "limitations": [
+        "A bare invocation does not identify an outcome, project, or authorized effects."
+      ]
+    },
+    {
+      "id": "O9",
+      "response": "Route 1: Explain or review a project. External HTTP is documented; the three proposed mechanisms are not established by the supplied platform documentation.\n\n- **AI requests:** `fetch` from `sdk` supports outbound HTTP and streamed response bodies, including AI-style output. Check response status and handle failures; streaming does not remove the documented response-size cap.\n- **`process.env.AI_KEY`:** The backend runs in a V8 sandbox, not a Node.js server. The documentation does not establish `process.env` or a runtime secret-injection mechanism. `TGCLOUD_TOKEN` authenticates the local CLI, not the external AI provider. Do not hardcode the provider key or expose it in frontend assets.\n- **Drizzle transaction:** The SDK has Drizzle-like syntax, but that does not establish upstream `db.transaction` support or atomicity/rollback guarantees. Verify the platform API and semantics before depending on them.\n- **`tgcloud backup`:** No backup/restore command is documented. Do not treat it as an available recovery plan. Code rollback cannot restore deleted database data.\n\nProduction approval depends on verified secret provisioning, the required write-consistency guarantees, and a tested recovery method. These are unresolved capabilities, not proof that no solution exists. No implementation or service contact performed. This assessment uses the supplied capture of the [official reference](https://core.telegram.org/bots/serverless), not fresh live evidence.",
+      "commands": [],
+      "limitations": [
+        "No current installed CLI/SDK inspection or live verification was authorized.",
+        "Runtime secrets, transaction guarantees, and backup/restore remain unresolved by the provided reference."
+      ]
+    }
+  ],
+  "sourcesRead": [
+    "incubator/skills/engineering-workflows/telegram-serverless/SKILL.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/operations.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/database.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/mini-apps.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/runtime-sdk.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/setup.md",
+    "incubator/skills/engineering-workflows/telegram-serverless/references/sources.md",
+    "skill-evals/telegram-serverless/cases.json (O1-O9 only)",
+    "official-serverless-documentation-capture (selected platform/runtime/Mini App/migration/CLI sections and searches)"
+  ],
+  "approximateSourceBytesRead": 88766
+}

@@ -1,0 +1,39 @@
+{
+  "candidate": {
+    "checks": [
+      "B1/tgcloud/schema.js",
+      "B1/tgcloud/handlers/message.js",
+      "B2/tgcloud/schema.js",
+      "B2/tgcloud/endpoints/listNotes.js",
+      "B2/tgcloud/endpoints/createNote.js",
+      "B2/public/index.html#inline-1",
+      "B2/tgcloud.jsonc"
+    ],
+    "allPassed": true
+  },
+  "baseline": {
+    "checks": [
+      "B1/tgcloud/schema.js",
+      "B1/tgcloud/handlers/message.js",
+      "B2/tgcloud/schema.js",
+      "B2/tgcloud/endpoints/listNotes.js",
+      "B2/tgcloud/endpoints/createNote.js",
+      "B2/public/index.html#inline-1",
+      "B2/tgcloud.jsonc"
+    ],
+    "allPassed": true
+  },
+  "skillExamples": {
+    "checks": [
+      "database.md#0",
+      "database.md#1",
+      "mini-apps.md#0",
+      "mini-apps.md#1",
+      "mini-apps.md#2",
+      "runtime-sdk.md#0"
+    ],
+    "allPassed": true,
+    "stage": "formatted public candidate"
+  },
+  "limits": "Syntax and JSON parsing only; no SDK execution, database, authentication, Telegram or browser qualification."
+}

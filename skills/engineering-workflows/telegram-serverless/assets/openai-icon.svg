@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Telegram Serverless: code in a cloud</title>
+  <g fill="#0021C7">
+    <rect x="284" y="438" width="462" height="256"/>
+    <circle cx="336" cy="422" r="142"/>
+    <circle cx="510" cy="350" r="172"/>
+    <circle cx="682" cy="446" r="130"/>
+    <circle cx="284" cy="568" r="126"/>
+    <circle cx="746" cy="568" r="126"/>
+  </g>
+  <g fill="#7FA0FF">
+    <polygon points="408,434 438,468 383,521 438,574 408,608 316,521"/>
+    <polygon points="535,428 577,428 500,614 458,614"/>
+    <polygon points="617,434 709,521 617,608 587,574 642,521 587,468"/>
+  </g>
+</svg>

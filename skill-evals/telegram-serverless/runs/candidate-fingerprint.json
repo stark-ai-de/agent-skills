@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "skill": "telegram-serverless",
+  "version": "0.1.0",
+  "stage": "incubator",
+  "algorithm": "sha256-per-file",
+  "files": {
+    "SKILL.md": "55b940c19970b7e0659b96f22ed060f20de91f91b9776ef2cbef4916f203c45b",
+    "agents/openai.yaml": "4dfa21b205c224d8da2018c611e7f6a2c134ede9105bb2a21a25e5820ecf9701",
+    "assets/openai-icon.png": "9c52f6a4b5e3c6282b953b82297deca14aeb05b67dcc97fb9bfad20ad8eda8dd",
+    "assets/openai-icon.svg": "57e52cff01aa4c6f127316591de0f3266d84fb991636373343a135bdf37220fc",
+    "references/database.md": "f38eaa3293f2cb17147bdc5995651034b572f9b583fba8b7b6e61bb88dd502d8",
+    "references/mini-apps.md": "2d83065b64181cbdbc747886900a2e8bc86056aeff8a5c0db183140386e9fb4d",
+    "references/operations.md": "b1d009670c5131157d0cd55f31ff127e6de978b176af812cfdf9c3caccfb0951",
+    "references/runtime-sdk.md": "6c69d7dff744707606fa59bd790ad9125433b1bb7ac274391e58a7c8678be2ce",
+    "references/setup.md": "4a88d8f942b64bf3191b4fc462eddbd584634fd91ade45c345177b3faa3288ac",
+    "references/sources.md": "31627e714c07e7cf879d19f9069a925d281b15c91ead2a69b8c24a93853c6909"
+  }
+}

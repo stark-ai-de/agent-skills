@@ -102,6 +102,17 @@ const description =
       its receipts. Do not put credentials in task text or catalog descriptions.
     </p>
 
+    <p>
+      Telegram Serverless guides use of Telegram's official CLI and hosting platform. When
+      you authorize deployment or remote execution, the CLI sends selected modules, built
+      frontend files or test inputs to Telegram. Remote execution can access the bot's
+      database, send Bot API messages and call external services used by your application.
+      Linking uses the owner's separate Serverless CLI access token, entered locally.
+      Installation of this skill alone does not contact Telegram or create a bot.
+      Telegram and any application-selected services process that content under their own
+      terms and privacy notices; it is not sent to <StarkAi /> by this package.
+    </p>
+
     <h2>Answers for this package</h2>
     <p>
       These answers apply to the harness-first plugin. They do not describe a host product,
@@ -110,19 +121,21 @@ const description =
     <ul>
       <li>
         <strong>Publisher collection:</strong> no package telemetry is sent to <StarkAi />.
-        Task text you submit to the optional TypeSafe API may contain personal data.
+        Task text sent to TypeSafe and bot data or test inputs sent to Telegram may contain personal data.
       </li>
       <li>
-        <strong>Purpose of optional API processing:</strong> choose capabilities for the task
-        you supply. Optional local caches reuse recommendations; receipts support inspection.
+        <strong>Purpose of service processing:</strong> TypeSafe recommends capabilities; Telegram
+        links, runs and hosts the bot or Mini App you authorize. Optional local advisor caches
+        reuse recommendations; receipts support inspection.
       </li>
       <li>
-        <strong>Recipients:</strong> TypeSafe receives advisor requests when you enable API
-        use. The helper does not send those requests to <StarkAi />.
+        <strong>Recipients:</strong> TypeSafe receives enabled advisor requests; Telegram receives
+        authorized CLI operations and deployed application traffic. Your application may call
+        other services you select. This package does not route that content to <StarkAi />.
       </li>
       <li>
-        <strong>Retention:</strong> you control local output and cache files. TypeSafe and
-        your host set their own service retention policies.
+        <strong>Retention:</strong> you control local output and cache files. TypeSafe, Telegram,
+        your application services and your host set their own service retention policies.
       </li>
       <li>
         <strong>Your controls:</strong> use <a href={withBase("/support/")}>Support</a> for

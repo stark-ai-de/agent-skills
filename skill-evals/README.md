@@ -25,6 +25,7 @@ Use this folder for:
 - [`cursor-spec-interviewer`](cursor-spec-interviewer/README.md)
 - [`drawio-diagrams`](drawio-diagrams/README.md)
 - [`jev-capability-advisor`](jev-capability-advisor/README.md)
+- [`telegram-serverless`](telegram-serverless/README.md)
 
 Do not put secrets, customer data, private repository paths, or internal hostnames in eval files.
 
