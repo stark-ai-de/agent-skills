@@ -253,8 +253,12 @@ function readLatestRelease(repository) {
   return { id: release.id, tagName: release.tag_name };
 }
 
-function attestationFailureKind(result) {
+export function attestationFailureKind(result) {
   const detail = `${result.stderr ?? ""}\n${result.stdout ?? ""}`;
+  // An unattested subject returns 404 before Publish Release can create its attestations.
+  if (/(?:HTTP\s+404\b|status\s+code\s+404\b|no attestations found)/i.test(detail)) {
+    return "missing";
+  }
   if (
     /(?:timed?\s*out|connection|network|rate.?limit|authentication|unauthorized|forbidden|HTTP\s+(?:4(?!04)\d{2}|5\d{2})|API request failed)/i.test(
       detail,
