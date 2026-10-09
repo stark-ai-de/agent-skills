@@ -10,8 +10,8 @@
     "assets/openai-icon.png": "9c52f6a4b5e3c6282b953b82297deca14aeb05b67dcc97fb9bfad20ad8eda8dd",
     "assets/openai-icon.svg": "57e52cff01aa4c6f127316591de0f3266d84fb991636373343a135bdf37220fc",
     "references/database.md": "b2b69d04f45e37d3e77fc1ed67af24613e24007a1331f1cbfc9de32d82677ec7",
-    "references/mini-apps.md": "1009fc39512d3fcf8349e665dfed82ed540a57d4e3ec8d56645f6816513c867c",
-    "references/operations.md": "e0ee5e995ab1efe4507c2d7a457fd38dfb77743425a6adede4fd635db15d5a6e",
+    "references/mini-apps.md": "b31550aa9d2de68589ea173800c360f2271efbd34ec4e6e0409462055106bd84",
+    "references/operations.md": "27d9efbc5bb456549e4f6b92a3814fd3293060f1da7f1ea7c99b4875eb341c27",
     "references/runtime-sdk.md": "6bdd16b3bed05e9e60e99ba06597e131fe0773c79ef6df1f4a0c0e3b9b011da0",
     "references/setup.md": "ec705fc10d93a0898de57183635dc05588ea863feb649e984dea35f1e9c07ae4",
     "references/sources.md": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
@@ -20,9 +20,9 @@
     "package.json": "6249e1a7d005cac0c01a056a91213b6c22ddc6b48f7e232ce59dc28bb707404c",
     "skill-evals/telegram-serverless/cases.json": "aa59b422c9cb9d8230c46c3c14a31e5a1ec261b14973b9ae0b0e583175c785f7",
     "skill-evals/telegram-serverless/rubric.md": "4b5c0d7d9b07569f915d944c78675a7ac11ecffc96c14c76f7bc4a184551a841",
-    "skill-evals/telegram-serverless/source-review.md": "9c93845bba75f7f622ca51f82a853b4c29f085ffa3499626604d7b2f224dbd7a",
-    "skill-evals/telegram-serverless/validate-examples.mjs": "99d59d02de01e83b3169fbdd860667872c300853504b63f8be521b8bae40ceb8",
-    "skill-evals/telegram-serverless/runs/2026-10-09-review-fixes-candidate.json": "9601dbd92c7be9bd39c1495a9d8ee26a34a4baf2d69c44a8f7f40bbfd9b8ced8"
+    "skill-evals/telegram-serverless/source-review.md": "cbc39b5cb73cd0d2d28307e2a1d46204298473f17fa25ff7974186efd52ee8a0",
+    "skill-evals/telegram-serverless/validate-examples.mjs": "5aa11dca221ab465256078db4ac79a64449ecbde18c371b007d9ae3d4b7c5a1a",
+    "skill-evals/telegram-serverless/runs/2026-10-09-review-fixes-candidate.json": "f2668d9cb2c0f8795ac4734b938fb270d7000499707871ea1ea4e13b6bfd608e"
   },
   "limits": "Current canonical payload and scoped evaluation inputs. All ten payload files match the generated portable projection byte-for-byte. This is not archive, hosted CI, release or live-runtime evidence."
 }

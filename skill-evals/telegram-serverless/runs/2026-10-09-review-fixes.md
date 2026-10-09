@@ -7,7 +7,7 @@ Reviewed 2026-10-09 (UTC), starting from PR head 41878b7. The concurrent portal-
 - CLI 0.2.0 status is network-capable: an available saved/environment token enables authenticated GET /webhook through webhookStatusLine. diff is the cached offline comparison. The reference now prohibits status during offline-only work without altering credentials.
 - The canonical Mini App example starts disabled, requires a callable SDK and nonempty init data, and restores controls on synchronous and callback failures. Authentication errors request reopening Telegram; unexpected details are not exposed. Successful note text uses textContent, and no failure retries automatically.
 
-The [source review](../source-review.md) identifies the official CLI archive and Mini Apps SDK. No upstream executable code is bundled into the regression runner.
+The [source review](../source-review.md) identifies the official CLI archive and Mini Apps SDK. A final review follow-up clarified that Telegram keyboard-button and inline launches may lack init data; the example now explains the unavailable launch capability and offers a usable Mini App entry path. The operations reference also links directly to the published CLI 0.2.0 implementation. No upstream executable code is bundled into the regression runner.
 
 ## Method and evidence
 

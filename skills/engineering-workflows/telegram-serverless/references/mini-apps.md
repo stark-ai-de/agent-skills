@@ -51,7 +51,8 @@ Minimal original HTML behavior:
     webApp.initData.length > 0;
 
   if (!available) {
-    result.textContent = "Open this app in Telegram.";
+    result.textContent =
+      "This launch does not provide Mini App init data or Serverless support. Open the app through a Telegram Mini App launch that provides both.";
   } else {
     button.disabled = false;
     button.addEventListener("click", () => {

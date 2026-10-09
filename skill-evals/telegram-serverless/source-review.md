@@ -17,7 +17,7 @@ The raw page capture used by evaluation agents is temporary and excluded from th
 ## Source challenges resolved
 
 - CLI 0.2.0 labels status as offline but calls webhookStatusLine; with available credentials this performs authenticated GET /webhook. Silent failure handling does not make it offline. diff remains a cached comparison.
-- The Mini Apps SDK exports Serverless without init data and throws synchronously before callback delivery when init data is absent. The browser example now checks prerequisites and handles synchronous errors as well as callbacks.
+- The Mini Apps SDK exports Serverless without init data and throws synchronously before callback delivery when init data is absent. The browser example now checks prerequisites and handles synchronous errors as well as callbacks. The [Mini Apps launch-mode reference](https://core.telegram.org/bots/webapps#webappinitdata) documents empty init data for keyboard-button and inline-mode launches, so the unavailable-state message names the missing launch capability instead of implying the app is outside Telegram.
 - CLI token and Bot API token are separate. CLI environment authentication does not establish backend environment variables or secret injection.
 - Backend SDK access is not Node.js or arbitrary npm support. Frontend build tooling has a distinct boundary.
 - run executes uploaded local modules on the platform; supplied ctx bypasses normal init-data verification for testing. It is neither offline nor authentication proof.

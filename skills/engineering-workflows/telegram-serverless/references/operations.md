@@ -18,7 +18,7 @@ Read for routes 6–8 and deployment/migration handoffs. Source: [CLI reference]
 | webhook sync | Change routing and allowed_updates; drop-pending also discards queued updates                      |
 | upgrade      | Move legacy local layout; dry-run previews moves                                                   |
 
-`status` is not an offline-only command: CLI 0.2.0 calls authenticated `GET /webhook` when a saved token or `TGCLOUD_TOKEN` is available. It silently ignores webhook lookup failures; a successful status command does not prove that no network request was attempted. Recheck the installed CLI before relying on a different version's behavior.
+`status` is not an offline-only command: CLI 0.2.0 calls authenticated `GET /webhook` when a saved token or `TGCLOUD_TOKEN` is available. It silently ignores webhook lookup failures; a successful status command does not prove that no network request was attempted. See the [CLI 0.2.0 implementation](https://registry.npmjs.org/@tgcloud/cli/-/cli-0.2.0.tgz) and recheck the installed CLI before relying on a different version's behavior.
 
 Init/add/login/completion are covered in [setup](setup.md). Do not label fetch as having no local effects: it updates CLI-owned metadata. Never edit that state manually.
 

@@ -85,6 +85,9 @@ for (const [name, options] of [
     const app = mount(options);
     assert.equal(app.button.disabled, true);
     assert.match(app.result.textContent, /open.*Telegram/i);
+    if (name.includes("init data")) {
+      assert.match(app.result.textContent, /launch.*init data/i);
+    }
     app.click();
     assert.equal(app.calls.length, 0);
   });
