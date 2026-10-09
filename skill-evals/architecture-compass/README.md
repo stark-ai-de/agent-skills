@@ -11,6 +11,7 @@ Passing behavior must:
 - limit agent-initiated selection to a relevant read-only audit unless the user's existing request authorizes the mutating outcome and scope;
 - use setup coverage `recommended` or `complete`, applying the seven-decision foundation only to new or evidence-empty repositories;
 - keep audit strictly read-only and prevent direct refactor from inventing durable decisions or repairing governance;
+- repeat authorized simplification through complete inventory passes, qualify library/shared-code equivalence, count all handwritten additions, and distinguish supported convergence from blocked or incomplete work;
 - treat AC-ADR-065 as an optional adoptable target policy, record local mapping/authorized hosts/prerequisite gaps, and keep installed, configured, active/trusted, processing-authorized, current-inventory, and qualified states distinct;
 - audit adopted Jev policies from existing evidence without provider requests or repair, preserve native fallback with visible unmet obligations, and require fresh exact host/runtime/configuration/model/reasoning evidence for qualification;
 - respect active/explicitly requested native Plan, continue permitted no-write planning with inactive, unavailable, declined, or indeterminate controls, reuse unchanged content/write approval, exit active Plan before writes, and recheck state before execution; unknown control state blocks only an action that depends on resolving that state;
@@ -62,6 +63,12 @@ Focused workflow and lifecycle cases:
 - `cases/clear-setup-intent.md`
 - `cases/clear-audit-intent.md`
 - `cases/clear-bounded-refactor-intent.md`
+- `cases/simplification-converged-passes.md`
+- `cases/simplification-library-compatibility.md`
+- `cases/simplification-accounting.md`
+- `cases/simplification-shared-boundaries.md`
+- `cases/simplification-proof-failure.md`
+- `cases/simplification-audit-authority.md`
 - `cases/clear-plan-refactor-intent.md`
 - `cases/clear-plan-run-refactor-intent.md`
 - `cases/ambiguous-workflow-selection.md`
@@ -107,6 +114,10 @@ Focused workflow and lifecycle cases:
 
 Focused routed-library cases:
 
+- `cases/simplification-existing-capabilities.md`
+- `cases/simplification-contract-mismatch.md`
+- `cases/simplification-coverage-and-drift.md`
+- `cases/simplification-honest-metrics-and-stop.md`
 - `cases/adr-catalog-short-first-inventory.md`
 - `cases/selective-frontend-routing.md`
 - `cases/nextjs-request-routing.md`
@@ -219,3 +230,13 @@ after its frozen install. Keep its receipt separate from response-only scenario
 evaluations and target adoption evidence. Semantic evaluation must distinguish
 an unsafe recommendation from a quoted or negated warning; keyword presence alone
 cannot establish that the agent endorsed the behavior.
+
+## Simplification instruction regressions
+
+`pnpm run validate:architecture-compass` also checks the optional shared worksheet
+and its dispatch/report links. The owning pure contract checks reject 16 mutated
+instruction variants covering routing, audit/planning authority, inventory,
+version evidence, proof, convergence, accounting and scope boundaries. Run just
+these checks with `bun --bun scripts/validation/architecture-compass/simplification-contract.test.mjs`.
+They are structural regression evidence, not executed conversational cases or
+proof of model quality. The synthetic simplification cases remain prospective.

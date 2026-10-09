@@ -9,6 +9,8 @@ import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inve
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
 
+import { simplificationContractErrors } from "./simplification-contract.mjs";
+
 const root = process.cwd();
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const skillDir = path.join(root, "skills", "engineering-workflows", "architecture-compass");
@@ -246,6 +248,12 @@ const baselineEvalCases = [
   "clear-setup-intent.md",
   "clear-audit-intent.md",
   "clear-bounded-refactor-intent.md",
+  "simplification-converged-passes.md",
+  "simplification-library-compatibility.md",
+  "simplification-accounting.md",
+  "simplification-shared-boundaries.md",
+  "simplification-proof-failure.md",
+  "simplification-audit-authority.md",
   "clear-plan-refactor-intent.md",
   "clear-plan-run-refactor-intent.md",
   "ambiguous-workflow-selection.md",
@@ -299,6 +307,10 @@ const baselineEvalCases = [
   "audit-and-pr-review-routing.md",
 ];
 const routedLibraryEvalCases = [
+  "simplification-existing-capabilities.md",
+  "simplification-contract-mismatch.md",
+  "simplification-coverage-and-drift.md",
+  "simplification-honest-metrics-and-stop.md",
   "portless-compatible-default.md",
   "portless-existing-routing-migration.md",
   "portless-no-local-endpoint.md",
@@ -1802,6 +1814,17 @@ if (
   databaseAcquireIndex <= databaseDisposerIndex
 ) {
   fail(`${backendLifecycleGuideRel}: database disposer must precede external acquisition`);
+}
+
+for (const error of simplificationContractErrors({
+  skill: skillText,
+  worksheet: readRegularFile(
+    path.join(referencesDir, "ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md"),
+  ),
+  lifecycle: lifecycleGuide,
+  report: readRegularFile(path.join(assetsDir, "refactor-report-template.md")),
+})) {
+  fail(error);
 }
 
 const assetFiles = markdownFiles(assetsDir);

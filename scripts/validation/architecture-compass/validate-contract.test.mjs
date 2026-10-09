@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
+import "./simplification-contract.test.mjs";
+
 const source = process.cwd();
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-contract-"));
 const skill = "skills/engineering-workflows/architecture-compass";

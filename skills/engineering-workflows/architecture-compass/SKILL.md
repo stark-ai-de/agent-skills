@@ -1,12 +1,12 @@
 ---
 name: architecture-compass
-description: Set up ADR governance, audit architecture and drift, or plan and execute bounded ADR-guided refactors. Use when work needs binding architecture decisions, provider-to-local mapping, architecture PR review, and durable runtime or source-boundary changes.
+description: Set up ADR governance, audit architecture and drift, or plan and execute bounded refactors and code simplification. Use when work needs binding architecture decisions, library reuse, shared-code ownership, provider-to-local mapping, or architecture PR review.
 license: Apache-2.0
 compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex web, and other Agent Skills hosts; adapts to host planning, review, question, and permission controls while keeping one portable ADR workflow.
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.10.2"
+  version: "0.11.0"
 ---
 
 # Architecture Compass
@@ -110,6 +110,8 @@ If evidence changes the route materially, announce the reclassification and reso
 ## Workflow
 
 Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md) and the matching report asset after selection and before producing an artifact or executing a mutation. Keep these entry gates visible:
+
+For requested code simplification, duplication reduction, or library reuse, load the optional [AC-ADR-006 simplification loop](references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) after selecting the workflow. Use it for read-only audit, planning, or authorized execution within that route's authority; it adds no workflow or target policy.
 
 ### `setup`
 
