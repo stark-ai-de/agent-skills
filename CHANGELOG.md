@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.26.0 (2026-10-09)
+
+## What's Changed
+* feat(skills): ship guarded iterative simplification in Architecture Compass by @servrox in https://github.com/stark-ai-de/agent-skills/pull/138
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.3...v0.26.0
+
 ## 0.25.3 (2026-10-09)
 
 ## What's Changed
