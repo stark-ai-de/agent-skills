@@ -1,0 +1,101 @@
+name: PR 138 isolated review transfer
+on:
+  push:
+    branches: [codex/pr138-review-transfer-20261009]
+permissions:
+  contents: read
+jobs:
+  transfer:
+    if: github.repository == 'stark-ai-de/agent-skills'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect transfer phase
+        id: phase
+        run: |
+          if test -f review-transfer-repair.json; then echo 'repair=true' >> "$GITHUB_OUTPUT"; else echo 'repair=false' >> "$GITHUB_OUTPUT"; fi
+      - uses: pnpm/setup@v3
+        if: steps.phase.outputs.repair == 'false'
+        with:
+          runtime: node@24.18.0
+          cache: false
+          install: false
+      - name: Prepare pinned offline validation tools
+        if: steps.phase.outputs.repair == 'false'
+        env:
+          DISABLE_TELEMETRY: '1'
+          DO_NOT_TRACK: '1'
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/pr138-offline-tools"
+          mkdir -p "$out/cli"
+          printf '{"private":true}\n' > "$out/cli/package.json"
+          pnpm --dir "$out/cli" add --ignore-scripts --save-exact skills@1.5.23 github-actionlint@1.7.12
+          "$out/cli/node_modules/.bin/github-actionlint" --version
+          cp -R "$HOME/.github-actionlint" "$out/actionlint-cache"
+          cp review-transfer.bundle "$out/received.bundle"
+          tar -C "$out" -czf "$RUNNER_TEMP/pr138-offline-tools.tar.gz" .
+      - uses: actions/upload-artifact@v7
+        if: steps.phase.outputs.repair == 'false'
+        with:
+          name: pr138-offline-tools
+          path: ${{ runner.temp }}/pr138-offline-tools.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+      - name: Verify repaired transfer bytes without execution
+        if: steps.phase.outputs.repair == 'true'
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, hashlib, json, pathlib
+          received = base64.b64encode(pathlib.Path('review-transfer.bundle').read_bytes()).decode()
+          edits = json.loads(pathlib.Path('review-transfer-repair.json').read_text())
+          for edit in reversed(edits):
+              start, end, old, new = edit
+              assert received[start:end] == old
+              received = received[:start] + new + received[end:]
+          payload = base64.b64decode(received, validate=True)
+          assert hashlib.sha256(payload).hexdigest() == 'dfbd29c8263e0bbd04fdb76b19bc390317041c374d9430554cfbf55077bfeb7f'
+          pathlib.Path('/tmp/pr138-verified.bundle').write_bytes(payload)
+          PY
+  import:
+    needs: transfer
+    if: github.repository == 'stark-ai-de/agent-skills' && github.event.head_commit.message == 'chore: verify PR 138 source transfer'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Import exact reviewed objects without moving the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(gh api repos/stark-ai-de/agent-skills/pulls/138 --jq .head.sha)" = 3f1b28929bba24795de4bbbc636ba70b5fc7068b
+          python3 - <<'PY'
+          import base64, hashlib, json, pathlib
+          received = base64.b64encode(pathlib.Path('review-transfer.bundle').read_bytes()).decode()
+          for start, end, old, new in reversed(json.loads(pathlib.Path('review-transfer-repair.json').read_text())):
+              assert received[start:end] == old
+              received = received[:start] + new + received[end:]
+          payload = base64.b64decode(received, validate=True)
+          assert hashlib.sha256(payload).hexdigest() == 'dfbd29c8263e0bbd04fdb76b19bc390317041c374d9430554cfbf55077bfeb7f'
+          pathlib.Path('/tmp/pr138-verified.bundle').write_bytes(payload)
+          PY
+          git bundle verify /tmp/pr138-verified.bundle
+          git fetch /tmp/pr138-verified.bundle refs/heads/pr138-reviewed-local
+          test "$(git rev-parse FETCH_HEAD)" = ca17fe4ae40fdf0470b59ee6ca9145155b80b35f
+          test "$(git rev-parse FETCH_HEAD^{tree})" = f7f298b467441fb73e58855e368ec0800e268ef8
+          test "$(git show -s --format=%P FETCH_HEAD)" = 3f1b28929bba24795de4bbbc636ba70b5fc7068b
+          test -z "$(git diff --name-only 3f1b28929bba24795de4bbbc636ba70b5fc7068b FETCH_HEAD -- .github package.json .release-please-manifest.json CHANGELOG.md)"
+          git -c credential.helper='!gh auth git-credential' push origin ca17fe4ae40fdf0470b59ee6ca9145155b80b35f:refs/heads/codex/pr138-reviewed-objects-20261009
+          gh api --method DELETE repos/stark-ai-de/agent-skills/git/refs/heads/codex/pr138-reviewed-objects-20261009
+          gh api --method DELETE repos/stark-ai-de/agent-skills/git/refs/heads/codex/pr138-review-transfer-20261009
