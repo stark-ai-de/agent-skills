@@ -16,14 +16,19 @@ export const PRE_PUBLICATION_RECOVERY_PATHS = Object.freeze([
   "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.guide.md",
   "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.long.md",
   "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.short.md",
+  "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.guide.md",
+  "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.long.md",
+  "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.short.md",
   "docs/publishing.md",
   "incubator/skills/repo-maintenance/release-manager/SKILL.md",
   "scripts/lib/release-management.mjs",
   "scripts/release/manage-release.mjs",
+  "scripts/release/reconcile-github-release.mjs",
   "scripts/release/verify-prepublication-release-recovery.mjs",
   "scripts/release/verify-release-recovery-subjects.mjs",
   "scripts/validation/adrs/decision-lock.tsv",
   "scripts/validation/test-release-management.mjs",
+  "scripts/validation/test-release-reconciler.mjs",
 ]);
 
 export const PRE_PUBLICATION_RECOVERY_IMMUTABLE_PATHS = Object.freeze([
@@ -129,7 +134,7 @@ export function releaseRecoveryComparisonErrors({
   }
   const allowed = new Set(PRE_PUBLICATION_RECOVERY_PATHS);
   const observed = new Set();
-  let publicationWorkflowChanged = false;
+  let guardedControllerChanged = false;
   for (const file of files) {
     const filename = file?.filename;
     if (typeof filename !== "string" || observed.has(filename)) {
@@ -141,10 +146,15 @@ export function releaseRecoveryComparisonErrors({
     if (!new Set(["added", "modified"]).has(file?.status) || file?.previous_filename) {
       errors.push(`recovery file status is not allowed: ${filename}`);
     }
-    if (filename === ".github/workflows/publish-release.yml") publicationWorkflowChanged = true;
+    if (
+      filename === ".github/workflows/publish-release.yml" ||
+      filename === "scripts/release/reconcile-github-release.mjs"
+    ) {
+      guardedControllerChanged = true;
+    }
   }
-  if (!publicationWorkflowChanged) {
-    errors.push("recovery diff does not change the guarded publication workflow");
+  if (!guardedControllerChanged) {
+    errors.push("recovery diff does not change the guarded publication controller");
   }
   return errors;
 }

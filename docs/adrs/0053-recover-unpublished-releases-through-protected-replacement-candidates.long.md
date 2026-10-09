@@ -2,7 +2,7 @@
 
 ID: ADR-0053
 Title: Recover unpublished releases through protected replacement candidates
-Status: Accepted
+Status: Superseded
 Date: 2026-09-03
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: ADR-0051
-Superseded by: None
+Superseded by: ADR-0062
 Guide verified: 2026-09-03
 Gist: Replace an unpublished release candidate only through an explicit protected and payload-equivalent recovery revision.
 

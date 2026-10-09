@@ -868,7 +868,11 @@ const recoveryComparison = {
     status:
       filename.startsWith(
         "docs/adrs/0053-recover-unpublished-releases-through-protected-replacement-candidates.",
-      ) || filename.startsWith("scripts/release/verify-")
+      ) ||
+      filename.startsWith(
+        "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.",
+      ) ||
+      filename.startsWith("scripts/release/verify-")
         ? "added"
         : "modified",
   })),
@@ -920,6 +924,30 @@ assert.equal(
   null,
 );
 assert.deepEqual(prePublicationRecoveryErrors(recoveryInput()), []);
+assert.deepEqual(
+  releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      files: [{ filename: "scripts/release/reconcile-github-release.mjs", status: "modified" }],
+    },
+  }),
+  [],
+  "a reconciler repair alone must satisfy the guarded controller-change check",
+);
+assert.deepEqual(
+  releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      files: [{ filename: ".github/workflows/publish-release.yml", status: "modified" }],
+    },
+  }),
+  [],
+  "the publication workflow remains a qualifying controller change",
+);
 assert.deepEqual(
   recoveryComparison.files.map((file) => file.filename).sort(),
   [...PRE_PUBLICATION_RECOVERY_PATHS].sort(),
@@ -1063,7 +1091,31 @@ assert.match(
       },
     }),
   ).join(";"),
-  /does not change the guarded publication workflow/,
+  /does not change the guarded publication controller/,
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [{ filename: "scripts/validation/test-release-reconciler.mjs", status: "modified" }],
+      },
+    }),
+  ).join(";"),
+  /does not change the guarded publication controller/,
+  "a regression test alone cannot authorize replacement publication",
+);
+assert.match(
+  prePublicationRecoveryErrors(
+    recoveryInput({
+      comparison: {
+        ...recoveryComparison,
+        files: [{ filename: "scripts/release/other-controller.mjs", status: "modified" }],
+      },
+    }),
+  ).join(";"),
+  /path is not allowed/,
+  "other release scripts remain outside the fixed allowlist",
 );
 assert.match(
   prePublicationRecoveryErrors(
