@@ -122,7 +122,7 @@ export async function prepareForwardRelease({ library, github, verify, apply = f
   );
   const candidates = await manifest.buildPullRequests();
   assert.equal(candidates.length, 1, "expected exactly one generated release PR");
-  const pull = candidates[0].pullRequest;
+  const pull = candidates[0];
   assert.equal(pull.title.toString(), `chore(release): release ${FORWARD_RELEASE.nextVersion}`);
   assert.equal(pull.version.toString(), FORWARD_RELEASE.nextVersion);
   assert.equal(pull.draft, true, "the generated release must remain a draft");
