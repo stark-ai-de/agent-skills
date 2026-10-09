@@ -100,3 +100,10 @@ A setup run passes only when it:
   authority, selected action, and evidence claims semantically.
 - Keep pinned synthetic plugin execution, response-only agent probes, and real
   target adoption separate; carry forward none as a substitute for another.
+
+For requested simplification, verify that inventory and physical-line accounting
+include non-ignored untracked source without changing the Git index. Missing
+paths or unreadable content must limit coverage and savings claims. Preserve the
+original cumulative baseline across concurrent work, with a reconciled bridge
+for any new measurement segment. Out-of-scope symlinks and misleading `--help`
+or `--dry-run` command names must not expand inspection authority.

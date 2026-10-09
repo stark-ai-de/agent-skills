@@ -6,7 +6,7 @@ metadata:
   author: stark-ai-de
   category: repo-maintenance
   internal: true
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Script Simplification
@@ -36,6 +36,23 @@ evidence of improvement.
 - The only proposed change is a language port, line-count reduction, or new
   helper framework with no demonstrated maintenance benefit.
 
+## Workflow selection
+
+The complete workflow set is:
+
+- `assess`: inventory scripts and recommend changes without writing files or
+  invoking write-capable checks.
+- `simplify`: implement and validate a bounded script cleanup that the user
+  already authorized.
+
+For clear authorized intent, announce the selected route and scope and proceed.
+An assessment, review, or recommendation request selects `assess`, not
+`simplify`. On bare activation, ambiguous cleanup intent, or an options request,
+show both workflows and ask; an options request alone authorizes no execution.
+Do not infer merge, deployment, publication, tool installation, or external
+operations from permission to edit scripts or create a PR. Preserve host Plan
+and no-write controls. The steps below stay within the selected route.
+
 ## Inputs to inspect
 
 - User scope and authorization; exact repository, default branch, worktree,
@@ -52,25 +69,31 @@ evidence of improvement.
    repository its own reviewable diff. Do not manufacture a change where none
    is useful.
 2. Inventory every Python, shell, JavaScript/TypeScript, PowerShell, Nix
-   generated, package-manager, and embedded workflow script in scope. Separate
+   generated, package-manager, and embedded workflow script in scope, including
+   non-ignored untracked files. Record exclusions and unreadable paths; do not
+   follow symlinks outside scope. Separate
    runtime helpers, operator commands, tests, fixtures, and generated copies. Use
    [the inventory and decision guide](references/inventory-and-decisions.md).
 3. Trace each proposed removal or consolidation through static callers and
    manual operations. Search workflows, package scripts, docs, runbooks, and
    platform-specific entry points. Treat absence from source imports as
-   insufficient proof of non-use.
+   insufficient proof of non-use. Unknown external or operator callers block
+   removal until their contract is resolved.
 4. Compare alternatives against the whole contract. Prefer an existing tool or
    framework function only when it preserves required auth, evidence, limits,
    errors, and side effects with less maintenance. Keep small domain-specific
    coordinators, safety checks, and stable public entry points when needed.
-5. Make the smallest coherent edit in the owning source. Update direct callers
+5. In `assess`, report the proposed change and stop before editing. In
+   `simplify`, make the smallest coherent edit in the owning source. Update direct callers
    and documentation, preserve generated-source ownership, and avoid a new
    plugin, hook, dependency, or language port unless its net benefit is proven.
-6. Validate changed behavior and important negative paths with the repository's
-   pinned tools. Compare exact before/after outputs where behavior must stay
+6. Inspect check commands for side effects before executing them; `--help`,
+   `--dry-run` and test naming are not safety guarantees. In `simplify`, validate
+   changed behavior and important negative paths with the repository's pinned tools. Compare exact before/after outputs where behavior must stay
    stable. Distinguish local tests, current-head CI, and real operational proof;
-   none substitutes for the others.
-7. Report the mechanisms and caller paths removed, standard functions reused,
+   none substitutes for the others. Stop dependent changes when proof fails;
+   repair or revert only this task's authorized edits, never unrelated work.
+7. Report proposed versus actually removed mechanisms and caller paths, functions reused,
    necessary helpers retained with reasons, validation results, and open gates.
    If a PR was requested, publish one per repository under the user's authority
    and read back its head, diff, and CI state.

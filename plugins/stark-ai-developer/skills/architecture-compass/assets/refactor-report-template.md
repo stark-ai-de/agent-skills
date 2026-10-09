@@ -117,11 +117,11 @@ For adopted testing decisions, link the target-native measurement record using [
 Use the optional [AC-ADR-006 loop](../references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) only for a requested simplification assessment or implementation. Leave this section out for unrelated work; audit reports observations without persisting an artifact.
 
 - Baseline / final revision or content identity; task delta versus full PR:
-- Scope / inventory coverage / structural scan / semantic review / exclusions:
+- Scope / tracked and untracked inventory / structural scan / semantic review / exclusions and unreadable paths:
 - Applied, retained and deferred candidates; alternative APIs/versions and equivalence evidence:
 - Shared-code owner, real consumers, runtime boundaries and remaining custom policy:
 - Dependency changes, integration/upgrade responsibility and exit path:
-- Counting method, paths, rename treatment and binary/generated exclusions:
+- Counting method, paths, rename treatment, untracked additions, completeness and binary/generated exclusions:
 
 | Category                                   | Added lines | Deleted lines | Net delta (added - deleted) |
 | ------------------------------------------ | ----------- | ------------- | --------------------------- |
@@ -130,7 +130,7 @@ Use the optional [AC-ADR-006 loop](../references/ac-adr-006-assign-workspace-own
 | Other (name docs, config, generated, etc.) |             |               |                             |
 | All changed files                          |             |               |                             |
 
-Keep the initial baseline fixed; identify each pass's starting candidate and count all added support files. Separate handwritten production, tests/fixtures, docs/config, and generated/vendor/lockfile changes. Use the same formatter/counter and paths for incremental and cumulative measurements.
+Keep the initial baseline fixed; identify each pass's starting candidate and count all added support files, including untracked additions without staging. Record a baseline bridge for concurrent edits or segmented work; do not claim a verified net reduction from incomplete totals. Separate handwritten production, tests/fixtures, docs/config, and generated/vendor/lockfile changes. Use the same formatter/counter and paths for incremental and cumulative measurements.
 
 | Pass / candidate | Removed responsibility or replacement API/version | Handwritten delta / cumulative delta | Generated/vendor/lockfile delta | Existing proof receipt IDs |
 | ---------------- | ------------------------------------------------- | ------------------------------------ | ------------------------------- | -------------------------- |

@@ -12,12 +12,18 @@ the inventory is a decision aid, not a requirement to produce a large report.
 | Decision              | Remove, reuse an existing function, simplify, or retain; cite evidence.                              |
 | Proof                 | Focused positive/negative checks, exact-output comparison, current-head CI, and untested live gates. |
 
+Record the exact baseline and final content identity, inventory coverage and
+tracked/non-ignored untracked additions without staging. In `assess`, give the
+inventory in the response; do not persist a report or run write-capable checks.
+
 ## Decision tests
 
 1. **Remove:** no real caller remains, and another supported path owns the same
-   outcome. A self-test of an unused command does not make it a production
-   caller. Remove the obsolete test with the command; keep tests of the active
-   path.
+   outcome. Establish the public and operator contract too: absence of source
+   callers is not evidence that an externally invoked command is unused. Defer
+   removal when those callers are unknown. A self-test alone is not a production
+   caller, but remove its test only after the obsolete behavior is authorized
+   for removal; preserve any distinct assertions needed by the supported path.
 2. **Use a standard function:** compare its full behavior, not its API name.
    Check authentication, trusted evidence, response bounds, timeouts, retries,
    error visibility, and version pinning. Reject a replacement that needs an
@@ -32,8 +38,9 @@ the inventory is a decision aid, not a requirement to produce a large report.
 ## Representative patterns
 
 - An unused `qualification` CLI duplicates a publisher's receipt recorder.
-  Workflow, catalog, docs, and operator searches find only its self-tests.
-  Remove that CLI and those tests, but retain the publisher's evidence binding
+  Workflow, catalog, docs, and operator searches find only its self-tests, and
+  the owner confirms no external contract remains. In `simplify`, remove that
+  CLI and only obsolete tests, but retain the publisher's evidence binding
   and the separate upstream owner checks.
 - Two audit-profile configuration files repeat app URLs and score thresholds.
   Move shared values into one small function; keep both documented profile
@@ -57,3 +64,7 @@ the inventory is a decision aid, not a requirement to produce a large report.
 
 Count removed mechanisms, dependencies, special cases, and caller paths when
 those counts help a reviewer. Include line counts only as supporting evidence.
+Use one fixed baseline, count new helpers and untracked files, distinguish
+implementation/tests/docs/config from generated output, and separate proposed
+savings from verified results. A plain Git diff excludes untracked additions;
+mark incomplete totals rather than silently overstating a reduction.

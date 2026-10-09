@@ -9,6 +9,8 @@ import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inve
 import { validateLegacyReferenceEvidence } from "./verify-legacy-reference-source-lock.mjs";
 import { validateLegacyCaseLineage } from "../lib/legacy-case-lineage.mjs";
 
+import { simplificationContractErrors } from "./simplification-contract.mjs";
+
 const root = process.cwd();
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const skillDir = path.join(root, "skills", "engineering-workflows", "architecture-compass");
@@ -1812,6 +1814,17 @@ if (
   databaseAcquireIndex <= databaseDisposerIndex
 ) {
   fail(`${backendLifecycleGuideRel}: database disposer must precede external acquisition`);
+}
+
+for (const error of simplificationContractErrors({
+  skill: skillText,
+  worksheet: readRegularFile(
+    path.join(referencesDir, "ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md"),
+  ),
+  lifecycle: lifecycleGuide,
+  report: readRegularFile(path.join(assetsDir, "refactor-report-template.md")),
+})) {
+  fail(error);
 }
 
 const assetFiles = markdownFiles(assetsDir);

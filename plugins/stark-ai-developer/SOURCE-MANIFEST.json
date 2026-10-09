@@ -179,10 +179,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 19329,
+      "byteLength": 19360,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "73e6f6ee5ad5730e5a1604081663fe350a8cea20f65a9d288c1eeb8e53fab222"
+      "sha256": "809d5f017ac7ca3f5443ba79363c0e7fcd6d8829a1daebb11662458f1cd6febb"
     },
     {
       "byteLength": 692,
@@ -251,10 +251,10 @@
       "sha256": "f9275179b91c49d4cbd8d32f883b63074a8cb7557f0e0b246440c4760e60b971"
     },
     {
-      "byteLength": 12295,
+      "byteLength": 12538,
       "mode": "0644",
       "path": "skills/architecture-compass/assets/refactor-report-template.md",
-      "sha256": "4fbd84da4a7c450acc1a849bd0840f80a636efbf77bfbd96dd044a1a6e4139d6"
+      "sha256": "dcaf228aedb426b3f8194a2dbc64cd4d01fc2eae2c49704d35a980763e3c3ae4"
     },
     {
       "byteLength": 14869,
@@ -365,10 +365,10 @@
       "sha256": "74f7e0fb4be9347b1edd6d461ab3534345dcf7a5cdbb02e1f2a52f0034c7c8d3"
     },
     {
-      "byteLength": 16797,
+      "byteLength": 18112,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md",
-      "sha256": "2e4cc9d217de5e7e0502f03f04560e5cd94d132f28898e221d6eb84278ffd7a7"
+      "sha256": "edcfe62e4c7bfca7ef1493e12fff2022510f639af77436afc83c23d326521d97"
     },
     {
       "byteLength": 5881,
@@ -2195,5 +2195,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "56efad7a916ebb30084fc9445b4858acab5b289662e7ea799b752917ed7f9e0e"
+  "treeHash": "3e1d84bd2702543f54954119613c6f9479dacd0b7e8aca7661a9daa709e6dc4d"
 }

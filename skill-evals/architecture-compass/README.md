@@ -230,3 +230,13 @@ after its frozen install. Keep its receipt separate from response-only scenario
 evaluations and target adoption evidence. Semantic evaluation must distinguish
 an unsafe recommendation from a quoted or negated warning; keyword presence alone
 cannot establish that the agent endorsed the behavior.
+
+## Simplification instruction regressions
+
+`pnpm run validate:architecture-compass` also checks the optional shared worksheet
+and its dispatch/report links. The owning pure contract checks reject 16 mutated
+instruction variants covering routing, audit/planning authority, inventory,
+version evidence, proof, convergence, accounting and scope boundaries. Run just
+these checks with `bun --bun scripts/validation/architecture-compass/simplification-contract.test.mjs`.
+They are structural regression evidence, not executed conversational cases or
+proof of model quality. The synthetic simplification cases remain prospective.

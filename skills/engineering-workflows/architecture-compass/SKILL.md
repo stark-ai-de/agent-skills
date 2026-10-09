@@ -111,6 +111,8 @@ If evidence changes the route materially, announce the reclassification and reso
 
 Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md) and the matching report asset after selection and before producing an artifact or executing a mutation. Keep these entry gates visible:
 
+For requested code simplification, duplication reduction, or library reuse, load the optional [AC-ADR-006 simplification loop](references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop) after selecting the workflow. Use it for read-only audit, planning, or authorized execution within that route's authority; it adds no workflow or target policy.
+
 ### `setup`
 
 - Use target evidence for `recommended` or evaluate every accepted adoptable target-repository decision for `complete`. Only a new or evidence-empty repository receives AC-ADR-005, 006, 018, 019, 021, 022, and 049 as its initial candidate foundation. Setup never authorizes application refactoring, deployment, publication, or production probes.
@@ -123,7 +125,6 @@ Load the [AC-ADR-064 Guide](references/ac-adr-064-preserve-approved-scope-throug
 ### `refactor`
 
 - Verify accepted local ADRs govern and the request authorizes the whole bounded change. Stop on missing governance, conflict, unresolved durable choice, scope expansion, or material drift. Direct refactor never invents a durable decision or silently repairs governance.
-- For requested code simplification, duplication reduction, or library reuse, load the optional [AC-ADR-006 simplification loop](references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md#simplification-loop). The same worksheet can support read-only audit or planning within that route's authority; it adds no workflow or target policy.
 
 ### `plan-refactor`
 

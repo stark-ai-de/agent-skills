@@ -116,10 +116,19 @@ the net line changes including tests." For recommendations only, request `audit`
   Keep unrelated changes out of the task's attributable savings. Keep the initial
   baseline fixed for cumulative savings and identify each pass's starting
   candidate for incremental deltas, including relevant dirty-tree identity.
-- Inventory every requested source file, not just the PR diff. For a TypeScript
-  scope, enumerate tracked `.ts` and `.tsx` files, classify implementation,
-  tests/fixtures, declarations and generated files, and reconcile the counts.
-  Report exclusions and files that could not be inspected.
+- Inventory every requested source file, not just the PR diff. Include tracked
+  and non-ignored untracked files; record staged, unstaged, new and deleted paths
+  without changing the index. For a TypeScript scope, include `.ts`, `.tsx`,
+  `.mts` and `.cts` where used, and classify implementation, tests/fixtures,
+  declarations and generated files. Reconcile included, excluded and unreadable
+  paths. Name ignored/vendor/generated exclusions rather than silently claiming
+  they were reviewed; inspect ignored content only when explicitly in scope.
+- Use repository-native, NUL-delimited path inventories where available, for
+  example `git ls-files -z --cached --others --exclude-standard -- <scope>`,
+  deduplicating paths and reconciling deleted files against the fixed baseline.
+  Do not follow symlinks outside the authorized scope or execute repository code
+  merely to discover files. Inspection commands, including `--help` and
+  `--dry-run`, need a side-effect check before execution.
 - Use available semantic callers/imports and structural search to find repeated
   behavior, pass-through wrappers, duplicate schema/type declarations and custom
   platform plumbing. Inspect candidates and consumers before deciding. Text
@@ -229,7 +238,9 @@ fails, state drifts materially, or a new dependency/ownership decision falls
 outside accepted governance. A failed slice is repaired or reverted within the
 authorized changes; no endless optimization or unrelated cleanup follows.
 After concurrent changes, reconcile the new candidate and affected proof before
-continuing; preserve the original baseline or explicitly explain a new one.
+continuing. Keep the original cumulative baseline; when a new work segment needs
+its own baseline, record both identities and a reconciled bridge separating this
+task from concurrent edits. An unexplained reset is not a savings measurement.
 
 ### 5. Report attributable savings and limits
 
@@ -251,8 +262,14 @@ Use repository-native diff/count tools, for example `git diff --numstat` between
 verified revisions, with the same path scope and counting method. State whether
 counts are physical lines or a language-aware SLOC measure; they are not
 interchangeable. Include new/deleted files and rename treatment, and disclose
-binary files or excluded generated output. Split this task's delta from the full
-PR when other authors or earlier passes contributed changes.
+binary files or excluded generated output. Plain `git diff` omits untracked files:
+count every in-scope untracked addition with the same physical-line method, label
+it separately, and reconcile it into the totals. Do not stage files to measure
+savings. If the available tools cannot include those paths, mark totals incomplete
+and do not claim a verified net reduction. Avoid double-counting a staged file
+with further unstaged edits: compare its final content against the fixed baseline.
+Split this task's delta from the full PR when other authors or earlier passes
+contributed changes.
 
 Do not count reformatting/minification, moving code to another owned package,
 deleting required tests, or hiding vendored/generated code as reduced maintenance.

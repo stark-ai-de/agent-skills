@@ -43,7 +43,7 @@
   "publisher": {
     "legalName": "servrox solutions UG"
   },
-  "releaseNotes": "Architecture Compass 0.11.0 consolidates iterative code simplification with complete inventory passes, exact-version library and shared-owner checks, fixed-baseline net accounting, owning-boundary validation, and explicit convergence or blocked-stop reporting. Ten synthetic scenarios define expected behavior; they are not live agent-performance evidence. Existing bundled skills, including Telegram Serverless, are retained.",
+  "releaseNotes": "Architecture Compass 0.11.0 consolidates iterative code simplification with complete inventory passes, exact-version library and shared-owner checks, fixed-baseline net accounting, owning-boundary validation, and explicit convergence or blocked-stop reporting. Covers untracked source and index-preserving accounting, with 16 malformed-instruction regression tests. Ten synthetic scenarios define expected behavior; they are not live agent-performance evidence. Script Simplification remains an incubator candidate pending comparative promotion evidence. Existing bundled skills, including Telegram Serverless, are retained.",
   "skills": [
     {
       "name": "codex-memory-curator",
