@@ -12,6 +12,31 @@
 
 ### Removed
 
+## 0.25.3 (2026-10-09)
+
+## What's Changed
+* fix(release): verify post-release completion by @servrox in https://github.com/stark-ai-de/agent-skills/pull/117
+* chore(release): release 0.25.2 by @stark-ai-release[bot] in https://github.com/stark-ai-de/agent-skills/pull/118
+* fix(jev): clarify portable API permissions and actionable failure outcomes by @servrox in https://github.com/stark-ai-de/agent-skills/pull/111
+* fix(architecture-compass): harden qualification lifecycle evidence by @servrox in https://github.com/stark-ai-de/agent-skills/pull/107
+* ci(jev): run checks only for relevant changes by @servrox in https://github.com/stark-ai-de/agent-skills/pull/123
+* chore(ci): resolve transient archive identity merge markers by @servrox in https://github.com/stark-ai-de/agent-skills/pull/124
+* feat(codegraph-ast-grep): add explicit workflow options routing by @servrox in https://github.com/stark-ai-de/agent-skills/pull/122
+* docs(roadmap): propose per-file PR explanation ADR by @servrox in https://github.com/stark-ai-de/agent-skills/pull/91
+* fix(release): recover unpublished 0.25.2 through a forward release PR by @servrox in https://github.com/stark-ai-de/agent-skills/pull/119
+* feat(change-impact): add bounded review candidate in incubator by @servrox in https://github.com/stark-ai-de/agent-skills/pull/121
+* docs(adr): propose post-merge cleanup assessment by @servrox in https://github.com/stark-ai-de/agent-skills/pull/92
+* feat(architecture-compass): qualify shadcn lint recipes by @servrox in https://github.com/stark-ai-de/agent-skills/pull/108
+* docs(roadmap): reconcile implemented repository features by @servrox in https://github.com/stark-ai-de/agent-skills/pull/125
+* fix(release): freeze and qualify forward-release bootstrap by @servrox in https://github.com/stark-ai-de/agent-skills/pull/126
+* fix(deps): patch security findings and refresh compatible packages by @servrox in https://github.com/stark-ai-de/agent-skills/pull/127
+* Share stable and incubator skill listing by @servrox in https://github.com/stark-ai-de/agent-skills/pull/128
+* fix(release): accept direct Release Please PR candidates by @servrox in https://github.com/stark-ai-de/agent-skills/pull/133
+* feat: add Telegram Serverless skill and plugin integration by @servrox in https://github.com/stark-ai-de/agent-skills/pull/132
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.25.1...v0.25.3
+
 ## 0.25.2 (2026-09-28)
 
 ## What's Changed
