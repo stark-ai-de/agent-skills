@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "method": "Implementer-produced scoped reevaluation after the two PR review findings. The current skill and existing synthetic cases were available; B2 reuses the prior backend artifacts with a corrected frontend. No independent baseline comparison or model-performance claim.",
+  "cases": [
+    {
+      "id": "B2",
+      "response": "Route 4 — Build or modify a Mini App. These five files provide a plain-HTML notes app with no bundler. Both endpoints derive the owner from platform-verified ctx.initData.user.id; listing filters by that owner, and creation ignores client-supplied identities. Notes are trimmed, must contain non-whitespace text, and cannot exceed 2,000 UTF-16 code units before trimming. The browser uses the official callback API, displays text safely, preserves input on errors, and never retries writes automatically. public/ is already the static output folder; no build step is needed. Apply the schema through a reviewed migration before any later publication of its dependent endpoints. No deployment or Telegram contact was performed. Review follow-up: absent SDK/init data leaves controls disabled with a Telegram entry message. A shared callback/try-catch path restores all controls after either asynchronous or synchronous SDK failures. The existing ownership predicates, input bounds, safe text rendering and uncertain-write retry guidance remain in place.",
+      "files": {
+        "tgcloud/schema.js": "import { table, integer, text, index } from 'sdk/db';\n\nexport const notes = table('notes', {\n  id: integer('id').primaryKey({ autoIncrement: true }),\n  ownerId: integer('owner_id').notNull(),\n  body: text('body').notNull(),\n}, (t) => ({\n  byOwner: index('notes_by_owner').on(t.ownerId),\n}));\n",
+        "tgcloud/endpoints/listNotes.js": "import { db, EndpointError } from 'sdk';\nimport { eq, asc } from 'sdk/db';\nimport { notes } from '../schema.js';\n\nexport default async function (_input, ctx) {\n  const ownerId = ctx?.initData?.user?.id;\n  if (!Number.isSafeInteger(ownerId) || ownerId <= 0) {\n    throw new EndpointError('Open this app in Telegram.', { code: 'UNAUTHORIZED' });\n  }\n\n  const rows = await db.select({ id: notes.id, body: notes.body })\n    .from(notes)\n    .where(eq(notes.ownerId, ownerId))\n    .orderBy(asc(notes.id))\n    .all();\n  return { notes: rows };\n}\n",
+        "tgcloud/endpoints/createNote.js": "import { db, EndpointError } from 'sdk';\nimport { notes } from '../schema.js';\n\nexport default async function (input, ctx) {\n  const ownerId = ctx?.initData?.user?.id;\n  if (!Number.isSafeInteger(ownerId) || ownerId <= 0) {\n    throw new EndpointError('Open this app in Telegram.', { code: 'UNAUTHORIZED' });\n  }\n  if (typeof input?.body !== 'string' || input.body.length > 2000) {\n    throw new EndpointError('Enter a note of at most 2,000 characters.', {\n      code: 'INVALID_NOTE',\n    });\n  }\n  const body = input.body.trim();\n  if (!body) {\n    throw new EndpointError('A note cannot be empty.', { code: 'INVALID_NOTE' });\n  }\n\n  const [note] = await db.insert(notes)\n    .values({ ownerId, body })\n    .returning()\n    .run();\n  return { note: { id: note.id, body: note.body } };\n}\n",
+        "public/index.html": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>My notes</title>\n</head>\n<body>\n  <main>\n    <h1>My notes</h1>\n    <form id=\"note-form\">\n      <label for=\"body\">Note (maximum 2,000 characters)</label><br>\n      <textarea id=\"body\" maxlength=\"2000\" required disabled></textarea><br>\n      <button id=\"save\" type=\"submit\" disabled>Save note</button>\n    </form>\n    <button id=\"reload\" type=\"button\" disabled>Reload notes</button>\n    <p id=\"status\" role=\"status\" aria-live=\"polite\"></p>\n    <ul id=\"notes\"></ul>\n  </main>\n  <script src=\"https://telegram.org/js/telegram-web-app.js\"></script>\n  <script>\n    const form = document.getElementById('note-form');\n    const body = document.getElementById('body');\n    const save = document.getElementById('save');\n    const reload = document.getElementById('reload');\n    const status = document.getElementById('status');\n    const list = document.getElementById('notes');\n    const webApp = window.Telegram?.WebApp;\n    const serverless = webApp?.Serverless;\n\n    function setBusy(busy) {\n      body.disabled = busy;\n      save.disabled = busy;\n      reload.disabled = busy;\n    }\n\n    function showError(error, fallback) {\n      status.textContent = error.type === 'ENDPOINT_ERROR'\n        ? error.message\n        : error.type === 'UNAUTHORIZED'\n          ? 'Reopen this app in Telegram to continue.'\n          : fallback;\n    }\n\n    function appendNote(note) {\n      const item = document.createElement('li');\n      item.textContent = note.body;\n      list.append(item);\n    }\n\n    function callEndpoint(name, input, onSuccess, fallback) {\n      setBusy(true);\n      const finish = (error, result) => {\n        setBusy(false);\n        if (error) {\n          showError(error, fallback);\n          return;\n        }\n        onSuccess(result);\n      };\n      try {\n        serverless.call(name, input, finish);\n      } catch {\n        finish({ type: 'CLIENT_ERROR' });\n      }\n    }\n\n    function loadNotes() {\n      status.textContent = 'Loading…';\n      callEndpoint('listNotes', {}, (result) => {\n        list.replaceChildren();\n        result.notes.forEach(appendNote);\n        status.textContent = result.notes.length ? 'Notes loaded.' : 'No notes yet.';\n      }, 'Unable to load notes. Try Reload notes.');\n    }\n\n    if (typeof serverless?.call !== 'function' ||\n        typeof webApp?.initData !== 'string' || !webApp.initData.length) {\n      status.textContent = 'Open this app in a Telegram version that supports Serverless.';\n    } else {\n      reload.addEventListener('click', loadNotes);\n      form.addEventListener('submit', (event) => {\n        event.preventDefault();\n        if (!body.value.trim() || body.value.length > 2000) {\n          status.textContent = 'Enter a nonempty note of at most 2,000 characters.';\n          return;\n        }\n        status.textContent = 'Saving…';\n        callEndpoint('createNote', { body: body.value }, (result) => {\n          appendNote(result.note);\n          body.value = '';\n          status.textContent = 'Saved.';\n        }, 'Save was not confirmed. Reload notes before trying again.');\n      });\n      loadNotes();\n    }\n  </script>\n</body>\n</html>\n",
+        "tgcloud.jsonc": "{\n  \"$schema\": \"./node_modules/@tgcloud/cli/schema/tgcloud.json\",\n  \"static\": {\n    \"source\": \"public\"\n  }\n}\n"
+      },
+      "commands": [],
+      "limitations": [
+        "Implementer-produced follow-up to the historical B2 output, not an independent or blinded model rerun.",
+        "Backend artifacts are retained from the prior candidate; browser behavior is assessed with controlled DOM/SDK doubles. Live authentication, database execution and hosting are unverified."
+      ]
+    },
+    {
+      "id": "O1",
+      "response": "Route 6: Validate and test. Remote run uploads and executes modules on Telegram, so it cannot be used for offline testing or to prove authentication. For the supplied SDK-free fixture, propose a local syntax check and a harness that verifies the returned ID comes from the supplied context, not input.userId, and that missing context fails locally. Do not invoke status either: CLI 0.2.0 may query the live webhook with available credentials. No proposed command is executed as part of this response, and mocked context is not Telegram authentication proof.",
+      "proposedChecks": [
+        "node --check tgcloud/endpoints/getNote.js",
+        "Local fixture harness: valid context returns 123; conflicting input.userId does not override context; missing context rejects."
+      ],
+      "cloudCommands": [],
+      "executed": false
+    },
+    {
+      "id": "O12",
+      "response": "Route 6: Validate and test. Exclude tgcloud status from this offline-only plan. CLI 0.2.0 calls webhookStatusLine and, with the available token, performs authenticated GET /webhook; lookup errors are swallowed, so successful exit does not establish offline execution. The already-installed tgcloud diff compares working files with the cached snapshot and is an appropriate offline option. Local file, syntax and pure-logic inspection are also allowed. Do not read, unset, move or modify credentials to suppress the status request, and do not fetch, log in, install packages or query Telegram. No commands have been run.",
+      "allowedProposals": [
+        "tgcloud diff with the already installed project-local CLI",
+        "Local file, syntax and pure-logic inspection"
+      ],
+      "excludedCommands": [
+        "tgcloud status",
+        "tgcloud fetch",
+        "tgcloud login",
+        "tgcloud webhook",
+        "tgcloud run",
+        "tgcloud push",
+        "tgcloud migrate"
+      ],
+      "credentialChanges": false,
+      "executed": false
+    }
+  ],
+  "limits": "Proposed application and CLI actions remain unexecuted. Separate offline harness results do not establish live Telegram behavior."
+}

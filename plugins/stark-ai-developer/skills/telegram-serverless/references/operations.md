@@ -6,7 +6,8 @@ Read for routes 6–8 and deployment/migration handoffs. Source: [CLI reference]
 
 | Command      | Main effect                                                                                        |
 | ------------ | -------------------------------------------------------------------------------------------------- |
-| status, diff | Offline comparison against the last synchronized cloud snapshot                                    |
+| diff         | Offline comparison against the last synchronized cloud snapshot                                    |
+| status       | Compare the snapshot and, when credentials exist, query live webhook state                         |
 | fetch        | Read deployed state and refresh local CLI metadata; preserve working source files                  |
 | run          | Upload local modules and execute remotely; application/API/database effects are possible           |
 | push         | Change deployed modules/static files                                                               |
@@ -17,11 +18,13 @@ Read for routes 6–8 and deployment/migration handoffs. Source: [CLI reference]
 | webhook sync | Change routing and allowed_updates; drop-pending also discards queued updates                      |
 | upgrade      | Move legacy local layout; dry-run previews moves                                                   |
 
+`status` is not an offline-only command: CLI 0.2.0 calls authenticated `GET /webhook` when a saved token or `TGCLOUD_TOKEN` is available. It silently ignores webhook lookup failures; a successful status command does not prove that no network request was attempted. Recheck the installed CLI before relying on a different version's behavior.
+
 Init/add/login/completion are covered in [setup](setup.md). Do not label fetch as having no local effects: it updates CLI-owned metadata. Never edit that state manually.
 
 ## Validate and test
 
-Start with the requested evidence level. An offline-only request prohibits login, fetch, webhook queries, remote run, push, and migrations. Do not silently install a CLI to inspect a project.
+Start with the requested evidence level. An offline-only request prohibits status, login, fetch, webhook queries, remote run, push, and migrations. Use diff against the cached snapshot or inspect local files instead; do not remove credentials or change CLI state to make status appear offline. Do not silently install a CLI to inspect a project.
 
 Check module layout, imports, syntax, schema usage, ownership predicates, frontend scripts/output, and sensitive-file exclusion. Node syntax checks can check JS parsing but do not execute the platform SDK. Mocks can prove application decisions, not Telegram authentication, schema enforcement, or service behavior.
 

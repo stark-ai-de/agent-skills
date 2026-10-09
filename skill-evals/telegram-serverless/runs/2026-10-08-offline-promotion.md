@@ -1,5 +1,7 @@
 # Offline qualification and promotion assessment
 
+Historical evidence for the pre-review candidate. The 2026-10-09 review found an incorrect offline-status classification and an unhandled Mini App SDK precondition failure; the original trials did not exercise the failing browser states. See the [scoped review-fix assessment](2026-10-09-review-fixes.md) for the corrected payload and current checks. Existing hashes, archives and trial outputs below retain their original subject.
+
 Reviewed: 2026-10-08 UTC (2026-10-09 Europe/Berlin). Decision: promote telegram-serverless 0.1.0 under [ADR-0006](../../../docs/adrs/0006-use-incubator-outside-public-catalog.short.md) ([Long, canonical](../../../docs/adrs/0006-use-incubator-outside-public-catalog.long.md) · [Guide](../../../docs/adrs/0006-use-incubator-outside-public-catalog.guide.md)) and [ADR-0008](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.short.md) ([Long, canonical](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.long.md) · [Guide](../../../docs/adrs/0008-promote-skills-by-quality-utility-and-maintenance-fit.guide.md)). Integration checks are recorded separately; this is not publication or live Telegram qualification.
 
 ## Method

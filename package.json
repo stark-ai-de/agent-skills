@@ -83,7 +83,7 @@
     "validate:openai-marketplace": "bun --bun scripts/plugin/validate-openai-marketplace.mjs",
     "validate:openai-submission": "bun --bun scripts/plugin/validate-openai-submission.mjs",
     "validate:standalone-skills": "bun --bun scripts/plugin/validate-standalone-skills.mjs",
-    "validate:plugin-evals": "bun exec \"bun --bun scripts/plugin/validate-plugin-evals.mjs && bun --bun scripts/validation/test-plugin-evals.mjs\"",
+    "validate:plugin-evals": "bun exec \"bun --bun scripts/plugin/validate-plugin-evals.mjs && bun --bun scripts/validation/test-plugin-evals.mjs && bun --bun skill-evals/telegram-serverless/validate-examples.mjs\"",
     "validate:release-descriptor": "bun exec \"bun --bun scripts/plugin/validate-release-descriptor.mjs && bun --bun scripts/validation/test-release-descriptor.mjs\"",
     "validate:contract-snapshots": "bun --bun scripts/plugin/validate-contract-snapshots.mjs",
     "generate:openai-marketplace-fixture": "bun --bun scripts/plugin/generate-openai-marketplace-fixture.mjs",

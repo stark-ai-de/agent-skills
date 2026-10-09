@@ -8,13 +8,16 @@ Reviewed: 2026-10-09 (Europe/Berlin). This is documentation and published-packag
 - [Mini Apps Serverless calls](https://core.telegram.org/bots/webapps#serverless): call signature, verified init-data boundary, and client errors.
 - [CLI package metadata](https://registry.npmjs.org/@tgcloud%2Fcli/latest): @tgcloud/cli 0.2.0, Node.js >=18.0.0, MIT.
 - [Creator package metadata](https://registry.npmjs.org/@tgcloud%2Fcreate-bot/latest): @tgcloud/create-bot 0.1.1, Node.js >=18.0.0, MIT.
-- [Published CLI 0.2.0 archive](https://registry.npmjs.org/@tgcloud/cli/-/cli-0.2.0.tgz): inspected in memory without installing or executing it, particularly commands/migrate.js, commands/run.js, and commands/login.js.
+- [Published CLI 0.2.0 archive](https://registry.npmjs.org/@tgcloud/cli/-/cli-0.2.0.tgz): source-inspected without installing the CLI or performing a live CLI operation, particularly commands/migrate.js, commands/run.js, commands/login.js, and (during the review follow-up) commands/status.js and commands/webhook.js.
+- [Official Mini Apps JavaScript](https://telegram.org/js/telegram-web-app.js): Serverless availability, synchronous precondition errors and callback delivery; inspected during the 2026-10-09 review follow-up.
 - [Agent Skills specification](https://agentskills.io/specification) and [Agent Plugins 1.0.0](https://agent-plugins.org/specification): public format and package boundaries.
 
 The raw page capture used by evaluation agents is temporary and excluded from the repository. Runtime references contain original explanations and bounded examples; no upstream skill is vendored.
 
 ## Source challenges resolved
 
+- CLI 0.2.0 labels status as offline but calls webhookStatusLine; with available credentials this performs authenticated GET /webhook. Silent failure handling does not make it offline. diff remains a cached comparison.
+- The Mini Apps SDK exports Serverless without init data and throws synchronously before callback delivery when init data is absent. The browser example now checks prerequisites and handles synchronous errors as well as callbacks.
 - CLI token and Bot API token are separate. CLI environment authentication does not establish backend environment variables or secret injection.
 - Backend SDK access is not Node.js or arbitrary npm support. Frontend build tooling has a distinct boundary.
 - run executes uploaded local modules on the platform; supplied ctx bypasses normal init-data verification for testing. It is neither offline nor authentication proof.

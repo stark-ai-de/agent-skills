@@ -2159,16 +2159,16 @@
       "sha256": "b2b69d04f45e37d3e77fc1ed67af24613e24007a1331f1cbfc9de32d82677ec7"
     },
     {
-      "byteLength": 5709,
+      "byteLength": 6465,
       "mode": "0644",
       "path": "skills/telegram-serverless/references/mini-apps.md",
-      "sha256": "a731add5e545d8ed300cd13a95e1836f51ccae262ec9ac5161c071a16c3243be"
+      "sha256": "1009fc39512d3fcf8349e665dfed82ed540a57d4e3ec8d56645f6816513c867c"
     },
     {
-      "byteLength": 6828,
+      "byteLength": 7442,
       "mode": "0644",
       "path": "skills/telegram-serverless/references/operations.md",
-      "sha256": "a98879ff6d206e8058cb04aaa618031185ba48e3005ed5e8028556c256ce0dcd"
+      "sha256": "e0ee5e995ab1efe4507c2d7a457fd38dfb77743425a6adede4fd635db15d5a6e"
     },
     {
       "byteLength": 4498,
@@ -2195,5 +2195,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "6cfaa89f6e5ba2b4b9ae4b69d0465e9dc083301a4c5b87b5ae6af8e8d43286a0"
+  "treeHash": "6f8242fdf7dc656dcd60eeabcdb43d7cad65f55e3b06aa10b30f420c5d742f06"
 }

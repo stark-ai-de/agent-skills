@@ -162,6 +162,17 @@
         "cli": "No project-local CLI yet",
         "credentials": "No credentials supplied; do not request tokens in chat."
       }
+    },
+    {
+      "id": "O12",
+      "kind": "operations",
+      "prompt": "Review an offline-only plan for an already linked Telegram Serverless project. Is tgcloud status safe alongside tgcloud diff? Explain the permitted checks without running commands or changing credentials.",
+      "fixtures": {
+        "cliVersion": "@tgcloud/cli 0.2.0",
+        "credentials": "A saved token or TGCLOUD_TOKEN is available; do not inspect its value.",
+        "sourceObservation": "status calls webhookStatusLine; with a token it requests GET /webhook and silently ignores lookup failures.",
+        "requestedScope": "No network, installation, credential changes, or cloud operations."
+      }
     }
   ]
 }
