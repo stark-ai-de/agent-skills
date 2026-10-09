@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { spawnSync } from "node:child_process";
 import { assess, digest, readEvidence, snapshot } from "./evaluate.mjs";
 
 // Synthetic records exercise the checker only. They are never stored as promotion receipts.
@@ -145,4 +146,39 @@ test("evidence paths and symlinks cannot escape capture directory", () => {
 });
 test("malformed reports are rejected instead of passed", () => {
   assert.equal(assess(null, current, () => Buffer.alloc(0)).qualified, false);
+});
+
+test("aggregate rejects public promotion without captured evidence", () => {
+  const root = process.cwd();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "planning-promotion-"));
+  try {
+    for (const name of [
+      "skills/engineering-workflows/architecture-compass",
+      "skills/codex-operations/codex-spec-interviewer",
+    ])
+      fs.cpSync(path.join(root, name), path.join(dir, name), { recursive: true });
+    const zoom = ["skills", "incubator/skills"]
+      .map((base) => `${base}/engineering-workflows/architecture-zoom`)
+      .find((name) => fs.existsSync(path.join(root, name, "SKILL.md")));
+    fs.cpSync(
+      path.join(root, zoom),
+      path.join(dir, "skills/engineering-workflows/architecture-zoom"),
+      { recursive: true },
+    );
+    fs.mkdirSync(path.join(dir, "skill-evals/architecture-zoom"), { recursive: true });
+    fs.copyFileSync(
+      path.join(root, "skill-evals/architecture-zoom/cases.json"),
+      path.join(dir, "skill-evals/architecture-zoom/cases.json"),
+    );
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, "skill-evals/architecture-zoom/validate-contract.mjs")],
+      { cwd: dir, encoding: "utf8", timeout: 30_000 },
+    );
+    assert.ifError(result.error);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Public Architecture Zoom requires a reviewed/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

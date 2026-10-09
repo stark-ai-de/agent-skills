@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { snapshot } from "./evaluate.mjs";
+import { assess, readEvidence, snapshot } from "./evaluate.mjs";
 
 const root = process.cwd();
 const compass = "skills/engineering-workflows/architecture-compass";
@@ -40,6 +40,23 @@ for (const scenario of state.cases) {
   assert.equal(
     new Set([...scenario.required, ...scenario.forbidden]).size,
     scenario.required.length + scenario.forbidden.length,
+  );
+}
+// Public promotion cannot bypass reviewed, current captures by skipping the manual CLI.
+// The checker verifies integrity and judgments, not their authentic human provenance.
+if (zoom.startsWith("skills/")) {
+  const reportFile = path.join(root, "skill-evals/architecture-zoom/promotion.json");
+  assert.ok(
+    fs.existsSync(reportFile),
+    "Public Architecture Zoom requires a reviewed skill-evals/architecture-zoom/promotion.json",
+  );
+  const result = assess(JSON.parse(fs.readFileSync(reportFile, "utf8")), state, (file) =>
+    readEvidence(path.dirname(reportFile), file),
+  );
+  assert.equal(
+    result.qualified,
+    true,
+    `Public Zoom qualification failed: ${result.errors.join("; ")}`,
   );
 }
 // Copy real payloads into unrelated directories to catch source-only cross-skill dependencies.
