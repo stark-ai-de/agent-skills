@@ -39,7 +39,7 @@ Record before/after state and read-back. If a host ignores the selected file, ha
 
 This is a template for an observed supported instruction surface, not a universal filename or ready-to-run installer:
 
-> For product, feature or architecture planning, read <local coordination ADR> and <existing product/work index>. Reuse current goals, contracts, specs and genuine approvals. Select the first missing capability: Architecture Zoom, Architecture Compass or Codex Spec Interviewer. Preserve the request's scope and Plan/write boundaries. Provision missing selected skills only under the explicit source/scope policy. Return targeted gaps to the coordinator and stop at the agreed completion criteria.
+> For product, feature or architecture planning, read `<local coordination ADR>` and `<existing product/work index>`. Reuse current goals, contracts, specs and genuine approvals. Select the first missing capability: Architecture Zoom, Architecture Compass or Codex Spec Interviewer. Preserve the request's scope and Plan/write boundaries. Provision missing selected skills only under the explicit source/scope policy. Return targeted gaps to the coordinator and stop at the agreed completion criteria.
 
 Resolve placeholders from inspected repository state. A fresh session must demonstrate actual loading/routing before claiming the binding works.
 
@@ -57,13 +57,13 @@ Pilot default: one focused correction round and one targeted recheck, then surfa
 
 Use the [five-group evaluation protocol](../../../skill-evals/architecture-zoom/README.md). Keep these observations separate:
 
-| Claim | Needed evidence |
-| --- | --- |
-| Local policy adopted | Local identity, actual acceptance decision and mapping |
-| Startup binding configured | Authorized edit and read-back in the supported scope |
-| Skill available | Exact resolved source/revision and host inventory |
-| Skill loaded | Correct instructions observed in the specific session |
-| Routing qualified | Positive and negative cases run on the named host |
-| Hard boundary enforced | Observed host/sandbox/CI controls, not prompt wording |
+| Claim                      | Needed evidence                                        |
+| -------------------------- | ------------------------------------------------------ |
+| Local policy adopted       | Local identity, actual acceptance decision and mapping |
+| Startup binding configured | Authorized edit and read-back in the supported scope   |
+| Skill available            | Exact resolved source/revision and host inventory      |
+| Skill loaded               | Correct instructions observed in the specific session  |
+| Routing qualified          | Positive and negative cases run on the named host      |
+| Hard boundary enforced     | Observed host/sandbox/CI controls, not prompt wording  |
 
 Do not count written fixtures as executed evaluations. Preserve failures and unknowns, record the input revisions, and bind observations to the actual tested candidate. An unavailable specialist is a pending transition, not a successful three-skill run.

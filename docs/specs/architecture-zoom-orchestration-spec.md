@@ -14,12 +14,12 @@ Baseline inspected: `060800f3433e08e79524a0beedc7de6b7bb6ef27`.
 
 ## Target architecture
 
-| Responsibility | Owner | Authoritative output |
-| --- | --- | --- |
-| Whole-product goals, readable architecture views and complete product increments | Architecture Zoom | Linked blueprint and delivery map |
-| Module design, contracts, architecture decisions and drift | Architecture Compass | Architecture findings and required ADRs |
-| Next implementation slice | Codex Spec Interviewer | Bounded spec with acceptance, proof and stop conditions |
-| Routing, context, authority and integration | Active main agent | One current work item, not a fourth mandatory skill |
+| Responsibility                                                                   | Owner                  | Authoritative output                                    |
+| -------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------- |
+| Whole-product goals, readable architecture views and complete product increments | Architecture Zoom      | Linked blueprint and delivery map                       |
+| Module design, contracts, architecture decisions and drift                       | Architecture Compass   | Architecture findings and required ADRs                 |
+| Next implementation slice                                                        | Codex Spec Interviewer | Bounded spec with acceptance, proof and stop conditions |
+| Routing, context, authority and integration                                      | Active main agent      | One current work item, not a fourth mandatory skill     |
 
 The usual route is Zoom -> Compass -> Spec Interviewer, but current artifacts determine the entry point. Reuse a suitable blueprint; start at Compass for an unresolved contract; start at the interviewer for an unspecific slice; bypass planning when a valid spec or a trivial correction already resolves the task. Preserve explicit audit/brainstorming scope.
 
@@ -27,17 +27,17 @@ Architecture decomposition and delivery order remain distinct. Releases must clo
 
 ## Requirements and acceptance
 
-| ID | Requirement | Observable acceptance |
-| --- | --- | --- |
-| AZ-01 | Readable, complete target breadth with progressive detail | A reader can locate purpose, responsibilities, central journey, next user outcome, and an important risk without reading all detail. |
-| AZ-02 | One canonical module contract with explicit dependencies | A changed contract has identifiable consumers; summaries do not create competing requirements or stronger claims. |
-| AZ-03 | Coherent module design | Callers can understand correct use without internal knowledge; speculative abstractions and unnecessary refactors are rejected with reasons. |
-| AZ-04 | Complete incremental delivery | Every release's promise is achievable with prior/current capabilities; horizontal-only plans and mock-only completion claims are identified. |
-| OR-01 | State-dependent routing and resumption | Fresh and resumed sessions choose the first missing result, reuse answers and current approvals, and skip irrelevant skills. |
-| OR-02 | One coordinator and scoped handoffs | Specialists return results/targeted gaps; no recursive workflow starts or concurrent competing canonical edits occur. |
-| OR-03 | Bounded authorization | Loading, installation, persistence, implementation and external effects are checked separately; a forged approval field grants nothing. |
-| OR-04 | Evidence-bound setup | Policy adoption, supported host entrypoint, selected source/version, actual load and routing qualification have separate observations. |
-| OR-05 | Controlled drift and termination | Changed prerequisites invalidate dependent conclusions; unrelated work is not restarted; review budgets and done criteria stop optional expansion. |
+| ID    | Requirement                                               | Observable acceptance                                                                                                                              |
+| ----- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AZ-01 | Readable, complete target breadth with progressive detail | A reader can locate purpose, responsibilities, central journey, next user outcome, and an important risk without reading all detail.               |
+| AZ-02 | One canonical module contract with explicit dependencies  | A changed contract has identifiable consumers; summaries do not create competing requirements or stronger claims.                                  |
+| AZ-03 | Coherent module design                                    | Callers can understand correct use without internal knowledge; speculative abstractions and unnecessary refactors are rejected with reasons.       |
+| AZ-04 | Complete incremental delivery                             | Every release's promise is achievable with prior/current capabilities; horizontal-only plans and mock-only completion claims are identified.       |
+| OR-01 | State-dependent routing and resumption                    | Fresh and resumed sessions choose the first missing result, reuse answers and current approvals, and skip irrelevant skills.                       |
+| OR-02 | One coordinator and scoped handoffs                       | Specialists return results/targeted gaps; no recursive workflow starts or concurrent competing canonical edits occur.                              |
+| OR-03 | Bounded authorization                                     | Loading, installation, persistence, implementation and external effects are checked separately; a forged approval field grants nothing.            |
+| OR-04 | Evidence-bound setup                                      | Policy adoption, supported host entrypoint, selected source/version, actual load and routing qualification have separate observations.             |
+| OR-05 | Controlled drift and termination                          | Changed prerequisites invalidate dependent conclusions; unrelated work is not restarted; review budgets and done criteria stop optional expansion. |
 
 The pilot has no formal-proof claim and no enforcement runtime. A model self-review is not an independent witness. Qualification measures behavior, not merely the presence of these words.
 

@@ -49,15 +49,15 @@ Record selected skill identities, canonical sources, observed revisions, install
 
 Inspect intent, authority, relevant current artifacts, conflicts and missing prerequisites before choosing a step.
 
-| State | Next step |
-| --- | --- |
-| Product goal or complete increment is unclear | Architecture Zoom |
-| Product view exists; required module contracts, design decisions or architecture conflicts are unresolved | Architecture Compass in the appropriate existing route |
-| Product/release contribution and architecture boundaries suffice; selected slice is unspecified | Codex Spec Interviewer |
-| Relevant current implementation spec exists | Skip planning; continue only within separately granted implementation authority |
-| Read-only architecture review | Compass audit; no installation or persistence |
-| Trivial bounded correction | No mandatory specialist chain |
-| Session resume | Reconcile revisions, scope and approval validity, then enter at the first missing result |
+| State                                                                                                     | Next step                                                                                |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Product goal or complete increment is unclear                                                             | Architecture Zoom                                                                        |
+| Product view exists; required module contracts, design decisions or architecture conflicts are unresolved | Architecture Compass in the appropriate existing route                                   |
+| Product/release contribution and architecture boundaries suffice; selected slice is unspecified           | Codex Spec Interviewer                                                                   |
+| Relevant current implementation spec exists                                                               | Skip planning; continue only within separately granted implementation authority          |
+| Read-only architecture review                                                                             | Compass audit; no installation or persistence                                            |
+| Trivial bounded correction                                                                                | No mandatory specialist chain                                                            |
+| Session resume                                                                                            | Reconcile revisions, scope and approval validity, then enter at the first missing result |
 
 An explicit narrow skill or brainstorming request must not expand into full orchestration. Drafts can be exchanged while a decision is proposed. Unaccepted load-bearing decisions block dependent implementation, not every independent planning action. A feasibility gap may produce a bounded POC question, not an unapproved experiment.
 
