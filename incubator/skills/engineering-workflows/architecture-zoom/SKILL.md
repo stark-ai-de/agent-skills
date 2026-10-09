@@ -7,7 +7,7 @@ metadata:
   internal: true
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Architecture Zoom
@@ -60,11 +60,12 @@ Reuse the request, prior answers, product goals, release map, accepted local ADR
 
 Read only the relevant local reference or template:
 
+- [Orchestration handoffs](references/orchestration.md): selected capability, contract-aware routing and standalone fallback.
 - [Design contracts](references/design-contracts.md): module quality, assurance, release closure, and change impact.
 - [Blueprint template](assets/blueprint-template.md): one navigable artifact, selectively expanded.
 - [Work-item template](assets/work-item-template.md): scoped handoff and resumption context.
 
-Architecture Compass owns architecture governance, audit, and authorized refactoring. Codex Spec Interviewer owns a selected implementation specification. This candidate supplies compatible handoffs but does not require either skill to be installed or invoke them automatically. Cross-skill orchestration is a separate proposed integration, not an enabled feature of this candidate.
+Architecture Compass owns architecture governance, audit, and authorized refactoring. Codex Spec Interviewer owns a selected implementation specification. This candidate supplies compatible handoffs but does not require either skill to be installed or invoke them automatically. When explicitly selected for a coordinated workflow, use [orchestration handoffs](references/orchestration.md). The main agent resolves available skills and applicable grants; this skill returns its result or targeted gaps and never recursively launches the chain. Public promotion and native-host qualification remain separately gated.
 
 ## Scripts
 

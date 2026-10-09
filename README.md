@@ -225,3 +225,7 @@ Skills and plugins are executable context. Helper scripts are read-only unless t
 ## License
 
 [Apache-2.0](LICENSE) for the skills and repository material published here.
+
+## Coordinated product planning
+
+Architecture Compass can map the opt-in coordination ADR into a target repository, review module contracts, and preserve scoped handoffs to Codex Spec Interviewer. The companion Architecture Zoom blueprint skill is still an explicitly selected incubator candidate, not a public install dependency. Read the [integration contract and qualification status](docs/specs/architecture-zoom-orchestration-spec.md) before enabling the complete three-skill route. Skill selection does not grant installation or write permission, and a saved startup pointer is not proof of fresh-session activation.

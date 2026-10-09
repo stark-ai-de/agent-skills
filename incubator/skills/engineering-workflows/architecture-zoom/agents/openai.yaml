@@ -1,0 +1,11 @@
+interface:
+  display_name: "Architecture Zoom"
+  short_description: "Plans readable architecture and complete product increments"
+  icon_small: "./assets/openai-icon.png"
+  icon_large: "./assets/openai-icon.png"
+  default_prompt: "Use Architecture Zoom to plan this product or feature as a readable whole-product blueprint with scoped module contracts and complete usable increments. Reuse existing context and decisions, expose important uncertainty, refine only the next necessary decision, and stop at the authorized planning deliverable."
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true

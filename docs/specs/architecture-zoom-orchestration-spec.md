@@ -1,100 +1,77 @@
 # Architecture Zoom and intent-bound skill orchestration
 
-Status: Proposed integration; the Architecture Zoom pilot remains in the incubator.
-Public-sharing authority: the maintainer requested a pull request with the discussed design in this public repository. This is not ADR acceptance, a production qualification, or a release request.
-Baseline inspected: `060800f3433e08e79524a0beedc7de6b7bb6ef27`.
+Status: implementation and release preparation in PR #141; native-agent qualification and Zoom promotion remain evidence gates.
+Authority: the maintainer requested completion of the discussed design for an upcoming release. This authorizes the bounded PR changes, not merge, publication, global installations or target-project adoption.
+Baseline: `d3b93d7bb7fff313b42703715a10d93944f653ad` (pilot), on `main` at `060800f3433e08e79524a0beedc7de6b7bb6ef27`.
 
 ## Read first
 
-**Target:** a user can describe a feature once, understand its place in the whole product, and receive a bounded specification that advances a complete usable increment. A later fresh session can resume without repeating the entire planning interview.
+**Target:** describe a feature once, understand its place in the whole product, and obtain a bounded specification that advances a complete usable increment. A supported fresh session should resume from repository-owned state without repeating the interview.
 
-**This PR delivers:** a self-contained [Architecture Zoom candidate](../../incubator/skills/engineering-workflows/architecture-zoom/SKILL.md), its templates and design criteria, a [proposed reusable coordination ADR](architecture-zoom/intent-bound-product-planning.short.md), and [five evaluation groups](../../skill-evals/architecture-zoom/README.md). It captures the agreed end state while making the first pilot independently usable through explicit selection.
+**Implemented:** an explicitly selectable [Architecture Zoom candidate](../../incubator/skills/engineering-workflows/architecture-zoom/SKILL.md); canonical coordination and preselection/provisioning ADRs in Compass; opt-in setup/profile/startup instructions; module-design review guidance; shared, synchronized handoff templates; interviewer consumption; targeted feedback and resumption instructions; deterministic contracts and an executable evidence checker. The [evaluation protocol](../../skill-evals/architecture-zoom/README.md) separates these checks from real agent behavior.
 
-**Not activated by this PR:** automatic cross-skill invocation, installation, repository-wide startup rules, acceptance of provider/local ADRs, production plugin membership, or changed behavior in the two existing public skills. The coordination drafts deliberately remain outside the active Architecture Compass library until their decision and distribution gates are met. Creating this PR does not mean those gates passed.
+**Not claimed:** actual installation on a native host, automatic startup observed in a fresh session, baseline improvement, a published Zoom skill, target-project adoption, merge or release. The original proposal triplets now point to their canonical successors rather than competing with them.
 
-## Target architecture
+## Whole-product architecture
 
-| Responsibility                                                                   | Owner                  | Authoritative output                                    |
-| -------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------- |
-| Whole-product goals, readable architecture views and complete product increments | Architecture Zoom      | Linked blueprint and delivery map                       |
-| Module design, contracts, architecture decisions and drift                       | Architecture Compass   | Architecture findings and required ADRs                 |
-| Next implementation slice                                                        | Codex Spec Interviewer | Bounded spec with acceptance, proof and stop conditions |
-| Routing, context, authority and integration                                      | Active main agent      | One current work item, not a fourth mandatory skill     |
+| Responsibility                                               | Owner                  | Canonical outcome                        |
+| ------------------------------------------------------------ | ---------------------- | ---------------------------------------- |
+| Product breadth, readable architecture, complete increments  | Architecture Zoom      | Blueprint and delivery map               |
+| Module contracts, architecture decisions and targeted review | Architecture Compass   | Contracts/findings and required ADRs     |
+| Next implementation slice                                    | Codex Spec Interviewer | Bounded implementation specification     |
+| Selection, approvals, current state and integration          | Main agent             | One work item; no fourth mandatory skill |
 
-The usual route is Zoom -> Compass -> Spec Interviewer, but current artifacts determine the entry point. Reuse a suitable blueprint; start at Compass for an unresolved contract; start at the interviewer for an unspecific slice; bypass planning when a valid spec or a trivial correction already resolves the task. Preserve explicit audit/brainstorming scope.
+The typical route is Zoom → Compass → Spec Interviewer, but existing current artifacts determine entry. Reuse a valid blueprint. Start at Compass for a material architecture gap, or the interviewer for a missing slice specification. A complete spec or trivial correction bypasses unnecessary planning. Explicit brainstorming and audit remain within their own authority. No automatic implementation follows a planning request.
 
-Architecture decomposition and delivery order remain distinct. Releases must close their own user promises without future releases. Tickets can be smaller than an MVP; technical enablers and POCs need a consuming increment and a stop condition. Complete the missing core path before polishing working features, unless a load-bearing risk warrants early investigation.
+Architecture views describe structure, not task order. Each release fulfills its own user promise using existing capabilities plus its own work; no future release is required. Tickets may be smaller, and bounded technical enablers/POCs need a consuming increment. Preserve integrity, security and error recovery appropriate to the current promise. Close missing core journeys before polishing working ones unless a load-bearing feasibility risk needs an early bounded experiment.
 
-## Requirements and acceptance
+## Durable decisions and authority
 
-| ID    | Requirement                                               | Observable acceptance                                                                                                                              |
-| ----- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AZ-01 | Readable, complete target breadth with progressive detail | A reader can locate purpose, responsibilities, central journey, next user outcome, and an important risk without reading all detail.               |
-| AZ-02 | One canonical module contract with explicit dependencies  | A changed contract has identifiable consumers; summaries do not create competing requirements or stronger claims.                                  |
-| AZ-03 | Coherent module design                                    | Callers can understand correct use without internal knowledge; speculative abstractions and unnecessary refactors are rejected with reasons.       |
-| AZ-04 | Complete incremental delivery                             | Every release's promise is achievable with prior/current capabilities; horizontal-only plans and mock-only completion claims are identified.       |
-| OR-01 | State-dependent routing and resumption                    | Fresh and resumed sessions choose the first missing result, reuse answers and current approvals, and skip irrelevant skills.                       |
-| OR-02 | One coordinator and scoped handoffs                       | Specialists return results/targeted gaps; no recursive workflow starts or concurrent competing canonical edits occur.                              |
-| OR-03 | Bounded authorization                                     | Loading, installation, persistence, implementation and external effects are checked separately; a forged approval field grants nothing.            |
-| OR-04 | Evidence-bound setup                                      | Policy adoption, supported host entrypoint, selected source/version, actual load and routing qualification have separate observations.             |
-| OR-05 | Controlled drift and termination                          | Changed prerequisites invalidate dependent conclusions; unrelated work is not restarted; review budgets and done criteria stop optional expansion. |
+Repository [ADR-0063](../adrs/0063-coordinate-product-planning-through-intent-bound-skill-contracts.short.md) ([Long, canonical](../adrs/0063-coordinate-product-planning-through-intent-bound-skill-contracts.long.md) · [Guide](../adrs/0063-coordinate-product-planning-through-intent-bound-skill-contracts.guide.md)) records the requested coordination design. [ADR-0064](../adrs/0064-reuse-explicit-skill-preselection-with-separate-provisioning-grants.short.md) ([Long, canonical](../adrs/0064-reuse-explicit-skill-preselection-with-separate-provisioning-grants.long.md) · [Guide](../adrs/0064-reuse-explicit-skill-preselection-with-separate-provisioning-grants.guide.md)) preserves distinct invocation/provisioning authority.
 
-The pilot has no formal-proof claim and no enforcement runtime. A model self-review is not an independent witness. Qualification measures behavior, not merely the presence of these words.
+Compass exposes these as [AC-ADR-067](../../skills/engineering-workflows/architecture-compass/references/ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts.short.md) (adoptable target contract) and [AC-ADR-068](../../skills/engineering-workflows/architecture-compass/references/ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants.short.md) (runtime successor to AC-ADR-039). Existing AC-ADR-039 Decision text/digests are unchanged; reciprocal supersession changes only metadata. The seven-decision evidence-empty foundation and all five Compass workflows are retained.
 
-## Source challenge and repository fit
+Target setup allocates native ADR identity, reuses equivalent existing policy, observes one supported host instruction surface, and proposes exact pointer/profile edits. Local acceptance, recorded user preselection, current host permission, installation, document writes and implementation are separate. A model-authored approval field never grants authority. Missing or unpromoted skills produce a bounded handoff, not a silent installation. No universal installer or background orchestration service is added.
 
-The live repository has Architecture Compass 0.11.0, including an optional simplification loop, while the earlier conversation inspected installed 0.10.0. Integrate into the live source rather than replacing it with that older copy. Respect the existing public workflow inventory; add no `auto` workflow or fourth orchestrator. The spec interviewer remains planning-only.
+## Contracts and change control
 
-The supplied [codebase-design](https://github.com/mattpocock/skills/blob/main/skills/engineering/codebase-design/SKILL.md) and [improve-codebase-architecture](https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md) inform module locality and observable interfaces. They are inspiration, not vendored dependencies or copied text. Do not mandate a second implementation before every legitimate ownership/security boundary, remove tests without equivalent coverage, or equate fewer public methods with sufficient testing.
+The main agent owns a `product-planning/v1` work item linking product, release, slice, canonical contracts, relevant revisions/uncommitted state, prior answers, actual approval sources, evidence limits and non-goals. Compass owns the [work-item template](../../skills/engineering-workflows/architecture-compass/assets/product-planning-work-item.md); a repository generator creates byte-identical consumer copies that work in independently installed skills.
 
-Existing incubator skills such as `repo-map-zoom-out`, `prd-writer`, and `issue-plan-slicer` retain their narrower purposes. Zoom owns the connected whole-product/contract/delivery view, not implementation, general code audits, or issue publication.
+Specialists return one bounded result or a concrete missing prerequisite. They do not recursively start another whole workflow. Changed contracts invalidate affected conclusions and dependent approvals; unrelated work is retained only after impact is understood. Use a bounded correction/recheck budget, escalate material unresolved choices, and stop at the agreed done criteria. Optional improvements cannot enlarge scope or weaken acceptance.
 
-The repository requires [incubator separation](../../CONTRIBUTING.md), [spec persistence](../specs.md), and source-owned generated plugin projections. Current host docs and exact installation commands must be checked again when implementing a particular host adapter; this PR introduces no guessed installer command or universal startup-file claim.
+## Requirement coverage
 
-## ADR gate
+| ID    | Requirement                                    | Implemented owner / proof boundary                                              |
+| ----- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| AZ-01 | Readable complete target, progressive detail   | Zoom workflow, blueprint template; human usability evidence still required      |
+| AZ-02 | One canonical contract and visible assumptions | Blueprint/design guidance and versioned handoff                                 |
+| AZ-03 | Coherent module seams and bounded refinement   | Compass module-contract review aid and existing simplification loop             |
+| AZ-04 | Complete product increments                    | Zoom closure checks and frozen delivery scenario; real output judgment required |
+| OR-01 | State-aware route/resumption                   | AC-ADR-067 and setup profile; native startup evidence required                  |
+| OR-02 | One coordinator and scoped feedback            | Work-item contracts in all three skills                                         |
+| OR-03 | Separate action authority                      | AC-ADR-068 and negative capture/evaluator cases                                 |
+| OR-04 | Observed setup/source/host state               | Profile fields and per-host evidence gate                                       |
+| OR-05 | Controlled drift, bounded reviews and stop     | Handoff dependencies, frozen scenarios and evidence rejection tests             |
 
-The [Long draft](architecture-zoom/intent-bound-product-planning.long.md) is the proposed durable coordination decision; its Short and Guide are linked views. Its provider ID is deliberately unallocated: inspect current catalog identity and lineage at integration instead of reserving a guessed number.
+## Delivery and qualification map
 
-Before changing public runtime behavior, reconcile accepted repository ADRs and the current Architecture Compass decisions, especially AC-ADR-039 (selected skill reuse and consent), AC-ADR-052 (repository-native persistence and supported host adapters), AC-ADR-064 (workflow/Plan/approval lifecycle), AC-ADR-022 (bounded delivery and proof), and the local workflow-selection successor ADR-0060. Create/accept reciprocal successors wherever policy would change; never relax accepted Long text in place. A reusable target ADR cannot silently override skill-runtime policy.
+| Increment                                  | Authored implementation                                                             | Remaining observation                                                                        |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| P1: standalone blueprint                   | Candidate, metadata, templates and design guidance                                  | Actual baseline/candidate outputs and reader review                                          |
+| P2: three-skill handoff                    | Compass contract/design guidance, interviewer consumption, shared template sync     | End-to-end planning and targeted-feedback captures                                           |
+| P3: opted-in session routing               | Adoptable ADR, supported startup/profile procedure, exact scope and resumption      | Fresh-session routing on each claimed host                                                   |
+| P4: optional provisioning and distribution | Separate grant/provenance/restart procedure, fail-closed fallback, evidence checker | Native discovery/install and negative-authority observations; then evidence-backed promotion |
 
-Provider acceptance does not accept a target repository's decision. Automatic invocation needs explicit scoped preselection; optional installation needs its own source/scope/update policy and host permission. Do not add this decision to the seven-decision evidence-empty setup foundation by default.
+Authored instructions are not a deterministic harness. Captured observations are not formal proof. Publication of Compass/interviewer instructions must not advertise Zoom as already released. It remains in the incubator until the existing promotion gate is met. See [capture and promotion procedure](../../skill-evals/architecture-zoom/CAPTURE.md).
 
-## Delivery map
+## Validation and release ownership
 
-### P1: explicit, standalone blueprint pilot — this PR
+Run `pnpm run validate:product-planning` for shared-template parity, independent-payload relative links, five frozen evaluation groups and evidence-checker regression tests. The tests intentionally use synthetic checker inputs and do not produce a passing agent receipt. `pnpm run qualify:product-planning -- <report.json>` checks actual submitted capture integrity, baseline/candidate coverage, explicit rubric judgments and native-host observations. No evidence supplied is a blocked prerequisite, not a pass.
 
-The user can select the incubator candidate and obtain a navigable blueprint, scoped module contracts and complete product increments without another skill or installer. The candidate returns a useful handoff even when specialists are absent. Templates are self-contained; evaluations remain outside the installable skill. Pass structural checks and record unrun behavioral evidence honestly. No promotion or automatic routing is implied.
+`pnpm run sync:planning-templates` writes only the two derived templates. Follow with `pnpm run sync:agent-plugin` and `pnpm run generate:traceability` for generated distribution surfaces. Do not hand-edit plugin copies. Run the release-intent local aggregate, formatting/lint, archive/install/fingerprint gates and required hosted Validate; use the final exact source state for each claim. Source contracts advance Compass to 0.12.0, Codex Spec Interviewer to 0.5.0 and the existing eight-skill bundle descriptor to 1.10.0. Release Please owns the later root version/changelog.
 
-### P2: qualified manual three-skill handoff
+## Public sources and scope
 
-After the relevant decisions are accepted, let a user explicitly select the three existing capabilities. Refine only missing artifacts and pass one work-item context through the current host. Introduce shared module-design guidance under Compass ownership with supported distribution; do not make installed skills depend on source-repository-only paths. Update the interviewer to consume known answers, product/release IDs, canonical contracts and immutable acceptance criteria without claiming runtime proof. Demonstrate an entire planning journey and a targeted feedback loop. Existing independent use still works.
+The supplied public `mattpocock/skills` design and architecture-improvement skills informed the discussion, but are not copied, vendored, or required dependencies. Existing Compass simplification behavior is extended, not replaced. Other incubator PRD/slicing/repo-map tools retain their narrower purposes. Current official host documentation is linked from the provider Guides; documentation inspection does not qualify a host.
 
-### P3: opt-in session routing
-
-Add the accepted adoptable ADR triplet to canonical Compass references and its catalog. Extend the authorized setup procedure to map local identity, reuse equivalent rules, resolve one supported startup surface, and record skill source and permission state. Bind a concise pointer, not copied whole policy. Qualify fresh/resumed sessions with already available selected skills. Unavailable hosts get a precise manual handoff, not a fabricated load. No new installation capability is needed for this increment to fulfill its promise.
-
-### P4: optional authorized provisioning and public promotion
-
-Only after policy and provenance gates, supply missing selected skills through observed supported mechanisms. Reuse authorized existing global/project installations; never silently shadow them, update them, or install a namesake. Record resolved revision and host, update owner, restart needs, and read-back. Unknown origin, offline discovery, unsupported installation, or revoked permission blocks only the dependent handoff. Run negative tests, then use the normal promotion/release workflow for any public payload change. Neither promotion nor release is authorized by this PR request.
-
-## Implementation surfaces after acceptance
-
-- `skills/engineering-workflows/architecture-compass/`: new accepted provider triplet, catalog/adoption/mapping references, setup guidance and scoped design review integration; retain all existing modes and audit no-write behavior.
-- `skills/codex-operations/codex-spec-interviewer/`: existing input/workflow/template contracts, not a second spec owner or direct implementer.
-- `incubator/skills/engineering-workflows/architecture-zoom/`: pilot first; move to `skills/engineering-workflows/` only through evidence-backed promotion.
-- Existing `skill-evals/`, contract tests and relevant documentation: fresh-session, authority, routing, product-closure and drift cases.
-- `plugins/stark-ai-developer.source.json` only if membership is explicitly selected. Regenerate projections with `pnpm run sync:agent-plugin`; do not hand-edit generated `plugins/stark-ai-developer/` or commit `adapters/`.
-
-## Validation and claims
-
-For this candidate/documentation change, the relevant repository commands are `pnpm run validate:skills` and `pnpm run list:incubator`; hosted Validate remains mandatory. Structural checks must cover all required headings, valid frontmatter, category description parity, reference resolution and exclusion from public discovery. Behavior uses the linked five-group eval protocol, not static text checks alone.
-
-For later runtime integration, additionally use the changed-contract gates including `pnpm run validate:architecture-compass`, `pnpm run validate:adrs`, `pnpm run validate:projections`, and the targeted interviewer/evaluation checks. Derive catalog counts, update lineage/locks and traceability from current data. Release intent requires the local aggregate and existing install/fingerprint/release gates. These are required future checks, not reported passes.
-
-## Risks, rollback and done-when
-
-Main risks are repeated interviews, hidden scope expansion, accepted-policy conflicts, stale approvals, competing documents, misleading MVP claims and over-planning. Mitigations are explicit owners, scoped handoffs, release closure, bounded review and evidence separation. Stop on unapproved writes, decision conflicts, unknown install provenance or changed acceptance. Preserve independent authorized work.
-
-The pilot is reversible by removing the new candidate and its category/index entries; it performs no target-project mutations by itself. Later host bindings and installation changes need their own exact rollback and ownership contracts. Uninstalling a skill does not undo artifacts or external side effects.
-
-This PR is complete as a reviewable pilot/proposal when artifacts are linked, new candidate metadata is coherent, reviewed content is public-safe, and actual validation gaps are disclosed. Cross-skill behavior and production readiness remain separate acceptance milestones.
+No global instruction edits, production probes, credentials, publishing changes or unrelated source refactors are included. Undo only this PR's owned changes; uninstallation or pointer removal does not undo user documents or external effects. Preserve existing approvals and user edits when reverting target bindings.

@@ -83,7 +83,9 @@ const allowedCategories = new Set([
 ]);
 const internalAllowedCategories = new Set([...allowedCategories, "implementation-policy"]);
 const allowedStatuses = new Set(["Accepted", "Superseded"]);
-const skillRuntimeIds = new Set([1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53, 64]);
+const skillRuntimeIds = new Set([
+  1, 2, 3, 4, 26, 36, 39, 43, 44, 45, 46, 48, 50, 51, 52, 53, 64, 68,
+]);
 const expectedCategories = new Map([
   [1, "governance"],
   [2, "governance"],
@@ -151,8 +153,12 @@ const expectedCategories = new Map([
   [64, "governance"],
   [65, "governance"],
   [66, "stack-tooling"],
+  [67, "governance"],
+  [68, "governance"],
 ]);
 const expectedStems = new Map([
+  [67, "ac-adr-067-coordinate-product-planning-through-intent-bound-skill-contracts"],
+  [68, "ac-adr-068-reuse-explicit-skill-preselection-with-separate-provisioning-grants"],
   [1, "ac-adr-001-route-architecture-compass-through-canonical-adr-triplets"],
   [2, "ac-adr-002-select-actions-resolve-authority-and-record-guardrail-adoption"],
   [3, "ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices"],

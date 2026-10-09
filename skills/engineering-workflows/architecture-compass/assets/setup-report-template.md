@@ -34,12 +34,12 @@
 - Repository evidence state: `new | evidence-empty | established`
 - Foundation eligibility and evidence:
 - Catalog path and revision/fingerprint:
-- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `46`
-- Matrix row count: `46`
+- Eligible catalog count (`Scope: target-repository`, `Adoptable: true`): `47`
+- Matrix row count: `47`
 - Selected count (`adopt` + `adapt`): `<number from completed matrix>`
 - Not-selected count (`defer` + `reject`): `<number from completed matrix>`
-- Total disposition count (`selected` + `not-selected`): `<number; must equal 46>`
-- Count equality: `selected + not-selected = total = 46`: `pass | fail`
+- Total disposition count (`selected` + `not-selected`): `<number; must equal 47>`
+- Count equality: `selected + not-selected = total = 47`: `pass | fail`
 - Duplicate IDs: `0 | <count and IDs>`
 - Missing IDs: `0 | <count and IDs>`
 - Deferred provider ADRs, triggers, and owners:
@@ -113,8 +113,9 @@ Use `adopt`, `adapt`, `defer`, or `reject`. A defer names a future trigger or ow
 | AC-ADR-063   |             |                 |                     |                        |                     |
 | AC-ADR-065   |             |                 |                     |                        |                     |
 | AC-ADR-066   |             |                 |                     |                        |                     |
+| AC-ADR-067   |             |                 |                     |                        |                     |
 
-AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
+AC-ADR-001 through AC-ADR-004, AC-ADR-026, AC-ADR-036, AC-ADR-039, AC-ADR-043 through AC-ADR-046, AC-ADR-048, and AC-ADR-064 plus AC-ADR-068 are skill-runtime controls and remain outside the target adoption matrix. AC-ADR-034, AC-ADR-042, and AC-ADR-047 are superseded target decisions and remain outside the matrix. Historical runtime decisions remain outside target adoption.
 
 ## Adopted Jev host advice
 
@@ -196,3 +197,7 @@ Final aggregate gate: <command or scenario, relationship to this receipt, and re
 ## Remaining decisions and risks
 
 -
+
+## Adopted product-planning coordination
+
+For AC-ADR-067, link the existing local coordination ADR and [adoption profile](product-planning-profile.md). Record actual supported entrypoint and read-back, explicit preselection, source/revision/availability for all selected skills, separate install grants and restart/fresh-session qualification. Do not infer runtime or provisioning authority from adoption.

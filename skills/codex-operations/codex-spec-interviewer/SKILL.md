@@ -6,7 +6,7 @@ compatibility: Targets Codex evidence and execution prompts across Agent Skills 
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # Codex Spec Interviewer
@@ -39,6 +39,7 @@ This is one end-to-end workflow. A clear request selects it; do not invent revie
 - The current user request and any follow-up answers.
 - Relevant `AGENTS.md`, `README.md`, issue descriptions, ADRs, repo docs, and `docs/agents/` files.
 - Existing specs, plans, requirements, and PRDs the user wants preserved or challenged.
+- A coordinated product-planning work item, when supplied: product/release/slice IDs, canonical contracts and revisions, prior answers, non-goals, evidence limits and genuine authorization. Do not require it for independent use.
 - File layout, naming conventions, scripts, package manager, lint/test/type-check commands, and CI expectations.
 - Current framework, library, API, or platform documentation through available MCP tools or web search when a decision depends on up-to-date behavior.
 - Error messages, screenshots, logs, PR feedback, or example files the user supplied.
@@ -48,7 +49,7 @@ This is one end-to-end workflow. A clear request selects it; do not invent revie
 Follow [workflow-details.md](references/workflow-details.md) for the shared interview, approval and delivery lifecycle. Use [host-adapters.md](references/host-adapters.md) only when a host control or transition matters.
 
 1. Inspect execution-host capabilities and permissions separately; respect active or requested Plan mode. Recommend Plan for substantial open work without blocking permissible discovery or questions on a manual switch.
-2. Inspect relevant repository context and prior answers. Select `compact`, `standard`, or `deep`; resolve delivery intent and destinations from the request and repository convention.
+2. For an existing coordinated handoff, read [product-planning handoffs](references/product-planning-handoffs.md) without restarting upstream skills. Inspect relevant repository context and prior answers. Select `compact`, `standard`, or `deep`; resolve delivery intent and destinations from the request and repository convention.
 3. Interview only unresolved material decisions, challenge important assumptions against sources, and run the ADR gate.
 4. Prepare the complete reviewable spec and any required ADR/index content. Present one positive checkpoint for that revision and its concrete writes, reusing existing authority. A native plan approval can serve as this checkpoint.
 5. Preserve approval across any required Plan exit. Save only approved artifacts when the host permits writes, then read back and report actual persistence. Explicit chat-only delivery completes without a save.
@@ -73,6 +74,8 @@ Read only the reference needed for the current step:
 - [question-bank.md](references/question-bank.md), [spec-rubric.md](references/spec-rubric.md), and [source-challenge.md](references/source-challenge.md): unresolved questions, depth, final self-check and source challenge.
 - [artifact-destinations.md](references/artifact-destinations.md), [adr-gate.md](references/adr-gate.md), and [rollout-checklist.md](references/rollout-checklist.md): destinations, durable decisions and risky delivery.
 - Matching `assets/spec-template.*.md`, bundled example specs and [execution prompt](assets/codex-execution-prompt.md): output formats.
+
+- [Product-planning handoffs](references/product-planning-handoffs.md) and [work-item template](assets/product-planning-work-item.md): optional contract-aware input and targeted feedback, not a new workflow.
 
 ## Scripts
 
