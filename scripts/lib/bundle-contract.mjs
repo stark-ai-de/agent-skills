@@ -22,6 +22,7 @@ export const EXPECTED_CODEX_SKILL_SOURCES = [
   "skills/codex-operations/codex-spec-interviewer",
   "skills/engineering-workflows/animated-readme-logo",
   "skills/engineering-workflows/architecture-compass",
+  "skills/engineering-workflows/architecture-zoom",
   "skills/engineering-workflows/codegraph-ast-grep",
   "skills/engineering-workflows/drawio-diagrams",
   "skills/engineering-workflows/telegram-serverless",

@@ -498,6 +498,29 @@
         "Existing hosting is preserved and any repair uses its relevant project tooling."
       ],
       "tags": ["product-boundary", "no-invention"]
+    },
+    {
+      "id": "positive-architecture-zoom-blueprint",
+      "kind": "positive",
+      "skill": "architecture-zoom",
+      "surface": "CHAT",
+      "discovery": "implicit",
+      "request": "Plan a local skill manager supporting discovery, installation, removal, updates and multiple targets. Start with one trusted source and one target. Reuse a saved current blueprint on session resumption; do not repeat its answered questions.",
+      "expected": [
+        "Shows the whole agreed product and a complete first user outcome.",
+        "Links canonical module contracts and reuses current answers.",
+        "Keeps implementation, installation and native-host qualification separate from planning."
+      ],
+      "expectedResultShape": [
+        "A readable blueprint, linked contracts, complete delivery increments and explicit evidence limits."
+      ],
+      "fixtures": [
+        "The readable-breadth-and-resume case in skill-evals/architecture-zoom/cases.json; provide current saved artifacts for the resumption variation."
+      ],
+      "passCriteria": [
+        "Planning preserves the requested scope and does not invent execution or host evidence."
+      ],
+      "tags": ["output-contract", "no-invention", "mutation-approval"]
     }
   ],
   "listingMappings": [
@@ -532,6 +555,10 @@
     {
       "skill": "jev-capability-advisor",
       "capability": "Recommend available skills and tools for a supplied task with Jev in Codex."
+    },
+    {
+      "skill": "architecture-zoom",
+      "capability": "Plan whole-product architecture and complete usable delivery increments."
     }
   ]
 }

@@ -10,7 +10,7 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 
 ## Tracked Specs
 
-- [`architecture-zoom-orchestration-spec.md`](architecture-zoom-orchestration-spec.md) - Architecture Zoom candidate and implemented three-skill contracts, opt-in routing/provisioning procedures, executable evidence gates, and release-readiness boundaries.
+- [`architecture-zoom-orchestration-spec.md`](architecture-zoom-orchestration-spec.md) - Accepted public Architecture Zoom release and three-skill contracts, opt-in routing/provisioning procedures, qualification evidence, and release boundaries.
 - [`architecture-compass-shadcn-lint-spec.md`](architecture-compass-shadcn-lint-spec.md) - all-rules design-system lint adoption, practical ESLint/Oxlint and shared-UI guidance, evidence boundaries, and provider integration.
 
 - [`animated-readme-logo-provider-routing-and-promotion-spec.md`](animated-readme-logo-provider-routing-and-promotion-spec.md) - portable provider routing, strict asset validation, and public promotion for `animated-readme-logo`.

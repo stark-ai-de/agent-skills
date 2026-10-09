@@ -45,4 +45,4 @@ On a changed requirement, assumption, interface, or relevant repository state, i
 
 Required corrections identify a violated agreed criterion. Necessary refactoring names the blocker and smallest safe change; beneficial prefactoring names a concrete upcoming consumer. Optional improvement remains optional. The original product goal cannot be traded for architectural elegance without a material user decision.
 
-These rules are original guidance inspired by established modularity and vertical-delivery concepts, not a vendored copy of another skill. Architecture Compass is the intended long-term owner of the shared design method after the coordinated integration is accepted; the incubator reference keeps this pilot self-contained until then.
+These rules are original guidance inspired by established modularity and vertical-delivery concepts, not a vendored copy of another skill. Architecture Compass owns shared module-contract review in the accepted coordinated integration. This local reference keeps Architecture Zoom self-contained; resolve the actually installed Compass guidance when its review is selected.

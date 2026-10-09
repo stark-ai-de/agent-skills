@@ -2,7 +2,7 @@
 
 ID: ADR-0006
 Title: Use incubator as default candidate home
-Status: Accepted
+Status: Superseded
 Date: 2026-05-21
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0065
 Guide verified: 2026-07-28
 Gist: Keep all unproven skills outside the installable catalog.
 

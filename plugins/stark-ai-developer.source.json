@@ -22,6 +22,10 @@
       "source": "skills/engineering-workflows/architecture-compass"
     },
     {
+      "name": "architecture-zoom",
+      "source": "skills/engineering-workflows/architecture-zoom"
+    },
+    {
       "name": "codegraph-ast-grep",
       "source": "skills/engineering-workflows/codegraph-ast-grep"
     },

@@ -2,7 +2,7 @@
 
 portable Agent Plugin generated from the explicit `plugins/stark-ai-developer.source.json` allowlist.
 
-This harness-first package contains 8 developer workflows and has no shared backend,
+This harness-first package contains 9 developer workflows and has no shared backend,
 bundled MCP server, telemetry or analytics. Jev Capability Advisor optionally
 sends supplied task text and public capability cards to TypeSafe using your own
 API key; offline candidate inspection needs no network or credentials.

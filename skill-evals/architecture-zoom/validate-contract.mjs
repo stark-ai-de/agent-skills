@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { assess, readEvidence, snapshot } from "./evaluate.mjs";
+import { assess, assessPublicAdmission, readEvidence, snapshot } from "./evaluate.mjs";
 
 const root = process.cwd();
 const compass = "skills/engineering-workflows/architecture-compass";
@@ -42,22 +42,36 @@ for (const scenario of state.cases) {
     scenario.required.length + scenario.forbidden.length,
   );
 }
-// Public promotion cannot bypass reviewed, current captures by skipping the manual CLI.
-// The checker verifies integrity and judgments, not their authentic human provenance.
+// Public admission and observed host qualification are distinct under ADR-0065.
+// Neither a decision record nor a successful structure check authenticates captures.
 if (zoom.startsWith("skills/")) {
-  const reportFile = path.join(root, "skill-evals/architecture-zoom/promotion.json");
+  assert.doesNotMatch(read(`${zoom}/SKILL.md`), /^\s+internal:\s*(?:true|"true"|'true')\s*$/m);
+  const admissionFile = path.join(root, "skill-evals/architecture-zoom/public-admission.json");
   assert.ok(
-    fs.existsSync(reportFile),
-    "Public Architecture Zoom requires a reviewed skill-evals/architecture-zoom/promotion.json",
+    fs.existsSync(admissionFile),
+    "Public Architecture Zoom requires a reviewed public-admission.json",
   );
-  const result = assess(JSON.parse(fs.readFileSync(reportFile, "utf8")), state, (file) =>
-    readEvidence(path.dirname(reportFile), file),
+  const admission = assessPublicAdmission(
+    JSON.parse(fs.readFileSync(admissionFile, "utf8")),
+    state,
   );
   assert.equal(
-    result.qualified,
+    admission.admitted,
     true,
-    `Public Zoom qualification failed: ${result.errors.join("; ")}`,
+    `Public Zoom admission failed: ${admission.errors.join("; ")}`,
   );
+  // A supplied behavioral receipt must still pass the complete evidence checker.
+  const reportFile = path.join(root, "skill-evals/architecture-zoom/promotion.json");
+  if (fs.existsSync(reportFile)) {
+    const result = assess(JSON.parse(fs.readFileSync(reportFile, "utf8")), state, (file) =>
+      readEvidence(path.dirname(reportFile), file),
+    );
+    assert.equal(
+      result.qualified,
+      true,
+      `Public Zoom qualification failed: ${result.errors.join("; ")}`,
+    );
+  }
 }
 // Copy real payloads into unrelated directories to catch source-only cross-skill dependencies.
 const disposable = fs.mkdtempSync(path.join(os.tmpdir(), "planning-standalone-"));

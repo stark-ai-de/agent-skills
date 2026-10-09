@@ -56,6 +56,53 @@ export function readEvidence(base, relative) {
   return fs.readFileSync(resolved);
 }
 
+/** ADR-0065: catalog admission is a decision, never observed host qualification. */
+export function assessPublicAdmission(record, current) {
+  const errors = [];
+  const need = (ok, message) => requireCondition(ok, message, errors);
+  if (!record || typeof record !== "object" || Array.isArray(record))
+    return { admitted: false, qualified: false, errors: ["Admission must be an object"] };
+  need(record.schemaVersion === 1, "Unsupported admission schema");
+  need(
+    record.kind === "maintainer-directed-public-release",
+    "Expected a public-admission decision",
+  );
+  need(record.skill === "architecture-zoom", "Admission names another skill");
+  need(
+    record.status === "Accepted" && record.decision === "ADR-0065",
+    "Accepted ADR-0065 admission is required",
+  );
+  need(
+    record.sourceFingerprint === current.sourceFingerprint,
+    "Stale public-admission source fingerprint",
+  );
+  need(
+    record.casesFingerprint === current.casesFingerprint,
+    "Changed public-admission case fingerprint",
+  );
+  need(
+    record.approval?.approved === true &&
+      hasText(record.approval?.authority) &&
+      hasText(record.approval?.scope),
+    "Explicit maintainer release acceptance is missing",
+  );
+  need(
+    record.nativeHostQualification === "not-run",
+    "Admission cannot claim native-host qualification",
+  );
+  need(
+    Array.isArray(record.claimedQualifiedHosts) && record.claimedQualifiedHosts.length === 0,
+    "Admission cannot name qualified hosts",
+  );
+  need(
+    hasText(record.qualityAssessment) &&
+      hasText(record.maintenanceOwner) &&
+      hasText(record.limitations),
+    "Document quality, maintenance and evidence limits",
+  );
+  return { admitted: errors.length === 0, qualified: false, errors };
+}
+
 /** Assess capture integrity plus explicit judgments; never infer agent behavior from skill wording. */
 export function assess(report, current, read) {
   const errors = [];
@@ -82,13 +129,20 @@ export function assess(report, current, read) {
       report.claimedHosts.every(hasText),
     "Name at least one actually exercised host",
   );
-  need(
-    new Set(report.claimedHosts ?? []).size === report.claimedHosts?.length,
-    "Duplicate claimed host",
-  );
+  need(Array.isArray(report.hostEvidence), "hostEvidence must be an array");
   need(hasText(report.captureMethod), "Document the real capture method and its limitations");
-  if (!Array.isArray(report.runs) || !Array.isArray(report.claimedHosts))
+  if (
+    !Array.isArray(report.runs) ||
+    !Array.isArray(report.claimedHosts) ||
+    !Array.isArray(report.hostEvidence)
+  )
     return { qualified: false, errors };
+  need(new Set(report.claimedHosts).size === report.claimedHosts.length, "Duplicate claimed host");
+  const hostEvidence = report.hostEvidence.filter((item) => {
+    const valid = item !== null && typeof item === "object" && !Array.isArray(item);
+    need(valid, "Invalid host evidence");
+    return valid;
+  });
   const evidenceDigests = new Set();
   const verifyArtifact = (artifact, label, unique = false) => {
     if (!artifact || !hasText(artifact.path) || !/^[a-f0-9]{64}$/.test(artifact.sha256 ?? "")) {
@@ -170,7 +224,7 @@ export function assess(report, current, read) {
         );
       }
     }
-    const observations = (report.hostEvidence ?? []).filter((item) => item.host === host);
+    const observations = hostEvidence.filter((item) => item.host === host);
     for (const type of ["discovery-install", "fresh-session-routing", "negative-authority"]) {
       const found = observations.filter((item) => item.type === type);
       need(
@@ -198,7 +252,7 @@ export function assess(report, current, read) {
 export function main(args = process.argv.slice(2), root = process.cwd()) {
   if (args.length !== 1 || args[0].startsWith("-")) {
     console.error(
-      "Usage: pnpm run qualify:product-planning -- <captured-run/report.json>\nNo captured evidence supplied: promotion remains blocked. This command never runs an agent, installs, or publishes.",
+      "Usage: pnpm run qualify:product-planning -- <captured-run/report.json>\nNo captured evidence supplied: native-host qualification remains unproven. Public admission is a separate maintainer decision. This command never runs an agent, installs, or publishes.",
     );
     return 2;
   }

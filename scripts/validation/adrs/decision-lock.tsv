@@ -58,3 +58,4 @@ ADR-0060	0060-allow-intent-bound-workflow-disclosure	2cb6b00dfe37479a8e520de45f1
 ADR-0062	0062-admit-release-reconciler-repairs-to-unpublished-recovery	54c80a874d119209a35f7a84e450cae1db2eb60d5c0b7bfc0668354cd2c3af67
 ADR-0063	0063-coordinate-product-planning-through-intent-bound-skill-contracts	c7680530d6774f171b14b819a07528f601245a288b8e565c2e6c17537a57e291
 ADR-0064	0064-reuse-explicit-skill-preselection-with-separate-provisioning-grants	ee92269ab195d7764af512590e6d574288b156b85c6f6036271c3272aee67f03
+ADR-0065	0065-allow-explicit-direct-public-skill-releases	e95e43bb251791c199c557bb819544ab9da3221f65e85982b8245a352290db98

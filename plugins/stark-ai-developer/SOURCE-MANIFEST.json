@@ -21,6 +21,10 @@
         "source": "skills/engineering-workflows/architecture-compass"
       },
       {
+        "name": "architecture-zoom",
+        "source": "skills/engineering-workflows/architecture-zoom"
+      },
+      {
         "name": "codegraph-ast-grep",
         "source": "skills/engineering-workflows/codegraph-ast-grep"
       },
@@ -38,7 +42,7 @@
       }
     ]
   },
-  "bundleHash": "1461e976254e9acbd2e126d8ba7a1ab1c119bed929cbb9956e9c5f25036581c3",
+  "bundleHash": "c1b2e098b9c1dd01ae55930c5e6dc52178077b002dec6796d6df955689ab82b2",
   "files": [
     {
       "byteLength": 10271,
@@ -50,13 +54,13 @@
       "byteLength": 1028,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "c75564ed210476ad571664f54738dc9e06039ee115e492d893a92715b02b3cef"
+      "sha256": "33f1c83f754878e28f0418a6f54f7d90d2e3cbe6caa9dae2cc2ab538fbb9c230"
     },
     {
-      "byteLength": 1424,
+      "byteLength": 1444,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "15d9a01c27a1199cb0fe7bc7ef814748e489cbe00c6f3b451726b4fee2c7e88b"
+      "sha256": "d7971f26eff588c247b86c7c4630f18a9881d07164b3ca88f071b2a572f6d05e"
     },
     {
       "byteLength": 13030,
@@ -1565,6 +1569,54 @@
       "sha256": "0282f00a5c522ac6c1578a13cb5e4ac2c1d6e0d92f3e6d0ebd5bb9357d3abb18"
     },
     {
+      "byteLength": 8643,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/SKILL.md",
+      "sha256": "69f2312624458bbe7e32aecc5a580178d8ce09edc7e8539ef4453b6f7f4595fc"
+    },
+    {
+      "byteLength": 620,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/agents/openai.yaml",
+      "sha256": "fbe576d5a264d412cbc55c1c5dc4b3e265158226f324b69d97db4b72f396ad36"
+    },
+    {
+      "byteLength": 3777,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/blueprint-template.md",
+      "sha256": "df041e40a306d1b0ce51a9d856c628d904f9a958f0f7fffeddb58e7ab6ab4df0"
+    },
+    {
+      "byteLength": 6111,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/openai-icon.png",
+      "sha256": "4736ebf701424761aba9f6461900ec54eb8b781ddab0586a5275d5d7e40c8255"
+    },
+    {
+      "byteLength": 860,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/openai-icon.svg",
+      "sha256": "f6c84ac3b5b8ea9a17d0706cbe1f4772065fdf06dcdea0e19518979d6e3f7065"
+    },
+    {
+      "byteLength": 2704,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/assets/work-item-template.md",
+      "sha256": "f05339c70c0965a6ea5edaa2cd1e347bbe773cbebbf384ae64ad2ed2a51301ca"
+    },
+    {
+      "byteLength": 5222,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/references/design-contracts.md",
+      "sha256": "5faeabf44ecf066cfbb2b118789a2a18a457335fa83970428d485186c5764b1c"
+    },
+    {
+      "byteLength": 2005,
+      "mode": "0644",
+      "path": "skills/architecture-zoom/references/orchestration.md",
+      "sha256": "a7123c56c7528629676df7cdf8bd003bf1bcf2c8f660b0aabf5801cf56e03422"
+    },
+    {
       "byteLength": 12701,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/SKILL.md",
@@ -2261,5 +2313,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "3f54408c0ee5be82d7b796718c421e5f0634a9956c22df14115e72af210a1dd7"
+  "treeHash": "699bbe556e1886099a632481a611a82669567bd7cce000f4f4d806886269c1b6"
 }

@@ -4,7 +4,6 @@ description: Plan a product or feature as a readable architecture blueprint and 
 license: Apache-2.0
 compatibility: Uses available repository and document tools; supports conversational planning without assuming native skill chaining, installation, or enforcement.
 metadata:
-  internal: true
   author: stark-ai-de
   category: engineering-workflows
   version: "0.2.0"
@@ -65,7 +64,7 @@ Read only the relevant local reference or template:
 - [Blueprint template](assets/blueprint-template.md): one navigable artifact, selectively expanded.
 - [Work-item template](assets/work-item-template.md): scoped handoff and resumption context.
 
-Architecture Compass owns architecture governance, audit, and authorized refactoring. Codex Spec Interviewer owns a selected implementation specification. This candidate supplies compatible handoffs but does not require either skill to be installed or invoke them automatically. When explicitly selected for a coordinated workflow, use [orchestration handoffs](references/orchestration.md). The main agent resolves available skills and applicable grants; this skill returns its result or targeted gaps and never recursively launches the chain. Public promotion and native-host qualification remain separately gated.
+Architecture Compass owns architecture governance, audit, and authorized refactoring. Codex Spec Interviewer owns a selected implementation specification. This skill supplies compatible handoffs but does not require either skill to be installed or invoke them automatically. When explicitly selected for a coordinated workflow, use [orchestration handoffs](references/orchestration.md). The main agent resolves available skills and applicable grants; this skill returns its result or targeted gaps and never recursively launches the chain. Public availability does not establish native-host startup or routing qualification; report those observations separately.
 
 ## Scripts
 

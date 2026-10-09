@@ -2,7 +2,7 @@
 
 ID: ADR-0004
 Title: Start with empty promoted-only catalog
-Status: Accepted
+Status: Superseded
 Date: 2026-05-20
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0065
 Guide verified: 2026-07-28
 Gist: Public installs should expose only promoted skills.
 

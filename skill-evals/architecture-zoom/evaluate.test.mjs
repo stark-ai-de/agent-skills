@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
-import { assess, digest, readEvidence, snapshot } from "./evaluate.mjs";
+import { assess, assessPublicAdmission, digest, readEvidence, snapshot } from "./evaluate.mjs";
 
 // Synthetic records exercise the checker only. They are never stored as promotion receipts.
 const current = snapshot(process.cwd());
@@ -118,6 +118,19 @@ test("actual native fresh-session observation is required", () =>
   rejected((r) => {
     r.hostEvidence = [];
   }, /fresh-session-routing/));
+test("malformed host evidence returns errors instead of throwing or qualifying", () => {
+  for (const value of [undefined, null, {}, 1, "invalid", [null], [false], [[]]])
+    rejected((r) => {
+      r.hostEvidence = value;
+    }, /hostEvidence|Invalid host evidence/);
+  rejected((r) => r.hostEvidence.push(null), /Invalid host evidence/);
+});
+test("non-array claimed hosts return errors instead of throwing", () => {
+  for (const value of [undefined, null, {}, 1, "invalid"])
+    rejected((r) => {
+      r.claimedHosts = value;
+    }, /actually exercised host/);
+});
 test("review and maintainer decisions cannot be omitted", () =>
   rejected((r) => {
     r.maintainerJudgment.approved = false;
@@ -148,7 +161,7 @@ test("malformed reports are rejected instead of passed", () => {
   assert.equal(assess(null, current, () => Buffer.alloc(0)).qualified, false);
 });
 
-test("aggregate rejects public promotion without captured evidence", () => {
+test("aggregate rejects public placement without maintainer admission", () => {
   const root = process.cwd();
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "planning-promotion-"));
   try {
@@ -180,5 +193,64 @@ test("aggregate rejects public promotion without captured evidence", () => {
     assert.match(result.stderr, /Public Architecture Zoom requires a reviewed/);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+function admissionFixture() {
+  return {
+    schemaVersion: 1,
+    kind: "maintainer-directed-public-release",
+    skill: "architecture-zoom",
+    status: "Accepted",
+    decision: "ADR-0065",
+    sourceFingerprint: current.sourceFingerprint,
+    casesFingerprint: current.casesFingerprint,
+    approval: {
+      approved: true,
+      authority: "Synthetic unit fixture",
+      scope: "Public skill and bundle",
+    },
+    nativeHostQualification: "not-run",
+    claimedQualifiedHosts: [],
+    qualityAssessment: "Synthetic fixture, not review evidence",
+    maintenanceOwner: "unit-test",
+    limitations: "No observed host evidence",
+  };
+}
+
+test("explicit public admission never becomes behavioral qualification", () => {
+  const admission = admissionFixture();
+  assert.deepEqual(assessPublicAdmission(admission, current), {
+    admitted: true,
+    qualified: false,
+    errors: [],
+  });
+  assert.equal(assess(admission, current, () => Buffer.alloc(0)).qualified, false);
+});
+
+test("public admission rejects missing acceptance, stale source and invented host claims", () => {
+  for (const mutate of [
+    (r) => {
+      r.approval.approved = false;
+    },
+    (r) => {
+      r.sourceFingerprint = "old";
+    },
+    (r) => {
+      r.casesFingerprint = "old";
+    },
+    (r) => {
+      r.claimedQualifiedHosts = ["unobserved-host"];
+    },
+    (r) => {
+      r.nativeHostQualification = "passed";
+    },
+    (r) => {
+      r.limitations = "";
+    },
+  ]) {
+    const admission = admissionFixture();
+    mutate(admission);
+    assert.equal(assessPublicAdmission(admission, current).admitted, false);
   }
 });
