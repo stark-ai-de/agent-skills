@@ -251,7 +251,7 @@ function copyInputs(targetRoot) {
 
 function buildIsolated(root) {
   copyInputs(root);
-  syncPortableProjection({ root, gitRoot: repositoryRoot });
+  syncPortableProjection({ root, gitRoot: repositoryRoot, dependencyRoot: repositoryRoot });
   const identity = pluginIdentity(root);
   const openAi = withOpenAiStage(
     root,

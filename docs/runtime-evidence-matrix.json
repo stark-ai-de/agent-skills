@@ -10,6 +10,43 @@
   "signalValues": ["pass", "fail", "unknown", "not-applicable"],
   "boundaries": [
     {
+      "id": "ssh-management-node-contract",
+      "surfaces": ["package:root:ssh-node", "ci:ssh:node"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "argon2Smoke": "pass",
+            "nodeTestRunnerContract": "fail",
+            "sshLifecycle": "unknown",
+            "crossPlatformHosted": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "argon2Smoke": "pass",
+            "nodeTestRunnerContract": "pass",
+            "sshLifecycle": "pass",
+            "nativeOpenSshTmux": "pass",
+            "crossPlatformHosted": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:ssh",
+        ".github/workflows/ssh-management.yml",
+        "ADR-0067",
+        "ADR-0068",
+        "ADR-0069",
+        "scripts/ssh/artifact.test.mjs"
+      ],
+      "rationale": "Node 24.21.0 passed the local SSH library, API, MCP and native OpenSSH/tmux fixtures. Bun 1.4.2 passes the Node crypto Argon2 smoke but rejects the required node:test invocation under --test. The approved deployable contract is Node 24.18 or newer; repository packaging outside this boundary retains Bun. Native macOS/Windows and hosted results are pending. Canonical SSH lifecycle sources now belong to the independent SSH repository; this boundary qualifies the pinned Node artifact consumer.",
+      "fallbackOrder": ["node"],
+      "revisit": "Reassess a Bun candidate when it preserves the declared test-runner, vault, lifecycle and upstream runtime contracts, or on a Node regression."
+    },
+    {
       "id": "root-javascript-tooling",
       "surfaces": ["package:root:bun-default"],
       "candidates": [

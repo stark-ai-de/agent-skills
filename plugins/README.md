@@ -8,7 +8,7 @@ copies under `plugins/stark-ai-developer/skills/`.
 homemade source file, never inside the generated package. It keeps two jobs as
 fields, not folders:
 
-- membership: `id` (`codex`), `displayName`, `description`, `skills[]`, and
+- membership: `id` (`codex`), `displayName`, `description`, `skills[]`, `mcp[]`, and
   `distributions`
 - plugin identity: `pluginId`, `version`, `listingId`, `submissionType`,
   `publicListingStrategy`, `outputs`, `contractSnapshots`, and `build`
@@ -26,11 +26,11 @@ Canonical skills remain under `skills/<category>/<skill>/`. The `id` and
 install target; `displayName` identifies the public distribution.
 
 Portable Agent Plugins packages and client-native adapters follow
-[ADR-0043](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.short.md) ([Long, canonical](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.long.md) · [Guide](../docs/adrs/0043-package-portable-agent-plugins-and-separate-client-adapters.guide.md)).
-The same validated membership produces three distinct outputs: the portable
+[ADR-0066](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.short.md) ([Long, canonical](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.long.md) · [Guide](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.guide.md)).
+Local MCP sources are canonical workspace packages; `mcp[].targets` explicitly selects their distributions. The same validated membership produces distinct outputs: the portable
 projection under `plugins/stark-ai-developer/`, the OpenAI-native harness-first
 archive under `dist/openai/` from ephemeral adapter staging, and optional
-one-skill standalone archives under `dist/skills/`. Listing copy lives in
+one-skill standalone archives under `dist/skills/`, and a Claude-native local MCP archive under `dist/claude/`. The public OpenAI archive stays skills-only. `pnpm run build:ssh` builds the reusable library and local API; `pnpm run sync:agent-plugin` generates local runtime files without installing dependencies at MCP startup. `pnpm run package:claude-plugin` generates and removes native staging. See [local SSH setup](../README.md#local-ssh-management) for trust, capabilities and lifecycle. Listing copy lives in
 `docs/listing/openai/`. First-publication portal observations live in
 `docs/listing/openai/stark-ai-developer-first-publication.md`. Catalog version
 stays in `package.json`; plugin version stays in this sibling source file.

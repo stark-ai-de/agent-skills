@@ -2,6 +2,13 @@
   "schemaVersion": 1,
   "gates": [
     {
+      "id": "ssh-management",
+      "command": "pnpm run validate:ssh",
+      "owner": ".github/workflows/ssh-management.yml#native",
+      "proof": "Pinned artifact identity, integrity and path safety; standalone daemon/viewer/MCP operation; offline plugin projections. SSH lifecycle and native fixtures belong to stark-ai-de/ssh-manager.",
+      "cadence": "every aggregate run; Linux, macOS and Windows artifact-consumer matrix on matching pull requests and manual dispatch"
+    },
+    {
       "id": "repository-aggregate",
       "command": "pnpm run validate",
       "owner": ".github/workflows/validate.yml#validate",

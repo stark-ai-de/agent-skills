@@ -1,0 +1,36 @@
+name: SSH runtime artifact qualification
+on:
+  pull_request:
+    paths:
+      - "vendor/ssh-manager/**"
+      - "scripts/ssh/**"
+      - "scripts/lib/ssh-runtime-artifact.mjs"
+      - "plugins/stark-ai-developer.source*"
+      - ".github/workflows/ssh-management.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          install: false
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node scripts/ssh/build.mjs
+      - run: node scripts/ssh/test.mjs
+      - name: Generate portable plugin
+        run: node scripts/plugin/sync-agent-plugin.mjs
+      - name: Validate and package native adapters
+        run: |
+          node scripts/plugin/validate-agent-plugin.mjs
+          node scripts/plugin/package-claude-plugin.mjs
+          node scripts/plugin/package-openai-plugin.mjs

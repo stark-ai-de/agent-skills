@@ -22,6 +22,7 @@ import {
   readRepoPackage,
 } from "./release-descriptor.mjs";
 import { writeZipStoreV1 } from "./reproducible-archive.mjs";
+import { copyRuntimeArtifact } from "./ssh-runtime-artifact.mjs";
 
 export const PORTABLE_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 const artifactPaths = pluginArtifactPaths();
@@ -34,6 +35,7 @@ const GENERATED_ROOT_FILES = new Set([
   "README.md",
   "SOURCE-MANIFEST.json",
   "plugin.json",
+  "mcp.json",
 ]);
 const POSIX_SEPARATOR = "/";
 const GENERATED_CACHE_SEGMENTS = new Set(["__pycache__"]);
@@ -225,7 +227,10 @@ function readRootFile(root, fileName) {
 function portableManifest(root) {
   const identity = pluginIdentity(root);
   const listing = readOpenAiListing(root);
-  const description = listing.plugin?.longDescription;
+  const bundle = loadValidatedBundle(root);
+  const description = bundle.mcp?.some((entry) => entry.targets.includes("portable"))
+    ? "Reviewed developer skills and local SSH management: a reusable TypeScript library, authenticated local API, terminal viewer and MCP tools. SSH targets require explicit local credential, host-trust and capability setup."
+    : listing.plugin?.longDescription;
   if (typeof description !== "string" || !description.trim()) {
     throw new Error("listing source plugin.longDescription is required for the portable manifest");
   }
@@ -268,12 +273,16 @@ function generatedReadme({ kind, bundle, root }) {
     kind === "portable"
       ? `Use \`${identity.portableProjection}/\` only with a client that supports the portable Agent Plugins contract.`
       : "Use this OpenAI-native `.codex-plugin` package only with a client that requires that native layout. It is generated at package time and is not a committed repository tree.";
+  const runtimeDescription =
+    kind === "portable" && bundle.mcp?.some((entry) => entry.targets.includes("portable"))
+      ? "It also bundles a local SSH management MCP and background API. Node 24.18 or newer is required. Run `node runtime/cli.mjs help` for local setup. No SSH connection is opened until a specific approved target is requested. Credentials and grants are configured locally; MCP tools cannot grant permissions or submit credentials. State uses the native operating-system user's state directory and remains separate between Windows and WSL. Terminal sessions belong to the daemon, independently of the agent process. No telemetry or analytics is bundled."
+      : "It has no shared backend, bundled MCP server, telemetry or analytics.";
   return `# ${bundle.displayName}
 
 ${projectionName} generated from the explicit \`${PLUGIN_SOURCE_PATH}\` allowlist.
 
-This harness-first package contains ${bundle.skills.length} developer workflows and has no shared backend,
-bundled MCP server, telemetry or analytics. Jev Capability Advisor optionally
+This package contains ${bundle.skills.length} developer workflows. ${runtimeDescription}
+Jev Capability Advisor optionally
 sends supplied task text and public capability cards to TypeSafe using your own
 API key; offline candidate inspection needs no network or credentials.
 Telegram Serverless uses the official CLI for authorized Telegram operations.
@@ -304,6 +313,7 @@ function buildSourceManifest({ root, bundle, kind, manifestFiles }) {
       id: bundle.id,
       displayName: bundle.displayName,
       skills: bundle.skills.map(({ name, source }) => ({ name, source })),
+      mcp: (bundle.mcp ?? []).filter((entry) => entry.targets.includes(kind)),
     },
     treeHash: packageTreeHash(files),
     archiveProfile: identity.archiveProfile,
@@ -311,7 +321,7 @@ function buildSourceManifest({ root, bundle, kind, manifestFiles }) {
   };
 }
 
-function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
+function writePortableStage(root, stage, bundle, { gitRoot = root, dependencyRoot = root } = {}) {
   assertNoUntrackedReleaseInputs(
     gitRoot,
     bundle.skills.map((entry) => entry.source),
@@ -332,6 +342,26 @@ function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
       `skills/${entry.name}`,
       { gitRoot, gitPrefix: entry.source },
     );
+  }
+  if (bundle.mcp?.some((entry) => entry.targets.includes("portable"))) {
+    writeGeneratedFile(
+      path.join(stage, "mcp.json"),
+      canonicalJson({
+        mcpServers: {
+          "ssh-management": { command: "node", args: ["${PLUGIN_ROOT}/runtime/mcp.mjs"] },
+        },
+      }),
+      manifestFiles,
+      "mcp.json",
+    );
+    const runtimeRoot = path.join(stage, "runtime");
+    copyRuntimeArtifact({ root, output: runtimeRoot });
+    for (const entry of enumerateTree(runtimeRoot)) {
+      const relative = `runtime/${entry.relative}`;
+      const bytes = fs.readFileSync(entry.absolute);
+      fs.chmodSync(entry.absolute, 0o644);
+      manifestFiles.push(manifestEntry({ path: relative, bytes, mode: 0o644 }));
+    }
   }
   copyRegularFile(
     readRootFile(root, "LICENSE"),
@@ -538,12 +568,15 @@ export function syncGeneratedProjection({
 export function stagePortableProjection(
   root = process.cwd(),
   target = PORTABLE_TARGET,
-  { gitRoot } = {},
+  { gitRoot, dependencyRoot } = {},
 ) {
   const resolvedRoot = resolveRoot(root);
   const bundle = loadValidatedBundle(resolvedRoot);
   return withStage(resolvedRoot, target, (stage) =>
-    writePortableStage(resolvedRoot, stage, bundle, { gitRoot: gitRoot ?? resolvedRoot }),
+    writePortableStage(resolvedRoot, stage, bundle, {
+      gitRoot: gitRoot ?? resolvedRoot,
+      dependencyRoot: dependencyRoot ?? resolvedRoot,
+    }),
   );
 }
 
@@ -552,11 +585,15 @@ export function syncPortableProjection({
   target = PORTABLE_TARGET,
   check = false,
   gitRoot,
+  dependencyRoot,
 } = {}) {
   const resolvedRoot = resolveRoot(root);
   const bundle = loadValidatedBundle(resolvedRoot);
   const staged = withStage(resolvedRoot, target, (stage) =>
-    writePortableStage(resolvedRoot, stage, bundle, { gitRoot: gitRoot ?? resolvedRoot }),
+    writePortableStage(resolvedRoot, stage, bundle, {
+      gitRoot: gitRoot ?? resolvedRoot,
+      dependencyRoot: dependencyRoot ?? resolvedRoot,
+    }),
   );
   const drift = finishStagedProjection({ ...staged, check });
   return { bundle, drift, target: path.join(resolvedRoot, fromPosix(target)) };
@@ -727,6 +764,12 @@ export function validatePortableProjection({
     const relative = entry.name;
     if (GENERATED_ROOT_FILES.has(relative)) continue;
     if (relative === "skills" && entry.isDirectory()) continue;
+    if (
+      relative === "runtime" &&
+      entry.isDirectory() &&
+      bundle.mcp?.some((mcp) => mcp.targets.includes("portable"))
+    )
+      continue;
     errors.push(`portable projection contains unexpected root entry: ${relative}`);
   }
   const skillsRoot = path.join(targetRoot, "skills");

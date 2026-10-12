@@ -51,6 +51,7 @@ export function membershipFromSource(source) {
     displayName: source.displayName,
     description: source.description,
     skills: source.skills,
+    ...(source.mcp ? { mcp: source.mcp } : {}),
     distributions: source.distributions,
   };
 }

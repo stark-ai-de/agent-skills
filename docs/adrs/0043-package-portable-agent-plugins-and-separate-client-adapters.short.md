@@ -2,7 +2,7 @@
 
 ID: ADR-0043
 Title: Package portable Agent Plugins and separate client adapters
-Status: Accepted
+Status: Superseded
 Date: 2026-08-18
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0066
 Guide verified: 2026-08-26
 Gist: Make Agent Plugins the canonical package projection and generate a separate client adapter only when a target surface cannot consume that projection or requires client-native files.
 

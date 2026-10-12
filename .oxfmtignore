@@ -15,4 +15,10 @@ CHANGELOG.md
 skills/engineering-workflows/drawio-diagrams/references/*.md
 plugins/stark-ai-developer/skills/drawio-diagrams/references/*.md
 plugins/stark-ai-developer/plugin.json
+plugins/stark-ai-developer/SOURCE-MANIFEST.json
+plugins/stark-ai-developer/runtime
+plugins/stark-ai-developer/mcp.json
 docs/listing/openai/requirement-traceability.json
+
+# Reviewed generated producer bytes must retain their pinned identity.
+vendor/ssh-manager/runtime
