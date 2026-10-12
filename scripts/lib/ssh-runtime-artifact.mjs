@@ -39,7 +39,7 @@ export function validateRuntimeArtifact(directory, pin) {
     for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
       const relative = prefix + entry.name;
       if (
-        !/^[a-zA-Z0-9_.\/-]+$/.test(relative) ||
+        !/^[a-zA-Z0-9_./-]+$/.test(relative) ||
         relative.split("/").some((part) => part === "." || part === "..") ||
         relative.length > 256
       )

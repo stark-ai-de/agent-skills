@@ -321,7 +321,7 @@ function buildSourceManifest({ root, bundle, kind, manifestFiles }) {
   };
 }
 
-function writePortableStage(root, stage, bundle, { gitRoot = root, dependencyRoot = root } = {}) {
+function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
   assertNoUntrackedReleaseInputs(
     gitRoot,
     bundle.skills.map((entry) => entry.source),

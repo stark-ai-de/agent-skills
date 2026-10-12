@@ -6,8 +6,8 @@
     "mcp": [
       {
         "artifact": {
-          "manifestSha256": "def7ac584bfd98498d947f72155b0eafa33997e9d34c906db0347b4c5d191e62",
-          "sourceCommit": "876046a46bd03c1cf045992d912c0eca90c3f14c",
+          "manifestSha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18",
+          "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
           "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
           "version": "1.0.0"
         },
@@ -58,7 +58,7 @@
       }
     ]
   },
-  "bundleHash": "13e8eab539a750392ee1dc55c41e14c2d476ff68a53811251f9dc2897f6f9f6d",
+  "bundleHash": "482928f31e27b9620b6c1be4975d2cbe86b5163e575eebeb1ada2304b11148b7",
   "files": [
     {
       "byteLength": 10271,
@@ -88,7 +88,7 @@
       "byteLength": 2128,
       "mode": "0644",
       "path": "runtime/ARTIFACT-MANIFEST.json",
-      "sha256": "def7ac584bfd98498d947f72155b0eafa33997e9d34c906db0347b4c5d191e62"
+      "sha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18"
     },
     {
       "byteLength": 14205,
@@ -2413,5 +2413,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "1a86a874c799d6c8a0cd23a2abe573c748cf609a923fb6906867a991f1db7330"
+  "treeHash": "510354624294a80622f371cabff0507f3f69f945932acdbb0d7f9fa313ce0db2"
 }

@@ -4,7 +4,7 @@
   "managementApiVersion": "v1",
   "nodeMinimum": "24.18.0",
   "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
-  "sourceCommit": "876046a46bd03c1cf045992d912c0eca90c3f14c",
+  "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
   "buildManifestSha256": "377aca315002ad2c368183ffbd39c4da1f158eb33b0d3acf66356dfba347dd5d",
   "files": [
     {

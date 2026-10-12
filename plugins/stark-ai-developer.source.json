@@ -76,8 +76,8 @@
       "artifact": {
         "version": "1.0.0",
         "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
-        "sourceCommit": "876046a46bd03c1cf045992d912c0eca90c3f14c",
-        "manifestSha256": "def7ac584bfd98498d947f72155b0eafa33997e9d34c906db0347b4c5d191e62"
+        "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
+        "manifestSha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18"
       }
     }
   ]

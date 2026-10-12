@@ -177,7 +177,8 @@ test("standalone artifact starts authenticated daemon and viewer without produce
     }, 10000);
     mcp.once("exit", (code) => {
       clearTimeout(timeout);
-      code === 0 ? resolve() : reject(new Error(`MCP failed: ${stderr}`));
+      if (code === 0) resolve();
+      else reject(new Error(`MCP failed: ${stderr}`));
     });
     mcp.once("error", reject);
   });
