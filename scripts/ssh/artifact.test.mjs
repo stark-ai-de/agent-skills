@@ -101,11 +101,17 @@ test("standalone artifact starts authenticated daemon and viewer without produce
       timeout: 20000,
     });
   assert.match(run("help"), /ssh-management start/);
-  t.after(() => {
+  t.after(async () => {
     try {
       run("stop");
     } finally {
-      fs.rmSync(directory, { recursive: true, force: true });
+      // Windows releases the daemon's working directory after the stop response.
+      await fs.promises.rm(directory, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+        retryDelay: 100,
+      });
     }
   });
   const started = JSON.parse(run("start"));
