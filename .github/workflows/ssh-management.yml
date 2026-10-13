@@ -4,14 +4,22 @@ on:
     paths:
       - "vendor/ssh-manager/**"
       - "scripts/ssh/**"
-      - "scripts/lib/ssh-runtime-artifact.mjs"
-      - "scripts/lib/plugin-projections.mjs"
-      - "scripts/lib/release-descriptor.mjs"
-      - "scripts/plugin/package-claude-plugin.mjs"
-      - "scripts/release/verify-supply-chain.mjs"
-      - "scripts/validation/test-local-mcp-projections.mjs"
-      - "scripts/vendor/agent-plugins/**"
+      - "scripts/lib/**"
+      - "scripts/plugin/**"
+      - "scripts/release/**"
+      - "scripts/validation/**"
+      - "scripts/vendor/**"
+      - "skills/**"
       - "plugins/stark-ai-developer.source*"
+      - "docs/listing/openai/**"
+      - "site/public/logo*.png"
+      - "LICENSE"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".bun-version"
+      - ".gitattributes"
+      - ".github/workflows/validate.yml"
       - ".github/workflows/ssh-management.yml"
   workflow_dispatch:
 permissions:
@@ -43,8 +51,12 @@ jobs:
         run: node scripts/validation/test-local-mcp-projections.mjs
       - name: Package Claude-native plugin
         run: node scripts/plugin/package-claude-plugin.mjs
+      - name: Validate Claude archive offline
+        run: node scripts/plugin/validate-claude-plugin.mjs
       - name: Package OpenAI skills-only plugin
         run: node scripts/plugin/package-openai-plugin.mjs
+      - name: Check target configurations and archive contracts
+        run: node scripts/validation/test-mcp-projections.mjs
       - name: Capture Claude archive identity
         run: node scripts/ssh/claude-archive-identity.mjs write dist/claude
       - uses: actions/upload-artifact@v4

@@ -23,7 +23,7 @@ import {
   readRepoPackage,
 } from "./release-descriptor.mjs";
 import { writeZipStoreV1 } from "./reproducible-archive.mjs";
-import { copyRuntimeArtifact } from "./ssh-runtime-artifact.mjs";
+import { copyRuntimeArtifact, validateRuntimeArtifact } from "./ssh-runtime-artifact.mjs";
 
 export const PORTABLE_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 export const PORTABLE_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
@@ -395,20 +395,26 @@ function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
   );
 }
 
-export function writeClaudeStage({ root, stage, bundle = loadValidatedBundle(root) }) {
+export function writeClaudeStage({
+  root,
+  stage,
+  bundle = loadValidatedBundle(root),
+  gitRoot = root,
+}) {
   const identity = pluginIdentity(root);
+  const selected = (bundle.mcp ?? []).filter((entry) => entry.targets.includes("claude"));
   const manifestFiles = [];
   for (const entry of bundle.skills) {
-    writeSkillProjection({ root, stage, entry, manifestFiles });
+    writeSkillProjection({ root, stage, entry, manifestFiles, gitRoot });
   }
   copyRegularFile(
     readRootFile(root, "LICENSE"),
     path.join(stage, "LICENSE"),
     manifestFiles,
     "LICENSE",
-    { gitRoot: root, gitRelative: "LICENSE" },
+    { gitRoot, gitRelative: "LICENSE" },
   );
-  if (bundle.mcp?.some((entry) => entry.targets.includes("claude"))) {
+  if (selected.length) {
     writeRuntimeFiles({ root, stage, manifestFiles });
     writeGeneratedFile(
       path.join(stage, ".mcp.json"),
@@ -424,13 +430,16 @@ export function writeClaudeStage({ root, stage, bundle = loadValidatedBundle(roo
       ".mcp.json",
     );
   }
+  // Claude discovers the wrapped root .mcp.json automatically. A manifest path
+  // would load it again using the different, bare server-map contract.
   writeGeneratedFile(
     path.join(stage, ".claude-plugin/plugin.json"),
     canonicalJson({
       name: identity.name,
       version: identity.version,
-      description:
-        "Developer skills and local SSH management with explicit target trust and capabilities.",
+      description: selected.length
+        ? "Reviewed developer skills and local SSH management MCP tools. SSH targets require explicit local credential, host-trust and capability setup."
+        : readOpenAiListing(root).plugin.longDescription,
       skills: "./skills/",
     }),
     manifestFiles,
@@ -438,7 +447,10 @@ export function writeClaudeStage({ root, stage, bundle = loadValidatedBundle(roo
   );
   writeGeneratedFile(
     path.join(stage, "SOURCE-MANIFEST.json"),
-    canonicalJson(buildSourceManifest({ root, bundle, kind: "claude", manifestFiles })),
+    canonicalJson({
+      ...buildSourceManifest({ root, bundle, kind: "claude", manifestFiles }),
+      mcp: selected,
+    }),
     manifestFiles,
     "SOURCE-MANIFEST.json",
   );
@@ -789,9 +801,20 @@ export function createDirectoryArchive({ sourceRoot, output, archiveRoot = "" })
   return createZipArchive(files, path.resolve(output));
 }
 
+export function validatePortableMcpConfiguration(root, configuration) {
+  const schema = JSON.parse(
+    fs.readFileSync(path.join(root, PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH), "utf8"),
+  );
+  const validator = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  return validator(configuration)
+    ? []
+    : validator.errors.map((error) => `mcp.json${error.instancePath || ""}: ${error.message}`);
+}
+
 export function validatePortableProjection({
   root = process.cwd(),
   target = PORTABLE_TARGET,
+  gitRoot = root,
 } = {}) {
   const resolvedRoot = resolveRoot(root);
   const bundle = loadValidatedBundle(resolvedRoot);
@@ -819,23 +842,21 @@ export function validatePortableProjection({
     errors.push(`portable plugin.json: ${error.message}`);
   }
 
+  const runtime = bundle.mcp?.find((entry) => entry.targets.includes("portable"));
   const mcpPath = path.join(targetRoot, "mcp.json");
-  if (fs.existsSync(mcpPath)) {
+  if (runtime || fs.existsSync(mcpPath)) {
     try {
-      const mcp = JSON.parse(fs.readFileSync(mcpPath, "utf8"));
-      const schema = JSON.parse(
-        fs.readFileSync(path.join(resolvedRoot, PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH), "utf8"),
-      );
-      const validator = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-      if (!validator(mcp)) {
-        errors.push(
-          ...validator.errors.map(
-            (error) => `mcp.json${error.instancePath || ""}: ${error.message}`,
-          ),
-        );
-      }
+      const configuration = JSON.parse(fs.readFileSync(mcpPath, "utf8"));
+      errors.push(...validatePortableMcpConfiguration(resolvedRoot, configuration));
     } catch (error) {
       errors.push(`portable mcp.json: ${error.message}`);
+    }
+  }
+  if (runtime) {
+    try {
+      validateRuntimeArtifact(path.join(targetRoot, "runtime"), runtime.artifact);
+    } catch (error) {
+      errors.push(`portable runtime: ${error.message}`);
     }
   }
 
@@ -886,7 +907,7 @@ export function validatePortableProjection({
   const expectedStage = fs.mkdtempSync(path.join(os.tmpdir(), "portable-validate-"));
   let drift;
   try {
-    writePortableStage(resolvedRoot, expectedStage, bundle, { gitRoot: resolvedRoot });
+    writePortableStage(resolvedRoot, expectedStage, bundle, { gitRoot });
     const expectedManifest = fs.readFileSync(path.join(expectedStage, "SOURCE-MANIFEST.json"));
     const actualManifest = fs.readFileSync(path.join(targetRoot, "SOURCE-MANIFEST.json"));
     if (Buffer.compare(expectedManifest, actualManifest) !== 0) {

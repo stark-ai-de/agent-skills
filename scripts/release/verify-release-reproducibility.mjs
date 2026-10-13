@@ -36,6 +36,7 @@ import {
 } from "../lib/release-subject.mjs";
 import { validateReleaseSubjectDocument } from "../lib/release-subject-validation.mjs";
 import { PLUGIN_SOURCE_PATH, pluginIdentity } from "../lib/release-descriptor.mjs";
+import { withClaudeStage } from "../lib/claude-projection.mjs";
 import { copyTrackedPrefixes } from "../lib/git-index.mjs";
 
 const repositoryRoot = process.cwd();
@@ -282,6 +283,15 @@ function buildIsolated(root) {
   const archives = {
     "portable.zip": portableArchive,
     "openai.zip": openAi.archive,
+    "claude.zip": withClaudeStage(
+      root,
+      ({ stage }) =>
+        createDirectoryArchive({
+          sourceRoot: stage,
+          output: path.join(root, "claude.zip"),
+        }),
+      { gitRoot: repositoryRoot },
+    ),
   };
   const standaloneRoot = path.join(root, STANDALONE_TARGET);
   fs.mkdirSync(standaloneRoot, { recursive: true, mode: 0o755 });

@@ -24,15 +24,18 @@ function run(script, args = []) {
 try {
   const portableArchive = path.join(stage, "portable.zip");
   const openAiArchive = path.join(stage, "openai.zip");
+  const claudeArchive = path.join(stage, "claude.zip");
   const standaloneOutput = path.join(stage, "skills");
 
   run("package-agent-plugin.mjs", ["--root", root, "--output", portableArchive]);
   run("package-openai-plugin.mjs", ["--root", root, "--output", openAiArchive]);
+  run("package-claude-plugin.mjs", ["--root", root, "--output", claudeArchive]);
+  run("validate-claude-plugin.mjs", ["--root", root, "--archive", claudeArchive]);
   run("package-standalone-skills.mjs", ["--root", root, "--output", standaloneOutput]);
   run("validate-openai-submission.mjs", ["--root", root, "--archive", openAiArchive]);
   run("validate-standalone-skills.mjs", ["--root", root, "--output", standaloneOutput]);
 
-  console.log("Validated portable, OpenAI, and standalone archives in an isolated stage.");
+  console.log("Validated portable, OpenAI, Claude, and standalone archives in an isolated stage.");
 } catch (error) {
   console.error(`Archive validation failed: ${error.message}`);
   process.exitCode = 1;

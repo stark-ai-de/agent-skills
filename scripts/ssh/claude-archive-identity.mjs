@@ -68,7 +68,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         ? writeClaudeArchiveIdentity(directory)
         : compareClaudeArchiveIdentities(directory);
     const label =
-      operation === "compare" ? "Three-platform Claude archive verified" : "Claude archive identity";
+      operation === "compare"
+        ? "Three-platform Claude archive verified"
+        : "Claude archive identity";
     console.log(`${label}: ${identity.sha256}`);
   } catch (error) {
     console.error(error.message);

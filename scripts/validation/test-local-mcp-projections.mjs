@@ -172,9 +172,12 @@ try {
       const projected = path.join(portable, "runtime/mcp.mjs");
       const original = fs.readFileSync(projected);
       fs.appendFileSync(projected, "tampered");
-      const rejectedProjection = verifySupplyChain();
-      assert.notEqual(rejectedProjection.status, 0);
-      assert.match(rejectedProjection.stderr, /Runtime projection differs from pinned artifact/);
+      const projectionErrors = validatePortableProjection({ root: repository }).errors;
+      assert.ok(projectionErrors.some((error) => error.includes("file digest mismatch")));
+      // Supply-chain verification owns the imported artifact; output integrity
+      // belongs to the selected projection's validator.
+      const verifiedSource = verifySupplyChain();
+      assert.equal(verifiedSource.status, 0, verifiedSource.stderr || verifiedSource.stdout);
       fs.writeFileSync(projected, original);
     }
   }
@@ -190,8 +193,14 @@ try {
     writeClaudeArchiveIdentity(directory);
   }
   const expectedIdentity = compareClaudeArchiveIdentities(identities);
-  const windowsIdentity = path.join(identities, "ssh-claude-identity-Windows/archive-identity.json");
-  fs.writeFileSync(windowsIdentity, JSON.stringify({ ...expectedIdentity, sha256: "0".repeat(64) }));
+  const windowsIdentity = path.join(
+    identities,
+    "ssh-claude-identity-Windows/archive-identity.json",
+  );
+  fs.writeFileSync(
+    windowsIdentity,
+    JSON.stringify({ ...expectedIdentity, sha256: "0".repeat(64) }),
+  );
   assert.throws(
     () => compareClaudeArchiveIdentities(identities),
     /differs between Linux and Windows/,

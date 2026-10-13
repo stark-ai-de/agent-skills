@@ -302,7 +302,7 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: 📦 Package zip-store-v1 archives
-        run: bun exec "pnpm run package:agent-plugin && pnpm run package:openai-plugin"
+        run: bun exec "pnpm run package:agent-plugin && pnpm run package:openai-plugin && pnpm run package:claude-plugin"
 
       - name: 🧾 Report archive identity
         run: bun --bun scripts/release/report-archive-identity.mjs

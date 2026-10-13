@@ -107,7 +107,8 @@ pnpm run verify:supply-chain
 against its colocated schema and the Node/Bun/pnpm pins. `validate:contract-snapshots`
 checks the dated snapshots selected by that source file. `validate:traceability` fails when
 `docs/listing/openai/requirement-traceability.json` is stale.
-`verify:supply-chain` inventories bundled licenses and lockfile packages; signed
+`verify:supply-chain` verifies the pinned runtime artifact and inventories its dependency
+licenses independently of output target selection, along with bundled skills and lockfile packages; signed
 release-tag provenance remains a publication gate.
 
 Synchronize/check and validate the committed portable projection:
@@ -121,8 +122,13 @@ Edit bundled skills only under `skills/<category>/<skill>/`. Do not hand-edit
 `plugins/stark-ai-developer/`. After changing a bundled skill or
 `plugins/stark-ai-developer.source.json`, run `pnpm run sync:agent-plugin`.
 `validate:projections` includes `sync-agent-plugin --check` and fails on drift.
-The same command also regenerates `.agents/plugins/marketplace.json` from
-`plugins/stark-ai-developer.source.json` and fails `--check` when that file drifts.
+It validates actual portable MCP configuration against the pinned official schema,
+checks each selected projection's full runtime inventory against the artifact pin,
+and exercises portable-only, Claude-only, both-target and no-MCP configurations.
+Claude staging uses canonical inputs directly. OpenAI remains skills-only throughout.
+The MCP schema provenance and byte checksum are part of `validate:contract-snapshots`.
+`sync:agent-plugin` also regenerates `.agents/plugins/marketplace.json` from
+`plugins/stark-ai-developer.source.json`; its `--check` mode fails when that file drifts.
 
 Generate and validate the ephemeral OpenAI adapter independently:
 
@@ -131,6 +137,16 @@ pnpm run validate:openai-plugin
 ```
 
 Build and inspect release archives, including standalone skill archives:
+
+Claude also has a separately callable offline check:
+`pnpm run package:claude-plugin` followed by `pnpm run validate:claude-plugin`.
+Both accept `--root`; the packager accepts `--output` and the validator `--archive`.
+Claude source manifests record file hashes, Git-normalized modes, tree hash and
+archive profile. Two isolated builds cover portable, OpenAI, Claude and standalone
+archives; platform reports must include all three plugin archives.
+Native `claude plugin validate` on the extracted final ZIP remains a manual merge
+gate. Record CLI version, OS, PR commit, ZIP SHA-256, exit code and warnings;
+offline checks and platform ZIP identity do not replace this evidence.
 
 ```bash
 pnpm run validate:archives
@@ -144,6 +160,7 @@ pnpm run validate:release-proof
 and `verify:release-reproducibility` use disposable temporary directories and
 do not rewrite committed repository artifacts. OpenAI adapter packaging stages
 a native `.codex-plugin` tree only long enough to validate and archive it.
+Claude similarly uses a disposable `.claude-plugin` stage, independent of portable output.
 Archives use the `zip-store-v1` STORE-only profile. Isolated OpenAI-adapter
 marketplace fixtures are generated with `pnpm run generate:openai-marketplace-fixture`
 and must not rewrite `.agents/plugins/marketplace.json`.
@@ -292,7 +309,7 @@ pnpm run release:validate -- --base-ref origin/main
 - Animated README Logo validation checks the `audit`/`create`/`transform`/`animate` contract, required motion/delivery artifacts, provider and tooling gates, runtime fixtures, and deterministic eval assertions.
 - SkillOpt setup validation (`pnpm run validate:skillopt`, not in the local aggregate) checks helper `--help` contracts, adapter template syntax, mode config contracts, benchmark hard-assertion coverage, and accidental private payload leakage.
 - Plugin-source validation treats `plugins/stark-ai-developer.source.schema.json` as the authoritative closed input schema, checks the exact six-skill Codex allowlist, normalized source boundaries, README command tokens, routing declarations, and category-inference rejection.
-- Projection validation checks the committed portable Agent Plugins schema, generated root shape, byte-identical canonical skill trees, symlink/special-file rejection, and deterministic source manifests. OpenAI-native adapter and archive proof is independent: `validate:openai-plugin` stages a `.codex-plugin` tree only long enough to validate it, and `validate:archives` plus `verify:release-reproducibility` prove the skills-only ZIP, standalone skill archives, and two-build `zip-store-v1` checksums. Those adapter and archive checks are not part of the local `pnpm run validate` aggregate.
+- Projection validation checks the committed portable Agent Plugins schema, generated root shape, byte-identical canonical skill trees, symlink/special-file rejection, and deterministic source manifests. OpenAI-native adapter and archive proof is independent: `validate:openai-plugin` stages a `.codex-plugin` tree only long enough to validate it, and `validate:archives` plus `verify:release-reproducibility` prove the skills-only OpenAI ZIP, target-selected Claude ZIP, standalone skill archives, and two-build `zip-store-v1` checksums. The full `validate:archives` and `verify:release-reproducibility` gates are separate from the local `pnpm run validate` aggregate; target-configuration fixtures run under `validate:projections`.
 - Listing and marketplace validation checks metadata limits, safe HTTPS URLs, asset dimensions, brand-color contrast, routing fidelity, local `./` source paths, no-auth marketplace semantics, and explicit non-public terminology.
 
 Repository CLIs live under domain folders: `scripts/catalog/` (skills, ADRs, scaffolding), `scripts/plugin/` (projections, listing, OpenAI, evals), `scripts/release/` (versioning, archives, post-release), and `scripts/repo/` (lint, smoke, script syntax, traceability). Shared modules stay in `scripts/lib/`. Pinned schemas stay in `scripts/vendor/`. Skill-specific maintainer implementations and their tests live under `scripts/validation/<area>/`, shared validation helpers under `scripts/validation/lib/`, and installable runtime helpers remain inside their owning skill directory. Prefer `pnpm run` names over raw paths. This preserves the runtime-payload separation defined by [ADR-0007](adrs/0007-keep-skill-evals-outside-runtime-payload.short.md) ([Long, canonical](adrs/0007-keep-skill-evals-outside-runtime-payload.long.md) · [Guide](adrs/0007-keep-skill-evals-outside-runtime-payload.guide.md)).
@@ -302,7 +319,7 @@ Repository CLIs live under domain folders: `scripts/catalog/` (skills, ADRs, sca
 See the [GitHub Actions workflow list](publishing.md#github-actions-workflows) for
 the displayed names, responsibilities, and triggers.
 
-The `✅ Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. Checkout is shallow; pull requests fetch only the base commit needed for release-impact diffs. It runs `pnpm run validate`, then `pnpm run validate:archives` and the shared reproducibility script through `.github/actions/build-release-subjects`; on a successful `main` push it uploads `openai.zip`, `portable.zip`, and `release-subject.json` as three direct, byte-preserved artifacts for `Publish Release`. It then runs `pnpm run format:check`, `pnpm run lint`, `pnpm dlx skills@1.5.23 add ./skills --list`, and `pnpm run smoke:install`. A separate `archive-identity` matrix pins Git to LF checkouts (`core.autocrlf=false`), packages `zip-store-v1` archives on Linux, macOS, and Windows, and compares SHA-256 values. Repository `.gitattributes` also sets `* text=auto eol=lf` so Windows working trees match Git blobs. `pnpm run validate` includes actionlint for GitHub Actions workflows, the Astro site build, `validate:network-endpoints`, release-descriptor, contract-snapshot, traceability, and supply-chain gates. The live ChatGPT directory fetch is part of neither the local aggregate nor hosted `Validate`. Publish does not rerun local release packaging. OpenAI adapter generation is not part of the local aggregate. On pull requests, the impact contract rejects missing component bumps and partial or over-broad generated release PRs.
+The `✅ Validate` workflow runs on pushes to `main`, pull requests, and manual dispatch. Checkout is shallow; pull requests fetch only the base commit needed for release-impact diffs. It runs `pnpm run validate`, then `pnpm run validate:archives` and the shared reproducibility script through `.github/actions/build-release-subjects`; on a successful `main` push it uploads `openai.zip`, `portable.zip`, and `release-subject.json` as three direct, byte-preserved artifacts for `Publish Release`. It then runs `pnpm run format:check`, `pnpm run lint`, `pnpm dlx skills@1.5.23 add ./skills --list`, and `pnpm run smoke:install`. A separate `archive-identity` matrix pins Git to LF checkouts (`core.autocrlf=false`), packages portable, OpenAI and Claude `zip-store-v1` archives on Linux, macOS, and Windows, and requires a complete matching SHA-256 and byte-size report from each platform. Claude is validation-only here; the published release-subject artifact set remains OpenAI and portable. Repository `.gitattributes` also sets `* text=auto eol=lf` so Windows working trees match Git blobs. `pnpm run validate` includes actionlint for GitHub Actions workflows, the Astro site build, `validate:network-endpoints`, release-descriptor, contract-snapshot, traceability, and supply-chain gates. The live ChatGPT directory fetch is part of neither the local aggregate nor hosted `Validate`. Publish does not rerun local release packaging. The local aggregate exercises temporary native packages through projection fixtures; full archive and reproducibility gates remain separate. On pull requests, the impact contract rejects missing component bumps and partial or over-broad generated release PRs.
 
 `pnpm run smoke:fingerprint` reads the current worktree projection of `git ls-files --cached --others --exclude-standard` without creating a copy or changing repository state. Run it immediately before and after broader gates when a receipt must bind those gates to exact candidate bytes; both invocations must report the same digest. `pnpm run smoke:install` uses the identical projection and emits the fingerprint of the bytes it actually copied. Indexed paths missing from the worktree are skipped, while ignored private paths and dependency/build/temp roots are explicitly denied. The focused contract test in `pnpm run validate:scripts` proves digest stability independent of creation order; digest changes for content, path, permission-mode, and candidate-set changes; copy/fingerprint equality; ignored-path exclusion; read-only repository behavior; parent/leaf symlink rejection before any destination appears; and exact CLI skill-set enforcement. A network-restricted local validation may set `SKILLS_SMOKE_CLI=/absolute/path/to/a-preinstalled-skills-cli` to exercise the same discovery and installation assertions without fetching executable code; the override must resolve to an existing regular executable file. `SKILLS_SMOKE_FORCE_TTY`, when configured, accepts only `0` or `1`. Older trusted CLIs that suppress captured output may set it to `1`; this requires the explicit CLI path and the local `script` utility. Both overrides are validated before a temporary directory is created, and every later failure unwinds through the temporary-copy cleanup. Record the candidate digest, CLI version, and both overrides in the validation receipt; CI and release gates leave the overrides unset.
 
