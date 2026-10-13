@@ -1,10 +1,12 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "ssh-management": {
       "args": [
         "${PLUGIN_ROOT}/runtime/mcp.mjs"
       ],
-      "command": "node"
+      "command": "node",
+      "type": "stdio"
     }
   }
 }

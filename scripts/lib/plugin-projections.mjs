@@ -14,6 +14,7 @@ import {
 import { readOpenAiListing } from "./openai-listing.mjs";
 import {
   PINNED_AGENT_PLUGINS_SCHEMA_PATH,
+  PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH,
   PLUGIN_SOURCE_PATH,
   packageAuthorName,
   pluginArtifactPaths,
@@ -25,6 +26,7 @@ import { writeZipStoreV1 } from "./reproducible-archive.mjs";
 import { copyRuntimeArtifact } from "./ssh-runtime-artifact.mjs";
 
 export const PORTABLE_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
+export const PORTABLE_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 const artifactPaths = pluginArtifactPaths();
 export const PORTABLE_TARGET = artifactPaths.portableTarget;
 export const RETIRED_OPENAI_ADAPTER_TARGET = artifactPaths.retiredOpenAiAdapter;
@@ -321,6 +323,17 @@ function buildSourceManifest({ root, bundle, kind, manifestFiles }) {
   };
 }
 
+function writeRuntimeFiles({ root, stage, manifestFiles }) {
+  const runtimeRoot = path.join(stage, "runtime");
+  copyRuntimeArtifact({ root, output: runtimeRoot });
+  for (const entry of enumerateTree(runtimeRoot)) {
+    const relative = `runtime/${entry.relative}`;
+    const bytes = fs.readFileSync(entry.absolute);
+    fs.chmodSync(entry.absolute, 0o644);
+    manifestFiles.push(manifestEntry({ path: relative, bytes, mode: 0o644 }));
+  }
+}
+
 function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
   assertNoUntrackedReleaseInputs(
     gitRoot,
@@ -347,21 +360,19 @@ function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
     writeGeneratedFile(
       path.join(stage, "mcp.json"),
       canonicalJson({
+        $schema: PORTABLE_MCP_SCHEMA,
         mcpServers: {
-          "ssh-management": { command: "node", args: ["${PLUGIN_ROOT}/runtime/mcp.mjs"] },
+          "ssh-management": {
+            type: "stdio",
+            command: "node",
+            args: ["${PLUGIN_ROOT}/runtime/mcp.mjs"],
+          },
         },
       }),
       manifestFiles,
       "mcp.json",
     );
-    const runtimeRoot = path.join(stage, "runtime");
-    copyRuntimeArtifact({ root, output: runtimeRoot });
-    for (const entry of enumerateTree(runtimeRoot)) {
-      const relative = `runtime/${entry.relative}`;
-      const bytes = fs.readFileSync(entry.absolute);
-      fs.chmodSync(entry.absolute, 0o644);
-      manifestFiles.push(manifestEntry({ path: relative, bytes, mode: 0o644 }));
-    }
+    writeRuntimeFiles({ root, stage, manifestFiles });
   }
   copyRegularFile(
     readRootFile(root, "LICENSE"),
@@ -379,6 +390,55 @@ function writePortableStage(root, stage, bundle, { gitRoot = root } = {}) {
   writeGeneratedFile(
     path.join(stage, "SOURCE-MANIFEST.json"),
     canonicalJson(buildSourceManifest({ root, bundle, kind: "portable", manifestFiles })),
+    manifestFiles,
+    "SOURCE-MANIFEST.json",
+  );
+}
+
+export function writeClaudeStage({ root, stage, bundle = loadValidatedBundle(root) }) {
+  const identity = pluginIdentity(root);
+  const manifestFiles = [];
+  for (const entry of bundle.skills) {
+    writeSkillProjection({ root, stage, entry, manifestFiles });
+  }
+  copyRegularFile(
+    readRootFile(root, "LICENSE"),
+    path.join(stage, "LICENSE"),
+    manifestFiles,
+    "LICENSE",
+    { gitRoot: root, gitRelative: "LICENSE" },
+  );
+  if (bundle.mcp?.some((entry) => entry.targets.includes("claude"))) {
+    writeRuntimeFiles({ root, stage, manifestFiles });
+    writeGeneratedFile(
+      path.join(stage, ".mcp.json"),
+      canonicalJson({
+        mcpServers: {
+          "ssh-management": {
+            command: "node",
+            args: ["${CLAUDE_PLUGIN_ROOT}/runtime/mcp.mjs"],
+          },
+        },
+      }),
+      manifestFiles,
+      ".mcp.json",
+    );
+  }
+  writeGeneratedFile(
+    path.join(stage, ".claude-plugin/plugin.json"),
+    canonicalJson({
+      name: identity.name,
+      version: identity.version,
+      description:
+        "Developer skills and local SSH management with explicit target trust and capabilities.",
+      skills: "./skills/",
+    }),
+    manifestFiles,
+    ".claude-plugin/plugin.json",
+  );
+  writeGeneratedFile(
+    path.join(stage, "SOURCE-MANIFEST.json"),
+    canonicalJson(buildSourceManifest({ root, bundle, kind: "claude", manifestFiles })),
     manifestFiles,
     "SOURCE-MANIFEST.json",
   );
@@ -757,6 +817,26 @@ export function validatePortableProjection({
     }
   } catch (error) {
     errors.push(`portable plugin.json: ${error.message}`);
+  }
+
+  const mcpPath = path.join(targetRoot, "mcp.json");
+  if (fs.existsSync(mcpPath)) {
+    try {
+      const mcp = JSON.parse(fs.readFileSync(mcpPath, "utf8"));
+      const schema = JSON.parse(
+        fs.readFileSync(path.join(resolvedRoot, PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH), "utf8"),
+      );
+      const validator = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+      if (!validator(mcp)) {
+        errors.push(
+          ...validator.errors.map(
+            (error) => `mcp.json${error.instancePath || ""}: ${error.message}`,
+          ),
+        );
+      }
+    } catch (error) {
+      errors.push(`portable mcp.json: ${error.message}`);
+    }
   }
 
   const expectedRoots = new Set(bundle.skills.map((entry) => `skills/${entry.name}`));

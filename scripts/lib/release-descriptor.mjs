@@ -19,6 +19,8 @@ export const PLUGIN_SOURCE_PATH = "plugins/stark-ai-developer.source.json";
 export const PLUGIN_SOURCE_SCHEMA_PATH = "plugins/stark-ai-developer.source.schema.json";
 export const PINNED_AGENT_PLUGINS_SCHEMA_PATH =
   "scripts/vendor/agent-plugins/1.0.0/plugin.schema.json";
+export const PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH =
+  "scripts/vendor/agent-plugins/1.0.0/mcp.schema.json";
 
 function resolveRoot(root = moduleRoot) {
   return path.resolve(root);

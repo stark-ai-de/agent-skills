@@ -5,6 +5,11 @@ on:
       - "vendor/ssh-manager/**"
       - "scripts/ssh/**"
       - "scripts/lib/ssh-runtime-artifact.mjs"
+      - "scripts/lib/plugin-projections.mjs"
+      - "scripts/lib/release-descriptor.mjs"
+      - "scripts/plugin/package-claude-plugin.mjs"
+      - "scripts/validation/test-local-mcp-projections.mjs"
+      - "scripts/vendor/agent-plugins/**"
       - "plugins/stark-ai-developer.source*"
       - ".github/workflows/ssh-management.yml"
   workflow_dispatch:
@@ -32,5 +37,6 @@ jobs:
       - name: Validate and package native adapters
         run: |
           node scripts/plugin/validate-agent-plugin.mjs
+          node scripts/validation/test-local-mcp-projections.mjs
           node scripts/plugin/package-claude-plugin.mjs
           node scripts/plugin/package-openai-plugin.mjs

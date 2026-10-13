@@ -26,11 +26,29 @@ Canonical skills remain under `skills/<category>/<skill>/`. The `id` and
 install target; `displayName` identifies the public distribution.
 
 Portable Agent Plugins packages and client-native adapters follow
-[ADR-0066](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.short.md) ([Long, canonical](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.long.md) · [Guide](../docs/adrs/0066-package-local-mcp-runtimes-with-target-specific-projections.guide.md)).
-Local MCP sources are canonical workspace packages; `mcp[].targets` explicitly selects their distributions. The same validated membership produces distinct outputs: the portable
-projection under `plugins/stark-ai-developer/`, the OpenAI-native harness-first
-archive under `dist/openai/` from ephemeral adapter staging, and optional
-one-skill standalone archives under `dist/skills/`, and a Claude-native local MCP archive under `dist/claude/`. The public OpenAI archive stays skills-only. `pnpm run build:ssh` builds the reusable library and local API; `pnpm run sync:agent-plugin` generates local runtime files without installing dependencies at MCP startup. `pnpm run package:claude-plugin` generates and removes native staging. See [local SSH setup](../README.md#local-ssh-management) for trust, capabilities and lifecycle. Listing copy lives in
+[ADR-0070](../docs/adrs/0070-consume-pinned-ssh-runtime-artifacts-from-an-independent-repository.short.md) ([Long, canonical](../docs/adrs/0070-consume-pinned-ssh-runtime-artifacts-from-an-independent-repository.long.md) · [Guide](../docs/adrs/0070-consume-pinned-ssh-runtime-artifacts-from-an-independent-repository.guide.md)).
+Canonical SSH sources belong to
+[`stark-ai-de/ssh-manager`](https://github.com/stark-ai-de/ssh-manager).
+This repository consumes a reviewed runtime artifact under
+`vendor/ssh-manager/runtime`, pinned by producer revision, runtime version and
+manifest digest. `mcp[].targets` explicitly selects its distributions. The same
+validated membership produces the portable projection under
+`plugins/stark-ai-developer/`, the OpenAI-native harness-first archive under
+`dist/openai/` from ephemeral adapter staging, optional one-skill standalone
+archives under `dist/skills/`, and a Claude-native local MCP archive under
+`dist/claude/`. The public OpenAI archive stays skills-only.
+
+To update the runtime, review the producer revision and artifact manifest digest,
+then run `node scripts/ssh/import-artifact.mjs <runtime-directory> <reviewed-pin.json>`.
+The pin JSON contains `version`, `sourceRepository`, `sourceCommit` and
+`manifestSha256`; import verifies the complete payload before replacing it.
+`pnpm run build:ssh` verifies and copies the pinned artifact rather than rebuilding
+producer sources. Run `pnpm run sync:agent-plugin` to regenerate the portable
+projection, then `pnpm run validate:ssh` and `pnpm run validate:projections`.
+Generation is offline and installs no dependencies at MCP startup.
+`pnpm run package:claude-plugin` independently copies the selected runtime and
+removes its native staging. See [local SSH setup](../README.md#local-ssh-management)
+for trust, capabilities and lifecycle. Listing copy lives in
 `docs/listing/openai/`. First-publication portal observations live in
 `docs/listing/openai/stark-ai-developer-first-publication.md`. Catalog version
 stays in `package.json`; plugin version stays in this sibling source file.
