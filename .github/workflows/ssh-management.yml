@@ -8,6 +8,7 @@ on:
       - "scripts/lib/plugin-projections.mjs"
       - "scripts/lib/release-descriptor.mjs"
       - "scripts/plugin/package-claude-plugin.mjs"
+      - "scripts/release/verify-supply-chain.mjs"
       - "scripts/validation/test-local-mcp-projections.mjs"
       - "scripts/vendor/agent-plugins/**"
       - "plugins/stark-ai-developer.source*"
@@ -32,11 +33,39 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: node scripts/ssh/build.mjs
       - run: node scripts/ssh/test.mjs
-      - name: Generate portable plugin
-        run: node scripts/plugin/sync-agent-plugin.mjs
-      - name: Validate and package native adapters
-        run: |
-          node scripts/plugin/validate-agent-plugin.mjs
-          node scripts/validation/test-local-mcp-projections.mjs
-          node scripts/plugin/package-claude-plugin.mjs
-          node scripts/plugin/package-openai-plugin.mjs
+      - name: Verify committed portable plugin
+        run: node scripts/plugin/sync-agent-plugin.mjs --check
+      # Keep native commands separate: PowerShell otherwise returns only the
+      # last native exit code, potentially masking an earlier adapter failure.
+      - name: Validate portable plugin
+        run: node scripts/plugin/validate-agent-plugin.mjs
+      - name: Test local MCP projections
+        run: node scripts/validation/test-local-mcp-projections.mjs
+      - name: Package Claude-native plugin
+        run: node scripts/plugin/package-claude-plugin.mjs
+      - name: Package OpenAI skills-only plugin
+        run: node scripts/plugin/package-openai-plugin.mjs
+      - name: Capture Claude archive identity
+        run: node scripts/ssh/claude-archive-identity.mjs write dist/claude
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ssh-claude-identity-${{ runner.os }}
+          path: dist/claude/archive-identity.json
+          if-no-files-found: error
+          retention-days: 7
+  claude-reproducibility:
+    needs: native
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24.18.0
+          install: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ssh-claude-identity-*
+          path: dist/claude-identities
+      - name: Compare all three native Claude archives
+        run: node scripts/ssh/claude-archive-identity.mjs compare dist/claude-identities

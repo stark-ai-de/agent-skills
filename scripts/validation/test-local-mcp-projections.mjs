@@ -6,6 +6,11 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { unzipSync } from "fflate";
+import { load as parseYaml } from "js-yaml";
+import {
+  compareClaudeArchiveIdentities,
+  writeClaudeArchiveIdentity,
+} from "../ssh/claude-archive-identity.mjs";
 
 import {
   createDirectoryArchive,
@@ -59,6 +64,7 @@ try {
   );
   const sourcePath = path.join(repository, PLUGIN_SOURCE_PATH);
   const source = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+  const membership = structuredClone(source.mcp);
   const identity = pluginIdentity(repository);
   const portable = path.join(repository, identity.portableProjection);
   const packageScript = path.join(root, "scripts/plugin/package-claude-plugin.mjs");
@@ -68,12 +74,23 @@ try {
       encoding: "utf8",
     });
 
-  for (const targets of [["portable", "claude"], ["claude"], ["portable"]]) {
-    source.mcp[0].targets = targets;
+  const verifySupplyChain = () =>
+    spawnSync(
+      process.execPath,
+      [path.join(root, "scripts/release/verify-supply-chain.mjs"), "--root", repository],
+      { cwd: repository, encoding: "utf8", timeout: 30000 },
+    );
+
+  for (const targets of [["portable", "claude"], ["claude"], ["portable"], []]) {
+    source.mcp = targets.length ? [{ ...membership[0], targets }] : [];
+    const label = targets.join("-") || "skills-only";
     fs.writeFileSync(sourcePath, JSON.stringify(source, null, 2) + "\n");
     syncPortableProjection({ root: repository });
     assert.deepEqual(validatePortableProjection({ root: repository }).errors, []);
     assert.equal(fs.existsSync(path.join(portable, "runtime")), targets.includes("portable"));
+    assert.equal(fs.existsSync(path.join(portable, "mcp.json")), targets.includes("portable"));
+    const supplyChain = verifySupplyChain();
+    assert.equal(supplyChain.status, 0, supplyChain.stderr || supplyChain.stdout);
 
     if (targets.includes("portable")) {
       const mcpPath = path.join(portable, "mcp.json");
@@ -92,7 +109,7 @@ try {
       }
     }
 
-    const output = path.join(fixture, `claude-${targets.join("-")}.zip`);
+    const output = path.join(fixture, `claude-${label}.zip`);
     const packaged = packageClaude(output);
     assert.equal(packaged.status, 0, packaged.stderr || packaged.stdout);
     const archive = fs.readFileSync(output);
@@ -133,16 +150,69 @@ try {
     const executable = manifest.files.filter((file) => file.mode === "0755");
     assert.ok(executable.length > 0, "the Claude archive must preserve executable skill scripts");
 
-    const stage = path.join(fixture, `stage-${targets.join("-")}`);
+    const stage = path.join(fixture, `stage-${label}`);
     writeClaudeStage({ root: repository, stage, bundle: loadValidatedBundle(repository) });
     // Simulate a filesystem that loses Unix execute bits, as native Windows does.
     for (const file of enumerateTree(stage)) fs.chmodSync(file.absolute, 0o644);
-    const normalizedOutput = path.join(fixture, `normalized-${targets.join("-")}.zip`);
+    const normalizedOutput = path.join(fixture, `normalized-${label}.zip`);
     createDirectoryArchive({ sourceRoot: stage, output: normalizedOutput });
     assert.deepEqual(fs.readFileSync(normalizedOutput), archive);
+
+    if (targets.includes("portable")) {
+      const projected = path.join(portable, "runtime/mcp.mjs");
+      const original = fs.readFileSync(projected);
+      fs.appendFileSync(projected, "tampered");
+      const rejectedProjection = verifySupplyChain();
+      assert.notEqual(rejectedProjection.status, 0);
+      assert.match(rejectedProjection.stderr, /Runtime projection differs from pinned artifact/);
+      fs.writeFileSync(projected, original);
+    }
   }
 
-  source.mcp[0].targets = ["claude"];
+  const identities = path.join(fixture, "identities");
+  for (const platform of ["Linux", "macOS", "Windows"]) {
+    const directory = path.join(identities, `ssh-claude-identity-${platform}`);
+    fs.mkdirSync(directory, { recursive: true });
+    fs.copyFileSync(
+      path.join(fixture, "claude-portable-claude.zip"),
+      path.join(directory, "candidate.zip"),
+    );
+    writeClaudeArchiveIdentity(directory);
+  }
+  const expectedIdentity = compareClaudeArchiveIdentities(identities);
+  const windowsIdentity = path.join(
+    identities,
+    "ssh-claude-identity-Windows/archive-identity.json",
+  );
+  fs.writeFileSync(
+    windowsIdentity,
+    JSON.stringify({ ...expectedIdentity, sha256: "0".repeat(64) }),
+  );
+  assert.throws(
+    () => compareClaudeArchiveIdentities(identities),
+    /differs between Linux and Windows/,
+  );
+  fs.writeFileSync(windowsIdentity, JSON.stringify(expectedIdentity));
+  fs.unlinkSync(path.join(identities, "ssh-claude-identity-macOS/archive-identity.json"));
+  assert.throws(() => compareClaudeArchiveIdentities(identities), /ENOENT/);
+
+  const workflow = parseYaml(
+    fs.readFileSync(path.join(root, ".github/workflows/ssh-management.yml"), "utf8"),
+  );
+  for (const script of [
+    "scripts/plugin/validate-agent-plugin.mjs",
+    "scripts/validation/test-local-mcp-projections.mjs",
+    "scripts/plugin/package-claude-plugin.mjs",
+    "scripts/plugin/package-openai-plugin.mjs",
+  ]) {
+    assert.equal(
+      workflow.jobs.native.steps.filter((step) => step.run?.trim() === `node ${script}`).length,
+      1,
+      `${script} must occupy its own fail-fast CI step`,
+    );
+  }
+
+  source.mcp = [{ ...membership[0], targets: ["claude"] }];
   fs.writeFileSync(sourcePath, JSON.stringify(source, null, 2) + "\n");
   syncPortableProjection({ root: repository });
   fs.appendFileSync(path.join(repository, "vendor/ssh-manager/runtime/mcp.mjs"), "tampered");
@@ -150,6 +220,9 @@ try {
   assert.notEqual(rejected.status, 0);
   assert.match(rejected.stderr, /file digest mismatch/);
   assert.equal(fs.existsSync(path.join(fixture, "tampered.zip")), false);
+  const rejectedArtifact = verifySupplyChain();
+  assert.notEqual(rejectedArtifact.status, 0);
+  assert.match(rejectedArtifact.stderr, /file digest mismatch/);
 } finally {
   fs.rmSync(fixture, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }

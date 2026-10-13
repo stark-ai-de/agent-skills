@@ -73,9 +73,13 @@ try {
     const runtimeRoot = path.join(root, identity.portableProjection, "runtime");
     for (const [relative, bytes] of verified.files) {
       inventory.push({ path: `${entry.source}/${relative}`, license: "SEE NOTICE.txt" });
-      const projected = path.join(runtimeRoot, relative);
-      if (!fs.existsSync(projected) || !fs.readFileSync(projected).equals(bytes))
-        errors.push(`[SEC-001] Runtime projection differs from pinned artifact: ${relative}`);
+      // Claude-only membership has no portable runtime. Still verify and
+      // inventory the pinned artifact, but compare only selected projections.
+      if (entry.targets.includes("portable")) {
+        const projected = path.join(runtimeRoot, relative);
+        if (!fs.existsSync(projected) || !fs.readFileSync(projected).equals(bytes))
+          errors.push(`[SEC-001] Runtime projection differs from pinned artifact: ${relative}`);
+      }
     }
     const built = JSON.parse(verified.files.get("BUILD-MANIFEST.json"));
     runtimeDependencies.push(...built.dependencies);
