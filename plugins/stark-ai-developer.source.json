@@ -48,13 +48,13 @@
     "openaiPlugin": "stark-ai-developer"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.10.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-1.11.0.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
@@ -67,5 +67,18 @@
     "bunVersion": "1.4.0",
     "pnpmVersion": "11.24.0",
     "archiveProfile": "zip-store-v1"
-  }
+  },
+  "mcp": [
+    {
+      "name": "ssh-management",
+      "source": "vendor/ssh-manager/runtime",
+      "targets": ["portable", "claude"],
+      "artifact": {
+        "version": "1.0.0",
+        "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
+        "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
+        "manifestSha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18"
+      }
+    }
+  ]
 }

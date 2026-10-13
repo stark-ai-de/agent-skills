@@ -3,6 +3,22 @@
   "bundle": {
     "displayName": "stark AI Developer",
     "id": "codex",
+    "mcp": [
+      {
+        "artifact": {
+          "manifestSha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18",
+          "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
+          "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
+          "version": "1.0.0"
+        },
+        "name": "ssh-management",
+        "source": "vendor/ssh-manager/runtime",
+        "targets": [
+          "portable",
+          "claude"
+        ]
+      }
+    ],
     "skills": [
       {
         "name": "codex-memory-curator",
@@ -42,7 +58,7 @@
       }
     ]
   },
-  "bundleHash": "c1b2e098b9c1dd01ae55930c5e6dc52178077b002dec6796d6df955689ab82b2",
+  "bundleHash": "482928f31e27b9620b6c1be4975d2cbe86b5163e575eebeb1ada2304b11148b7",
   "files": [
     {
       "byteLength": 10271,
@@ -51,16 +67,100 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 1028,
+      "byteLength": 1491,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "33f1c83f754878e28f0418a6f54f7d90d2e3cbe6caa9dae2cc2ab538fbb9c230"
+      "sha256": "f797a6521ceb0e2b8494e2843033cb852cda94dd0dd8a47edc253411bd9450dd"
     },
     {
-      "byteLength": 1444,
+      "byteLength": 241,
+      "mode": "0644",
+      "path": "mcp.json",
+      "sha256": "68146dec10929aa845e8e513f2929bb2ad23a657aeee1e9554d4a1e8d004787a"
+    },
+    {
+      "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "d7971f26eff588c247b86c7c4630f18a9881d07164b3ca88f071b2a572f6d05e"
+      "sha256": "da62af7c4b2b2d9502816e7796994a07cb2a4740f87de567c7bee4a7ffaebadd"
+    },
+    {
+      "byteLength": 2128,
+      "mode": "0644",
+      "path": "runtime/ARTIFACT-MANIFEST.json",
+      "sha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18"
+    },
+    {
+      "byteLength": 14205,
+      "mode": "0644",
+      "path": "runtime/BUILD-MANIFEST.json",
+      "sha256": "377aca315002ad2c368183ffbd39c4da1f158eb33b0d3acf66356dfba347dd5d"
+    },
+    {
+      "byteLength": 10271,
+      "mode": "0644",
+      "path": "runtime/LICENSE",
+      "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
+    },
+    {
+      "byteLength": 104397,
+      "mode": "0644",
+      "path": "runtime/NOTICE.txt",
+      "sha256": "a133c8799a7c40a0af22ada5580935016764c10aa52f7ae763eb6a7793d6b65f"
+    },
+    {
+      "byteLength": 334606,
+      "mode": "0644",
+      "path": "runtime/cli.mjs",
+      "sha256": "09d6281ebf407116884dc75c83c30325c1e1bd3f1f56762de589d1fc599974dd"
+    },
+    {
+      "byteLength": 1669975,
+      "mode": "0644",
+      "path": "runtime/daemon.mjs",
+      "sha256": "b0a863b85b54c46c67d739abc96ad99b73bc3309b47ab32cd3dfeeb6eba70f16"
+    },
+    {
+      "byteLength": 643053,
+      "mode": "0644",
+      "path": "runtime/mcp.mjs",
+      "sha256": "1fe29d76af2b381ef6d38322857a15760431e7e2924ec8e31261f2afad6f90c0"
+    },
+    {
+      "byteLength": 1521,
+      "mode": "0644",
+      "path": "runtime/viewer/fit.js",
+      "sha256": "ba3ea256ce0620a0992a197d6c9baea64823fc93d8da07a9e366ca9943c18527"
+    },
+    {
+      "byteLength": 1196,
+      "mode": "0644",
+      "path": "runtime/viewer/index.html",
+      "sha256": "bab09af9a3c10b109051e6cd49a2042dbbbef3fb401ae7f889ef35ec47971b9c"
+    },
+    {
+      "byteLength": 676,
+      "mode": "0644",
+      "path": "runtime/viewer/viewer.css",
+      "sha256": "e8e51574042aac174d7b95f8088af706dd68c95ba52c5f835378886219438d4c"
+    },
+    {
+      "byteLength": 8135,
+      "mode": "0644",
+      "path": "runtime/viewer/viewer.js",
+      "sha256": "4d58ca4e2256618edf7af561c03871b85c2e66dffa4990a5b707daecbc5c99e5"
+    },
+    {
+      "byteLength": 7112,
+      "mode": "0644",
+      "path": "runtime/viewer/xterm.css",
+      "sha256": "854a7c0fb70e8b1a083c16797ab827299fb18744f5ad34f227b48337e33293c6"
+    },
+    {
+      "byteLength": 488663,
+      "mode": "0644",
+      "path": "runtime/viewer/xterm.js",
+      "sha256": "14903579ff54664cd72f8e8699e6961a6272c21863ec1c3b118cdc8af5d4a972"
     },
     {
       "byteLength": 13030,
@@ -2309,9 +2409,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.10.0"
+    "version": "1.11.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7b271c54c8639d6bbfd4d5e8f5e51f497c92fe9e1eaa35cedc69fb320a02c2dc"
+  "treeHash": "b2680049880d1ed617cb39cc3e5f338dabb1011ed37a5e5d96540bfefcfcaf3b"
 }

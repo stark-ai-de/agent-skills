@@ -152,6 +152,53 @@
           "const": "zip-store-v1"
         }
       }
+    },
+    "mcp": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "source", "targets", "artifact"],
+        "properties": {
+          "name": {
+            "const": "ssh-management"
+          },
+          "source": {
+            "const": "vendor/ssh-manager/runtime"
+          },
+          "targets": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 1,
+            "items": {
+              "enum": ["portable", "claude"]
+            }
+          },
+          "artifact": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["version", "sourceRepository", "sourceCommit", "manifestSha256"],
+            "properties": {
+              "version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              },
+              "sourceRepository": {
+                "const": "https://github.com/stark-ai-de/ssh-manager"
+              },
+              "sourceCommit": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "manifestSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

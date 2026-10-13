@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #171b20;
+  color: #e7edf1;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 18px;
+}
+h1 {
+  font-size: 1.4rem;
+}
+form,
+nav {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin: 16px 0;
+}
+label {
+  display: grid;
+  gap: 6px;
+}
+input,
+button {
+  font: inherit;
+  padding: 9px 12px;
+  border: 1px solid #56616b;
+  background: #242c34;
+  color: inherit;
+  border-radius: 4px;
+}
+button:disabled {
+  opacity: 0.5;
+}
+#terminal {
+  height: 65vh;
+  background: #000;
+  padding: 12px;
+}
+#status,
+p {
+  color: #b7c5ce;
+  font-size: 0.9rem;
+}

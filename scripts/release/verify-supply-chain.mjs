@@ -9,6 +9,7 @@ import { load as parseYaml } from "js-yaml";
 import { loadValidatedBundle } from "../lib/bundle-contract.mjs";
 import { isGeneratedCachePath, listTrackedSourceFiles } from "../lib/plugin-projections.mjs";
 import { pluginIdentity } from "../lib/release-descriptor.mjs";
+import { artifactEntry, validateRuntimeArtifact } from "../lib/ssh-runtime-artifact.mjs";
 
 const DANGEROUS =
   /curl\s+[^\n]*\|\s*(?:ba)?sh|wget\s+[^\n]*\|\s*(?:ba)?sh|npm\s+install\s+|pnpm\s+add\s+|pip\s+install\s+|Invoke-WebRequest/;
@@ -65,6 +66,16 @@ try {
   }
 
   const lockPath = path.join(root, "pnpm-lock.yaml");
+  const runtimeDependencies = [];
+  if (bundle.mcp?.length) {
+    const { entry, directory } = artifactEntry(root);
+    const verified = validateRuntimeArtifact(directory, entry.artifact);
+    for (const relative of verified.files.keys()) {
+      inventory.push({ path: `${entry.source}/${relative}`, license: "SEE NOTICE.txt" });
+    }
+    const built = JSON.parse(verified.files.get("BUILD-MANIFEST.json"));
+    runtimeDependencies.push(...built.dependencies);
+  }
   if (!fs.existsSync(lockPath)) {
     errors.push("[SEC-001] pnpm-lock.yaml is missing");
   }
@@ -83,6 +94,11 @@ try {
         versionInfo: identity.version,
         licenseConcluded: "Apache-2.0",
       },
+      ...runtimeDependencies.map((pkg) => ({
+        name: pkg.name,
+        versionInfo: pkg.version,
+        licenseConcluded: pkg.license,
+      })),
       ...walkLockPackages(lockfile).map((pkg) => ({
         name: pkg.path,
         versionInfo: pkg.version,
@@ -98,7 +114,9 @@ try {
     for (const error of [...new Set(errors)]) console.error(`- ${error}`);
     process.exitCode = 1;
   } else {
-    console.log(`Supply-chain inventory: ${inventory.length} bundled files under Apache-2.0.`);
+    console.log(
+      `Supply-chain inventory: ${inventory.length} bundled files; runtime dependency licenses are recorded separately.`,
+    );
     console.log(`Generated SPDX package count: ${sbom.packages.length}`);
     console.log(`SBOM SHA-256: ${sbomHash}`);
     console.log("Signed release-tag provenance remains a publication gate.");

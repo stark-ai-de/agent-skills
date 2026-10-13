@@ -119,6 +119,99 @@ Bundles use explicit, version-controlled manifests. The Codex bundle is the orde
 
 The `-a` option selects the host where a skill is installed; it does not change that skill's target contract. An intentionally cross-host install preserves target-specific evidence and output while adapting collaboration controls to the selected host.
 
+## Local SSH management
+
+The portable local plugin includes the standalone SSH runtime from
+[stark-ai-de/ssh-manager](https://github.com/stark-ai-de/ssh-manager), the canonical
+owner of `@stark-ai/ssh-manager`, its local API/runtime and MCP adapter. Node 24.18
+or newer is required. This repository consumes a reviewed, revision- and
+digest-pinned artifact; normal plugin generation requires no producer checkout or
+network. The public OpenAI archive remains skills-only.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm run validate:ssh
+pnpm run sync:agent-plugin
+node plugins/stark-ai-developer/runtime/cli.mjs help
+node plugins/stark-ai-developer/runtime/cli.mjs start
+```
+
+Producer source, library examples and native SSH/browser fixtures belong to the
+[SSH repository](https://github.com/stark-ai-de/ssh-manager). To update the bundled
+runtime, review the producer revision and artifact manifest digest, then run
+`node scripts/ssh/import-artifact.mjs <runtime-directory> <reviewed-pin.json>`.
+The pin JSON contains `version`, `sourceRepository`, `sourceCommit` and
+`manifestSha256`; import verifies the entire payload before replacing it.
+Regenerate projections and run the consumer validation after importing.
+
+In an installed portable or Claude package, use `node runtime/cli.mjs` instead.
+The MCP starts this same daemon on demand. Setup requires a trusted local operator:
+create a profile, assign an existing SSH-agent socket, private-key file reference or
+encrypted vault credential, inspect and confirm its exact host fingerprint, then
+grant capabilities at the current profile revision. `operator <operation> <JSON-file>`
+accepts structured setup arguments and prompts for explicit confirmation. Vault
+initialization, unlock and rotation prompt without echoing the password. No key is
+generated, provisioned or silently trusted; existing `known_hosts` is only read.
+
+Example profile arguments for `ssh_host_create`:
+
+```json
+{
+  "profile": {
+    "name": "example",
+    "host": "host.example.test",
+    "username": "developer",
+    "port": 22,
+    "groups": ["development"],
+    "fileRoots": ["/srv/project"]
+  }
+}
+```
+
+Use `ssh_credential_add` to obtain an opaque credential ID, then `ssh_host_update`
+to assign it with the expected revision. `ssh_host_inspect` returns the fingerprint
+and public key for `ssh_host_confirm`. Confirmation invalidates previous grants;
+`ssh_grants_set` subsequently grants `connect`, `shell`, `files.read`, `files.write`
+or `tunnel`. Arbitrary shell is a powerful write capability. The operator token is
+never provided to the MCP. This protects the management interfaces; it does not
+sandbox other programs already running as the same operating-system user.
+
+`viewer` prints the loopback viewer URL. Paste a local bootstrap token from the
+private `agent.token` or `operator.token` file and an existing session ID. Tokens
+stay in page memory. Multiple readers may attach; one authenticated client holds
+the input lease. Detaching or ending the MCP leaves the PTY in the daemon. Plain
+PTYs are lost after SSH loss or daemon restart. Already-installed Unix `tmux`
+sessions can be recovered explicitly after fresh authentication; tmux is never
+installed automatically. Remote Windows profiles explicitly select `powershell`
+or `cmd`; tmux is unavailable on them. Reconnect never replays a job.
+
+Native state locations are `$XDG_STATE_HOME/stark-ai/ssh-manager` (or
+`~/.local/state/stark-ai/ssh-manager`) on Linux/WSL,
+`~/Library/Application Support/stark-ai/ssh-manager` on macOS, and
+`%LOCALAPPDATA%/stark-ai/ssh-manager` on Windows. Windows and WSL retain separate
+credentials and mutable state. `--state-directory` selects an isolated native
+directory for tests or embedding; one manager owns each directory.
+
+The API exposes authenticated `/v1/` operations and `/v1/openapi.json`, WebSocket
+terminal events and streaming upload/download. Direct library consumers use
+`SSHManager` with their own lifecycle and trusted actor; a separate
+[consumer example](https://github.com/stark-ai-de/ssh-manager/blob/main/packages/ssh-manager/examples/embedded.mjs) needs neither MCP
+nor Fastify. The typed `ManagementClient` export under
+`@stark-ai/ssh-manager-runtime/client` shares the daemon. Close the client to
+detach; `stop` explicitly ends the service.
+
+Audit defaults to bounded metadata. Terminal recording is off by default and
+requires the unlocked encrypted vault. Locking the vault preserves existing
+authenticated sessions and blocks new vault decryptions. Argon2id and AES-256-GCM
+provide authenticated encryption at rest; the running SSH process can use
+decrypted credentials. Optional recording pauses while locked. Remote SFTP roots
+and symlink checks are enforced, but a hostile remote filesystem can race those
+checks; server-side confinement provides the stronger filesystem boundary.
+
+Native macOS/Windows, live Codex/Claude installation, and release qualification
+remain separate evidence gates. Implementation and local tests do not constitute
+publication approval.
+
 ## Choose a skill
 
 |                                                            Icon                                                             | Skill                                                                              | When to use                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |

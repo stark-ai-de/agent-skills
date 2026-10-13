@@ -31,3 +31,7 @@ npm-debug.log*
 
 docs/specs/do-not-publish/*
 !docs/specs/do-not-publish/.gitkeep
+
+# Retired local build directories may remain while old daemons drain.
+# Canonical SSH sources now belong to stark-ai-de/ssh-manager.
+/packages/ssh-manager*/

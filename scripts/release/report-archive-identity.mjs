@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { claudeArchivePath } from "../lib/claude-projection.mjs";
 import { pluginIdentity } from "../lib/release-descriptor.mjs";
 import { inspectZipStoreV1 } from "../lib/reproducible-archive.mjs";
 
@@ -12,6 +13,7 @@ const identity = pluginIdentity(root);
 const archives = {
   portable: path.join(root, "dist", "agent-plugins", `${identity.name}-${identity.version}.zip`),
   openai: path.join(root, identity.openaiArchive),
+  claude: claudeArchivePath(root),
 };
 const report = {
   os: process.platform,
