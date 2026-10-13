@@ -1,0 +1,6 @@
+interface:
+  display_name: "Karakeep Knowledge"
+  short_description: "Set up and use a local Karakeep knowledge collection"
+  default_prompt: "Use $karakeep-knowledge to check my existing collection and retrieve relevant saved sources, or guide an authorized setup if it is missing."
+policy:
+  allow_implicit_invocation: true

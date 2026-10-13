@@ -126,6 +126,13 @@
       "owner": "skill-evals/architecture-zoom/validate-contract.mjs",
       "proof": "Planning handoff template parity, skill/reference contracts and evaluation-evidence integrity; not live-agent qualification",
       "cadence": "every aggregate run"
+    },
+    {
+      "id": "karakeep-knowledge",
+      "command": "pnpm run validate:karakeep",
+      "owner": ".github/workflows/validate.yml#validate",
+      "proof": "Local Karakeep preparation, credential boundary, read-only readiness and MCP launcher behavior with synthetic fixtures",
+      "cadence": "hosted Validate preflight"
     }
   ]
 }
