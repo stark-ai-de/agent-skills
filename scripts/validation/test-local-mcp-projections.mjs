@@ -49,9 +49,19 @@ function archiveModes(bytes) {
 
 try {
   const repository = path.join(fixture, "repository");
+  // Scope Windows long-path support to this disposable clone, not global Git config.
   const clone = spawnSync(
     "git",
-    ["clone", "--local", "--no-hardlinks", "--quiet", root, repository],
+    [
+      "clone",
+      "--config",
+      "core.longpaths=true",
+      "--local",
+      "--no-hardlinks",
+      "--quiet",
+      root,
+      repository,
+    ],
     {
       encoding: "utf8",
     },
@@ -180,14 +190,8 @@ try {
     writeClaudeArchiveIdentity(directory);
   }
   const expectedIdentity = compareClaudeArchiveIdentities(identities);
-  const windowsIdentity = path.join(
-    identities,
-    "ssh-claude-identity-Windows/archive-identity.json",
-  );
-  fs.writeFileSync(
-    windowsIdentity,
-    JSON.stringify({ ...expectedIdentity, sha256: "0".repeat(64) }),
-  );
+  const windowsIdentity = path.join(identities, "ssh-claude-identity-Windows/archive-identity.json");
+  fs.writeFileSync(windowsIdentity, JSON.stringify({ ...expectedIdentity, sha256: "0".repeat(64) }));
   assert.throws(
     () => compareClaudeArchiveIdentities(identities),
     /differs between Linux and Windows/,
