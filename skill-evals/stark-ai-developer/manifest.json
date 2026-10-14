@@ -521,6 +521,51 @@
         "Planning preserves the requested scope and does not invent execution or host evidence."
       ],
       "tags": ["output-contract", "no-invention", "mutation-approval"]
+    },
+    {
+      "id": "positive-karakeep-main-sync",
+      "kind": "positive",
+      "skill": "karakeep-knowledge",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Use $karakeep-knowledge to reconcile this repository under its existing approved main-only policy.",
+      "expected": [
+        "Fetches and pins remote default-branch evidence; excludes dirty local work.",
+        "Reuses existing bookmark IDs and preserves conflicting manual edits.",
+        "Reports verified operations separately from pending captures and capability gaps."
+      ],
+      "expectedResultShape": [
+        "A scoped evidence-backed report with actual source identity and no false completion claims."
+      ],
+      "fixtures": [
+        "Synthetic scenario inventory in skill-evals/karakeep-knowledge/README.md; no live collection evidence claimed."
+      ],
+      "passCriteria": [
+        "No unauthorized writes, invented MCP capability or overwritten human data."
+      ],
+      "tags": ["mutation-approval", "no-invention", "output-contract"]
+    },
+    {
+      "id": "negative-karakeep-read-no-write",
+      "kind": "negative",
+      "skill": "karakeep-knowledge",
+      "surface": "CODEX",
+      "discovery": "implicit",
+      "request": "Find saved sources relevant to this implementation; no collection maintenance requested.",
+      "expected": [
+        "Searches and retrieves relevant saved content with original source links.",
+        "Does not enroll repository sync or curate the collection by implication."
+      ],
+      "expectedResultShape": [
+        "A scoped evidence-backed report with actual source identity and no false completion claims."
+      ],
+      "fixtures": [
+        "Synthetic scenario inventory in skill-evals/karakeep-knowledge/README.md; no live collection evidence claimed."
+      ],
+      "passCriteria": [
+        "No unauthorized writes, invented MCP capability or overwritten human data."
+      ],
+      "tags": ["mutation-approval", "no-invention", "output-contract"]
     }
   ],
   "listingMappings": [
@@ -559,6 +604,10 @@
     {
       "skill": "architecture-zoom",
       "capability": "Plan whole-product architecture and complete usable delivery increments."
+    },
+    {
+      "skill": "karakeep-knowledge",
+      "capability": "Connect, synchronize approved repository knowledge and curate a local Karakeep collection."
     }
   ]
 }

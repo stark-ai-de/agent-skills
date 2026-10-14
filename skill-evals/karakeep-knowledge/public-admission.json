@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "maintainer-directed-public-release",
+  "skill": "karakeep-knowledge",
+  "status": "Accepted",
+  "decision": "ADR-0065",
+  "acceptedOn": "2026-10-14",
+  "approval": {
+    "approved": true,
+    "authority": "Explicit maintainer request to update PR #148 on 2026-10-14",
+    "scope": "Prepare a final public skill without incubation, with main-branch knowledge synchronization and requested or approved automatic curation. No merge or publication."
+  },
+  "acceptedSpecification": "README.md extension scenarios and the public skill's four workflows with sync/curation contracts",
+  "nativeHostQualification": "not-run",
+  "claimedQualifiedHosts": [],
+  "qualityAssessment": "Reuse one collection, preserve manual content and make approved updates incremental. Four explicit routes keep discovery and write authority bounded. Utility is assessed from the authored contract, not measured agent improvement.",
+  "maintenanceOwner": "stark-ai-de",
+  "limitations": "Original helper tests cover local preparation and credentials. Historical live read observations do not qualify this extended payload. Live sync/curation, smart-list creation, text-body update, host triggers, native discovery and comparative agent-quality/performance runs remain unobserved."
+}

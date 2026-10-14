@@ -1,12 +1,11 @@
 ---
 name: karakeep-knowledge
-description: Set up or use a local persistent Karakeep knowledge collection through its official MCP server. Use when configuring Karakeep for coding agents, checking an existing connection, saving requested references, or consulting saved web sources for development work.
+description: Set up or use a local persistent Karakeep knowledge collection through its official MCP server. Use when configuring Karakeep for coding agents, checking an existing connection, saving or synchronizing approved repository knowledge from the remote default branch, curating lists and tags, or consulting saved web sources for development work.
 license: Apache-2.0
 metadata:
-  internal: true
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Karakeep Knowledge
@@ -23,6 +22,8 @@ user's existing account. A cloud account or external AI provider is not required
 - Consult saved component libraries, frameworks, design references or instructions
   when they are relevant to the user's coding task.
 - Save or import references the user has requested to add to this collection.
+- Reconcile missing or changed approved repository knowledge after merge to main.
+- Organize saved knowledge on request or under an existing automatic curation policy.
 
 ## When not to use
 
@@ -40,14 +41,22 @@ user's existing account. A cloud account or external AI provider is not required
 
 ## Workflow
 
-| Route                  | Intent                                                                 | Read                                                        |
-| ---------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Set up or connect**  | Missing setup, new agent connection, stopped or misconfigured service  | [Setup](references/setup.md), then [MCP](references/mcp.md) |
-| **Use the collection** | Search/read existing knowledge or save explicitly requested references | [Use](references/use.md)                                    |
+| Route                         | Intent                                                                | Read                                                        |
+| ----------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Set up or connect**         | Missing setup, new agent connection, stopped or misconfigured service | [Setup](references/setup.md), then [MCP](references/mcp.md) |
+| **Use the collection**        | Search/read knowledge or save requested references                    | [Use](references/use.md)                                    |
+| **Sync repository knowledge** | Reconcile approved repository sources from remote main/default branch | [Sync](references/sync.md)                                  |
+| **Curate the collection**     | Organize a requested scope or run an approved curation policy         | [Curation](references/curation.md)                          |
 
-For clear authorized intent, announce the relevant route and proceed. For a bare
-invocation or request for options, show both routes and ask which outcome is wanted.
-An options request does not authorize installation.
+For clear authorized intent, announce the selected route and proceed. For a bare
+invocation or options request, show all four routes and ask which outcome is wanted.
+Options alone authorize no execution. Reading knowledge does not authorize writes.
+
+Automatic sync/curation means execution on a relevant skill invocation under a
+persisted, once-approved policy. Installation alone adds no watcher, scheduler or
+post-merge hook. If continuous operation is requested, configure the host's existing
+hook/scheduler explicitly, using the same account, policy, lock and receipts; verify
+one actual trigger. Do not claim unattended operation from a prompt file alone.
 
 1. Check actual tool availability. If Karakeep is connected, search and retrieve one
    relevant saved page; read actual content before recommending it. Do not run setup
@@ -64,13 +73,14 @@ An options request does not authorize installation.
    check and [persistence/recovery](references/operations.md). Reuse authorization
    already given; ask only for missing personal input or genuinely new scope.
 5. With a working connection, use [search → content → source-backed answer](references/use.md).
+   For approved sync/curation, follow its policy and conflict gates.
    Capture a private setup receipt after setup/repair so the next agent can locate
    the same endpoint and account. Recheck readiness; a receipt is not live proof.
 
 ## Safety rules
 
-- Ordinary use is read-only. Import, tagging, account creation and configuration
-  changes need the corresponding user request. Do not broaden a read key or bypass
+- Ordinary use is read-only. Import, tagging, sync, curation, account creation and
+  configuration changes need the corresponding request or a valid standing policy. Do not broaden a read key or bypass
   missing MCP writes with an undocumented login/API path.
 - Keep credentials in private runtime files, never chat, Git, public examples or the
   Nix store. Local storage does not make a cloud-backed coding agent local: content
@@ -85,6 +95,8 @@ An options request does not authorize installation.
 - [Setup](references/setup.md): environment inspection, new stack, adoption and acceptance.
 - [MCP](references/mcp.md): official runtime, private credentials and client configuration.
 - [Use](references/use.md): efficient retrieval, citations and bounded imports.
+- [Sync](references/sync.md): main-only evidence, once-approved authority and reconciliation.
+- [Curation](references/curation.md): lists, tags, maintenance and resource limits.
 - [Operations](references/operations.md): NixOS/WSL, start/stop, backup and recovery.
 - [Sources](references/sources.md): checked upstream contracts and baseline versions.
 
@@ -105,6 +117,8 @@ on Linux/POSIX; the launcher requires an already-installed official MCP runtime.
 
 For setup, report the local URL, private storage/config locations, service owner,
 account/collection confirmation without credentials, and observed checks versus gaps.
+For sync/curation, report the pinned source revision and scope, created/updated/unchanged/
+conflicted/pending/failed counts, preserved manual data and the next required action.
 For use, return relevant findings with original source links and distinguish saved
 content from newly verified facts. Report failed captures without calling them archived.
 
@@ -114,6 +128,9 @@ content from newly verified facts. Report failed captures without calling them a
   credentials, real MCP search/content, and documented restart/backup/restore results.
 - Use: actual relevant content was retrieved, account/source identity is preserved,
   and writes stay within the requested scope.
+
+- Sync/curation: authorized fields are read back, receipts cover completed operations,
+  repeated runs converge, and conflicts or missing capabilities remain explicit.
 
 ## Failure modes
 

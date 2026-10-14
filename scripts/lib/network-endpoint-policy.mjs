@@ -25,11 +25,16 @@ function endpointIsDeclared(endpoint, relative) {
     /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/(?:jev_advisor|https_transport|jev_hooks)\.py$/.test(
       relative,
     );
+  const karakeepLoopbackOwner =
+    /^(?:canonical|portable)\/karakeep-knowledge\/scripts\/(?:prepare|status)\.py$/.test(relative);
+  // Only fixed loopback defaults are declared; runtime.py validates selected origins.
+  // This grants no remote endpoint or exception for other skill scripts.
   // The advisor owns one provider endpoint; the offline hook manager names it only
   // in its processing disclosure. Network-call exceptions remain transport-only.
   return (
     DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix)) ||
-    (advisorEndpointOwner && endpoint === "https://api.typesafe.ai/v1/systemone")
+    (advisorEndpointOwner && endpoint === "https://api.typesafe.ai/v1/systemone") ||
+    (karakeepLoopbackOwner && ["http://localhost", "http://localhost:3000"].includes(endpoint))
   );
 }
 

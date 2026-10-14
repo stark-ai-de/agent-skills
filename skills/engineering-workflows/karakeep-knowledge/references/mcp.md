@@ -103,3 +103,12 @@ Installing this skill alone does not register an MCP server, install Docker or p
 automatic skill activation. If persistent agent guidance is requested, add a scoped
 pointer to this skill and the nonsecret private-receipt location through that host's
 configuration owner. Avoid a global rule to search unrelated tasks.
+
+## Approved sync and curation writes
+
+Keep ordinary retrieval on the read connection. For requested writes or an approved
+standing policy, use a separately authorized write-capable key/connection scoped to
+bookmarks, lists and tags as needed. Discover callable schemas before selecting tools;
+never silently widen the read key or assume product features are all exposed by MCP.
+Record the intended account in the private policy and verify identity before a batch.
+See [Sync](sync.md) and [Curation](curation.md) for authority and capability gaps.

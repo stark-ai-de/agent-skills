@@ -399,6 +399,30 @@
       "rationale": "The existing SkillOpt setup validator explicitly launches Python helpers. This newly discovered inventory entry records source-level ownership only; it does not claim a new SkillOpt execution result.",
       "fallbackOrder": ["python3"],
       "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
+    },
+    {
+      "id": "karakeep-helper-python",
+      "surfaces": ["package:root:karakeep-python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "localOfflineFixtures": "pass",
+            "minimum310Interpreter": "unknown",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        "skill-evals/karakeep-knowledge/test_karakeep.py",
+        "skill-evals/karakeep-knowledge/README.md",
+        "pnpm run validate:karakeep"
+      ],
+      "rationale": "Dependency-free POSIX helpers require Python 3.10+. All 15 synthetic tests passed on Python 3.12 in the managed Linux environment. This is helper evidence, not native MCP, live curation or host-trigger qualification.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Requalify when helper/runtime contracts change; report missing Python instead of silently installing another runtime."
     }
   ]
 }

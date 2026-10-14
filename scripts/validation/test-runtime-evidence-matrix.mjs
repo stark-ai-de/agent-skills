@@ -132,6 +132,8 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
       surface = "package:root:native-oxc";
     } else if (name === "validate:memory-curators" && /^node\b/.test(command)) {
       surface = "package:root:validate-memory-curators";
+    } else if (name === "validate:karakeep" && /^python3 -B -m unittest\b/.test(command)) {
+      surface = "package:root:karakeep-python";
     } else if (["build:ssh", "test:ssh"].includes(name) && /^node\b/.test(command)) {
       surface = "package:root:ssh-node";
     } else if (
@@ -407,6 +409,7 @@ function negativeFixtureErrors() {
 
   for (const command of [
     'bun exec "bash -c unknown-command"',
+    'bun exec "python3 -c unknown-command"',
     'bun exec "pnpm run nonexistent-runtime-fixture"',
     'bun exec "${RUNTIME} scripts/catalog/validate-skills.mjs"',
   ]) {
@@ -579,8 +582,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 16,
-  `current runtime-selection inventory must discover 16 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 17,
+  `current runtime-selection inventory must discover 17 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -588,8 +591,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 15,
-  `current runtime evidence matrix must define 15 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 16,
+  `current runtime evidence matrix must define 16 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());

@@ -68,3 +68,32 @@ for (const prefix of ["canonical", "portable"]) {
   assert.ok(scanNetworkSource(hookSource, label.replace("jev_hooks.py", "another.py")).length > 0);
 }
 console.log("Hook processing disclosure is declared; hook network calls remain rejected.");
+
+for (const prefix of ["canonical", "portable"]) {
+  for (const name of ["prepare", "status"]) {
+    const label = `${prefix}/karakeep-knowledge/scripts/${name}.py`;
+    for (const endpoint of ["http://localhost", "http://localhost:3000"]) {
+      assert.deepEqual(scanNetworkSource(`URL = "${endpoint}"`, label), []);
+    }
+    for (const endpoint of [
+      "http://localhost.example.org",
+      "https://unexpected.example",
+      "http://localhost:3001",
+    ]) {
+      assert.ok(scanNetworkSource(`URL = "${endpoint}"`, label).length > 0);
+    }
+    assert.ok(
+      scanNetworkSource(
+        'URL = "http://localhost:3000"',
+        label.replace("status.py", "other.py").replace("prepare.py", "other.py"),
+      ).length > 0,
+    );
+    assert.ok(
+      scanNetworkSource(
+        'URL = "http://localhost:3000"',
+        label.replace("karakeep-knowledge", "other-skill"),
+      ).length > 0,
+    );
+  }
+}
+console.log("Karakeep fixed loopback defaults stay scoped to their owning helpers.");
