@@ -80,3 +80,6 @@ hosted PR validation separately in the PR; public admission does not replace beh
 
 These cases require future agent execution with synthetic/private fixtures and
 observable tool effects. The helper suite tests the setup/launcher boundary only.
+
+[Public extension checks and limits](runs/2026-10-14-public.md) record the final
+public payload, packaging and installation observations.
