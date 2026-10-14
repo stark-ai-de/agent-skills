@@ -1,13 +1,21 @@
 """Shared, read-only primitives for the local Karakeep helpers (Python 3.10+)."""
 
+from http.client import HTTPException
 import json
 import os
 from pathlib import Path
 import shlex
 import stat
+import subprocess
+import sys
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
+
+
+REQUEST_TIMEOUT = 5
+MAX_RESPONSE_BYTES = 1024 * 1024
 
 
 class ConfigurationError(Exception):
@@ -93,25 +101,67 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
-def get_json(address, route, key=None):
-    """One bounded GET. Bypass proxies and reject redirects before sending credentials."""
-    request = Request(local_url(address) + route, headers={"Accept": "application/json"})
-    if key:
-        request.add_header("Authorization", "Bearer " + key)
-    opener = build_opener(ProxyHandler({}), NoRedirect())
+def _get_json(address, route, key=None):
+    """Worker transport. The parent enforces the deadline, including DNS and headers."""
     try:
-        with opener.open(request, timeout=5) as response:
+        request = Request(local_url(address) + route, headers={"Accept": "application/json"})
+        if key:
+            request.add_header("Authorization", "Bearer " + key)
+        opener = build_opener(ProxyHandler({}), NoRedirect())
+        with opener.open(request, timeout=REQUEST_TIMEOUT) as response:
             status = response.status
-            raw = response.read(1024 * 1024 + 1)
-        if len(raw) > 1024 * 1024:
+            raw = response.read(MAX_RESPONSE_BYTES + 1)
+        if len(raw) > MAX_RESPONSE_BYTES:
             return status, None
         try:
             return status, json.loads(raw)
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, RecursionError):
             return status, None
     except HTTPError as error:
         code = error.code
         error.close()
         return code, None
-    except (URLError, OSError, ValueError):
+    except (HTTPException, URLError, OSError, ValueError):
+        # HTTPException text may contain an untrusted status line or partial body.
         return None, None
+
+
+def get_json(address, route, key=None):
+    """One bounded GET; no proxies/redirects, leaked workers or credential arguments."""
+    address = local_url(address)
+    deadline = time.monotonic() + REQUEST_TIMEOUT
+    payload = json.dumps([address, route, key]).encode("utf-8")
+    try:
+        # A socket timeout only bounds inactivity. Isolate the complete exchange so
+        # trickling headers/body cannot outlive the budget. No process-global signals
+        # or background thread survives a timeout. The key travels only over stdin.
+        with subprocess.Popen(
+            [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "--http-worker"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        ) as worker:
+            try:
+                output, _ = worker.communicate(payload, timeout=max(0, deadline - time.monotonic()))
+            finally:
+                if worker.poll() is None:
+                    worker.kill()
+                    worker.communicate()
+            if worker.returncode != 0:
+                return None, None
+        result = json.loads(output)
+        if isinstance(result, list) and len(result) == 2:
+            return tuple(result)
+    except (subprocess.SubprocessError, OSError, ValueError, RecursionError):
+        pass
+    return None, None
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] != ["--http-worker"]:
+        raise SystemExit("Internal transport worker; use status.py to inspect readiness.")
+    try:
+        result = _get_json(*json.load(sys.stdin))
+    except (ConfigurationError, TypeError, ValueError, RecursionError):
+        result = (None, None)
+    json.dump(result, sys.stdout)

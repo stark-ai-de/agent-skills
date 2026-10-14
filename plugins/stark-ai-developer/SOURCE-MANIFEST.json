@@ -2441,10 +2441,10 @@
       "sha256": "8291c28b50091321c5ac9ea0eef0b0ad1bf9e5160d26b926b1e548ffde435495"
     },
     {
-      "byteLength": 4542,
+      "byteLength": 6552,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/runtime.py",
-      "sha256": "045717c11b7b1e8d115055deb99fcae911796ab76d50f61448ff404906e3dec7"
+      "sha256": "15852cfaab6829240bcc81c78b5a519159d493b7bfa577114b944b17a89911a2"
     },
     {
       "byteLength": 2916,
@@ -2519,5 +2519,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "26213cdc357520c029ab438d8a4b8f844ebdcfde933a3632732cd4257a4870e5"
+  "treeHash": "62c467a9dacf5c2188a5c16b22aa74d39763684097b005ca0157fd6025960d48"
 }
