@@ -162,6 +162,15 @@ or qualify its supported system-CA option. Setting that environment variable
 after Node has started does not update the current process's trust. Never use
 `NODE_TLS_REJECT_UNAUTHORIZED=0` or disable browser certificate verification.
 
+Windows curl with Schannel can report `CRYPT_E_NO_REVOCATION_CHECK` when a
+local CA has no revocation-list distribution point. Check trust and hostname
+matching separately; a normal Windows `Invoke-WebRequest` can distinguish this
+client-specific condition from a missing CA. For an intentionally selected local
+curl probe, [`--ssl-revoke-best-effort`](https://curl.se/docs/manpage.html#--ssl-revoke-best-effort)
+tolerates missing/offline revocation information while retaining CA and hostname
+checks. Keep that choice scoped to the diagnostic invocation; never substitute
+`--insecure` or a global TLS-validation bypass.
+
 A wildcard for `*.localhost` does not cover a multi-label name such as
 `ui.checkout-a.example.localhost`. Verify the actual leaf certificate and SNI
 handling for the chosen checkout name. After a deliberate CA rotation, update
