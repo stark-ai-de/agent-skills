@@ -173,7 +173,12 @@ If a helper is selected, follow ADR-0014's preference for dependency-free `.mjs`
 
 ## Architectural decisions
 
-No new catalog-wide ADR is needed for this scoped extension. Existing ADRs [0014](../adrs/0014-prefer-node-skill-helper-scripts.long.md), [0029](../adrs/0029-keep-linked-worktrees-inside-the-repository.long.md), [0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) and [0060](../adrs/0060-allow-intent-bound-workflow-disclosure.long.md) govern helper choice, isolated writes, validation and intent-bound workflows. Existing publication/admission rules remain unchanged.
+No new catalog-wide ADR is needed for this scoped extension. Existing publication/admission rules remain unchanged. The relevant catalog decisions are:
+
+- [ADR-0014](../adrs/0014-prefer-node-skill-helper-scripts.short.md) ([Long, canonical](../adrs/0014-prefer-node-skill-helper-scripts.long.md) · [Guide](../adrs/0014-prefer-node-skill-helper-scripts.guide.md)): helper choice.
+- [ADR-0029](../adrs/0029-keep-linked-worktrees-inside-the-repository.short.md) ([Long, canonical](../adrs/0029-keep-linked-worktrees-inside-the-repository.long.md) · [Guide](../adrs/0029-keep-linked-worktrees-inside-the-repository.guide.md)): isolated writes.
+- [ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)): validation.
+- [ADR-0060](../adrs/0060-allow-intent-bound-workflow-disclosure.short.md) ([Long, canonical](../adrs/0060-allow-intent-bound-workflow-disclosure.long.md) · [Guide](../adrs/0060-allow-intent-bound-workflow-disclosure.guide.md)): intent-bound workflows.
 
 Consumer adoption changes a repository's knowledge ownership and agent-write policy, so it needs a repository-specific decision. Use the [adoption ADR template](karakeep-project-adoption-adr-template.md), adapted to that repository's ADR conventions. The template itself is not an accepted ADR and grants no writes. Product/service consumers additionally own their access, lifecycle and reachability contract; never copy private consumer configuration into this public spec.
 
@@ -221,9 +226,9 @@ The future implementation must demonstrate these cases with synthetic fixtures a
 | Long source with relevant content near its end                      | Full retrieval or explicit truncation; summaries and retrieval do not imply untested coverage        |
 | No adopted write policy                                             | Ordinary reads remain read-only; no enrollment, upload or background task                            |
 
-For this documentation-only change, validate formatting of the changed Markdown, relative links, source/ADR references, absence of private data and the scoped diff. Use `git diff --check` and the repository-pinned Oxfmt executable with `--check` on the changed files. Hosted PR CI remains separate.
+For this documentation-only change, validate formatting of the changed Markdown, relative links, source/ADR references, absence of private data and the scoped diff. Use `git diff --check`, `pnpm run validate:adrs` for the ADR references, and the repository-pinned Oxfmt executable with `--check` on the changed files. Hosted PR CI remains separate.
 
-For future runtime changes, select owning checks: `pnpm run validate:karakeep`, `pnpm run validate:skills`, and `pnpm run validate:projections` after generated changes, plus behavioral evaluations for the cases above. Run `pnpm run validate:adrs` only when actual catalog ADR artifacts change. Existing setup tests do not prove the new knowledge workflows. Full release/aggregate gates apply according to ADR-0041; this spec does not introduce a release.
+For future runtime changes, select owning checks: `pnpm run validate:karakeep`, `pnpm run validate:skills`, and `pnpm run validate:projections` after generated changes, plus behavioral evaluations for the cases above. Run `pnpm run validate:adrs` when catalog ADR artifacts or references to them change. Existing setup tests do not prove the new knowledge workflows. Full release/aggregate gates apply according to ADR-0041; this spec does not introduce a release.
 
 ## Rollout, rollback and risks
 
