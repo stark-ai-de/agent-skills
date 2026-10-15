@@ -14,7 +14,7 @@ Variant: Short
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-09-25
+Guide verified: 2026-10-15
 Gist: Default compatible local development endpoints to Portless and HTTPS, migrate existing routing through authorized changes, and document evidence-backed exceptions.
 
 Variants: **Short** · [Long, canonical](ac-adr-066-use-portless-for-local-development-endpoints.long.md) · [Guide](ac-adr-066-use-portless-for-local-development-endpoints.guide.md)
