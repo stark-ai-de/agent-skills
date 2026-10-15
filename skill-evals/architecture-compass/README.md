@@ -213,9 +213,11 @@ an endorsement, nor prove correctness merely because keywords are present.
 
 ## Portless local-development cases
 
-These six scenarios cover AC-ADR-066 applicability, migration preference,
-technical exceptions, worktree identity and local decision authority. They are
-static contracts, not executed agent turns or Portless runtime tests.
+These ten scenarios cover AC-ADR-066 applicability, migration preference,
+technical exceptions, worktree identity and local decision authority, including
+launcher-root identity, container reachability, first-install CA ownership and
+OAuth callback constraints. They are static contracts, not executed agent turns
+or Portless runtime tests.
 
 - `cases/portless-compatible-default.md`
 - `cases/portless-existing-routing-migration.md`
@@ -223,6 +225,10 @@ static contracts, not executed agent turns or Portless runtime tests.
 - `cases/portless-technical-exception.md`
 - `cases/portless-worktree-collision.md`
 - `cases/portless-local-adr-conflict.md`
+- `cases/portless-launcher-root-identity.md`
+- `cases/portless-container-reachability.md`
+- `cases/portless-first-install-ca-ownership.md`
+- `cases/portless-oauth-checkout-domains.md`
 
 The [isolated recipe qualification](fixtures/shadcn-lint/README.md) adds executed
 plugin-runtime evidence for both linter examples. Run `pnpm run qualify:shadcn-lint`
