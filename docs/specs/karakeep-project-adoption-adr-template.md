@@ -32,7 +32,7 @@ The private adoption policy identifies the intended account/collection, reposito
 
 Reads remain the default outside that policy. Human edits, unowned fields and other projects' memberships are preserved. Credentials, raw transcripts, sensitive runtime data and unrelated files are excluded. Source removal marks retirement rather than deleting shared knowledge. Public sharing and destructive cleanup require separate authority.
 
-The workflow runs when the agent invokes it; this decision installs no scheduler, daemon, CI job, hook or n8n workflow. On outage, repository work continues and pending synchronization is reported and reconciled on a later invocation. A prompt-based workflow provides no guarantee that every session or crash is recorded.
+The globally available skill is checked when an agent first works in this repository in a session and reconciles eligible changes at substantive completion/handoff. The active global agent instruction or this repository's short instruction reference supplies that behavioral trigger; installing skill files alone does not execute it. Missing project setup is resolved once, without repeating approval of routine writes. The workflow runs when the agent invokes it; this decision installs no scheduler, daemon, CI job, executable hook or n8n workflow. On outage, repository work continues and pending synchronization is reported and reconciled on a later invocation. A prompt-based workflow provides no guarantee that every session or crash is recorded.
 
 ## Consequences and alternatives
 
@@ -42,9 +42,9 @@ Use the selected shared skill plus its bundled Node `scripts/knowledge.mjs` help
 
 ## Adoption and verification
 
-1. Accept this repository-specific decision and resolve its placeholders; link the reviewed skill/spec from short repository guidance.
-2. Confirm a supported, appropriately scoped API write path, the installed Node/helper paths and the private policy/receipt/collection-lock location without putting secrets in Git.
-3. Pilot canonical/draft separation, direct reference capture, factual session reporting, overview/approved-aggregate maintenance, new-dossier proposal gating and preservation of human edits.
-4. Verify a no-op repeat, outage recovery and cross-project source reuse before expanding the selected paths.
+1. On first use, accept this repository-specific decision and resolve its placeholders, reusing existing approval; link the reviewed skill/spec from short repository guidance. This is normal adoption, not a separate pilot project.
+2. Confirm a supported, appropriately scoped API write path, the globally installed Node/helper paths, the active start instruction and private policy/receipt/collection-lock location without putting secrets in Git. Verify `check` in a fresh agent session; use one manual setup invocation if automatic discovery is unavailable.
+3. Verify canonical/draft separation, direct reference capture, factual session reporting, overview/approved-aggregate maintenance, new-dossier proposal gating and preservation of human edits during authorized normal use.
+4. Verify a no-op repeat, outage recovery and cross-project source reuse. Other repositories adopt the same global skill as work reaches them; no initial bulk import is required.
 
 Stop collection writes on unresolved ownership, permissions or conflicts. Disabling the adoption policy rolls back the workflow without deleting repository or collection content. New retention/deletion behavior requires an explicit lifecycle decision.
