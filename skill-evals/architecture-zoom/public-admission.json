@@ -5,7 +5,7 @@
   "status": "Accepted",
   "decision": "ADR-0065",
   "acceptedOn": "2026-10-09",
-  "sourceFingerprint": "cb89f77575b798643777d15180a704a9054a1e2304f407e29030b5db44ec1acd",
+  "sourceFingerprint": "b599421c611f3a935b247198a19172f3ab556cd2a96e935573f1febf5cec10d6",
   "casesFingerprint": "004ecedb97abb1cc7e1463bd3407599fb431c4cb94aef62b785887628f0c0c65",
   "approval": {
     "approved": true,
@@ -17,5 +17,5 @@
   "qualityAssessment": "The self-contained planning workflow covers whole-product readability, scoped module contracts, complete increments and bounded handoffs. It serves product and feature planning without implementation or installation helpers. The maintainer selected public inclusion after the prior PR review. Structural, packaging and installation-smoke checks validate the delivered contract; they do not prove agent-quality improvement or host routing.",
   "maintenanceOwner": "stark-ai-de",
   "limitations": "Full paired behavioral runs, human usability review, native installation/discovery and fresh-session routing remain unobserved for this final payload. The earlier single-case comparison used an older revision and is not current qualification evidence. This admission decision must not be submitted as an observed evaluation.",
-  "maintenanceNote": "2026-10-15: Refresh the shared source fingerprint for the explicitly authorized AC-ADR-066 Portless Guide update and its matching Guide verified metadata (PR #149). Architecture Zoom, interviewer payloads, planning cases, the original admission decision and unobserved native-host qualification are unchanged."
+  "maintenanceNote": "2026-10-15: Refresh the shared source fingerprint for the explicitly authorized AC-ADR-066 Portless Guide update, matching Guide verified metadata, and required Compass patch-version bump (PR #149). Architecture Zoom, interviewer payloads, planning cases, the original admission decision and unobserved native-host qualification are unchanged."
 }
