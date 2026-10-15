@@ -33,18 +33,20 @@ Karakeep is an editable knowledge collection. It is not the authoritative store 
 
 ## Scope and decision status
 
-The maintainer confirmed the shared collection, repository authority, agent-invoked workflow, factual session reports, separate drafts, and direct substantive source capture during the specification interview. The instruction to update the existing Karakeep pull request authorizes persistence of this specification. Recommendations below remain proposals; saving this draft does not accept them as implemented behavior.
+The maintainer confirmed the shared collection, repository authority, agent-invoked workflow, factual session reports, separate drafts, direct substantive source capture, project-list organization, bounded aggregation maintenance and Karakeep-owned cross-project dossiers during the specification interview. The instruction to update the existing Karakeep pull request authorizes persistence of this specification. Recommendations below remain proposals; saving this draft does not accept them as implemented behavior.
 
-| Area                | Contract                                                                                                                       | Status                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Knowledge ownership | Repository documents remain authoritative; Karakeep holds attributable knowledge copies                                        | Confirmed                                       |
-| Execution           | Reusable skill invoked during agent work; no required background pipeline, scheduler, CI import job, or n8n workflow           | Confirmed                                       |
-| Session knowledge   | Save short factual reports directly within an adopted policy; propose new standalone findings and process evaluations first    | Confirmed                                       |
-| Unmerged work       | Keep separately identified draft copies beside authoritative documents                                                         | Confirmed                                       |
-| Source capture      | Reuse or capture all direct substantive references in adopted documents; mark missing content; deeper traversal only on demand | Confirmed                                       |
-| Aggregations        | Support repository-origin and collection-origin artifacts with one owner and traceable inputs                                  | Recommended design                              |
-| Reliability         | Add a small on-demand deterministic helper alongside semantic agent instructions                                               | Recommended; implementation choice remains open |
-| Native enrichment   | Use available native per-item summaries, topic tagging, and optional semantic retrieval after capability and quality checks    | Recommended configuration, not activated        |
+| Area                      | Contract                                                                                                                                        | Status                                          |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Knowledge ownership       | Repository documents remain authoritative; Karakeep holds attributable knowledge copies                                                         | Confirmed                                       |
+| Execution                 | Reusable skill invoked during agent work; no required background pipeline, scheduler, CI import job, or n8n workflow                            | Confirmed                                       |
+| Session knowledge         | Save short factual reports directly within an adopted policy; propose new standalone findings and process evaluations first                     | Confirmed                                       |
+| Unmerged work             | Keep separately identified draft copies beside authoritative documents                                                                          | Confirmed                                       |
+| Source capture            | Reuse or capture all direct substantive references in adopted documents; mark missing content; deeper traversal only on demand                  | Confirmed                                       |
+| Organization              | One private project list per project, shared source objects and a small vocabulary for role, lifecycle and topics                               | Confirmed                                       |
+| Aggregation maintenance   | Maintain one factual project overview and already approved aggregates during relevant invocations; propose new topical dossiers first           | Confirmed                                       |
+| Derived-content ownership | Repository documents stay repository-owned; general cross-project dossiers are authoritative in Karakeep, with traceable adoption into projects | Confirmed                                       |
+| Reliability               | Add a small on-demand deterministic helper alongside semantic agent instructions                                                                | Recommended; implementation choice remains open |
+| Native enrichment         | Use available native per-item summaries, topic tagging, and optional semantic retrieval after capability and quality checks                     | Recommended configuration, not activated        |
 
 Quality and useful coverage take precedence over token cost and performance optimization at the current scale. Revisit these choices after observed problems. Bounded retries, finite traversal and resumable work still prevent loops and incorrect completion claims; they must not silently discard requested content.
 
@@ -89,7 +91,7 @@ Use native link, text, and supported asset bookmarks. The following roles are a 
 | Finding          | A reusable standalone insight with supporting sources                      | Propose before creating as a new independent artifact                          |
 | Synthesis        | Comparison, overview, summary, or aggregated dataset                       | Derived content with one authoritative owner and explicit input revisions      |
 
-Prefer one private project list per recurring project scope and a small cross-cutting vocabulary for role, lifecycle and topics. A bookmark can belong to several lists without duplicating its contents. Topic tags may be AI suggestions; project, role and draft/canonical status must be assigned deterministically. Lists and tags organize retrieval; they are not an authorization boundary.
+Use one private project list per adopted project and a small cross-cutting vocabulary for role, lifecycle and topics. Reuse an existing matching list and existing source objects instead of creating a parallel folder hierarchy or duplicate content per project. A bookmark can belong to several lists without duplicating its contents. Topic tags may be AI suggestions; project, role and draft/canonical status must be assigned deterministically. Lists and tags organize retrieval; they are not an authorization boundary.
 
 Examples such as `kind:session`, `kind:synthesis` or `state:draft` are proposed tag labels, not promises about search syntax. Verify the installed parser and tools before creating smart lists. A normal list is not an acceptable silent substitute for an unsupported smart list.
 
@@ -135,24 +137,36 @@ Do not upload full transcripts or every tool call. Raw history remains in the ow
 
 ## Aggregations and summaries
 
+### Standing maintenance scope
+
+Within an adopted write policy, relevant skill invocations may create and maintain **one factual overview per project** and refresh **already approved aggregates** without per-item confirmation. Propose a new topical dossier before creating it. New independent findings and process evaluations still require a proposal first, including when they arise while maintaining an existing aggregate. Refresh authority covers the approved artifact's purpose and source scope; it does not authorize unrelated dossiers or broader access.
+
+The project overview is a concise derived entry point in Karakeep: project goal, evidence-backed current state, confirmed decisions, open work and source references. It has a stable project identity and an explicit as-of time. Keep unmerged work visibly separate from the canonical state. Session reports retain the factual history; do not replace them with an ever-growing overview or treat a historical session result as current status without checking its sources. Project-essential documentation remains complete in the repository.
+
+### Authority and both creation directions
+
 Support both useful directions without running both for every item:
 
 1. A repository agent consumes Karakeep sources and creates a repository-owned comparison or document. Its Karakeep copy follows the normal document/draft workflow.
-2. An agent creates a collection-owned synthesis from several saved sources. A repository may intentionally adopt a version or cite it; project-essential conclusions must also be readable in the repository.
+2. An approved general, cross-project dossier is created and maintained with its authoritative original in Karakeep. No separate knowledge repository is required. A project may explicitly adopt the needed content into its own repository documentation or cite the dossier; project-essential conclusions must also be readable in that repository without Karakeep.
 
-Choose one authoritative owner for each derived artifact. Record original input identities and revisions, creation/update time, synthesis purpose and whether the artifact is a generated view or an adopted document. A mirrored copy retains the original artifact identity and lineage. If a repository intentionally adopts and edits a synthesis as a new document, record that adoption explicitly.
+Each derived artifact has one authoritative owner. Record original input identities and revisions, creation/update time, synthesis purpose and whether the artifact is a generated view or an adopted document. A mirrored copy retains the original artifact identity and lineage. If a repository intentionally adopts and edits a dossier as a new document, record that adoption explicitly; its repository-owned content does not silently overwrite the Karakeep-owned dossier or transfer its ownership.
 
 Never treat an exported copy as a new independent original, and never use an artifact or its mirrors as fresh evidence to regenerate itself. Existing syntheses can be discovery aids, but claims must remain traceable to original sources. A plain list of URLs is not a content-preserving aggregate.
 
 For aggregated datasets, retain the useful records or a supported content representation together with a schema description, source mapping and completeness limits. Large or unsupported original files stay in their authoritative repository/artifact store; the Karakeep representation must clearly state what it contains and cannot imply a full copy. Per-record source lineage may be represented compactly where identical provenance applies to a defined group.
 
-Refresh an aggregate during an agent task or explicit refresh when its inputs changed. Mark known outdated inputs as stale; an incomplete refresh preserves the prior result and reports pending work. Maintain no collection-wide automatic dossier or scheduled refresh by default. Native per-source summaries may run on ingestion independently of task-specific multi-source synthesis.
+### Refresh and incomplete work
+
+During relevant skill invocations or an explicit refresh, compare inputs with the last successful aggregate state and update affected approved artifacts when inputs changed. Retain their logical identities, preserve human edits and apply the same ownership/conflict checks as other writes. Repeated reconciliation must not create a new overview or dossier merely because another session ran.
+
+Mark known outdated inputs as stale; an incomplete refresh preserves the prior result with its prior source state and reports pending work. Do not claim collection-wide freshness from checking one project's inputs. Maintain no collection-wide automatic dossier or scheduled refresh by default. Native per-source summaries remain a separate configuration proposal and never replace original content.
 
 ## Agent invocation and failure behavior
 
 An adopted workflow checks relevant changed knowledge and pending receipts at meaningful completion/handoff points. Compare with the last successfully reconciled snapshot, not merely the last local commit. Review selected durable docs, ADRs, runbooks, useful design/research notes and their sources; do not interpret "project content" as every file.
 
-The procedure is: inspect authority and capabilities; plan creates/reuse/updates/conflicts; reconcile sources and canonical/draft documents; record factual session work; propose independent findings/evaluations; verify writes and report pending outcomes. These are agent-invoked actions. Repository guidance does not install a host trigger or CI job.
+The procedure is: inspect authority and capabilities; plan creates/reuse/updates/conflicts; reconcile sources and canonical/draft documents; record factual session work; maintain the project overview and affected approved aggregates; propose new topical dossiers and independent findings/evaluations; verify writes and report pending outcomes. These are agent-invoked actions. Repository guidance does not install a host trigger or CI job.
 
 Preserve the baseline's three-way field ownership checks. Re-read before updates and after writes; use conditional writes only where the actual API supports them. A local lock is not a distributed transaction with other hosts or human editors. Uncertain creates must be reconciled before retrying. Multiple hosts need a qualified writer/coordination policy before overlapping automated writes can be claimed safe.
 
@@ -213,18 +227,23 @@ The checked v0.33.2 MCP baseline does not expose text-body updates or smart-list
 
 The future implementation must demonstrate these cases with synthetic fixtures and then an authorized pilot:
 
-| Case                                                                | Observable result                                                                                    |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Shared source used by two projects                                  | One source bookmark, both project relationships preserved                                            |
-| Canonical document plus two unmerged branches                       | Canonical content unchanged; two distinguishable drafts with exact provenance                        |
-| Merged draft and repeated reconciliation                            | Canonical update from verified remote revision; draft marked superseded; no duplicate writes         |
-| Reference document with existing, new and inaccessible direct links | Existing sources reused, reachable content inspected, missing content explicit, no recursive crawl   |
-| Substantive session repeated or resumed                             | One attributable factual report per logical segment; no invented metrics or automatic process rating |
-| Human edit, timeout or missing write capability                     | Human content preserved; uncertain writes reconciled; unsupported actions reported pending           |
-| Karakeep outage                                                     | Repository work remains usable; pending work is visible and later resumable                          |
-| Repo-origin and collection-origin synthesis                         | Original-source lineage survives both directions; mirrors do not form feedback loops                 |
-| Long source with relevant content near its end                      | Full retrieval or explicit truncation; summaries and retrieval do not imply untested coverage        |
-| No adopted write policy                                             | Ordinary reads remain read-only; no enrollment, upload or background task                            |
+| Case                                                                | Observable result                                                                                                                 |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Shared source used by two projects                                  | One source bookmark, both project relationships preserved                                                                         |
+| Canonical document plus two unmerged branches                       | Canonical content unchanged; two distinguishable drafts with exact provenance                                                     |
+| Merged draft and repeated reconciliation                            | Canonical update from verified remote revision; draft marked superseded; no duplicate writes                                      |
+| Reference document with existing, new and inaccessible direct links | Existing sources reused, reachable content inspected, missing content explicit, no recursive crawl                                |
+| Substantive session repeated or resumed                             | One attributable factual report per logical segment; no invented metrics or automatic process rating                              |
+| Human edit, timeout or missing write capability                     | Human content preserved; uncertain writes reconciled; unsupported actions reported pending                                        |
+| Karakeep outage                                                     | Repository work remains usable; pending work is visible and later resumable                                                       |
+| Repo-origin and collection-origin synthesis                         | Original-source lineage survives both directions; mirrors do not form feedback loops                                              |
+| First adopted invocation and unchanged repeat                       | One factual project overview with source state; repeat reuses its identity and preserves session reports                          |
+| Changed source of an approved aggregate                             | The same artifact is refreshed within its accepted scope, or visibly stale/pending; human edits survive                           |
+| New topical dossier, independent finding or process evaluation      | Proposal only until approved; an existing aggregate is not used to bypass that boundary                                           |
+| General dossier adopted by a project                                | Original remains authoritative in Karakeep; adopted project content is independently readable and authoritative in its repository |
+| Aggregated dataset with incomplete inputs                           | Useful records, schema, source mapping and coverage limits are retained; a URL list alone is insufficient                         |
+| Long source with relevant content near its end                      | Full retrieval or explicit truncation; summaries and retrieval do not imply untested coverage                                     |
+| No adopted write policy                                             | Ordinary reads remain read-only; no enrollment, upload or background task                                                         |
 
 For this documentation-only change, validate formatting of the changed Markdown, relative links, source/ADR references, absence of private data and the scoped diff. Use `git diff --check`, `pnpm run validate:adrs` for the ADR references, and the repository-pinned Oxfmt executable with `--check` on the changed files. Hosted PR CI remains separate.
 
@@ -241,7 +260,7 @@ Material risks are stale copies, incomplete capture, conflicting writers, duplic
 ## Open choices and done-when
 
 1. Select instructions-only for an initial pilot or the recommended on-demand helper; define its narrow interface before coding.
-2. Adopt the first repository's eligible paths, taxonomy and standing write scope, with a real supported write connection.
+2. Adopt the first repository's eligible paths and standing write scope; map the agreed project lists and content roles to supported tools and concrete identifiers, with a real supported write connection.
 3. Qualify native enrichment and source retrieval on representative long and short content; exact models are deployment configuration.
 4. For a hosted agent consumer, separately select reachability, credential ownership and service lifecycle. One owner's shared collection does not grant access across tenants.
 
@@ -249,4 +268,4 @@ Specification delivery is complete when the agreed requirements and explicit pro
 
 ## Codex execution handoff
 
-After a separate implementation instruction, read this spec, the existing `karakeep-knowledge` routes and repository ADRs. Resolve only the open choices governing the requested slice. Extend the existing skill; preserve main-only canonical proof while adding an explicitly separate draft path. Implement no scheduler, CI import, custom database, blanket uploads or live service changes outside that instruction. Add meaningful fixtures for identity, conflicts, reference capture, session facts, lineage and outage recovery. Generate package projections through repository scripts, run the owning checks and report implementation, local checks, hosted CI and live qualification separately.
+After a separate implementation instruction, read this spec, the existing `karakeep-knowledge` routes and repository ADRs. Resolve only the open choices governing the requested slice. Extend the existing skill; preserve main-only canonical proof while adding an explicitly separate draft path. Implement no scheduler, CI import, custom database, blanket uploads or live service changes outside that instruction. Add meaningful fixtures for identity, conflicts, reference capture, session facts, overview/approved-aggregate maintenance, dossier proposal gates, source lineage and outage recovery. Generate package projections through repository scripts, run the owning checks and report implementation, local checks, hosted CI and live qualification separately.

@@ -16,11 +16,15 @@ Agents need reusable knowledge across the same owner's projects. Repository docu
 
 Use the shared `karakeep-knowledge` skill as an optional knowledge projection of selected repository content. Repository documents remain authoritative. The same owner may share a collection across projects while preserving project/source attribution and access boundaries.
 
-The adopted policy authorizes the agent, during relevant skill invocations, to reconcile approved knowledge documents and all direct substantive references, maintain canonical copies plus separately identified drafts, and save concise factual reports from substantive sessions. New standalone findings and process evaluations are proposed before saving. Already authorized routine writes do not require per-item confirmation.
+The adopted policy authorizes the agent, during relevant skill invocations, to reconcile approved knowledge documents and all direct substantive references, maintain canonical copies plus separately identified drafts, and save concise factual reports from substantive sessions. It also permits creating and maintaining one factual project overview and refreshing already approved aggregates within their accepted purpose and source scope. New topical dossiers, standalone findings and process evaluations are proposed before saving. Already authorized routine writes do not require per-item confirmation.
 
 Canonical copies come from a freshly verified pinned remote canonical revision. Drafts retain branch/work-context and exact-content provenance. Document location and ADR acceptance status are separate. No draft replaces a canonical copy.
 
-Each aggregate or synthesis has one authoritative owner and traceable original inputs. A copy keeps its origin; export/import does not create new evidence or a regeneration loop. Project-essential conclusions remain documented in the repository.
+Use one private list per adopted project, reuse source objects across project lists and keep a small vocabulary for content role, lifecycle and topics. Source content remains independently captured; a link overview does not replace its sources.
+
+General cross-project dossiers have their authoritative original in Karakeep. Projects explicitly adopt needed content into their own documentation; project-essential conclusions remain independently readable in the repository. Each aggregate has one authoritative owner and traceable original inputs. A copy keeps its origin; export/import does not create new evidence or a regeneration loop.
+
+During relevant invocations, update affected approved aggregates when inputs changed, preserving their identities and human edits. Keep source revisions and an as-of time visible; incomplete refreshes retain the prior result with a stale/pending indication. Session reports remain separate historical records.
 
 ## Scope and authority
 
@@ -40,7 +44,7 @@ Instructions alone are a lower-code option. A shared on-demand helper improves r
 
 1. Accept this repository-specific decision and resolve its placeholders; link the reviewed skill/spec from short repository guidance.
 2. Confirm a supported, appropriately scoped write path and the private policy/receipt location without putting secrets in Git.
-3. Pilot canonical/draft separation, direct reference capture, factual session reporting and preservation of human edits.
+3. Pilot canonical/draft separation, direct reference capture, factual session reporting, overview/approved-aggregate maintenance, new-dossier proposal gating and preservation of human edits.
 4. Verify a no-op repeat, outage recovery and cross-project source reuse before expanding the selected paths.
 
 Stop collection writes on unresolved ownership, permissions or conflicts. Disabling the adoption policy rolls back the workflow without deleting repository or collection content. New retention/deletion behavior requires an explicit lifecycle decision.
