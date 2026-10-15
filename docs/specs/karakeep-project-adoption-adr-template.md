@@ -28,7 +28,7 @@ During relevant invocations, update affected approved aggregates when inputs cha
 
 ## Scope and authority
 
-The private adoption policy identifies the intended account/collection, repository and approved paths, managed fields/list/tag identities, permitted content destinations, agent write capability and receipt owner. Endpoint or credential changes do not follow from this ADR alone.
+The private adoption policy identifies the intended account/collection, repository and approved paths, managed fields/list/tag identities, permitted content destinations, agent write capability, credential reference, designated writing host and shared private receipt/lock owner. Endpoint or credential changes do not follow from this ADR alone.
 
 Reads remain the default outside that policy. Human edits, unowned fields and other projects' memberships are preserved. Credentials, raw transcripts, sensitive runtime data and unrelated files are excluded. Source removal marks retirement rather than deleting shared knowledge. Public sharing and destructive cleanup require separate authority.
 
@@ -38,12 +38,12 @@ The workflow runs when the agent invokes it; this decision installs no scheduler
 
 Repository completeness and shared agent retrieval are compatible, at the cost of maintaining attributable copies and visible freshness. Karakeep remains an editable knowledge system, not an immutable audit log. Lists/tags organize content but do not enforce tenant isolation.
 
-Instructions alone are a lower-code option. A shared on-demand helper improves repeatability of identity, receipts and conflict handling but adds maintained code. Record the selected implementation approach separately; this template does not silently select it.
+Use the selected shared skill plus its bundled Node `scripts/knowledge.mjs` helper. The agent selects and interprets content, writes reports/syntheses and handles proposals; the helper validates policy and provenance, plans and applies supported API operations, preserves human edits and records resumable outcomes. Run it only during agent invocations, with no background service or helper-side model calls. The shared specification owns its CLI and JSON contracts.
 
 ## Adoption and verification
 
 1. Accept this repository-specific decision and resolve its placeholders; link the reviewed skill/spec from short repository guidance.
-2. Confirm a supported, appropriately scoped write path and the private policy/receipt location without putting secrets in Git.
+2. Confirm a supported, appropriately scoped API write path, the installed Node/helper paths and the private policy/receipt/collection-lock location without putting secrets in Git.
 3. Pilot canonical/draft separation, direct reference capture, factual session reporting, overview/approved-aggregate maintenance, new-dossier proposal gating and preservation of human edits.
 4. Verify a no-op repeat, outage recovery and cross-project source reuse before expanding the selected paths.
 
