@@ -52,3 +52,5 @@ The Karakeep start check returned `needs_setup`; no adopted project policy exist
 ## Main integration
 
 Before final publication, main advanced to `6984886b61b0cce820be14bc5119bbf5acbc29fb` through the Karakeep and Portless PRs. An ordinary merge preserves those changes and adds the Swarm gate alongside Karakeep. The three additive conflicts were in package scripts, validation ownership and its required-ID check. Fixture sources and the helper digest remain unchanged, so the pilot is not rerun. Ownership, skills, lint, deterministic fixtures, script validation and formatting are checked on the integrated tree; hosted checks qualify the resulting published revision separately.
+
+The first hosted integration run found that this new spec linked ADR Long files without their required Short/Guide companions. The spec now includes all three forms and `validate:adrs` is selected explicitly. This was a documentation-contract failure; fixture/pilot code was unchanged.

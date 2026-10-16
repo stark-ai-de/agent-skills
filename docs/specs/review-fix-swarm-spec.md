@@ -86,14 +86,14 @@ state are correct; it does not claim model effectiveness.
 ## Architectural decisions
 
 ADR required: no. Existing decisions govern this feature:
-[ADR-0001](../adrs/0001-use-open-agent-skills-spec.long.md),
-[ADR-0007](../adrs/0007-keep-skill-evals-outside-runtime-payload.long.md),
-[ADR-0009](../adrs/0009-mark-incubator-skills-internal.long.md),
-[ADR-0029](../adrs/0029-keep-linked-worktrees-inside-the-repository.long.md),
-[ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md),
-[ADR-0056](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md),
-[ADR-0060](../adrs/0060-allow-intent-bound-workflow-disclosure.long.md), and
-[ADR-0065](../adrs/0065-allow-explicit-direct-public-skill-releases.long.md).
+[ADR-0001](../adrs/0001-use-open-agent-skills-spec.short.md) ([Long, canonical](../adrs/0001-use-open-agent-skills-spec.long.md) · [Guide](../adrs/0001-use-open-agent-skills-spec.guide.md)),
+[ADR-0007](../adrs/0007-keep-skill-evals-outside-runtime-payload.short.md) ([Long, canonical](../adrs/0007-keep-skill-evals-outside-runtime-payload.long.md) · [Guide](../adrs/0007-keep-skill-evals-outside-runtime-payload.guide.md)),
+[ADR-0009](../adrs/0009-mark-incubator-skills-internal.short.md) ([Long, canonical](../adrs/0009-mark-incubator-skills-internal.long.md) · [Guide](../adrs/0009-mark-incubator-skills-internal.guide.md)),
+[ADR-0029](../adrs/0029-keep-linked-worktrees-inside-the-repository.short.md) ([Long, canonical](../adrs/0029-keep-linked-worktrees-inside-the-repository.long.md) · [Guide](../adrs/0029-keep-linked-worktrees-inside-the-repository.guide.md)),
+[ADR-0041](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.short.md) ([Long, canonical](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.long.md) · [Guide](../adrs/0041-select-validation-from-changed-contracts-and-owning-boundaries.guide.md)),
+[ADR-0056](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.short.md) ([Long, canonical](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md) · [Guide](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.guide.md)),
+[ADR-0060](../adrs/0060-allow-intent-bound-workflow-disclosure.short.md) ([Long, canonical](../adrs/0060-allow-intent-bound-workflow-disclosure.long.md) · [Guide](../adrs/0060-allow-intent-bound-workflow-disclosure.guide.md)), and
+[ADR-0065](../adrs/0065-allow-explicit-direct-public-skill-releases.short.md) ([Long, canonical](../adrs/0065-allow-explicit-direct-public-skill-releases.long.md) · [Guide](../adrs/0065-allow-explicit-direct-public-skill-releases.guide.md)).
 No successor decision or ADR acceptance gate is introduced.
 
 Keep the incubator's boolean internal: true. The maintainer explicitly chose this
@@ -147,7 +147,7 @@ relocated duplication and shared-helper/comment controls; original-test modifica
 and deletion, permitted additional tests, invalid inputs and subprocess errors.
 
 Run pnpm run validate:review-fix-swarm, validate:skills, validate:ownership,
-validate:scripts, lint and format:check. The final published revision must pass the
+validate:scripts, validate:adrs, lint and format:check. The final published revision must pass the
 mandatory hosted Validate workflow. Local aggregate validation is selected only
 when required by an owning boundary or mandatory gate under ADR-0041.
 

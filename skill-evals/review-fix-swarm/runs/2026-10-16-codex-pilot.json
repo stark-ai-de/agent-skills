@@ -717,7 +717,8 @@
     "scripts": "passed",
     "lint": "passed",
     "internalDiscovery": "skills@1.5.23 hidden by default, visible with INSTALL_INTERNAL_SKILLS=1",
-    "hostedValidation": "Reported independently by PR checks on the published revision"
+    "hostedValidation": "Reported independently by PR checks on the published revision",
+    "adrs": "passed after completing linked Short/Long/Guide spec references"
   },
   "knowledge": "Start check needs_setup; no adopted repository policy, no upload; adoption remains pending."
 }
