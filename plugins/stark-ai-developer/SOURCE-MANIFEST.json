@@ -82,7 +82,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "da62af7c4b2b2d9502816e7796994a07cb2a4740f87de567c7bee4a7ffaebadd"
+      "sha256": "ea6efe93ce52f3867a501109fac0b9aa4a2ffffcf4a471c4488becad54c6326f"
     },
     {
       "byteLength": 2128,
@@ -286,7 +286,7 @@
       "byteLength": 20342,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "1c265070ddfe554d3aaeba14e1dc456356c505e80bb8c2c124c1f6032a472784"
+      "sha256": "83790498332bf30f20437e92f913ee97be03d0328a6d344154aae4209575378d"
     },
     {
       "byteLength": 692,
@@ -1567,22 +1567,22 @@
       "sha256": "0524a4e871899b4be58cde2010ee49d640e6215e7a787203315f821954aef6cd"
     },
     {
-      "byteLength": 6902,
+      "byteLength": 27811,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.guide.md",
-      "sha256": "6f9f0ba4e512078f13356130a413ce3e4d40dd679f42b79941f90242e9de522b"
+      "sha256": "c7d3b1725a9b60f51774c0ffb4199b400a64afe68159a6f3f4442f3b0026b53b"
     },
     {
       "byteLength": 7109,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.long.md",
-      "sha256": "076b5974bf6a64bc6c52854da2e62d01116893939db7a358bb985f91724ce868"
+      "sha256": "d86af2e3e9c95f83c45841528118fcc9d96d08412d159fc07d7b831b9174e824"
     },
     {
       "byteLength": 2475,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.short.md",
-      "sha256": "846126cf93baa10af4bb1ae76638c19c3bee26a987001c8dbaf0e79c2c28060c"
+      "sha256": "40329f8dfc49dc26f4e43103fd6b5b7dd744a8fc9eef9811c4173a4fa8910eb3"
     },
     {
       "byteLength": 5098,
@@ -2409,9 +2409,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.11.0"
+    "version": "1.11.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "b2680049880d1ed617cb39cc3e5f338dabb1011ed37a5e5d96540bfefcfcaf3b"
+  "treeHash": "6bca7efd4782d7770312b860c81eb2f214b9d32cd0b3a7fb59047e696772cb5e"
 }

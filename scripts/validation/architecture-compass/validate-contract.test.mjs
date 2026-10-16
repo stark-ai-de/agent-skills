@@ -5,6 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 import "./simplification-contract.test.mjs";
+import "./portless-guide.test.mjs";
 import { PUBLIC_ARCHITECTURE_ADR_IDS } from "../../lib/architecture-compass-inventory.mjs";
 
 const unapprovedId = String(Math.max(...PUBLIC_ARCHITECTURE_ADR_IDS) + 1).padStart(3, "0");
