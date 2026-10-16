@@ -111,7 +111,7 @@
       "command": "pnpm run validate:jev",
       "owner": "scripts/validation/jev-capability-advisor/validate.mjs",
       "proof": "Offline advisor selection, metadata, bounded cache and transport contracts with injected responses",
-      "cadence": "Pull requests with Jev validation changes; full 3 OS \u00d7 2 Python matrix on matching main pushes and manual dispatch"
+      "cadence": "Pull requests with Jev validation changes; full 3 OS × 2 Python matrix on matching main pushes and manual dispatch"
     },
     {
       "id": "change-impact",
@@ -131,7 +131,7 @@
       "id": "karakeep-knowledge",
       "command": "pnpm run validate:karakeep",
       "owner": ".github/workflows/validate.yml#validate",
-      "proof": "Local Karakeep preparation, credential boundary, read-only readiness and MCP launcher behavior with synthetic fixtures",
+      "proof": "Python setup, credential boundary, read-only readiness and MCP launcher fixtures; Node reconciliation, source capture, canonical/draft isolation, conflict preservation, recovery and startup-policy fixtures. Live instance and fresh-session observations remain separate.",
       "cadence": "hosted Validate preflight"
     }
   ]

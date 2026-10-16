@@ -48,13 +48,43 @@ export function scanNetworkSource(text, relative) {
     /^API_PATH = ['"]\/v1\/systemone['"]$/m.test(text);
   // Permit only the reviewed POST call shape in this provider-owned module.
   // All other call patterns and endpoint strings are still scanned below.
-  const apiText =
+  let apiText =
     sessionTransport && fixedTarget
       ? text.replace(
           /\bconnection\.request\(\s*(['"])POST\1,\s*API_PATH,\s*body=body,\s*headers=\{/g,
           "reviewed_provider_call({",
         )
       : text;
+  const karakeepTransport =
+    /^(?:canonical|portable)\/karakeep-knowledge\/scripts\/knowledge\/karakeep\.mjs$/.test(
+      relative,
+    );
+  const loopbackGuards = [
+    '["http:", "https:"].includes(u.protocol)',
+    '["localhost", "127.0.0.1", "[::1]"].includes(u.hostname)',
+    "!u.username",
+    "!u.password",
+    'u.pathname === "/"',
+    "!u.search",
+    "!u.hash",
+    "this.address = origin(auth.address)",
+    'route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY',
+  ].every((guard) => text.includes(guard));
+  // This exact module owns the reviewed, policy-bound loopback REST client.
+  // Mask only its wrapper and single fetch shape; additional calls still fail.
+  // Guard-drift fixtures complement runtime origin/credential tests, not a sandbox.
+  if (karakeepTransport && loopbackGuards) {
+    apiText = apiText
+      .replace(
+        /\basync request\(route, \{ method = "GET", body \} = \{\}\)/,
+        'async reviewedRequest(route, { method = "GET", body } = {})',
+      )
+      .replace(/\bthis\.request\(/g, "this.reviewedRequest(")
+      .replace(
+        /\bfetch\(this\.address \+ route, \{\s*method,\s*redirect: "manual",/,
+        'reviewedLoopbackCall(this.address + route, { method, redirect: "manual",',
+      );
+  }
   const hookManager =
     /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/jev_hooks\.py$/.test(relative);
   const patterns = hookManager

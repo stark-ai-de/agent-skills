@@ -418,11 +418,35 @@
       "evidenceRefs": [
         "skill-evals/karakeep-knowledge/test_karakeep.py",
         "skill-evals/karakeep-knowledge/README.md",
-        "pnpm run validate:karakeep"
+        "pnpm run validate:karakeep:python"
       ],
       "rationale": "Dependency-free POSIX helpers require Python 3.10+. All 15 synthetic tests passed on Python 3.12 in the managed Linux environment. This is helper evidence, not native MCP, live curation or host-trigger qualification.",
       "fallbackOrder": ["python3"],
       "revisit": "Requalify when helper/runtime contracts change; report missing Python instead of silently installing another runtime."
+    },
+    {
+      "id": "karakeep-knowledge-node-contract",
+      "surfaces": ["package:root:karakeep-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localLinuxFixtures": "pass",
+            "hostedLinuxFixtures": "pass",
+            "nativeLocalInstance": "pass",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:karakeep:node",
+        "skills/engineering-workflows/karakeep-knowledge/scripts/knowledge.mjs",
+        "skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md"
+      ],
+      "rationale": "The approved skill helper has an explicit Node 24.18+ Linux/POSIX CLI contract. Sixteen node:test cases passed locally on Node 24.22.0 and in the hosted Linux preflight on Node 24.18.0. Live local readback and reconciliation qualify that installed Node helper separately from synthetic fixtures. The Bun parent orchestrates the Python and Node gates through pnpm without replacing either runtime.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify after changes to the helper runtime or filesystem/transport contract. Report missing Node rather than substituting another runtime silently."
     }
   ]
 }
