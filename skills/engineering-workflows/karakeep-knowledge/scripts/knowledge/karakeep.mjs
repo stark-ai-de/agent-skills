@@ -109,6 +109,40 @@ export function remoteId(id) {
   );
   return encodeURIComponent(id);
 }
+function transportDiagnostic(error, aborted) {
+  if (aborted) return "timeout";
+  const pending = [error],
+    seen = new Set();
+  while (pending.length && seen.size < 32) {
+    const e = pending.shift();
+    if (!e || typeof e !== "object" || seen.has(e)) continue;
+    seen.add(e);
+    if (
+      [
+        "CERT_HAS_EXPIRED",
+        "DEPTH_ZERO_SELF_SIGNED_CERT",
+        "SELF_SIGNED_CERT_IN_CHAIN",
+        "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+        "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+        "ERR_TLS_CERT_ALTNAME_INVALID",
+      ].includes(e.code)
+    )
+      return "tls_trust";
+    if (e.code === "ECONNREFUSED") return "connection_refused";
+    if (["ENOTFOUND", "EAI_AGAIN"].includes(e.code)) return "dns";
+    if (
+      [
+        "ETIMEDOUT",
+        "UND_ERR_CONNECT_TIMEOUT",
+        "UND_ERR_HEADERS_TIMEOUT",
+        "UND_ERR_BODY_TIMEOUT",
+      ].includes(e.code)
+    )
+      return "timeout";
+    pending.push(e.cause, ...(Array.isArray(e.errors) ? e.errors.slice(0, 32) : []));
+  }
+  return "transport";
+}
 export class Karakeep {
   constructor(auth, { deadlineMs = 20000, maxBytes = 64 * 1024 * 1024 } = {}) {
     this.address = origin(auth.address);
@@ -117,11 +151,16 @@ export class Karakeep {
     this.maxBytes = maxBytes;
   }
   async request(route, { method = "GET", body } = {}) {
-    requireThat(
-      route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY,
-      "connection",
-      "Unsupported route or proxy-enabled Node runtime.",
-    );
+    try {
+      requireThat(
+        route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY,
+        "connection",
+        "Unsupported route or proxy-enabled Node runtime.",
+      );
+    } catch (error) {
+      error.requestOutcome = "not_sent";
+      throw error;
+    }
     const abort = new AbortController(),
       timer = setTimeout(() => abort.abort(), this.deadlineMs);
     try {
@@ -162,10 +201,12 @@ export class Karakeep {
       }
     } catch (e) {
       if (e instanceof KnowledgeError) throw e;
-      throw new KnowledgeError(
+      const error = new KnowledgeError(
         "unreachable",
         "Karakeep connection failed or exceeded its deadline.",
       );
+      error.diagnostic = transportDiagnostic(e, abort.signal.aborted);
+      throw error;
     } finally {
       clearTimeout(timer);
     }
@@ -272,7 +313,7 @@ export class Karakeep {
     requireThat(Array.isArray(result.lists), "api", "Unsupported membership response.");
     return result.lists.map((x) => x.id);
   }
-  async attach(id, listIds, tags, operations) {
+  async attach(id, listIds, tags, operations, beforeWrite = async () => {}) {
     const existing = await this.memberships(id);
     for (const list of listIds.filter((x) => !existing.includes(x))) {
       requireThat(
@@ -280,6 +321,7 @@ export class Karakeep {
         "policy",
         "List membership is not authorized.",
       );
+      await beforeWrite();
       await this.request("/api/v1/lists/" + remoteId(list) + "/bookmarks/" + remoteId(id), {
         method: "PUT",
       });
@@ -289,6 +331,7 @@ export class Karakeep {
     const missing = tags.filter((t) => !names.includes(t));
     if (missing.length) {
       requireThat(operations.includes("tag"), "policy", "Tag attachment is not authorized.");
+      await beforeWrite();
       await this.request("/api/v1/bookmarks/" + remoteId(id) + "/tags", {
         method: "POST",
         body: { tags: missing.map((tagName) => ({ tagName })) },

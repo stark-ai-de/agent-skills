@@ -163,7 +163,7 @@ class Helpers(unittest.TestCase):
     def test_only_explicit_loopback_origins_are_accepted(self):
         for address in ("http://localhost:3137", "http://127.0.0.1:3000/", "https://[::1]:3443"):
             self.assertEqual(runtime.local_url(address), address.rstrip("/"))
-        for address in ("https://example.org", "http://localhost.example.org", "http://user:secret@localhost", "http://localhost/path", "http://localhost?key=secret", "http://localhost:bad", "http://localhost\n", "http://localhost:0"):
+        for address in ("https://karakeep.localhost", "https://example.org", "http://localhost.example.org", "http://user:secret@localhost", "http://localhost/path", "http://localhost?key=secret", "http://localhost:bad", "http://localhost\n", "http://localhost:0"):
             with self.subTest(address=address), self.assertRaises(runtime.ConfigurationError):
                 runtime.local_url(address)
 
@@ -213,6 +213,15 @@ class Helpers(unittest.TestCase):
         self.assertIn("127.0.0.1", body["bypass"])
         self.assertEqual(result.stderr, "")
         self.assertNotIn("synthetic-test-value", result.stdout)
+
+    def test_launcher_rejects_named_localhost_before_spawning(self):
+        env_file = self.settings(address="https://karakeep.localhost")
+        child = "print('CHILD_STARTED')"
+        result = subprocess.run([sys.executable, "-B", str(SCRIPTS / "mcp_launcher.py"), "--env-file", str(env_file), "--", sys.executable, "-c", child], capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertNotIn("CHILD_STARTED", result.stderr)
+        self.assertNotIn("synthetic-test-value", result.stderr)
 
     def test_launcher_failure_does_not_echo_secret_or_protocol_output(self):
         env_file = self.settings()

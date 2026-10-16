@@ -50,6 +50,10 @@ loop from exporting and re-importing the same artifact. A repository may adopt a
 version of a Karakeep dossier, and may also publish a repository-owned synthesis;
 record ownership, lineage and the original versions in either direction.
 
+For complex independent evidence reads, the optional [handoff recipe](handoffs.md)
+keeps unique step identities and dependency results. It grants no extra writer or
+upload authority and does not replace helper inspection, source hashes or receipts.
+
 ## Canonical documents and drafts
 
 `inspect` verifies the remote identity and current default branch, pins its commit,
@@ -81,6 +85,11 @@ credential locally. All writes are read back and recorded immediately. Creation
 success and readable-content capture are distinct outcomes. Inspect private capture
 files, add an assessed full-content hash, then plan again for source-backed work.
 
+Before each dependent mutation, the helper requires current-pass complete source
+reads matching every bound original input and verified reference hash. A missing,
+changed or incomplete capture blocks dependent creates, updates and assignments;
+independent work may continue. Earlier successful receipts do not replace these reads.
+
 After an uncertain write, use `resume` with the recorded operation ID before a new
 plan. It finds the created object by exact URL or operation provenance; ambiguous
 results require resolution. Never blindly retry creation. A same-host dead lock can
@@ -89,6 +98,11 @@ the receipt and re-establish source/ownership before replanning. The helper neve
 removes a remote object. A local lock does not serialize human UI edits: the REST
 API has no compare-and-swap for this workflow, so before/after checks narrow but
 cannot eliminate that race. Report that limitation when resolving a conflict.
+
+An explicitly rejected create (HTTP 400/401/403/429 at the create request) or a local
+pre-dispatch refusal is recorded as failed, not applied. Correct its cause, then use
+one explicit `resume` attempt or a fresh plan. A later readback 403 does not establish
+that creation failed. Empty inventory after timeout likewise does not permit replay.
 
 Complete only after readback; pending sources, conflicts and failures remain visible.
 Repeated reconciliation converges without remote writes for unchanged objects.

@@ -55,3 +55,12 @@ Checked against Karakeep `v0.33.2` for the 0.3.0 helper:
 - [List REST routes](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/lists.ts) and [list schemas](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/shared/types/lists.ts): private manual list validation and membership.
 - [API key schema](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/shared/types/apiKeys.ts) and [user routes](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/users.ts): scoped credentials and expected-account verification.
 - [Codex skills](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills) and [global guidance](https://learn.chatgpt.com/docs/agent-configuration/agents-md#how-codex-discovers-guidance): user-wide discovery and instruction loading, not an executable startup hook.
+
+## Review corrections and optional CLI contract (2026-10-16)
+
+- [v0.33.2 bookmark creation](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/trpc/routers/bookmarks.ts): `import`/`rss` duplicates return before ordinary re-save field/archive/timestamp mutations; the helper uses `import`.
+- [v0.33.2 CLI](https://github.com/karakeep-app/karakeep/tree/v0.33.2/apps/cli): package version 0.33.0, explicit `KARAKEEP_SERVER_ADDR`, `whoami`, bounded search and versioned content continuation. No `skill` command in that source; installed help remains decisive.
+- [Git hook environment contract](https://git-scm.com/docs/githooks#_description): remove Git's repository-local selectors (`rev-parse --local-env-vars`) before inspecting another checkout; keep unrelated authentication environment.
+
+These are inspected source contracts. They do not establish installed CLI identity,
+live Hermes behavior, source quality or collection readiness for the 0.5.0 candidate.

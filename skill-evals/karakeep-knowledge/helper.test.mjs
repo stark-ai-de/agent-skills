@@ -13,6 +13,7 @@ import {
   apply,
   resume,
   check,
+  status,
   splitNote,
 } from "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/reconcile.mjs";
 import {
@@ -30,7 +31,12 @@ import {
   literal,
   origin,
   credentials,
+  Karakeep,
 } from "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/karakeep.mjs";
+import {
+  snapshot,
+  git,
+} from "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/git.mjs";
 const exec = promisify(execFile);
 const helper = fileURLToPath(
   new URL(
@@ -43,7 +49,9 @@ async function fixture(t) {
   await fs.chmod(root, 0o700);
   const objects = new Map(),
     members = new Map(),
-    writes = [];
+    writes = [],
+    requests = [],
+    faults = {};
   let next = 0,
     loseCreate = false;
   const lists = [
@@ -58,6 +66,7 @@ async function fixture(t) {
       res.writeHead(code, { "content-type": "application/json" });
       res.end(JSON.stringify(value));
     };
+    requests.push({ method: req.method, path: u.pathname });
     if (!["Bearer test-secret", "Bearer read-secret", "Bearer wrong-secret"].includes(key))
       return send({}, 401);
     if (req.method !== "GET" && key === "Bearer read-secret") return send({}, 403);
@@ -98,7 +107,20 @@ async function fixture(t) {
       const old = [...objects.values()].find(
         (x) => payload.type === "link" && x.content.url === payload.url,
       );
-      if (old) return send({ ...old, alreadyExists: true });
+      if (faults.rejectCreate) return send({}, faults.rejectCreate);
+      if (faults.dropWithoutCreate) {
+        req.socket.destroy();
+        return;
+      }
+      if (old) {
+        // v0.33.2 ordinary re-saves mutate these fields; import/rss are exempt.
+        if (!["import", "rss"].includes(payload.source)) {
+          for (const k of ["title", "note"]) if (Object.hasOwn(payload, k)) old[k] = payload[k];
+          old.archived = false;
+          old.createdAt = old.modifiedAt = new Date().toISOString();
+        }
+        return send({ ...old, alreadyExists: true });
+      }
       const id = "b" + ++next,
         b = {
           id,
@@ -127,14 +149,17 @@ async function fixture(t) {
         if (!b.tags.some((x) => x.name === tag.tagName)) b.tags.push({ name: tag.tagName });
       return send({ attached: b.tags });
     }
+    if (faults.readback403 && parts.length === 2 && req.method === "GET") return send({}, 403);
     if (parts[2] === "content") {
       const text = b.content.type === "text" ? b.content.text : (b.captured ?? "");
       const offset = Number(u.searchParams.get("cursor") || 0),
         chunk = text.slice(offset, offset + 50);
+      if (offset && faults.contentPageError) return send({}, 503);
+      if (faults.missingCapture) return send({}, 404);
       return send({
         bookmarkId: b.id,
         content: chunk,
-        contentVersion: hash(text),
+        contentVersion: offset && faults.contentVersionChange ? "changed" : hash(text),
         nextCursor: offset + 50 < text.length ? String(offset + 50) : null,
         truncated: offset + 50 < text.length,
       });
@@ -192,6 +217,8 @@ async function fixture(t) {
     writes,
     members,
     credentialFile,
+    requests,
+    faults,
     lose: () => {
       loseCreate = true;
     },
@@ -239,6 +266,7 @@ test("literal secrets match shell-literal parsing without executing substitution
   assert.throws(() => literal("one two"));
   assert.throws(() => literal("'unfinished"));
   assert.throws(() => origin("https://example.com"));
+  assert.throws(() => origin("https://karakeep.localhost"));
   assert.throws(() => origin("http://localhost/path"));
 });
 test("private credentials reject symlinks and permissive files", async (t) => {
@@ -572,4 +600,437 @@ test("recovery never adopts a known reused bookmark from an operation marker", a
   const store = await loadStore(f.p);
   assert.equal(store.entries[identity("source", url)].owned, false);
   assert.equal(b.title, "Human title");
+});
+
+test("duplicate source save racing with a human preserves all human fields and stays unowned", async (t) => {
+  const f = await fixture(t),
+    url = "https://example.test/racing";
+  const input = { kind: "source", url, title: "Suggested" };
+  const r = await f.prepare([input]);
+  const human = {
+    id: "human",
+    title: "Human",
+    note: "Private note",
+    archived: true,
+    createdAt: "2025-01-01T00:00:00Z",
+    modifiedAt: "2025-02-01T00:00:00Z",
+    content: { type: "link", url },
+    tags: [],
+  };
+  const before = structuredClone(human);
+  f.objects.set(human.id, human);
+  await r.apply();
+  assert.deepEqual(human, before);
+  const stored = (await loadStore(f.p)).entries[identity("source", url)];
+  assert.equal(stored.owned, false);
+  assert.equal(stored.fields, null);
+  const count = f.writes.length;
+  await (await f.prepare([input])).apply();
+  assert.equal(f.writes.length, count);
+  assert.deepEqual(human, before);
+});
+
+for (const fault of [
+  "changed",
+  "missingCapture",
+  "contentPageError",
+  "contentVersionChange",
+  "deleted",
+]) {
+  for (const existing of [false, true]) {
+    test(`fresh source gate blocks dependent ${existing ? "updates and attachments" : "creates"}: ${fault}`, async (t) => {
+      const f = await fixture(t),
+        url = "https://example.test/dependency";
+      const b = {
+        id: "source",
+        title: "Original",
+        note: null,
+        tags: [],
+        content: { type: "link", url },
+        captured: "Original content and important tail. ".repeat(5),
+      };
+      f.objects.set(b.id, b);
+      const key = identity("source", url),
+        file = await f.text();
+      const source = {
+        kind: "source",
+        url,
+        title: "Original",
+        capture: {
+          status: "verified",
+          contentHash: hash(b.captured),
+          reason: "Complete original inspected.",
+        },
+      };
+      f.p.approvedAggregates = [
+        { id: "topic", purpose: "Compare", inputKeys: [key], approval: "Test grant" },
+      ];
+      await f.savePolicy();
+      const dependent = {
+        kind: "dossier",
+        id: "topic",
+        title: "Derived",
+        contentFile: file,
+        purpose: "Compare",
+        inputs: [{ key, contentHash: hash(b.captured) }],
+      };
+      const reference = {
+        ...report(file, "referencing"),
+        references: [{ target: url, key, outcome: "verified" }],
+      };
+      const items = [source, dependent, reference, report(file, "independent")];
+      if (existing) {
+        await (await f.prepare(items)).apply();
+        await f.text(file, "Updated analysis.");
+        f.p.listIds = ["list1", "list2"];
+        f.p.tags.dossier = ["new-tag"];
+        f.p.tags.session = ["new-tag"];
+        await f.savePolicy();
+      }
+      const r = await f.prepare(items),
+        before = f.writes.length;
+      const dependentIds = [...f.objects.values()]
+        .filter(
+          (x) =>
+            ["Derived", "Work report"].includes(x.title) &&
+            splitNote(x.note).meta?.key !== identity("session", "policy", "independent"),
+        )
+        .map((x) => x.id);
+      if (fault === "changed") b.captured = "Different content.";
+      else if (fault === "deleted") f.objects.delete(b.id);
+      else f.faults[fault] = true;
+      const result = await r.apply();
+      assert.equal(result.status, "pending");
+      assert.equal(result.results[identity("dossier", "policy", "topic")].status, "needs_agent");
+      assert.equal(
+        result.results[identity("session", "policy", "referencing")].status,
+        "needs_agent",
+      );
+      assert.equal(result.results[identity("session", "policy", "independent")].status, "verified");
+      const mutations = f.writes.slice(before);
+      assert.equal(
+        mutations.filter(
+          (w) =>
+            w.payload.title === "Derived" ||
+            splitNote(w.payload.note).meta?.key === identity("session", "policy", "referencing") ||
+            dependentIds.some((id) => w.path.split("/").includes(id)),
+        ).length,
+        0,
+      );
+      // Prior receipt success must not unblock the next apply/resume pass either.
+      const resumed = await resume({ policy: f.policyFile, operation: r.planned.operation });
+      assert.equal(resumed.results[identity("dossier", "policy", "topic")].status, "needs_agent");
+    });
+  }
+}
+
+for (const code of [400, 401, 403, 429]) {
+  test(`definitive create HTTP ${code} is pending and explicit resume retries once`, async (t) => {
+    const f = await fixture(t),
+      file = await f.text();
+    await (await f.prepare([report(file, "predecessor")])).apply();
+    const r = await f.prepare([report(file, "predecessor"), report(file)]);
+    f.faults.rejectCreate = code;
+    await assert.rejects(r.apply(), (e) => e.code === "http_" + code);
+    const key = identity("session", "policy", "session-one");
+    const pending = await status({ policy: f.policyFile });
+    assert.equal(pending.status, "pending");
+    assert.equal(pending.pending.find((x) => x.key === key).status, "failed");
+    const receipt = await readJson(
+      path.join(locations(f.p).operations, r.planned.operation + ".json"),
+    );
+    assert.deepEqual(receipt.results[key].failure, {
+      phase: "create_request",
+      code: "http_" + code,
+      outcome: "not_applied",
+    });
+    const attempts = f.requests.filter(
+      (x) => x.method === "POST" && x.path === "/api/v1/bookmarks",
+    ).length;
+    await r.apply();
+    assert.equal(
+      f.requests.filter((x) => x.method === "POST" && x.path === "/api/v1/bookmarks").length,
+      attempts,
+    );
+    delete f.faults.rejectCreate;
+    assert.equal(
+      (await resume({ operation: r.planned.operation, policy: f.policyFile })).status,
+      "complete",
+    );
+    assert.equal(f.objects.size, 2);
+    assert.equal(
+      f.requests.filter((x) => x.method === "POST" && x.path === "/api/v1/bookmarks").length,
+      attempts + 1,
+    );
+    assert.equal((await status({ policy: f.policyFile })).status, "ready");
+  });
+}
+
+test("read-only credentials can be corrected for resume without recreating prior success", async (t) => {
+  const f = await fixture(t),
+    file = await f.text();
+  const r = await f.prepare([report(file)]);
+  const auth = await fs.readFile(f.credentialFile, "utf8");
+  await fs.writeFile(f.credentialFile, auth.replace("test-secret", "read-secret"));
+  await assert.rejects(r.apply(), (e) => e.code === "http_403");
+  await fs.writeFile(f.credentialFile, auth);
+  assert.equal(
+    (await resume({ operation: r.planned.operation, policy: f.policyFile })).status,
+    "complete",
+  );
+  assert.equal(f.objects.size, 1);
+});
+
+test("local create rejection records no dispatch and a corrected policy can use a fresh plan", async (t) => {
+  const f = await fixture(t),
+    file = await f.text();
+  f.p.operations = ["membership", "tag"];
+  await f.savePolicy();
+  const r = await f.prepare([report(file)]);
+  await assert.rejects(r.apply(), (e) => e.code === "policy");
+  const record = (await loadStore(f.p)).entries[identity("session", "policy", "session-one")];
+  assert.deepEqual(record.failure, {
+    phase: "create_preflight",
+    code: "policy",
+    outcome: "not_applied",
+  });
+  assert.equal(f.writes.length, 0);
+  f.p.operations.push("create");
+  await f.savePolicy();
+  assert.equal((await (await f.prepare([report(file)])).apply()).status, "complete");
+});
+
+test("accepted create followed by readback 403 stays uncertain and resumes without POST", async (t) => {
+  const f = await fixture(t),
+    file = await f.text(),
+    r = await f.prepare([report(file)]);
+  f.faults.readback403 = true;
+  await assert.rejects(r.apply(), (e) => e.code === "http_403");
+  const record = (await loadStore(f.p)).entries[identity("session", "policy", "session-one")];
+  assert.deepEqual(record.failure, {
+    phase: "create_readback",
+    code: "http_403",
+    outcome: "uncertain",
+  });
+  assert.equal(f.objects.size, 1);
+  delete f.faults.readback403;
+  const before = f.requests.filter(
+    (x) => x.method === "POST" && x.path === "/api/v1/bookmarks",
+  ).length;
+  assert.equal(
+    (await resume({ operation: r.planned.operation, policy: f.policyFile })).status,
+    "complete",
+  );
+  assert.equal(
+    f.requests.filter((x) => x.method === "POST" && x.path === "/api/v1/bookmarks").length,
+    before,
+  );
+});
+
+test("unknown transport outcome with empty inventory never authorizes a blind retry", async (t) => {
+  const f = await fixture(t),
+    file = await f.text(),
+    r = await f.prepare([report(file)]);
+  f.faults.dropWithoutCreate = true;
+  await assert.rejects(r.apply(), (e) => e.code === "unreachable");
+  delete f.faults.dropWithoutCreate;
+  const before = f.writes.length;
+  assert.equal(
+    (await resume({ operation: r.planned.operation, policy: f.policyFile })).status,
+    "pending",
+  );
+  assert.equal(f.writes.length, before);
+  assert.equal(f.objects.size, 0);
+  // Legacy uncertain entries without the new failure evidence remain conservative.
+  const store = await loadStore(f.p);
+  delete store.entries[identity("session", "policy", "session-one")].failure;
+  await writeJson(locations(f.p).store, store);
+  await resume({ operation: r.planned.operation, policy: f.policyFile });
+  assert.equal(f.writes.length, before);
+});
+
+test("inherited Git selectors cannot mix same-remote checkout identity and bytes", async (t) => {
+  const f = await fixture(t),
+    a = path.join(f.root, "a"),
+    b = path.join(f.root, "b"),
+    remote = path.join(f.root, "remote.git");
+  await exec("git", ["init", "--bare", "--initial-branch=main", remote]);
+  await exec("git", ["clone", remote, a]);
+  const g = (...args) => exec("git", ["-C", a, ...args]);
+  await g("config", "user.name", "Fixture");
+  await g("config", "user.email", "fixture@example.test");
+  await fs.writeFile(path.join(a, "README.md"), "Canonical.");
+  await g("add", "README.md");
+  await g("commit", "-m", "Initial");
+  await g("push", "origin", "main");
+  await exec("git", ["clone", remote, b]);
+  await g("switch", "-c", "other");
+  await fs.writeFile(path.join(a, "README.md"), "Other checkout.");
+  await g("commit", "-am", "Other revision");
+  await fs.writeFile(path.join(b, "README.md"), "Requested draft.");
+  f.p.scope = "project";
+  f.p.repo = { id: "example/repo", remote, branch: "main", include: ["README.md"], exclude: [] };
+  await f.savePolicy();
+  const p = (await loadPolicy(f.policyFile)).policy;
+  const expected = await snapshot(b, p);
+  const cases = [
+    { GIT_DIR: path.join(a, ".git") },
+    { GIT_WORK_TREE: a },
+    { GIT_COMMON_DIR: path.join(a, ".git") },
+    {
+      GIT_DIR: path.join(a, ".git"),
+      GIT_WORK_TREE: a,
+      GIT_INDEX_FILE: path.join(a, ".git/index"),
+      GIT_OBJECT_DIRECTORY: path.join(a, ".git/objects"),
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "remote.origin.url",
+      GIT_CONFIG_VALUE_0: "/wrong",
+    },
+  ];
+  for (const env of cases) {
+    const prior = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
+    try {
+      Object.assign(process.env, env);
+      assert.deepEqual(await snapshot(b, p), expected);
+      assert.equal(
+        (await git(b, ["rev-parse", "HEAD"])).trim(),
+        (
+          await exec("git", ["-C", b, "rev-parse", "HEAD"], { env: { PATH: process.env.PATH } })
+        ).stdout.trim(),
+      );
+    } finally {
+      for (const [k, v] of Object.entries(prior))
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+    }
+  }
+});
+
+for (const [code, diagnostic] of [
+  ["SELF_SIGNED_CERT_IN_CHAIN", "tls_trust"],
+  ["ECONNREFUSED", "connection_refused"],
+  ["ENOTFOUND", "dns"],
+  ["ETIMEDOUT", "timeout"],
+  ["PRIVATE_UNKNOWN_CODE", "transport"],
+]) {
+  test(`transport diagnostics classify ${diagnostic} without exposing raw errors`, async (t) => {
+    t.mock.method(globalThis, "fetch", async () => {
+      throw new TypeError("private endpoint and secret must not leak", {
+        cause: new AggregateError([Object.assign(new Error("private certificate text"), { code })]),
+      });
+    });
+    const api = new Karakeep({ address: "https://localhost", key: "synthetic-secret" });
+    await assert.rejects(api.account("account"), (e) => {
+      assert.equal(e.code, "unreachable");
+      assert.equal(e.diagnostic, diagnostic);
+      assert.doesNotMatch(
+        JSON.stringify(e) + e.message,
+        /private|synthetic-secret|PRIVATE_UNKNOWN_CODE/u,
+      );
+      return true;
+    });
+  });
+}
+
+test("overall Node deadline reports only the timeout category", async (t) => {
+  t.mock.method(
+    globalThis,
+    "fetch",
+    (_url, { signal }) =>
+      new Promise((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new Error("raw transport message")), {
+          once: true,
+        });
+      }),
+  );
+  const api = new Karakeep(
+    { address: "https://localhost", key: "synthetic-secret" },
+    { deadlineMs: 5 },
+  );
+  await assert.rejects(
+    api.account("account"),
+    (e) => e.code === "unreachable" && e.diagnostic === "timeout",
+  );
+});
+
+test("failed creates remain pending in an adopted project's startup check", async (t) => {
+  const f = await fixture(t),
+    repo = path.join(f.root, "repo"),
+    remote = path.join(f.root, "remote.git");
+  await exec("git", ["init", "--bare", "--initial-branch=main", remote]);
+  await exec("git", ["clone", remote, repo]);
+  const g = (...args) => exec("git", ["-C", repo, ...args]);
+  await g("config", "user.name", "Fixture");
+  await g("config", "user.email", "fixture@example.test");
+  await fs.writeFile(path.join(repo, "README.md"), "Project knowledge.");
+  await g("add", "README.md");
+  await g("commit", "-m", "Initial");
+  await g("push", "origin", "main");
+  f.p.scope = "project";
+  f.p.repo = { id: "example/repo", remote, branch: "main", include: ["README.md"], exclude: [] };
+  await f.savePolicy();
+  const config = path.join(f.root, "config.json"),
+    file = await f.text();
+  await writeJson(config, { schemaVersion: 1, projects: [{ remote, policy: f.policyFile }] });
+  await (await f.prepare([report(file, "predecessor")], { repo })).apply();
+  assert.equal((await check({ repo, config })).status, "ready");
+  const r = await f.prepare([report(file)], { repo });
+  f.faults.rejectCreate = 403;
+  await assert.rejects(r.apply(), (e) => e.code === "http_403");
+  assert.equal((await check({ repo, config })).status, "pending");
+});
+
+for (const visible of [false, true]) {
+  test(`create timeout with ${visible ? "a visible object" : "empty inventory"} never blindly repeats POST`, async (t) => {
+    const f = await fixture(t),
+      file = await f.text(),
+      r = await f.prepare([report(file)]);
+    const originalFetch = globalThis.fetch;
+    const intercepted = t.mock.method(globalThis, "fetch", async (url, options) => {
+      if (options?.method === "POST" && new URL(url).pathname === "/api/v1/bookmarks") {
+        if (visible) await (await originalFetch(url, options)).body.cancel();
+        throw Object.assign(new Error("synthetic deadline"), { code: "ETIMEDOUT" });
+      }
+      return originalFetch(url, options);
+    });
+    await assert.rejects(r.apply(), (e) => e.code === "unreachable" && e.diagnostic === "timeout");
+    intercepted.mock.restore();
+    const before = f.writes.length;
+    const result = await resume({ operation: r.planned.operation, policy: f.policyFile });
+    assert.equal(result.status, visible ? "complete" : "pending");
+    assert.equal(f.objects.size, visible ? 1 : 0);
+    assert.equal(
+      f.writes.slice(before).filter((w) => w.method === "POST" && w.path === "/api/v1/bookmarks")
+        .length,
+      0,
+    );
+  });
+}
+
+test("stored original text is read afresh before an approved aggregate write", async (t) => {
+  const f = await fixture(t),
+    file = await f.text();
+  await (await f.prepare([report(file)])).apply();
+  const key = identity("session", "policy", "session-one"),
+    original = [...f.objects.values()][0];
+  f.p.approvedAggregates = [
+    { id: "topic", purpose: "Compare", inputKeys: [key], approval: "Test grant" },
+  ];
+  await f.savePolicy();
+  const r = await f.prepare([
+    {
+      kind: "dossier",
+      id: "topic",
+      title: "Derived",
+      contentFile: file,
+      purpose: "Compare",
+      inputs: [{ key, contentHash: hash(original.content.text) }],
+    },
+    report(file, "independent"),
+  ]);
+  original.content.text = "Human changed the original after planning.";
+  const result = await r.apply();
+  assert.equal(result.results[identity("dossier", "policy", "topic")].status, "needs_agent");
+  assert.equal(result.results[identity("session", "policy", "independent")].status, "verified");
+  assert.equal([...f.objects.values()].filter((b) => b.title === "Derived").length, 0);
 });

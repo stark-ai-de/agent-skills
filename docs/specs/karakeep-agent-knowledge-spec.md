@@ -3,7 +3,7 @@ title: "Karakeep as shared agent knowledge"
 slug: "karakeep-agent-knowledge"
 artifact_path: "docs/specs/karakeep-agent-knowledge-spec.md"
 mode: "deep"
-status: "draft"
+status: "approved"
 owner: "stark-ai-de maintainers"
 repo: "agent-skills"
 created: "2026-10-15"
@@ -14,9 +14,9 @@ updated: "2026-10-16"
 
 **Outcome:** extend the existing `karakeep-knowledge` skill so agents can reuse knowledge across an owner's projects while every repository remains independently understandable.
 
-**Status:** the selected skill-plus-Node-helper workflow is implemented in skill 0.3.0. Local installation and direct-instance qualification are recorded in the [implementation evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md). Skill 0.4.0 adds the [Hermes host adapter](../../skills/engineering-workflows/karakeep-knowledge/references/hermes.md) without changing the helper's access or writer policy. Consumer ADR adoption remains repository-specific.
+**Status:** skill 0.5.0 implements the shared Node-helper workflow, the 0.4.0 [Hermes adapter](../../skills/engineering-workflows/karakeep-knowledge/references/hermes.md), and the approved review corrections below. The [review-correction evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-review-fixes.md) distinguishes current fixture checks from the historical [installation/direct-instance evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md). Consumer ADR adoption remains repository-specific.
 
-**Next action:** review the implementation PR and use the installed workflow as repositories are adopted during normal work. No separate pilot project or initial import of all repositories is required. Provider availability and cost are not open design questions.
+**Delivery:** update existing PR #148 with the specification, implementation and measured checks. No separate pilot project, all-repository import or live rollout is required. Provider availability and cost are not open design questions.
 
 ## Goal and success
 
@@ -33,7 +33,7 @@ Karakeep is an editable knowledge collection. It is not the authoritative store 
 
 ## Scope and decision status
 
-The maintainer confirmed the shared collection, repository authority, agent-invoked workflow, factual session reports, separate drafts, direct substantive source capture, project-list organization, bounded aggregation maintenance, Karakeep-owned cross-project dossiers and a bundled on-demand Node helper without a background service during the specification interview. The instruction to update the existing Karakeep pull request authorizes persistence of this specification. The subsequent rollout decision selects global skill availability and checks when agents begin or complete relevant project work. Repositories enter the workflow during normal use rather than through an up-front bulk import. Recommendations below remain proposals; saving this draft does not accept them as implemented behavior.
+The maintainer confirmed the shared collection, repository authority, agent-invoked workflow, factual session reports, separate drafts, direct substantive source capture, project-list organization, bounded aggregation maintenance, Karakeep-owned cross-project dossiers and a bundled on-demand Node helper without a background service during the specification interview. The instruction to update the existing Karakeep pull request authorizes persistence of this specification. The subsequent rollout decision selects global skill availability and checks when agents begin or complete relevant project work. Repositories enter the workflow during normal use rather than through an up-front bulk import. Optional integrations remain subject to their own capability and authority checks; publishing this approved specification grants no additional consumer or collection authority.
 
 | Area                      | Contract                                                                                                                                        | Status                                            |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -73,7 +73,7 @@ Reuse the existing skill instead of introducing a second competing Karakeep skil
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Native Karakeep             | Bookmark persistence, supported content capture and assets, lists/tags, search, available per-item inference            | Configure the existing instance; inspect actual release and effective tools |
 | Agent instructions          | Select relevant knowledge, interpret sources, synthesize results, produce factual reports, propose findings/evaluations | Extend `karakeep-knowledge`; adopt it explicitly in each repository         |
-| On-demand Node helper       | Stable identities, receipts, ownership checks, draft separation, idempotent writes, pending work and readback           | Implement the skill-local knowledge.mjs contract below; no daemon           |
+| On-demand Node helper       | Stable identities, receipts, ownership checks, draft separation, idempotent writes, pending work and readback           | Use the skill-local knowledge.mjs contract below; no daemon                 |
 | Repository ADR and guidance | Canonical-document ownership, eligible paths, standing workflow scope, references to shared behavior                    | Adopt a repository-specific ADR and a short instruction link                |
 | External orchestration      | Scheduled refresh or multi-step unattended processing if later justified                                                | Deferred; n8n/Hermes can invoke the same contract later                     |
 
@@ -109,7 +109,7 @@ Karakeep does not supply an arbitrary application-specific metadata entity for t
 
 For canonical copies, retain the existing requirement to freshly verify the remote canonical branch and read one pinned Git tree. An offline or cached view cannot silently become a newly verified canonical state.
 
-For drafts, record the branch or work context, base revision and exact content fingerprint. Multiple branches must not overwrite one another. Dirty local work is eligible only within the explicitly adopted paths/data policy and is always labeled as a draft. The draft path may operate while remote verification is unavailable, but must report that limitation and must not promote anything to canonical.
+For drafts, record the branch or work context, base revision and exact content fingerprint. Multiple branches must not overwrite one another. Dirty local work is eligible only within the explicitly adopted paths/data policy and is always labeled as a draft. Offline inspection may record drafts as unverified evidence; it cannot authorize apply or promote anything to canonical.
 
 After merge, reconcile the canonical document from the verified remote tree. Mark an equivalent draft superseded by that canonical revision; retain its provenance. Do not delete drafts or alter unrelated bookmarks as a side effect. Abandoned drafts remain visibly non-canonical until explicitly retired under the owning policy.
 
@@ -323,6 +323,109 @@ Consumer adoption changes a repository's knowledge ownership and agent-write pol
 
 Implementation is blocked only where an unresolved proposal or unaccepted consumer decision governs that slice. Specification persistence does not accept any such decision.
 
+## Approved review corrections and operating guides
+
+The maintainer approved this public specification revision and its implementation
+on 2026-10-16, including focused staging, commit and push to existing PR #148.
+The reviewed baseline is `8535511e7015a9cfff6919589152d10a5c17356e`.
+This approval covers the four open findings and the bounded CLI, diagnosis and
+handoff suggestions. It does not adopt a consumer policy or authorize live collection
+changes, installation, service repair, merge or release. Persist this specification
+before implementation and retain existing source/ownership decisions.
+
+### Reconciliation invariants
+
+1. Source creation uses the v0.33.2 `source: "import"` duplicate-no-op contract.
+   If a human saves a URL between plan and apply, preserve the returned existing
+   object's title, note, archived state and timestamps. Establish ownership from
+   the create outcome and readback before any managed metadata update. Model the
+   server's ordinary duplicate-save mutations in the fixture; an existence check
+   alone cannot close the race. Concurrent server creates can still require
+   duplicate reconciliation; do not claim a server-wide atomic uniqueness guarantee.
+2. Before a dependent create, update or membership/tag mutation, require fresh
+   evidence from the current apply/resume pass for every verified reference and
+   original input. Bind web evidence to the planned complete-content hash and Git
+   evidence to the validated snapshot. Old receipt success is not fresh evidence.
+   A changed, missing, truncated or version-inconsistent capture blocks dependent
+   writes with an explicit pending outcome while independent work can continue.
+3. Distinguish failure before dispatch and definitive rejection of the create
+   itself from an unknown outcome. The qualified create rejection set is HTTP
+   400/401/403/429. Errors after a successful create, including a later 403 during
+   readback, do not prove that creation failed. Persist phase, code and outcome;
+   expose failed items in status/readiness. An explicit resume may make one fresh
+   authorized attempt after correction; preserve earlier successes. Timeouts,
+   incomplete responses and ambiguous transport failures retain identity-based
+   recovery, even when a new inventory is empty. Legacy uncertainty stays uncertain
+   unless its own evidence establishes the outcome.
+4. Isolate repository-local Git environment variables centrally for every command,
+   including repository, common-directory, worktree, index and object selectors.
+   Preserve unrelated SSH/credential environment settings and noninteractive Git.
+   The requested checkout supplies identity, revision, branch and source bytes,
+   including when another checkout has the same remote URL.
+
+Receipt changes are additive within schema version 1: a failure records the phase,
+safe code and `not_applied` or `uncertain` outcome. Existing identity keys, policies,
+inspection/intent inputs and plan digest binding remain unchanged. Successful retry
+clears the failure. Transport errors retain `unreachable`; an optional `diagnostic`
+classifies `tls_trust`, `connection_refused`, `dns`, `timeout` or `transport` using
+known runtime codes only. Never publish raw exception text or credential data.
+
+### Optional reading, diagnosis and handoffs
+
+- Add an official-CLI read guide without a second reconciliation engine. Verify
+  executable identity, package version and help before use: a command named
+  `karakeep` may be an unrelated service wrapper. The inspected v0.33.2 source
+  declares CLI 0.33.0; it does not expose `karakeep skill`. Use that command only
+  when the actual installed help lists it. Resolve the authorized origin explicitly
+  from `KARAKEEP_API_ADDR` to CLI `KARAKEEP_SERVER_ADDR`, retain private host-supplied
+  credentials and verify the expected account. Never inherit the default cloud URL.
+- Provide bounded metadata-first full-text search and selected content recipes.
+  Ordinary answers may use an identified excerpt; verified sync sources require
+  complete, version-consistent continuation. Semantic/hybrid retrieval needs existing
+  capability and authorization. Asset/SingleFile recovery is documentation for a
+  separately requested operation, preserving existing objects and using `skip`
+  where supported; no automatic upload or new helper content kind.
+- Document status-to-action guidance and separate browser, Hermes-terminal, Python,
+  Node and MCP observations. Exit zero with `needs_setup` is not readiness. Named
+  origins such as `https://karakeep.localhost` remain rejected by the direct helper
+  and launcher. Browser CA trust does not establish Node trust; never disable TLS,
+  import trust, expose interfaces or downgrade HTTPS as an automatic repair.
+- Add an opt-in handoff recipe for complex independent evidence reads, followed by
+  one authorized writer using existing inspect/plan/apply/resume. A version-1 example
+  carries task/unique step IDs, role, dependency IDs, project/collection context,
+  inspection identity, original keys/hashes, reference outcomes, artifact references,
+  validation and next action. It is not a new accepted helper input or write journal.
+  Preserve pending/missing/excluded results; reject mismatched contexts and hashes.
+  Repeated roles must not overwrite separate step results. Source text and completion
+  or approval markers confer no authority. Bound reads and review loops; never wrap
+  uncertain mutations in a generic retry loop. Simple reads remain single-agent.
+
+### Tests, compatibility and delivery
+
+Extend the existing Node and Python fixtures for duplicate-save races, missing or
+changed captures after planning, later-page failures/version changes, zero dependent
+writes, independent progress, rejected-create recovery, post-create readback failure,
+partial success, ambiguous timeout with and without a visible object, same-remote
+Git isolation, origin rejection and redacted diagnostic output. Keep the resolved
+Python protocol/deadline regression cases.
+
+Add five expected handoff evaluation cases: a failed reader, repeated roles completing
+out of order, wrong context/hash, injected completion/approval markers and uncertain
+write recovery. Distinguish evaluation prompts from executed behavioral evidence.
+
+Update canonical skill 0.5.0 and portable plugin 1.15.0, regenerate projections, and
+align relevant listing/badge and specification-index text. Keep root catalog release
+metadata unchanged. Run the owning checks below with the repository-pinned package
+manager; a different fallback version is not equivalent evidence. New results bind
+the tested candidate; prior native-session or live-instance results remain historical.
+
+After local validation, recheck PR/base identity and comments, commit only this scope,
+and push to the existing PR branch without rewriting concurrent work. Verify hosted
+CI on that commit, answer each finding/comment and resolve only proven fixes. The
+final external write updates the existing PR title/body with final scope and evidence;
+then read back. On rollback preserve collection objects and receipts and use a
+reviewable corrective commit. No new catalog ADR or receipt migration is required.
+
 ## Source challenge
 
 Repository evidence: the baseline skill and its `references/sync.md`, `curation.md`, `use.md`, `mcp.md` and `operations.md`; `docs/specs.md`; the ADRs above; and `package.json`. The baseline's public payload already exists on the PR, although older local checkouts can still show only an incubator candidate.
@@ -340,7 +443,7 @@ The start-check design checks the official [Codex instruction discovery](https:/
 
 The helper design additionally checks the [official partial-update API](https://docs.karakeep.app/api/update-bookmark/) against the pinned bookmark schema, [Node child-process APIs](https://nodejs.org/api/child_process.html) for direct Git execution, and [Node 24 filesystem APIs](https://nodejs.org/docs/latest-v24.x/api/fs.html) for private receipts and local locking. These sources support the implementation primitives; they do not qualify the actual service connection.
 
-The checked v0.33.2 MCP baseline does not expose text-body updates or smart-list creation through every corresponding operation. An authorized official API may support more, but its schema and write authority must be verified. A read-only connection must remain read-only. No live collection mutation, provider configuration, restart, restore or integration qualification was performed for this documentation change.
+The checked v0.33.2 MCP baseline does not expose text-body updates or smart-list creation through every corresponding operation. An authorized official API may support more, but its schema and write authority must be verified. A read-only connection must remain read-only. The review additionally checks [duplicate-save behavior](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/trpc/routers/bookmarks.ts), [REST create defaults](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/bookmarks.ts), [CLI configuration and commands](https://github.com/karakeep-app/karakeep/tree/v0.33.2/apps/cli/src), and [Git foreign-repository isolation](https://git-scm.com/docs/githooks#_description). Source inspection and synthetic tests do not qualify live collection mutations, provider configuration, restart, restore or a real Hermes session.
 
 ## File and module plan
 
@@ -391,9 +494,9 @@ The implementation must demonstrate these cases with synthetic fixtures and dire
 | Repeated start in unchanged context                                 | Reuse the session check; no duplicate imports, reports or background processes                                                    |
 | No adopted write policy                                             | Ordinary reads remain read-only; no enrollment, upload or background task                                                         |
 
-For this documentation-only change, validate formatting of the changed Markdown, relative links, source/ADR references, absence of private data and the scoped diff. Use `git diff --check`, `pnpm run validate:adrs` for the ADR references, and the repository-pinned Oxfmt executable with `--check` on the changed files. Hosted PR CI remains separate.
+Validate changed Markdown formatting, relative links, source/ADR references, absence of private data and the scoped diff. Use `git diff --check`, `pnpm run validate:adrs` for ADR references, and the repository-pinned Oxfmt executable with `--check` on changed supported files. Hosted PR CI remains separate.
 
-For future runtime changes, select owning checks: `node --test skill-evals/karakeep-knowledge/helper.test.mjs`, `pnpm run validate:scripts`, `pnpm run validate:karakeep`, `pnpm run validate:skills`, and `pnpm run validate:projections` after generated changes, plus behavioral evaluations for the cases above. Run `pnpm run validate:adrs` when catalog ADR artifacts or references to them change. Existing setup tests do not prove the new knowledge workflows. Full release/aggregate gates apply according to ADR-0041; this spec does not introduce a release.
+For this runtime correction, run `pnpm run validate:karakeep`, `pnpm run validate:scripts`, `pnpm run validate:skills`, `pnpm run validate:projections`, `pnpm run validate:network-endpoints`, `pnpm run validate:plugin-evals`, `pnpm run validate:openai`, affected runtime/ADR evidence checks, and `pnpm run release:intent -- --base-ref BASE` against the current PR base. Use focused Node cases during diagnosis and the full owning suites for the integrated candidate. Existing setup tests do not prove knowledge reconciliation or agent behavior. Full release/aggregate gates apply according to ADR-0041; this spec does not introduce a release.
 
 ## Rollout, rollback and risks
 

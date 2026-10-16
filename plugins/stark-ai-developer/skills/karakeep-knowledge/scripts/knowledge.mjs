@@ -71,6 +71,7 @@ try {
     JSON.stringify({
       status: "failed",
       code: known ? error.code : "internal",
+      ...(known && error.diagnostic ? { diagnostic: error.diagnostic } : {}),
       message: known
         ? error.message
         : "Operation failed; inspect private local inputs and runtime availability.",

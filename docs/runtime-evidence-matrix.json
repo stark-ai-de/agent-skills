@@ -442,9 +442,10 @@
       "evidenceRefs": [
         "pnpm run validate:karakeep:node",
         "skills/engineering-workflows/karakeep-knowledge/scripts/knowledge.mjs",
-        "skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md"
+        "skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md",
+        "skill-evals/karakeep-knowledge/runs/2026-10-16-review-fixes.md"
       ],
-      "rationale": "The approved skill helper has an explicit Node 24.18+ Linux/POSIX CLI contract. Sixteen node:test cases passed locally on Node 24.22.0 and in the hosted Linux preflight on Node 24.18.0. Live local readback and reconciliation qualify that installed Node helper separately from synthetic fixtures. The Bun parent orchestrates the Python and Node gates through pnpm without replacing either runtime.",
+      "rationale": "The approved helper requires Node 24.18+ on Linux/POSIX. The original 16-case hosted and direct-instance evidence remains historical evidence for 0.3.0. The 0.5.0 review-correction receipt records 46 current local Node cases on Node 24.22.0; hosted results are attached to the reviewed PR commit, and live host/collection activation is not inferred from fixtures. The Bun parent orchestrates Python and Node gates through pinned pnpm without substituting runtimes.",
       "fallbackOrder": ["node"],
       "revisit": "Requalify after changes to the helper runtime or filesystem/transport contract. Report missing Node rather than substituting another runtime silently."
     }

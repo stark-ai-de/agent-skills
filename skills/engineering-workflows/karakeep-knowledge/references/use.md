@@ -27,6 +27,12 @@ An empty collection may indicate a different account. Compare one known bookmark
 ID and the private setup receipt. A healthy API and readable bookmarks still do not
 prove screenshots, full-page archives, full-text indexing or MCP content work.
 
+For optional official-CLI reading, including executable identity and explicit local
+account mapping, use [CLI reads](cli.md). Bounded excerpts can support an ordinary
+answer; verified sync sources require the complete version-consistent cursor chain.
+Independent readers may use [handoffs](handoffs.md) when delegation is authorized;
+one authorized writer retains the existing helper/receipt contract.
+
 ## Requested saves and imports
 
 For a requested URL, check existing bookmarks first and preserve IDs/notes. Saving a

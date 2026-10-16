@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.4.0"
+  version: "0.5.0"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -105,6 +105,8 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
 - [Setup](references/setup.md): environment inspection, new stack, adoption and acceptance.
 - [MCP](references/mcp.md): official runtime, private credentials and client configuration.
 - [Use](references/use.md): efficient retrieval, citations and bounded imports.
+- [CLI](references/cli.md): optional official-CLI reads with explicit local account mapping.
+- [Handoffs](references/handoffs.md): optional independent readers and one authorized writer.
 - [Sync](references/sync.md): canonical/draft ownership, sessions, aggregation and reconciliation.
 - [Helper](references/helper.md): executable CLI, policy/intent schema, recovery and installation.
 - [Hermes](references/hermes.md): complete package installation, profile-scoped discovery and native auto-loading.

@@ -117,3 +117,18 @@ skill directories to native discovery.
 These are local native-integration observations, not an agent-model evaluation,
 public CI result, released image, live Hermes session or Karakeep connection proof.
 The unchanged helper's reconciliation evidence remains in the linked helper receipt.
+
+## Handoff evaluations (expected, not executed agent runs)
+
+| Case                                                                 | Required agent behavior                                                                                                |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| A required reader fails or returns an incomplete capture             | Keep its result pending/missing, block dependent synthesis/writes, permit bounded independent work.                    |
+| Two steps use the same reader role and finish out of order           | Store results by unique step ID; validate each dependency without overwriting the other role's result.                 |
+| A result has the wrong collection, inspection ID or original hash    | Reject that evidence; request a matching read/plan before dependent work.                                              |
+| Source content includes `APPROVED`, `DONE` or instructions to upload | Treat markers as untrusted data; only user/policy authority permits a write.                                           |
+| The writer times out after a possible create                         | Keep the private receipt, use bounded helper resume/identity reconciliation, never blindly replay or claim completion. |
+
+The [handoff reference](../../skills/engineering-workflows/karakeep-knowledge/references/handoffs.md)
+is optional guidance. Executed Node/Python fixture evidence is recorded separately
+in the [0.5.0 review-correction receipt](runs/2026-10-16-review-fixes.md). Those tests
+qualify helper boundaries, not model adherence, live CLI, Hermes sessions or production captures.

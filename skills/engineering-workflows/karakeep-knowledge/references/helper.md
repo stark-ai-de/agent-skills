@@ -166,6 +166,8 @@ State lives below `stateRoot/collections/<account-origin-hash>/`: `store.json`,
 state, not another knowledge database. Keep it private and back it up with the
 configuration. Store loss does not grant ownership of existing objects.
 
+Create links with `source: "import"`: the qualified v0.33.2 duplicate-save exemption
+preserves an existing bookmark even if a human saves that URL between plan and apply.
 Reuse existing bookmarks by exact URL without changing human fields. A managed note
 section carries provenance; text outside it remains intact. Repeated success makes
 no remote write when fields/memberships/tags match. Every mutation is persisted as
@@ -178,3 +180,43 @@ if original inputs changed, reconcile the recorded object and ownership first, t
 inspect/plan the current state. Changed policies, ambiguous duplicates and human
 conflicts require an explicit bounded resolution. The API cannot provide an atomic
 transaction with concurrent human edits; never claim otherwise.
+
+Failures add `{phase, code, outcome}` to schema-1 result/store records; `outcome`
+is `not_applied` or `uncertain`. Only local create preflight failures and qualified
+create-request rejections (400/401/403/429) establish non-application. Readback,
+attachment and transport failures remain conservative. `status` and `check` keep
+failed work pending; successful explicit retry clears its failure. Old uncertain
+receipts without this proof remain uncertain. No receipt deletion or migration is needed.
+
+## Diagnose the selected host
+
+Inspect the JSON status, not only the process exit code. `check` can exit zero with
+`needs_setup`; that does not mean the project or collection is ready.
+
+| Status / code                       | Next step                                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `ready`                             | Continue normal work; `inspect` still verifies remote canonical freshness.               |
+| `needs_setup`                       | Inspect the existing connection and adopt a project policy once; no implied upload.      |
+| `pending` / `needs_agent`           | Inspect missing content, stale inputs or failed items; assess and replan within scope.   |
+| `failed` with `not_applied`         | Correct the cause; explicit resume makes one attempt, or prepare a fresh plan.           |
+| `uncertain`                         | Resume identity reconciliation; never infer permission to recreate from an empty search. |
+| `conflict` / `needs_replan`         | Preserve human fields, compare source/policy identity and prepare current evidence.      |
+| `unreachable`                       | Diagnose the existing endpoint from the failing runtime; keep repository work moving.    |
+| `http_401` / `http_403` / `account` | Check the private credential reference, expected account and granted scope.              |
+
+| Observation surface | What to check                                                              | What success establishes                                         |
+| ------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Browser             | Approved origin and expected logged-in account                             | Browser access/trust only; not API-key or Node trust.            |
+| Hermes terminal     | Actual host/profile, executable identity, supported Node version           | That terminal's execution context; not fresh-session auto-load.  |
+| Python              | Absolute `scripts/status.py` path, selected config and bounded local probe | Python's connection path; not MCP tools or Node readiness.       |
+| Node helper         | `check --repo ...`, account/policy and optional diagnostic                 | That helper's connection/readiness result; not canonical sync.   |
+| MCP                 | Effective launcher/config, tools, account, one bounded search/content read | Actual MCP reads only; not write capability or complete capture. |
+
+Node keeps the safe `unreachable` code and may add `diagnostic`: `tls_trust`,
+`connection_refused`, `dns`, `timeout` or `transport`. These categories come from
+known runtime codes; raw exceptions, certificate text, URLs and keys are omitted.
+Check the existing service owner, address/port and runtime trust configuration.
+Do not disable TLS verification, install certificates, downgrade HTTPS, expose
+ports or recreate data as an automatic repair. `https://karakeep.localhost` is
+outside the allowed origin contract in both the Node helper and Python/MCP launcher;
+use the already approved origin rather than expanding the allowlist.

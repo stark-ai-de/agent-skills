@@ -4,6 +4,21 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { requireThat, KnowledgeError, hash, identity, noLinks } from "./state.mjs";
 const execute = promisify(execFile);
+let localEnvNames;
+async function gitEnvironment() {
+  // Git defines the repository selectors. Query with no inherited Git settings,
+  // then remove only local selectors from the real invocation (retain SSH/auth).
+  localEnvNames ??= execute("git", ["rev-parse", "--local-env-vars"], {
+    encoding: "utf8",
+    timeout: 45000,
+    env: Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_"))),
+  }).then(({ stdout }) => stdout.trim().split(/\s+/u));
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_OPTIONAL_LOCKS: "0" };
+  for (const name of await localEnvNames) delete env[name];
+  for (const name of Object.keys(env))
+    if (/^GIT_CONFIG_(KEY|VALUE)_\d+$/u.test(name)) delete env[name];
+  return env;
+}
 export async function git(root, args, { bytes = false } = {}) {
   try {
     return (
@@ -11,7 +26,7 @@ export async function git(root, args, { bytes = false } = {}) {
         encoding: bytes ? "buffer" : "utf8",
         maxBuffer: 128 * 1024 * 1024,
         timeout: 45000,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_OPTIONAL_LOCKS: "0" },
+        env: await gitEnvironment(),
       })
     ).stdout;
   } catch {

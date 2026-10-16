@@ -569,6 +569,23 @@ export async function plan({
       }
     }
   }
+  // Bind reference hashes too; intent references name identities, not versions.
+  for (const item of items) {
+    const dependencies = [...item.inputs];
+    for (const ref of item.references.filter((r) => r.outcome === "verified")) {
+      const original =
+        items.find((x) => x.key === ref.key) ||
+        store.entries[ref.key] ||
+        inspection.source.documents.find((x) => x.key === ref.key);
+      requireThat(
+        original?.contentHash,
+        "coverage",
+        "Verified reference needs a bound source hash.",
+      );
+      dependencies.push({ key: ref.key, contentHash: original.contentHash });
+    }
+    operations.find((o) => o.key === item.key).dependencies = dependencies;
+  }
   const data = {
     schemaVersion: 1,
     operation,
@@ -604,6 +621,54 @@ function requireWrite(p, kind) {
     "capability",
     "The policy has no qualified bookmark write capability.",
   );
+}
+async function verifyDependencies(item, op, data, inspection, store, api, freshSources) {
+  const refs = item.references.filter((r) => r.outcome === "verified");
+  // Old plans bind input hashes directly; unbound verified references need a new plan.
+  const dependencies = op.dependencies ?? (refs.length ? null : item.inputs);
+  requireThat(
+    dependencies &&
+      dependencies.length === item.inputs.length + refs.length &&
+      item.inputs.every((input) =>
+        dependencies.some((d) => d.key === input.key && d.contentHash === input.contentHash),
+      ) &&
+      refs.every((ref) =>
+        dependencies.some((d) => d.key === ref.key && /^[a-f0-9]{64}$/u.test(d.contentHash)),
+      ),
+    "source_dependency",
+    "Replan to bind every verified reference and original input version.",
+  );
+  for (const dependency of dependencies) {
+    const original =
+      data.items.find((x) => x.key === dependency.key) || store.entries[dependency.key];
+    const document = inspection.source.documents.find((x) => x.key === dependency.key);
+    let contentHash;
+    if (document) contentHash = document.contentHash; // validated snapshot, never a mirrored copy
+    else if (original?.kind === "source") {
+      requireThat(
+        freshSources.get(dependency.key) === dependency.contentHash,
+        "source_dependency",
+        "Source lacks verified evidence from this apply pass.",
+      );
+      // Recheck before each dependent mutation, including membership and tag writes.
+      const capture = await api.content(store.entries[dependency.key].id);
+      if (capture.available) contentHash = capture.contentHash;
+    } else {
+      const record = store.entries[dependency.key];
+      requireThat(
+        record?.id && !record.uncertain && !record.failure && !record.needsReplan,
+        "source_dependency",
+        "Original input is unavailable or unresolved.",
+      );
+      const current = await api.get(record.id);
+      if (current.content?.type === "text") contentHash = hash(current.content.text);
+    }
+    requireThat(
+      contentHash === dependency.contentHash,
+      "source_dependency",
+      "Original input no longer matches its planned complete-content hash.",
+    );
+  }
 }
 export async function apply({
   plan: planFile,
@@ -730,9 +795,10 @@ export async function apply({
       };
       await writeJson(receiptFile, receipt);
     }
-    for (const item of [...data.items].sort(
-      (a, b) => (a.kind === "source" ? 0 : 1) - (b.kind === "source" ? 0 : 1),
-    )) {
+    receipt.status = "pending";
+    const freshSources = new Map();
+    const order = (item) => (item.kind === "source" ? 0 : item.inputs.length ? 2 : 1);
+    for (const item of [...data.items].sort((a, b) => order(a) - order(b))) {
       const op = data.operations.find((x) => x.key === item.key);
       requireThat(op, "plan", "Missing planned operation.");
       if (["proposal", "conflict", "needs_agent"].includes(op.status)) {
@@ -740,7 +806,56 @@ export async function apply({
         continue;
       }
       let record = store.entries[item.key],
+        current = null;
+      const checkDependencies = () =>
+        verifyDependencies(item, op, data, inspection, store, api, freshSources);
+      try {
+        await checkDependencies();
+      } catch (e) {
+        receipt.results[item.key] = {
+          status: "needs_agent",
+          reason: e instanceof KnowledgeError ? e.code : "source_dependency",
+        };
+        store.entries[item.key] = {
+          ...record,
+          kind: item.kind,
+          project: p.repo?.id ?? null,
+          needsReplan: true,
+          operation: data.operation,
+        };
+        continue;
+      }
+      try {
         current = record?.id ? await api.get(record.id) : op.id ? await api.get(op.id) : null;
+      } catch (e) {
+        if (item.kind !== "source") throw e;
+        const evidence = {
+          status: "pending",
+          reason: e instanceof KnowledgeError ? e.code : "transport",
+        };
+        receipt.results[item.key] = { status: "needs_agent", evidence };
+        store.entries[item.key] = {
+          ...record,
+          id: record?.id ?? op.id,
+          kind: item.kind,
+          project: p.repo?.id ?? null,
+          evidence,
+          operation: data.operation,
+        };
+        continue;
+      }
+      if (
+        record?.failure?.outcome === "not_applied" &&
+        record.operation === data.operation &&
+        !resuming
+      ) {
+        receipt.results[item.key] = {
+          status: "failed",
+          failure: record.failure,
+          reason: "Use explicit resume or inspect and plan again after correcting the cause.",
+        };
+        continue;
+      }
       if (record?.uncertain && !resuming) {
         receipt.results[item.key] = {
           status: "uncertain",
@@ -792,19 +907,30 @@ export async function apply({
       store.entries[item.key] = {
         ...record,
         kind: item.kind,
+        project: p.repo?.id ?? null,
+        projects: [...new Set([...(record?.projects ?? []), ...(p.repo ? [p.repo.id] : [])])],
         uncertain: true,
+        failure: null,
         attempt: current ? (record?.owned ? "update" : "reuse") : "create",
         operation: data.operation,
       };
       await saveStore(p, store);
       await writeJson(receiptFile, receipt);
-      let owned = Boolean(record?.owned);
+      let owned = Boolean(record?.owned),
+        phase = current ? "reconcile_readback" : "create_preflight";
       try {
         if (!current) {
           requireWrite(p, "create");
+          await checkDependencies();
           const payload =
             item.kind === "source"
-              ? { type: "link", url: item.url, title: item.title, note: section(item.meta) }
+              ? {
+                  type: "link",
+                  source: "import",
+                  url: item.url,
+                  title: item.title,
+                  note: section(item.meta),
+                }
               : {
                   type: "text",
                   title: item.title,
@@ -812,9 +938,16 @@ export async function apply({
                   note: section(item.meta),
                   ...(item.sourceUrl ? { sourceUrl: item.sourceUrl } : {}),
                 };
+          phase = "create_request";
           const created = await api.create(payload);
-          current = await api.get(created.id);
+          phase = "create_readback";
+          requireThat(created?.id, "api", "Create response omitted its bookmark identity.");
+          current = created;
           owned = !created.alreadyExists;
+          // Preserve the accepted identity even when the following read fails.
+          store.entries[item.key] = { ...store.entries[item.key], id: created.id, owned };
+          await saveStore(p, store);
+          current = await api.get(created.id);
           if (owned)
             requireThat(
               splitNote(current.note).meta?.creationOperation === data.operation,
@@ -832,7 +965,10 @@ export async function apply({
         } else if (owned) {
           const d = delta(item, current, record);
           if (Object.keys(d.patch).length) {
+            phase = "update_preflight";
             requireWrite(p, "update");
+            await checkDependencies();
+            phase = "update_request";
             await api.update(current.id, d.patch);
             current = await api.get(current.id);
           }
@@ -847,13 +983,22 @@ export async function apply({
             "Stored managed fields differ from the plan.",
           );
         }
-        await api.attach(current.id, p.listIds, p.tags[item.kind] ?? [], p.operations);
+        phase = "attachments";
+        await api.attach(
+          current.id,
+          p.listIds,
+          p.tags[item.kind] ?? [],
+          p.operations,
+          checkDependencies,
+        );
+        phase = "source_read";
         const evidence = await sourceEvidence(
           api,
           item,
           current,
           path.dirname(data.inspectionFile),
         );
+        if (evidence?.status === "verified") freshSources.set(item.key, evidence.contentHash);
         const contentHash =
           evidence?.status === "verified" ? evidence.contentHash : item.contentHash;
         store.entries[item.key] = {
@@ -880,11 +1025,20 @@ export async function apply({
         await saveStore(p, store);
         await writeJson(receiptFile, receipt);
       } catch (e) {
+        const code = e instanceof KnowledgeError ? e.code : "transport";
+        const notApplied =
+          phase === "create_preflight" ||
+          (phase === "create_request" &&
+            (e.requestOutcome === "not_sent" ||
+              ["http_400", "http_401", "http_403", "http_429"].includes(code)));
+        const failure = { phase, code, outcome: notApplied ? "not_applied" : "uncertain" };
         receipt.results[item.key] = {
-          status: "uncertain",
+          status: notApplied ? "failed" : "uncertain",
           id: current?.id ?? null,
-          reason: e instanceof KnowledgeError ? e.code : "transport",
+          reason: code,
+          failure,
         };
+        store.entries[item.key] = { ...store.entries[item.key], uncertain: !notApplied, failure };
         if (current)
           store.entries[item.key] = {
             ...store.entries[item.key],
@@ -894,7 +1048,8 @@ export async function apply({
           };
         await saveStore(p, store);
         await writeJson(receiptFile, receipt);
-        throw e;
+        if (item.kind !== "source" || phase !== "source_read") throw e;
+        // Source read/capture failures block dependents, but not independent work.
       }
     }
     const complete = Object.values(receipt.results).every(
@@ -1047,12 +1202,23 @@ export async function status({ policy: policyFile, online = false }) {
   if (online) await connect(p);
   const pending = Object.entries(store.entries)
     .filter(
-      ([, r]) => r.uncertain || r.needsReplan || (r.evidence && r.evidence.status !== "verified"),
+      ([, r]) =>
+        r.uncertain ||
+        r.failure ||
+        r.needsReplan ||
+        (r.evidence && r.evidence.status !== "verified"),
     )
     .map(([key, r]) => ({
       key,
       operation: r.operation,
-      status: r.uncertain ? "uncertain" : r.needsReplan ? "needs_replan" : r.evidence.status,
+      status: r.uncertain
+        ? "uncertain"
+        : r.failure
+          ? "failed"
+          : r.needsReplan
+            ? "needs_replan"
+            : r.evidence.status,
+      ...(r.failure ? { failure: r.failure } : {}),
     }));
   return {
     status: pending.length ? "pending" : "ready",
@@ -1098,7 +1264,8 @@ export async function check({ repo, config = defaultConfig() }) {
   }
   requireThat(candidates.length <= 1, "config", "Multiple project policies match the repository.");
   if (!candidates.length) {
-    let connection = "not_configured";
+    let connection = "not_configured",
+      diagnostic;
     if (descriptor.collectionPolicy) {
       const { policy: shared } = await loadPolicy(descriptor.collectionPolicy);
       requireThat(shared.scope === "collection", "config", "Expected a collection policy.");
@@ -1107,11 +1274,13 @@ export async function check({ repo, config = defaultConfig() }) {
         connection = "ready";
       } catch (e) {
         connection = e.code === "unreachable" ? "unreachable" : "conflict";
+        diagnostic = e.diagnostic;
       }
     }
     return {
       status: "needs_setup",
       connection,
+      ...(diagnostic ? { diagnostic } : {}),
       reason: "This repository has no adopted project policy.",
     };
   }
@@ -1124,13 +1293,21 @@ export async function check({ repo, config = defaultConfig() }) {
     await connect(p);
   } catch (e) {
     if (e.code === "unreachable")
-      return { status: "unreachable", reason: e.message, policy: policyFile };
+      return {
+        status: "unreachable",
+        reason: e.message,
+        policy: policyFile,
+        ...(e.diagnostic ? { diagnostic: e.diagnostic } : {}),
+      };
     return { status: "conflict", reason: e.code, policy: policyFile };
   }
   const pending = Object.values(store.entries).some(
     (r) =>
       (r.project === p.repo.id || r.projects?.includes(p.repo.id)) &&
-      (r.uncertain || r.needsReplan || (r.evidence && r.evidence.status !== "verified")),
+      (r.uncertain ||
+        r.failure ||
+        r.needsReplan ||
+        (r.evidence && r.evidence.status !== "verified")),
   );
   return {
     status:
