@@ -30,7 +30,7 @@ For each candidate use `apply` (evidence and measured improvement), `retain` (wh
 
 - Fix the original revision and working-snapshot identity at the start. Track additions/deletions from that base **through all rounds**, not resetting the baseline after each fix.
 - Inventory staged, unstaged, non-ignored untracked, renamed and deleted files. Include touched production code, tests/fixtures, examples/scripts and documentation/config, plus new helper files. Separate generated files/lockfiles and third-party/unrelated edits.
-- Report physical added/removed/net lines **per category and total**, along with the concrete *maintenance obligation removed*. Show any growth in tests even if production shrinks.
+- Report physical added/removed/net lines **per category and total**, along with the concrete _maintenance obligation removed_. Show any growth in tests even if production shrinks.
 - Neither moving code to helpers nor deleting necessary tests counts as simplification. No arbitrary deletion target.
 
 ## Re-review and runtime cost
@@ -41,4 +41,4 @@ For each candidate use `apply` (evidence and measured improvement), `retain` (wh
 
 ## Sources and scope
 
-Adapted from [stark-mechas-v2 PR #18](https://github.com/servrox/stark-mechas-v2/pull/18) (documentation-only policy proposal) and the [Architecture Compass simplification guide](https://github.com/stark-ai-de/agent-skills/blob/main/skills/engineering-workflows/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md). Those documents are examples, **not** automatically binding ADRs in another repository. Use the target repository's own accepted decisions, test contracts and user-approved scope.
+The [Architecture Compass simplification guide](https://github.com/stark-ai-de/agent-skills/blob/main/skills/engineering-workflows/architecture-compass/references/ac-adr-006-assign-workspace-ownership-and-source-roles.guide.md) provides public background. It does not automatically impose binding ADRs on another repository. Use the target repository's own accepted decisions, test contracts and user-approved scope. Private maintainer provenance remains local under ADR-0056.

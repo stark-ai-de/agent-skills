@@ -27,3 +27,5 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 - [`hetzner-inference-setup-skill-spec.md`](hetzner-inference-setup-skill-spec.md) - cross-platform loopback LiteLLM setup, client adapters, credential boundaries, lifecycle, evidence, and rollback for Hetzner Inference.
 - [`native-typescript-tooling-architecture-compass-spec.md`](native-typescript-tooling-architecture-compass-spec.md) - native TypeScript tooling guidance for Architecture Compass.
 - [`stark-ai-developer-agent-plugin-spec.md`](stark-ai-developer-agent-plugin-spec.md) - phased portable Agent Plugins core and separate OpenAI adapter contract for **stark AI Developer**.
+
+- [`review-fix-swarm-spec.md`](review-fix-swarm-spec.md) - Bounded review/fix/simplification contract, fixture safety, semantic adjudication and CODEX pilot qualification.

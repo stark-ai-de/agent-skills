@@ -126,6 +126,13 @@
       "owner": "skill-evals/architecture-zoom/validate-contract.mjs",
       "proof": "Planning handoff template parity, skill/reference contracts and evaluation-evidence integrity; not live-agent qualification",
       "cadence": "every aggregate run"
+    },
+    {
+      "id": "review-fix-swarm",
+      "command": "pnpm run validate:review-fix-swarm",
+      "owner": "skill-evals/review-fix-swarm/fixture-kit.test.mjs",
+      "proof": "Offline fixture Git write isolation, host-configuration independence, original-test integrity and honest semantic-review state; real CODEX/Pi quality remains separate.",
+      "cadence": "every aggregate run"
     }
   ]
 }

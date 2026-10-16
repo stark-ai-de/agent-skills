@@ -20,7 +20,16 @@ PRECHECK
    deleted/renamed paths and affected consumers. Show explicit exclusions.
    Keep immutable baseline and original dirty-snapshot identity.
 2. Inspect effective Codex config, feature support, model availability and
-   permissions. Use 3 read-only reviewers in parallel (<=4 threads), preferably
+   permissions. Enforce read-only permissions on the review PARENT/session;
+   custom agent instructions cannot override inherited sandbox permissions.
+   If the current parent is writable, use a separate enforced read-only review
+   session and end it before starting the fixer. Missing enforcement is BLOCKED.
+   On every start/resume, confirm actual cwd and read-only policy before any
+   probe or reviewer; a resumed session may retain neither. Stop on mismatch.
+   Set GIT_OPTIONAL_LOCKS=0 for orchestration Git reads to avoid index refreshes.
+   Fingerprint all reviewed source, untracked paths, index and HEAD before/after
+   review. Mutation invalidates results and blocks triage.
+   Use 3 reviewers in parallel (<=4 threads), preferably
    available gpt-6-luna / medium. No Astra. Do not change validated config or
    rerun smoke tests. Only if setup is invalid: make minimal backed-up,
    supported changes when already authorized; otherwise MANUAL_ACTION.
@@ -40,6 +49,9 @@ PER ROUND
    - Regression: tests, consumers, failure paths, UI/accessibility.
    CODEX: all three native Codex reviewers.
    HYBRID: Codex bugs + Codex regression + external Pi simplify.
+   Reconcile actual native creation receipts and completion evidence per role.
+   Role labels in the coordinator summary alone do not prove launches.
+   Keep raw runtime transcripts local; publish only sanitized evidence.
    No unnecessary 4th control reviewer.
 5. Verify, deduplicate and classify candidates as APPLY / RETAIN / DEFER.
    For each simplification check: delete / native / existing library / reuse /
@@ -51,6 +63,7 @@ PER ROUND
 7. Run impacted focused tests, type/lint/format where applicable. Re-inventory
    new/changed files. Start fresh reviewers for another round while real
    actionable findings or improvements remain, MAX_ROUNDS total.
+   A last-round fix without fresh re-review is PARTIAL, never DONE.
    Stop earlier if no proven bug AND no proven simplification or no progress.
    Before DONE, rescan whole authorized scope for simplification opportunities.
 8. Run final project-required contract tests/checks once; record any checks not
