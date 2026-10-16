@@ -10,6 +10,7 @@ import {
   githubRepositorySlug as deriveGithubRepositorySlug,
   listingArtifactPaths,
   listingIdentityFromSource,
+  openAiIdentityFromSource,
   publicRepositoryUrl as derivePublicRepositoryUrl,
 } from "./listing-identity.mjs";
 
@@ -37,6 +38,7 @@ function readJson(filePath) {
 export function identityFromSource(source) {
   return {
     ...listingIdentityFromSource(source),
+    openaiProfile: openAiIdentityFromSource(source),
     schemaVersion: source.schemaVersion,
     submissionType: source.submissionType,
     publicListingStrategy: source.publicListingStrategy,
@@ -88,7 +90,8 @@ export function loadPluginSourceFile(root = moduleRoot) {
   }
 
   const errors = [];
-  const expectedArchive = `dist/openai/${source.pluginId}-${source.version}.zip`;
+  const openai = openAiIdentityFromSource(source);
+  const expectedArchive = openai.archive;
   if (source.outputs.openaiArchive !== expectedArchive) {
     errors.push(
       `[REL-001] outputs.openaiArchive must equal ${expectedArchive} for the declared identity`,
@@ -99,7 +102,7 @@ export function loadPluginSourceFile(root = moduleRoot) {
   }
   if (
     source.distributions.portablePlugin !== source.pluginId ||
-    source.distributions.openaiPlugin !== source.pluginId
+    source.distributions.openaiPlugin !== openai.pluginId
   ) {
     errors.push("[BND-001] distribution plugin ids must match pluginId");
   }
@@ -142,6 +145,7 @@ export function pluginIdentity(root = moduleRoot) {
     publicListingStrategy: release.publicListingStrategy,
     portableProjection: release.outputs.portableProjection,
     openaiArchive: release.outputs.openaiArchive,
+    openaiProfile: release.openaiProfile,
     marketplaceTarget: release.outputs.repositoryMarketplaceTarget,
     archiveProfile: release.build.archiveProfile,
     nodeVersion: release.build.nodeVersion,

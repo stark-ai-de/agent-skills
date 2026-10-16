@@ -8,7 +8,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import compare from "semver/functions/compare.js";
 import valid from "semver/functions/valid.js";
 
-import { pluginArtifactPaths } from "../lib/release-descriptor.mjs";
+import { pluginArtifactPaths, PLUGIN_SOURCE_PATH } from "../lib/release-descriptor.mjs";
+import { openAiIdentityFromSource } from "../lib/listing-identity.mjs";
+import { listingForOpenAiIdentity } from "../lib/openai-profiles.mjs";
 import { resolveTagCommit } from "../lib/github-release-reconciliation.mjs";
 import {
   matchingOpenAiReleaseIssues,
@@ -238,6 +240,30 @@ export function selectPreviousPluginRelease(releases, currentReleaseVersion) {
   return eligible[0] ?? null;
 }
 
+export function previousReleaseForIdentity({
+  releases,
+  currentReleaseVersion,
+  pluginId,
+  legacyPluginId,
+  readValidatedSubject,
+}) {
+  const remaining = [...releases];
+  while (true) {
+    const previousRelease = selectPreviousPluginRelease(remaining, currentReleaseVersion);
+    if (!previousRelease) return { previousRelease: null, previousSubject: null };
+    const previousSubject = readValidatedSubject(previousRelease);
+    if (
+      !previousSubject ||
+      !valid(previousSubject.openaiProfile?.version ?? previousSubject.pluginVersion)
+    ) {
+      throw new Error(`Invalid historical subject for ${previousRelease.tag_name}`);
+    }
+    const historicalId = previousSubject.openaiProfile?.pluginId ?? legacyPluginId;
+    if (historicalId === pluginId) return { previousRelease, previousSubject };
+    remaining.splice(remaining.indexOf(previousRelease), 1);
+  }
+}
+
 function assertPublicListing(listing) {
   const publisher = listing?.publisher;
   if (!publisher || typeof publisher !== "object" || Array.isArray(publisher)) {
@@ -282,24 +308,30 @@ export function buildOpenAiReleasePlan({
   issues,
 }) {
   assertPublicListing(listing);
-  if (listing.plugin?.version !== subject.pluginVersion) {
+  const currentVersion = subject.openaiProfile?.version ?? subject.pluginVersion;
+  const currentName = subject.openaiProfile?.pluginId ?? listing.plugin?.name;
+  if (listing.plugin?.version !== currentVersion || listing.plugin?.name !== currentName) {
     throw new Error("release subject pluginVersion does not match listing.plugin.version");
   }
   if (!valid(listing.plugin?.version)) throw new Error("listing.plugin.version is invalid");
   if (previousRelease && !previousSubject) {
     throw new Error(`Previous release ${previousRelease.tag_name} is missing release-subject.json`);
   }
-  const previousVersion = previousSubject?.pluginVersion ?? null;
+  const previousName =
+    previousSubject?.openaiProfile?.pluginId ?? listing.canonicalPluginName ?? listing.plugin.name;
+  const previousVersion =
+    previousName === currentName
+      ? (previousSubject?.openaiProfile?.version ?? previousSubject?.pluginVersion ?? null)
+      : null;
   if (previousVersion && !valid(previousVersion)) {
     throw new Error(`Previous release ${previousRelease.tag_name} has an invalid pluginVersion`);
   }
-  if (previousVersion && compare(subject.pluginVersion, previousVersion) < 0) {
-    throw new Error(`Plugin version decreased from ${previousVersion} to ${subject.pluginVersion}`);
+  if (previousVersion && compare(currentVersion, previousVersion) < 0) {
+    throw new Error(`Plugin version decreased from ${previousVersion} to ${currentVersion}`);
   }
-  const marker = openAiIssueMarker(listing.plugin.name, subject.pluginVersion);
+  const marker = openAiIssueMarker(listing.plugin.name, currentVersion);
   const existing = matchingOpenAiReleaseIssues(issues, marker)[0] ?? null;
-  const pluginVersionChanged =
-    !previousVersion || compare(subject.pluginVersion, previousVersion) !== 0;
+  const pluginVersionChanged = !previousVersion || compare(currentVersion, previousVersion) !== 0;
   if (!pluginVersionChanged) {
     return {
       status: "noop",
@@ -337,7 +369,7 @@ export function buildOpenAiReleasePlan({
     releaseUrl,
     openaiAssetUrl: openAi.browser_download_url,
     openaiSha256: openAiSha256,
-    firstPublicationUrl: `https://github.com/${repository}/blob/${releaseSha}/docs/listing/openai/${listing.plugin.name}-first-publication.md#composer-icon-handoff`,
+    firstPublicationUrl: `https://github.com/${repository}/blob/${releaseSha}/docs/listing/openai/${listing.canonicalPluginName ?? listing.plugin.name}-first-publication.md#composer-icon-handoff`,
   });
   return {
     status: "create",
@@ -346,7 +378,7 @@ export function buildOpenAiReleasePlan({
     marker,
     title: ISSUE_TITLE,
     body,
-    pluginVersion: subject.pluginVersion,
+    pluginVersion: currentVersion,
     releaseUrl,
     assetUrl: openAi.browser_download_url,
   };
@@ -354,7 +386,11 @@ export function buildOpenAiReleasePlan({
 
 function readCurrentContext(options) {
   const listingPath = pluginArtifactPaths(process.cwd()).listing;
-  const listing = readJsonAtCommit(options.releaseSha, listingPath);
+  const releaseSource = readJsonAtCommit(options.releaseSha, PLUGIN_SOURCE_PATH);
+  const listing = listingForOpenAiIdentity(
+    readJsonAtCommit(options.releaseSha, listingPath),
+    openAiIdentityFromSource(releaseSource),
+  );
   const tagCommit = readTagCommit(options.repository, options.tag);
   if (tagCommit !== options.releaseSha) {
     throw new Error(`release tag ${options.tag} does not point to ${options.releaseSha}`);
@@ -378,10 +414,19 @@ function readCurrentContext(options) {
       : subjectFromRelease(options.repository, release),
     options,
   );
-  const previousRelease = selectPreviousPluginRelease(releases, options.releaseVersion);
-  const previousSubject = previousRelease
-    ? subjectFromRelease(options.repository, previousRelease)
-    : null;
+  const { previousRelease, previousSubject } = previousReleaseForIdentity({
+    releases,
+    currentReleaseVersion: options.releaseVersion,
+    pluginId: subject.openaiProfile?.pluginId ?? listing.plugin.name,
+    legacyPluginId: releaseSource.pluginId,
+    readValidatedSubject: (historicalRelease) => {
+      const historicalSha = readTagCommit(options.repository, historicalRelease.tag_name);
+      return validateCurrentSubject(subjectFromRelease(options.repository, historicalRelease), {
+        releaseSha: historicalSha,
+        releaseVersion: historicalRelease.tag_name.slice(1),
+      });
+    },
+  });
   return {
     repository: options.repository,
     tag: options.tag,

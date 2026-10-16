@@ -49,22 +49,22 @@
   "distributions": {
     "skillsCliAgent": "codex",
     "portablePlugin": "stark-ai-developer",
-    "openaiPlugin": "stark-ai-developer"
+    "openaiPlugin": "stark-ai-developer-tools"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.15.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.0.0.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
     "agentPlugins": "agent-plugins-1.0.0",
-    "openaiPackaging": "openai-plugin-packaging-2026-08-19",
-    "openaiSubmission": "openai-plugin-submission-2026-08-19"
+    "openaiPackaging": "openai-plugin-packaging-2026-10-16",
+    "openaiSubmission": "openai-plugin-submission-2026-10-16"
   },
   "build": {
     "nodeVersion": "24.18.0",
@@ -84,5 +84,34 @@
         "manifestSha256": "43ffe4c9273531621373270b14edd3c7c3d37e693fd1928ccc3c6fe24e261b18"
       }
     }
-  ]
+  ],
+  "openai": {
+    "activeProfile": "new-remote",
+    "profiles": {
+      "existing-skills-only": {
+        "transport": "none"
+      },
+      "existing-remote": {
+        "version": "2.0.0",
+        "transport": "http",
+        "url": "https://skills-mcp.stark-ai.de/mcp",
+        "description": "Ten reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
+      },
+      "new-remote": {
+        "pluginId": "stark-ai-developer-tools",
+        "version": "1.0.0",
+        "displayName": "stark AI Developer Tools",
+        "transport": "http",
+        "url": "https://skills-mcp.stark-ai.de/mcp",
+        "description": "Ten reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
+      },
+      "desktop-local": {
+        "pluginId": "stark-ai-developer-desktop",
+        "version": "1.0.0",
+        "displayName": "stark AI Developer Desktop",
+        "transport": "stdio",
+        "description": "Ten reviewed developer skills plus local deterministic skill and plugin metadata validation. Runs on the desktop with Node.js 24; no remote metadata service or SSH MCP is included."
+      }
+    }
+  }
 }

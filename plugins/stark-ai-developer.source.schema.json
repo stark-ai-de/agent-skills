@@ -199,6 +199,164 @@
           }
         }
       }
+    },
+    "openai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activeProfile", "profiles"],
+      "properties": {
+        "activeProfile": {
+          "enum": ["existing-skills-only", "existing-remote", "new-remote", "desktop-local"]
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["existing-skills-only", "existing-remote", "new-remote", "desktop-local"],
+          "properties": {
+            "existing-skills-only": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/openaiProfile"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "transport": {
+                      "const": "none"
+                    }
+                  }
+                }
+              ]
+            },
+            "existing-remote": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/openaiProfile"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "transport": {
+                      "const": "http"
+                    }
+                  }
+                }
+              ]
+            },
+            "new-remote": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/openaiProfile"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "transport": {
+                      "const": "http"
+                    }
+                  }
+                }
+              ]
+            },
+            "desktop-local": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/openaiProfile"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "transport": {
+                      "const": "stdio"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "openaiProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transport"],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 64
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "transport": {
+          "enum": ["none", "http", "stdio"]
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://[^/?#@]+/mcp$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "transport": {
+                "const": "http"
+              }
+            }
+          },
+          "then": {
+            "required": ["url", "description"],
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "pattern": "^https://[^/?#@]+/mcp$"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "transport": {
+                "const": "stdio"
+              }
+            }
+          },
+          "then": {
+            "required": ["description"],
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

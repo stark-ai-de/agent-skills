@@ -2,7 +2,7 @@
 
 ID: ADR-0070
 Title: Consume pinned SSH runtime artifacts from an independent repository
-Status: Accepted
+Status: Superseded
 Date: 2026-10-12
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0066
-Superseded by: None
+Superseded by: ADR-0071
 Guide verified: 2026-10-12
 Gist: The skills repository bundles a reviewed immutable SSH runtime artifact while independent sources and lifecycle tests belong to the public SSH repository.
 

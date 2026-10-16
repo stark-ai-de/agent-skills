@@ -140,6 +140,13 @@
       "owner": "skill-evals/review-fix-swarm/fixture-kit.test.mjs",
       "proof": "Offline fixture Git write isolation, host-configuration independence, original-test integrity and honest semantic-review state; real CODEX/Pi quality remains separate.",
       "cadence": "every aggregate run"
+    },
+    {
+      "id": "metadata-mcp",
+      "owner": "packages/skill-metadata-mcp/src/core.mjs",
+      "proof": "Deterministic public metadata rules, bounded parsing, MCP HTTP/stdio behavior and profile-aware candidate packaging.",
+      "cadence": "On metadata MCP, profile or release-contract changes; included in the local aggregate.",
+      "command": "pnpm run validate:metadata-mcp"
     }
   ]
 }

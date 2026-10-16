@@ -17,6 +17,7 @@ import {
   missingReleasePleaseLifecycleLabels,
 } from "../lib/release-management.mjs";
 import { githubRepositorySlug, readRepoPackage } from "../lib/release-descriptor.mjs";
+import { selectOpenAiReleaseRoute } from "../lib/openai-release-handoff.mjs";
 import { validateReleaseEnvironment } from "./check-release-environment.mjs";
 
 const root = process.cwd();
@@ -407,7 +408,7 @@ function openAiHandoff(repository, tag) {
 function usage() {
   return [
     "Usage: pnpm run release:manage -- <command>",
-    "Commands: status | setup-check | impact --kind patch|minor|breaking [--skill name] | release-pr --confirm | publish-plan [--recovery-release-sha sha] --confirm | publish [--recovery-release-sha sha] --confirm | approve --run-id id [--recovery-release-sha sha] --confirm | post-release --tag vX.Y.Z --confirm | openai-handoff --tag vX.Y.Z",
+    "Commands: status | setup-check | impact --kind patch|minor|breaking [--skill name] | release-pr --confirm | publish-plan [--recovery-release-sha sha] --confirm | publish [--recovery-release-sha sha] --confirm | approve --run-id id [--recovery-release-sha sha] --confirm | post-release --tag vX.Y.Z --confirm | openai-route [--evidence-file private.json] | openai-handoff --tag vX.Y.Z",
   ].join("\n");
 }
 
@@ -450,6 +451,14 @@ try {
         ["tag", validateTag(argument(argv, "--tag"))],
       ]);
       break;
+    case "openai-route": {
+      const file = argument(argv, "--evidence-file");
+      const evidence = file ? JSON.parse(fs.readFileSync(path.resolve(file), "utf8")) : {};
+      if (!evidence || typeof evidence !== "object" || Array.isArray(evidence))
+        throw new Error("Route evidence must be a JSON object");
+      console.log(JSON.stringify(selectOpenAiReleaseRoute(evidence), null, 2));
+      break;
+    }
     case "openai-handoff":
       openAiHandoff(repository, validateTag(argument(argv, "--tag")));
       break;

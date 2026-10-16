@@ -283,9 +283,7 @@ export function validateOpenAiListing(root) {
     errors.push("listing.plugin must be a mapping");
     return { bundle, listing, errors };
   }
-  if (plugin.name !== bundle.distributions.openaiPlugin) {
-    errors.push("listing.plugin.name must match distributions.openaiPlugin");
-  }
+  // The base listing is anchored to listingId below; projections apply the selected OpenAI identity.
   let identity;
   try {
     identity = pluginIdentity(root);

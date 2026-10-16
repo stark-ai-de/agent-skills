@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { listingForProfile, profilePackageFiles } from "./openai-profiles.mjs";
 
 import { canonicalJson, hashBytes, loadValidatedBundle } from "./bundle-contract.mjs";
 import { LISTING_PATH, readOpenAiListing } from "./openai-listing.mjs";
@@ -23,7 +24,6 @@ const EXPECTED_ROOTS = new Set([
   "SOURCE-MANIFEST.json",
 ]);
 const FORBIDDEN_MANIFEST_FIELDS = [
-  "mcpServers",
   "apps",
   "hooks",
   "interface.screenshots",
@@ -58,6 +58,11 @@ export function openAiManifestFromListing(listing) {
       name: listing.publisher.legalName,
     },
     skills: "./skills/",
+    ...(listing.submissionProfile?.transport !== undefined &&
+    listing.submissionProfile.transport !== "none"
+      ? { mcpServers: "./.mcp.json" }
+      : {}),
+    ...(listing.submissionProfile?.transport === "stdio" ? { requires_local_executor: true } : {}),
     interface: {
       displayName: plugin.displayName,
       shortDescription: plugin.shortDescription,
@@ -106,6 +111,12 @@ function writeOpenAiPackage({ root, stage, bundle, listing, gitRoot = root }) {
     pluginManifest,
     includeAssets: true,
     assetFiles,
+    extraFiles: profilePackageFiles(root, listing.submissionProfile),
+    readmeContent:
+      listing.submissionProfile?.transport !== "none" && listing.submissionProfile
+        ? `# ${listing.plugin.displayName}\n\nGenerated OpenAI ${listing.submissionProfile.profile} candidate. Includes ${bundle.skills.length} unchanged reviewed skills and two metadata validation tools.\n\n${listing.plugin.longDescription}\n\nTransport: ${listing.submissionProfile.transport}. ${listing.submissionProfile.url ?? "Requires Node.js 24; bundled stdio server starts without downloading dependencies."}\n\nOnly share metadata you intend to provide to the validator. This tool does not validate complete ZIPs, establish security or guarantee publication.\n`
+        : undefined,
+    provenance: listing.submissionProfile ? { openaiProfile: listing.submissionProfile } : {},
     gitRoot,
   });
   return pluginManifest;
@@ -157,9 +168,9 @@ function addTreeErrors(root, targetRoot, bundle, errors) {
   }
 }
 
-export function stageOpenAiProjection({ root = process.cwd(), gitRoot } = {}) {
+export function stageOpenAiProjection({ root = process.cwd(), gitRoot, profile } = {}) {
   const resolvedRoot = path.resolve(root);
-  const listing = readOpenAiListing(resolvedRoot);
+  const listing = listingForProfile(resolvedRoot, readOpenAiListing(resolvedRoot), profile);
   const bundle = loadValidatedBundle(resolvedRoot);
   let pluginManifest;
   const stage = withTempStage("openai-adapter-stage-", (stagePath) => {
@@ -180,8 +191,8 @@ export function stageOpenAiProjection({ root = process.cwd(), gitRoot } = {}) {
   };
 }
 
-export function withOpenAiStage(root, fn, { gitRoot } = {}) {
-  const staged = stageOpenAiProjection({ root, gitRoot });
+export function withOpenAiStage(root, fn, { gitRoot, profile } = {}) {
+  const staged = stageOpenAiProjection({ root, gitRoot, profile });
   try {
     return fn(staged);
   } finally {
@@ -206,18 +217,26 @@ export function assertWritableOpenAiTarget(root, target) {
 }
 
 export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) {
+  listing = listing?.submissionProfile
+    ? listing
+    : listingForProfile(root, listing ?? readOpenAiListing(root));
   const errors = [];
   const targetStat = fs.existsSync(targetRoot) ? fs.lstatSync(targetRoot) : null;
   if (!targetStat?.isDirectory() || targetStat.isSymbolicLink()) {
     return { errors: [`OpenAI adapter is missing or not a directory: ${targetRoot}`] };
   }
 
+  const extra = profilePackageFiles(root, listing?.submissionProfile);
+  const expectedRoots = new Set([
+    ...EXPECTED_ROOTS,
+    ...extra.map((file) => file.path.split("/")[0]),
+  ]);
   for (const entry of fs.readdirSync(targetRoot, { withFileTypes: true })) {
-    if (!EXPECTED_ROOTS.has(entry.name)) {
+    if (!expectedRoots.has(entry.name)) {
       errors.push(`unexpected OpenAI adapter root entry: ${entry.name}`);
     }
   }
-  for (const expected of EXPECTED_ROOTS) {
+  for (const expected of expectedRoots) {
     if (!fs.existsSync(path.join(targetRoot, expected))) {
       errors.push(`missing OpenAI adapter root entry: ${expected}`);
     }
@@ -230,6 +249,11 @@ export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) 
     if (canonicalJson(manifest) !== canonicalJson(expectedManifest)) {
       errors.push(".codex-plugin/plugin.json does not match the reviewed listing source");
     }
+    if (
+      (!listing.submissionProfile || listing.submissionProfile.transport === "none") &&
+      manifest.mcpServers !== undefined
+    )
+      errors.push("skills-only OpenAI adapter contains mcpServers");
     if (manifest.skills !== "./skills/") errors.push("OpenAI manifest skills must be ./skills/");
     for (const forbidden of FORBIDDEN_MANIFEST_FIELDS) {
       const value = forbidden.split(".").reduce((current, key) => current?.[key], manifest);
@@ -237,6 +261,16 @@ export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) 
     }
   }
 
+  for (const file of extra) {
+    const actual = path.join(targetRoot, file.path);
+    if (
+      !fs.existsSync(actual) ||
+      !fs.lstatSync(actual).isFile() ||
+      fs.lstatSync(actual).isSymbolicLink() ||
+      hashBytes(fs.readFileSync(actual)) !== hashBytes(Buffer.from(file.content))
+    )
+      errors.push(`OpenAI profile file mismatch: ${file.path}`);
+  }
   const assetsRoot = path.join(targetRoot, "assets");
   if (fs.existsSync(assetsRoot)) {
     const assetNames = fs.readdirSync(assetsRoot).sort();
@@ -253,6 +287,11 @@ export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) 
     const sourceManifest = JSON.parse(
       fs.readFileSync(path.join(targetRoot, "SOURCE-MANIFEST.json"), "utf8"),
     );
+    if (
+      canonicalJson(sourceManifest.openaiProfile ?? null) !==
+      canonicalJson(listing?.submissionProfile ?? null)
+    )
+      errors.push("OpenAI SOURCE-MANIFEST profile is stale");
     if (sourceManifest.projection !== "openai") {
       errors.push("OpenAI SOURCE-MANIFEST projection must be openai");
     }
@@ -267,7 +306,7 @@ export function validateOpenAiProjection({ root, targetRoot, bundle, listing }) 
 export function syncOpenAiProjection({ root = process.cwd(), target, check = false } = {}) {
   const resolvedRoot = path.resolve(root);
   assertWritableOpenAiTarget(resolvedRoot, target);
-  const listing = readOpenAiListing(resolvedRoot);
+  const listing = listingForProfile(resolvedRoot, readOpenAiListing(resolvedRoot));
   const pluginManifest = openAiManifestFromListing(listing);
   const result = syncGeneratedProjection({
     root: resolvedRoot,

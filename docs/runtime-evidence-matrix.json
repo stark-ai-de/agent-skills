@@ -506,6 +506,40 @@
       "rationale": "Node 24.22.0 passed all 14 black-box fixture tests on Linux/WSL. The fixture grader and its children use the Node --test CLI contract through process.execPath. Bun 1.4.2 invoked with --test rejects this suite with Cannot use test outside of the test runner. This evidence selects Node for this concrete validator only; Bun remains the parent repository orchestrator. Hosted and other-platform observations remain separate.",
       "fallbackOrder": ["node"],
       "revisit": "Requalify when Bun supports the required Node test-runner invocation or the fixture CLI contract changes; report missing Node rather than silently substituting a runtime."
+    },
+    {
+      "id": "metadata-mcp-node-contract",
+      "surfaces": ["package:root:metadata-mcp-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "boundedMetadataParsing": "pass",
+            "httpMcp": "pass",
+            "stdioMcp": "pass",
+            "offlineDesktopBundle": "pass",
+            "crossPlatformHosted": "unknown"
+          }
+        },
+        {
+          "id": "bun",
+          "signals": {
+            "nodeTestRunnerContract": "unknown",
+            "httpMcp": "unknown",
+            "crossPlatformHosted": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "ADR-0072",
+        "pnpm run validate:metadata-mcp",
+        "packages/skill-metadata-mcp/test/transports.test.mjs",
+        "packages/skill-metadata-mcp/test/profiles.test.mjs"
+      ],
+      "rationale": "The approved deployment and offline stdio runtime is Node.js 24.18 or newer. Node 24.22.0 passed the local metadata, HTTP, stdio and isolated bundle fixtures. The Node test runner directly qualifies that declared production runtime; Bun remains the existing repository build tool. Hosted and native desktop qualification are separate pending evidence.",
+      "fallbackOrder": ["node"],
+      "revisit": "Reassess when the declared hosting/runtime contract changes or Node compatibility regresses."
     }
   ]
 }

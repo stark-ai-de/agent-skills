@@ -1,0 +1,37 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "pnpm --filter @stark-ai/skill-metadata-mcp run build:http",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "functions": {
+    "api/index.mjs": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/mcp",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index"
+    }
+  ],
+  "outputDirectory": "public",
+  "headers": [
+    {
+      "source": "/.well-known/openai-apps-challenge",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}

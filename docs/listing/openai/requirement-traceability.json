@@ -26,9 +26,10 @@
     {
       "commands": [
         "validate:openai-plugin",
-        "validate:openai-submission"
+        "validate:openai-submission",
+        "validate:metadata-mcp"
       ],
-      "contract": "OpenAI adapter and skills-only manifest",
+      "contract": "Profile-aware OpenAI adapter and metadata MCP",
       "id": "OAI-001"
     },
     {

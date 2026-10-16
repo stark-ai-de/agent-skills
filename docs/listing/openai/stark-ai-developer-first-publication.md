@@ -271,3 +271,7 @@ not a freeze.
 - commit secrets, reviewer transcripts, or machine-specific paths
 - invent a portal URL that downloads the saved `.codex-plugin/plugin.json`
 - log ChatGPT directory-document account identifiers, cookies, session tokens, or category catalog `pageToken` values
+
+## Metadata MCP candidate and fallback handoff
+
+ADR-0071 and ADR-0072 define explicit OpenAI profiles. See the [metadata MCP qualification guide](../../../packages/skill-metadata-mcp/README.md) for build, archive verification, Vercel configuration and manual fallback rules. The existing public listing remains authoritative until a replacement or update is verified as published. Do not treat a successful ZIP check, prepared endpoint or open pull request as portal acceptance.

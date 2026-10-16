@@ -79,6 +79,22 @@ const description =
       as potentially sensitive task data.
     </p>
 
+    <h2>Optional metadata validator MCP</h2>
+    <p>
+      The separate metadata-validator candidate checks skill YAML and plugin JSON that you
+      explicitly supply. Its remote profile processes those documents on Vercel; its desktop
+      profile performs the same checks locally. Send only metadata you intend to share with
+      the selected validator. It does not inspect repositories, execute commands, fetch URLs,
+      certify security, or guarantee publication.
+    </p>
+    <p>
+      The validator application does not store or log document contents. The remote hosting
+      provider processes network and operational data such as IP addresses, request times,
+      routes and response status under its applicable policies. This optional service is
+      separate from the published skills-only package described below. Availability requires
+      an explicitly qualified deployment and release.
+    </p>
+
     <h2>How to report</h2>
     <p>
       Follow the repository{" "}

@@ -25,8 +25,8 @@ const REQUIREMENTS = [
   },
   {
     id: "OAI-001",
-    contract: "OpenAI adapter and skills-only manifest",
-    commands: ["validate:openai-plugin", "validate:openai-submission"],
+    contract: "Profile-aware OpenAI adapter and metadata MCP",
+    commands: ["validate:openai-plugin", "validate:openai-submission", "validate:metadata-mcp"],
   },
   {
     id: "META-001",

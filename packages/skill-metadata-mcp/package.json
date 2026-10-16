@@ -1,0 +1,24 @@
+{
+  "name": "@stark-ai/skill-metadata-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "build": "pnpm run build:http && pnpm run build:stdio",
+    "build:http": "node build.mjs http",
+    "build:stdio": "node build.mjs stdio",
+    "dev": "node src/dev.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
+    "ajv": "8.20.0",
+    "js-yaml": "5.4.2",
+    "mcp-handler": "2.3.0",
+    "zod": "4.6.7"
+  },
+  "engines": {
+    "node": ">=24.18.0"
+  }
+}

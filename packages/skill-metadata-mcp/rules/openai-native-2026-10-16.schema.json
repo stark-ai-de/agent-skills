@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stark-ai.de/schemas/openai-native-metadata-2026-10-16.schema.json",
+  "title": "OpenAI native metadata subset, verified 2026-10-16; not a ZIP or submission validator",
+  "type": "object",
+  "required": ["name", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "skills": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "mcpServers": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "requires_local_executor": {
+      "type": "boolean"
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "interface": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "shortDescription": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "longDescription": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "developerName": {
+          "type": "string",
+          "maxLength": 80
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

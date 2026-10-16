@@ -116,6 +116,29 @@ function observation() {
 }
 
 assert.equal(evaluateReleaseCompletion(observation(), expected).status, "success");
+for (const [profileId, pluginId, version] of [
+  ["new-remote", "stark-ai-developer-tools", "1.0.0"],
+  ["existing-remote", "stark-ai-developer", "2.0.0"],
+  ["desktop-local", "stark-ai-developer-desktop", "1.0.0"],
+]) {
+  const fixture = observation();
+  fixture.subject.pluginVersion = "1.16.0";
+  fixture.subject.openaiProfile = { profile: profileId, pluginId, version };
+  const trialExpected = structuredClone(expected);
+  trialExpected.handoff.marker = `<!-- openai-plugin-release:${pluginId}@${version} -->`;
+  assert.equal(evaluateReleaseCompletion(fixture, trialExpected).status, "success", profileId);
+  for (const invalidMarker of [
+    `<!-- openai-plugin-release:wrong-id@${version} -->`,
+    `<!-- openai-plugin-release:${pluginId}@9.9.9 -->`,
+  ])
+    assert.equal(
+      evaluateReleaseCompletion(fixture, {
+        ...trialExpected,
+        handoff: { ...trialExpected.handoff, marker: invalidMarker },
+      }).reason,
+      "openai_handoff_invalid",
+    );
+}
 
 for (const state of ["open", "closed"]) {
   const fixture = observation();

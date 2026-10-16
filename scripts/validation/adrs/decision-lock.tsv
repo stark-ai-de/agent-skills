@@ -64,3 +64,5 @@ ADR-0067	0067-separate-ssh-management-from-transport-adapters	f1e5b9f1bc1cbb9aca
 ADR-0068	0068-own-ssh-sessions-in-a-local-runtime	7e78367dd376bcb40a19f7a79e49cf3c0fbffa7c2cdd6950f5f7705e251bd07d
 ADR-0069	0069-protect-ssh-credentials-trust-and-target-grants	9446384a4e0208e2427e160a02d6a6528d0b84a9c6c1f99643ed054eff3d9524
 ADR-0070	0070-consume-pinned-ssh-runtime-artifacts-from-an-independent-repository	7a0c6cd3bc6bab3812b140cf6c2949805421946a16c103fe1b8f4577f255d165
+ADR-0071	0071-add-target-specific-openai-distribution-profiles	0c5fa379dc342995b0ed9e55b2753cb0d92dcc226a62c147617576fdac881489
+ADR-0072	0072-share-one-metadata-validation-core-across-mcp-transports	c6d1f5fe4edc099184d069b094decd37040d378858fab3c9a0cf75bad094c1a0

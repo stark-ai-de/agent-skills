@@ -697,6 +697,9 @@ export function writeSharedPackageFiles({
   pluginManifest,
   includeAssets = false,
   assetFiles = [],
+  extraFiles = [],
+  provenance = {},
+  readmeContent,
   gitRoot = root,
 }) {
   assertNoUntrackedReleaseInputs(
@@ -723,7 +726,7 @@ export function writeSharedPackageFiles({
   );
   writeGeneratedFile(
     path.join(stage, "README.md"),
-    generatedReadme({ kind, bundle, root }),
+    readmeContent ?? generatedReadme({ kind, bundle, root }),
     manifestFiles,
     "README.md",
   );
@@ -739,9 +742,11 @@ export function writeSharedPackageFiles({
       );
     }
   }
+  for (const file of extraFiles)
+    writeGeneratedFile(path.join(stage, file.path), file.content, manifestFiles, file.path);
   writeGeneratedFile(
     path.join(stage, "SOURCE-MANIFEST.json"),
-    canonicalJson(buildSourceManifest({ root, bundle, kind, manifestFiles })),
+    canonicalJson({ ...buildSourceManifest({ root, bundle, kind, manifestFiles }), ...provenance }),
     manifestFiles,
     "SOURCE-MANIFEST.json",
   );

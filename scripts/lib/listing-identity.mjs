@@ -119,3 +119,26 @@ export function githubRepositorySlug(repository) {
     ? `${owner}/${repositoryName}`
     : undefined;
 }
+
+/** OpenAI identities remain owned by the canonical source, independently of portable identity. */
+export function openAiIdentityFromSource(
+  source,
+  profileId = source.openai?.activeProfile ?? "existing-skills-only",
+) {
+  const profile =
+    source.openai?.profiles?.[profileId] ??
+    (profileId === "existing-skills-only" ? { transport: "none" } : null);
+  if (!profile) throw new Error(`Unknown OpenAI profile: ${profileId}`);
+  const pluginId = profile.pluginId ?? source.pluginId;
+  const version = profile.version ?? source.version;
+  return {
+    profile: profileId,
+    pluginId,
+    version,
+    displayName: profile.displayName ?? source.displayName,
+    transport: profile.transport,
+    ...(profile.url ? { url: profile.url } : {}),
+    ...(profile.description ? { description: profile.description } : {}),
+    archive: `dist/openai/${pluginId}-${version}.zip`,
+  };
+}
