@@ -35,3 +35,6 @@ docs/specs/do-not-publish/*
 # Retired local build directories may remain while old daemons drain.
 # Canonical SSH sources now belong to stark-ai-de/ssh-manager.
 /packages/ssh-manager*/
+
+# Local Vercel project linkage
+.vercel/

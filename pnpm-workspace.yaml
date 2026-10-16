@@ -1,6 +1,7 @@
 packages:
   - "."
   - "site"
+  - "packages/skill-metadata-mcp"
   - "scripts/release/forward-release-tool"
 overrides:
   "vite@": 8.2.2

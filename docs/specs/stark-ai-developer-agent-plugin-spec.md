@@ -1,5 +1,7 @@
 # Implementation Specification: stark AI Developer Skills and OpenAI Plugin Distribution
 
+The existing skills-only publication remains the v1 reference. [ADR-0071](../adrs/0071-add-target-specific-openai-distribution-profiles.short.md) ([Long, canonical](../adrs/0071-add-target-specific-openai-distribution-profiles.long.md) · [Guide](../adrs/0071-add-target-specific-openai-distribution-profiles.guide.md)) adds explicit OpenAI distribution profiles, and [ADR-0072](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.short.md) ([Long, canonical](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.long.md) · [Guide](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.guide.md)) defines the optional metadata MCP. Follow the [MCP qualification guide](../../packages/skill-metadata-mcp/README.md) for those candidates; preparing a profile does not establish portal eligibility or publication.
+
 - **Status:** Phase 6 publication recorded; current catalog membership unconfirmed
 - **Contract revision:** 14
 - **Implementation readiness:** Phases 1–4 are repository-local complete. Phase 6 publication is recorded. Directory identity is a manual `pnpm run verify:openai-directory` diagnostic; see [current observation limits](../publishing.md#manual-directory-observation).

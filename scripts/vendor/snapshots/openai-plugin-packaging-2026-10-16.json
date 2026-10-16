@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractId": "openai-plugin-packaging-2026-10-16",
+  "source": {
+    "url": "https://developers.openai.com/plugins/build/plugins",
+    "title": "OpenAI Developers \u2014 Package your plugin",
+    "checksum": {
+      "algorithm": "sha256",
+      "value": "eeceb3e77693ff72e1a8a750753318bce1aa923faf4ad25206669df4a572c292"
+    }
+  },
+  "verifiedOn": "2026-10-16",
+  "verifiedBy": "stark-ai-de",
+  "precedenceClass": "packaging-submission",
+  "facts": {
+    "nativeManifestPath": ".codex-plugin/plugin.json",
+    "displayNameMax": 30,
+    "shortDescriptionMax": 30,
+    "longDescriptionMax": 4000,
+    "developerNameMax": 80,
+    "capabilitiesMax": 20,
+    "capabilityLengthMax": 120,
+    "starterPromptsMax": 3,
+    "starterPromptLengthMax": 128,
+    "packageNameMax": 64,
+    "assetMaxBytes": 5242880,
+    "skillsOnlyOmits": ["mcpServers", "apps", "interface.screenshots", "authentication"],
+    "marketplaceAuthenticationRequired": true,
+    "allowedAuthentication": ["ON_INSTALL", "ON_USE"],
+    "nativeMcpConfiguration": ".mcp.json",
+    "nativeMcpManifestField": "mcpServers",
+    "supportedProfiles": ["existing-skills-only", "existing-remote", "new-remote", "desktop-local"]
+  },
+  "requirementIds": ["OAI-001", "META-001"],
+  "validators": ["validate:openai-plugin", "validate:openai-listing", "validate:openai-submission"],
+  "unresolvedConflicts": []
+}

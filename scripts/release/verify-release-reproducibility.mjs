@@ -176,6 +176,7 @@ function releaseSubjectReport(firstBuild, checksums, differences) {
     releaseVersion: packageVersion(),
     pluginVersion: identity.version,
     archiveProfile: identity.archiveProfile,
+    openaiProfile: identity.openaiProfile,
     openai: {
       sha256: checksums["openai.zip"],
       bytes: firstBuild.archives["openai.zip"].bytes,

@@ -67,7 +67,10 @@ export function renderOpenAiSubmissionChecklist(
     `- Terms: ${plugin.urls.termsOfService}`,
     `- Support: ${plugin.urls.support}`,
     `- Security: ${plugin.urls.security}`,
-    `- ChatGPT plugin: ${plugin.urls.chatgptPlugin}`,
+    ...(listing.submissionProfile?.profile &&
+    ["new-remote", "desktop-local"].includes(listing.submissionProfile.profile)
+      ? ["- ChatGPT plugin: pending verified publication; retain the existing listing separately."]
+      : [`- ChatGPT plugin: ${plugin.urls.chatgptPlugin}`]),
     `- Release notes: ${inline(releaseNotes)}`,
     "",
     "## Capabilities",
@@ -95,6 +98,16 @@ export function renderOpenAiSubmissionChecklist(
     "2. Keep both existing Plugin Info logos unchanged. Restore them only if the ZIP upload reset them.",
     `3. Follow the [Composer icon handoff](${firstPublicationUrl}) to set the separate light and dark PNGs manually; do not use the Plugin Info logos for these fields.`,
     "4. After propagation, verify light and dark rendering plus the public directory identity.",
+    "",
+    "## Route and transport",
+    "",
+    `- Selected profile: ${listing.submissionProfile?.profile ?? "existing-skills-only"}`,
+    `- Transport: ${listing.submissionProfile?.transport ?? "none"}`,
+    ...(listing.submissionProfile?.url ? [`- MCP endpoint: ${listing.submissionProfile.url}`] : []),
+    "- Check A0 existing skills-only update first; use A1 only with confirmed migration permission, then B new remote, C allowlisted desktop, D direct-install bridge.",
+    "- An in-progress review or repairable package, permission, DNS or service error does not trigger fallback. Resolve product review findings on the same route.",
+    "- Keep private eligibility and portal observations in the maintainer workflow. Do not wait for support before an otherwise permitted new submission.",
+    "- For remote profiles verify the stable public HTTPS MCP, domain challenge, tool scan, five positive and three negative cases, demo and current legal URLs before submission.",
     "",
     "## Checklist",
     "",

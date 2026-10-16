@@ -12,7 +12,7 @@ import {
   listTrackedSourceFiles,
 } from "../lib/plugin-projections.mjs";
 import { openAiManifestFromListing, readOpenAiListing } from "../lib/openai-projection.mjs";
-import { pluginIdentity } from "../lib/release-descriptor.mjs";
+import { listingForProfile, openAiProfile, profilePackageFiles } from "../lib/openai-profiles.mjs";
 import {
   assertNoPathCollisions,
   assertSafeArchivePath,
@@ -104,23 +104,33 @@ function validateArchivePath(name) {
 }
 
 function parseArgs(argv) {
+  const profileIndex = argv.indexOf("--profile");
+  const profile = profileIndex === -1 ? undefined : argv[profileIndex + 1];
+  if (profileIndex !== -1 && (!profile || profile.startsWith("--")))
+    throw new Error("--profile requires a profile id");
   const rootIndex = argv.indexOf("--root");
   const archiveIndex = argv.indexOf("--archive");
   const root = rootIndex === -1 ? process.cwd() : path.resolve(argv[rootIndex + 1]);
   return {
     root,
+    profile,
     archive:
       archiveIndex === -1
-        ? path.join(root, pluginIdentity(root).openaiArchive)
+        ? path.join(root, openAiProfile(root, profile).archive)
         : path.resolve(argv[archiveIndex + 1]),
   };
 }
 
 try {
-  const { root, archive: archivePath } = parseArgs(process.argv.slice(2));
+  const { root, archive: archivePath, profile } = parseArgs(process.argv.slice(2));
   const listingValidation = validateOpenAiListing(root);
   const bundle = loadValidatedBundle(root);
-  const listing = listingValidation.listing ?? readOpenAiListing(root);
+  const listing = listingForProfile(
+    root,
+    listingValidation.listing ?? readOpenAiListing(root),
+    profile,
+  );
+  const extra = profilePackageFiles(root, listing.submissionProfile);
   const errors = [...listingValidation.errors];
   const archiveBytes = fs.readFileSync(archivePath);
   if (archiveBytes.length > MAX_COMPRESSED_BYTES) {
@@ -203,7 +213,10 @@ try {
       errors.push(`OpenAI submission archive is missing ${rootEntry}`);
     }
   }
-  const expectedFiles = new Set(expectedRoots);
+  const expectedFiles = new Set([...expectedRoots, ...extra.map((file) => file.path)]);
+  for (const file of extra)
+    if (!files[file.path] || hashBytes(files[file.path]) !== hashBytes(Buffer.from(file.content)))
+      errors.push(`submission profile file mismatch: ${file.path}`);
   for (const entry of bundle.skills) {
     for (const sourceFile of listTrackedSourceFiles(
       root,
@@ -238,6 +251,7 @@ try {
   }
   for (const name of names) {
     if (
+      !extra.some((file) => file.path === name) &&
       !name.startsWith(".codex-plugin/") &&
       !name.startsWith("assets/") &&
       !name.startsWith("skills/") &&
@@ -280,7 +294,13 @@ try {
       }
     }
   }
-  if (names.some((name) => /\.(mcp|app)\.json$/.test(name) || name.includes("hooks/"))) {
+  if (
+    names.some(
+      (name) =>
+        (!extra.some((file) => file.path === name) && /\.(mcp|app)\.json$/.test(name)) ||
+        name.includes("hooks/"),
+    )
+  ) {
     errors.push("OpenAI submission archive contains a skills-only exclusion");
   }
   const combined = names.map((name) => Buffer.from(files[name]).toString("utf8")).join("\n");

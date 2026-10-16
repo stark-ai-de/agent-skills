@@ -26,6 +26,7 @@ export function createReleaseSubject({
   releaseVersion,
   pluginVersion,
   archiveProfile,
+  openaiProfile,
   openai,
   portable,
   differences = [],
@@ -41,6 +42,7 @@ export function createReleaseSubject({
     releaseVersion,
     pluginVersion,
     archiveProfile,
+    ...(openaiProfile ? { openaiProfile } : {}),
     subjects: {
       openai: { name: "openai.zip", sha256: openai.sha256, bytes: openai.bytes },
       portable: { name: "portable.zip", sha256: portable.sha256, bytes: portable.bytes },
@@ -67,6 +69,7 @@ export function normalizeReleaseSubject(report, { releaseTag } = {}) {
     releaseVersion,
     pluginVersion: report?.pluginVersion,
     archiveProfile: report?.archiveProfile,
+    openaiProfile: report?.openaiProfile,
     openai: subjects?.openai,
     portable: subjects?.portable,
     differences: report?.differences ?? [],

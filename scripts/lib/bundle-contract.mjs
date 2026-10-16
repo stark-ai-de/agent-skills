@@ -287,7 +287,7 @@ function validateBundleSemantics(root, bundle, bundleFile, errors) {
     }
     if (
       bundle.distributions?.portablePlugin !== release.pluginId ||
-      bundle.distributions?.openaiPlugin !== release.pluginId
+      bundle.distributions?.openaiPlugin !== release.openaiProfile.pluginId
     ) {
       errors.push(
         `[BND-001] ${bundleFile}: distribution plugin ids must match the plugin source pluginId`,

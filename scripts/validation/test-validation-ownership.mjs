@@ -14,6 +14,7 @@ assert.ok(Array.isArray(plan.gates) && plan.gates.length > 0);
 const ids = plan.gates.map((gate) => gate.id);
 assert.equal(new Set(ids).size, ids.length, "validation gate ids must be unique");
 const requiredIds = new Set([
+  "metadata-mcp",
   "ssh-management",
   "repository-aggregate",
   "adrs",
