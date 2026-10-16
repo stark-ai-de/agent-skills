@@ -1,0 +1,8 @@
+# Merge into the selected profile's config.yaml; retain existing list entries.
+# Replace the path with the existing parent of karakeep-knowledge/SKILL.md.
+# Omit external_dirs when using $HERMES_HOME/skills/karakeep-knowledge.
+skills:
+  external_dirs:
+    - /absolute/shared-skills
+  auto_load:
+    - karakeep-knowledge

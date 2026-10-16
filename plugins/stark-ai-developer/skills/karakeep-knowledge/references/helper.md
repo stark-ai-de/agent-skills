@@ -32,7 +32,8 @@ The instruction is an agent behavior, not an executable host hook. Qualify it wi
 fresh real session that actually invokes `check`; unit tests or file presence alone
 are insufficient. Other hosts need their own supported instruction/discovery entry.
 A one-time manual invocation plus [project instruction](../assets/project-instructions.md)
-is the fallback. Do not claim Codex guidance configures Hermes automatically.
+is the fallback. For Hermes, use the native profile-scoped `skills.auto_load` adapter
+in [Hermes](hermes.md); Codex guidance does not configure Hermes automatically.
 
 Default descriptor: `$XDG_CONFIG_HOME/karakeep/knowledge/config.json`, otherwise
 `~/.config/karakeep/knowledge/config.json`. Schema:

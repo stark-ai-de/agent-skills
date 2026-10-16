@@ -14,7 +14,7 @@ updated: "2026-10-16"
 
 **Outcome:** extend the existing `karakeep-knowledge` skill so agents can reuse knowledge across an owner's projects while every repository remains independently understandable.
 
-**Status:** the selected skill-plus-Node-helper workflow is implemented in skill 0.3.0. Local installation and direct-instance qualification are recorded in the [implementation evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md). Consumer ADR adoption remains repository-specific.
+**Status:** the selected skill-plus-Node-helper workflow is implemented in skill 0.3.0. Local installation and direct-instance qualification are recorded in the [implementation evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md). Skill 0.4.0 adds the [Hermes host adapter](../../skills/engineering-workflows/karakeep-knowledge/references/hermes.md) without changing the helper's access or writer policy. Consumer ADR adoption remains repository-specific.
 
 **Next action:** review the implementation PR and use the installed workflow as repositories are adopted during normal work. No separate pilot project or initial import of all repositories is required. Provider availability and cost are not open design questions.
 
@@ -181,6 +181,8 @@ Source removal retires its managed provenance by default. It does not delete the
 Install one reviewed skill revision into the current agent host's supported user-wide skill location through the existing configuration/install owner. For Codex, the documented user location is `~/.agents/skills`; a managed plugin can also deliver the skill. Choose one effective installation and check for duplicate names. Keep the active global instruction in the actual Codex home's `AGENTS.md`, respecting overrides and managed source ownership. Do not edit a generated cache or replace unrelated instructions. Back up and update existing configuration through its owner.
 
 The global instruction tells the agent to load the skill and invoke `check` once when it first works in a repository during a session. Check again after switching repositories or relevant policy/context changes. An unchanged context does not need another start check for every user message. At a substantive completion/handoff, invoke the adopted reconciliation workflow, including factual session reporting and affected approved aggregates. A repository's more specific restrictions still apply. Ordinary questions outside a repository do not initiate repository import.
+
+Hermes uses the same complete skill package and its native profile-scoped `skills.external_dirs`/`skills.auto_load` configuration. Codex global instructions do not configure Hermes. The [host adapter](../../skills/engineering-workflows/karakeep-knowledge/references/hermes.md) owns installation, profile shadowing, runtime prerequisites and observed-startup qualification. A package-only installation adds no credentials, private endpoint, writer grant or hosted-service attachment.
 
 Suggested global instruction, adapted to the host's supported skill invocation:
 

@@ -41,6 +41,12 @@ repository contract, not proof of identical installed package tools. Discover th
 actual session's schemas. These historical checks did not establish live execution. The 0.3.0 helper adds
 separate direct-use qualification; it does not add a scheduled trigger or performance benchmark.
 
+## Hermes host adapter
+
+The 0.4.0 [Hermes adapter](hermes.md#checked-upstream-contract) records the checked
+upstream revision, native skill discovery and session auto-load contract. Host
+configuration and real agent execution require their own qualification.
+
 ## Node helper API profile
 
 Checked against Karakeep `v0.33.2` for the 0.3.0 helper:

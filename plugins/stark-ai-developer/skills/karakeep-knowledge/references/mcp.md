@@ -69,6 +69,10 @@ saved receipt does not prove the agent can call tools.
 
 ## Other clients and host boundaries
 
+For Hermes skill installation and startup checks, follow the [Hermes adapter](hermes.md).
+MCP server registration is separate; do not copy another client's JSON schema into
+Hermes configuration without checking the installed runtime's native MCP schema.
+
 For clients accepting `mcpServers`, use the same command and arguments:
 
 ```json

@@ -85,3 +85,35 @@ observable tool effects. The Python suite tests setup/launcher behavior; the Nod
 public payload, packaging and installation observations.
 
 [Node helper and direct installation evidence](runs/2026-10-16-helper.md) records the current implementation, synthetic verification and separate live qualification.
+
+## Hermes adapter scenarios
+
+The 0.4.0 [host adapter](../../skills/engineering-workflows/karakeep-knowledge/references/hermes.md)
+adds native discovery/auto-load instructions and a mergeable configuration example.
+The Node/Python helper implementation is unchanged. Public source inspection is
+not a claim of installed or live Hermes activation.
+
+| Condition                                 | Required observation                                                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Fresh profile with shared package         | Native discovery and auto-load select the exact complete package; its helper runs on the same execution host.                            |
+| Existing profile settings                 | Preserve unrelated directories, auto-loaded skills and explicit disabling; resolve native name collisions without replacing local files. |
+| Only SKILL.md copied                      | Report missing support modules; do not claim the helper is installed.                                                                    |
+| Remote terminal or hosted profile         | Verify package/repository visibility and loopback/writer policy; do not reuse a developer host's connection by assumption.               |
+| Skill disabled with a retained credential | No claim of revoked write access; enforce detachment through the credential owner.                                                       |
+
+### Native adapter observations — 2026-10-16
+
+A local host integration capture exercised the complete 0.4.0 candidate in the
+upstream Hermes image `v2026.9.24`, source revision
+`f97608f178d1ffeca59860195ab7da295f7c8e5f` (Linux amd64, Node 26.5.1).
+Nine offline cases passed: native configuration/discovery and support-file access,
+profile-specific disabling, empty-list opt-out, repeated initialization, malformed
+configuration, absent payload, preserved existing local installation, ambiguous-name
+refusal with explicit resolution, and the installed Node helper's read-only
+`needs_setup` result without repository or policy writes. The host initializer
+supplied real profile YAML; patching default values alone did not expose external
+skill directories to native discovery.
+
+These are local native-integration observations, not an agent-model evaluation,
+public CI result, released image, live Hermes session or Karakeep connection proof.
+The unchanged helper's reconciliation evidence remains in the linked helper receipt.

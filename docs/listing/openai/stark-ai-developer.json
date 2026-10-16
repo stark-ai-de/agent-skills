@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "stark-ai-developer",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
     "longDescription": "stark AI Developer supports product blueprints, specifications, architecture decisions, code search, diagrams, repository visuals, agent memory, capability advice, Telegram bots and local Karakeep knowledge. Its open-source instructions and scripts are reviewable.\n\nThe OpenAI package has no bundled service or telemetry. Jev optionally sends tasks and public capability cards to TypeSafe using your key. Telegram remote operations can send code or tests and change live data. Karakeep requires a separately installed official MCP and local service; approved sync and curation change saved content. Retrieved knowledge reaches your agent provider under the host data policy. Installation starts no service, scheduler or watcher. The host controls discovery and permissions; external services retain their own access requirements.",
@@ -45,7 +45,7 @@
   "publisher": {
     "legalName": "servrox solutions UG"
   },
-  "releaseNotes": "Karakeep Knowledge 0.2.0 joins the public catalog and developer bundle directly under ADR-0065. It adds approved remote-main reconciliation and scoped list/tag curation to setup and retrieval. Installation does not register Karakeep or start background work. Live synchronization, curation and native routing remain unobserved.",
+  "releaseNotes": "Karakeep Knowledge 0.4.0 adds native Hermes skill discovery and session auto-load guidance to the shared Node reconciliation workflow. The complete package supports canonical documents, separate drafts, factual reports and approved aggregates. Installation grants no collection access and adds no background service. Hosted connections and actual agent-session execution require separate qualification.",
   "skills": [
     {
       "name": "codex-memory-curator",
@@ -113,7 +113,7 @@
     },
     {
       "name": "karakeep-knowledge",
-      "intent": "Connect and curate persistent development knowledge with approved main-branch synchronization.",
+      "intent": "Connect and curate persistent development knowledge with approved canonical/draft synchronization and factual session reports.",
       "cohesion": "Preserves reusable sources and reviewed repository knowledge for the toolkit's development workflows.",
       "products": ["CODEX"],
       "allowImplicitInvocation": true,

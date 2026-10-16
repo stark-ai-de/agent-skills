@@ -5,7 +5,10 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.3.0"
+  version: "0.4.0"
+  hermes:
+    tags: [knowledge, karakeep, repositories]
+    category: engineering-workflows
 ---
 
 # Karakeep Knowledge
@@ -58,10 +61,13 @@ post-merge hook. If continuous operation is requested, configure the host's exis
 hook/scheduler explicitly, using the same account, policy, lock and receipts; verify
 one actual trigger. Do not claim unattended operation from a prompt file alone.
 
-1. When global or repository guidance requests a session-start check, run
+1. At the first substantive work in a Git repository after this skill is loaded,
+   or when global/repository guidance requests the session-start check, run
    `node <absolute-skill-root>/scripts/knowledge.mjs check --repo <absolute-repository-root>`
    once for that repository/context. Follow [Sync](references/sync.md) for the result.
    This check is read-only; missing project policy is not upload permission.
+   Outside a Git repository, do not invent a repository or start an import. For
+   Hermes discovery and native session auto-loading, read [Hermes](references/hermes.md).
    Check actual tool availability. If Karakeep is connected, search and retrieve one
    relevant saved page; read actual content before recommending it. Do not run setup
    preparation just because this is a new agent session.
@@ -101,6 +107,7 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
 - [Use](references/use.md): efficient retrieval, citations and bounded imports.
 - [Sync](references/sync.md): canonical/draft ownership, sessions, aggregation and reconciliation.
 - [Helper](references/helper.md): executable CLI, policy/intent schema, recovery and installation.
+- [Hermes](references/hermes.md): complete package installation, profile-scoped discovery and native auto-loading.
 - [Curation](references/curation.md): lists, tags, maintenance and resource limits.
 - [Operations](references/operations.md): NixOS/WSL, start/stop, backup and recovery.
 - [Sources](references/sources.md): checked upstream contracts and baseline versions.
