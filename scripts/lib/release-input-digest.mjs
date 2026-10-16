@@ -16,6 +16,10 @@ export const SOURCE_TREE_INPUTS = [
   PLUGIN_SOURCE_PATH,
   PLUGIN_SOURCE_SCHEMA_PATH,
   "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "scripts/lib/ssh-runtime-artifact.mjs",
+  "vendor/ssh-manager/runtime",
   "skills",
   "scripts/vendor",
   LISTING_PATH,
@@ -24,7 +28,7 @@ export const SOURCE_TREE_INPUTS = [
   "site/public/logo-dark.png",
 ];
 
-export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${PLUGIN_SOURCE_PATH}, ${PLUGIN_SOURCE_SCHEMA_PATH}, package.json, skills/, scripts/vendor/, ${LISTING_PATH}, LICENSE, site/public/logo.png, and site/public/logo-dark.png in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;
+export const SOURCE_TREE_HASH_RECIPE = `For each Git-tracked blob under ${SOURCE_TREE_INPUTS.join(", ")} in bytewise lexicographic path order: relative path, NUL, Git-normalized mode 0644 or 0755, NUL, file SHA-256, NUL; then SHA-256. Untracked and ignored files under those roots are rejected.`;
 
 function fileSha256(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");

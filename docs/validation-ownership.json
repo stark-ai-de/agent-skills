@@ -2,6 +2,13 @@
   "schemaVersion": 1,
   "gates": [
     {
+      "id": "ssh-management",
+      "command": "pnpm run validate:ssh",
+      "owner": ".github/workflows/ssh-management.yml#native",
+      "proof": "Pinned artifact identity, integrity and path safety; standalone daemon/viewer/MCP operation; native Node consumer packaging and target-configuration fixtures. SSH lifecycle and native fixtures belong to stark-ai-de/ssh-manager. Claude CLI acceptance remains manual.",
+      "cadence": "every aggregate run; Linux, macOS and Windows artifact-consumer matrix on matching pull requests and manual dispatch"
+    },
+    {
       "id": "repository-aggregate",
       "command": "pnpm run validate",
       "owner": ".github/workflows/validate.yml#validate",
@@ -54,21 +61,21 @@
       "id": "release-reproducibility",
       "command": "pnpm run verify:release-reproducibility",
       "owner": "scripts/release/verify-release-reproducibility.mjs",
-      "proof": "Two isolated archive builds and release-subject materialization",
+      "proof": "Two isolated portable, OpenAI, Claude and standalone archive builds; release-subject materialization remains limited to OpenAI and portable.",
       "cadence": "release preparation"
     },
     {
       "id": "archives",
       "command": "pnpm run validate:archives",
       "owner": "scripts/release/validate-archives.mjs",
-      "proof": "Portable, OpenAI-native, and standalone archive boundaries",
+      "proof": "Portable, OpenAI-native, Claude-native and standalone archive boundaries; Claude offline inventory, provenance and normalized mode validation. Native Claude CLI acceptance remains manual.",
       "cadence": "hosted Validate release gate"
     },
     {
       "id": "projections",
       "command": "pnpm run validate:projections",
       "owner": "scripts/validation/test-plugin-projections.mjs",
-      "proof": "Portable projection manifests, byte identity, and safety fixtures",
+      "proof": "Portable plugin and MCP schemas, target-selected portable/Claude runtime inventories, OpenAI skills-only boundary, canonical byte identity and safety fixtures; complete three-platform archive comparison contract.",
       "cadence": "every aggregate run"
     },
     {

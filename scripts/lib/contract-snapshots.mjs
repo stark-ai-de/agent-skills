@@ -5,7 +5,11 @@ import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 
-import { loadValidatedRelease, PINNED_AGENT_PLUGINS_SCHEMA_PATH } from "./release-descriptor.mjs";
+import {
+  loadValidatedRelease,
+  PINNED_AGENT_PLUGINS_SCHEMA_PATH,
+  PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH,
+} from "./release-descriptor.mjs";
 
 const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const SNAPSHOT_SCHEMA_PATH = "scripts/vendor/snapshots/snapshot.schema.json";
@@ -104,6 +108,29 @@ export function validateContractSnapshots(root = moduleRoot) {
         errors.push(
           `[FOUND-001] ${relative} checksum must match ${PINNED_AGENT_PLUGINS_SCHEMA_PATH}`,
         );
+      }
+      const mcpPin = snapshot.facts.mcpSchema;
+      const mcpId = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
+      try {
+        if (
+          mcpPin?.path !== PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH ||
+          mcpPin?.url !== mcpId ||
+          !/^[a-f0-9]{64}$/.test(mcpPin?.sha256 ?? "") ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(mcpPin?.verifiedOn ?? "")
+        ) {
+          throw new Error("MCP schema provenance pin is missing or invalid");
+        }
+        const bytes = fs.readFileSync(
+          path.join(resolvedRoot, PINNED_AGENT_PLUGINS_MCP_SCHEMA_PATH),
+        );
+        if (
+          crypto.createHash("sha256").update(bytes).digest("hex") !== mcpPin.sha256 ||
+          JSON.parse(bytes).$id !== mcpId
+        ) {
+          throw new Error("MCP schema checksum or schema ID mismatch");
+        }
+      } catch (error) {
+        errors.push(`[FOUND-001] ${relative}: ${error.message}`);
       }
     } else if (factsChecksum(snapshot.facts) !== snapshot.source.checksum.value) {
       errors.push(`[FOUND-001] ${relative} checksum must match the encoded facts pin`);

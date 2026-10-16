@@ -59,3 +59,8 @@ ADR-0062	0062-admit-release-reconciler-repairs-to-unpublished-recovery	54c80a874
 ADR-0063	0063-coordinate-product-planning-through-intent-bound-skill-contracts	c7680530d6774f171b14b819a07528f601245a288b8e565c2e6c17537a57e291
 ADR-0064	0064-reuse-explicit-skill-preselection-with-separate-provisioning-grants	ee92269ab195d7764af512590e6d574288b156b85c6f6036271c3272aee67f03
 ADR-0065	0065-allow-explicit-direct-public-skill-releases	e95e43bb251791c199c557bb819544ab9da3221f65e85982b8245a352290db98
+ADR-0066	0066-package-local-mcp-runtimes-with-target-specific-projections	fb0524f53aabf721be1377deb657eb1b20c160670623bee7f216297ca482be7c
+ADR-0067	0067-separate-ssh-management-from-transport-adapters	f1e5b9f1bc1cbb9acad24f660eeb4f7245b4d9cfa04c94db841e68c19d0f1388
+ADR-0068	0068-own-ssh-sessions-in-a-local-runtime	7e78367dd376bcb40a19f7a79e49cf3c0fbffa7c2cdd6950f5f7705e251bd07d
+ADR-0069	0069-protect-ssh-credentials-trust-and-target-grants	9446384a4e0208e2427e160a02d6a6528d0b84a9c6c1f99643ed054eff3d9524
+ADR-0070	0070-consume-pinned-ssh-runtime-artifacts-from-an-independent-repository	7a0c6cd3bc6bab3812b140cf6c2949805421946a16c103fe1b8f4577f255d165

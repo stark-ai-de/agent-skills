@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { archiveIdentityErrors } from "../lib/archive-identity.mjs";
+
 const root = process.argv[2] ? path.resolve(process.argv[2]) : process.cwd();
 const identities = fs
   .readdirSync(root, { withFileTypes: true })
@@ -14,20 +16,7 @@ const identities = fs
     }
     return { os: entry.name, report: JSON.parse(fs.readFileSync(file, "utf8")) };
   });
-if (identities.length < 2) {
-  throw new Error("need at least two OS identity reports to compare");
-}
-const reference = identities[0];
-const errors = [];
-for (const current of identities.slice(1)) {
-  for (const name of Object.keys(reference.report.archives)) {
-    const expected = reference.report.archives[name].sha256;
-    const actual = current.report.archives[name]?.sha256;
-    if (expected !== actual) {
-      errors.push(`${name}: ${reference.os} ${expected} != ${current.os} ${actual}`);
-    }
-  }
-}
+const errors = archiveIdentityErrors(identities);
 if (errors.length > 0) {
   console.error("Cross-platform zip-store-v1 identity failed:");
   for (const error of errors) console.error(`- ${error}`);

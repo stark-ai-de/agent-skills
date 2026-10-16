@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "runtimeVersion": "1.0.0",
+  "managementApiVersion": "v1",
+  "nodeMinimum": "24.18.0",
+  "sourceRepository": "https://github.com/stark-ai-de/ssh-manager",
+  "sourceCommit": "f02d8e99945bb5fa8278a5d7de4e46f4d8badb85",
+  "buildManifestSha256": "377aca315002ad2c368183ffbd39c4da1f158eb33b0d3acf66356dfba347dd5d",
+  "files": [
+    {
+      "path": "BUILD-MANIFEST.json",
+      "size": 14205,
+      "sha256": "377aca315002ad2c368183ffbd39c4da1f158eb33b0d3acf66356dfba347dd5d"
+    },
+    {
+      "path": "LICENSE",
+      "size": 10271,
+      "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
+    },
+    {
+      "path": "NOTICE.txt",
+      "size": 104397,
+      "sha256": "a133c8799a7c40a0af22ada5580935016764c10aa52f7ae763eb6a7793d6b65f"
+    },
+    {
+      "path": "cli.mjs",
+      "size": 334606,
+      "sha256": "09d6281ebf407116884dc75c83c30325c1e1bd3f1f56762de589d1fc599974dd"
+    },
+    {
+      "path": "daemon.mjs",
+      "size": 1669975,
+      "sha256": "b0a863b85b54c46c67d739abc96ad99b73bc3309b47ab32cd3dfeeb6eba70f16"
+    },
+    {
+      "path": "mcp.mjs",
+      "size": 643053,
+      "sha256": "1fe29d76af2b381ef6d38322857a15760431e7e2924ec8e31261f2afad6f90c0"
+    },
+    {
+      "path": "viewer/fit.js",
+      "size": 1521,
+      "sha256": "ba3ea256ce0620a0992a197d6c9baea64823fc93d8da07a9e366ca9943c18527"
+    },
+    {
+      "path": "viewer/index.html",
+      "size": 1196,
+      "sha256": "bab09af9a3c10b109051e6cd49a2042dbbbef3fb401ae7f889ef35ec47971b9c"
+    },
+    {
+      "path": "viewer/viewer.css",
+      "size": 676,
+      "sha256": "e8e51574042aac174d7b95f8088af706dd68c95ba52c5f835378886219438d4c"
+    },
+    {
+      "path": "viewer/viewer.js",
+      "size": 8135,
+      "sha256": "4d58ca4e2256618edf7af561c03871b85c2e66dffa4990a5b707daecbc5c99e5"
+    },
+    {
+      "path": "viewer/xterm.css",
+      "size": 7112,
+      "sha256": "854a7c0fb70e8b1a083c16797ab827299fb18744f5ad34f227b48337e33293c6"
+    },
+    {
+      "path": "viewer/xterm.js",
+      "size": 488663,
+      "sha256": "14903579ff54664cd72f8e8699e6961a6272c21863ec1c3b118cdc8af5d4a972"
+    }
+  ]
+}
