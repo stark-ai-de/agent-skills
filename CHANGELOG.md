@@ -12,6 +12,17 @@
 
 ### Removed
 
+## 0.28.0 (2026-10-16)
+
+## What's Changed
+* Bundle SSH runtime from independent pinned producer by @servrox in https://github.com/stark-ai-de/agent-skills/pull/145
+* fix(architecture-compass): isolate Portless checkout identity and qualify setup by @servrox in https://github.com/stark-ai-de/agent-skills/pull/149
+* feat: add shared Karakeep knowledge with verified source sync by @servrox in https://github.com/stark-ai-de/agent-skills/pull/148
+* feat(incubator): reusable Codex/Pi review-fix-simplify swarm by @servrox in https://github.com/stark-ai-de/agent-skills/pull/146
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.27.0...v0.28.0
+
 ## 0.27.0 (2026-10-09)
 
 ## What's Changed
