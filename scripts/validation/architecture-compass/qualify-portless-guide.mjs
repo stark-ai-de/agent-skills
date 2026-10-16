@@ -31,7 +31,7 @@ for (let index = 0; index < args.length; index++) {
   else throw new Error("Unknown or incomplete qualifier argument: " + args[index]);
 }
 assert.equal(process.platform, "linux", "This explicit qualifier requires Linux namespaces");
-function resolveExecutable(name) {
+function resolveCommandPath(name) {
   const candidates = name.includes(path.sep)
     ? [path.resolve(name)]
     : (process.env.PATH || "").split(path.delimiter).map((directory) => path.join(directory, name));
@@ -45,20 +45,20 @@ function resolveExecutable(name) {
   }
   throw new Error("Required existing executable unavailable: " + name);
 }
-const binary = resolveExecutable(executable);
+const binary = resolveCommandPath(executable);
 assert.equal(
   execFileSync(binary, ["--version"], { encoding: "utf8", timeout: 10000 }).trim(),
   "0.15.8",
   "This version-qualified fixture requires Portless 0.15.8",
 );
-const node = resolveExecutable("node");
+const node = resolveCommandPath("node");
 const nodeVersion = execFileSync(node, ["--version"], { encoding: "utf8" }).trim();
 const [major, minor] = nodeVersion.slice(1).split(".").map(Number);
 assert.ok(major > 24 || (major === 24 && minor >= 18), "Requires existing Node 24.18+");
-resolveExecutable("openssl");
-const ip = resolveExecutable("ip");
+resolveCommandPath("openssl");
+const ip = resolveCommandPath("ip");
 if (!parentNamespace) {
-  const unshare = resolveExecutable("unshare");
+  const unshare = resolveCommandPath("unshare");
   const namespace = fs.readlinkSync("/proc/self/ns/net");
   const ownedTemporary = fs.mkdtempSync(path.join(os.tmpdir(), "portless-guide-runtime-"));
   const child = spawn(

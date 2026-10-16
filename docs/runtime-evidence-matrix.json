@@ -399,6 +399,32 @@
       "rationale": "The existing SkillOpt setup validator explicitly launches Python helpers. This newly discovered inventory entry records source-level ownership only; it does not claim a new SkillOpt execution result.",
       "fallbackOrder": ["python3"],
       "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
+    },
+    {
+      "id": "portless-guide-node-fixtures",
+      "surfaces": ["internal:portless-guide:node-fixtures"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "guideGitFixtures": "pass",
+            "isolatedLinuxPortlessFixtures": "pass",
+            "hostedLinux": "unknown",
+            "nativeMacos": "unknown",
+            "nativeWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/architecture-compass/portless-guide.test.mjs",
+        "scripts/validation/architecture-compass/qualify-portless-guide.mjs",
+        "pnpm run validate:architecture-compass",
+        "pnpm run qualify:portless-guide"
+      ],
+      "rationale": "Bun retains the parent repository commands. Explicit Node 24.22.0 children exercised the documented Node launcher and the existing Portless 0.15.8 Node contract on Linux/WSL: inherited Git selectors, isolated HTTPS/HTTP/WebSocket forwarding, negative controls and alias lifecycle. This is an explicit Node compatibility fixture, not a general fallback or a claim that Bun is incompatible. Hosted and native-platform observations remain separate.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when the documented Node example, Portless version or fixture runtime contract changes. Missing Node fails this explicit qualification boundary without installation or silent runtime substitution."
     }
   ]
 }

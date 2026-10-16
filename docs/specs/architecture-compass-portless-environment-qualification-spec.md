@@ -79,6 +79,11 @@ ADR required: no. Implements existing AC-ADR-066 under ADR-0029 (exclusive
 external worktree), ADR-0032 (canonical Long and linked variants), ADR-0041
 (changed-contract validation) and ADR-0050 (separate release preparation).
 No accepted decision or decision digest may be rewritten.
+The existing ADR-0054 runtime matrix records the explicit Node fixture children;
+Bun retains the parent commands. This is compatibility-test ownership, not a
+repository runtime-policy change or an inferred Bun incompatibility. Include
+`validate:runtime-matrix` in the owning proof set. The initial hosted aggregate
+identified the missing owner registration; repair it through that existing gate.
 
 Decision contract: [AC-ADR-066 Short](../../skills/engineering-workflows/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.short.md)
 ([Long, canonical](../../skills/engineering-workflows/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.long.md) ·

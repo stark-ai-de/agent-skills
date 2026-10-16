@@ -8,6 +8,14 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const errors = [];
 const nativeRootScripts = new Set(["format", "format:check", "lint", "lint:fix"]);
 const internalNodeOwners = new Map([
+  [
+    "scripts/validation/architecture-compass/portless-guide.test.mjs",
+    "internal:portless-guide:node-fixtures",
+  ],
+  [
+    "scripts/validation/architecture-compass/qualify-portless-guide.mjs",
+    "internal:portless-guide:node-fixtures",
+  ],
   ["scripts/repo/validate-scripts.mjs", "internal:validate-scripts:syntax-check"],
   [
     "scripts/validation/drawio-diagrams/validate-fixtures.mjs",
@@ -579,8 +587,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 16,
-  `current runtime-selection inventory must discover 16 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 17,
+  `current runtime-selection inventory must discover 17 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -588,8 +596,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 15,
-  `current runtime evidence matrix must define 15 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 16,
+  `current runtime evidence matrix must define 16 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());
