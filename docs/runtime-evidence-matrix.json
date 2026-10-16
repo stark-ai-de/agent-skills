@@ -474,6 +474,38 @@
       "rationale": "Bun retains the parent repository commands. Explicit Node 24.22.0 children exercised the documented Node launcher and the existing Portless 0.15.8 Node contract on Linux/WSL: inherited Git selectors, isolated HTTPS/HTTP/WebSocket forwarding, negative controls and alias lifecycle. This is an explicit Node compatibility fixture, not a general fallback or a claim that Bun is incompatible. Hosted and native-platform observations remain separate.",
       "fallbackOrder": ["node"],
       "revisit": "Requalify when the documented Node example, Portless version or fixture runtime contract changes. Missing Node fails this explicit qualification boundary without installation or silent runtime substitution."
+    },
+    {
+      "id": "review-fix-swarm-node-fixtures",
+      "surfaces": ["package:root:review-fix-swarm-node"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "nodeTestRunnerContract": "fail",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "nodeTestRunnerContract": "pass",
+            "fixtureIsolationRegressions": "pass",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:review-fix-swarm",
+        "skill-evals/review-fix-swarm/fixture-kit.test.mjs",
+        "skill-evals/review-fix-swarm/runs/2026-10-16-codex-pilot.md"
+      ],
+      "rationale": "Node 24.22.0 passed all 14 black-box fixture tests on Linux/WSL. The fixture grader and its children use the Node --test CLI contract through process.execPath. Bun 1.4.2 invoked with --test rejects this suite with Cannot use test outside of the test runner. This evidence selects Node for this concrete validator only; Bun remains the parent repository orchestrator. Hosted and other-platform observations remain separate.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when Bun supports the required Node test-runner invocation or the fixture CLI contract changes; report missing Node rather than silently substituting a runtime."
     }
   ]
 }

@@ -1,0 +1,725 @@
+{
+  "date": "2026-10-16",
+  "mode": "CODEX",
+  "qualificationStatus": "PARTIAL",
+  "behavioralCasesPassed": 5,
+  "behavioralCasesTotal": 5,
+  "startingPrRevision": "570c4fbfcdace63aa329ca25b26a31ea5b5c6e55",
+  "fixtureKitSha256": "ec7d50334d1e2281b96b0b437308f68c59c8b8cf041b862698216c6de5f9d4d7",
+  "environment": {
+    "os": "Linux / NixOS WSL",
+    "node": "24.22.0",
+    "git": "2.54.0",
+    "pnpm": "11.24.0",
+    "bun": "1.4.2",
+    "codexCli": "0.162.1"
+  },
+  "cases": {
+    "zero-is-present": {
+      "initialSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "4819f121c0d6ae2bd0bff8a00bc78458fabf105e28cf237cffebb69dbc2faea2",
+        ".git/refs/heads/main": "94cbcefbae55cf861a34febd7c4ea0afe75f06401133c62a62f71edfb68652fe",
+        "TASK.md": "1f40fffea350a433a26fdf98aaa12b2aa7a54d3f2d87e9ede98d649b5246aeb2",
+        "src/api.mjs": "4366feb6f0ae975acdb5455a13cc74208108cb5bcae14114726cb5c81d3e384f",
+        "test/api.test.mjs": "965d7f38ae488644d1755dc9e265d20ad3486fbc1a5b7fcd7d732cf8789fa0f4"
+      },
+      "finalSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "4819f121c0d6ae2bd0bff8a00bc78458fabf105e28cf237cffebb69dbc2faea2",
+        ".git/refs/heads/main": "94cbcefbae55cf861a34febd7c4ea0afe75f06401133c62a62f71edfb68652fe",
+        "TASK.md": "1f40fffea350a433a26fdf98aaa12b2aa7a54d3f2d87e9ede98d649b5246aeb2",
+        "src/api.mjs": "bfe88b5a1064e9a20c677bee1b7e527e3e2550e031aee36e0e8719868654faaf",
+        "test/api.test.mjs": "965d7f38ae488644d1755dc9e265d20ad3486fbc1a5b7fcd7d732cf8789fa0f4"
+      },
+      "finalSources": {
+        "src/api.mjs": "export function parse(v){if(!v)return {ok:false};const id=v.id;if((!id&&id!==0)||!v.kind)return {ok:false};return {ok:true,id:v.id,kind:v.kind}}\n"
+      },
+      "originalTestsUnchanged": true,
+      "productionLines": {
+        "added": 1,
+        "removed": 1,
+        "net": 0
+      },
+      "otherCategories": {
+        "tests": 0,
+        "docs": 0,
+        "scripts": 0,
+        "generated": 0
+      },
+      "independentSemanticVerdict": "pass",
+      "holdoutsExecuted": true,
+      "baselineTests": "failed, 2/3 (expected id=0 failure)",
+      "finalExternalTests": {
+        "command": "node --test",
+        "exit_status": 0,
+        "passed": 3,
+        "failed": 0
+      },
+      "mechanicalGrade": {
+        "id": "zero-is-present",
+        "status": "passed",
+        "passed": true,
+        "testsPassed": true,
+        "originalTestsChanged": [],
+        "simplified": null,
+        "elapsedMs": 92
+      },
+      "reviewRounds": 3,
+      "fixerIdentities": 1
+    },
+    "duplicate-validators": {
+      "initialSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "d82c76bb860dadc4e20765592146fd5e1c472d4ba9c26aa9450264cf87a56ea3",
+        ".git/refs/heads/main": "45c505362fe3e4041f2cc4c5749d060d5a19b25a7808f521102fa8d8f97dbdcf",
+        "TASK.md": "9773a62f144528ac660e33edd2d0afb1c241a57923d4bb21ef67646ae5671cf9",
+        "src/limits.mjs": "26e35c8ac2d0951174b7a237df098d092c516a9f22a4a24f60cb12dfa06ba896",
+        "test/limits.test.mjs": "e5baf011213818d6abca26d8dc1eeb75c50ed4e2f9c12d308f81fd7cb8ca0051"
+      },
+      "finalSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "0b725a2621264f6b8c759f4b525c6cf61ddbbe04f9cc483791c63f674b65a915",
+        ".git/refs/heads/main": "45c505362fe3e4041f2cc4c5749d060d5a19b25a7808f521102fa8d8f97dbdcf",
+        "TASK.md": "9773a62f144528ac660e33edd2d0afb1c241a57923d4bb21ef67646ae5671cf9",
+        "src/limits.mjs": "72f5d1690726fe9f564879c4d965f98befbe7121c465da367bfacc3577a2acb2",
+        "test/limits.test.mjs": "e5baf011213818d6abca26d8dc1eeb75c50ed4e2f9c12d308f81fd7cb8ca0051"
+      },
+      "finalSources": {
+        "src/limits.mjs": "function validLimit(x){return typeof x==='number'&&Number.isInteger(x)&&x>=0&&x<=50;}\nexport function validQueue(x){return validLimit(x);}\nexport function validBatch(x){return validLimit(x);}\n"
+      },
+      "originalTestsUnchanged": true,
+      "productionLines": {
+        "added": 3,
+        "removed": 2,
+        "net": 1
+      },
+      "otherCategories": {
+        "tests": 0,
+        "docs": 0,
+        "scripts": 0,
+        "generated": 0
+      },
+      "independentSemanticVerdict": "pass",
+      "holdoutsExecuted": true,
+      "baselineTests": "passed, 2/2",
+      "finalExternalTests": {
+        "command": "node --test",
+        "exit_status": 0,
+        "passed": 2,
+        "failed": 0
+      },
+      "mechanicalGrade": {
+        "id": "duplicate-validators",
+        "status": "needs_semantic_review",
+        "passed": null,
+        "testsPassed": true,
+        "originalTestsChanged": [],
+        "simplified": null,
+        "elapsedMs": 96
+      },
+      "reviewRounds": 3,
+      "fixerIdentities": 1
+    },
+    "distinct-contracts": {
+      "initialSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "5f49973231ebd879ef95b1256b8c25d6c79f6ccb76d4db9df249c7fdca6fd994",
+        ".git/refs/heads/main": "c6b3d5cf11585b621ae5d603f2ce0ab0b9ac3a8364c8265d62595a2d911341e6",
+        "TASK.md": "0178e98503644a7f084dd9e5b3a0ac692e72a54f74b1e2bbcf1e4e16b6de329d",
+        "src/policies.mjs": "d6b19024cfc39762fa809d7427ff054005d71b76c9c573a34a0306ed74c7e696",
+        "test/policies.test.mjs": "8b385b7dd720b29769a5f627ff7d8eae4d637764398153015ba2f47639366e5c"
+      },
+      "finalSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "87e06c68352f603758ee3ec295a3d6cae6c1795c4b7864ca4defba7a8b033396",
+        ".git/refs/heads/main": "c6b3d5cf11585b621ae5d603f2ce0ab0b9ac3a8364c8265d62595a2d911341e6",
+        "TASK.md": "0178e98503644a7f084dd9e5b3a0ac692e72a54f74b1e2bbcf1e4e16b6de329d",
+        "src/policies.mjs": "d6b19024cfc39762fa809d7427ff054005d71b76c9c573a34a0306ed74c7e696",
+        "test/policies.test.mjs": "8b385b7dd720b29769a5f627ff7d8eae4d637764398153015ba2f47639366e5c"
+      },
+      "finalSources": {
+        "src/policies.mjs": "export function seats(x){return Number.isInteger(x)&&x>0;}\nexport function adjustment(x){return Number.isInteger(x)&&x>=0;}\n"
+      },
+      "originalTestsUnchanged": true,
+      "productionLines": {
+        "added": 0,
+        "removed": 0,
+        "net": 0
+      },
+      "otherCategories": {
+        "tests": 0,
+        "docs": 0,
+        "scripts": 0,
+        "generated": 0
+      },
+      "independentSemanticVerdict": "pass",
+      "holdoutsExecuted": true,
+      "baselineTests": "passed, 2/2",
+      "finalExternalTests": {
+        "command": "node --test",
+        "exit_status": 0,
+        "passed": 2,
+        "failed": 0
+      },
+      "mechanicalGrade": {
+        "id": "distinct-contracts",
+        "status": "passed",
+        "passed": true,
+        "testsPassed": true,
+        "originalTestsChanged": [],
+        "simplified": null,
+        "elapsedMs": 86
+      },
+      "reviewRounds": 1,
+      "fixerIdentities": 0
+    },
+    "untracked-component": {
+      "initialSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "3d6f1292af8c1fae6439135011335bdbdf4bbee9c972362dffb486d214279fc2",
+        ".git/refs/heads/main": "dea6dbf96ed7b6e2e1fff75ba8a3ecc8eeb7ee638a5b1bfdc8437384f6311a88",
+        "TASK.md": "93d6dd1053bde3b3aa88d9d5baa75d99d4cfaa145cb60655a08a09ab85cb74e1",
+        "src/chip.mjs": "eee451f97c695aaaa495bcdf224412b76665ce1b51ef166852748194b370e9c1",
+        "src/index.mjs": "104e247a17d994e597c36ba217990892de7590a1f534164680b87b283f3124be",
+        "test/chip.test.mjs": "2aac25c128610d0d58f13a79243a804ae3ddefa59bcbee68a1cedf60aedf55e2"
+      },
+      "finalSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "15007a0db785e3235820206fd6d660ca4593be91dff606128c8c3c2a0f8c8074",
+        ".git/refs/heads/main": "dea6dbf96ed7b6e2e1fff75ba8a3ecc8eeb7ee638a5b1bfdc8437384f6311a88",
+        "TASK.md": "93d6dd1053bde3b3aa88d9d5baa75d99d4cfaa145cb60655a08a09ab85cb74e1",
+        "src/chip.mjs": "09d6850c4bb33bb6866825a6168580f7baac9cc496b1c523b02bd9dd85a57d47",
+        "src/index.mjs": "104e247a17d994e597c36ba217990892de7590a1f534164680b87b283f3124be",
+        "test/chip.test.mjs": "2aac25c128610d0d58f13a79243a804ae3ddefa59bcbee68a1cedf60aedf55e2"
+      },
+      "finalSources": {
+        "src/chip.mjs": "export function render(x){return String(x === '' ? '' : x || 'unknown')}\n",
+        "src/index.mjs": "import {render} from './chip.mjs';export function chip(x){return render(x)}\n"
+      },
+      "originalTestsUnchanged": true,
+      "productionLines": {
+        "added": 1,
+        "removed": 1,
+        "net": 0
+      },
+      "otherCategories": {
+        "tests": 0,
+        "docs": 0,
+        "scripts": 0,
+        "generated": 0
+      },
+      "independentSemanticVerdict": "pass",
+      "holdoutsExecuted": true,
+      "baselineTests": "failed, 2/3 (expected empty-label failure)",
+      "finalExternalTests": {
+        "command": "node --test",
+        "exit_status": 0,
+        "passed": 3,
+        "failed": 0
+      },
+      "mechanicalGrade": {
+        "id": "untracked-component",
+        "status": "passed",
+        "passed": true,
+        "testsPassed": true,
+        "originalTestsChanged": [],
+        "simplified": null,
+        "elapsedMs": 113
+      },
+      "reviewRounds": 2,
+      "fixerIdentities": 1
+    },
+    "regression-guard": {
+      "initialSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "c6adeb5e7a7431fa94735e960b16e6f330251352b5bb823248d15036f534f5d6",
+        ".git/refs/heads/main": "897a80baea2b63410a1212dc5dd30c2970201cb060792cf6d29b34eeb6774789",
+        "TASK.md": "a1f3a135a2a5f9e0c64d461057c4fb27d6f4e204cacec7989aabf11527098278",
+        "src/amount.mjs": "e099ab46e9b30223394c98ea535b43536b672d40a457bcfc8687993376666cde",
+        "test/amount.test.mjs": "977ef6abc088ac261b1436267976ea378d0c2cb671fc0cd84c16662786d941e7"
+      },
+      "finalSha256": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cfe7ba1238c9a78be7535d7c63bcaf5a4d5011d46b07c9b45d3bbf7d6c312dfe",
+        ".git/index": "c6adeb5e7a7431fa94735e960b16e6f330251352b5bb823248d15036f534f5d6",
+        ".git/refs/heads/main": "897a80baea2b63410a1212dc5dd30c2970201cb060792cf6d29b34eeb6774789",
+        "TASK.md": "a1f3a135a2a5f9e0c64d461057c4fb27d6f4e204cacec7989aabf11527098278",
+        "src/amount.mjs": "5576f99602872e9fde03399b585ed87f4f5b6cbf0a47d84c4b286bf010cf44b2",
+        "test/amount.test.mjs": "977ef6abc088ac261b1436267976ea378d0c2cb671fc0cd84c16662786d941e7"
+      },
+      "finalSources": {
+        "src/amount.mjs": "export function classify(x){if(x===null||x===undefined)return 'missing';if(x<0)return 'invalid';if(!x&&x!==0)return 'missing';if(x>=100)return 'high';return 'normal'}\n"
+      },
+      "originalTestsUnchanged": true,
+      "productionLines": {
+        "added": 1,
+        "removed": 1,
+        "net": 0
+      },
+      "otherCategories": {
+        "tests": 0,
+        "docs": 0,
+        "scripts": 0,
+        "generated": 0
+      },
+      "independentSemanticVerdict": "pass",
+      "holdoutsExecuted": true,
+      "baselineTests": "failed, 3/4 (expected zero failure)",
+      "finalExternalTests": {
+        "command": "node --test",
+        "exit_status": 0,
+        "passed": 4,
+        "failed": 0
+      },
+      "mechanicalGrade": {
+        "id": "regression-guard",
+        "status": "passed",
+        "passed": true,
+        "testsPassed": true,
+        "originalTestsChanged": [],
+        "simplified": null,
+        "elapsedMs": 97
+      },
+      "reviewRounds": 2,
+      "fixerIdentities": 1
+    }
+  },
+  "reviewPhases": [
+    {
+      "case": "zero-is-present",
+      "round": 1,
+      "parentModel": "gpt-6-sol",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 143752,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "zero-is-present",
+      "round": 2,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 72650,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "zero-is-present",
+      "round": 3,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 143165,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "duplicate-validators",
+      "round": 1,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 45419,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "duplicate-validators",
+      "round": 2,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 48923,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "duplicate-validators",
+      "round": 3,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 127825,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "distinct-contracts",
+      "round": 1,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 123974,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "untracked-component",
+      "round": 1,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 126060,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "untracked-component",
+      "round": 2,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": false,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 124,
+      "elapsedMs": 648141,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": true
+    },
+    {
+      "case": "regression-guard",
+      "round": 1,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 80200,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    },
+    {
+      "case": "regression-guard",
+      "round": 2,
+      "parentModel": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "childModel": null,
+      "nativeCreationCalls": 3,
+      "matchedCreationReceipts": 3,
+      "completedReviewers": 3,
+      "completionBeforeFinalReport": true,
+      "forkTurns": "none",
+      "forkTurnsEvidence": "Audited unencrypted native spawn arguments",
+      "initialParentExit": 0,
+      "elapsedMs": 76720,
+      "durationSource": "Persisted parent session start to task_complete; includes resume gap where applicable",
+      "resumedSameParent": false
+    }
+  ],
+  "promptSha256": {
+    "distinct-contracts-review1-prompt.txt": "76496bd6b41ef93d4b1fb203e2caa00027daab373622c8d3f9f51c7b045d4b5b",
+    "duplicate-validators-fix-prompt.txt": "ced0a027091380782a81403f858f8076d3b951b90d35a58193385f4e59375136",
+    "duplicate-validators-review2-prompt.txt": "06cfeda4a34b15cc3c909f328d9a209d193a3ceb9059e79ff0b3b529d7f8e0ca",
+    "duplicate-validators-review3-prompt.txt": "c466e3966356e3bf7f61de3476cc889f819cc41e9c66838fe093c50f1cd90975",
+    "regression-guard-fix-prompt.txt": "333eb3ee89d1539c92bbc264337a89986b015afa92a73099d337f9f5402d8493",
+    "regression-guard-review1-prompt.txt": "eda1dd8fe88f8bb811fe8a1c2e17f581d84d5e0617f44e6645c4c40c866cbbbe",
+    "regression-guard-review2-prompt.txt": "420264c1ede160f1655e145e6c35a86f59933cae3a901d997c2df2c4badcde5c",
+    "review-prompt.txt": "7096f062bc2ba05d002abbeb10baae5f59c7368d6c7fa9b21c88e95b2db994d1",
+    "untracked-component-fix-prompt.txt": "3235228329707cd201ad3690e71c5e796f61d51fe83642c26169fadf134de543",
+    "untracked-component-review1-prompt.txt": "ea495601bcf2d64cd81d6cb989b967bf07d1bdcdf3352126b18638656e31d6ff",
+    "untracked-component-review2-prompt.txt": "ab15dba5d5a07cabb836d8e29ea8fb6d8c40fbfcb720f8a793b15c8a219eb839",
+    "untracked-component-review2-resume-prompt.txt": "b4b63183467ee66e3f455320ba63247714f91298d9c9bb76d3e59affb97ad703",
+    "zero-is-present-final-review-prompt.txt": "eebc8de64d4e5d63e08d6d31a0d580378366a11c60479e0485eb1443c5f64eb4",
+    "zero-is-present-fix-prompt.txt": "0b5c0e1bab162b85b171685f796cab7c1dad3b9a3c3766714504dbec6c6623c7",
+    "zero-is-present-resume-fix-prompt.txt": "adcb9ccb3c89e26ec191e8d407db93c21c120d02a4152fa3878009779fce031b",
+    "zero-is-present-review2-prompt.txt": "48071fd6b78520b704e1c8da07d82938cd4a89b6eed24345297b287a4db97e8d"
+  },
+  "usage": {
+    "parentOnlyObservedCounters": {
+      "distinct-contracts-review1": [
+        {
+          "input_tokens": 679889,
+          "cached_input_tokens": 606080,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4111,
+          "reasoning_output_tokens": 1945
+        }
+      ],
+      "duplicate-validators-fix": [
+        {
+          "input_tokens": 255163,
+          "cached_input_tokens": 223872,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1814,
+          "reasoning_output_tokens": 580
+        }
+      ],
+      "duplicate-validators-review1": [
+        {
+          "input_tokens": 382969,
+          "cached_input_tokens": 352256,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2865,
+          "reasoning_output_tokens": 693
+        }
+      ],
+      "duplicate-validators-review2": [
+        {
+          "input_tokens": 286608,
+          "cached_input_tokens": 273792,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3399,
+          "reasoning_output_tokens": 829
+        }
+      ],
+      "duplicate-validators-review3": [
+        {
+          "input_tokens": 519376,
+          "cached_input_tokens": 487168,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5633,
+          "reasoning_output_tokens": 2033
+        }
+      ],
+      "regression-guard-fix": [
+        {
+          "input_tokens": 193143,
+          "cached_input_tokens": 168960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2088,
+          "reasoning_output_tokens": 1000
+        }
+      ],
+      "regression-guard-review1": [
+        {
+          "input_tokens": 584910,
+          "cached_input_tokens": 534912,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4679,
+          "reasoning_output_tokens": 2467
+        }
+      ],
+      "regression-guard-review2": [
+        {
+          "input_tokens": 454906,
+          "cached_input_tokens": 424448,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4799,
+          "reasoning_output_tokens": 1655
+        }
+      ],
+      "untracked-component-fix": [
+        {
+          "input_tokens": 236259,
+          "cached_input_tokens": 208000,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1254,
+          "reasoning_output_tokens": 321
+        }
+      ],
+      "untracked-component-review1": [
+        {
+          "input_tokens": 470870,
+          "cached_input_tokens": 452608,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4784,
+          "reasoning_output_tokens": 2673
+        }
+      ],
+      "untracked-component-review2-resume": [
+        {
+          "input_tokens": 563207,
+          "cached_input_tokens": 521088,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5595,
+          "reasoning_output_tokens": 2904
+        }
+      ],
+      "untracked-component-review2-resume2": [
+        {
+          "input_tokens": 713070,
+          "cached_input_tokens": 667776,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 8739,
+          "reasoning_output_tokens": 5155
+        }
+      ],
+      "zero-is-present-final-review": [
+        {
+          "input_tokens": 713482,
+          "cached_input_tokens": 683648,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 8252,
+          "reasoning_output_tokens": 4115
+        }
+      ],
+      "zero-is-present-fix": [
+        {
+          "input_tokens": 197270,
+          "cached_input_tokens": 158464,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1758,
+          "reasoning_output_tokens": 714
+        }
+      ],
+      "zero-is-present-resume-fix": [
+        {
+          "input_tokens": 267293,
+          "cached_input_tokens": 227328,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2015,
+          "reasoning_output_tokens": 714
+        }
+      ],
+      "zero-is-present-review1": [
+        {
+          "input_tokens": 749488,
+          "cached_input_tokens": 704896,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5182,
+          "reasoning_output_tokens": 2687
+        }
+      ],
+      "zero-is-present-review2": [
+        {
+          "input_tokens": 606605,
+          "cached_input_tokens": 568576,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4015,
+          "reasoning_output_tokens": 1770
+        }
+      ],
+      "zero-is-present-review3": [
+        {
+          "input_tokens": 313894,
+          "cached_input_tokens": 291328,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3447,
+          "reasoning_output_tokens": 1525
+        }
+      ]
+    },
+    "childTokens": null,
+    "totalTokens": null,
+    "cost": null,
+    "provenance": "CLI turn.completed usage; parent counters do not establish child usage or cost"
+  },
+  "pilotCodeBalance": {
+    "production": {
+      "added": 6,
+      "removed": 5,
+      "net": 1
+    },
+    "tests": {
+      "added": 0,
+      "removed": 0,
+      "net": 0
+    },
+    "docs": {
+      "added": 0,
+      "removed": 0,
+      "net": 0
+    },
+    "scripts": {
+      "added": 0,
+      "removed": 0,
+      "net": 0
+    },
+    "generated": {
+      "added": 0,
+      "removed": 0,
+      "net": 0
+    }
+  },
+  "limits": [
+    "Distinct-control index byte immutability timing is inconclusive; source/tests/HEAD/ref unchanged.",
+    "Duplicate-validator index bytes changed during CLI execution; whole Git-tree immutability is not established.",
+    "Two preliminary ephemeral zero-case coordinators (Luna and Sol) were diagnostic overhead, unscored and not launch-audited.",
+    "Duplicate round 3 was an unnecessary extra round after round 2 already had completion evidence; it counts within the three-round ceiling.",
+    "Untracked round 2 initially exited 124; safe resume collected the same reviewers without new launches.",
+    "An earlier resume invocation used the outer checkout and writable policy; its exact five-byte probe was verified and removed, and that attempt was blocked.",
+    "Unresolved internal exec CreateProcess ENOENT warnings in duplicate round 2 and untracked round 1; executable and root cause not established.",
+    "Internal reviewer test counts sometimes described a file-level test; external test and grade results are canonical.",
+    "Full end-to-end pilot wall time and individual child durations were not measured; parent phase durations are not a matched performance benchmark.",
+    "No HYBRID/Pi, Codex Cloud, external-consumer or public-promotion qualification."
+  ],
+  "localChecks": {
+    "fixtureRegressions": "14/14 passed",
+    "skills": "passed with five pre-existing unrelated warnings",
+    "ownership": "passed",
+    "scripts": "passed",
+    "lint": "passed",
+    "internalDiscovery": "skills@1.5.23 hidden by default, visible with INSTALL_INTERNAL_SKILLS=1",
+    "hostedValidation": "Reported independently by PR checks on the published revision",
+    "adrs": "passed after completing linked Short/Long/Guide spec references",
+    "runtimeMatrix": "passed with explicit Node fixture boundary; Bun 1.4.2 --test candidate fails the required test-runner invocation"
+  },
+  "knowledge": "Start check needs_setup; no adopted repository policy, no upload; adoption remains pending."
+}

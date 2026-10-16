@@ -33,6 +33,7 @@ const requiredIds = new Set([
   "change-impact",
   "product-planning",
   "karakeep-knowledge",
+  "review-fix-swarm",
 ]);
 assert.deepEqual(
   new Set(ids),

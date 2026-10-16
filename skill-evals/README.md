@@ -44,3 +44,7 @@ skill-evals/
 ```
 
 Per ADR-0007, keep evals outside `skills/` by default so installed agents receive only operational skill content. Bundle fixtures inside a skill only when the skill needs them at runtime.
+
+## Candidate protocols (no performance proof yet)
+
+- [`review-fix-swarm`](review-fix-swarm/README.md) — bounded Codex / Pi review-fix-simplify pilot and paired evaluation plan.
