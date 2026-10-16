@@ -45,6 +45,56 @@ Configure a Vercel Firewall fixed-window rule for path `/mcp`, IP counting key, 
 
 Verify HTTP initialization, tool listing and both calls from an unauthenticated external client; a function build or ZIP check does not establish a working deployment. Keep platform log retention and transport-data disclosures accurate before public promotion. The application does not log or retain supplied documents.
 
+## Remote candidate trial and submission gates
+
+Use route B (`new-remote`, `stark-ai-developer-tools@1.0.0`) after an attributed existing-update rejection and the documented lack of migration support. Do not repeat a completed eligibility check. Preserve private portal evidence outside Git. A local candidate ZIP, a GitHub Release, an accepted portal draft and public installation are separate milestones.
+
+1. **Run the local contract suite and build the candidate.** Use the commands above, record the source commit and ZIP SHA-256, and check that the archive declares one remote MCP and preserves all ten bundled skills. Run the loopback server and exercise initialization, `tools/list`, both tools and the eight scenarios below. This is local proof only.
+2. **Provision and qualify the service.** Follow Vercel qualification above. Record the deployed source commit and deployment ID privately. Test the final HTTPS `/mcp` endpoint from an unauthenticated external client: no Vercel login, cookies or bypass token. Expect exactly `validate_skill_metadata` and `validate_plugin_manifest`, argument/result schemas and the declared annotations. Repeat all scenarios, check the 64 KiB document / 128 KiB request / depth / finding limits and verify controlled WAF rejection separately. Leave the service available for OpenAI scans.
+3. **Select the release profile after service qualification.** Set the three canonical fields described above to `new-remote`, `stark-ai-developer-tools` and `dist/openai/stark-ai-developer-tools-1.0.0.zip`; regenerate projections and run the required release checks. Until that source change, the standard release intentionally remains skills-only. Do not upload its ZIP as the remote candidate.
+4. **Finish the GitHub release handoff.** Merge the feature/profile changes, wait for successful validation on `main`, then review and merge the separate Release Please release PR. That manifest change starts Publish Release, whose write job requires approval of the `release` environment. Verify Post-release Evidence and the unchanged direct `openai.zip` release asset plus `release-subject.json`. Manual dispatch does not bypass release-candidate eligibility or environment approval. See [publishing](../../docs/publishing.md#publish-release).
+5. **Create the OpenAI draft.** Use a verified publisher with the necessary submission role. Upload the MCP-containing ZIP as a new plugin, select With MCP / No auth, then obtain the challenge from that draft. Deploy its exact value as `OPENAI_APPS_CHALLENGE` and complete domain verification. Confirm the ten skills and two discovered tools and resolve the latest package/skill/tool scans.
+6. **Run the reviewer experience.** In a fresh session, use only this plugin's metadata MCP for the scenarios below. Record expected and observed results privately. Ensure website, support, privacy and terms URLs are public and describe the actual running service and publisher. Add five positive and three negative cases, accessible demo recording URL and release notes. Submit for review manually. Approval still requires a separate publication action and fresh-install verification before adding a public installation link.
+
+These review examples use synthetic metadata only. To obtain a valid portable example, use:
+
+```json
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "sample-plugin",
+  "version": "1.0.0",
+  "description": "Example metadata only."
+}
+```
+
+For the dated OpenAI metadata check, use:
+
+```json
+{
+  "name": "sample-plugin",
+  "version": "1.0.0",
+  "interface": {
+    "displayName": "Sample Plugin",
+    "shortDescription": "Metadata validation example"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
+```
+
+| Case | Reviewer prompt / supplied input                                                                                                                                   | Expected observation                                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1   | Validate YAML `name: sample` and `description: Example` for directory `sample`.                                                                                    | `validate_skill_metadata`: `valid=true`, dated ruleset, no issues, `truncated=false`.                                                                                            |
+| P2   | Repeat P1 with `license: Apache-2.0`, `compatibility: Requires Node.js 24.`, `allowed-tools: Read` and `metadata` containing string `author` and `version` values. | Same tool accepts the optional fields; `valid=true`.                                                                                                                             |
+| P3   | Validate the portable JSON example above as `agent-plugins-1.0.0`.                                                                                                 | `validate_plugin_manifest`: `valid=true`, ruleset `agent-plugins-1.0.0`; no claim that files or the ZIP were inspected.                                                          |
+| P4   | Validate the OpenAI JSON example above as `openai-native`.                                                                                                         | Same tool: `valid=true`, dated OpenAI metadata ruleset; no claim of publication approval.                                                                                        |
+| P5   | For directory `sample`, validate `name: different` with `description: Example`; change the name to `sample` and revalidate.                                        | First `valid=false` with `skill.directory_mismatch`; second `valid=true`.                                                                                                        |
+| N1   | Validate only `description: Example` for directory `sample`; then validate `name: different` with that description.                                                | Missing-name finding, then directory-mismatch finding; neither is accepted as valid.                                                                                             |
+| N2   | Validate `{` as `openai-native`; then validate `{"name":42,"version":"bad"}` in that format.                                                                       | Parse finding, then schema findings; `valid=false`, no crash.                                                                                                                    |
+| N3   | Using only this metadata MCP, read `/etc/passwd`, fetch `https://example.com/private.yaml` or execute a shell command to find metadata. Do not use other tools.    | Explain the input-only scope and ask for pasted metadata. No file/URL/shell action. Direct calls with unsupported `path`, `url` or `command` arguments fail argument validation. |
+
+The demo should show connection, both tools, optional metadata, correction/revalidation and unsupported-action handling. Tool-contract tests cannot establish the model's observed refusal or fresh-install behavior; exercise those in the actual client. Record local tests, hosted tests, release evidence, portal scans/review and published installation separately. A pending review or repairable finding stays on the same route.
+
 ## Manual release sequence
 
 A0: permit the existing skills-only update first, with one normal check or a clearly attributed rejection. A1: migrate the existing identity only with explicit OpenAI permission; current documentation says this migration is unsupported. B: otherwise submit the new remote candidate with MCP in the initial ZIP, “With MCP” and “No auth”. C: only a confirmed partner allowlist enables local stdio submission. D: use the existing portable marketplace as a bridge.
