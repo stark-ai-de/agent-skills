@@ -181,6 +181,7 @@ try {
   );
   const listingDir = path.posix.dirname(LISTING_PATH);
   fs.cpSync(path.join(repositoryRoot, listingDir), path.join(mutationClone, listingDir), {
+    filter: (source) => path.basename(source) !== "node_modules",
     recursive: true,
   });
   fs.copyFileSync(

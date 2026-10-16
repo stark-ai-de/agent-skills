@@ -1,0 +1,27 @@
+{
+  "name": "@stark-ai/openai-review-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Maintainer-only OpenAI MCP review walkthrough sources",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "remotion studio",
+    "typecheck": "tsc --noEmit",
+    "render": "remotion render src/index.ts Walkthrough ../../../../dist/review-video/remotion-rebuilt.mp4",
+    "record:client": "node record-server.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.535",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.535"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "packageManager": "pnpm@11.24.0"
+}

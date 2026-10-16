@@ -1,0 +1,654 @@
+[
+  {
+    "time": "2026-10-16T20:46:21.488Z",
+    "durationMs": 390,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {},
+        "clientInfo": {
+          "name": "publisher-review-walkthrough",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {
+          "tools": {
+            "listChanged": true
+          }
+        },
+        "serverInfo": {
+          "name": "stark-ai-metadata-validator",
+          "version": "1.0.0"
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 1
+    }
+  },
+  {
+    "time": "2026-10-16T20:46:28.189Z",
+    "durationMs": 197,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list",
+      "params": {}
+    },
+    "response": {
+      "result": {
+        "tools": [
+          {
+            "name": "validate_skill_metadata",
+            "title": "Validate skill metadata",
+            "description": "Check explicitly supplied YAML skill metadata and its directory name against pinned public rules. Metadata only; no files, URLs, shell actions, security audit or publication approval. Send only metadata you intend to share with this service.",
+            "inputSchema": {
+              "type": "object",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "properties": {
+                "frontmatter": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "directory_name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "required": ["frontmatter", "directory_name"],
+              "additionalProperties": false
+            },
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "openWorldHint": false,
+              "idempotentHint": true
+            },
+            "outputSchema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "ruleset": {
+                  "type": "string"
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["code", "path", "message"],
+                    "additionalProperties": false
+                  }
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["valid", "ruleset", "issues", "truncated"],
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "validate_plugin_manifest",
+            "title": "Validate plugin manifest",
+            "description": "Check explicitly supplied JSON plugin metadata against Agent Plugins 1.0.0 or the dated OpenAI-native metadata rules. Does not inspect ZIP contents, fetch references or establish release eligibility. Send only metadata you intend to share with this service.",
+            "inputSchema": {
+              "type": "object",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "properties": {
+                "manifest_json": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "format": {
+                  "type": "string",
+                  "enum": ["agent-plugins-1.0.0", "openai-native"]
+                }
+              },
+              "required": ["manifest_json", "format"],
+              "additionalProperties": false
+            },
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "openWorldHint": false,
+              "idempotentHint": true
+            },
+            "outputSchema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "ruleset": {
+                  "type": "string"
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["code", "path", "message"],
+                    "additionalProperties": false
+                  }
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["valid", "ruleset", "issues", "truncated"],
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "jsonrpc": "2.0",
+      "id": 2
+    }
+  },
+  {
+    "time": "2026-10-16T20:46:36.451Z",
+    "durationMs": 258,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "name: sample\ndescription: Validate supplied sample metadata.",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":true,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 3
+    }
+  },
+  {
+    "time": "2026-10-16T20:46:45.160Z",
+    "durationMs": 205,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "name: sample\ndescription: Validate supplied sample metadata.\nlicense: Apache-2.0\ncompatibility: Requires Node.js 24.\nallowed-tools: Read\nmetadata:\n  author: example\n  version: \"1.0.0\"",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":true,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 4
+    }
+  },
+  {
+    "time": "2026-10-16T20:46:53.912Z",
+    "durationMs": 248,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_plugin_manifest",
+        "arguments": {
+          "manifest_json": "{\"$schema\": \"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json\", \"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"description\": \"Example metadata only.\"}",
+          "format": "agent-plugins-1.0.0"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":true,\"ruleset\":\"agent-plugins-1.0.0\",\"issues\":[],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true,
+          "ruleset": "agent-plugins-1.0.0",
+          "issues": [],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 5
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:02.614Z",
+    "durationMs": 199,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_plugin_manifest",
+        "arguments": {
+          "manifest_json": "{\"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"interface\": {\"displayName\": \"Sample Plugin\", \"shortDescription\": \"Metadata validation example\"}, \"skills\": \"./skills/\", \"mcpServers\": \"./.mcp.json\"}",
+          "format": "openai-native"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":true,\"ruleset\":\"openai-native-metadata-2026-10-16\",\"issues\":[],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true,
+          "ruleset": "openai-native-metadata-2026-10-16",
+          "issues": [],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 6
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:11.387Z",
+    "durationMs": 270,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "name: different\ndescription: Example",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":false,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[{\"code\":\"skill.directory_mismatch\",\"path\":\"/name\",\"message\":\"Skill name must equal its directory name.\"}],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": false,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [
+            {
+              "code": "skill.directory_mismatch",
+              "path": "/name",
+              "message": "Skill name must equal its directory name."
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 7
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:18.078Z",
+    "durationMs": 187,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "name: sample\ndescription: Example",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":true,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 8
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:24.805Z",
+    "durationMs": 223,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "description: Example",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":false,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[{\"code\":\"skill.name\",\"path\":\"/name\",\"message\":\"Use 1–64 lowercase ASCII letters, digits and single separating hyphens.\"}],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": false,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [
+            {
+              "code": "skill.name",
+              "path": "/name",
+              "message": "Use 1–64 lowercase ASCII letters, digits and single separating hyphens."
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 9
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:31.588Z",
+    "durationMs": 278,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "frontmatter": "name: different\ndescription: Example",
+          "directory_name": "sample"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":false,\"ruleset\":\"agent-skills-metadata-2026-10-16\",\"issues\":[{\"code\":\"skill.directory_mismatch\",\"path\":\"/name\",\"message\":\"Skill name must equal its directory name.\"}],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": false,
+          "ruleset": "agent-skills-metadata-2026-10-16",
+          "issues": [
+            {
+              "code": "skill.directory_mismatch",
+              "path": "/name",
+              "message": "Skill name must equal its directory name."
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 10
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:38.410Z",
+    "durationMs": 318,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 11,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_plugin_manifest",
+        "arguments": {
+          "manifest_json": "{",
+          "format": "openai-native"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":false,\"ruleset\":\"openai-native-metadata-2026-10-16\",\"issues\":[{\"code\":\"input.parse\",\"path\":\"/\",\"message\":\"Expected valid JSON.\"}],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": false,
+          "ruleset": "openai-native-metadata-2026-10-16",
+          "issues": [
+            {
+              "code": "input.parse",
+              "path": "/",
+              "message": "Expected valid JSON."
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 11
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:45.091Z",
+    "durationMs": 177,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 12,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_plugin_manifest",
+        "arguments": {
+          "manifest_json": "{\"name\":42,\"version\":\"bad\"}",
+          "format": "openai-native"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"valid\":false,\"ruleset\":\"openai-native-metadata-2026-10-16\",\"issues\":[{\"code\":\"schema.type\",\"path\":\"/name\",\"message\":\"must be string\"},{\"code\":\"schema.pattern\",\"path\":\"/version\",\"message\":\"must match pattern \\\"^(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*)\\\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\\\+([0-9A-Za-z-]+(?:\\\\.[0-9A-Za-z-]+)*))?$\\\"\"}],\"truncated\":false}"
+          }
+        ],
+        "structuredContent": {
+          "valid": false,
+          "ruleset": "openai-native-metadata-2026-10-16",
+          "issues": [
+            {
+              "code": "schema.type",
+              "path": "/name",
+              "message": "must be string"
+            },
+            {
+              "code": "schema.pattern",
+              "path": "/version",
+              "message": "must match pattern \"^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$\""
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "jsonrpc": "2.0",
+      "id": 12
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:51.821Z",
+    "durationMs": 226,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 13,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "path": "/etc/passwd"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"path\""
+          }
+        ],
+        "isError": true
+      },
+      "jsonrpc": "2.0",
+      "id": 13
+    }
+  },
+  {
+    "time": "2026-10-16T20:47:58.547Z",
+    "durationMs": 223,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 14,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "url": "https://example.com/private.yaml"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"url\""
+          }
+        ],
+        "isError": true
+      },
+      "jsonrpc": "2.0",
+      "id": 14
+    }
+  },
+  {
+    "time": "2026-10-16T20:48:05.294Z",
+    "durationMs": 244,
+    "status": 200,
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 15,
+      "method": "tools/call",
+      "params": {
+        "name": "validate_skill_metadata",
+        "arguments": {
+          "command": "uname -a"
+        }
+      }
+    },
+    "response": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"command\""
+          }
+        ],
+        "isError": true
+      },
+      "jsonrpc": "2.0",
+      "id": 15
+    }
+  }
+]
