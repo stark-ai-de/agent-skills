@@ -3,7 +3,7 @@ import test from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawnSync, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { unzipSync } from "fflate";
 import {
@@ -269,3 +269,135 @@ test("route selection CLI is read-only and requires no portal credentials", () =
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout).route, "A0");
 });
+
+test("HTTP builds serve exact static challenge bytes and remove cached tokens", () => {
+  const packageRoot = path.join(root, "packages/skill-metadata-mcp");
+  const env = { ...process.env };
+  delete env.OPENAI_APPS_CHALLENGE;
+  const token = "synthetic-qualification-token\n";
+  const build = (buildEnv) => {
+    const result = spawnSync(process.execPath, [path.join(packageRoot, "build.mjs"), "http"], {
+      cwd: packageRoot,
+      env: buildEnv,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+  };
+  try {
+    build({ ...env, OPENAI_APPS_CHALLENGE: token });
+    assert.equal(
+      fs.readFileSync(path.join(packageRoot, "public/.well-known/openai-apps-challenge"), "utf8"),
+      token,
+    );
+    const config = JSON.parse(fs.readFileSync(path.join(packageRoot, "vercel.json")));
+    assert.equal(
+      config.rewrites.some((route) => route.source.startsWith("/.well-known")),
+      false,
+    );
+    assert.equal(config.outputDirectory, "public");
+    build(env);
+    assert.equal(
+      fs.existsSync(path.join(packageRoot, "public/.well-known/openai-apps-challenge")),
+      false,
+    );
+  } finally {
+    fs.rmSync(path.join(packageRoot, "public/.well-known/openai-apps-challenge"), { force: true });
+  }
+});
+test(
+  "isolated desktop release rebuilds both bundles and preserves both identities",
+  { timeout: 60000 },
+  () => {
+    const temp = fs.mkdtempSync(path.join(os.tmpdir(), "metadata-isolated-release-"));
+    const checkout = path.join(temp, "checkout");
+    fs.mkdirSync(checkout);
+    try {
+      const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
+        .split("\0")
+        .filter(Boolean);
+      for (const relative of tracked) {
+        const from = path.join(root, relative),
+          to = path.join(checkout, relative);
+        fs.mkdirSync(path.dirname(to), { recursive: true });
+        if (fs.lstatSync(from).isSymbolicLink()) fs.symlinkSync(fs.readlinkSync(from), to);
+        else fs.copyFileSync(from, to);
+      }
+      const sourcePath = path.join(checkout, "plugins/stark-ai-developer.source.json");
+      const fixtureSource = JSON.parse(fs.readFileSync(sourcePath));
+      fixtureSource.openai.activeProfile = "desktop-local";
+      fixtureSource.distributions.openaiPlugin = "stark-ai-developer-desktop";
+      fixtureSource.outputs.openaiArchive = "dist/openai/stark-ai-developer-desktop-1.0.0.zip";
+      fs.writeFileSync(sourcePath, JSON.stringify(fixtureSource, null, 2) + "\n");
+      const git = (args) => execFileSync("git", args, { cwd: checkout, stdio: "pipe" });
+      git(["init", "--quiet"]);
+      git(["add", "."]);
+      git([
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.test",
+        "commit",
+        "--quiet",
+        "-m",
+        "isolated fixture",
+      ]);
+      for (const relative of ["node_modules", "packages/skill-metadata-mcp/node_modules"])
+        fs.symlinkSync(
+          path.join(root, relative),
+          path.join(checkout, relative),
+          process.platform === "win32" ? "junction" : "dir",
+        );
+      assert.equal(fs.existsSync(path.join(checkout, "packages/skill-metadata-mcp/dist")), false);
+      const evidencePath = path.join(temp, "evidence.json");
+      const subjects = path.join(temp, "subjects");
+      const result = spawnSync(
+        process.execPath,
+        [
+          path.join(checkout, "scripts/release/verify-release-reproducibility.mjs"),
+          "--evidence",
+          evidencePath,
+          "--subjects-dir",
+          subjects,
+        ],
+        { cwd: checkout, encoding: "utf8", timeout: 50000 },
+      );
+      assert.equal(result.status, 0, result.stderr + result.stdout);
+      const evidence = JSON.parse(fs.readFileSync(evidencePath));
+      assert.equal(evidence.reproducibility.byteIdentical, true);
+      assert.equal(evidence.package.version, fixtureSource.version);
+      assert.deepEqual(evidence.projections.openai.package, {
+        name: "stark-ai-developer-desktop",
+        version: "1.0.0",
+      });
+      const files = unzipSync(fs.readFileSync(path.join(subjects, "openai.zip")));
+      const manifest = JSON.parse(Buffer.from(files[".codex-plugin/plugin.json"]));
+      assert.equal(manifest.name, evidence.projections.openai.package.name);
+      assert.equal(manifest.version, evidence.projections.openai.package.version);
+      const install = path.join(temp, "install");
+      fs.mkdirSync(install);
+      const bundle = path.join(install, "index.mjs");
+      fs.writeFileSync(bundle, files["server/dist/index.mjs"]);
+      const input =
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: {
+            protocolVersion: "2025-06-18",
+            capabilities: {},
+            clientInfo: { name: "isolated-release", version: "1.0.0" },
+          },
+        }) + "\n";
+      const offline = spawnSync(process.execPath, [bundle], {
+        cwd: install,
+        input,
+        encoding: "utf8",
+        timeout: 5000,
+      });
+      assert.equal(offline.status, 0, offline.stderr);
+      assert.match(offline.stdout, /stark-ai-metadata-validator/);
+    } finally {
+      fs.rmSync(temp, { recursive: true, force: true });
+    }
+  },
+);

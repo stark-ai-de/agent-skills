@@ -240,6 +240,30 @@ export function selectPreviousPluginRelease(releases, currentReleaseVersion) {
   return eligible[0] ?? null;
 }
 
+export function previousReleaseForIdentity({
+  releases,
+  currentReleaseVersion,
+  pluginId,
+  legacyPluginId,
+  readValidatedSubject,
+}) {
+  const remaining = [...releases];
+  while (true) {
+    const previousRelease = selectPreviousPluginRelease(remaining, currentReleaseVersion);
+    if (!previousRelease) return { previousRelease: null, previousSubject: null };
+    const previousSubject = readValidatedSubject(previousRelease);
+    if (
+      !previousSubject ||
+      !valid(previousSubject.openaiProfile?.version ?? previousSubject.pluginVersion)
+    ) {
+      throw new Error(`Invalid historical subject for ${previousRelease.tag_name}`);
+    }
+    const historicalId = previousSubject.openaiProfile?.pluginId ?? legacyPluginId;
+    if (historicalId === pluginId) return { previousRelease, previousSubject };
+    remaining.splice(remaining.indexOf(previousRelease), 1);
+  }
+}
+
 function assertPublicListing(listing) {
   const publisher = listing?.publisher;
   if (!publisher || typeof publisher !== "object" || Array.isArray(publisher)) {
@@ -390,10 +414,19 @@ function readCurrentContext(options) {
       : subjectFromRelease(options.repository, release),
     options,
   );
-  const previousRelease = selectPreviousPluginRelease(releases, options.releaseVersion);
-  const previousSubject = previousRelease
-    ? subjectFromRelease(options.repository, previousRelease)
-    : null;
+  const { previousRelease, previousSubject } = previousReleaseForIdentity({
+    releases,
+    currentReleaseVersion: options.releaseVersion,
+    pluginId: subject.openaiProfile?.pluginId ?? listing.plugin.name,
+    legacyPluginId: releaseSource.pluginId,
+    readValidatedSubject: (historicalRelease) => {
+      const historicalSha = readTagCommit(options.repository, historicalRelease.tag_name);
+      return validateCurrentSubject(subjectFromRelease(options.repository, historicalRelease), {
+        releaseSha: historicalSha,
+        releaseVersion: historicalRelease.tag_name.slice(1),
+      });
+    },
+  });
   return {
     repository: options.repository,
     tag: options.tag,

@@ -181,7 +181,9 @@ function validateHandoff(observation, expected) {
   if (!handoff || !markerMatch) {
     return failure("openai_handoff_invalid", "the OpenAI handoff marker is invalid");
   }
-  if (markerMatch[2] !== observation?.subject?.pluginVersion) {
+  const profile = observation?.subject?.openaiProfile;
+  const expectedVersion = profile?.version ?? observation?.subject?.pluginVersion;
+  if (markerMatch[2] !== expectedVersion || (profile && markerMatch[1] !== profile.pluginId)) {
     return failure(
       "openai_handoff_invalid",
       "the OpenAI handoff marker does not match the published plugin version",

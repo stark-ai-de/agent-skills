@@ -255,6 +255,18 @@ function buildIsolated(root) {
   copyInputs(root);
   syncPortableProjection({ root, gitRoot: repositoryRoot, dependencyRoot: repositoryRoot });
   const identity = pluginIdentity(root);
+  if (identity.openaiProfile.transport === "stdio") {
+    const packageRoot = path.join(root, "packages/skill-metadata-mcp");
+    fs.symlinkSync(
+      path.join(repositoryRoot, "packages/skill-metadata-mcp/node_modules"),
+      path.join(packageRoot, "node_modules"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    execFileSync(process.execPath, [path.join(packageRoot, "build.mjs"), "stdio"], {
+      cwd: packageRoot,
+      stdio: "inherit",
+    });
+  }
   const openAi = withOpenAiStage(
     root,
     (staged) => ({
@@ -351,7 +363,14 @@ function buildEvidence(firstBuild, checksums, differences) {
         sourceManifestSha256: generatedManifests.portableSourceManifest,
         pluginManifestSha256: generatedManifests.portableManifest,
       },
-      openai: firstBuild.openAiProjection,
+      openai: {
+        ...firstBuild.openAiProjection,
+        profile: pluginIdentity(firstBuild.root).openaiProfile.profile,
+        package: {
+          name: pluginIdentity(firstBuild.root).openaiProfile.pluginId,
+          version: pluginIdentity(firstBuild.root).openaiProfile.version,
+        },
+      },
     },
     manifests: {
       generated: generatedManifests,

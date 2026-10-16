@@ -9,6 +9,7 @@ import {
   buildOpenAiReleasePlan,
   concurrentPublicationRuns,
   selectPreviousPluginRelease,
+  previousReleaseForIdentity,
 } from "../release/reconcile-openai-plugin-issue.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -448,3 +449,63 @@ assert.throws(
 assert.equal(concurrentTransport.postCount, 0);
 
 console.log("OpenAI plugin release issue fixtures passed.");
+
+const identityHistory = [{ tag_name: "v0.28.0" }, { tag_name: "v0.27.0" }, { tag_name: "v0.26.0" }];
+const historySubjects = {
+  "v0.28.0": {
+    pluginVersion: "1.16.0",
+    openaiProfile: { pluginId: "other-plugin", version: "1.0.0" },
+  },
+  "v0.27.0": {
+    pluginVersion: "1.15.0",
+    openaiProfile: { pluginId: listing.plugin.name, version: "2.0.0" },
+  },
+};
+const history = previousReleaseForIdentity({
+  releases: identityHistory,
+  currentReleaseVersion: "0.29.0",
+  pluginId: listing.plugin.name,
+  legacyPluginId: listing.plugin.name,
+  readValidatedSubject: (r) => historySubjects[r.tag_name],
+});
+assert.equal(history.previousRelease.tag_name, "v0.27.0");
+for (const [version, outcome] of [
+  ["1.9.0", "reject"],
+  ["2.0.0", "noop"],
+  ["2.1.0", "create"],
+]) {
+  const args = {
+    repository: "example/example",
+    tag: release.tag_name,
+    releaseSha,
+    release,
+    listing: { ...listing, plugin: { ...listing.plugin, version } },
+    subject: { ...subject, openaiProfile: { pluginId: listing.plugin.name, version } },
+    ...history,
+    issues: [],
+  };
+  if (outcome === "reject")
+    assert.throws(() => buildOpenAiReleasePlan(args), /decrease|older|lower|downgrade/i);
+  else assert.equal(buildOpenAiReleasePlan(args).status, outcome);
+}
+assert.equal(
+  previousReleaseForIdentity({
+    releases: identityHistory,
+    currentReleaseVersion: "0.29.0",
+    pluginId: "new-identity",
+    legacyPluginId: listing.plugin.name,
+    readValidatedSubject: (r) => historySubjects[r.tag_name] ?? { pluginVersion: "1.0.0" },
+  }).previousRelease,
+  null,
+);
+assert.throws(
+  () =>
+    previousReleaseForIdentity({
+      releases: identityHistory,
+      currentReleaseVersion: "0.29.0",
+      pluginId: "new-identity",
+      legacyPluginId: listing.plugin.name,
+      readValidatedSubject: () => null,
+    }),
+  /Invalid historical/,
+);

@@ -107,3 +107,33 @@ test("portable schema and dated OpenAI metadata rules have explicit boundaries",
     assert.equal(plugin({ format: "openai-native", manifest_json }).valid, false);
   assert.equal(plugin({ format: "unknown", manifest_json: "{}" }).valid, false);
 });
+
+test("aliases fail at parsing even with otherwise valid skill fields", () => {
+  const output = skill({ ...example, frontmatter: example.frontmatter + "a: &a [1]\nb: *a\n" });
+  assert.equal(output.valid, false);
+  assert.equal(output.issues[0].code, "input.parse");
+});
+test("OpenAI versions follow complete SemVer prerelease and build rules", () => {
+  for (const [version, expected] of [
+    ["1.0.0", true],
+    ["0.0.0", true],
+    ["1.2.3-alpha.1+build.7", true],
+    ["1.0.0-0", true],
+    ["1.0.0-x-y-z.--", true],
+    ["1.2.3+001", true],
+    ["01.2.3", false],
+    ["1.2.3-01", false],
+    ["1.2.3-alpha..1", false],
+    ["1.2.3+..", false],
+    ["1.2.3+", false],
+    ["1.2.3.4", false],
+  ])
+    assert.equal(
+      plugin({
+        format: "openai-native",
+        manifest_json: JSON.stringify({ name: "example", version }),
+      }).valid,
+      expected,
+      version,
+    );
+});
