@@ -38,5 +38,14 @@ Checked 2026-10-14 against upstream `v0.33.2` source (not a live mutation test):
 
 The pinned npm MCP version remains `0.33.1`; the source tag above describes the web
 repository contract, not proof of identical installed package tools. Discover the
-actual session's schemas. No live sync, curation, scheduled trigger, text-body update,
-smart-list creation or performance benchmark was observed for this extension.
+actual session's schemas. These historical checks did not establish live execution. The 0.3.0 helper adds
+separate direct-use qualification; it does not add a scheduled trigger or performance benchmark.
+
+## Node helper API profile
+
+Checked against Karakeep `v0.33.2` for the 0.3.0 helper:
+
+- [Bookmark REST routes](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/bookmarks.ts): paginated inventory, exact `text` PATCH, readable content with versioned continuation, tags and memberships.
+- [List REST routes](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/lists.ts) and [list schemas](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/shared/types/lists.ts): private manual list validation and membership.
+- [API key schema](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/shared/types/apiKeys.ts) and [user routes](https://github.com/karakeep-app/karakeep/blob/v0.33.2/packages/api/routes/users.ts): scoped credentials and expected-account verification.
+- [Codex skills](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills) and [global guidance](https://learn.chatgpt.com/docs/agent-configuration/agents-md#how-codex-discovers-guidance): user-wide discovery and instruction loading, not an executable startup hook.

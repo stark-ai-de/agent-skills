@@ -1,11 +1,11 @@
 ---
 name: karakeep-knowledge
-description: Set up or use a local persistent Karakeep knowledge collection through its official MCP server. Use when configuring Karakeep for coding agents, checking an existing connection, saving or synchronizing approved repository knowledge from the remote default branch, curating lists and tags, or consulting saved web sources for development work.
+description: Set up or use a local persistent Karakeep knowledge collection through its official MCP server. Use when configuring Karakeep for coding agents, checking an existing connection, checking project readiness, saving factual session reports, synchronizing approved canonical documents and separate drafts, maintaining approved source-backed aggregates, curating lists and tags, or consulting saved web sources for development work.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Karakeep Knowledge
@@ -22,7 +22,7 @@ user's existing account. A cloud account or external AI provider is not required
 - Consult saved component libraries, frameworks, design references or instructions
   when they are relevant to the user's coding task.
 - Save or import references the user has requested to add to this collection.
-- Reconcile missing or changed approved repository knowledge after merge to main.
+- Check project readiness and reconcile approved documents, separate drafts and factual session reports during meaningful work.
 - Organize saved knowledge on request or under an existing automatic curation policy.
 
 ## When not to use
@@ -41,12 +41,12 @@ user's existing account. A cloud account or external AI provider is not required
 
 ## Workflow
 
-| Route                         | Intent                                                                | Read                                                        |
-| ----------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Set up or connect**         | Missing setup, new agent connection, stopped or misconfigured service | [Setup](references/setup.md), then [MCP](references/mcp.md) |
-| **Use the collection**        | Search/read knowledge or save requested references                    | [Use](references/use.md)                                    |
-| **Sync repository knowledge** | Reconcile approved repository sources from remote main/default branch | [Sync](references/sync.md)                                  |
-| **Curate the collection**     | Organize a requested scope or run an approved curation policy         | [Curation](references/curation.md)                          |
+| Route                         | Intent                                                                                          | Read                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Set up or connect**         | Missing setup, new agent connection, stopped or misconfigured service                           | [Setup](references/setup.md), then [MCP](references/mcp.md) |
+| **Use the collection**        | Search/read knowledge or save requested references                                              | [Use](references/use.md)                                    |
+| **Sync repository knowledge** | Check readiness; reconcile canonical documents, drafts, factual reports and approved aggregates | [Sync](references/sync.md)                                  |
+| **Curate the collection**     | Organize a requested scope or run an approved curation policy                                   | [Curation](references/curation.md)                          |
 
 For clear authorized intent, announce the selected route and proceed. For a bare
 invocation or options request, show all four routes and ask which outcome is wanted.
@@ -58,7 +58,11 @@ post-merge hook. If continuous operation is requested, configure the host's exis
 hook/scheduler explicitly, using the same account, policy, lock and receipts; verify
 one actual trigger. Do not claim unattended operation from a prompt file alone.
 
-1. Check actual tool availability. If Karakeep is connected, search and retrieve one
+1. When global or repository guidance requests a session-start check, run
+   `node <absolute-skill-root>/scripts/knowledge.mjs check --repo <absolute-repository-root>`
+   once for that repository/context. Follow [Sync](references/sync.md) for the result.
+   This check is read-only; missing project policy is not upload permission.
+   Check actual tool availability. If Karakeep is connected, search and retrieve one
    relevant saved page; read actual content before recommending it. Do not run setup
    preparation just because this is a new agent session.
 2. If tools are unavailable, inspect the existing host configuration and use
@@ -95,14 +99,20 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
 - [Setup](references/setup.md): environment inspection, new stack, adoption and acceptance.
 - [MCP](references/mcp.md): official runtime, private credentials and client configuration.
 - [Use](references/use.md): efficient retrieval, citations and bounded imports.
-- [Sync](references/sync.md): main-only evidence, once-approved authority and reconciliation.
+- [Sync](references/sync.md): canonical/draft ownership, sessions, aggregation and reconciliation.
+- [Helper](references/helper.md): executable CLI, policy/intent schema, recovery and installation.
 - [Curation](references/curation.md): lists, tags, maintenance and resource limits.
 - [Operations](references/operations.md): NixOS/WSL, start/stop, backup and recovery.
 - [Sources](references/sources.md): checked upstream contracts and baseline versions.
 
 ## Scripts
 
-Setup uses the existing Docker Engine and Compose. Helpers require Python 3.10+
+The dependency-free `scripts/knowledge.mjs` requires Node.js 24.18+ on Linux/POSIX.
+It handles `check`, `inspect`, `plan`, `apply`, `status` and `resume`; only `apply`/
+`resume` can write to Karakeep under an adopted policy. It never calls a model,
+installs a service or edits repository files. [Helper reference](references/helper.md).
+
+Setup uses the existing Docker Engine and Compose. Existing setup helpers require Python 3.10+
 on Linux/POSIX; the launcher requires an already-installed official MCP runtime.
 
 - `scripts/status.py`: read-only path/HTTP probe; `--offline` avoids network access.

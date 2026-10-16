@@ -7,16 +7,16 @@ status: "draft"
 owner: "stark-ai-de maintainers"
 repo: "agent-skills"
 created: "2026-10-15"
-updated: "2026-10-15"
+updated: "2026-10-16"
 ---
 
 # Karakeep as shared agent knowledge
 
 **Outcome:** extend the existing `karakeep-knowledge` skill so agents can reuse knowledge across an owner's projects while every repository remains independently understandable.
 
-**Status:** usage, skill-plus-Node-helper architecture and direct introduction into the existing instance are selected. The implementation plan includes global discovery and an agent-invoked start check. The helper, installation and runtime configuration are not implemented by this documentation change; saving it does not accept a consumer ADR.
+**Status:** the selected skill-plus-Node-helper workflow is implemented in skill 0.3.0. Local installation and direct-instance qualification are recorded in the [implementation evidence](../../skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md). Consumer ADR adoption remains repository-specific.
 
-**Next action:** implement the shared helper and instruction-based start check, configure the existing instance, then qualify normal use directly. No separate pilot project or initial import of all repositories is required. Provider availability and cost are not open design questions.
+**Next action:** review the implementation PR and use the installed workflow as repositories are adopted during normal work. No separate pilot project or initial import of all repositories is required. Provider availability and cost are not open design questions.
 
 ## Goal and success
 
@@ -35,18 +35,18 @@ Karakeep is an editable knowledge collection. It is not the authoritative store 
 
 The maintainer confirmed the shared collection, repository authority, agent-invoked workflow, factual session reports, separate drafts, direct substantive source capture, project-list organization, bounded aggregation maintenance, Karakeep-owned cross-project dossiers and a bundled on-demand Node helper without a background service during the specification interview. The instruction to update the existing Karakeep pull request authorizes persistence of this specification. The subsequent rollout decision selects global skill availability and checks when agents begin or complete relevant project work. Repositories enter the workflow during normal use rather than through an up-front bulk import. Recommendations below remain proposals; saving this draft does not accept them as implemented behavior.
 
-| Area                      | Contract                                                                                                                                        | Status                                               |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Knowledge ownership       | Repository documents remain authoritative; Karakeep holds attributable knowledge copies                                                         | Confirmed                                            |
-| Execution                 | Reusable skill invoked during agent work; no required background pipeline, scheduler, CI import job, or n8n workflow                            | Confirmed                                            |
-| Session knowledge         | Save short factual reports directly within an adopted policy; propose new standalone findings and process evaluations first                     | Confirmed                                            |
-| Unmerged work             | Keep separately identified draft copies beside authoritative documents                                                                          | Confirmed                                            |
-| Source capture            | Reuse or capture all direct substantive references in adopted documents; mark missing content; deeper traversal only on demand                  | Confirmed                                            |
-| Organization              | One private project list per project, shared source objects and a small vocabulary for role, lifecycle and topics                               | Confirmed                                            |
-| Aggregation maintenance   | Maintain one factual project overview and already approved aggregates during relevant invocations; propose new topical dossiers first           | Confirmed                                            |
-| Derived-content ownership | Repository documents stay repository-owned; general cross-project dossiers are authoritative in Karakeep, with traceable adoption into projects | Confirmed                                            |
-| Reliability               | Bundled Node helper owns deterministic planning, API reconciliation and recovery; the invoking agent owns semantic work                         | Confirmed; implementation specified, not implemented |
-| Native enrichment         | Use available native per-item summaries, topic tagging, and optional semantic retrieval after capability and quality checks                     | Recommended configuration, not activated             |
+| Area                      | Contract                                                                                                                                        | Status                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Knowledge ownership       | Repository documents remain authoritative; Karakeep holds attributable knowledge copies                                                         | Confirmed                                         |
+| Execution                 | Reusable skill invoked during agent work; no required background pipeline, scheduler, CI import job, or n8n workflow                            | Confirmed                                         |
+| Session knowledge         | Save short factual reports directly within an adopted policy; propose new standalone findings and process evaluations first                     | Confirmed                                         |
+| Unmerged work             | Keep separately identified draft copies beside authoritative documents                                                                          | Confirmed                                         |
+| Source capture            | Reuse or capture all direct substantive references in adopted documents; mark missing content; deeper traversal only on demand                  | Confirmed                                         |
+| Organization              | One private project list per project, shared source objects and a small vocabulary for role, lifecycle and topics                               | Confirmed                                         |
+| Aggregation maintenance   | Maintain one factual project overview and already approved aggregates during relevant invocations; propose new topical dossiers first           | Confirmed                                         |
+| Derived-content ownership | Repository documents stay repository-owned; general cross-project dossiers are authoritative in Karakeep, with traceable adoption into projects | Confirmed                                         |
+| Reliability               | Bundled Node helper owns deterministic planning, API reconciliation and recovery; the invoking agent owns semantic work                         | Implemented; see qualification evidence           |
+| Native enrichment         | Use available native per-item summaries, topic tagging, and optional semantic retrieval after capability and quality checks                     | Optional; native tags/summaries qualified locally |
 
 The global start instruction is a behavioral trigger for the invoking agent, not a daemon or an executable host hook. One-time setup records connection and project policy; installing skill files alone does not execute a check.
 
@@ -57,13 +57,13 @@ Quality and useful coverage take precedence over token cost and performance opti
 - No new always-running service, custom Karakeep UI, database schema, scheduler, CI synchronization job, n8n workflow, or Hermes cron job.
 - No automatic upload of entire repositories, secrets, raw transcripts, tool-output streams, dependencies, or generated build artifacts.
 - No automatic publication, cross-owner sharing, global taxonomy migration, destructive cleanup, or replacement account/collection.
-- No activation of these proposals through this specification-only change, and no unqualified claim that a prompt guarantees every session will be recorded.
+- No unqualified claim that a prompt guarantees every session will be recorded; activation evidence and remaining feature boundaries are recorded separately.
 
 ## Existing implementation and extension boundary
 
 The baseline is `karakeep-knowledge` 0.2.0 in PR #148 at commit `7944a191e85e6db2d520473e689f165dda21ef2f`. Its four routes cover setup/connection, use, repository synchronization, and curation. It already specifies remote-default-branch snapshots, ownership receipts, conflict preservation, uncertain-write reconciliation, and capability checks.
 
-The current sync route is **main/default-branch only**. This proposal adds a distinct draft channel; it does not reinterpret dirty work as authoritative content. The current skill also does not bundle a deterministic synchronization helper or implement the session-report and aggregation contracts below. Those are future work.
+The 0.2.0 baseline sync route was **main/default-branch only**. Skill 0.3.0 adds a distinct draft channel, deterministic helper and session/aggregation instructions. Dirty work remains explicitly separate from authoritative content. The executable policy and intent schemas are documented in the [helper reference](../../skills/engineering-workflows/karakeep-knowledge/references/helper.md).
 
 Reuse the existing skill instead of introducing a second competing Karakeep skill. Preserve its setup, credential handling, recovery, and ordinary read routes. Ordinary use remains read-only unless the invocation or a standing project policy authorizes a bounded write workflow. A request to research or implement code alone grants no collection upload.
 
@@ -221,7 +221,7 @@ The helper makes no model calls and does not launch another agent. Native per-it
 
 ### CLI and invocation
 
-The following is the specified future interface; the script is not implemented by this documentation change. Resolve `kk_helper` to the absolute `scripts/knowledge.mjs` path of the installed, reviewed skill. `kk_policy` is the approved private policy, `kk_repo` the native repository root, and `kk_run` a private operation directory under the policy's state root. These are task-specific variables, not new environment-wide settings. Commands never depend on the caller's working directory.
+The following interface is implemented by the bundled helper; see its reference for exact JSON schemas and current recovery boundaries. Resolve `kk_helper` to the absolute `scripts/knowledge.mjs` path of the installed, reviewed skill. `kk_policy` is the approved private policy, `kk_repo` the native repository root, and `kk_run` a private operation directory under the policy's state root. These are task-specific variables, not new environment-wide settings. Commands never depend on the caller's working directory.
 
 ```bash
 node "$kk_helper" check --repo "$kk_repo"
@@ -276,7 +276,7 @@ The current source baseline supports bookmark creation and partial updates throu
 
 Use built-in `fetch` with an overall abort deadline, bounded response reading, serial mutation and no implicit authenticated redirects. Only the configured service origin receives the bearer key. Read existing private credentials through their owner: either the current literal `KARAKEEP_API_ADDR`/`KARAKEEP_API_KEY` file format or explicitly configured environment variable names. Implement compatible literal parsing without shell evaluation and exercise the existing parser's valid/invalid fixtures. Never put secret values in CLI arguments, JSON intents, receipts or logs, or automatically repurpose a read-only key as a write key. Account verification must use a qualified identity read or approved account-bound sentinel; an empty bookmark list alone proves no account identity.
 
-Initially qualify execution on Linux/NixOS/WSL with the existing native Node and Git. Keep `.mjs` code portable, but do not claim native Windows file-secret support until equivalent private-access checks are qualified. Match the existing setup's loopback HTTP(S) boundary for the direct local rollout; support for a hosted/private remote endpoint requires the separate connection contract and must not weaken the current Python launcher. Use `node:child_process.execFile` with argument arrays for Git; do not evaluate a shell string, change branches, stage files or modify repository documents. Read canonical bytes from one freshly verified remote tree; keep local drafts in a separate snapshot with branch/work context and hashes. A remote tip advancing during the run does not mix trees; report the later revision as subsequent work. Divergence or stale/unverifiable authority blocks canonical writes.
+Initially qualify execution on Linux/NixOS/WSL with the existing native Node and Git. Keep `.mjs` code portable, but do not claim native Windows file-secret support until equivalent private-access checks are qualified. Match the existing setup's loopback HTTP(S) boundary for the direct local rollout; support for a hosted/private remote endpoint requires the separate connection contract and must not weaken the current Python launcher. Use `node:child_process.execFile` with argument arrays for Git; do not evaluate a shell string, change branches, stage files or modify repository documents. Read canonical bytes from one freshly verified remote tree; keep local drafts in a separate snapshot with branch/work context and hashes. A remote tip advancing between inspection and apply invalidates the plan; inspect and plan the later revision without mixing trees. Divergence or stale/unverifiable authority blocks canonical writes.
 
 ### State, concurrency and recovery
 

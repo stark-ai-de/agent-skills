@@ -3,7 +3,7 @@ interface:
   short_description: "Connect, sync and curate Karakeep knowledge"
   icon_small: "./assets/openai-icon.png"
   icon_large: "./assets/openai-icon.png"
-  default_prompt: "Use $karakeep-knowledge to check my existing collection and retrieve relevant saved sources, or run an approved main-branch sync, curation policy or setup."
+  default_prompt: "Use $karakeep-knowledge to check my existing collection and retrieve relevant saved sources, or run an approved knowledge sync with separate drafts, factual session reports, aggregates, curation or setup."
 policy:
   products:
     - CODEX
