@@ -718,7 +718,8 @@
     "lint": "passed",
     "internalDiscovery": "skills@1.5.23 hidden by default, visible with INSTALL_INTERNAL_SKILLS=1",
     "hostedValidation": "Reported independently by PR checks on the published revision",
-    "adrs": "passed after completing linked Short/Long/Guide spec references"
+    "adrs": "passed after completing linked Short/Long/Guide spec references",
+    "runtimeMatrix": "passed with explicit Node fixture boundary; Bun 1.4.2 --test candidate fails the required test-runner invocation"
   },
   "knowledge": "Start check needs_setup; no adopted repository policy, no upload; adoption remains pending."
 }

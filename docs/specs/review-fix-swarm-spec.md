@@ -94,6 +94,7 @@ ADR required: no. Existing decisions govern this feature:
 [ADR-0056](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.short.md) ([Long, canonical](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.long.md) · [Guide](../adrs/0056-allow-reviewed-public-comparisons-while-protecting-private-provenance.guide.md)),
 [ADR-0060](../adrs/0060-allow-intent-bound-workflow-disclosure.short.md) ([Long, canonical](../adrs/0060-allow-intent-bound-workflow-disclosure.long.md) · [Guide](../adrs/0060-allow-intent-bound-workflow-disclosure.guide.md)), and
 [ADR-0065](../adrs/0065-allow-explicit-direct-public-skill-releases.short.md) ([Long, canonical](../adrs/0065-allow-explicit-direct-public-skill-releases.long.md) · [Guide](../adrs/0065-allow-explicit-direct-public-skill-releases.guide.md)).
+Runtime selection also follows [ADR-0054](../adrs/0054-select-repository-runtimes-through-an-advisory-evidence-matrix.short.md) ([Long, canonical](../adrs/0054-select-repository-runtimes-through-an-advisory-evidence-matrix.long.md) · [Guide](../adrs/0054-select-repository-runtimes-through-an-advisory-evidence-matrix.guide.md)) and [ADR-0055](../adrs/0055-use-pnpm-for-package-management-and-bun-for-execution.short.md) ([Long, canonical](../adrs/0055-use-pnpm-for-package-management-and-bun-for-execution.long.md) · [Guide](../adrs/0055-use-pnpm-for-package-management-and-bun-for-execution.guide.md)).
 No successor decision or ADR acceptance gate is introduced.
 
 Keep the incubator's boolean internal: true. The maintainer explicitly chose this
@@ -147,7 +148,7 @@ relocated duplication and shared-helper/comment controls; original-test modifica
 and deletion, permitted additional tests, invalid inputs and subprocess errors.
 
 Run pnpm run validate:review-fix-swarm, validate:skills, validate:ownership,
-validate:scripts, validate:adrs, lint and format:check. The final published revision must pass the
+validate:scripts, validate:adrs, validate:runtime-matrix, lint and format:check. The final published revision must pass the
 mandatory hosted Validate workflow. Local aggregate validation is selected only
 when required by an owning boundary or mandatory gate under ADR-0041.
 
