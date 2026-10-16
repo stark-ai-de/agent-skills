@@ -16,6 +16,8 @@ export function listingForOpenAiIdentity(listing, profile) {
   selected.canonicalPluginName = listing.plugin.name;
   selected.submissionProfile = profile;
   if (profile.transport !== "none") {
+    if (listing.mcpSubmission?.publication?.release_notes)
+      selected.releaseNotes = listing.mcpSubmission.publication.release_notes;
     Object.assign(selected.plugin, {
       name: profile.pluginId,
       version: profile.version,

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { validateOpenAiListing } from "../lib/openai-contract.mjs";
-import { LISTING_PATH } from "../lib/openai-projection.mjs";
+import { LISTING_PATH, openAiManifestFromListing } from "../lib/openai-projection.mjs";
+import { listingForProfile } from "../lib/openai-profiles.mjs";
 import { renderOpenAiSubmissionChecklist } from "../lib/openai-worksheet.mjs";
 import {
   PLUGIN_SOURCE_PATH,
@@ -36,6 +38,7 @@ function createFixture() {
   const listingDest = path.join(fixture, listingDir);
   fs.mkdirSync(path.dirname(listingDest), { recursive: true, mode: 0o755 });
   fs.cpSync(path.join(repositoryRoot, listingDir), listingDest, {
+    filter: (source) => path.basename(source) !== "node_modules",
     recursive: true,
   });
   fs.cpSync(path.join(repositoryRoot, "site", "public"), path.join(fixture, "site", "public"), {
@@ -241,4 +244,72 @@ for (const theme of ["light", "dark"]) {
   assert.ok(fs.existsSync(path.join(repositoryRoot, path.dirname(paths.firstPublication), icon)));
 }
 
+// Review details must survive packaging under the documented extension namespace.
+for (const profile of ["new-remote", "existing-remote", "desktop-local"]) {
+  const selected = listingForProfile(repositoryRoot, listing, profile);
+  const manifest = openAiManifestFromListing(selected);
+  const submission = manifest.extensions["com.openai"];
+  assert.deepEqual(submission, listing.mcpSubmission);
+  assert.equal(submission.review.test_cases.positive.length, 5);
+  assert.equal(submission.review.test_cases.negative.length, 3);
+  for (const test of submission.review.test_cases.positive) {
+    for (const field of ["description", "prompt", "tools_triggered", "expected_behavior"])
+      assert.ok(test[field]?.trim(), `${profile} missing ${field}`);
+  }
+  assert.equal(submission.review.commerce, false);
+  assert.ok(submission.publication.translations["de-DE"].subtitle.length <= 30);
+  assert.ok(submission.publication.translations["de-DE"].description.length <= 4000);
+  assert.ok(!("review" in manifest.interface));
+  assert.ok(!("test_credentials" in submission.review));
+  assert.ok(!("reviewer_instructions" in submission.review));
+  submission.review.test_cases.positive[0].prompt = "changed copy";
+  assert.notEqual(listing.mcpSubmission.review.test_cases.positive[0].prompt, "changed copy");
+}
+const skillsOnly = openAiManifestFromListing(
+  listingForProfile(repositoryRoot, listing, "existing-skills-only"),
+);
+assert.equal(skillsOnly.extensions, undefined, "MCP review fields must not leak to skills-only");
+// Preserve the exact public media and prevent the animated replay drifting from recorded inputs.
+const videoRoot = path.join(repositoryRoot, "docs/listing/openai/review-video");
+const videoJson = (name) => JSON.parse(fs.readFileSync(path.join(videoRoot, name), "utf8"));
+const media = videoJson("assets.json");
+for (const [name, expected] of Object.entries(media.assets)) {
+  const bytes = fs.readFileSync(path.join(videoRoot, "site", name));
+  assert.equal(bytes.length, expected.bytes, name);
+  assert.equal(createHash("sha256").update(bytes).digest("hex"), expected.sha256, name);
+}
+const recorded = videoJson("recorded-mcp-responses.json");
+const replay = videoJson("src/evidence.json");
+assert.equal(recorded.length, 15);
+assert.equal(replay.length, recorded.length);
+for (const [index, row] of replay.entries()) {
+  const event = recorded[index];
+  assert.equal(event.status, 200);
+  assert.deepEqual(row.request, index < 2 ? event.request : event.request.params);
+  const response = event.response;
+  const result = response.result ?? {};
+  const expected =
+    index === 1
+      ? result.tools.map(({ name, annotations }) => ({ name, annotations }))
+      : index === 0
+        ? result
+        : row.id === "N3"
+          ? (response.error ?? result)
+          : (result.structuredContent ?? response);
+  assert.deepEqual(row.response, expected, `recorded response ${index}`);
+}
+const recordedCases = videoJson("recording-cases.json");
+const declaredCases = [
+  ...listing.mcpSubmission.review.test_cases.positive,
+  ...listing.mcpSubmission.review.test_cases.negative,
+];
+assert.equal(recordedCases.length, declaredCases.length);
+for (const [index, scenario] of recordedCases.entries()) {
+  assert.equal(scenario.prompt, declaredCases[index].prompt);
+  assert.equal(scenario.description, declaredCases[index].description);
+}
+assert.equal(
+  new URL(listing.mcpSubmission.review.demo_recording_url).pathname,
+  "/walkthrough-remotion.mp4",
+);
 console.log("OpenAI listing contract fixtures passed.");

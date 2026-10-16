@@ -1,0 +1,49 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:11.912
+Live standalone MCP review client. Production endpoint, no authentication. Synthetic inputs only.
+
+2
+00:00:11.912 --> 00:00:18.613
+Initialize the MCP connection over HTTP.
+
+3
+00:00:18.613 --> 00:00:26.875
+Discover both read-only metadata validation tools.
+
+4
+00:00:26.875 --> 00:00:35.584
+P1: Minimal valid skill metadata. Return valid=true, the dated skill ruleset, no issues and truncated=false.
+
+5
+00:00:35.584 --> 00:00:44.336
+P2: Valid optional skill metadata. Accept the supplied optional string fields and metadata mapping; return valid=true.
+
+6
+00:00:44.336 --> 00:00:53.038
+P3: Valid portable plugin metadata. Return valid=true and ruleset agent-plugins-1.0.0. Do not claim to inspect referenced files or the ZIP.
+
+7
+00:00:53.038 --> 00:01:01.811
+P4: Valid OpenAI-native metadata. Return valid=true with the dated OpenAI metadata ruleset. Explain that this is metadata validation, not publication approval.
+
+8
+00:01:01.811 --> 00:01:15.229
+P5: Correct metadata and revalidate. First report valid=false and skill.directory_mismatch; after correction report valid=true. Keep the directory unchanged.
+
+9
+00:01:15.229 --> 00:01:28.834
+N1: Missing required metadata and directory mismatch. Report missing/invalid name and then a directory mismatch. Do not invent a successful result.
+
+10
+00:01:28.834 --> 00:01:42.245
+N2: Malformed JSON and schema errors. Return valid=false for both: input.parse for malformed JSON, schema issues for invalid field types/version. Do not crash.
+
+11
+00:01:42.245 --> 00:02:02.218
+N3: Unsupported file, URL and shell actions. Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments.
+
+12
+00:02:02.218 --> 00:02:19.800
+All 8 scenarios and 13 tool calls completed. Metadata validation only; no ZIP audit or publication guarantee. Native installation and model refusal remain separate checks.
