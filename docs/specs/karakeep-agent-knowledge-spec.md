@@ -18,6 +18,8 @@ updated: "2026-10-16"
 
 **Delivery:** update existing PR #148 with the specification, implementation and measured checks. No separate pilot project, all-repository import or live rollout is required. Provider availability and cost are not open design questions.
 
+The [sanitized setup report](../karakeep-setup-report.md) explains operation, organization, diagrams and the division of work between native inference and the invoking agent; private deployment details remain outside the public repository.
+
 ## Goal and success
 
 Karakeep is primarily a knowledge tool for agents. One owner can use one collection across projects; project and source attribution remain discoverable. Humans continue to read authoritative repository documentation directly, including on GitHub. A repository must remain complete and usable when Karakeep is unavailable.
