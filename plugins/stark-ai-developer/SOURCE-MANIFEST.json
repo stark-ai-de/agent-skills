@@ -1567,22 +1567,22 @@
       "sha256": "0524a4e871899b4be58cde2010ee49d640e6215e7a787203315f821954aef6cd"
     },
     {
-      "byteLength": 20201,
+      "byteLength": 27811,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.guide.md",
-      "sha256": "cf3a42630f90881903385acef7bd33a24ac15471b1f6fb190d6f6f94ad0504aa"
+      "sha256": "c7d3b1725a9b60f51774c0ffb4199b400a64afe68159a6f3f4442f3b0026b53b"
     },
     {
       "byteLength": 7109,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.long.md",
-      "sha256": "df5d109cfd3bb1ab40220ade3d84256de83878322a3548d26c8205b28588c631"
+      "sha256": "d86af2e3e9c95f83c45841528118fcc9d96d08412d159fc07d7b831b9174e824"
     },
     {
       "byteLength": 2475,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.short.md",
-      "sha256": "01fda524b4ee306a719fb6669b69c8ee64a121d211747f6908046ef53776ce6a"
+      "sha256": "40329f8dfc49dc26f4e43103fd6b5b7dd744a8fc9eef9811c4173a4fa8910eb3"
     },
     {
       "byteLength": 5098,
@@ -2413,5 +2413,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "d93b72e103b5a3f80031b4798b878add2de1daafa0145539e2637bd09144a6d5"
+  "treeHash": "6bca7efd4782d7770312b860c81eb2f214b9d32cd0b3a7fb59047e696772cb5e"
 }

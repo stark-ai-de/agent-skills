@@ -14,7 +14,7 @@ Variant: Guide
 Canonical variant: Long
 Supersedes: none
 Superseded by: none
-Guide verified: 2026-10-15
+Guide verified: 2026-10-16
 Gist: Default compatible local development endpoints to Portless and HTTPS, migrate existing routing through authorized changes, and document evidence-backed exceptions.
 
 Variants: [Short](ac-adr-066-use-portless-for-local-development-endpoints.short.md) · [Long, canonical](ac-adr-066-use-portless-for-local-development-endpoints.long.md) · **Guide**
@@ -23,7 +23,7 @@ Variants: [Short](ac-adr-066-use-portless-for-local-development-endpoints.short.
 
 This Guide is non-normative. Long owns the decision; this file records current
 integration mechanics and evidence to collect. Documentation/source review on
-2026-10-15 for v0.15.8 is not a universal runtime or browser qualification.
+2026-10-16 for v0.15.8 is not a universal runtime or browser qualification.
 
 ## Route and classify
 
@@ -83,6 +83,50 @@ verify the selected recovery path works with the repository's configuration.
 
 Source: [configuration and port assignment](https://portless.sh/configuration).
 
+## Forward between services without a proxy loop
+
+When a frontend forwards `/api` back through Portless to an API, preserve the
+target service's Host header. Forwarding the frontend Host instead routes the
+request back to the frontend; the hop guard eventually returns `508 Loop Detected`.
+
+For example, this JavaScript Vite configuration discovers the API address from
+the same managed CLI environment. Set `DEV_API_NAME` to the complete, already
+disambiguated API name emitted by the checkout's launcher; `--no-worktree` avoids
+adding another prefix. `get` formats an address even for an unregistered name,
+so verify the corresponding route and API identity before starting the frontend.
+
+```js
+import { execFileSync } from "node:child_process";
+
+const apiName = process.env.DEV_API_NAME;
+if (!apiName) throw new Error("DEV_API_NAME must identify this checkout's API");
+const apiUrl = execFileSync("portless", ["get", apiName, "--no-worktree"], {
+  encoding: "utf8",
+}).trim();
+
+export default {
+  server: {
+    proxy: {
+      "/api": {
+        target: apiUrl,
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
+};
+```
+
+Keep `ws: true` when that route requires WebSocket forwarding and qualify the
+actual HMR/public WSS origin separately. The Node process performing HTTPS
+forwarding must trust the selected proxy CA from process startup, using its
+qualified CA configuration. Do not disable upstream certificate verification,
+set `secure: false`, or downgrade HTTPS to fix a Host-routing loop. Exercise both
+an API identity response and a WebSocket message through the frontend; a direct
+API request alone does not prove the two-service path.
+
+Source: [pinned HTTP and WebSocket loop handling](https://github.com/vercel-labs/portless/blob/v0.15.8/packages/portless/src/proxy.ts).
+
 ## Verify names, protocols and topology
 
 Prefer the worktree-aware `portless run` form when wrapping an explicit command.
@@ -130,6 +174,54 @@ environments. Leave LAN mode, extra TLDs, tunnels and automatic hosts-file
 synchronization disabled. Inspect persisted settings as well as environment
 variables; an earlier custom TLD must not silently survive the migration.
 Repository launchers neither start a competing shared proxy nor stop it.
+
+### Managed-host configuration and first diagnostics
+
+The following client environment describes the loopback profile above. Obtain the
+state path from the host's approved configuration; the service and every client
+must select the same directory. Values are configuration inputs, not commands to
+repair a host during repository startup.
+
+| Input                                                     | Managed loopback profile                                |
+| --------------------------------------------------------- | ------------------------------------------------------- |
+| `PORTLESS_STATE_DIR`                                      | Explicit absolute path owned by the selected host/user  |
+| `PORTLESS_PORT`                                           | `443`, or the host's explicitly qualified listener port |
+| `PORTLESS_HTTPS`                                          | `1`                                                     |
+| `PORTLESS_TLD`                                            | `localhost`                                             |
+| `PORTLESS_SYNC_HOSTS`                                     | `0`                                                     |
+| `PORTLESS_LAN`, `PORTLESS_WILDCARD`                       | `0`                                                     |
+| `PORTLESS_TAILSCALE`, `PORTLESS_FUNNEL`, `PORTLESS_NGROK` | `0`                                                     |
+
+Start diagnosis with read-only commands under that same environment:
+
+```sh
+portless doctor
+portless list
+# When the service is owned by the upstream service installer:
+portless service status
+```
+
+For a declarative NixOS service, inspect the selected unit's status and effective
+configuration instead; an upstream service-status result does not establish that
+unit's ownership. Verify daemon identity, liveness, actual state/listeners,
+HTTPS/TLD/LAN settings and persisted markers before delegation. Ordinary app
+commands auto-start a missing proxy and reuse persisted settings. An explicit
+client environment alone does not make mismatched running settings fail: the
+reviewed CLI can warn and continue. A managed adapter therefore stops on missing
+or mismatched prerequisites, leaving host repair to its owner. It must not hide
+`proxy start`, `service install`, `trust`, `hosts sync`, `clean` or global `prune`
+inside normal repository startup. A successful `doctor` remains diagnostic
+evidence, not proof of trust in every supported client.
+
+Ordinary v0.15.8 app startup also attempts cleanup of orphaned process groups
+recorded in the shared route registry. Distinct names and avoiding `--force` do
+not disable that behavior or establish per-checkout cleanup authority. Inspect
+that lifecycle under the actual registry owner; use a qualified adapter or retain
+an owned exception when foreign-process isolation cannot be established. Do not
+run global cleanup to make an unrelated checkout start successfully.
+
+Sources: [pinned CLI startup and diagnostics](https://github.com/vercel-labs/portless/blob/v0.15.8/packages/portless/src/cli.ts),
+[state discovery](https://github.com/vercel-labs/portless/blob/v0.15.8/packages/portless/src/cli-utils.ts).
 
 ### Scope, initialize and verify the CA
 
@@ -221,9 +313,17 @@ import { basename, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const launcherDirectory = dirname(fileURLToPath(import.meta.url));
+const gitEnvironment = { ...process.env };
+const repositoryVariables = execFileSync("git", ["rev-parse", "--local-env-vars"], {
+  encoding: "utf8",
+})
+  .trim()
+  .split(/\r?\n/);
+for (const variable of repositoryVariables) delete gitEnvironment[variable];
 const checkout = realpathSync(
   execFileSync("git", ["-C", launcherDirectory, "rev-parse", "--show-toplevel"], {
     encoding: "utf8",
+    env: gitEnvironment,
   }).trim(),
 );
 const label =
@@ -236,6 +336,13 @@ const label =
 const id = createHash("sha256").update(checkout).digest("hex").slice(0, 10);
 const name = `ui.${label}-${id}.example-app`;
 ```
+
+Git's `-C` alone does not override inherited repository selectors. Remove the
+Git-local names returned by `rev-parse --local-env-vars`, including `GIT_DIR`,
+`GIT_WORK_TREE` and `GIT_COMMON_DIR`, from the lookup child's environment.
+Preserve unrelated runtime and authentication variables and the launcher's own
+environment. Enumeration or lookup failure stops the launch. See
+[Git's hook isolation pattern](https://git-scm.com/docs/githooks#_description).
 
 The Git lookup is anchored to the launcher's file, so invoking that launcher
 from the root, a package subdirectory or another working directory preserves
@@ -266,6 +373,38 @@ loopback, such as `-p 127.0.0.1:<host-port>:<container-port>`. Container loopbac
 alone is not reachable through that mapping. Recheck IPv4/IPv6 publication and
 the selected Docker networking mode; do not publish on all host interfaces to
 make the proxy reachable. See [Docker port publishing](https://docs.docker.com/engine/network/port-publishing/).
+
+### Already-running containers and static aliases
+
+An attached launcher owns its container command and assigned-port mapping. For
+an independently managed, already-running container, leave lifecycle with its
+existing owner. Verify readiness, service/checkout identity, the internal listener
+and host-loopback-only published port before registering that reachable port:
+
+```sh
+# Only after ownership, readiness and route-conflict checks:
+portless alias "$DEV_ALIAS_NAME" "$DEV_PUBLISHED_PORT"
+portless get "$DEV_ALIAS_NAME" --no-worktree
+# Only while the exact alias mapping is still owned by this lifecycle:
+portless alias --remove "$DEV_ALIAS_NAME"
+```
+
+Use a complete disambiguated name and a verified numeric published port. Static
+aliases have no container process ownership token. In v0.15.8, registering an
+existing static alias can replace its mapping even without `--force`. Inspect
+the current route and retain an ownership record before registration; reject
+foreign or changed mappings instead of treating CLI success as proof of safety.
+Serialize registration/removal through the routing owner where concurrent
+writers are possible: a separate check followed by a CLI call is not atomic.
+If exclusive ownership cannot be established, leave the change pending. Before
+removal, recheck the exact name, port and ownership; remove only that alias.
+Do not stop the independent container, clean shared state or terminate another
+project's process. Confirm that the backend, another route and shared proxy remain
+healthy after scoped removal. A Node port fixture proves routing/lifecycle only;
+actual Docker networking still needs representative Docker evidence.
+
+Sources: [pinned alias CLI](https://github.com/vercel-labs/portless/blob/v0.15.8/packages/portless/src/cli.ts),
+[route replacement semantics](https://github.com/vercel-labs/portless/blob/v0.15.8/packages/portless/src/routes.ts).
 
 For a remote proxy or another network namespace, identify the routing owner,
 restricted connection and browser-visible hostname before applying this example.
