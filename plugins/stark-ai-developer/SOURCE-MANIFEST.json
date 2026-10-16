@@ -53,12 +53,16 @@
         "source": "skills/engineering-workflows/telegram-serverless"
       },
       {
+        "name": "karakeep-knowledge",
+        "source": "skills/engineering-workflows/karakeep-knowledge"
+      },
+      {
         "name": "jev-capability-advisor",
         "source": "skills/skill-maintenance/jev-capability-advisor"
       }
     ]
   },
-  "bundleHash": "482928f31e27b9620b6c1be4975d2cbe86b5163e575eebeb1ada2304b11148b7",
+  "bundleHash": "4fb3d1df94e6a088f53a67edccdc3ff8d3e1d69e3d5138611f6208d330898453",
   "files": [
     {
       "byteLength": 10271,
@@ -67,10 +71,10 @@
       "sha256": "a7b36ca6da256a4e1822ebef076e6bea349f8fd217cd5b879f343ab3b6c39079"
     },
     {
-      "byteLength": 1491,
+      "byteLength": 1492,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "f797a6521ceb0e2b8494e2843033cb852cda94dd0dd8a47edc253411bd9450dd"
+      "sha256": "13ad48e425d25c85cdb6133a75bb8af99c1ca3bafebceb88fbad4c81806ed5f8"
     },
     {
       "byteLength": 241,
@@ -82,7 +86,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "da62af7c4b2b2d9502816e7796994a07cb2a4740f87de567c7bee4a7ffaebadd"
+      "sha256": "719853411f1524af78384fb38a953ac68ff4f90029bc08aabe20333840760071"
     },
     {
       "byteLength": 2128,
@@ -286,7 +290,7 @@
       "byteLength": 20342,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "1c265070ddfe554d3aaeba14e1dc456356c505e80bb8c2c124c1f6032a472784"
+      "sha256": "83790498332bf30f20437e92f913ee97be03d0328a6d344154aae4209575378d"
     },
     {
       "byteLength": 692,
@@ -1567,22 +1571,22 @@
       "sha256": "0524a4e871899b4be58cde2010ee49d640e6215e7a787203315f821954aef6cd"
     },
     {
-      "byteLength": 6902,
+      "byteLength": 27811,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.guide.md",
-      "sha256": "6f9f0ba4e512078f13356130a413ce3e4d40dd679f42b79941f90242e9de522b"
+      "sha256": "c7d3b1725a9b60f51774c0ffb4199b400a64afe68159a6f3f4442f3b0026b53b"
     },
     {
       "byteLength": 7109,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.long.md",
-      "sha256": "076b5974bf6a64bc6c52854da2e62d01116893939db7a358bb985f91724ce868"
+      "sha256": "d86af2e3e9c95f83c45841528118fcc9d96d08412d159fc07d7b831b9174e824"
     },
     {
       "byteLength": 2475,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-066-use-portless-for-local-development-endpoints.short.md",
-      "sha256": "846126cf93baa10af4bb1ae76638c19c3bee26a987001c8dbaf0e79c2c28060c"
+      "sha256": "40329f8dfc49dc26f4e43103fd6b5b7dd744a8fc9eef9811c4173a4fa8910eb3"
     },
     {
       "byteLength": 5098,
@@ -2347,6 +2351,186 @@
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     },
     {
+      "byteLength": 10503,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/SKILL.md",
+      "sha256": "d76b145404ce8655760aadbcb85161e29862f45c8190c1d82472feca3f8656a1"
+    },
+    {
+      "byteLength": 488,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/agents/openai.yaml",
+      "sha256": "f3ea70f13a43a5f81763494ef08a49ee94ed6c3509a0def9bb788324d0421384"
+    },
+    {
+      "byteLength": 1912,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/compose.template.json",
+      "sha256": "e56741b5b3ad921780978293a3bd429d1b02740eb6897d4f0f0545bac941a36c"
+    },
+    {
+      "byteLength": 1181,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/global-instructions.md",
+      "sha256": "5873b7d3d3bad52839427b27d61d3ea3b84dfdb1a2885d4f0ec182bb8241f9f3"
+    },
+    {
+      "byteLength": 320,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/hermes-config.example.yaml",
+      "sha256": "bb24d33ccffb01a212500007461139c2d8478d47b9ad2198cd28f44f0ef2a479"
+    },
+    {
+      "byteLength": 4068,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/nixos-module.nix",
+      "sha256": "f0066ff41ba56cab3615bc5134879ccd8c6e689f7e81d2543bb82a5149b2477c"
+    },
+    {
+      "byteLength": 7281,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/openai-icon.png",
+      "sha256": "f2920184b9e0c0be881de8b1d6d034acf61d934449e4197f440a640d27e32c38"
+    },
+    {
+      "byteLength": 758,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/openai-icon.svg",
+      "sha256": "096dbae84f39c2960eb453a7c7588d1712d57f72d97199d45d550069845cd30f"
+    },
+    {
+      "byteLength": 1247,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/policy.example.json",
+      "sha256": "0065f5b67eda8ff5fd0b9c26d08fb46b61f4cf54ec9142998b3429d203f6bc2f"
+    },
+    {
+      "byteLength": 579,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/assets/project-instructions.md",
+      "sha256": "094147bf7684056bb3a9a4b160111f148cd5f07467f343fe42b57e10116a237e"
+    },
+    {
+      "byteLength": 3249,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/cli.md",
+      "sha256": "c8f89f068e645127d29330d7ecad1eb0229e0d8ebc52bc362f0f6bc272d78737"
+    },
+    {
+      "byteLength": 9770,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/curation.md",
+      "sha256": "b57fe381cee3a82df442dec6498db796d4b1d90a339cbfc04053696168bfd049"
+    },
+    {
+      "byteLength": 3574,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/handoffs.md",
+      "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
+    },
+    {
+      "byteLength": 14509,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/helper.md",
+      "sha256": "884e15bc15bcbc95548cd309a5c52ce9dd3efb671eb59828c99627adb8122b5f"
+    },
+    {
+      "byteLength": 5977,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/hermes.md",
+      "sha256": "46f536bfb13bd411f0ff0496dcf51fa10574fbc523d3587399da2b5e453b174f"
+    },
+    {
+      "byteLength": 6193,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/mcp.md",
+      "sha256": "3886e8bef5f9356e3c6f674da58787d4e31aaaaee1937e282f1ee9b839d8bb4c"
+    },
+    {
+      "byteLength": 5680,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/operations.md",
+      "sha256": "44465eed957cf3e90f8a0c7ec1f1df7677f1e2eabf8b5a4e257b070ae3fbbe05"
+    },
+    {
+      "byteLength": 7840,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/setup.md",
+      "sha256": "1968507e65533b98faceb2720ba0be777ca00ccadc89cf16fa79e2c465103c78"
+    },
+    {
+      "byteLength": 7208,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/sources.md",
+      "sha256": "2042513f14679026ca0842662ae0d26c8049c45bdfbee503966ff43f5efa222f"
+    },
+    {
+      "byteLength": 7151,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/sync.md",
+      "sha256": "6281fca019eaea2e25f1868b6a9b943e7e2e8f0af5b7d5abab01d7915454f8bf"
+    },
+    {
+      "byteLength": 3985,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/references/use.md",
+      "sha256": "4227df9ee8866db40b79d9c821ca9444f5f0a264083732b4d419f6b6a7b844b1"
+    },
+    {
+      "byteLength": 3370,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge.mjs",
+      "sha256": "5cd63a876031bdfab3fb277108c507adbe9af3e5a056a1ee64383f3648f527aa"
+    },
+    {
+      "byteLength": 7517,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge/git.mjs",
+      "sha256": "d1627b2aaac7961f357fac401fc3bfee6d25f64b7123688489c83c54078621e7"
+    },
+    {
+      "byteLength": 11104,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge/karakeep.mjs",
+      "sha256": "9e48aa576350f63d1c2547fd46eca076eeb4008823114a39195acbf24806c123"
+    },
+    {
+      "byteLength": 46215,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge/reconcile.mjs",
+      "sha256": "f8792915db1af6b91e7378f199ae6fff58c143c671ff41951b336cc526e66f2f"
+    },
+    {
+      "byteLength": 10852,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/knowledge/state.mjs",
+      "sha256": "10b30ac275cee0abc8c18c72e8bfe21241f50f8b93674f77efc93ec702c2945b"
+    },
+    {
+      "byteLength": 1607,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/mcp_launcher.py",
+      "sha256": "acfe37d73fb0d729042d5e2ec5dd5b2e7b0b388827ae83b79cb6898002ddabd4"
+    },
+    {
+      "byteLength": 5253,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/prepare.py",
+      "sha256": "8291c28b50091321c5ac9ea0eef0b0ad1bf9e5160d26b926b1e548ffde435495"
+    },
+    {
+      "byteLength": 6552,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/runtime.py",
+      "sha256": "15852cfaab6829240bcc81c78b5a519159d493b7bfa577114b944b17a89911a2"
+    },
+    {
+      "byteLength": 2916,
+      "mode": "0644",
+      "path": "skills/karakeep-knowledge/scripts/status.py",
+      "sha256": "764d75e3cc6f4d69bdf33e27383c2bfcff065a96afcc5832ae50872b44605c8f"
+    },
+    {
       "byteLength": 8929,
       "mode": "0644",
       "path": "skills/telegram-serverless/SKILL.md",
@@ -2409,9 +2593,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.11.0"
+    "version": "1.15.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "b2680049880d1ed617cb39cc3e5f338dabb1011ed37a5e5d96540bfefcfcaf3b"
+  "treeHash": "0084853aa22b83d34a103e8d0199a73ab04137ae10efefed874f684198e55cf3"
 }

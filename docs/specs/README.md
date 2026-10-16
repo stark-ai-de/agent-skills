@@ -10,6 +10,8 @@ For spec policy, naming, ADR linkage, and documentation update rules, see [`../s
 
 ## Tracked Specs
 
+- [`karakeep-agent-knowledge-spec.md`](karakeep-agent-knowledge-spec.md) - Approved shared agent knowledge feature, canonical/draft separation, source capture, factual reports and derived-content ownership, with review corrections and CLI/agent-handoff guides; includes a [consumer ADR template](karakeep-project-adoption-adr-template.md). Runtime and live qualification are recorded separately.
+
 - [`architecture-zoom-orchestration-spec.md`](architecture-zoom-orchestration-spec.md) - Accepted public Architecture Zoom release and three-skill contracts, opt-in routing/provisioning procedures, qualification evidence, and release boundaries.
 - [`architecture-compass-shadcn-lint-spec.md`](architecture-compass-shadcn-lint-spec.md) - all-rules design-system lint adoption, practical ESLint/Oxlint and shared-UI guidance, evidence boundaries, and provider integration.
 

@@ -26,6 +26,7 @@ export const EXPECTED_CODEX_SKILL_SOURCES = [
   "skills/engineering-workflows/codegraph-ast-grep",
   "skills/engineering-workflows/drawio-diagrams",
   "skills/engineering-workflows/telegram-serverless",
+  "skills/engineering-workflows/karakeep-knowledge",
   "skills/skill-maintenance/jev-capability-advisor",
 ];
 export const OPENAI_PRODUCTS = new Set(["CHAT", "CODEX"]);

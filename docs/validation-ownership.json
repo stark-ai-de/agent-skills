@@ -128,6 +128,13 @@
       "cadence": "every aggregate run"
     },
     {
+      "id": "karakeep-knowledge",
+      "command": "pnpm run validate:karakeep",
+      "owner": ".github/workflows/validate.yml#validate",
+      "proof": "Python setup, credential boundary, read-only readiness and MCP launcher fixtures; Node reconciliation, source capture, canonical/draft isolation, conflict preservation, recovery and startup-policy fixtures. Live instance and fresh-session observations remain separate.",
+      "cadence": "hosted Validate preflight"
+    },
+    {
       "id": "review-fix-swarm",
       "command": "pnpm run validate:review-fix-swarm",
       "owner": "skill-evals/review-fix-swarm/fixture-kit.test.mjs",

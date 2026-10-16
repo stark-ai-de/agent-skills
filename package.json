@@ -120,6 +120,7 @@
     "lint:actions": "bun --bun scripts/repo/lint-actions.mjs",
     "lint:fix": "oxlint --config oxlint.json --fix scripts",
     "validate:jev": "bun --bun scripts/validation/jev-capability-advisor/validate.mjs",
+    "qualify:portless-guide": "bun --bun scripts/validation/architecture-compass/qualify-portless-guide.mjs",
     "qualify:shadcn-lint": "pnpm --dir skill-evals/architecture-compass/fixtures/shadcn-lint run qualify",
     "validate:change-impact": "bun --bun scripts/validation/change-impact/validate.mjs",
     "eval:change-impact": "bun --bun scripts/validation/change-impact/evaluate.mjs",
@@ -131,6 +132,9 @@
     "validate:ssh": "pnpm run build:ssh && pnpm run test:ssh",
     "package:claude-plugin": "bun --bun scripts/plugin/package-claude-plugin.mjs",
     "validate:claude-plugin": "bun --bun scripts/plugin/validate-claude-plugin.mjs",
+    "validate:karakeep": "bun exec \"pnpm run validate:karakeep:python && pnpm run validate:karakeep:node\"",
+    "validate:karakeep:python": "python3 -B -m unittest discover -s skill-evals/karakeep-knowledge -p 'test_*.py' -v",
+    "validate:karakeep:node": "node --test skill-evals/karakeep-knowledge/helper.test.mjs",
     "validate:review-fix-swarm": "node --test skill-evals/review-fix-swarm/fixture-kit.test.mjs"
   },
   "devDependencies": {

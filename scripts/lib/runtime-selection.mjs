@@ -64,6 +64,13 @@ export function packageCommandRuntimes(expression, scripts) {
       runtimes.add("bun");
     } else if (executable === "node" && option) {
       runtimes.add("node");
+    } else if (
+      executable === "python3" &&
+      option === "-B" &&
+      argument === "-m" &&
+      words[3] === "unittest"
+    ) {
+      runtimes.add("python3");
     } else if (executable === "oxfmt" || executable === "oxlint") {
       runtimes.add("native");
     } else if (executable === "pnpm" && option === "run" && Object.hasOwn(scripts, argument)) {

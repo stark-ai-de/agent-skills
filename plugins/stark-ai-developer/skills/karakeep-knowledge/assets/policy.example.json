@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "owner-project-knowledge",
+  "revision": "1",
+  "scope": "project",
+  "repo": {
+    "id": "owner/project",
+    "remote": "git@example.org:owner/project.git",
+    "remoteName": "origin",
+    "branch": "main",
+    "include": ["README.md", "docs/**/*.md"],
+    "exclude": ["docs/private/**", "docs/generated/**"]
+  },
+  "connection": {
+    "address": "http://127.0.0.1:3000",
+    "accountId": "REPLACE_WITH_VERIFIED_ACCOUNT_ID",
+    "credentialFile": "/private/config/writer.env",
+    "apiProfile": "karakeep-0.33",
+    "scopes": ["bookmarks:readwrite", "lists:readwrite", "tags:readwrite", "users:read"]
+  },
+  "stateRoot": "/private/state/karakeep-knowledge",
+  "writerHost": "REPLACE_WITH_DESIGNATED_WRITER_HOST",
+  "writeEnabled": true,
+  "kinds": ["document", "source", "session", "overview", "finding", "dossier", "dataset"],
+  "operations": ["create", "update", "membership", "tag"],
+  "listIds": ["REPLACE_WITH_PRIVATE_PROJECT_LIST_ID"],
+  "tags": {
+    "document": ["kind-document"],
+    "source": ["kind-source"],
+    "session": ["kind-session"],
+    "overview": ["kind-overview"]
+  },
+  "approvedAggregates": [],
+  "maxContentBytes": 16777216,
+  "approval": "REPLACE_WITH_ACTUAL_SCOPE_ADOPTION_REFERENCE"
+}

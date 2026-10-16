@@ -213,9 +213,11 @@ an endorsement, nor prove correctness merely because keywords are present.
 
 ## Portless local-development cases
 
-These six scenarios cover AC-ADR-066 applicability, migration preference,
-technical exceptions, worktree identity and local decision authority. They are
-static contracts, not executed agent turns or Portless runtime tests.
+These thirteen scenarios cover AC-ADR-066 applicability, migration preference,
+technical exceptions, worktree identity and local decision authority, including
+launcher-root identity, container reachability, first-install CA ownership and
+OAuth callback constraints. They are static contracts, not executed agent turns
+or Portless runtime tests.
 
 - `cases/portless-compatible-default.md`
 - `cases/portless-existing-routing-migration.md`
@@ -223,6 +225,25 @@ static contracts, not executed agent turns or Portless runtime tests.
 - `cases/portless-technical-exception.md`
 - `cases/portless-worktree-collision.md`
 - `cases/portless-local-adr-conflict.md`
+- `cases/portless-launcher-root-identity.md`
+- `cases/portless-container-reachability.md`
+- `cases/portless-first-install-ca-ownership.md`
+- `cases/portless-oauth-checkout-domains.md`
+- `cases/portless-managed-host-preflight.md`
+- `cases/portless-cross-service-proxy-loop.md`
+- `cases/portless-static-alias-lifecycle.md`
+
+The Compass contract regression entrypoint also executes the actual Guide Git
+example in disposable repositories. `pnpm run qualify:portless-guide` separately
+checks the Guide's two-service configuration with existing Portless 0.15.8 and
+Node 24+ in an isolated Linux user/network namespace. It creates temporary state,
+CA and loopback services (including the proxy's port-80 redirect), changes no host
+trust/hosts files, and cleans up only its owned processes/state. Optional
+`--portless-bin` selects an existing executable. Missing tools or version mismatch
+fail without installing anything. The qualifier proves fixture HTTP/WebSocket,
+TLS and alias lifecycle behavior; it does not qualify Vite, Docker, browser, OAuth
+or native Windows integration. Source/static cases remain a separate evidence
+stage from these executable checks.
 
 The [isolated recipe qualification](fixtures/shadcn-lint/README.md) adds executed
 plugin-runtime evidence for both linter examples. Run `pnpm run qualify:shadcn-lint`

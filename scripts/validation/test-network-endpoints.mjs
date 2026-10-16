@@ -68,3 +68,74 @@ for (const prefix of ["canonical", "portable"]) {
   assert.ok(scanNetworkSource(hookSource, label.replace("jev_hooks.py", "another.py")).length > 0);
 }
 console.log("Hook processing disclosure is declared; hook network calls remain rejected.");
+
+for (const prefix of ["canonical", "portable"]) {
+  for (const name of ["prepare", "status"]) {
+    const label = `${prefix}/karakeep-knowledge/scripts/${name}.py`;
+    for (const endpoint of ["http://localhost", "http://localhost:3000"]) {
+      assert.deepEqual(scanNetworkSource(`URL = "${endpoint}"`, label), []);
+    }
+    for (const endpoint of [
+      "http://localhost.example.org",
+      "https://unexpected.example",
+      "http://localhost:3001",
+    ]) {
+      assert.ok(scanNetworkSource(`URL = "${endpoint}"`, label).length > 0);
+    }
+    assert.ok(
+      scanNetworkSource(
+        'URL = "http://localhost:3000"',
+        label.replace("status.py", "other.py").replace("prepare.py", "other.py"),
+      ).length > 0,
+    );
+    assert.ok(
+      scanNetworkSource(
+        'URL = "http://localhost:3000"',
+        label.replace("karakeep-knowledge", "other-skill"),
+      ).length > 0,
+    );
+  }
+}
+console.log("Karakeep fixed loopback defaults stay scoped to their owning helpers.");
+
+const knowledgeTransport = fs.readFileSync(
+  new URL(
+    "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/karakeep.mjs",
+    import.meta.url,
+  ),
+  "utf8",
+);
+for (const prefix of ["canonical", "portable"]) {
+  const label = `${prefix}/karakeep-knowledge/scripts/knowledge/karakeep.mjs`;
+  assert.deepEqual(scanNetworkSource(knowledgeTransport, label), []);
+  for (const unsafe of [
+    knowledgeTransport.replace('["localhost", "127.0.0.1", "[::1]"]', '["unexpected.example"]'),
+    knowledgeTransport.replace('redirect: "manual"', 'redirect: "follow"'),
+    knowledgeTransport.replace("!process.env.NODE_USE_ENV_PROXY", "true"),
+    knowledgeTransport.replace(
+      "this.address = origin(auth.address)",
+      "this.address = auth.address",
+    ),
+    knowledgeTransport.replace('route.startsWith("/api/v1/")', 'route.startsWith("/")'),
+    knowledgeTransport + "\nfetch(destination)",
+    knowledgeTransport + "\nrequest(destination)",
+    knowledgeTransport + "\nhttps.request(destination)",
+    knowledgeTransport + '\nconst endpoint = "https://unexpected.example";',
+  ]) {
+    assert.ok(
+      scanNetworkSource(unsafe, label).length > 0,
+      "loopback guard drift and extra calls must fail",
+    );
+  }
+  for (const other of [
+    label.replace("karakeep-knowledge", "other-skill"),
+    label.replace("/karakeep.mjs", "/other.mjs"),
+    label.replace(`${prefix}/`, "external/"),
+  ]) {
+    assert.ok(
+      scanNetworkSource(knowledgeTransport, other).length > 0,
+      "REST exception must stay in its exact transport module",
+    );
+  }
+}
+console.log("Karakeep loopback REST declaration and rejection fixtures passed.");

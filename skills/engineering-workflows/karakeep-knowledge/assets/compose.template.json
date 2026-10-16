@@ -1,0 +1,54 @@
+{
+  "name": "karakeep",
+  "services": {
+    "web": {
+      "image": "ghcr.io/karakeep-app/karakeep:0.33.2@sha256:b069e4307dec06ea06d16989c6861c30a1ff208568be44ed5fb5d422cd3e950c",
+      "restart": "unless-stopped",
+      "ports": ["127.0.0.1:@PORT@:3000", "[::1]:@PORT@:3000"],
+      "env_file": ["@CONFIG@/karakeep.env"],
+      "environment": {
+        "DATA_DIR": "/data",
+        "MEILI_ADDR": "http://meilisearch:7700",
+        "BROWSER_WEB_URL": "http://chrome:9222"
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "@DATA@/data",
+          "target": "/data",
+          "bind": { "create_host_path": false }
+        }
+      ],
+      "depends_on": ["chrome", "meilisearch"],
+      "logging": { "driver": "json-file", "options": { "max-size": "10m", "max-file": "3" } }
+    },
+    "chrome": {
+      "image": "ghcr.io/karakeep-app/karakeep-chrome:release@sha256:c51a8c8e6c3c1040a50fa0ecfd0b2fc298401b4229262636552458151f6f18fa",
+      "restart": "unless-stopped",
+      "init": true,
+      "command": [
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--hide-scrollbars",
+        "--disable-blink-features=AutomationControlled",
+        "--window-size=1440,900"
+      ],
+      "logging": { "driver": "json-file", "options": { "max-size": "10m", "max-file": "3" } }
+    },
+    "meilisearch": {
+      "image": "getmeili/meilisearch:v1.41.0@sha256:860fa4baed04ae1c235de870edab0c8006227546dea1bbb6411fbfc5e27cf1db",
+      "restart": "unless-stopped",
+      "env_file": ["@CONFIG@/meilisearch.env"],
+      "environment": { "MEILI_NO_ANALYTICS": "true" },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "@DATA@/meilisearch",
+          "target": "/meili_data",
+          "bind": { "create_host_path": false }
+        }
+      ],
+      "logging": { "driver": "json-file", "options": { "max-size": "10m", "max-file": "3" } }
+    }
+  }
+}

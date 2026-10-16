@@ -48,3 +48,7 @@ The skill and copyable prompts now require re-confirming cwd/read-only enforceme
 `pnpm run validate:review-fix-swarm`: **14/14 regression tests pass**, covering all five baselines, Git environment/configuration isolation, semantic controls, original-test integrity, extra tests, existing destination refusal, invalid inputs, indirect Git directories and timeout handling. `validate:skills`, `validate:ownership`, `validate:scripts`, lint and formatting pass locally. The skills validator reports five pre-existing warnings in unrelated public skills. The final published revision's mandatory hosted Validate result is recorded by PR checks separately. Local aggregate validation was not selected merely for finalization under ADR-0041.
 
 The Karakeep start check returned `needs_setup`; no adopted project policy exists, no content was uploaded and adoption remains pending.
+
+## Main integration
+
+Before final publication, main advanced to `6984886b61b0cce820be14bc5119bbf5acbc29fb` through the Karakeep and Portless PRs. An ordinary merge preserves those changes and adds the Swarm gate alongside Karakeep. The three additive conflicts were in package scripts, validation ownership and its required-ID check. Fixture sources and the helper digest remain unchanged, so the pilot is not rerun. Ownership, skills, lint, deterministic fixtures, script validation and formatting are checked on the integrated tree; hosted checks qualify the resulting published revision separately.
