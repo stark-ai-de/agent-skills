@@ -1,0 +1,6 @@
+interface:
+  display_name: "Visual Reports"
+  short_description: "Compact HTML reports with complete sources and adjustable styles"
+  default_prompt: "Use $visual-reports to create a compact visual report with visible caveats and complete source exports."
+policy:
+  allow_implicit_invocation: true
