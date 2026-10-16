@@ -29,11 +29,11 @@ Run `pnpm --filter @stark-ai/skill-metadata-mcp run dev` for a loopback-only HTT
 
 ## Tool contract
 
-`validate_skill_metadata({frontmatter, directory_name})` accepts one YAML mapping containing metadata, not a complete SKILL.md. It checks public field rules and directory agreement. Additional fields are not silently reinterpreted as repository policy.
+`validate_skill_metadata({frontmatter, directory_name})` accepts one YAML mapping containing metadata, not a complete SKILL.md. It checks public field rules and directory agreement. Names are compared after NFKC normalization and allow lowercase Unicode letters/numbers with single separating hyphens, up to 64 Unicode codepoints. Additional fields are not silently reinterpreted as repository policy.
 
 `validate_plugin_manifest({manifest_json, format})` accepts JSON and `agent-plugins-1.0.0` or `openai-native`. Portable validation uses the repository-pinned official 1.0.0 schema. OpenAI validation checks a dated metadata subset, not every future extension. Neither validates ZIP contents, referenced files, security or eligibility.
 
-Output: `valid`, `ruleset`, deterministic `issues` with `code/path/message`, and `truncated`. Documents are limited to 64 KiB UTF-8, requests to 128 KiB, nesting to 20 and reported findings to 100. YAML aliases, unknown tags and multiple documents are rejected. Input-schema errors are MCP parameter failures; malformed documents produce findings. No document values are included in parser error messages.
+Output: `valid`, `ruleset`, deterministic `issues` with `code/path/message`, and `truncated`. Documents are limited to 64 KiB UTF-8, HTTP requests and individual stdio JSON lines (excluding the final LF) to 128 KiB, nesting to 20 and reported findings to 100. YAML aliases, unknown tags and multiple documents are rejected. Input-schema errors are MCP parameter failures; malformed documents produce findings. No document values are included in parser error messages. Oversized complete or incomplete stdio lines close the transport with a generic diagnostic. See the [feature specification](../../docs/specs/openai-mcp-profiles-spec.md).
 
 ## Vercel qualification
 
