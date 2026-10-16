@@ -85,6 +85,8 @@ try {
     PLUGIN_SOURCE_PATH,
     "plugins/stark-ai-developer.source.schema.json",
     "package.json",
+    "docs/listing/openai/stark-ai-developer.json",
+    "docs/assets/chatgpt-plugin-badge.svg",
   ]) {
     fs.copyFileSync(path.join(repositoryRoot, relative), path.join(root, relative));
   }

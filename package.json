@@ -131,7 +131,10 @@
     "test:ssh": "node scripts/ssh/test.mjs",
     "validate:ssh": "pnpm run build:ssh && pnpm run test:ssh",
     "package:claude-plugin": "bun --bun scripts/plugin/package-claude-plugin.mjs",
-    "validate:claude-plugin": "bun --bun scripts/plugin/validate-claude-plugin.mjs"
+    "validate:claude-plugin": "bun --bun scripts/plugin/validate-claude-plugin.mjs",
+    "validate:karakeep": "bun exec \"pnpm run validate:karakeep:python && pnpm run validate:karakeep:node\"",
+    "validate:karakeep:python": "python3 -B -m unittest discover -s skill-evals/karakeep-knowledge -p 'test_*.py' -v",
+    "validate:karakeep:node": "node --test skill-evals/karakeep-knowledge/helper.test.mjs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

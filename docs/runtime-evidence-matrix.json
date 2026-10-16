@@ -401,6 +401,55 @@
       "revisit": "Requalify after setup-helper runtime changes; fail the owning check if Python is absent instead of silently choosing a different runtime."
     },
     {
+      "id": "karakeep-helper-python",
+      "surfaces": ["package:root:karakeep-python"],
+      "candidates": [
+        {
+          "id": "python3",
+          "signals": {
+            "localOfflineFixtures": "pass",
+            "minimum310Interpreter": "unknown",
+            "hostedLinux": "unknown",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "python3",
+      "evidenceRefs": [
+        "skill-evals/karakeep-knowledge/test_karakeep.py",
+        "skill-evals/karakeep-knowledge/README.md",
+        "pnpm run validate:karakeep:python"
+      ],
+      "rationale": "Dependency-free POSIX helpers require Python 3.10+. All 15 synthetic tests passed on Python 3.12 in the managed Linux environment. This is helper evidence, not native MCP, live curation or host-trigger qualification.",
+      "fallbackOrder": ["python3"],
+      "revisit": "Requalify when helper/runtime contracts change; report missing Python instead of silently installing another runtime."
+    },
+    {
+      "id": "karakeep-knowledge-node-contract",
+      "surfaces": ["package:root:karakeep-node"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "localLinuxFixtures": "pass",
+            "hostedLinuxFixtures": "pass",
+            "nativeLocalInstance": "pass",
+            "crossPlatformHosts": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:karakeep:node",
+        "skills/engineering-workflows/karakeep-knowledge/scripts/knowledge.mjs",
+        "skill-evals/karakeep-knowledge/runs/2026-10-16-helper.md",
+        "skill-evals/karakeep-knowledge/runs/2026-10-16-review-fixes.md"
+      ],
+      "rationale": "The approved helper requires Node 24.18+ on Linux/POSIX. The original 16-case hosted and direct-instance evidence remains historical evidence for 0.3.0. The 0.5.0 review-correction receipt records 46 current local Node cases on Node 24.22.0; hosted results are attached to the reviewed PR commit, and live host/collection activation is not inferred from fixtures. The Bun parent orchestrates Python and Node gates through pinned pnpm without substituting runtimes.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify after changes to the helper runtime or filesystem/transport contract. Report missing Node rather than substituting another runtime silently."
+    },
+    {
       "id": "portless-guide-node-fixtures",
       "surfaces": ["internal:portless-guide:node-fixtures"],
       "candidates": [

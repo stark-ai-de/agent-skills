@@ -62,6 +62,9 @@ jobs:
       - name: 🧾 Test post-release receipt contract
         run: pnpm run test:post-release-receipt
 
+      - name: 🗂️ Test local Karakeep helpers
+        run: pnpm run validate:karakeep
+
       - name: ✅ Validate repository contracts
         run: pnpm run validate
 
