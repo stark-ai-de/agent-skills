@@ -46,10 +46,14 @@ The initial expanded Node suite reproduced 19 failures on the reviewed implement
 Passed locally: `validate:karakeep`, `validate:skills`, `validate:scripts`,
 `validate:projections`, `validate:network-endpoints`, `validate:plugin-evals`,
 `validate:openai`, `validate:adrs`, `validate:runtime-matrix`, `validate:traceability`,
-`validate:release-descriptor`, and `validate:contract-snapshots`. The targeted format
-check and `git diff --check` are final publication gates.
+`validate:release-descriptor`, and `validate:contract-snapshots`. These checks were
+renewed after integrating concurrent main revision
+`d268d34036aca4d657d476b857d16329e4958c27`; `validate:architecture-compass` and
+`validate:product-planning` also passed. Both runtime inventories and the main
+Portless changes are preserved. The helper/test fingerprint stayed identical.
+Targeted formatting of the complete PR diff and `git diff --check` passed.
 
-`release:intent -- --base-ref 1fbcd87159e2fdf22b6c462cf41fff25b4a3f10a` passed as a
+`release:intent -- --base-ref d268d34036aca4d657d476b857d16329e4958c27` passed as a
 feature contract (skill 0.5.0 and plugin 1.15.0), not a catalog release. The local
 `validate` aggregate was not required/run; owning checks follow ADR-0041. Hosted
 results must be read on the published commit and linked in PR #148 separately.

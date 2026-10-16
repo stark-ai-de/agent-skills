@@ -448,6 +448,32 @@
       "rationale": "The approved helper requires Node 24.18+ on Linux/POSIX. The original 16-case hosted and direct-instance evidence remains historical evidence for 0.3.0. The 0.5.0 review-correction receipt records 46 current local Node cases on Node 24.22.0; hosted results are attached to the reviewed PR commit, and live host/collection activation is not inferred from fixtures. The Bun parent orchestrates Python and Node gates through pinned pnpm without substituting runtimes.",
       "fallbackOrder": ["node"],
       "revisit": "Requalify after changes to the helper runtime or filesystem/transport contract. Report missing Node rather than substituting another runtime silently."
+    },
+    {
+      "id": "portless-guide-node-fixtures",
+      "surfaces": ["internal:portless-guide:node-fixtures"],
+      "candidates": [
+        {
+          "id": "node",
+          "signals": {
+            "guideGitFixtures": "pass",
+            "isolatedLinuxPortlessFixtures": "pass",
+            "hostedLinux": "unknown",
+            "nativeMacos": "unknown",
+            "nativeWindows": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "scripts/validation/architecture-compass/portless-guide.test.mjs",
+        "scripts/validation/architecture-compass/qualify-portless-guide.mjs",
+        "pnpm run validate:architecture-compass",
+        "pnpm run qualify:portless-guide"
+      ],
+      "rationale": "Bun retains the parent repository commands. Explicit Node 24.22.0 children exercised the documented Node launcher and the existing Portless 0.15.8 Node contract on Linux/WSL: inherited Git selectors, isolated HTTPS/HTTP/WebSocket forwarding, negative controls and alias lifecycle. This is an explicit Node compatibility fixture, not a general fallback or a claim that Bun is incompatible. Hosted and native-platform observations remain separate.",
+      "fallbackOrder": ["node"],
+      "revisit": "Requalify when the documented Node example, Portless version or fixture runtime contract changes. Missing Node fails this explicit qualification boundary without installation or silent runtime substitution."
     }
   ]
 }
