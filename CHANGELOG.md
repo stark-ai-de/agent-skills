@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.29.0 (2026-10-16)
+
+## What's Changed
+* feat(openai): prepare MCP profiles and release fallbacks by @servrox in https://github.com/stark-ai-de/agent-skills/pull/151
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.28.0...v0.29.0
+
 ## 0.28.0 (2026-10-16)
 
 ## What's Changed
