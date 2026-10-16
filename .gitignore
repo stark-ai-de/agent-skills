@@ -38,3 +38,7 @@ docs/specs/do-not-publish/*
 
 # Local Vercel project linkage
 .vercel/
+.env*
+
+# Generated MCP landing page
+packages/skill-metadata-mcp/public/

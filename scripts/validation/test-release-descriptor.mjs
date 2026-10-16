@@ -185,7 +185,9 @@ try {
     path.join(fixture, PLUGIN_SOURCE_SCHEMA_PATH),
   );
   const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
-  descriptor.version = "9.9.9";
+  const activeProfile = descriptor.openai?.profiles?.[descriptor.openai.activeProfile];
+  if (activeProfile?.version) activeProfile.version = "9.9.9";
+  else descriptor.version = "9.9.9";
   fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
   const drifted = loadReleaseDescriptorFile(fixture);
   assert.ok(

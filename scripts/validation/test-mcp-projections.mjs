@@ -154,13 +154,20 @@ try {
     assert.deepEqual(validatePortableProjection({ root }).errors, []);
     assert.equal(fs.existsSync(path.join(portable, "runtime")), hasPortable);
     assert.equal(fs.existsSync(path.join(portable, "mcp.json")), hasPortable);
-    withOpenAiStage(root, ({ stage }) => {
-      for (const forbidden of ["runtime", "mcp.json", ".mcp.json"]) {
+    withOpenAiStage(root, ({ stage, listing }) => {
+      for (const forbidden of ["runtime", "mcp.json"]) {
         assert.equal(fs.existsSync(path.join(stage, forbidden)), false);
       }
       assert.deepEqual(readJson(path.join(stage, "SOURCE-MANIFEST.json")).bundle.mcp, []);
       const openai = readJson(path.join(stage, ".codex-plugin/plugin.json"));
-      assert.equal(Object.hasOwn(openai, "mcpServers"), false);
+      const hasMetadata = listing.submissionProfile.transport !== "none";
+      assert.equal(Object.hasOwn(openai, "mcpServers"), hasMetadata);
+      assert.equal(fs.existsSync(path.join(stage, ".mcp.json")), hasMetadata);
+      if (hasMetadata) {
+        assert.deepEqual(Object.keys(readJson(path.join(stage, ".mcp.json")).mcpServers), [
+          "skill-metadata",
+        ]);
+      }
     });
     fs.rmSync(portable, { recursive: true, force: true });
   }

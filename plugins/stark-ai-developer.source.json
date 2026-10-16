@@ -49,7 +49,7 @@
   "distributions": {
     "skillsCliAgent": "codex",
     "portablePlugin": "stark-ai-developer",
-    "openaiPlugin": "stark-ai-developer"
+    "openaiPlugin": "stark-ai-developer-tools"
   },
   "pluginId": "stark-ai-developer",
   "version": "1.16.0",
@@ -58,7 +58,7 @@
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-1.16.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.0.0.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
@@ -86,7 +86,7 @@
     }
   ],
   "openai": {
-    "activeProfile": "existing-skills-only",
+    "activeProfile": "new-remote",
     "profiles": {
       "existing-skills-only": {
         "transport": "none"

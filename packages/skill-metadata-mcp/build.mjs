@@ -67,3 +67,12 @@ fs.writeFileSync(
     2,
   ) + "\n",
 );
+
+// Vercel Other builds require a non-empty, deliberately public static directory.
+if (mode === "http") {
+  fs.mkdirSync(path.join(root, "public"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "public/index.html"),
+    '<!doctype html><html lang="en"><meta charset="utf-8"><title>Skill metadata MCP</title><h1>Skill metadata MCP</h1><p>Send MCP requests to /mcp. Service status: <a href="/health">/health</a>.</p><p><a href="https://stark-ai-de.github.io/agent-skills/privacy/">Privacy</a></p></html>\n',
+  );
+}
