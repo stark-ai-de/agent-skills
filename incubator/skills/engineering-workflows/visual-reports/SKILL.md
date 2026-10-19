@@ -36,6 +36,9 @@ when reusing the configurator, exporting pinned consumer assets or caching a
 selected icon. Product data and concrete report generation stay in the consuming
 repository; this skill owns the general contract and presentation sources.
 
+For capability comparisons, read [comparison patterns](references/comparisons.md)
+when adding badges, KPIs, screenshots, positioning maps or the user's own reference.
+
 ## Inputs to inspect
 
 Read the relevant source documents and existing generator before editing. Identify
@@ -88,7 +91,10 @@ Load the relevant sections for the selected route; it also records evidence limi
 
 ## Scripts
 
-No bundled scripts. Use the repository's existing generator and validation tools.
+Use `scripts/export-assets.mjs` for explicitly requested pinned consumer exports
+and `scripts/cache_icon.py` for selected icon downloads and verified cache reuse.
+Read [their contract](references/report-contract.md#ownership-and-portable-assets)
+for inputs and write effects. Prefer the consumer's existing generator and checks.
 The agent may write an explicitly selected preference after verifying Git exclusion;
 the standalone HTML does not write repository files or start a server.
 
@@ -97,12 +103,18 @@ the standalone HTML does not write repository files or start a server.
 Deliver the self-contained HTML, full Markdown/JSON source exports as appropriate,
 and a concise handoff with the verified opening method, source limits and checks.
 Distinguish generated output, a verified preview and any unresolved qualification.
+Whenever the task changes files or filesystem layout, always include a verified,
+compact file tree in the completion response. Read the
+[filesystem handoff contract](references/filesystem-handoff.md) for affected roots,
+change labels, ownership and optional accessible colors/icons. A short plain-text
+tree is sufficient; this rule does not require another HTML artifact.
 
 ## Completion criteria
 
 - Required facts and decision-changing conditions survive source, JSON and HTML.
 - All three styles use one content source; explicit preferences remain local.
 - Relevant interactions and static/offline reading are checked.
+- Filesystem changes have a verified completion tree with textual change labels.
 - The supplied preview reaches the intended report, or delivery limits are stated.
 
 ## Failure modes

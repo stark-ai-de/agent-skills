@@ -157,6 +157,10 @@ and comparison of up to four selections can expose the remaining complete data.
 Use only interactions useful to the task. Downloads supplement readable embedded
 exports; they must not be the only way to access required information without JS.
 
+The [comparison patterns](comparisons.md) cover shared feature badges, unknown
+versus absent/planned states, scoped KPIs, genuine screenshots, editorial area maps
+and the distinction between an own-product target and delivered capabilities.
+
 ## Delivery and checks
 
 Deliver complete standalone HTML with inline CSS, needed JavaScript, data, fonts
@@ -183,6 +187,14 @@ conformance. If actually comparing designs with users, hold content equivalent,
 balance order, and assess correctness, missed caveats, task time and recovery
 after interruption together. Measure delayed recall separately for learning
 materials. Do not report improvements without measurements.
+
+## Filesystem handoff
+
+For tasks that change files or filesystem layout, the completion response always
+includes an affected-file tree. The [filesystem handoff contract](filesystem-handoff.md)
+owns its complete rules, including change labels, separate roots, generated versus
+maintained content and optional accessible colors/icons. This complements the
+content and delivery rules; it does not broaden the skill into a general file manager.
 
 ## Public sources and qualification
 
