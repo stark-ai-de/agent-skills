@@ -29,6 +29,13 @@ source and fact in both the report and its agent-readable exports.
 - Summarize away evidence that the task requires keeping.
 - Diagnose ADHD or promise a therapeutic or reading-speed benefit.
 
+## Shared assets and ownership
+
+Read [ownership and portable assets](references/report-contract.md#ownership-and-portable-assets)
+when reusing the configurator, exporting pinned consumer assets or caching a
+selected icon. Product data and concrete report generation stay in the consuming
+repository; this skill owns the general contract and presentation sources.
+
 ## Inputs to inspect
 
 Read the relevant source documents and existing generator before editing. Identify

@@ -113,8 +113,9 @@ No credentials, transcripts or unrelated browser state belong in this file.
 ## Icons and assets
 
 Use small recognizable product marks and labeled action icons. First check
-[theSVG](https://thesvg.org/) for actual brands and verify the official product
-identity. If absent, use the official website, press assets or official repository.
+[theSVG](https://thesvg.org/) and its `https://thesvg.org/api/registry.json`
+registry for actual brands. Resolve the published slug/variant rather than guessing
+asset URLs and verify the entry against the official product identity. If absent, use the official website, press assets or official repository.
 Do not confuse namesakes or substitute a hosting provider's logo. When no genuine
 asset is found, retain the name and a neutral labeled placeholder.
 
@@ -123,7 +124,9 @@ installation or individually obtained SVGs without a new runtime dependency.
 Brand logos are not replaced by generic icons. Obtain approval for new libraries
 where repository policy requires it.
 
-Use consistent 16–18 px boxes, preserved aspect ratios and original brand colors.
+Use consistent 16–18 px brand boxes, preserved aspect ratios and original brand colors.
+Generic icons may use 14–16 px with a consistent 1.5–1.75 stroke weight.
+Prefer an official dark/light variant or a small neutral backing for contrast.
 Keep labels visible. Mark adjacent decorative images appropriately; icon-only
 controls need accessible names. Do not encode status through color alone.
 
@@ -191,3 +194,37 @@ This original draft captures a user-defined reporting workflow. It does not vend
 third-party skill instructions or templates. Study-specific medical or learning
 claims are not asserted. Independent agent adoption and user-comprehension
 qualification remain open; this draft does not enter the public catalog or plugin.
+
+## Ownership and portable assets
+
+This skill owns the general contract, starter shell and reusable presentation
+assets. A consuming repository owns its product records, evidence, feature
+definitions, screenshots, source-to-data mapping and concrete generated reports.
+Keep product-specific renderers with their data; do not export their private
+content into the public skill. A report profile records only the consumer's
+selected values and rendering decisions and links here for the general rules.
+
+The optional [Graphite Grain configurator](../assets/graphite-grain/configurator.mjs)
+and its HTML/CSS implement the ten documented presentation controls, three
+presets, A/B and standalone exports. They expect the Graphite Grain DOM classes
+used by their CSS, inline `</style>` / `</body>` insertion points and an embedded
+WOFF2 font in the base report. The consumer supplies that base HTML, source
+fingerprint, font license and the adjacent `demo.html` destination. They are not
+a universal HTML parser or a source-to-product renderer. `report-shell.html`
+remains the smaller independent starter with a Sans fallback.
+
+Use `node scripts/export-assets.mjs --destination <generated-bundle-directory>`
+from this skill to export a clean, committed revision. This explicitly writes a
+bundle and manifest at the supplied destination; it does not install dependencies,
+fetch assets or update consumer imports. `--check` is read-only. The consumer
+keeps its manifest and verifies every digest before loading the bundle. A pinned
+generated copy enables offline builds; edit the skill sources and re-export,
+never maintain an independent template fork in the consumer. Preserve the Apache
+license. No private product content, downloaded logos or fonts are exported.
+
+`scripts/cache_icon.py --repo <repository> --url <asset-https-url>
+--identity-url <official-product-https-url> --label <verified-name>` downloads only
+the selected asset, checks SVG content and records provenance in the already
+ignored cache. `--refresh` explicitly replaces a retrieval. It does not discover
+brand identities or grant usage rights; the agent must establish both. Normal
+report generation uses reviewed embedded assets without network access.
