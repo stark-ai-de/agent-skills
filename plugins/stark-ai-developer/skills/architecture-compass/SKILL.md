@@ -6,7 +6,7 @@ compatibility: Designed for Codex, Cursor, Claude Code, ChatGPT Chat/Work, Codex
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.12.1"
+  version: "0.13.0"
 ---
 
 # Architecture Compass
@@ -70,6 +70,7 @@ Route skill behavior through:
 - **Workflows:** [AC-ADR-064 Short](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.short.md) · [Guide](references/ac-adr-064-preserve-approved-scope-through-capability-aware-planning.guide.md).
 - **Validation:** [AC-ADR-049 Guide](references/ac-adr-049-distinguish-change-risk-from-representative-environment-observation.guide.md).
 - **Host state:** [AC-ADR-036 Guide](references/ac-adr-036-keep-architecture-compass-portable-through-host-adapters.guide.md).
+- **Worktrees and harness alignment:** [AC-ADR-054 Short](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.short.md) · [Long](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md) · [Guide](references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md). Load for relevant Setup adoption or work governed by its local mapping; compare the assigned workspace with effective harness settings before writing, preserving existing consumer ADR authority.
 - **Execution and claims:** [AC-ADR-003 Guide](references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md) · [AC-ADR-004 Guide](references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md).
 - **Presentation:** [AC-ADR-050 Short](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.short.md) · [Guide](references/ac-adr-050-use-semantic-status-markers-in-user-facing-receipts.guide.md).
 - **Adopted Jev host advice:** [AC-ADR-065 Short](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.short.md) · [Long](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.long.md) · [Guide](references/ac-adr-065-require-qualified-jev-host-advice-after-repository-adoption.guide.md); load for local adoption, host prerequisite evidence, or compliance audit.

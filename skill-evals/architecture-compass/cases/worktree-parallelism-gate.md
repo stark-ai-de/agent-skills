@@ -11,8 +11,9 @@ The Architecture Compass checkpoint was shown and the user explicitly confirmed
 sequential writer, two read-only analysts, and two parallel writers with
 same-codebase conflict risk. For the last situation, the repository scanner
 recursively traverses every directory below the root and has no safe exclusion,
-while local instructions do not mandate a worktree location. Do not create a
-worktree yet.
+while local instructions do not mandate a worktree location and the target has
+not adopted AC-ADR-054. Do not create a worktree yet. Separately explain what
+changes if an accepted local mapping of AC-ADR-054 already governs the target.
 
 ## Deterministic Assertions
 
@@ -24,6 +25,9 @@ worktree yet.
 - contains: purpose
 - contains: cleanup
 - not_contains: Git requires repository-local worktrees
+- contains: adopted
+- contains: Worktrunk
+- contains: harness
 
 ## Expected Behavior
 
@@ -39,3 +43,7 @@ worktree yet.
   authority.
 - If target instructions mandated `<repo>/.worktrees`, report that local
   override and resolve the scanner conflict before creation.
+- In the separately adopted case, every writer uses a suitable assigned
+  external worktree, including a sequential writer; reuse that worktree instead
+  of creating another for ceremony. Apply the Worktrunk availability flow and
+  initial harness comparison without changing the non-adopting target's policy.
