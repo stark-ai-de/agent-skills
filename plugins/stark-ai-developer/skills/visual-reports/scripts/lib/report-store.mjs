@@ -12,12 +12,46 @@ async function regular(file) {
   const stat = await lstat(file);
   if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Store file must be regular");
 }
+async function inspectDirectoryPath(resolved) {
+  const volume = path.parse(resolved).root;
+  const parts = resolved.slice(volume.length).split(path.sep).filter(Boolean);
+  let current = volume;
+  for (let index = 0; index < parts.length; index++) {
+    current = path.join(current, parts[index]);
+    let stat;
+    try {
+      stat = await lstat(current);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      return [
+        current,
+        ...parts.slice(index + 1).map((part) => (current = path.join(current, part))),
+      ];
+    }
+    if (!stat.isDirectory() || stat.isSymbolicLink() || (await realpath(current)) !== current)
+      throw new Error("Store must be a real directory without symlink ancestors");
+  }
+  return [];
+}
 async function root(directory, create = false) {
   const resolved = path.resolve(directory);
-  if (create) await mkdir(resolved, { recursive: true, mode: 0o700 });
-  const stat = await lstat(resolved);
-  if (!stat.isDirectory() || stat.isSymbolicLink() || (await realpath(resolved)) !== resolved)
-    throw new Error("Store must be a real directory without symlink ancestors");
+  const missing = await inspectDirectoryPath(resolved);
+  if (missing.length && !create)
+    throw Object.assign(new Error("Store directory does not exist"), { code: "ENOENT" });
+  for (const directoryPath of missing) {
+    try {
+      await mkdir(directoryPath, { mode: 0o700 });
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+    const stat = await lstat(directoryPath);
+    if (
+      !stat.isDirectory() ||
+      stat.isSymbolicLink() ||
+      (await realpath(directoryPath)) !== directoryPath
+    )
+      throw new Error("Store must be a real directory without symlink ancestors");
+  }
   return resolved;
 }
 async function readJson(file) {

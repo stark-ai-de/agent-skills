@@ -2799,16 +2799,16 @@
       "sha256": "1e4dedad8c3828246200213a4861e4242aa02b58d817ad730cf36bf4d70afb1c"
     },
     {
-      "byteLength": 12840,
+      "byteLength": 13056,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/report-state.mjs",
-      "sha256": "dba5969839437f3056baedeb7fa65e94bde345d8871c7db4b5448777a4fd6133"
+      "sha256": "da84b0b37e319b6b06250b3a987adaf16ce3f1a974f75bacf13e5ffec91f9133"
     },
     {
-      "byteLength": 6048,
+      "byteLength": 7141,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/report-store.mjs",
-      "sha256": "28c702da4e3d0fcdd4c2c6acd2b864862e6f5d2dde02fdd57eac58436043c8c5"
+      "sha256": "3a83b5595f2baa92a33499064b157c2afaca0f1bad54d974c455930ef0b893b9"
     },
     {
       "byteLength": 4743,
@@ -2823,10 +2823,10 @@
       "sha256": "20d3f715944caf5fdc49543b8e5c40576a6cfa99593ae7eadd09b3f517ce962b"
     },
     {
-      "byteLength": 20988,
+      "byteLength": 21254,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-delivery.mjs",
-      "sha256": "097dcba2637b4898c10546a57bae1ba1fa2e5e9e45e71b0e3cfc9330b6470cce"
+      "sha256": "a8d27618ab77dfe407fbe48a8857101106e230efa4796f0a3b008cae907ede5e"
     },
     {
       "byteLength": 15373,
@@ -2853,16 +2853,16 @@
       "sha256": "cc472348da91fddbeaba213b7bb57539a447fd0e24f2c68474c0182da37784ce"
     },
     {
-      "byteLength": 9225,
+      "byteLength": 11935,
       "mode": "0644",
       "path": "skills/visual-reports/tests/report-state.test.mjs",
-      "sha256": "52eab44d63dd8dba09c5e45e6fc5bf99fe82130df4ef46f72010ae80e7422a7c"
+      "sha256": "07ff065e1237a631052beb812cb863157317ad3d834bd742aab8d693814c5181"
     },
     {
-      "byteLength": 17185,
+      "byteLength": 19028,
       "mode": "0644",
       "path": "skills/visual-reports/tests/v2.test.mjs",
-      "sha256": "a98b1bcfdc24cd108f68a0d0fbcd8175a7817c6caff5ad2827d00893f44c6108"
+      "sha256": "5e270a2f175c2a84ba5490f8219a9d7aa855a9eff36b01e7efcb32d170db13f3"
     }
   ],
   "plugin": {
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "44d63162c2fc4c6c0142ea58d342c6d3f56d1f4b91234b3befffdbb5adcfadeb"
+  "treeHash": "01786f937e0e2dd0343447495c43bfcfa21486bcfd653c34817b1c0f37437f11"
 }

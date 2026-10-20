@@ -12,6 +12,16 @@ import {
   workingReport,
 } from "../scripts/lib/report-state.mjs";
 
+function typedSnapshot(markdown) {
+  const lines = markdown.split("\n");
+  const start = lines.findIndex((line) => /^`{3,}json$/.test(line));
+  assert.notEqual(start, -1, "Markdown includes the canonical typed JSON snapshot");
+  const fence = lines[start].slice(0, -4);
+  const end = lines.indexOf(fence, start + 1);
+  assert.ok(end > start, "typed JSON fence stays intact");
+  return JSON.parse(lines.slice(start + 1, end).join("\n"));
+}
+
 test("working exports retain one immutable original and exact field-level user provenance", () => {
   const source = exampleReport("r18");
   const original = structuredClone(source);
@@ -139,6 +149,62 @@ test("restoring all edited values removes the diff while preserving the baseline
   const restored = workingReport(edited, original);
   assert.deepEqual(restored, original);
   assert.deepEqual(edited.editing.original, original);
+});
+
+test("Markdown retains exact typed current and original JSON alongside its reader view", () => {
+  const original = exampleReport("r20");
+  original.extension = {
+    nested: {
+      integer: 1,
+      text: "1",
+      truth: true,
+      emptyObject: {},
+      emptyArray: [],
+      absentValue: null,
+    },
+    hostile: '```json\n</script><img src=x onerror="alert(1)">',
+  };
+  const draft = structuredClone(original);
+  draft.sections[0].data.user = "Edited current value";
+  const current = workingReport(original, draft);
+  const markdown = stateMarkdown(current);
+  assert.match(markdown, /## Prompt und Parameter/);
+  assert.match(markdown, /Complete, unfiltered current field index/);
+  assert.deepEqual(typedSnapshot(markdown), { current, original });
+
+  const numeric = exampleReport("r20");
+  numeric.extension = { value: 1 };
+  const textual = structuredClone(numeric);
+  textual.extension.value = "1";
+  assert.notEqual(stateMarkdown(numeric), stateMarkdown(textual));
+  const truth = structuredClone(numeric);
+  truth.extension.value = true;
+  const stringTruth = structuredClone(numeric);
+  stringTruth.extension.value = "true";
+  assert.notEqual(stateMarkdown(truth), stateMarkdown(stringTruth));
+  const nullable = structuredClone(numeric);
+  nullable.extension.value = null;
+  const textNull = structuredClone(numeric);
+  textNull.extension.value = "unknown (null)";
+  assert.notEqual(stateMarkdown(nullable), stateMarkdown(textNull));
+});
+
+test("no effective editor change returns the exact original including optional style presence", () => {
+  const implicit = exampleReport("r20");
+  delete implicit.style;
+  const implicitDraft = structuredClone(implicit);
+  implicitDraft.style = "current";
+  const unchangedImplicit = workingReport(implicit, implicitDraft);
+  assert.deepEqual(unchangedImplicit, implicit);
+  assert.equal(Object.hasOwn(unchangedImplicit, "style"), false);
+
+  const explicit = exampleReport("r20");
+  const edited = structuredClone(explicit);
+  edited.style = "calm";
+  assert.equal(workingReport(explicit, edited).editing.changes[0].field, "style");
+  const reverted = workingReport(workingReport(explicit, edited), explicit);
+  assert.deepEqual(reverted, explicit);
+  assert.equal(Object.hasOwn(reverted, "style"), true);
 });
 
 for (const [name, mutate] of [

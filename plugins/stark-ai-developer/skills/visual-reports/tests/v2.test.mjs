@@ -2,7 +2,7 @@
 import test from "node:test";
 import http from "node:http";
 import assert from "node:assert/strict";
-import { readFile, mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
+import { readFile, mkdtemp, rm, writeFile, symlink, readdir, lstat, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -301,6 +301,49 @@ test("store refuses symlink destinations; preview serves actual snapshots and li
     assert.equal(forbidden, 403);
   } finally {
     if (preview) await preview.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("store creation rejects symlink and non-directory ancestors before writing", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "report-store-ancestors-"));
+  try {
+    const target = path.join(directory, "target");
+    await mkdir(target);
+    const sentinel = path.join(target, "sentinel.txt");
+    await writeFile(sentinel, "unchanged target bytes");
+    const before = { names: await readdir(target), bytes: await readFile(sentinel) };
+
+    const link = path.join(directory, "link");
+    await symlink(target, link);
+    await assert.rejects(
+      publishRevision(example(), path.join(link, "new-store", "nested")),
+      /symlink ancestors/,
+    );
+    assert.deepEqual({ names: await readdir(target), bytes: await readFile(sentinel) }, before);
+
+    const missingTarget = path.join(directory, "not-created");
+    const dangling = path.join(directory, "dangling");
+    await symlink(missingTarget, dangling);
+    await assert.rejects(
+      publishRevision(example(), path.join(dangling, "new-store")),
+      /symlink ancestors/,
+    );
+    assert.equal((await lstat(dangling)).isSymbolicLink(), true);
+    await assert.rejects(lstat(missingTarget), { code: "ENOENT" });
+
+    const notDirectory = path.join(directory, "regular-file");
+    await writeFile(notDirectory, "keep file");
+    await assert.rejects(
+      publishRevision(example(), path.join(notDirectory, "new-store")),
+      /symlink ancestors/,
+    );
+    assert.equal(await readFile(notDirectory, "utf8"), "keep file");
+
+    const nestedStore = path.join(directory, "real", "nested", "store");
+    const revision = await publishRevision(example(), nestedStore);
+    assert.equal((await currentRevision(nestedStore)).revision, revision.revision);
+  } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });

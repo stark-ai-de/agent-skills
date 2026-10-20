@@ -308,6 +308,9 @@ try {
   assert.deepEqual(currentJson.editing.original, originalJson);
   assert.match(currentMarkdown, /Datenfluss/);
   assert.match(currentMarkdown, /Exported mixed working state/);
+  const typedFence = currentMarkdown.match(/^(`{3,})json\n([\s\S]*?)\n\1$/m);
+  assert.ok(typedFence, "current Markdown export carries a complete typed JSON snapshot");
+  assert.deepEqual(JSON.parse(typedFence[2]), { current: currentJson, original: originalJson });
   const downloadedLedgers = await evaluate(`(() => {
     const html=${JSON.stringify(currentHtml)};
     const parsed=new DOMParser().parseFromString(html,'text/html');

@@ -140,7 +140,8 @@ export function workingReport(source, draft) {
   const original = originalReport(source);
   const current = withoutRevision(draft);
   const changes = editorChanges(original, current);
-  if (changes.length) current.editing = { version: 1, kind: "user-edit", original, changes };
+  if (!changes.length) return original;
+  current.editing = { version: 1, kind: "user-edit", original, changes };
   return current;
 }
 
@@ -325,10 +326,12 @@ export function readerMarkdown(report, escapeInline = md) {
 
 export function stateMarkdown(report) {
   validateRevision(report);
-  const current = copy(report);
-  if (current.editing) delete current.editing.original;
   const original = report.editing
     ? `\n## Original snapshot (editing.original; unchanged)\n\n${markdownValue(report.editing.original)}\n`
     : "";
-  return `# ${markdownValue(report.title.replace(/[\r\n]/g, " "))}\n\n${markdownValue(report.takeaway)}\n\n${report.criticalCaveats.map((v) => `> Hinweis: ${markdownValue(v)}`).join("\n\n")}\n\n${editNotice(report)}\n\n${readerMarkdown(current)}\n\n## Complete, unfiltered current field index\n\nCurrent working state; filters and presentation never prune the export. User edits are not source verification.\n\n${markdownValue(current)}\n${original}`;
+  const typed = JSON.stringify({ current: report, original: originalReport(report) }, null, 2);
+  const fence = "`".repeat(
+    Math.max(3, ...[...typed.matchAll(/`+/g)].map((run) => run[0].length + 1)),
+  );
+  return `# ${markdownValue(report.title.replace(/[\r\n]/g, " "))}\n\n${markdownValue(report.takeaway)}\n\n${report.criticalCaveats.map((v) => `> Hinweis: ${markdownValue(v)}`).join("\n\n")}\n\n${editNotice(report)}\n\n${readerMarkdown(report)}\n\n## Complete, unfiltered current field index\n\nCurrent working state; filters and presentation never prune the export. User edits are not source verification.\n\n${markdownValue(report)}\n${original}\n\n## Canonical typed snapshots (JSON)\n\n${fence}json\n${typed}\n${fence}\n`;
 }
