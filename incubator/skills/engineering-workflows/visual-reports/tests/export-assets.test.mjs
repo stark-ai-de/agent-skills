@@ -30,7 +30,7 @@ async function fixture() {
       if (entry.isDirectory()) entries.push(`040000 tree ${await tree(absolute)}\t${entry.name}`);
       else entries.push(`100644 blob ${git(["hash-object", "-w", "--stdin"], await readFile(absolute))}\t${entry.name}`);
     }
-    return git(["mktree"], entries.sort().join("\n") + "\n");
+    return git(["mktree"], entries.length ? entries.sort().join("\n") + "\n" : "");
   }
   const revision = git(["-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit-tree", await tree(repo), "-m", "Synthetic export fixture"]);
   git(["update-ref", "HEAD", revision]);
@@ -49,6 +49,7 @@ test("committed portable bundle verifies digests and runs the renderer offline",
     assert.equal(manifest.source.revision, f.revision);
     for (const entry of manifest.files) assert.equal(createHash("sha256").update(await readFile(path.join(bundle, entry.file))).digest("hex"), entry.sha256);
     assert.ok(manifest.files.some((entry) => entry.file === "configurator.mjs"));
+    assert.ok(manifest.files.some((entry) => entry.file === "assets/report-state.mjs"));
     execFileSync(process.execPath, [path.join(bundle, "scripts/render-report.mjs"), "--gallery", path.join(f.temp, "gallery")]);
     assert.ok((await readFile(path.join(f.temp, "gallery/r24/r24.html"), "utf8")).includes("Zeitplan"));
     const target = path.join(bundle, "assets/report-runtime.css"); await writeFile(target, "tampered");

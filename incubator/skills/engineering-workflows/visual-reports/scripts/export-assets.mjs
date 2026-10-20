@@ -30,7 +30,7 @@ const inputs = {
 };
 // Preserve canonical relative imports so the complete renderer runs offline from the bundle.
 for (const input of git("ls-files", "--", "SKILL.md", "agents", "assets", "references", "scripts", "tests").split("\n").filter(Boolean)) inputs[input] = input;
-for (const required of ["scripts/render-report.mjs", "assets/report-runtime.js", "assets/report-runtime.css", "assets/report-recipes.mjs", "references/renderer.md"]) {
+for (const required of ["scripts/render-report.mjs", "assets/report-runtime.js", "assets/report-state.mjs", "assets/report-runtime.css", "assets/report-recipes.mjs", "references/renderer.md"]) {
   if (!inputs[required]) throw new Error(`Missing committed renderer input: ${required}`);
 }
 if (git("status", "--porcelain", "--untracked-files=all", "--", ".")) throw new Error("Uncommitted skill source; commit the complete snapshot before export.");

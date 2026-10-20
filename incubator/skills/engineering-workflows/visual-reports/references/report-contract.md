@@ -49,8 +49,11 @@ Keep customization small and progressively disclosed. Grain, dark mode, density
 and font size are adjustable preferences, not a universal ADHD layout. Do not
 default to word-part bolding or claim therapeutic/reading-speed benefits. Applying
 cognitive-accessibility patterns does not establish WCAG or ADHD effectiveness.
-Motion belongs only to an explicitly selected prototype, is reader-started and
-stoppable, and respects reduced-motion preference. Normal reports remain static.
+The agent may offer motion when it helps explain a relationship, including outside
+an explicit motion-prototype request. It starts only after a deliberate click,
+can be paused/reset, respects reduced motion and never replaces the static
+explanation. Opening, exporting or reopening a report is not permission to play.
+No decorative autoplay or automatically advancing slides.
 
 ## Presentation and styles
 
@@ -84,6 +87,12 @@ custom values and content state; settings and standalone HTML may be exported.
 Original brand colors stay intact. Its expected DOM/font/base-report requirements
 remain binding; it is not a universal adapter for any generated HTML. Four-view
 report/comparison/trend/flow demos are optional and explicitly fictional when used.
+
+For an explicitly requested presentation, start with slides and offer a reading
+view switch. Without JavaScript, all content is available in a complete reading
+view. This task-specific exception does not turn ordinary comparisons into a
+sequence of individual product slides. Critical conditions stay on their related
+slide, not only in presenter notes. Navigation and export never remove other slides.
 
 ## Local preference
 
@@ -163,15 +172,24 @@ action where supplied. Do not fabricate weights or scores.
 
 The standard delivery is standalone HTML plus complete Markdown and JSON, with a
 full JSON snapshot additionally embedded in HTML. All formats derive from the same
-source state. Filtering and sorting never shrink agent exports. Readable embedded
-exports supplement downloads and remain available without JavaScript. The intended
-following-agent workflow is reading/evaluation with source tracing and targeted
-section extraction, not a compulsory editing/write-back roundtrip.
+current data state. Filtering and sorting never shrink agent exports. Readable
+embedded exports supplement downloads and remain available without JavaScript.
+The intended following-agent workflow is reading/evaluation with source tracing
+and targeted section extraction, not a compulsory editing/write-back roundtrip.
 
-Local editor changes are a separate explicit draft export, never a silent mutation
-of the original snapshot or external sources. Closing the tab can lose unexported
-edits. A reviewed draft may be used in a later authorized render; this does not
-imply synchronization, collaboration or automatic repository/API writes.
+After local editing, HTML, Markdown and JSON export the full edited working state,
+including current static/no-JavaScript HTML. Preserve the unmodified original as a
+separate snapshot and mark changed fields as user edits, not new verified source
+facts. UI filters and sort order alone are not factual edits. The immutable original
+and working state must remain distinguishable even after another export/reopen.
+Invalid editor input must not silently export stale or truncated values.
+
+Closing the tab can lose unexported edits. Exports are explicit downloads and do
+not overwrite authoritative sources, repositories or APIs. A reviewed working
+snapshot may be rendered again after authorization; there is no implied
+synchronization, collaboration, automatic persistence or production connection.
+The concrete revision format and bounded editable fields are owned by
+[the renderer reference](renderer.md#browser-state-exports-and-safety).
 
 The [comparison patterns](comparisons.md) own shared badges, unknown/absent/planned
 states, scoped KPIs, genuine screenshots, editorial positioning maps and the
@@ -240,13 +258,14 @@ renderer. `report-shell.html` remains a smaller independent Sans-fallback starte
 
 `node scripts/export-assets.mjs --destination <bundle-directory>` explicitly
 exports a clean committed snapshot, manifest, source revision, per-file SHA-256
-and Apache license. The bundle now includes the runnable renderer, runtime,
-recipes and documentation at canonical relative paths, while keeping the existing
-flat configurator/cache-helper aliases. It installs nothing, fetches nothing and
-does not update consumer imports. `--check` is read-only. Consumers verify digests
-before loading a pinned offline bundle and update it explicitly; edit canonical
-skill sources and re-export rather than maintaining template forks. Do not export
-private data, downloaded logos or fonts. This does not broaden cache-write rights.
+and Apache license. The bundle includes the runnable renderer, shared working-state
+module, runtime, recipes and documentation at canonical relative paths, while
+keeping existing flat configurator/cache-helper aliases. It installs nothing,
+fetches nothing and does not update consumer imports. `--check` is read-only.
+Consumers verify digests before loading a pinned offline bundle and update it
+explicitly; edit canonical skill sources and re-export rather than maintaining
+template forks. Do not export private data, downloaded logos or fonts. This does
+not broaden cache-write rights.
 
 `scripts/cache_icon.py --repo <repository> --url <asset-https-url>
 --identity-url <official-product-https-url> --label <verified-name>` downloads only
