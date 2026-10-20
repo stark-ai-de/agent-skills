@@ -17,8 +17,12 @@ Option/metric toggles, search and sorting refine an already visible comparison.
 A long entry list followed by individual detail panels fails the comparison goal.
 Do not require the reader to remember values from other screens or repeatedly open
 products to find differences. There is no general four-item cap. On small screens,
-a labeled local comparison scroller is preferable to page overflow or stacked
-product essays. Details can hold supporting evidence, never decisive limitations.
+a labeled horizontal scroller can preserve a standalone wide comparison instead
+of stacking product essays. This exception does not make a guided tab body or its
+title bar scrollable; use the [guided layout contract](report-contract.md#guided-layout-and-navigation)
+there, and choose a standalone comparison when joint criteria need that space.
+Ordinary vertical page scrolling is allowed. Details can hold supporting evidence,
+never decisive limitations.
 
 Product details are retained, not removed: decision-relevant properties, values,
 conditions and boundaries belong on the joint surface; long explanations and

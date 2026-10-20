@@ -228,10 +228,29 @@ export function chartText(data) {
   return "";
 }
 
+/** Compact handoff shared by static HTML and full reader Markdown. */
+export function readerStatusLines(report) {
+  if (!report.readerStatus) return [];
+  const labels = {
+    information: "i Information · keine Aufgabe",
+    completed: "✓ Umgesetzt · Zusammenfassung",
+    "action-required": "→ Aktion erforderlich",
+    conditional: "→ Nur unter dieser Bedingung handeln",
+  };
+  const { state, condition } = report.readerStatus;
+  return [
+    labels[state],
+    ...(condition ? [condition] : []),
+    ...(report.nextAction ? [report.nextAction] : []),
+  ];
+}
+
 /** Reader Markdown is shared by Node exports and the embedded browser runtime. */
 export function readerMarkdown(report, escapeInline = md) {
   const lines = [];
-  if (report.nextAction) lines.push(`**Nächster Schritt:** ${escapeInline(report.nextAction)}`, "");
+  if (report.readerStatus) lines.push(...readerStatusLines(report).map(escapeInline), "");
+  else if (report.nextAction)
+    lines.push(`**Nächster Schritt:** ${escapeInline(report.nextAction)}`, "");
   for (const section of report.sections) {
     lines.push(
       `## ${escapeInline(section.title)}`,

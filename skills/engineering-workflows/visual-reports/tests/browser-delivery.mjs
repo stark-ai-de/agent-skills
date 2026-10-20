@@ -3,7 +3,7 @@
 // Usage: node tests/browser-delivery.mjs ws://LOOPBACK/devtools/browser/ID
 // SPDX-License-Identifier: Apache-2.0
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rename, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
@@ -144,6 +144,9 @@ try {
       await navigate(files[i]);
       const state = await evaluate(`({
         enhanced:document.documentElement.classList.contains('js'),
+        toolingClosed:document.querySelector('#report-toolbox')?.open===false,
+        toolingInFooter:document.querySelector('footer #export-json')!==null,
+        toolingHidden:!document.querySelector('#export-json').checkVisibility(),
         sections:document.querySelectorAll('main>section').length,
         overflow:document.documentElement.scrollWidth>innerWidth+1,
         caveats:document.querySelectorAll('header>.caveat').length,
@@ -153,6 +156,20 @@ try {
         motionDisabled:document.querySelector('[data-play]')?.disabled??null
       })`);
       assert.equal(state.enhanced, !disabled, reports[i].id);
+      assert.equal(state.toolingClosed, true);
+      assert.equal(state.toolingInFooter, true);
+      assert.equal(state.toolingHidden, true);
+      if (!disabled) {
+        assert.equal(
+          await evaluate(`(() => {
+          document.querySelector('#report-toolbox').open = true;
+          const visible = document.querySelector('#export-json').checkVisibility();
+          document.querySelector('#report-toolbox').open = false;
+          return visible;
+        })()`),
+          true,
+        );
+      }
       assert.equal(state.overflow, false, reports[i].id);
       assert.equal(state.sections, reports[i].sections.length);
       assert.ok(state.caveats && state.markdown && state.images, reports[i].id);
@@ -161,6 +178,71 @@ try {
       if (disabled) noScriptChecks++;
       else fileChecks++;
     }
+  }
+  await page("Emulation.setScriptExecutionDisabled", { value: false });
+  await navigate(files.at(-1));
+  const reducedMotion = [{ name: "prefers-reduced-motion", value: "reduce" }];
+  try {
+    await page("Emulation.setDeviceMetricsOverride", {
+      width: 1440,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    const layout = await evaluate(`(() => {
+      const box = (selector) => {
+        const { left, right, width } = document.querySelector(selector).getBoundingClientRect();
+        return { left, right, width };
+      };
+      return { header:box('header'), main:box('main'), footer:box('footer'), pageWidth:innerWidth };
+    })()`);
+    for (const area of ["main", "footer"]) {
+      assert.ok(
+        Math.abs(layout[area].left - layout.header.left) <= 1,
+        `${area} left edge: ${JSON.stringify(layout)}`,
+      );
+      assert.ok(
+        Math.abs(layout[area].width - layout.header.width) <= 1,
+        `${area} width: ${JSON.stringify(layout)}`,
+      );
+    }
+    assert.ok(
+      layout.footer.right <= layout.pageWidth + 1,
+      `footer fits viewport: ${JSON.stringify(layout)}`,
+    );
+
+    await evaluate("document.querySelector('#report-toolbox').open = true");
+    await page("Emulation.setEmulatedMedia", { media: "print", features: reducedMotion });
+    const printed = await evaluate(`(() => {
+      const note = document.querySelector('.print-note');
+      const toolbox = document.querySelector('#report-toolbox');
+      const exportButton = document.querySelector('#export-json');
+      return {
+        noteVisible: getComputedStyle(note).display !== 'none' && note.getClientRects().length > 0,
+        noteText: note.textContent,
+        toolboxOpen: toolbox.open,
+        toolboxHidden: getComputedStyle(toolbox).display === 'none' && !toolbox.checkVisibility(),
+        exportHidden: !exportButton.checkVisibility()
+      };
+    })()`);
+    assert.equal(printed.noteVisible, true, "print provenance note is visible");
+    assert.match(printed.noteText, /Nutzerbearbeitungen sind keine neue Quellenprüfung/);
+    assert.match(printed.noteText, /Original-Snapshot bleibt getrennt erhalten/);
+    assert.equal(
+      printed.toolboxOpen,
+      true,
+      "print visibility must not depend on closing the live toolbox",
+    );
+    assert.equal(printed.toolboxHidden, true);
+    assert.equal(printed.exportHidden, true);
+  } finally {
+    await page("Emulation.setEmulatedMedia", { media: "screen", features: reducedMotion });
+    await page("Emulation.setDeviceMetricsOverride", {
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
   }
   assert.equal(
     requests.filter((url) => /^https?:/.test(url)).length,
@@ -287,6 +369,13 @@ try {
     true,
     "v2 text diagram fixture",
   );
+  await evaluate(`(() => {
+    const evidence=document.createElement('details');
+    evidence.id='delivery-evidence'; evidence.open=true;
+    evidence.innerHTML='<summary>Expanded report evidence</summary><p>Evidence stays expanded.</p>';
+    document.querySelector('main').append(evidence);
+    document.querySelector('#report-toolbox').open=true;
+  })()`);
   for (const button of ["export-json", "export-md", "export-draft", "export-original"])
     await evaluate(`document.getElementById('${button}').click()`);
   const exports = await evaluate(
@@ -302,6 +391,11 @@ try {
     exports.find((item) => item.name.endsWith(".original.json")).text,
   );
   assert.equal(
+    await evaluate("document.querySelector('#report-toolbox').open"),
+    true,
+    "export must leave live tooling state unchanged",
+  );
+  assert.equal(
     currentJson.sections.find((section) => section.kind === "prompt").data.user,
     "Exported mixed working state",
   );
@@ -314,15 +408,19 @@ try {
   const downloadedLedgers = await evaluate(`(() => {
     const html=${JSON.stringify(currentHtml)};
     const parsed=new DOMParser().parseFromString(html,'text/html');
-    return {data:JSON.parse(parsed.getElementById('report-data').textContent),original:JSON.parse(parsed.getElementById('report-original').textContent),markdown:parsed.getElementById('report-markdown').textContent};
+    return {data:JSON.parse(parsed.getElementById('report-data').textContent),original:JSON.parse(parsed.getElementById('report-original').textContent),markdown:parsed.getElementById('report-markdown').textContent,toolboxClosed:parsed.querySelector('#report-toolbox').open===false,evidenceOpen:parsed.querySelector('#delivery-evidence').open};
   })()`);
   assert.deepEqual(downloadedLedgers.data, currentJson);
   assert.deepEqual(downloadedLedgers.original, originalJson);
   assert.match(downloadedLedgers.markdown, /Datenfluss/);
+  assert.equal(downloadedLedgers.toolboxClosed, true);
+  assert.equal(downloadedLedgers.evidenceOpen, true);
   const reopenedPath = path.join(directory, "current-export.html");
-  await (await import("node:fs/promises")).writeFile(reopenedPath, currentHtml);
+  await writeFile(reopenedPath, currentHtml);
   const reopenedUrl = pathToFileURL(reopenedPath).href;
   await navigate(reopenedUrl);
+  assert.equal(await evaluate("document.querySelector('#report-toolbox').open"), false);
+  assert.equal(await evaluate("document.querySelector('#delivery-evidence').open"), true);
   assert.deepEqual(
     await evaluate("JSON.parse(document.getElementById('report-data').textContent)"),
     currentJson,
@@ -355,6 +453,15 @@ try {
   const first = await publishRevision(managedReport, store);
   preview = await serveReport(store);
   await navigate(preview.url);
+  assert.deepEqual(
+    await evaluate(`({
+    closed: document.querySelector('#preview-toolbox')?.open === false,
+    footer: document.querySelector('footer #versions') !== null,
+    noticeOutside: document.querySelector('#preview-toolbox #notice') === null,
+    controlsHidden: !document.querySelector('#apply').checkVisibility()
+  })`),
+    { closed: true, footer: true, noticeOutside: true, controlsHidden: true },
+  );
   for (
     let i = 0;
     i < 100 &&
@@ -479,7 +586,6 @@ try {
   assert.ok(retried.scroll > 0, "reader scroll survives the failed revision and retry");
   assert.equal(retried.dirty, false);
   assert.match(retried.notice, /Aktueller Stand übernommen/);
-  assert.equal(errors.length, 0, errors.join("\n"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
     JSON.stringify(

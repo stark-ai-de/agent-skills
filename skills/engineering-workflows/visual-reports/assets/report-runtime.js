@@ -131,6 +131,7 @@
     const clone = document.documentElement.cloneNode(true);
     clone.classList.remove("js");
     clone.dataset.style = current.style ?? "current";
+    clone.querySelector("#report-toolbox").open = false;
     all("[data-option], [data-criterion], tbody tr, .slide", clone).forEach((node) => {
       node.hidden = false;
     });

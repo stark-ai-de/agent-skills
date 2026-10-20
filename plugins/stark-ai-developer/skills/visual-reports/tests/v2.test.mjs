@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { renderReport, validateReport, extractReport } from "../scripts/render-report.mjs";
 import { parseMarkdown } from "../scripts/lib/markdown-input.mjs";
 import { starter, templates, profiles } from "../scripts/lib/templates.mjs";
-import { CHART_TYPES, validateSvg } from "../scripts/lib/blocks-v2.mjs";
+import { CHART_TYPES, renderExtra, validateSvg } from "../scripts/lib/blocks-v2.mjs";
 import {
   publishRevision,
   currentRevision,
@@ -124,6 +124,59 @@ test("all chart types include signed, zero and explicit missing data without NaN
     assert.ok(!/NaN|Infinity/.test(out.html));
     assert.match(out.html, /Unbekannt/);
     assert.deepEqual(extractReport(out.html), report);
+  }
+});
+test("schema v2 accepts summary handoffs without nextAction and keeps action states strict", async () => {
+  const report = starter({ id: "v2-reader-status" });
+  for (const state of ["information", "completed"]) {
+    report.readerStatus = { state };
+    delete report.nextAction;
+    assert.equal(validateReport(report), report);
+    const rendered = await renderReport(report);
+    assert.match(rendered.html, new RegExp(`data-reader-state="${state}"`));
+    assert.doesNotMatch(rendered.html, /class="next-action"/);
+  }
+  for (const readerStatus of [
+    { state: "action-required" },
+    { state: "conditional", condition: "If the check fails." },
+  ]) {
+    report.readerStatus = readerStatus;
+    delete report.nextAction;
+    assert.throws(() => validateReport(report), /nextAction/);
+    report.nextAction = "Review the result.";
+    assert.equal(validateReport(report), report);
+  }
+  report.readerStatus = { state: "conditional" };
+  assert.throws(() => validateReport(report), /readerStatus.condition/);
+  report.readerStatus = { state: "invented" };
+  assert.throws(() => validateReport(report), /readerStatus.state/);
+  report.readerStatus = { state: "information", unsupported: true };
+  assert.throws(() => validateReport(report), /Unsupported readerStatus field/);
+});
+test("v2 chart and status-history evidence links use escaped source labels and stable targets", () => {
+  const report = example();
+  for (const source of report.sources) source.label = `Evidence <img src=x onerror="${source.id}">`;
+  for (const kind of ["chart", "statusHistory"]) {
+    const block = report.sections.find((section) => section.kind === kind);
+    assert.ok(block, `v2 fixture must include ${kind}`);
+    const ids =
+      kind === "chart"
+        ? block.data.rows.flatMap((row) => row.values.flatMap((value) => value.sourceIds))
+        : block.data.samples.flatMap((sample) => sample.sourceIds);
+    assert.ok(ids.length, `${kind} fixture must include evidence references`);
+    const html = renderExtra(block, report.sources);
+    assert.doesNotMatch(html, /<img src=x onerror=/);
+    for (const id of new Set(ids)) {
+      const source = report.sources.find((item) => item.id === id);
+      assert.ok(source, `${kind} evidence ID remains registered`);
+      assert.ok(
+        html.includes(
+          `href="#source-${id}">Evidence &lt;img src=x onerror=&quot;${id}&quot;&gt;</a>`,
+        ),
+        `${kind} renders the source label for ${id}`,
+      );
+      assert.ok(renderExtra(block).includes(`href="#source-${id}">${id}</a>`));
+    }
   }
 });
 test("waterfall validates totals and missing contributions; targets retain overshoots", async () => {
