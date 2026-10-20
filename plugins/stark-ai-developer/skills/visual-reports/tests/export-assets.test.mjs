@@ -4,7 +4,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { cp, mkdtemp, mkdir, readFile, writeFile, readdir, rm, symlink } from "node:fs/promises";
+import {
+  cp,
+  mkdtemp,
+  mkdir,
+  readFile,
+  writeFile,
+  readdir,
+  rm,
+  symlink,
+  rename,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -107,6 +117,13 @@ test("committed portable bundle verifies digests and runs the renderer offline",
     assert.ok(
       (await readFile(path.join(f.temp, "gallery/r24/r24.html"), "utf8")).includes("Zeitplan"),
     );
+    const outside = path.join(f.temp, "outside-assets");
+    await rename(path.join(bundle, "assets"), outside);
+    await symlink(outside, path.join(bundle, "assets"), "dir");
+    assert.throws(() => f.run(bundle, true), /Unsafe bundle directory/);
+    assert.throws(() => f.run(bundle), /Unsafe bundle directory/);
+    await rm(path.join(bundle, "assets"), { force: true });
+    await rename(outside, path.join(bundle, "assets"));
     const target = path.join(bundle, "assets/report-runtime.css");
     await writeFile(target, "tampered");
     assert.throws(() => f.run(bundle, true));

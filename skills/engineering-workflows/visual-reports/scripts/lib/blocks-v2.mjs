@@ -31,6 +31,24 @@ export const esc = (v) =>
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
   );
+export function validateRasterDataUrl(value, field = "image") {
+  const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
+  assert(match, `${field}: canonical PNG, JPEG or WebP data URL required`);
+  const [, mime, encoded] = match;
+  const bytes = Buffer.from(encoded, "base64");
+  assert(bytes.toString("base64") === encoded, `${field}: canonical base64 required`);
+  const signatures = {
+    png: (data) =>
+      data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    jpeg: (data) => data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff,
+    webp: (data) =>
+      data.length >= 12 &&
+      data.toString("ascii", 0, 4) === "RIFF" &&
+      data.toString("ascii", 8, 12) === "WEBP",
+  };
+  assert(signatures[mime](bytes), `${field}: image signature does not match declared MIME type`);
+  return bytes;
+}
 const assert = (ok, field) => {
   if (!ok) throw new TypeError(`${field}: invalid or missing value`);
 };
@@ -210,13 +228,35 @@ export function validateExtra(s, known) {
       if (d.licenseUrl !== undefined) assert(https(d.licenseUrl), `${field}.licenseUrl`);
       text(d.retrievedAt, field);
       assert(Number.isFinite(Date.parse(d.retrievedAt)), `${field}.retrievedAt`);
-      assert(
-        typeof d.src === "string" &&
-          d.src.length < 2800000 &&
-          /^data:image\/(?:svg\+xml|png|jpeg|webp|x-icon);base64,[A-Za-z0-9+/]+={0,2}$/.test(d.src),
-        `${field}.src`,
-      );
-      const bytes = Buffer.from(d.src.split(",")[1], "base64");
+      assert(typeof d.src === "string" && d.src.length < 2800000, `${field}.src`);
+      const [, mime, encoded] =
+        d.src.match(
+          /^data:image\/(svg\+xml|png|jpeg|webp|x-icon);base64,([A-Za-z0-9+/]+={0,2})$/,
+        ) ?? [];
+      assert(mime && encoded, `${field}.src: canonical base64 image required`);
+      const bytes = Buffer.from(encoded, "base64");
+      assert(bytes.toString("base64") === encoded, `${field}.src: canonical base64 image required`);
+      if (mime !== "svg+xml") {
+        const signatures = {
+          png: (value) =>
+            value
+              .subarray(0, 8)
+              .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+          jpeg: (value) =>
+            value.length >= 3 && value[0] === 0xff && value[1] === 0xd8 && value[2] === 0xff,
+          webp: (value) =>
+            value.length >= 12 &&
+            value.toString("ascii", 0, 4) === "RIFF" &&
+            value.toString("ascii", 8, 12) === "WEBP",
+          "x-icon": (value) =>
+            value.length >= 4 &&
+            value[0] === 0 &&
+            value[1] === 0 &&
+            value[2] === 1 &&
+            value[3] === 0,
+        };
+        assert(signatures[mime](bytes), `${field}.src: image signature does not match MIME type`);
+      }
       assert(
         createHash("sha256").update(bytes).digest("hex") === d.sha256,
         `${field}: asset checksum mismatch`,
@@ -229,13 +269,22 @@ export function validateExtra(s, known) {
 export function validateSvg(svg) {
   assert(
     /<svg\b/i.test(svg) &&
-      !/<!DOCTYPE|<!ENTITY|<(?:script|foreignObject|iframe|object|embed|animate|set)\b|\bon[a-z]+\s*=|(?:javascript|vbscript):|@import|url\(\s*['"]?(?!#)/i.test(
+      !/<!DOCTYPE|<!ENTITY|<\s*(?:[\w.-]+:)?(?:script|foreignObject|iframe|object|embed|animate|set|animateMotion|animateTransform)\b|(?:[\w.-]+:)?on[a-z]+\s*=|(?:javascript|vbscript):|@import/i.test(
         svg,
-      ),
+      ) &&
+      !/\\/.test(svg),
     "SVG active or external content",
   );
-  for (const [, href] of svg.matchAll(/(?:xlink:)?href\s*=\s*["']([^"']*)/gi))
+  for (const [, href] of svg.matchAll(/(?:[\w.-]+:)?(?:href|src)\s*=\s*["']([^"']*)/gi))
     assert(href.startsWith("#"), "SVG external reference");
+  for (const [, body] of svg.matchAll(/url\s*\(([^)]*)\)/gi))
+    assert(
+      body
+        .trim()
+        .replace(/^['"]|['"]$/g, "")
+        .startsWith("#"),
+      "SVG external CSS reference",
+    );
 }
 const bulletList = (items) => `<ul>${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
 const unit = (d) => esc(d.unit);
@@ -429,95 +478,4 @@ export function renderExtra(s) {
     return `<figure class="product-logo"><img src="${esc(d.src)}" alt="${esc(d.alt)}"><figcaption>${esc(d.label)} · <a href="${esc(d.identityUrl)}">Produkt</a> · <a href="${esc(d.sourceUrl)}">Bildquelle</a>${d.licenseUrl ? ` · <a href="${esc(d.licenseUrl)}">Lizenz</a>` : ""}</figcaption></figure>`;
   throw new TypeError(`Unsupported block ${s.kind}`);
 }
-export function chartText(d) {
-  // Selective, deterministic exports, never a model input format.
-  if (["before-after", "actual-target"].includes(d.type))
-    return d.rows
-      .map(
-        (r) =>
-          `${r.label}: ${fmt(r.values[0].value)} ${d.type === "before-after" ? "->" : "/ target"} ${fmt(r.values[1].value)} ${d.unit}`,
-      )
-      .join("\n");
-  if (d.type === "waterfall")
-    return d.rows
-      .map(
-        (r) =>
-          `${r.role.padEnd(5)} ${r.label}: ${r.role === "delta" && r.values[0].value > 0 ? "+" : ""}${r.values[0].value} ${d.unit}`,
-      )
-      .join("\n");
-  return "";
-}
-export function readerMarkdown(report, md) {
-  const lines = [];
-  if (report.nextAction) lines.push(`**Nächster Schritt:** ${md(report.nextAction)}`, "");
-  for (const s of report.sections) {
-    lines.push(`## ${md(s.title)}`, "", ...s.caveats.map((v) => `> Hinweis: ${md(v)}`));
-    const d = s.data;
-    if (s.kind === "bullets") lines.push(...d.items.map((v) => `- ${md(v)}`));
-    else if (s.kind === "text") lines.push(...d.paragraphs.map(md));
-    else if (s.kind === "chart") {
-      lines.push(md(`${d.context} · ${d.unit} · Richtung: ${d.direction}`), "");
-      const diagram = chartText(d);
-      if (diagram) lines.push("```text", diagram.replace(/`/g, "'"), "```", "");
-      lines.push(
-        `| Beobachtung ${d.xUnit !== undefined ? `| x (${md(d.xUnit)}) ` : ""}| ${d.series.map((v) => md(v.label)).join(" | ")} |`,
-        `| --- ${d.xUnit !== undefined ? "| --- " : ""}| ${d.series.map(() => "---").join(" | ")} |`,
-      );
-      lines.push(
-        ...d.rows.map(
-          (r) =>
-            `| ${md(r.label)} ${d.xUnit !== undefined ? `| ${r.x} ` : ""}| ${r.values.map((v) => `${md(fmt(v.value))} ${md(d.unit)} (${md(v.state)}; ${md(v.note)}; ${v.sourceIds.map(md).join(", ")})`).join(" | ")} |`,
-        ),
-      );
-    } else if (s.kind === "statusHistory") {
-      const known = d.samples.filter((x) => x.status !== "unknown").length,
-        healthy = d.samples.filter((x) => x.status === "healthy").length;
-      lines.push(
-        `${healthy}/${known} bekannte Stichproben gesund; ${d.samples.length - known} unbekannt. Keine zeitgewichtete Verfügbarkeit.`,
-        "",
-        "```text",
-        d.samples
-          .map((x) => ({ healthy: "+", degraded: "~", down: "X", unknown: "?" })[x.status])
-          .join(""),
-        "```",
-        "",
-        ...d.samples.map(
-          (x) =>
-            `- ${md(x.at)}: ${md(x.status)} · ${md(x.note)} · ${x.sourceIds.map(md).join(", ")}`,
-        ),
-      );
-    } else if (s.kind === "timeline") {
-      const start = Math.min(...d.tasks.map((t) => Date.parse(t.start))),
-        end = Math.max(...d.tasks.map((t) => Date.parse(t.end))),
-        span = end - start || 1;
-      lines.push(
-        "```text",
-        ...d.tasks.map(
-          (t) =>
-            `${t.label.replace(/[`|\r\n]/g, " ")} |${" ".repeat(Math.round(((Date.parse(t.start) - start) / span) * 30))}${"=".repeat(Math.max(1, Math.round(((Date.parse(t.end) - Date.parse(t.start)) / span) * 30)))}| ${t.start} -> ${t.end}`,
-        ),
-        "```",
-        "",
-        ...d.tasks.map(
-          (t) =>
-            `- ${md(t.label)}: ${md(t.start)} → ${md(t.end)} · ${md(t.owner)} · ${t.progress === null ? "Fortschritt unbekannt" : `${t.progress}%`}`,
-        ),
-        ...d.dependencies.map((e) => `- Abhängigkeit: ${md(e.from)} → ${md(e.to)}`),
-      );
-    } else if (s.kind === "diagram")
-      lines.push(md(d.description), "", "```mermaid", d.source.replace(/`/g, "'"), "```");
-    else lines.push(md(d)); // Full structured content for legacy blocks.
-    for (const detail of s.details ?? [])
-      lines.push("", `### ${md(detail.title)}`, "", ...detail.items.map((x) => `- ${md(x)}`));
-    lines.push("", `Quellen: ${s.sourceIds.map(md).join(", ") || "Keine zugeordnet"}`, "");
-  }
-  lines.push(
-    "## Quellen",
-    "",
-    ...report.sources.map(
-      (s) =>
-        `- ${md(s.id)}: ${md(s.label)} · ${md(s.state)}${s.url ? ` · <${s.url.replace(/[<>]/g, (c) => encodeURIComponent(c))}>` : ""}${s.asOf ? ` · ${md(s.asOf)}` : ""}`,
-    ),
-  );
-  return lines.join("\n");
-}
+export { chartText, readerMarkdown } from "./report-state.mjs";

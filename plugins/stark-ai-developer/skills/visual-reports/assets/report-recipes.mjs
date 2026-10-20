@@ -334,11 +334,13 @@ export function exampleReport(id) {
           "motion",
           "Bewegung bewusst testen",
           { distance: 180, duration: 800, easing: "ease-out" },
-          ["Nur für den ausdrücklich gewählten Motion-Prototyp; kein Effekt im normalen Report."],
+          [
+            "Bewegung startet nur nach Klick und kann pausiert und zurückgesetzt werden; kein Autoplay.",
+          ],
         ),
         section("explanation", "text", "Statische Alternative", {
           paragraphs: [
-            "Start: links. Ende: 180 Pixel rechts. Abspielen und Stoppen bleiben freiwillig; Reduced Motion verhindert die Animation.",
+            "Start: links. Ende: 180 Pixel rechts. Abspielen bleibt freiwillig; Pause, Fortsetzen und Zurücksetzen sind verfügbar. Reduced Motion verhindert die Animation.",
           ],
         }),
       ];
@@ -437,8 +439,8 @@ export function exampleReport(id) {
         section("feature", "graph", "Wie der vollständige Export funktioniert", graph()),
         section("limits", "text", "Funktion und Grenze", {
           paragraphs: [
-            "Browserfilter ändern nur die Darstellung. Das Original-JSON und Markdown enthalten weiterhin alle Optionen, Kennzahlen und Quellen.",
-            "Lokale Entwürfe werden separat exportiert. Eine Quelldatei wird dadurch nicht automatisch geändert.",
+            "Browserfilter ändern nur die Darstellung. HTML, JSON und Markdown exportieren den vollständigen Arbeitsstand; das Original bleibt separat erhalten.",
+            "Bearbeitete HTML-, Markdown- und JSON-Exporte enthalten denselben vollständigen Arbeitsstand und kennzeichnen Nutzerfelder; das ursprüngliche JSON bleibt getrennt. Keine Quelldatei wird automatisch geändert.",
           ],
         }),
       ];
@@ -574,6 +576,7 @@ export function exampleReport(id) {
         ? "execute"
         : "understand",
     style: "current",
+    ...(id === "r09" ? { presentation: "slides" } : {}),
     takeaway:
       "Fiktives Funktionsbeispiel: Inhalte, Bedingungen und Quellen bleiben in allen Ausgabeformaten erhalten.",
     criticalCaveats: [

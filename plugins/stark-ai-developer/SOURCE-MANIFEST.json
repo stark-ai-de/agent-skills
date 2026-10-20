@@ -2649,10 +2649,10 @@
       "sha256": "d84735cf7e4084c9a41bef889092f13cf08767d2d73cb823cce610baf9fbf333"
     },
     {
-      "byteLength": 19412,
+      "byteLength": 19665,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-recipes.mjs",
-      "sha256": "e5848ec6fe85be948c8df5c813629528ec52e1100e03a12418ab85acccd6bc44"
+      "sha256": "9c1be070642545f686a4dcc9984e0d3d7db6cb195fe8d21f6392efcf2f84ba3d"
     },
     {
       "byteLength": 9554,
@@ -2661,10 +2661,10 @@
       "sha256": "44e75f84e14bad281ad7339c65f1e425876af9aec4305d612dd79f0404fc135b"
     },
     {
-      "byteLength": 12176,
+      "byteLength": 20525,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.js",
-      "sha256": "ddbcb9e4ce406c9e2bd496c912e34bf7760ebdd3fb54cea7e546b2f99d73f9b6"
+      "sha256": "d18138a49771c35deeca7baab47309c31ef790ee7acd21b201704e634c1b12eb"
     },
     {
       "byteLength": 14484,
@@ -2727,16 +2727,16 @@
       "sha256": "d33acf8dfbe58323de38baf44a679e3e65703d9656277c0f3d4660af510243f2"
     },
     {
-      "byteLength": 22990,
+      "byteLength": 24524,
       "mode": "0644",
       "path": "skills/visual-reports/references/renderer.md",
-      "sha256": "be603c2358c089fa25e0443f2f72a1bff99e4a2f7df0ba5169c58f12c23ab3c1"
+      "sha256": "503af31762574279abd9e05d78a6844f45877411c5995669a28bfab8b03df8fe"
     },
     {
-      "byteLength": 15499,
+      "byteLength": 16767,
       "mode": "0644",
       "path": "skills/visual-reports/references/report-contract.md",
-      "sha256": "1a7efc9f4eb39da8c3d54508ee2c58bf513f6924acc1ccf7b2234a0840a24aec"
+      "sha256": "0831a91d49172bd2b1de6e1a8725d225c5df5ec1d232f325dbbb350466c4aab3"
     },
     {
       "byteLength": 4405,
@@ -2751,28 +2751,34 @@
       "sha256": "fdab7787996fee727dff4edf2b70b8a88f40c7553f029c0107d5d430c7574c3c"
     },
     {
-      "byteLength": 4136,
+      "byteLength": 7375,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/cache_icon.py",
-      "sha256": "91cd13ac31e7daff22bd9a9881814627be73a93f9382ed49d438be546eacabca"
+      "sha256": "adc803da636cea51c98ca01794d514a4069429ad45762d9f6f26c3350ee2edde"
     },
     {
-      "byteLength": 4508,
+      "byteLength": 4151,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/export-assets.mjs",
-      "sha256": "1d2e9509231f2f3bba871da256fab97e49d4a7694a289644bccd83ecded71493"
+      "sha256": "754d7e6815b956f61558c35aebd2924cba7cd10e0863e7b4b1a266285e9a1dbd"
     },
     {
-      "byteLength": 23763,
+      "byteLength": 21850,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/blocks-v2.mjs",
-      "sha256": "8078ca5ba7d4ae89a12d86ea0b2446b701d963660d3ab2758fb6c49ff21914ae"
+      "sha256": "5f88084a0a1b0ee302c01930aafa1a099a0ddcdd6c98d71f4ed2d12637b524a4"
     },
     {
       "byteLength": 3818,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/cli.mjs",
       "sha256": "a0eaf0b0e68497f296a0895dba2ffcfc672f69a8a0a5183ee67307639a311fbf"
+    },
+    {
+      "byteLength": 1684,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/export-path.mjs",
+      "sha256": "274c3fb2fba4e6e2147530a82db68f11dedc8e2a3259913892819334d5da6392"
     },
     {
       "byteLength": 472,
@@ -2793,6 +2799,12 @@
       "sha256": "1e4dedad8c3828246200213a4861e4242aa02b58d817ad730cf36bf4d70afb1c"
     },
     {
+      "byteLength": 12840,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/report-state.mjs",
+      "sha256": "dba5969839437f3056baedeb7fa65e94bde345d8871c7db4b5448777a4fd6133"
+    },
+    {
       "byteLength": 6048,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/report-store.mjs",
@@ -2805,40 +2817,52 @@
       "sha256": "ac0590213f76d873f354d7c89154b71fc0b0f9b4bdd17029b5a725d21cef6d73"
     },
     {
-      "byteLength": 32052,
+      "byteLength": 34839,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/render-report.mjs",
-      "sha256": "9dfa500591c1034252fb0cb971343a000a8202fda96b63f74dd46eac64b548db"
+      "sha256": "bb461939dfbf13ba0655090dbd0c0d0b7d01b53d1afe1f176ed90b5af5f0285d"
     },
     {
-      "byteLength": 10820,
+      "byteLength": 11219,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-delivery.mjs",
-      "sha256": "d8dbe12cac9409fcbdfb33039cb80b40a07b47a18b35682bed38b220e5e294eb"
+      "sha256": "2bc866088470b24ca2fd4b364e0ed8dbc57bbeea8367f0d14b9086963c7744b4"
     },
     {
-      "byteLength": 8131,
+      "byteLength": 15373,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-smoke.py",
-      "sha256": "1de59bb7920d325f53c0a2bee232580051e5a1bb7778649a9c50498833563696"
+      "sha256": "53e3286d1454da76900fe1abd5dcde79ab94e37f976a873a9728ac0178cf1bde"
     },
     {
-      "byteLength": 5144,
+      "byteLength": 2262,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/cache-icon.test.mjs",
+      "sha256": "35064bb27bc881340d77ebce74441e9f33e0dd900cba737294a34ca63c68fa9d"
+    },
+    {
+      "byteLength": 5604,
       "mode": "0644",
       "path": "skills/visual-reports/tests/export-assets.test.mjs",
-      "sha256": "4525bbb4566fa6e94ba5668edc9813fdb35014419e96fdf0a390d314b6a40806"
+      "sha256": "d634cf67b1a472b0dc3b07435bddb4bc089a8da902b517b2950db6135097b3fe"
     },
     {
-      "byteLength": 7174,
+      "byteLength": 10338,
       "mode": "0644",
       "path": "skills/visual-reports/tests/render-report.test.mjs",
-      "sha256": "7294368b99aae2e9802e0665e5d05f325e8ed38fb0328de54c807289736afe27"
+      "sha256": "cc472348da91fddbeaba213b7bb57539a447fd0e24f2c68474c0182da37784ce"
     },
     {
-      "byteLength": 15960,
+      "byteLength": 1935,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/report-state.test.mjs",
+      "sha256": "9ffc13efc984652ae0770a3f9b68b3d6cf91dda3569a1fe0cadbac412f61f199"
+    },
+    {
+      "byteLength": 17185,
       "mode": "0644",
       "path": "skills/visual-reports/tests/v2.test.mjs",
-      "sha256": "479e42c52db2ce52f3b7b4c2fbd98ba765c44e73880b2bb4ed7ce5170029066a"
+      "sha256": "a98b1bcfdc24cd108f68a0d0fbcd8175a7817c6caff5ad2827d00893f44c6108"
     }
   ],
   "plugin": {
@@ -2847,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "3ebd4987c5e99ed7a954a8cdcc1274b12d821e75b18f249aa059fc56f919f020"
+  "treeHash": "5d05fae0f4a8572cfefe0ef2f9741c6a6f85092a48bc8fda4c6f9a02a3a4fde7"
 }

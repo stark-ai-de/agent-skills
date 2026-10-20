@@ -17,6 +17,8 @@ import {
   history,
 } from "../scripts/lib/report-store.mjs";
 import { serveReport } from "../scripts/lib/preview.mjs";
+import { exampleReport } from "../assets/report-recipes.mjs";
+import { workingReport } from "../scripts/lib/report-state.mjs";
 const markdown = await readFile(
   new URL("../assets/completion-example.md", import.meta.url),
   "utf8",
@@ -220,6 +222,18 @@ test("reviewed logos preserve bytes and provenance; active SVG and digest mismat
   assert.throws(() => validateReport(r), /checksum/);
   assert.throws(() => validateSvg('<svg><image href="https://example.org/a"/></svg>'));
   assert.throws(() => validateSvg('<svg><animate attributeName="href"/></svg>'));
+  assert.doesNotThrow(() =>
+    validateSvg(
+      '<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g"/></defs><rect fill="url(#g)"/></svg>',
+    ),
+  );
+  assert.throws(() =>
+    validateSvg('<svg xmlns="http://www.w3.org/2000/svg" xmlns:x="urn:svg"><x:script/></svg>'),
+  );
+  assert.throws(() =>
+    validateSvg(String.raw`<svg><rect style="fill:u\72l(https://example.org/a)"/></svg>`),
+  );
+  assert.throws(() => validateSvg('<!DOCTYPE svg [<!ENTITY x "y">]><svg/>'));
 });
 test("managed snapshots reject stale writers and preserve complete revision history", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "report-store-test-"));
@@ -242,6 +256,15 @@ test("managed snapshots reject stale writers and preserve complete revision hist
     const current = await currentRevision(directory);
     const payload = await readRevision(directory, current.revision);
     assert.deepEqual(extractReport(payload.html), JSON.parse(payload.json));
+    const editedOriginal = exampleReport("r18");
+    const draft = structuredClone(editedOriginal);
+    draft.sections[0].data.cards[0].column = "Erledigt";
+    const edited = workingReport(editedOriginal, draft);
+    const editedStore = path.join(directory, "edited-store");
+    const editedRevision = await publishRevision(edited, editedStore);
+    const editedPayload = await readRevision(editedStore, editedRevision.revision);
+    assert.deepEqual(JSON.parse(editedPayload.json).editing.original, editedOriginal);
+    assert.deepEqual(extractReport(editedPayload.html), JSON.parse(editedPayload.json));
     await writeFile(path.join(directory, "revisions", current.revision, "report.md"), "tampered");
     await assert.rejects(readRevision(directory, current.revision), /checksum/);
   } finally {

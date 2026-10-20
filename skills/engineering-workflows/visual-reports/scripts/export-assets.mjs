@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdir, readFile, writeFile, lstat, realpath } from "node:fs/promises";
+import { mkdir, readFile, writeFile, realpath, lstat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveExportTarget } from "./lib/export-path.mjs";
 
 const skill = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const git = (...args) => execFileSync("git", ["-C", skill, ...args], { encoding: "utf8" }).trim();
@@ -57,6 +58,7 @@ for (const required of [
   "assets/report-runtime.js",
   "assets/report-runtime.css",
   "assets/report-recipes.mjs",
+  "scripts/lib/report-state.mjs",
   "references/renderer.md",
 ]) {
   if (!inputs[required]) throw new Error(`Missing committed renderer input: ${required}`);
@@ -97,21 +99,12 @@ const outputs = [
 ];
 if (!args.includes("--check")) await mkdir(destination, { recursive: true });
 for (const { file, bytes } of outputs) {
-  const target = path.join(destination, file);
+  const target = await resolveExportTarget(destination, file, {
+    create: !args.includes("--check"),
+  });
   if (args.includes("--check")) {
-    if (!(await lstat(target)).isFile() || !(await readFile(target)).equals(bytes))
-      throw new Error(`Bundle differs: ${file}`);
+    if (!(await readFile(target)).equals(bytes)) throw new Error(`Bundle differs: ${file}`);
   } else {
-    await mkdir(path.dirname(target), { recursive: true });
-    const parent = await realpath(path.dirname(target));
-    const root = await realpath(destination);
-    if (parent !== root && !parent.startsWith(root + path.sep))
-      throw new Error(`Bundle path escapes destination: ${file}`);
-    try {
-      if (!(await lstat(target)).isFile()) throw new Error(`Not a regular output: ${file}`);
-    } catch (error) {
-      if (error.code !== "ENOENT") throw error;
-    }
     await writeFile(target, bytes);
   }
 }

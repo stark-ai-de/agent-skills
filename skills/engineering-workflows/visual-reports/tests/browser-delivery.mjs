@@ -194,7 +194,8 @@ try {
     );
   }
   const store = path.join(directory, "managed");
-  const first = await publishRevision(mixed, store);
+  const managedReport = exampleReport("r20");
+  const first = await publishRevision(managedReport, store);
   preview = await serveReport(store);
   await navigate(preview.url);
   for (
@@ -205,9 +206,19 @@ try {
   )
     await new Promise((resolve) => setTimeout(resolve, 30));
   await evaluate(
-    `const f=document.querySelector('iframe').contentWindow;f.document.querySelector('details').open=true;f.scrollTo(0,300);const e=f.document.getElementById('style');e.value='calm';e.dispatchEvent(new Event('change',{bubbles:true}));`,
+    `const f=document.querySelector('iframe').contentWindow;f.document.querySelector('details').open=true;f.scrollTo(0,300);const e=f.document.querySelector('[data-prompt-field="system"]');e.value='Local editor draft';e.dispatchEvent(new Event('input',{bubbles:true}));`,
   );
-  const changed = structuredClone(mixed);
+  assert.equal(
+    await evaluate("document.querySelector('iframe').contentWindow.visualReportView.isDirty()"),
+    true,
+  );
+  assert.match(
+    await evaluate(
+      "document.querySelector('iframe').contentDocument.getElementById('report-json').textContent",
+    ),
+    /Local editor draft/,
+  );
+  const changed = structuredClone(managedReport);
   changed.nextAction = "Second revision for browser fixture";
   const second = await publishRevision(changed, store, { expected: first.revision });
   for (

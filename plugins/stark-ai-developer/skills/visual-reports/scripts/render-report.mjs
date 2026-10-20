@@ -12,7 +12,15 @@ import {
   renderExtra,
   readerMarkdown,
   icon,
+  validateRasterDataUrl,
+  esc as escape,
 } from "./lib/blocks-v2.mjs";
+import {
+  editNotice,
+  originalReport,
+  stateMarkdown,
+  validateRevision,
+} from "./lib/report-state.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const KINDS = Object.freeze([
@@ -49,11 +57,6 @@ export const STATES = Object.freeze([
 ]);
 const styles = ["current", "balanced", "calm"];
 const idPattern = /^[a-z][a-z0-9-]*$/;
-const escape = (value) =>
-  String(value ?? "").replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
-  );
 const json = (value) => JSON.stringify(value, null, 2) + "\n";
 const scriptJson = (value) =>
   json(value)
@@ -68,6 +71,46 @@ const fail = (message) => {
 const assert = (condition, message) => {
   if (!condition) fail(message);
 };
+function assertJsonRepresentable(value, label = "report", ancestors = new Set()) {
+  const type = typeof value;
+  if (value === null || type === "string" || type === "boolean") return;
+  if (type === "number")
+    return assert(
+      Number.isFinite(value) && !Object.is(value, -0),
+      `${label}: finite JSON number required`,
+    );
+  assert(type === "object", `${label}: value is not JSON representable`);
+  assert(!ancestors.has(value), `${label}: cyclic value is not JSON representable`);
+  ancestors.add(value);
+  const descriptorValue = (descriptor, childLabel) => {
+    assert(
+      descriptor && descriptor.enumerable && Object.hasOwn(descriptor, "value"),
+      `${childLabel}: enumerable data property required`,
+    );
+    assertJsonRepresentable(descriptor.value, childLabel, ancestors);
+  };
+  if (Array.isArray(value)) {
+    assert(Object.getPrototypeOf(value) === Array.prototype, `${label}: unsupported array type`);
+    const keys = Reflect.ownKeys(value);
+    assert(
+      keys.length === value.length + 1 && keys.includes("length"),
+      `${label}: array properties must be JSON representable`,
+    );
+    for (let index = 0; index < value.length; index++)
+      descriptorValue(Object.getOwnPropertyDescriptor(value, String(index)), `${label}[${index}]`);
+  } else {
+    const prototype = Object.getPrototypeOf(value);
+    assert(
+      prototype === Object.prototype || prototype === null,
+      `${label}: plain JSON object required`,
+    );
+    for (const key of Reflect.ownKeys(value)) {
+      assert(typeof key === "string", `${label}: symbol key is not JSON representable`);
+      descriptorValue(Object.getOwnPropertyDescriptor(value, key), `${label}.${key}`);
+    }
+  }
+  ancestors.delete(value);
+}
 const object = (value, label) =>
   assert(
     value !== null && typeof value === "object" && !Array.isArray(value),
@@ -129,6 +172,7 @@ function date(value, field = "timeline date") {
 
 /** Validate before rendering; never execute source markup, guessed URLs or expressions. */
 export function validateReport(report) {
+  assertJsonRepresentable(report);
   object(report, "report");
   assert([1, 2].includes(report.schemaVersion), "Unsupported schemaVersion");
   if (report.schemaVersion === 2) validateV2(report);
@@ -140,6 +184,8 @@ export function validateReport(report) {
     "Invalid reader goal",
   );
   assert(styles.includes(report.style ?? "current"), "Invalid style");
+  if (report.presentation !== undefined)
+    assert(["slides", "reading"].includes(report.presentation), "Invalid presentation start mode");
   strings(report.criticalCaveats, "criticalCaveats", true);
   list(report.sources, "sources", true);
   const known = ids(report.sources, "sources");
@@ -302,11 +348,10 @@ export function validateReport(report) {
         text(d.alt, "alt");
         text(d.caption, "caption");
         assert(
-          typeof d.src === "string" &&
-            d.src.length <= 2800000 &&
-            /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(d.src),
+          typeof d.src === "string" && d.src.length <= 2800000,
           "Only reviewed embedded raster images are accepted; use graph for generated SVG",
         );
+        validateRasterDataUrl(d.src, "figure.src");
         break;
       case "variants":
         list(d.items, "variants");
@@ -387,6 +432,15 @@ export function validateReport(report) {
         });
         break;
     }
+  }
+  if (report.presentation === "slides")
+    assert(
+      report.sections.some((section) => section.kind === "slides"),
+      "Presentation requires a slides block",
+    );
+  if (report.editing !== undefined) {
+    validateRevision(report);
+    validateReport(report.editing.original);
   }
   return report;
 }
@@ -490,7 +544,7 @@ function block(s) {
     case "variants":
       return `<div class="grid">${d.items.map((v) => `<div class="tone-${v.tone}"><h3><span class="swatch" aria-hidden="true"></span>${escape(v.label)}</h3><p>${escape(v.text)}</p><p>Status: ${escape(v.status)}</p><div class="metric"><span>Fortschritt</span><span>${v.progress}%</span></div><div class="track" aria-hidden="true"><span class="bar" style="width:${v.progress}%"></span></div></div>`).join("")}</div>`;
     case "motion":
-      return `<p>Bewegung: 0 → ${d.distance}px · ${d.duration}ms · ${escape(d.easing)}. Statischer Endzustand ohne JavaScript.</p><div class="motion-lane"><span class="motion-dot" style="transform:translateX(${d.distance}px)" aria-hidden="true"></span></div><div class="toolbar js-only"><label>Dauer <input data-duration type="number" min="100" max="5000" value="${d.duration}"> ms</label><label>Easing <select data-easing>${["linear", "ease", "ease-in", "ease-out", "ease-in-out"].map((v) => `<option${v === d.easing ? " selected" : ""}>${v}</option>`).join("")}</select></label><button data-play>Abspielen</button><button data-stop>Stoppen</button><output data-motion-status></output></div>`;
+      return `<p>Bewegung: 0 → ${d.distance}px · ${d.duration}ms · ${escape(d.easing)}. Statischer Endzustand ohne JavaScript.</p><div class="motion-lane"><span class="motion-dot" style="transform:translateX(${d.distance}px)" aria-hidden="true"></span></div><div class="toolbar js-only"><label>Dauer <input data-duration type="number" min="100" max="5000" value="${d.duration}"> ms</label><label>Easing <select data-easing>${["linear", "ease", "ease-in", "ease-out", "ease-in-out"].map((v) => `<option${v === d.easing ? " selected" : ""}>${v}</option>`).join("")}</select></label><button data-play>Abspielen</button><button data-pause disabled>Pause</button><button data-stop>Zurücksetzen</button><output data-motion-status></output></div>`;
     case "prototype":
       return `<p>Simulation, keine externe Aktion. Zustand: <strong data-prototype-state aria-live="polite">${escape(d.initial)}</strong></p><p>Zustände: ${d.states.map(escape).join(" → ")}</p>${d.transitions.map((t) => `<p>${escape(t.from)} → ${escape(t.to)}: ${escape(t.label)}</p>`).join("")}<div class="toolbar js-only">${d.transitions.map((t, i) => `<button data-transition="${i}">${escape(t.label)}</button>`).join("")}<button data-reset-prototype>Zurücksetzen</button></div>`;
     case "slides":
@@ -540,18 +594,22 @@ function markdownValue(value, depth = 0) {
 }
 export function renderMarkdown(report) {
   validateReport(report);
-  return `# ${markdownValue(report.title.replace(/[\r\n]/g, " "))}\n\n${markdownValue(report.takeaway)}\n\n${report.criticalCaveats.map((v) => `> Hinweis: ${markdownValue(v)}`).join("\n\n")}\n\n${readerMarkdown(report, markdownValue)}\n\n## Complete, unfiltered field index\n\nEvery field below is derived from the same report model. No browser selection or local draft changes this source snapshot.\n\n${markdownValue(report)}\n`;
+  return stateMarkdown(report);
 }
 export async function renderReport(report) {
   validateReport(report);
-  const [css, runtime] = await Promise.all([
+  const [css, browser, stateModule] = await Promise.all([
     readFile(path.join(here, "../assets/report-runtime.css"), "utf8"),
     readFile(path.join(here, "../assets/report-runtime.js"), "utf8"),
+    readFile(path.join(here, "./lib/report-state.mjs"), "utf8"),
   ]);
+  const runtime = `const ReportState = (() => {\n${stateModule.replace(/^export /gm, "")}\nreturn { originalReport, workingReport, validateRevision, editNotice, stateMarkdown, readerMarkdown, chartText };\n})();\n${browser}`;
+  assert(!/<\/script/i.test(runtime), "Owned runtime contains an unsafe script end tag");
   const markdown = renderMarkdown(report),
     digest = createHash("sha256").update(runtime).digest("base64");
   const csp = `default-src 'none'; script-src 'sha256-${digest}'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'`;
-  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}</style></head><body><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1><p class="takeaway">${escape(report.takeaway)}</p>${caveats(report.criticalCaveats)}${report.nextAction ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>` : ""}<div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-json">Original-JSON</button><button id="export-md">Vollständiges Markdown</button><button id="export-settings">Stil exportieren</button><button id="export-draft">Lokalen Entwurf exportieren</button></div><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}${block(s)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre>${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><p class="print-note">Druckansicht kann lokale Entwürfe enthalten; diese separat als JSON exportieren. Vollständige Originaldaten liegen als Begleitdateien und eingebettet vor.</p><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
+  const original = originalReport(report);
+  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}</style></head><body><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1><p class="takeaway">${escape(report.takeaway)}</p>${caveats(report.criticalCaveats)}${report.nextAction ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>` : ""}<div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
   return { html, markdown, json: json(report) };
 }
 /** Explicit local writes only. A new output directory prevents accidental report overwrite. */
@@ -567,6 +625,12 @@ export async function writeReport(report, directory) {
       writeFile(path.join(directory, `${report.id}.${ext}`), value, { flag: "wx" }),
     ),
   );
+  if (report.editing)
+    await writeFile(
+      path.join(directory, `${report.id}.original.json`),
+      json(originalReport(report)),
+      { flag: "wx" },
+    );
   return rendered;
 }
 export function extractReport(html) {

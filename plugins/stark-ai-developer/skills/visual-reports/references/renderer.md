@@ -9,24 +9,27 @@ implementation-specific checks; it does not redefine the general rules.
 
 ## Confirmed decisions and precedence
 
-| Decision                               | Implementation consequence                                                                                                                                                                                                                                    |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| General visual-report skill            | Preserve lookup, decide, execute, understand/retain; not only product comparisons.                                                                                                                                                                            |
-| Comparison first                       | Shared criteria/option matrix and aligned numeric charts are visible immediately; filters refine an existing comparison. No mandatory product-detail navigation or four-option cap.                                                                           |
-| 6A: following agents read and evaluate | Complete source mapping and targeted extraction; a mandatory edit/write-back roundtrip is not imposed.                                                                                                                                                        |
-| 7A: HTML + complete Markdown + JSON    | One normalized data snapshot drives all outputs; JSON is also embedded in standalone HTML. Filters do not change exports.                                                                                                                                     |
-| 9A: agent selects and combines         | Choose blocks/recipes from the task without a compulsory interview. Ask only about material ambiguity.                                                                                                                                                        |
-| 10A: runnable implementation and tests | This PR includes code, 24 recipe examples and executable tests, not only a specification or comment.                                                                                                                                                          |
-| 11A: blocks + optional recipes         | One renderer implements the technical blocks. Recipes only combine them; optional consumer domain profiles supply criteria and validation rules, not invented facts or a second renderer.                                                                     |
-| 12B: all 24 use cases in this PR       | Includes presentation, motion, state prototypes, triage, feature flags and prompt editing. This deliberately expands the original report-only boundary.                                                                                                       |
-| 13A: selective, reviewed code reuse    | Reuse requires file-level provenance/license review and integration into common blocks. Report blocks and instructions are original. Pinned generator dependencies and selected Lucide icons are bundled with full notices; no external skill text is copied. |
+| Decision                                      | Implementation consequence                                                                                                                                                                                                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| General visual-report skill                   | Preserve lookup, decide, execute, understand/retain; not only product comparisons.                                                                                                                                                                            |
+| Comparison first                              | Shared criteria/option matrix and aligned numeric charts are visible immediately; filters refine an existing comparison. No mandatory product-detail navigation or four-option cap.                                                                           |
+| 6A: following agents read and evaluate        | Complete source mapping and targeted extraction; a mandatory edit/write-back roundtrip is not imposed.                                                                                                                                                        |
+| 7A: HTML + complete Markdown + JSON           | One normalized data snapshot drives all outputs; JSON is also embedded in standalone HTML. Filters do not change exports.                                                                                                                                     |
+| 9A: agent selects and combines                | Choose blocks/recipes from the task without a compulsory interview. Ask only about material ambiguity.                                                                                                                                                        |
+| 10A: runnable implementation and tests        | This PR includes code, 24 recipe examples and executable tests, not only a specification or comment.                                                                                                                                                          |
+| 11A: blocks + optional recipes                | One renderer implements the technical blocks. Recipes only combine them; optional consumer domain profiles supply criteria and validation rules, not invented facts or a second renderer.                                                                     |
+| 12B: all 24 use cases in this PR              | Includes presentation, motion, state prototypes, triage, feature flags and prompt editing. This deliberately expands the original report-only boundary.                                                                                                       |
+| 13A: selective, reviewed code reuse           | Reuse requires file-level provenance/license review and integration into common blocks. Report blocks and instructions are original. Pinned generator dependencies and selected Lucide icons are bundled with full notices; no external skill text is copied. |
+| 14A: current state plus original              | HTML, Markdown and JSON export the same working state; retain one original snapshot and label field-level user edits without re-verifying evidence.                                                                                                           |
+| 15A: helpful explanatory motion               | Motion may be offered for explanations; it starts on click, can pause/resume/reset, respects reduced motion and keeps a static explanation.                                                                                                                   |
+| 16A: explicit presentations start with slides | Presentation requests set `presentation: "slides"`; the reading toggle and complete no-JavaScript view remain available. Ordinary reports stay reading-first.                                                                                                 |
 
 The October 19 discussion comments are historical decision records, not another
 maintained specification. The later 11A/12B/13A answers supersede their unresolved
 three-way scope discussion. They do not turn every earlier evaluation suggestion
 into an approved design detail. Earlier Obsidian Glass/emissive card experiments
 are not defaults for Graphite Grain reports. The quiet, card-free report direction
-wins; motion is confined to an explicitly selected prototype.
+wins; motion remains optional and explanatory, never decorative autoplay.
 
 The accepted October 20 completion plan authorizes public preparation, plugin
 inclusion and local installation. It does not authorize push, merge, publication,
@@ -46,12 +49,12 @@ Consumer's authoritative sources + evidence + source-to-model adapter
          +---------------+----------------+
          |               |                |
     standalone HTML   complete Markdown   JSON
-    + full JSON       field index         same snapshot
+    + full JSON       field index         same current state
          |
     browser-only enhancements
     filters / styles / presentation / explicit motion / local editors
          |
-    separate local draft JSON (explicit download, no external write)
+    current exports plus separate immutable original snapshot
 ```
 
 The consumer owns facts, source reconciliation and genuine reviewed assets. It
@@ -150,18 +153,22 @@ details even without JavaScript; critical report content is never confined there
 
 ## Browser state, exports and safety
 
-Original exports always use the immutable input snapshot. UI filtering, sorting
-and presentation do not remove facts. Style changes use a single document and
-preserve content/focus; the settings download is a proposed preference, not an
-automatic write to `.cache/show-html/preferences.json`.
+HTML, Markdown and JSON downloads always describe the same complete working state.
+UI filtering, sorting and presentation do not remove facts. User edits carry
+field-level `user-edited` provenance and retain one immutable original snapshot;
+edits never inherit source evidence as proof of the change. Invalid editor input
+blocks current-state downloads. The original JSON remains separately available.
+Node writes an `.original.json` beside edited reports; managed revisions preserve
+the original metadata in their revision JSON.
 
-Local editor changes live only in the current tab. `Lokalen Entwurf exportieren`
-downloads a separate model with `draft.localOnly`, `basedOn` and an explanatory
-note. It does not overwrite the original, contact a service or claim the original
-sources now contain these edits. A subsequent explicit render can consume this
-JSON after consumer review. Closing the tab without exporting loses the draft.
-There is no automatic persistence, collaboration, authentication or production
-backend. Browser editor scope is separate from 6A's read/evaluate agent workflow.
+Local editor changes live only in the current tab and disappear when it closes
+unless explicitly exported. Exported HTML materializes the current bounded editor
+fields, retains the embedded current model and readable ledgers, and reopens as a
+complete static report without JavaScript. There is no automatic persistence,
+collaboration, authentication or production backend. Browser editor scope is
+separate from 6A's read/evaluate agent workflow. Style changes use a single
+document and preserve content/focus; the settings download is a proposed
+preference, not an automatic write to `.cache/show-html/preferences.json`.
 
 Source text is escaped; JSON script-breakout characters are encoded. The generated
 page has a CSP restricting script execution to the exact bundled runtime hash,
@@ -169,6 +176,10 @@ denying network connections, remote resources, forms, plugins and base changes.
 There is no eval, dynamic source-code compilation or runtime import. Only trusted
 owned CSS/runtime is inlined. CSP and escaping are defense in depth, not a claim
 that every browser or consumer wrapper has been audited.
+
+The managed preview bridge detects unsaved editor/style changes and blocks Apply
+after a newer revision until explicit discard. It captures and restores scroll
+position and expanded details while remaining an offline local reader.
 
 `assets/graphite-grain/` remains the existing optional DOM-specific configurator
 with its ten controls and A/B/standalone export workflow. It is not silently wired

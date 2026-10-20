@@ -14,6 +14,7 @@ import {
   writeReport,
 } from "../scripts/render-report.mjs";
 import { recipes, exampleReport } from "../assets/report-recipes.mjs";
+import { workingReport } from "../scripts/lib/report-state.mjs";
 const cli = fileURLToPath(new URL("../scripts/render-report.mjs", import.meta.url));
 
 for (const recipe of recipes) {
@@ -48,6 +49,17 @@ test("finite catalog: all 24, unique IDs, all registered blocks are exercised", 
     ["figure", "bullets", "diagram", "chart", "statusHistory", "logo"],
   ); // Separate raster fixture below.
 });
+test("explicit presentation intent starts slides and rejects invalid or missing slides", () => {
+  const report = exampleReport("r09");
+  assert.equal(report.presentation, "slides");
+  assert.equal(validateReport(report), report);
+  assert.ok(report.sections.some((section) => section.kind === "slides"));
+  report.presentation = "automatic";
+  assert.throws(() => validateReport(report), /Invalid presentation start mode/);
+  report.presentation = "slides";
+  report.sections = exampleReport("r01").sections;
+  assert.throws(() => validateReport(report), /Presentation requires a slides block/);
+});
 test("embedded raster block is validated; remote images and active SVG rejected", async () => {
   const report = exampleReport("r10");
   report.sections = [
@@ -67,8 +79,13 @@ test("embedded raster block is validated; remote images and active SVG rejected"
   assert.ok((await renderReport(report)).html.includes("<figure>"));
   for (const src of ["https://example.invalid/a.png", "data:image/svg+xml;base64,PHN2Zz4="]) {
     report.sections[0].data.src = src;
-    assert.throws(() => validateReport(report), /raster/);
+    assert.throws(() => validateReport(report), /canonical PNG/);
   }
+  report.sections[0].data.src = "data:image/png;base64,bm90IGFuIGltYWdl";
+  assert.throws(() => validateReport(report), /signature does not match/);
+  report.sections[0].data.src =
+    "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlL8AAAAASUVORK5CYII=";
+  assert.throws(() => validateReport(report), /signature does not match/);
 });
 test("unknown remains null; complete option matrix and source refs are required", () => {
   let report = exampleReport("r01");
@@ -159,6 +176,38 @@ test("all styles preserve facts; source metadata and extension fields survive", 
     assert.ok(out.markdown.includes(r.consumerExtension.requiredCondition));
   }
 });
+test("extensions must remain losslessly JSON representable before every renderer runs", async () => {
+  const valid = exampleReport("r21");
+  valid.consumerExtension = { nested: ["kept", null, 0] };
+  assert.deepEqual(
+    extractReport((await renderReport(valid)).html).consumerExtension,
+    valid.consumerExtension,
+  );
+  for (const invalid of [
+    { threshold: Infinity },
+    { threshold: -0 },
+    { missing: undefined },
+    { count: 1n },
+    { callback() {} },
+    new Date("2026-10-20T00:00:00Z"),
+  ]) {
+    const report = exampleReport("r21");
+    report.consumerExtension = invalid;
+    assert.throws(
+      () => validateReport(report),
+      /JSON representable|plain JSON object|finite JSON number/,
+    );
+    await assert.rejects(
+      renderReport(report),
+      /JSON representable|plain JSON object|finite JSON number/,
+    );
+  }
+  const cyclic = {};
+  cyclic.self = cyclic;
+  const report = exampleReport("r21");
+  report.consumerExtension = cyclic;
+  assert.throws(() => validateReport(report), /cyclic value/);
+});
 test("CLI writes three formats, refuses overwrite and extracts a targeted section", async () => {
   const temp = await mkdtemp(path.join(tmpdir(), "visual-report-test-"));
   try {
@@ -175,6 +224,30 @@ test("CLI writes three formats, refuses overwrite and extracts a targeted sectio
       ),
     );
     assert.deepEqual(selected, r.sections[0]);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+test("edited Node exports keep the original separately and preserve one source snapshot", async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "visual-report-edited-test-"));
+  try {
+    const original = exampleReport("r18");
+    const draft = structuredClone(original);
+    draft.sections[0].data.cards[0].column = "Erledigt";
+    const edited = workingReport(original, draft);
+    const destination = path.join(temp, "edited");
+    await writeReport(edited, destination);
+    assert.deepEqual(
+      JSON.parse(await readFile(path.join(destination, "r18.original.json"), "utf8")),
+      original,
+    );
+    const current = JSON.parse(await readFile(path.join(destination, "r18.json"), "utf8"));
+    assert.equal(current.editing.original.editing, undefined);
+    assert.deepEqual(
+      extractReport(await readFile(path.join(destination, "r18.html"), "utf8")),
+      current,
+    );
+    assert.match(await readFile(path.join(destination, "r18.md"), "utf8"), /Original snapshot/);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }

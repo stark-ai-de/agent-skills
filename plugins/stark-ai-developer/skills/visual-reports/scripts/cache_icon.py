@@ -2,23 +2,89 @@
 """Cache a selected public image; never installs packages or changes project policy."""
 import argparse
 import hashlib
+import ipaddress
 import json
 from pathlib import Path
 import re
 import time
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+import xml.etree.ElementTree as ET
 
 
 def validate_svg(payload):
     text = payload.decode('utf-8-sig')
-    if not re.search(r'<svg\b', text, re.I):
+    if re.search(r'<!DOCTYPE|<!ENTITY', text, re.I):
+        raise ValueError('SVG declarations and entities are not allowed')
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as error:
+        raise ValueError('Invalid SVG XML') from error
+    if root.tag.rsplit('}', 1)[-1].lower() != 'svg':
         raise ValueError('Response is not an SVG image')
-    if re.search(r'<!DOCTYPE|<!ENTITY|<(?:script|foreignObject|iframe|object|embed)\b|\bon[a-z]+\s*=|(?:javascript|vbscript):|@import|url\(\s*[\'\"]?(?!#)', text, re.I):
-        raise ValueError('SVG contains active or external content')
-    for target in re.findall(r'(?:xlink:)?href\s*=\s*[\'\"]([^\'\"]*)', text, re.I):
+    active = {'script', 'foreignobject', 'iframe', 'object', 'embed', 'animate', 'set', 'animatemotion', 'animatetransform'}
+    for element in root.iter():
+        name = element.tag.rsplit('}', 1)[-1].lower()
+        if name in active:
+            raise ValueError('SVG contains active content')
+        if name == 'style' and element.text:
+            validate_svg_css(element.text)
+        for attribute, value in element.attrib.items():
+            local_name = attribute.rsplit('}', 1)[-1].lower()
+            if local_name.startswith('on'):
+                raise ValueError('SVG contains active content')
+            if local_name in {'href', 'src'} and not value.startswith('#'):
+                raise ValueError('SVG references external content')
+            if local_name == 'style' or 'url' in value.lower():
+                validate_svg_css(value)
+
+
+def validate_svg_css(value):
+    # Reject CSS escapes rather than implementing tokenization; this blocks escaped
+    # function names such as u\\72l(...) while retaining ordinary static styles.
+    if "\\" in value:
+        raise ValueError('SVG contains active or external CSS')
+    for match in re.finditer(r'url\s*\(([^)]*)\)', value, re.I):
+        target = match.group(1).strip().strip('\'\"')
         if not target.startswith('#'):
-            raise ValueError('SVG references external content')
+            raise ValueError('SVG contains active or external CSS')
+    if re.search(r'(?:javascript|vbscript):|@import', value, re.I):
+        raise ValueError('SVG contains active or external CSS')
+
+
+def validate_public_https_url(value, label):
+    try:
+        parsed = urlsplit(value)
+        host = parsed.hostname
+        port = parsed.port
+    except (ValueError, AttributeError):
+        raise ValueError(f'{label} must be a public HTTPS URL') from None
+    if parsed.scheme != 'https' or not host or parsed.username is not None or parsed.password is not None:
+        raise ValueError(f'{label} must be a public HTTPS URL without credentials')
+    reserved = ('.localhost', '.local', '.test', '.invalid', '.example')
+    if port not in (None, 443) or host.lower() == 'localhost' or host.lower().endswith(reserved):
+        raise ValueError(f'{label} must be a public HTTPS URL')
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        address = None
+    if address is not None and not address.is_global:
+        raise ValueError(f'{label} must be a public HTTPS URL')
+    if address is None:
+        try:
+            domain = host.rstrip('.').encode('idna').decode('ascii')
+        except UnicodeError:
+            raise ValueError(f'{label} must be a public HTTPS URL') from None
+        labels = domain.split('.')
+        if len(labels) < 2 or any(not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?', label, re.I) for label in labels):
+            raise ValueError(f'{label} must be a public HTTPS URL')
+    return parsed
+
+
+class PublicHttpsRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        validate_public_https_url(new_url, 'Redirect URL')
+        return super().redirect_request(request, response, code, message, headers, new_url)
 
 
 def main():
@@ -30,8 +96,13 @@ def main():
     parser.add_argument('--label', required=True)
     parser.add_argument('--refresh', action='store_true', help='Explicitly replace a cached retrieval')
     args = parser.parse_args()
-    if urlsplit(args.url).scheme != 'https' or urlsplit(args.identity_url).scheme != 'https':
-        parser.error('Public assets and identity pages require HTTPS')
+    try:
+        validate_public_https_url(args.url, 'Asset URL')
+        validate_public_https_url(args.identity_url, 'Identity URL')
+        if args.license_url is not None:
+            validate_public_https_url(args.license_url, 'License URL')
+    except ValueError as error:
+        parser.error(str(error))
     repo = Path(args.repo).resolve()
     # Read-only check: no automatic policy/configuration edits.
     import subprocess
@@ -49,9 +120,9 @@ def main():
             print(json.dumps({**metadata, 'cache': 'hit', 'path': str(payload_file)}))
             return
         raise ValueError('Cache checksum mismatch; inspect before explicit refresh')
-    with urlopen(Request(args.url, headers={'User-Agent': 'visual-reports-asset-cache/1.0'}), timeout=15) as response:
-        if urlsplit(response.url).scheme != 'https':
-            raise ValueError('Refusing an insecure redirect')
+    opener = build_opener(PublicHttpsRedirectHandler())
+    with opener.open(Request(args.url, headers={'User-Agent': 'visual-reports-asset-cache/1.0'}), timeout=15) as response:
+        validate_public_https_url(response.url, 'Final asset URL')
         payload = response.read(2 * 1024 * 1024 + 1)
         media_type = response.headers.get_content_type()
         final_url = response.url
