@@ -57,3 +57,61 @@ else: raise AssertionError("credential redirect accepted")
 `);
   assert.equal(result, "");
 });
+
+test("asset fetch pins globally routed DNS answers, verifies hostname TLS, rejects mixed answers and bypasses proxies", () => {
+  const result = python(`
+import http.client, socket, urllib.request
+public = "93.184.216.34"
+private = "192.168.1.8"
+original_getaddrinfo = m.socket.getaddrinfo
+initial_url = "https:" + "/" + "/public.example.com/icon.svg"
+private_redirect = "https:" + "/" + "/private.example.com/icon.svg"
+def answer(addresses):
+ return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (value, 443)) for value in addresses]
+m.socket.getaddrinfo = lambda host, port, type: answer([public])
+assert m.resolve_public_addresses("public.example.com") == (public,)
+try:
+ m.socket.getaddrinfo = lambda host, port, type: answer([public, private])
+ m.resolve_public_addresses("mixed.example")
+except ValueError as error:
+ assert "globally routable" in str(error)
+else: raise AssertionError("mixed public/private DNS answers accepted")
+
+class FakeSocket:
+ def __init__(self): self.writes=[]
+ def setsockopt(self, *args): pass
+ def sendall(self, value): self.writes.append(value)
+ def close(self): pass
+class FakeContext:
+ def __init__(self): self.server_name=None
+ def wrap_socket(self, sock, server_hostname):
+  self.server_name=server_hostname
+  return sock
+fake = FakeSocket()
+connected=[]
+m.socket.getaddrinfo = lambda host, port, type: answer([public])
+m.socket.create_connection = lambda address, timeout, source: (connected.append((address, timeout, source)) or fake)
+context=FakeContext()
+connection=m.PinnedHTTPSConnection("public.example.com", timeout=15, context=context)
+connection.connect()
+assert connected == [((public, 443), 15, None)]
+assert connection.host == "public.example.com"
+assert context.server_name == "public.example.com"
+connection.putrequest("GET", "/icon.svg")
+connection.endheaders()
+assert b"Host: public.example.com" in b"".join(fake.writes)
+connection.close()
+
+m.socket.getaddrinfo = lambda host, port, type: answer([private])
+request=urllib.request.Request(initial_url)
+try:
+ m.PublicHttpsRedirectHandler().redirect_request(request, object(), 302, "Found", {}, private_redirect)
+except ValueError as error:
+ assert "globally routable" in str(error)
+else: raise AssertionError("private DNS redirect accepted")
+opener=m.build_public_opener()
+assert not any(isinstance(handler, urllib.request.ProxyHandler) and handler.proxies for handler in opener.handlers)
+m.socket.getaddrinfo = original_getaddrinfo
+`);
+  assert.equal(result, "");
+});

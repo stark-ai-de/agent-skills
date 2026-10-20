@@ -3,7 +3,7 @@
 // Usage: node tests/browser-delivery.mjs ws://LOOPBACK/devtools/browser/ID
 // SPDX-License-Identifier: Apache-2.0
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
@@ -51,13 +51,14 @@ function send(method, params = {}, sessionId) {
   });
 }
 const directory = await mkdtemp(path.join(tmpdir(), "report-browser-delivery-"));
-let target, preview;
+let target, preview, pageSessionId;
 try {
   target = await send("Target.createTarget", { url: "about:blank" });
   const { sessionId } = await send("Target.attachToTarget", {
     targetId: target.targetId,
     flatten: true,
   });
+  pageSessionId = sessionId;
   const page = (method, params = {}) => send(method, params, sessionId);
   const evaluate = async (expression) => {
     const result = await page("Runtime.evaluate", {
@@ -416,6 +417,66 @@ try {
   assert.equal(restored.open, true);
   assert.ok(restored.scroll > 0);
   assert.equal(restored.dirty, false);
+  const thirdReport = structuredClone(changed);
+  thirdReport.nextAction = "Temporarily unavailable revision for browser fixture";
+  const third = await publishRevision(thirdReport, store, { expected: second.revision });
+  const revisionHtml = path.join(store, "revisions", third.revision, "report.html");
+  const unavailableHtml = revisionHtml + ".temporarily-unavailable";
+  await rename(revisionHtml, unavailableHtml);
+  for (
+    let i = 0;
+    i < 100 &&
+    !(await evaluate("document.getElementById('notice').textContent.includes('Neuer Stand')"));
+    i++
+  )
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  await evaluate("document.getElementById('apply').click()");
+  for (
+    let i = 0;
+    i < 100 &&
+    !(await evaluate(
+      "document.getElementById('notice').textContent.includes('erneut zu versuchen')",
+    ));
+    i++
+  )
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.match(
+    await evaluate("document.getElementById('notice').textContent"),
+    /erneut zu versuchen/,
+  );
+  assert.equal(
+    await evaluate("!!document.querySelector('iframe').contentWindow.visualReportView"),
+    false,
+  );
+  const failedRequests = requests.filter((url) =>
+    url.includes(`/revision/${third.revision}/report.html`),
+  );
+  assert.equal(failedRequests.length, 1, "failed revision request is not repeated by polling");
+  await new Promise((resolve) => setTimeout(resolve, 1600));
+  assert.equal(
+    requests.filter((url) => url.includes(`/revision/${third.revision}/report.html`)).length,
+    1,
+    "failed revision remains user-retryable without accidental navigation",
+  );
+  await rename(unavailableHtml, revisionHtml);
+  await evaluate("document.getElementById('apply').click()");
+  for (
+    let i = 0;
+    i < 100 &&
+    !(await evaluate(
+      `document.querySelector('iframe').contentWindow.location.href.includes('${third.revision}') && !!document.querySelector('iframe').contentWindow.visualReportView`,
+    ));
+    i++
+  )
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  const retried = await evaluate(
+    "({open:document.querySelector('iframe').contentDocument.querySelector('details').open,scroll:document.querySelector('iframe').contentWindow.scrollY,dirty:document.querySelector('iframe').contentWindow.visualReportView.isDirty(),notice:document.getElementById('notice').textContent})",
+  );
+  assert.equal(retried.open, true, "reader details survive the failed revision and retry");
+  assert.ok(retried.scroll > 0, "reader scroll survives the failed revision and retry");
+  assert.equal(retried.dirty, false);
+  assert.match(retried.notice, /Aktueller Stand übernommen/);
+  assert.equal(errors.length, 0, errors.join("\n"));
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
     JSON.stringify(
@@ -430,6 +491,7 @@ try {
         localEditors: "pass",
         httpPreview: "pass",
         revisionNoticeAndDraftProtection: "pass",
+        failedRevisionRetry: "pass",
         restoredDetailsAndScroll: "pass",
         browserExceptions: errors.length,
       },
@@ -438,8 +500,14 @@ try {
     ),
   );
 } finally {
+  if (preview && pageSessionId)
+    await send("Page.navigate", { url: "about:blank" }, pageSessionId).catch(() => {});
   if (target) await send("Target.closeTarget", { targetId: target.targetId }).catch(() => {});
+  if (preview) {
+    const closed = preview.close();
+    preview.server.closeAllConnections?.();
+    await closed;
+  }
   socket.close();
-  if (preview) await preview.close();
   await rm(directory, { recursive: true, force: true });
 }

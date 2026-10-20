@@ -2643,10 +2643,10 @@
       "sha256": "09ea93fcdf0f603e4e7be6be10b14af13dd0e50d2618f77f5243f5b0221d345a"
     },
     {
-      "byteLength": 2583,
+      "byteLength": 3493,
       "mode": "0644",
       "path": "skills/visual-reports/assets/preview.js",
-      "sha256": "d84735cf7e4084c9a41bef889092f13cf08767d2d73cb823cce610baf9fbf333"
+      "sha256": "64ed50fb4d1c343cfe5e0f35572471d9c32bfa6eaebcb34703d48ce33b016ee3"
     },
     {
       "byteLength": 19665,
@@ -2751,10 +2751,10 @@
       "sha256": "fdab7787996fee727dff4edf2b70b8a88f40c7553f029c0107d5d430c7574c3c"
     },
     {
-      "byteLength": 7375,
+      "byteLength": 9410,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/cache_icon.py",
-      "sha256": "adc803da636cea51c98ca01794d514a4069429ad45762d9f6f26c3350ee2edde"
+      "sha256": "194e255694a6b143e63841f5f133f12a3f768cfc8390f05f0d7c23f7cf82aa90"
     },
     {
       "byteLength": 4151,
@@ -2817,16 +2817,16 @@
       "sha256": "ac0590213f76d873f354d7c89154b71fc0b0f9b4bdd17029b5a725d21cef6d73"
     },
     {
-      "byteLength": 34857,
+      "byteLength": 34004,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/render-report.mjs",
-      "sha256": "c5ef1e8f8df18932c9fa8664c92468ce7f7e7aa57fd29e279994a1ae5b5e59fa"
+      "sha256": "20d3f715944caf5fdc49543b8e5c40576a6cfa99593ae7eadd09b3f517ce962b"
     },
     {
-      "byteLength": 17987,
+      "byteLength": 20988,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-delivery.mjs",
-      "sha256": "7880f0b38299bf1b694c960af469f6d0780f639705374f6abdb533d9ef2a21d8"
+      "sha256": "097dcba2637b4898c10546a57bae1ba1fa2e5e9e45e71b0e3cfc9330b6470cce"
     },
     {
       "byteLength": 15373,
@@ -2835,10 +2835,10 @@
       "sha256": "53e3286d1454da76900fe1abd5dcde79ab94e37f976a873a9728ac0178cf1bde"
     },
     {
-      "byteLength": 2588,
+      "byteLength": 5077,
       "mode": "0644",
       "path": "skills/visual-reports/tests/cache-icon.test.mjs",
-      "sha256": "ded644619914c26e15f051212f9b7f049c4cbd62915a4a127dfa75161d9f82c5"
+      "sha256": "6238f4683df9b2143911103b2d8ba830392dad85e9717cfe8e98c6926ec56617"
     },
     {
       "byteLength": 5604,
@@ -2853,10 +2853,10 @@
       "sha256": "cc472348da91fddbeaba213b7bb57539a447fd0e24f2c68474c0182da37784ce"
     },
     {
-      "byteLength": 1935,
+      "byteLength": 9225,
       "mode": "0644",
       "path": "skills/visual-reports/tests/report-state.test.mjs",
-      "sha256": "9ffc13efc984652ae0770a3f9b68b3d6cf91dda3569a1fe0cadbac412f61f199"
+      "sha256": "52eab44d63dd8dba09c5e45e6fc5bf99fe82130df4ef46f72010ae80e7422a7c"
     },
     {
       "byteLength": 17185,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "0df55a890038ff8c10833f8b80867e395818e5a56dcad6c2e451f8c1f432ff38"
+  "treeHash": "44d63162c2fc4c6c0142ea58d342c6d3f56d1f4b91234b3befffdbb5adcfadeb"
 }

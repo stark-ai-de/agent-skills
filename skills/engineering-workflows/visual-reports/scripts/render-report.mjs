@@ -10,7 +10,6 @@ import {
   validateExtra,
   validateDecoration,
   renderExtra,
-  readerMarkdown,
   icon,
   validateRasterDataUrl,
   esc as escape,
@@ -563,34 +562,6 @@ function block(s) {
     default:
       return renderExtra(s);
   }
-}
-function markdownValue(value, depth = 0) {
-  const pad = "  ".repeat(depth);
-  const md = (v) =>
-    String(v)
-      .replace(/[\\`*_{}\[\]<>#|]/g, "\\$&")
-      .replace(/\n/g, "  \n" + pad + "  ");
-  if (Array.isArray(value))
-    return value.length
-      ? value
-          .map(
-            (v, i) =>
-              `${pad}- ${i + 1}:` +
-              (v && typeof v === "object" ? "\n" + markdownValue(v, depth + 1) : " " + md(v)),
-          )
-          .join("\n")
-      : `${pad}(empty)`;
-  if (value && typeof value === "object")
-    return Object.entries(value)
-      .map(
-        ([k, v]) =>
-          `${pad}- ${md(k)}:` +
-          (v && typeof v === "object"
-            ? "\n" + markdownValue(v, depth + 1)
-            : " " + md(v === null ? "unknown (null)" : v)),
-      )
-      .join("\n");
-  return pad + md(value);
 }
 export function renderMarkdown(report) {
   validateReport(report);

@@ -2,13 +2,15 @@
 """Cache a selected public image; never installs packages or changes project policy."""
 import argparse
 import hashlib
+import http.client
 import ipaddress
 import json
 from pathlib import Path
 import re
+import socket
 import time
 from urllib.parse import urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, ProxyHandler, Request, build_opener
 import xml.etree.ElementTree as ET
 
 
@@ -81,10 +83,59 @@ def validate_public_https_url(value, label):
     return parsed
 
 
+def resolve_public_addresses(host):
+    try:
+        literal = ipaddress.ip_address(host)
+    except ValueError:
+        literal = None
+    if literal is not None:
+        if not literal.is_global:
+            raise ValueError('Asset host must resolve to globally routable addresses')
+        return (str(literal),)
+    try:
+        answers = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    except OSError:
+        raise ValueError('Asset host could not be resolved to a public address') from None
+    addresses = []
+    for answer in answers:
+        try:
+            address = ipaddress.ip_address(answer[4][0])
+        except (IndexError, ValueError):
+            raise ValueError('Asset host returned an invalid address') from None
+        if not address.is_global:
+            raise ValueError('Asset host must resolve to globally routable addresses')
+        addresses.append(str(address))
+    if not addresses:
+        raise ValueError('Asset host could not be resolved to a public address')
+    return tuple(dict.fromkeys(addresses))
+
+
+class PinnedHTTPSConnection(http.client.HTTPSConnection):
+    def __init__(self, host, *, timeout, context):
+        hostname = urlsplit('//' + host).hostname or host
+        self.pinned_ip = resolve_public_addresses(hostname)[0]
+        super().__init__(host, timeout=timeout, context=context)
+        self._create_connection = self._connect_pinned
+
+    def _connect_pinned(self, address, timeout, source_address):
+        return socket.create_connection((self.pinned_ip, address[1]), timeout, source_address)
+
+
+class PublicHTTPSHandler(HTTPSHandler):
+    def https_open(self, request):
+        return self.do_open(PinnedHTTPSConnection, request, context=self._context)
+
+
 class PublicHttpsRedirectHandler(HTTPRedirectHandler):
     def redirect_request(self, request, response, code, message, headers, new_url):
-        validate_public_https_url(new_url, 'Redirect URL')
+        parsed = validate_public_https_url(new_url, 'Redirect URL')
+        resolve_public_addresses(parsed.hostname)
         return super().redirect_request(request, response, code, message, headers, new_url)
+
+
+def build_public_opener():
+    # Empty proxy configuration intentionally bypasses ambient HTTP(S)_PROXY values.
+    return build_opener(ProxyHandler({}), PublicHttpsRedirectHandler(), PublicHTTPSHandler())
 
 
 def main():
@@ -120,7 +171,7 @@ def main():
             print(json.dumps({**metadata, 'cache': 'hit', 'path': str(payload_file)}))
             return
         raise ValueError('Cache checksum mismatch; inspect before explicit refresh')
-    opener = build_opener(PublicHttpsRedirectHandler())
+    opener = build_public_opener()
     with opener.open(Request(args.url, headers={'User-Agent': 'visual-reports-asset-cache/1.0'}), timeout=15) as response:
         validate_public_https_url(response.url, 'Final asset URL')
         payload = response.read(2 * 1024 * 1024 + 1)

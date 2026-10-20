@@ -5,6 +5,8 @@
     select = byId("versions");
   let loaded = null,
     latest = null,
+    requested = null,
+    initialRequested = false,
     pendingView = null;
   const view = () => frame.contentWindow?.visualReportView;
   const announce = (text) => {
@@ -12,25 +14,49 @@
   };
   function apply(revision) {
     if (!revision || revision === loaded) return;
+    if (requested) {
+      announce("Eine Revision wird noch geladen. Bitte warten, bevor Sie erneut übernehmen.");
+      return;
+    }
     if (view()?.isDirty() && !byId("discard").checked) {
       announce(
         "Ungesicherter Entwurf geschützt. Erst exportieren oder ausdrücklich Verwerfen wählen.",
       );
       return;
     }
-    pendingView = view()?.capture() ?? null;
+    pendingView ??= view()?.capture() ?? null;
     if (byId("discard").checked) view()?.discardDraft();
-    loaded = revision;
+    requested = revision;
     byId("discard").checked = false;
     frame.src = `/revision/${revision}/report.html`;
-    for (const ext of ["html", "md", "json"])
-      byId(ext).href = `/revision/${revision}/report.${ext}`;
     select.value = revision;
-    announce(revision === latest ? "Aktueller Stand übernommen." : "Historischer Stand geöffnet.");
+    announce("Revision wird geladen …");
   }
   frame.addEventListener("load", () => {
-    if (pendingView) view()?.restore(pendingView);
+    if (!requested) return;
+    const revision = requested;
+    if (new URL(frame.contentWindow.location.href).pathname !== `/revision/${revision}/report.html`)
+      return;
+    const reportView = view();
+    if (!reportView || typeof reportView.capture !== "function") {
+      requested = null;
+      announce(
+        "Revision konnte nicht geladen werden. Wählen Sie Übernehmen, um es erneut zu versuchen.",
+      );
+      return;
+    }
+    loaded = revision;
+    requested = null;
+    select.value = revision;
+    for (const ext of ["html", "md", "json"])
+      byId(ext).href = `/revision/${revision}/report.${ext}`;
+    if (pendingView) reportView.restore(pendingView);
     pendingView = null;
+    announce(
+      revision === latest
+        ? "Aktueller Stand übernommen."
+        : "Historischer Stand geöffnet. Ein neuerer Stand ist verfügbar.",
+    );
   });
   byId("apply").addEventListener("click", () => apply(select.value));
   byId("draft").addEventListener("click", () => view()?.exportDraft());
@@ -57,8 +83,10 @@
         }),
       );
       select.value = selected || latest;
-      if (!loaded) apply(latest);
-      else if (previous !== latest && loaded !== latest) {
+      if (!loaded && !initialRequested && !requested) {
+        initialRequested = true;
+        apply(latest);
+      } else if (loaded && previous !== latest && loaded !== latest) {
         select.value = latest;
         announce(
           "Neuer Stand verfügbar. Mit Übernehmen wechseln; der angezeigte Report bleibt erhalten.",
