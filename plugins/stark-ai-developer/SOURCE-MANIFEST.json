@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "b1ac8c38fc05454ce713d301181f88fff094758293aaa7269dd9047a9abcfa25"
+      "sha256": "916da097c4dc3f29609cd3f419aeb387dbe21674d6f9223b2bccb0a0b51b9dd7"
     },
     {
       "byteLength": 2128,
@@ -2598,7 +2598,7 @@
       "byteLength": 10337,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "682c4bf7894bd6ab948e42c9bfb40fb906a46c54e13f268726b80f26f2c25fba"
+      "sha256": "e440a15f58910de791988e9508e5e2a8974dcbeeb260311b2030d92252418c38"
     },
     {
       "byteLength": 497,
@@ -2655,22 +2655,22 @@
       "sha256": "9c1be070642545f686a4dcc9984e0d3d7db6cb195fe8d21f6392efcf2f84ba3d"
     },
     {
-      "byteLength": 10105,
+      "byteLength": 10130,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.css",
-      "sha256": "de0bc2846c26b5e594a145fc6d5735b1a097c0bc9a69738200a4e0e8be4d4c3c"
+      "sha256": "af85d2eddcb0479b6fbaf8032a7b0b4d8efe0b18d1aff719d229f9f129a0d6a6"
     },
     {
-      "byteLength": 20938,
+      "byteLength": 20995,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.js",
-      "sha256": "1c52792c474eccfde1b0f0960900684f757b34e72c454831a8e3dce89053b2d1"
+      "sha256": "26d58181df3535527ea72e853a1a3fd3a099703cb9575655a47932915a1b57f2"
     },
     {
-      "byteLength": 14484,
+      "byteLength": 14431,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-shell.html",
-      "sha256": "61b6af6e4aff546fc76e3cd84e16bad6b5e5ae7fdbf7ee49f803535a1ed56d70"
+      "sha256": "f135cb727d6316a3d715ae8da9e7d681fc3861eebf4a385700b174682421f5a9"
     },
     {
       "byteLength": 114402,
@@ -2763,10 +2763,10 @@
       "sha256": "754d7e6815b956f61558c35aebd2924cba7cd10e0863e7b4b1a266285e9a1dbd"
     },
     {
-      "byteLength": 21850,
+      "byteLength": 22071,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/blocks-v2.mjs",
-      "sha256": "5f88084a0a1b0ee302c01930aafa1a099a0ddcdd6c98d71f4ed2d12637b524a4"
+      "sha256": "c45e09dc165a80139d836d412b8416b7b8ea3fb977f661a5a41f05073ccaf438"
     },
     {
       "byteLength": 3818,
@@ -2817,22 +2817,22 @@
       "sha256": "ac0590213f76d873f354d7c89154b71fc0b0f9b4bdd17029b5a725d21cef6d73"
     },
     {
-      "byteLength": 35484,
+      "byteLength": 35463,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/render-report.mjs",
-      "sha256": "c8c0671e9b3babbf45d79aaab93f302f62b200cb0d57123ad94fac41ece8ace2"
+      "sha256": "066a42f4615839de4535d3772b68fd220e8256b865b772e1cc1dcabf0f218069"
     },
     {
-      "byteLength": 22431,
+      "byteLength": 25936,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-delivery.mjs",
-      "sha256": "b528fd97f395b17c7b11ae111bb44d03ed2fcf1b0e6f0f6a53d358b67b6a9e92"
+      "sha256": "2dd6d78d226f2b83d0192e4775c8f0468684d91f4a599a6fe9d2baacd87891c6"
     },
     {
-      "byteLength": 15373,
+      "byteLength": 15887,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-smoke.py",
-      "sha256": "53e3286d1454da76900fe1abd5dcde79ab94e37f976a873a9728ac0178cf1bde"
+      "sha256": "d0035ec0ead44c570a1c88c39a93a7c30212c5c0cd7ec37efdaa7569553706a2"
     },
     {
       "byteLength": 5077,
@@ -2847,10 +2847,10 @@
       "sha256": "d634cf67b1a472b0dc3b07435bddb4bc089a8da902b517b2950db6135097b3fe"
     },
     {
-      "byteLength": 12106,
+      "byteLength": 13276,
       "mode": "0644",
       "path": "skills/visual-reports/tests/render-report.test.mjs",
-      "sha256": "6abe83566413fdaf099d6606ff34ee5cb4c8788ea181551529ca243b3625fbc0"
+      "sha256": "ba6d3ed34a75d544219c9e32021371ff2c5ea7b9cfcff6b74a9efa7ee8f74f1a"
     },
     {
       "byteLength": 11935,
@@ -2859,17 +2859,17 @@
       "sha256": "07ff065e1237a631052beb812cb863157317ad3d834bd742aab8d693814c5181"
     },
     {
-      "byteLength": 19028,
+      "byteLength": 21600,
       "mode": "0644",
       "path": "skills/visual-reports/tests/v2.test.mjs",
-      "sha256": "5e270a2f175c2a84ba5490f8219a9d7aa855a9eff36b01e7efcb32d170db13f3"
+      "sha256": "4a8e4b5edd9ed3abd4a36309a76c90d346bd9feff68c9ac4207f053602604593"
     }
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.18.0"
+    "version": "1.19.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "1f1e2f6f181c6973c1d3153dd9b371e756b7190da2d9b0082bc0d5e8fea15504"
+  "treeHash": "114818f0dcf24d0f13098e2cb23c157231a6dbc0d622660bc60df4bbe7f7c4e5"
 }

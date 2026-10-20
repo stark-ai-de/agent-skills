@@ -516,7 +516,8 @@ main {
 header,
 body > nav,
 body > section,
-body > details {
+body > details,
+body > footer {
   max-width: 1120px;
   margin-left: auto;
   margin-right: auto;
@@ -614,7 +615,7 @@ li {
   display: block;
 }
 @media print {
-  .report-tooling {
+  .report-tooling > details {
     display: none;
   }
 }

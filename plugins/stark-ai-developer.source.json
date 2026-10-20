@@ -56,7 +56,7 @@
     "openaiPlugin": "stark-ai-developer-tools"
   },
   "pluginId": "stark-ai-developer",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "listingId": "stark-ai-developer",
   "submissionType": "skills-only",
   "publicListingStrategy": "single-plugin-bundled-skills",

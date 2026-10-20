@@ -10,6 +10,7 @@ import {
   validateExtra,
   validateDecoration,
   renderExtra,
+  sourceLinks,
   icon,
   validateRasterDataUrl,
   esc as escape,
@@ -461,15 +462,13 @@ export function validateReport(report) {
   }
   return report;
 }
-const sourceLinks = (ids) =>
-  ids.map((id) => `<a href="#source-${escape(id)}">[${escape(id)}]</a>`).join(" ");
 const caveats = (items) =>
   items.map((s) => `<p class="caveat"><strong>Hinweis:</strong> ${escape(s)}</p>`).join("");
 const notes = (items) => items.map((s) => `<p>${escape(s)}</p>`).join("");
 function table(d) {
   return `<div class="toolbar js-only"><label>Suchen <input type="search" data-search></label><output data-result-count aria-live="polite">${d.rows.length} / ${d.rows.length}</output></div><div class="scroll" role="region" tabindex="0" aria-label="Datentabelle"><table><thead><tr>${d.columns.map((c, i) => `<th scope="col">${escape(c.label)} <button class="js-only" data-sort="${i}" aria-label="${escape(c.label)} sortieren">↕</button></th>`).join("")}</tr></thead><tbody>${d.rows.map((r) => `<tr>${d.columns.map((c) => `<td data-value="${escape(r.cells[c.id])}">${r.cells[c.id] === null ? "Unbekannt" : escape(r.cells[c.id])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 }
-function comparison(d) {
+function comparison(d, sources) {
   const controls = `<div class="js-only"><fieldset><legend>Optionen</legend>${d.options.map((o) => `<label><input type="checkbox" checked data-option-toggle value="${escape(o.id)}">${escape(o.label)}</label>`).join("")}</fieldset><fieldset><legend>Kriterien / Kennzahlen</legend>${d.criteria.map((c) => `<label><input type="checkbox" checked data-criterion-toggle value="${escape(c.id)}">${escape(c.label)}</label>`).join("")}</fieldset></div>`;
   const rows = d.criteria
     .map((c) => {
@@ -488,7 +487,7 @@ function comparison(d) {
               : typeof v.value === "number"
                 ? `<div class="track" aria-hidden="true"><span class="zero" style="left:${((0 - lo) / range) * 100}%"></span><span class="bar" style="margin-left:${((Math.min(0, v.value) - lo) / range) * 100}%;width:${(Math.abs(v.value) / range) * 100}%"></span></div>`
                 : "";
-          return `<td data-option="${escape(o.id)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds)}</small></td>`;
+          return `<td data-option="${escape(o.id)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds, sources)}</small></td>`;
         })
         .join("");
       return `<tr data-criterion="${escape(c.id)}"><th scope="row">${escape(c.label)}<small>${escape(c.context)} · ${escape(c.direction)}${numeric.length ? ` · gemeinsame Skala ${lo} … ${hi} ${escape(c.unit)}` : ""}</small></th>${cells}</tr>`;
@@ -511,7 +510,7 @@ function graph(d, id) {
     .join("");
   return `<svg class="diagram" role="img" aria-label="${escape(id)} – beschriftete Beziehungen; Textdarstellung folgt" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow-${id}" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><polygon points="0 0, 7 3, 0 6"/></marker></defs>${edges}${d.nodes.map((n) => `<rect x="${n.x}" y="${n.y}" width="170" height="44" rx="3"/><text x="${n.x + 8}" y="${n.y + 27}">${escape(n.label)}</text>`).join("")}</svg><p>${d.nodes.map((n) => `${escape(n.id)}: ${escape(n.label)}`).join(" · ")}</p>${d.edges.map((e) => `<p>${escape(e.from)} → ${escape(e.to)}: ${escape(e.label)}</p>`).join("")}`;
 }
-function block(s) {
+function block(s, sources) {
   const d = s.data;
   switch (s.kind) {
     case "text":
@@ -519,7 +518,7 @@ function block(s) {
     case "table":
       return table(d);
     case "comparison":
-      return comparison(d);
+      return comparison(d, sources);
     case "code":
       return `<div class="grid">${d.blocks.map((b) => `<div><h3>${escape(b.label)}</h3><pre class="code"><code>${escape(b.code)}</code></pre>${notes(b.notes)}</div>`).join("")}</div>`;
     case "diff":
@@ -578,7 +577,7 @@ function block(s) {
         .map(escape)
         .join("\n")}</pre>`;
     default:
-      return renderExtra(s);
+      return renderExtra(s, sources);
   }
 }
 export function renderMarkdown(report) {
@@ -610,7 +609,7 @@ export async function renderReport(report) {
       : report.nextAction
         ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>`
         : ""
-  }<p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><footer class="report-tooling" aria-label="Report-Tooling"><details id="report-toolbox"><summary>Bericht-Werkzeuge · Export &amp; Darstellung</summary><p class="muted">Werkzeuge für diesen Bericht; kein Teil des behandelten Themas.</p><div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p></details></footer><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
+  }<p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s, report.sources)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds, report.sources) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><footer class="report-tooling" aria-label="Report-Tooling"><details id="report-toolbox"><summary>Bericht-Werkzeuge · Export &amp; Darstellung</summary><p class="muted">Werkzeuge für diesen Bericht; kein Teil des behandelten Themas.</p><div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p></footer><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
   return { html, markdown, json: json(report) };
 }
 /** Explicit local writes only. A new output directory prevents accidental report overwrite. */

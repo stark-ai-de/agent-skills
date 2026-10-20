@@ -78,7 +78,7 @@ function unique(rows, field) {
 export function validateV2(report) {
   assert(Object.hasOwn(templates, report.reportType), "reportType");
   assert(Object.hasOwn(profiles, report.domainProfile), "domainProfile");
-  text(report.nextAction, "nextAction");
+  if (report.readerStatus === undefined) text(report.nextAction, "nextAction");
 }
 export function validateDecoration(section) {
   if (section.icon !== undefined) assert(Object.hasOwn(icons, section.icon), "section.icon");
@@ -290,8 +290,8 @@ const bulletList = (items) => `<ul>${items.map((x) => `<li>${esc(x)}</li>`).join
 const unit = (d) => esc(d.unit);
 const palette = ["#a9d9cf", "#d5c394", "#b8b6df", "#e6b0b0", "#acc9e7"];
 const fmt = (v) => (v === null ? "Unbekannt" : String(v));
-function dataTable(d) {
-  return `<div class="scroll" role="region" tabindex="0" aria-label="Genaue Diagrammwerte"><table><thead><tr><th scope="col">Beobachtung</th>${d.xUnit !== undefined ? `<th scope="col">x (${esc(d.xUnit)})</th>` : ""}${d.series.map((s) => `<th scope="col">${esc(s.label)} (${unit(d)})</th>`).join("")}</tr></thead><tbody>${d.rows.map((r) => `<tr><th scope="row">${esc(r.label)}${r.role ? ` · ${esc(r.role)}` : ""}</th>${d.xUnit !== undefined ? `<td>${r.x}</td>` : ""}${r.values.map((v) => `<td>${esc(fmt(v.value))}<small>${esc(v.state)}${v.note ? ` · ${esc(v.note)}` : ""} ${v.sourceIds.map((id) => `<a href="#source-${id}">[${id}]</a>`).join(" ")}</small></td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+function dataTable(d, sources = []) {
+  return `<div class="scroll" role="region" tabindex="0" aria-label="Genaue Diagrammwerte"><table><thead><tr><th scope="col">Beobachtung</th>${d.xUnit !== undefined ? `<th scope="col">x (${esc(d.xUnit)})</th>` : ""}${d.series.map((s) => `<th scope="col">${esc(s.label)} (${unit(d)})</th>`).join("")}</tr></thead><tbody>${d.rows.map((r) => `<tr><th scope="row">${esc(r.label)}${r.role ? ` · ${esc(r.role)}` : ""}</th>${d.xUnit !== undefined ? `<td>${r.x}</td>` : ""}${r.values.map((v) => `<td>${esc(fmt(v.value))}<small>${esc(v.state)}${v.note ? ` · ${esc(v.note)}` : ""} ${sourceLinks(v.sourceIds, sources)}</small></td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 }
 function chartSvg(d) {
   const vals = d.rows.flatMap((r) => r.values.map((v) => v.value)).filter((v) => v !== null);
@@ -452,7 +452,11 @@ function chartSvg(d) {
   }
   return `<svg class="data-chart" role="img" aria-label="${esc(d.context)}; genaue Werte in der folgenden Tabelle" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
 }
-export function renderExtra(s) {
+export function sourceLinks(ids, sources = []) {
+  const labels = new Map(sources.map(({ id, label }) => [id, label]));
+  return ids.map((id) => `<a href="#source-${esc(id)}">${esc(labels.get(id) ?? id)}</a>`).join(" ");
+}
+export function renderExtra(s, sources = []) {
   const d = s.data;
   if (s.kind === "bullets") return bulletList(d.items);
   if (s.kind === "diagram") {
@@ -468,11 +472,11 @@ export function renderExtra(s) {
     return `<figure><img class="structure-diagram" src="data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}" alt="${esc(d.description)}"><figcaption>${esc(d.description)}</figcaption></figure><details id="diagram-source-${s.id}"><summary>Diagramm als Text</summary><pre>${esc(d.source)}</pre></details>`;
   }
   if (s.kind === "chart")
-    return `<p>${esc(d.context)} · Einheit: ${unit(d)} · Bewertungsrichtung: ${{ higher: "höher ist besser", lower: "niedriger ist besser", none: "ohne Bewertung" }[d.direction]}</p><ul class="chart-legend">${d.series.map((v, i) => `<li><span style="background:${palette[i % 5]}" aria-hidden="true"></span>${esc(v.label)}</li>`).join("")}</ul><div class="scroll" role="region" tabindex="0" aria-label="Diagramm, horizontal scrollbar">${chartSvg(d)}</div>${dataTable(d)}`;
+    return `<p>${esc(d.context)} · Einheit: ${unit(d)} · Bewertungsrichtung: ${{ higher: "höher ist besser", lower: "niedriger ist besser", none: "ohne Bewertung" }[d.direction]}</p><ul class="chart-legend">${d.series.map((v, i) => `<li><span style="background:${palette[i % 5]}" aria-hidden="true"></span>${esc(v.label)}</li>`).join("")}</ul><div class="scroll" role="region" tabindex="0" aria-label="Diagramm, horizontal scrollbar">${chartSvg(d)}</div>${dataTable(d, sources)}`;
   if (s.kind === "statusHistory") {
     const known = d.samples.filter((v) => v.status !== "unknown").length,
       healthy = d.samples.filter((v) => v.status === "healthy").length;
-    return `<p>${esc(d.context)}</p><p><strong>${healthy} / ${known} bekannte Stichproben gesund${known ? ` (${Math.round((healthy / known) * 1000) / 10}%)` : ""}</strong>; ${d.samples.length - known} unbekannt. Keine zeitgewichtete Verfügbarkeit.</p><div class="status-strip" aria-hidden="true">${d.samples.map((v) => `<span class="sample-${v.status}" title="${esc(v.at + ": " + v.status)}">${{ healthy: "✓", degraded: "~", down: "×", unknown: "?" }[v.status]}</span>`).join("")}</div><div class="scroll" tabindex="0"><table><thead><tr><th scope="col">Zeit (UTC)</th><th scope="col">Zustand</th><th scope="col">Beleg</th></tr></thead><tbody>${d.samples.map((v) => `<tr><th scope="row">${esc(v.at)}</th><td>${esc(v.status)}</td><td>${esc(v.note)} ${v.sourceIds.map((id) => `<a href="#source-${id}">[${id}]</a>`).join(" ")}</td></tr>`).join("")}</tbody></table></div>`;
+    return `<p>${esc(d.context)}</p><p><strong>${healthy} / ${known} bekannte Stichproben gesund${known ? ` (${Math.round((healthy / known) * 1000) / 10}%)` : ""}</strong>; ${d.samples.length - known} unbekannt. Keine zeitgewichtete Verfügbarkeit.</p><div class="status-strip" aria-hidden="true">${d.samples.map((v) => `<span class="sample-${v.status}" title="${esc(v.at + ": " + v.status)}">${{ healthy: "✓", degraded: "~", down: "×", unknown: "?" }[v.status]}</span>`).join("")}</div><div class="scroll" tabindex="0"><table><thead><tr><th scope="col">Zeit (UTC)</th><th scope="col">Zustand</th><th scope="col">Beleg</th></tr></thead><tbody>${d.samples.map((v) => `<tr><th scope="row">${esc(v.at)}</th><td>${esc(v.status)}</td><td>${esc(v.note)} ${sourceLinks(v.sourceIds, sources)}</td></tr>`).join("")}</tbody></table></div>`;
   }
   if (s.kind === "logo")
     return `<figure class="product-logo"><img src="${esc(d.src)}" alt="${esc(d.alt)}"><figcaption>${esc(d.label)} · <a href="${esc(d.identityUrl)}">Produkt</a> · <a href="${esc(d.sourceUrl)}">Bildquelle</a>${d.licenseUrl ? ` · <a href="${esc(d.licenseUrl)}">Lizenz</a>` : ""}</figcaption></figure>`;

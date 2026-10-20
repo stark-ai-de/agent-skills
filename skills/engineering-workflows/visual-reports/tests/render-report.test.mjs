@@ -60,6 +60,33 @@ test("explicit presentation intent starts slides and rejects invalid or missing 
   report.sections = exampleReport("r01").sections;
   assert.throws(() => validateReport(report), /Presentation requires a slides block/);
 });
+test("comparison cells use escaped source labels while preserving target IDs", async () => {
+  const report = exampleReport("r01");
+  assert.ok(report.sections.some((s) => s.kind === "comparison"));
+  const source = report.sources.find((item) =>
+    report.sections.some(
+      (section) =>
+        section.kind === "comparison" &&
+        section.data.criteria.some((criterion) =>
+          Object.values(criterion.values).some((value) => value.sourceIds.includes(item.id)),
+        ),
+    ),
+  );
+  assert.ok(source);
+  source.label = `Reviewed <img src=x onerror="${source.id}"> source`;
+  const html = (await renderReport(report)).html;
+  const comparisonCell = [...html.matchAll(/<td data-option="[^"]+">[\s\S]*?<\/td>/g)].find(
+    ([cell]) => cell.includes(`href="#source-${source.id}"`),
+  )?.[0];
+  assert.ok(comparisonCell, "the source reference must render inside a comparison cell");
+  assert.ok(
+    comparisonCell.includes(
+      `href="#source-${source.id}">Reviewed &lt;img src=x onerror=&quot;${source.id}&quot;&gt; source</a>`,
+    ),
+  );
+  assert.ok(html.includes(`id="source-${source.id}"`));
+  assert.doesNotMatch(html, /<img src=x onerror=/);
+});
 test("embedded raster block is validated; remote images and active SVG rejected", async () => {
   const report = exampleReport("r10");
   report.sections = [
