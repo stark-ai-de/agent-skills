@@ -1,5 +1,8 @@
 # Use the collection
 
+Follow [access selection](../SKILL.md#access-selection): use local MCP/API first,
+and inspect API support before treating a missing MCP tool as a browser-only task.
+
 ## Retrieval for coding work
 
 Confirm the current MCP tools and the intended account. Announce reuse briefly when
