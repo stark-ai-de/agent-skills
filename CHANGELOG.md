@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.31.0 (2026-10-20)
+
+## What's Changed
+* feat(visual-reports): clarify reader handoff and guided report layout by @servrox in https://github.com/stark-ai-de/agent-skills/pull/163
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.30.0...v0.31.0
+
 ## 0.30.0 (2026-10-20)
 
 ## What's Changed
