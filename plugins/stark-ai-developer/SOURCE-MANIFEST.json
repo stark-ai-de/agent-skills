@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "179883ec16f82539ffc76b501692d465b53dbe6d8563f448ddc00af55c8003f8"
+      "sha256": "b1ac8c38fc05454ce713d301181f88fff094758293aaa7269dd9047a9abcfa25"
     },
     {
       "byteLength": 2128,
@@ -291,10 +291,10 @@
       "sha256": "a37e1bc72c46376a710e18cf4c4f863d3a4cc90e22903df55f53f443e3c70f3f"
     },
     {
-      "byteLength": 20342,
+      "byteLength": 20853,
       "mode": "0644",
       "path": "skills/architecture-compass/SKILL.md",
-      "sha256": "83790498332bf30f20437e92f913ee97be03d0328a6d344154aae4209575378d"
+      "sha256": "86ac2bff9f1547cc7779877d2257a3b41666dac2bffd805d5dac1f54c43272b7"
     },
     {
       "byteLength": 692,
@@ -441,10 +441,10 @@
       "sha256": "20c01ca5868879f0b63d7605142195cbe21c685e254f0e7bed7c3aaed3438a2a"
     },
     {
-      "byteLength": 5370,
+      "byteLength": 5718,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md",
-      "sha256": "1351e8a7d2b0afbb5f218731c3bf6bf286364406348c2f206bc564a51833d265"
+      "sha256": "95a64f5a5137acc526ff4698936cb9b071e26af4b01cc558ac8497924777b73c"
     },
     {
       "byteLength": 6580,
@@ -1359,22 +1359,22 @@
       "sha256": "1483a0e7f95239868f44d023f1e4b12f371b01331ef0dd773eeaa9d2d50cf5a2"
     },
     {
-      "byteLength": 3937,
+      "byteLength": 11791,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md",
-      "sha256": "2dca8d360a6c5863a111f547c97a5c8a7a528d1c17255538390824c7441735dc"
+      "sha256": "db7cc6adb6c9edfa12323325d7dad6e3dbd62a1845359ef96c7fe11082c5de96"
     },
     {
-      "byteLength": 5596,
+      "byteLength": 7155,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md",
-      "sha256": "53557a0c308ef15db83cc94aefc587d99ea5d58785adbe502afedc7d6b9cce7a"
+      "sha256": "d498bccfc6900e6c50ea546cbc2317c736e739a70736ef2f402af615ee0f3203"
     },
     {
-      "byteLength": 2825,
+      "byteLength": 3630,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-054-isolate-agent-writes-in-external-git-worktrees.short.md",
-      "sha256": "902bb56aaa5deb769652ef71df32723ea43001e7d661eae299fba6c7ce1259aa"
+      "sha256": "7fde9f7b1cd093d65e1d834c7c87b32acbb74c1cbc1a5ad12c2f95b0f7edb3f4"
     },
     {
       "byteLength": 4400,
@@ -1629,10 +1629,10 @@
       "sha256": "16fba1f41aac19375ce0a32a86067e0770795c784edc2aad9e089d3a6ddbce5c"
     },
     {
-      "byteLength": 56731,
+      "byteLength": 56871,
       "mode": "0644",
       "path": "skills/architecture-compass/references/adr-catalog.md",
-      "sha256": "320322da634313a4d051546ef6c35196a88be1370ec46d48506b10f460e610c1"
+      "sha256": "ca2670fb2febae496a553188cf089c67bfa572fb1e1a71b033184c000bdba26e"
     },
     {
       "byteLength": 6988,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.17.0"
+    "version": "1.18.0"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "fa591fcb9a1282774d742f0d89e88ed984025503ec239f3d337b49847577cb1a"
+  "treeHash": "a3b6d65f7a0f8e693db283d21b95f773b68b12e496d0abbff764414b69fb89de"
 }
