@@ -4,6 +4,7 @@
   const source = JSON.parse(document.getElementById("report-data").textContent);
   const draft = JSON.parse(JSON.stringify(source));
   let hasUnsavedDraft = false;
+  let hasInvalidInput = false;
   const all = (selector, root = document) => [...root.querySelectorAll(selector)];
   const byId = (id) => document.getElementById(id);
   const announce = (text) => {
@@ -48,7 +49,7 @@
   const working = () => ReportState.workingReport(source, draft);
   function dirty() {
     const current = working();
-    hasUnsavedDraft = Boolean(current.editing);
+    hasUnsavedDraft = hasInvalidInput || Boolean(current.editing);
     updateLedgers(current);
     announce(
       current.editing
@@ -62,6 +63,7 @@
     isDirty: () => hasUnsavedDraft,
     discardDraft: () => {
       hasUnsavedDraft = false;
+      hasInvalidInput = false;
     },
     exportDraft: () => byId("export-draft").click(),
     capture: () => {
@@ -98,7 +100,7 @@
   });
   function exportCurrent(action) {
     const invalid = all("[data-prompt-field], [data-enabled], [data-rollout]").find(
-      (input) => !input.checkValidity(),
+      (input) => !validEditorInput(input),
     );
     if (invalid) {
       announce("Export blockiert: ungültige Editoreingabe korrigieren.");
@@ -115,6 +117,13 @@
     } catch (error) {
       announce("Export fehlgeschlagen: " + error.message);
     }
+  }
+  function validEditorInput(input) {
+    return (
+      input.checkValidity() &&
+      (input.type !== "number" ||
+        (input.value.trim() !== "" && Number.isFinite(input.valueAsNumber)))
+    );
   }
   // Snapshot serialization, not a second template engine: preserve owned markup,
   // restore the full static view, and materialize only the supported editor fields.
@@ -476,7 +485,9 @@
       };
       all("[data-prompt-field]", root).forEach((input) =>
         input.addEventListener("input", () => {
-          if (!input.checkValidity()) {
+          hasInvalidInput = all("[data-prompt-field]").some((field) => !validEditorInput(field));
+          if (hasInvalidInput) {
+            hasUnsavedDraft = true;
             announce("Ungültige Editoreingabe; Export bis zur Korrektur blockiert.");
             return;
           }

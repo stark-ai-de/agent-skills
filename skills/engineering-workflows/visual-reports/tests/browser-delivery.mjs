@@ -68,6 +68,27 @@ try {
     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
     return result.result.value;
   };
+  async function captureDownloads() {
+    await evaluate(`(() => {
+      window.__downloads = [];
+      window.__pendingDownloads = [];
+      window.__downloadBlobs = new Map();
+      const create = URL.createObjectURL.bind(URL);
+      URL.createObjectURL = (blob) => {
+        const url = create(blob);
+        window.__downloadBlobs.set(url, blob);
+        return url;
+      };
+      const click = HTMLAnchorElement.prototype.click;
+      HTMLAnchorElement.prototype.click = function() {
+        if (this.download) window.__pendingDownloads.push((async () => {
+          const text = await window.__downloadBlobs.get(this.href).text();
+          window.__downloads.push({name: this.download, text});
+        })());
+        else click.call(this);
+      };
+    })()`);
+  }
   await page("Page.enable");
   await page("Runtime.enable");
   await page("Network.enable");
@@ -98,6 +119,9 @@ try {
   const mixed = parseMarkdown(
     await readFile(new URL("../assets/completion-example.md", import.meta.url), "utf8"),
   );
+  const promptFixture = exampleReport("r20");
+  mixed.sections.push(promptFixture.sections[0]);
+  mixed.sources.push(...promptFixture.sources);
   const reports = [...recipes.map((r) => exampleReport(r.id)), mixed];
   const files = [];
   for (const report of reports) {
@@ -178,7 +202,9 @@ try {
   assert.equal(await evaluate("location.hash"), "#content", "keyboard skip link");
   for (const rid of ["r18", "r19", "r20"]) {
     await navigate(files[reports.findIndex((r) => r.id === rid)]);
-    const before = await evaluate("document.getElementById('report-data').textContent");
+    const original = await evaluate(
+      "JSON.parse(document.getElementById('report-original').textContent)",
+    );
     const change =
       rid === "r18"
         ? "const e=document.querySelector('[data-card-index] select');e.selectedIndex=(e.selectedIndex+1)%e.options.length;e.dispatchEvent(new Event('change',{bubbles:true}));"
@@ -187,12 +213,139 @@ try {
           : "const e=document.querySelector('[data-prompt-field=system]');e.value='Local test draft';e.dispatchEvent(new Event('input',{bubbles:true}));";
     await evaluate(change);
     assert.equal(await evaluate("window.visualReportView.isDirty()"), true, rid);
-    assert.equal(
-      await evaluate("document.getElementById('report-data').textContent"),
-      before,
-      "draft must not mutate source",
+    const current = await evaluate(
+      "JSON.parse(document.getElementById('report-data').textContent)",
     );
+    assert.deepEqual(
+      await evaluate("JSON.parse(document.getElementById('report-original').textContent)"),
+      original,
+      "original snapshot remains immutable",
+    );
+    assert.deepEqual(current.editing.original, original, "editing provenance stays on original");
+    assert.ok(
+      current.editing.changes.every((change) => change.state === "user-edited"),
+      rid,
+    );
+    assert.notDeepEqual(current, original, "current ledger materializes working state");
   }
+  const r20File = files[reports.findIndex((r) => r.id === "r20")];
+  for (const [field, value] of [
+    ["temperature", ""],
+    ["maxTokens", ""],
+  ]) {
+    await navigate(r20File);
+    await captureDownloads();
+    await evaluate(
+      `(() => { const e=document.querySelector('[data-prompt-field="${field}"]');e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true})); })()`,
+    );
+    assert.equal(
+      await evaluate("window.visualReportView.isDirty()"),
+      true,
+      `${field} invalid draft is protected`,
+    );
+    for (const button of ["export-json", "export-md", "export-draft"])
+      await evaluate(`document.getElementById('${button}').click()`);
+    assert.equal(await evaluate("window.__downloads.length"), 0, `${field} blocks current exports`);
+    assert.match(
+      await evaluate("document.getElementById('report-status').textContent"),
+      /Export blockiert/,
+    );
+    await evaluate("document.getElementById('export-original').click()");
+    await evaluate("Promise.all(window.__pendingDownloads)");
+    assert.equal(
+      await evaluate("window.__downloads.length"),
+      1,
+      "original remains available for recovery",
+    );
+    assert.match(await evaluate("window.__downloads[0].name"), /original\.json$/);
+  }
+  await navigate(r20File);
+  await captureDownloads();
+  await evaluate(
+    `(() => { const e=document.querySelector('[data-prompt-field="temperature"]');e.value='0';e.dispatchEvent(new Event('input',{bubbles:true})); })()`,
+  );
+  await evaluate("document.getElementById('export-json').click()");
+  await evaluate("Promise.all(window.__pendingDownloads)");
+  assert.equal(
+    JSON.parse((await evaluate("window.__downloads[0].text")).toString()).sections.find(
+      (section) => section.kind === "prompt",
+    ).data.temperature,
+    0,
+    "explicit numeric zero remains valid",
+  );
+  await navigate(files.at(-1));
+  await captureDownloads();
+  await evaluate(
+    `(() => { const e=document.querySelector('[data-prompt-field="user"]');e.value='Exported mixed working state';e.dispatchEvent(new Event('input',{bubbles:true})); })()`,
+  );
+  const mixedWorking = await evaluate(
+    "JSON.parse(document.getElementById('report-data').textContent)",
+  );
+  assert.equal(
+    mixedWorking.sections.some((section) => section.kind === "diagram"),
+    true,
+    "v2 text diagram fixture",
+  );
+  for (const button of ["export-json", "export-md", "export-draft", "export-original"])
+    await evaluate(`document.getElementById('${button}').click()`);
+  const exports = await evaluate(
+    "Promise.all(window.__pendingDownloads).then(()=>window.__downloads)",
+  );
+  const currentJson = JSON.parse(
+    exports.find((item) => item.name.endsWith(".json") && !item.name.endsWith(".original.json"))
+      .text,
+  );
+  const currentMarkdown = exports.find((item) => item.name.endsWith(".md")).text;
+  const currentHtml = exports.find((item) => item.name.endsWith(".html")).text;
+  const originalJson = JSON.parse(
+    exports.find((item) => item.name.endsWith(".original.json")).text,
+  );
+  assert.equal(
+    currentJson.sections.find((section) => section.kind === "prompt").data.user,
+    "Exported mixed working state",
+  );
+  assert.deepEqual(currentJson.editing.original, originalJson);
+  assert.match(currentMarkdown, /Datenfluss/);
+  assert.match(currentMarkdown, /Exported mixed working state/);
+  const downloadedLedgers = await evaluate(`(() => {
+    const html=${JSON.stringify(currentHtml)};
+    const parsed=new DOMParser().parseFromString(html,'text/html');
+    return {data:JSON.parse(parsed.getElementById('report-data').textContent),original:JSON.parse(parsed.getElementById('report-original').textContent),markdown:parsed.getElementById('report-markdown').textContent};
+  })()`);
+  assert.deepEqual(downloadedLedgers.data, currentJson);
+  assert.deepEqual(downloadedLedgers.original, originalJson);
+  assert.match(downloadedLedgers.markdown, /Datenfluss/);
+  const reopenedPath = path.join(directory, "current-export.html");
+  await (await import("node:fs/promises")).writeFile(reopenedPath, currentHtml);
+  const reopenedUrl = pathToFileURL(reopenedPath).href;
+  await navigate(reopenedUrl);
+  assert.deepEqual(
+    await evaluate("JSON.parse(document.getElementById('report-data').textContent)"),
+    currentJson,
+  );
+  assert.deepEqual(
+    await evaluate("JSON.parse(document.getElementById('report-original').textContent)"),
+    originalJson,
+  );
+  assert.equal(
+    await evaluate("document.getElementById('report-markdown').textContent.includes('Datenfluss')"),
+    true,
+  );
+  await page("Emulation.setScriptExecutionDisabled", { value: true });
+  await navigate(reopenedUrl);
+  assert.deepEqual(
+    await evaluate("JSON.parse(document.getElementById('report-data').textContent)"),
+    currentJson,
+  );
+  assert.deepEqual(
+    await evaluate("JSON.parse(document.getElementById('report-original').textContent)"),
+    originalJson,
+  );
+  assert.equal(
+    await evaluate("document.getElementById('report-markdown').textContent.includes('Datenfluss')"),
+    true,
+  );
+  await page("Emulation.setScriptExecutionDisabled", { value: false });
   const store = path.join(directory, "managed");
   const managedReport = exampleReport("r20");
   const first = await publishRevision(managedReport, store);
@@ -206,7 +359,7 @@ try {
   )
     await new Promise((resolve) => setTimeout(resolve, 30));
   await evaluate(
-    `const f=document.querySelector('iframe').contentWindow;f.document.querySelector('details').open=true;f.scrollTo(0,300);const e=f.document.querySelector('[data-prompt-field="system"]');e.value='Local editor draft';e.dispatchEvent(new Event('input',{bubbles:true}));`,
+    `const f=document.querySelector('iframe').contentWindow;f.document.querySelector('details').open=true;f.scrollTo(0,300);const e=f.document.querySelector('[data-prompt-field="maxTokens"]');e.value='0';e.dispatchEvent(new Event('input',{bubbles:true}));`,
   );
   assert.equal(
     await evaluate("document.querySelector('iframe').contentWindow.visualReportView.isDirty()"),
@@ -216,7 +369,14 @@ try {
     await evaluate(
       "document.querySelector('iframe').contentDocument.getElementById('report-json').textContent",
     ),
-    /Local editor draft/,
+    /maxTokens": 1200/,
+  );
+  assert.equal(
+    await evaluate(
+      "document.querySelector('iframe').contentDocument.querySelector('[data-prompt-field=maxTokens]').value",
+    ),
+    "0",
+    "raw invalid input remains visible while source ledgers stay valid",
   );
   const changed = structuredClone(managedReport);
   changed.nextAction = "Second revision for browser fixture";
