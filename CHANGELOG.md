@@ -12,6 +12,16 @@
 
 ### Removed
 
+## 0.30.0 (2026-10-20)
+
+## What's Changed
+* feat(architecture-compass): standardize worktrees with Worktrunk by @servrox in https://github.com/stark-ai-de/agent-skills/pull/158
+* feat(visual-reports): complete report authoring, revision previews and editable exports by @servrox in https://github.com/stark-ai-de/agent-skills/pull/156
+* fix(release): validate skill versions independently of catalog by @servrox in https://github.com/stark-ai-de/agent-skills/pull/161
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.29.0...v0.30.0
+
 ## 0.29.0 (2026-10-16)
 
 ## What's Changed
