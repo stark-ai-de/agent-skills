@@ -2351,10 +2351,10 @@
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     },
     {
-      "byteLength": 10503,
+      "byteLength": 11566,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "d76b145404ce8655760aadbcb85161e29862f45c8190c1d82472feca3f8656a1"
+      "sha256": "4af58eb185de59194974254c268c2d35401d6fe56ffad3e2763c029e41d34f9a"
     },
     {
       "byteLength": 488,
@@ -2471,10 +2471,10 @@
       "sha256": "6281fca019eaea2e25f1868b6a9b943e7e2e8f0af5b7d5abab01d7915454f8bf"
     },
     {
-      "byteLength": 3985,
+      "byteLength": 4151,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/use.md",
-      "sha256": "4227df9ee8866db40b79d9c821ca9444f5f0a264083732b4d419f6b6a7b844b1"
+      "sha256": "baaae835e4cd2c3b9560f5a5e76dfb11f1f2253066e95fded75de5b5792abc27"
     },
     {
       "byteLength": 3370,
@@ -2597,5 +2597,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "f033f95a5198c747c8df3f8ea8db6e35111968c21b31b79d12a19d2b3c36c37a"
+  "treeHash": "cf5b373310b86d964b34704f98e565dcce4124e6b370f2d0f0b6f76960ded510"
 }
