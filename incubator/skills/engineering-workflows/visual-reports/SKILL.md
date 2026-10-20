@@ -1,6 +1,6 @@
 ---
 name: visual-reports
-description: Create self-contained visual reports, comparisons, explainers, presentations and explicit local prototypes with a shared renderer, 24 optional recipes and complete HTML/Markdown/JSON exports. Use for readable visual output, adjustable styles or browser-local editing; not production app UI or clinical advice.
+description: Create self-contained visual reports, comparisons, explainers, presentations and explicit local prototypes with a shared renderer, 24 optional recipes and complete HTML/Markdown/JSON exports. Use when the user requests readable visual output, adjustable styles or browser-local editing; not production app UI or clinical advice.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
@@ -31,7 +31,7 @@ show options and shared criteria together before optional supporting detail.
 - Remove required evidence or invent measurements, screenshots, weights or scores.
 - Diagnose ADHD or promise therapeutic, reading-speed or comprehension benefits.
 
-## Ownership and inputs
+## Inputs to inspect
 
 Read the [report contract](references/report-contract.md) for general requirements
 and [renderer reference](references/renderer.md) for model/API, all 24 recipes,
@@ -86,7 +86,14 @@ do not force a selection wizard for every report.
 - Never commit preferences, credentials, caches, private sources or customer examples.
 - Tests and screenshots do not establish clinical benefit, full accessibility or usability.
 
-## Scripts and write effects
+## References
+
+- [Report contract](references/report-contract.md): general content, presentation and delivery.
+- [Renderer](references/renderer.md): model/API, decisions, 24 recipes and validation limits.
+- [Comparisons](references/comparisons.md): shared criteria, KPIs, screenshots and positioning.
+- [Filesystem handoff](references/filesystem-handoff.md): affected-file trees and ownership roles.
+
+## Scripts
 
 From the skill directory:
 
@@ -103,12 +110,17 @@ exports an explicitly requested committed, digest-pinned consumer bundle;
 `--check` is read-only. `scripts/cache_icon.py` downloads only a selected reviewed
 asset into an already ignored cache. Read their [portable assets contract](references/report-contract.md#ownership-and-portable-assets).
 
-## Output and completion
+## Output format
 
 Deliver self-contained HTML, full Markdown and JSON with a concise handoff: source
 limits, implementation boundaries, actual checks and verified opening method.
 A forwarded HTML also retains the full model for following agents to read/evaluate.
 Do not claim a mandatory edit roundtrip or independent agent/usability qualification.
+
+## Completion criteria
+
+Confirm source fidelity, visible caveats, complete exports and the applicable checks.
+State unresolved validation or delivery limits; do not imply an unrun gate passed.
 
 When files change, the completion response always includes a verified affected-file
 tree with added/changed/moved/deleted/context labels and maintained/generated/local
