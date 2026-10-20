@@ -47,12 +47,34 @@ try {
   }
 
   const inventory = [];
+  const reportDependencies = [];
   for (const entry of bundle.skills) {
+    if (entry.name === "visual-reports") {
+      const vendor = path.join(root, entry.source, "assets/vendor");
+      const manifest = JSON.parse(fs.readFileSync(path.join(vendor, "manifest.json"), "utf8"));
+      const expected = ["NOTICE.txt", "generator.mjs", "icons.mjs"];
+      if (JSON.stringify(Object.keys(manifest.files).sort()) !== JSON.stringify(expected))
+        errors.push("[SEC-001] report artifact inventory mismatch");
+      for (const name of expected) {
+        const digest = crypto
+          .createHash("sha256")
+          .update(fs.readFileSync(path.join(vendor, name)))
+          .digest("hex");
+        if (digest !== manifest.files[name])
+          errors.push(`[SEC-001] report artifact digest mismatch: ${name}`);
+      }
+      if (!manifest.dependencies?.length)
+        errors.push("[SEC-001] report dependency inventory missing");
+      reportDependencies.push(...(manifest.dependencies ?? []));
+    }
     for (const file of listTrackedSourceFiles(root, path.join(root, entry.source), entry.source)) {
       if (isGeneratedCachePath(file.relative)) continue;
       inventory.push({
         path: `${entry.source}/${file.relative}`,
-        license: "Apache-2.0",
+        license:
+          entry.name === "visual-reports" && file.relative.startsWith("assets/vendor/")
+            ? "SEE assets/vendor/NOTICE.txt"
+            : "Apache-2.0",
       });
       if (/\.(?:mjs|js|sh|py)$/.test(file.relative)) {
         const text = fs.readFileSync(file.absolute, "utf8");
@@ -66,7 +88,7 @@ try {
   }
 
   const lockPath = path.join(root, "pnpm-lock.yaml");
-  const runtimeDependencies = [];
+  const runtimeDependencies = [...reportDependencies];
   if (bundle.mcp?.length) {
     const { entry, directory } = artifactEntry(root);
     const verified = validateRuntimeArtifact(directory, entry.artifact);
@@ -82,6 +104,15 @@ try {
   const lockfile = fs.existsSync(lockPath)
     ? parseYaml(fs.readFileSync(lockPath, "utf8"))
     : { packages: {} };
+  for (const dependency of reportDependencies) {
+    const pinned = lockfile.packages?.[`${dependency.name}@${dependency.version}`];
+    if (
+      !dependency.integrity ||
+      pinned?.resolution?.integrity !== dependency.integrity ||
+      !dependency.license
+    )
+      errors.push(`[SEC-001] report dependency pin/license mismatch: ${dependency.name}`);
+  }
   const sbom = {
     spdxVersion: "SPDX-2.3",
     dataLicense: "CC0-1.0",

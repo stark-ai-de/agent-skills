@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "maintainer-directed-public-release",
+  "skill": "visual-reports",
+  "status": "Accepted",
+  "decision": "ADR-0065",
+  "acceptedOn": "2026-10-20",
+  "approval": {
+    "approved": true,
+    "authority": "Explicit maintainer implementation request for PR #156 on 2026-10-20",
+    "scope": "Complete and prepare public skill and plugin membership; back up and update local installation. No staging, push, merge or platform publication."
+  },
+  "acceptedSpecification": "Eight purpose templates, five domain profiles, compatible shared renderer, v2 JSON and bounded Markdown, reviewed visual patterns and atomic managed revisions; ADR-0073 through ADR-0075.",
+  "nativeHostQualification": "not-run",
+  "claimedQualifiedHosts": [],
+  "qualityAssessment": "Visible conclusions and constraints, reusable structured visuals and full source exports. Fixture and browser checks are recorded separately; no clinical or comparative agent-quality claim.",
+  "maintenanceOwner": "stark-ai-de",
+  "limitations": "Public preparation does not establish native discovery on every host, portal approval or end-to-end model-generation speed."
+}

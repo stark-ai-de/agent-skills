@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Visual Reports · Fiktives Gestaltungsbeispiel</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1c1d1f;
+        --ink: #eeefed;
+        --muted: #b1b2b4;
+        --accent: #88ff74;
+        --line: #45474a;
+        --space: 18px;
+        --radius: 0px;
+        --grain: 0.025;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          13px/1.65 Arial,
+          Helvetica,
+          sans-serif;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: var(--grain);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+      }
+      header,
+      main,
+      footer {
+        position: relative;
+        padding: var(--space);
+      }
+      header {
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      h1,
+      h2 {
+        font-size: 17px;
+        font-weight: 400;
+        margin: 0 0 10px;
+      }
+      h2 {
+        font-size: 15px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      .muted,
+      footer {
+        color: var(--muted);
+      }
+      a {
+        color: var(--ink);
+        text-underline-offset: 4px;
+      }
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 7px 11px;
+        cursor: pointer;
+      }
+      button[aria-pressed="true"] {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      .style-controls,
+      .download {
+        display: none;
+      }
+      .enhanced .style-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .enhanced .download {
+        display: inline-block;
+      }
+      section {
+        border-bottom: 1px solid var(--line);
+        padding: var(--space) 0;
+      }
+      section:first-child {
+        padding-top: 0;
+      }
+      .condition {
+        border-left: 2px solid var(--accent);
+        padding-left: 12px;
+      }
+      figure {
+        margin: 18px 0;
+      }
+      .flow {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+      }
+      .flow li:not(:last-child)::after {
+        content: " →";
+        color: var(--accent);
+      }
+      figcaption {
+        color: var(--muted);
+      }
+      details {
+        padding: 14px 0;
+      }
+      summary {
+        cursor: pointer;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font:
+          12px/1.65 ui-monospace,
+          monospace;
+      }
+      footer {
+        font-size: 12px;
+      }
+      .file-tree {
+        white-space: pre;
+        overflow-x: auto;
+        overflow-wrap: normal;
+        max-width: 100%;
+        padding: 12px 0;
+      }
+      .tree-added {
+        color: #88ff74;
+      }
+      .tree-changed {
+        color: #ffe264;
+      }
+      .tree-icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: -3px;
+      }
+      @media print {
+        .tree-added,
+        .tree-changed {
+          color: inherit;
+        }
+      }
+      @media (max-width: 600px) {
+        :root {
+          --space: 14px;
+        }
+        .flow {
+          flex-direction: column;
+        }
+      }
+      @media print {
+        .style-controls,
+        .download,
+        body::before {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Die passende Darstellung wählen.</h1>
+        <p class="muted">Fiktives Beispiel · keine Produktbewertung · Sans-Fallback</p>
+      </div>
+      <div class="style-controls" role="group" aria-label="Stil wählen">
+        <button type="button" data-style="current" aria-pressed="true">Aktuell</button>
+        <button type="button" data-style="balanced" aria-pressed="false">Mittelweg</button>
+        <button type="button" data-style="calm" aria-pressed="false">Ruhiger</button>
+      </div>
+    </header>
+    <main>
+      <section id="entscheidung" aria-labelledby="answer">
+        <h2 id="answer">Nächster Schritt: alle drei Stile vergleichen.</h2>
+        <p>Die Darstellung wechselt. Inhalt, Quellen und geöffnete Details bleiben erhalten.</p>
+        <p class="condition">
+          <strong>Wichtige Grenze:</strong> Dieses Beispiel misst keine Lesegeschwindigkeit und
+          belegt keine ADHS-Wirkung.
+        </p>
+        <figure
+          aria-label="Drei Schritte: Stil wählen, Inhalte prüfen, Auswahl ausdrücklich übernehmen lassen"
+        >
+          <ol class="flow">
+            <li>Stil wählen</li>
+            <li>Inhalte prüfen</li>
+            <li>Auswahl übernehmen lassen</li>
+          </ol>
+          <figcaption>
+            Die Auswahl ist vorübergehend. Eine Repo-Präferenz speichert der Agent erst auf
+            ausdrücklichen Wunsch.
+          </figcaption>
+        </figure>
+      </section>
+      <section id="details" aria-labelledby="how">
+        <h2 id="how">Was bleibt unabhängig vom Stil?</h2>
+        <ul>
+          <li>Notwendige Bedingungen sind offen sichtbar.</li>
+          <li>Zusatzinformationen lassen sich gezielt öffnen.</li>
+          <li>Alle Informationen sind ohne JavaScript lesbar.</li>
+        </ul>
+        <details>
+          <summary>Wie wird aus diesem Beispiel ein echter Report?</summary>
+          <p>
+            Der Agent verwendet die maßgeblichen Quellen und den bestehenden Generator. Er prüft die
+            vollständige Übereinstimmung von Quelle, HTML und Exporten. Dieses Beispiel ist kein
+            Datenrenderer.
+          </p>
+        </details>
+        <details>
+          <summary>Agentenlesbarer Inhalt dieses Beispiels</summary>
+          <pre id="source-data">
+{
+  "status": "fictional-example",
+  "reader_goal": "decide",
+  "takeaway": "Compare the three styles over the same content.",
+  "critical_caveats": ["No reading-speed measurement or ADHD efficacy claim."],
+  "body": ["Required conditions remain visible.", "Extra detail is optional.", "Content stays readable without JavaScript."],
+  "file_changes": {
+    "status": "fictional-example",
+    "root": "example-project/",
+    "entries": [
+      {"path": "docs/overview.md", "change": "changed", "role": "maintained-source"},
+      {"path": "reports/overview.html", "change": "added", "role": "generated-output"}
+    ]
+  },
+  "source_refs": [],
+  "next_action": "Choose a style; ask the agent explicitly to persist a preference."
+}</pre>
+          <button class="download" type="button" id="download-data">
+            Beispiel-JSON herunterladen
+          </button>
+        </details>
+      </section>
+      <section id="filesystem-example" aria-labelledby="filesystem-title">
+        <h2 id="filesystem-title">Wo liegen die Ergebnisse?</h2>
+        <p class="condition">Fiktiver Dateibaum · keine tatsächlichen Dateiänderungen.</p>
+        <figure aria-labelledby="filesystem-caption">
+          <figcaption id="filesystem-caption">
+            [+] Neu · [~] Geändert · [=] Kontext. Farben und Icons ergänzen die Textlabels.
+          </figcaption>
+          <!-- FolderOpen icon: Lucide. License text included at the end of this document. -->
+          <pre
+            class="file-tree"
+          ><code><svg class="tree-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b1b2b4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path></svg> example-project/                   [=] Kontext
+├── docs/overview.md                  <span class="tree-changed">[~] Geändert · maßgebliche Quelle</span>
+└── reports/overview.html             <span class="tree-added">[+] Neu · erzeugte Ausgabe</span></code></pre>
+        </figure>
+        <p class="muted">
+          Quelle in docs bearbeiten, HTML daraus erzeugen. Git- und PR-Status sind separat zu
+          prüfen.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <span id="style-status" role="status">Aktuell · keine dauerhafte Speicherung.</span>
+      <a href="#entscheidung">Zur Entscheidung</a>
+    </footer>
+    <script>
+      (() => {
+        const styles = {
+          current: {
+            bg: "#1c1d1f",
+            ink: "#eeefed",
+            muted: "#b1b2b4",
+            accent: "#88ff74",
+            line: "#45474a",
+            space: "18px",
+            radius: "0px",
+            grain: ".025",
+          },
+          balanced: {
+            bg: "#1f2123",
+            ink: "#e9ebe6",
+            muted: "#b7bcb7",
+            accent: "#a2e48f",
+            line: "#3c4041",
+            space: "21px",
+            radius: "3px",
+            grain: ".018",
+          },
+          calm: {
+            bg: "#222426",
+            ink: "#e5e7e3",
+            muted: "#bdc2bd",
+            accent: "#bbd9ad",
+            line: "#383b3d",
+            space: "24px",
+            radius: "6px",
+            grain: ".012",
+          },
+        };
+        document.documentElement.classList.add("enhanced");
+        for (const button of document.querySelectorAll("[data-style]"))
+          button.addEventListener("click", () => {
+            for (const [key, value] of Object.entries(styles[button.dataset.style]))
+              document.documentElement.style.setProperty("--" + key, value);
+            for (const other of document.querySelectorAll("[data-style]"))
+              other.setAttribute("aria-pressed", String(other === button));
+            document.getElementById("style-status").textContent =
+              button.textContent + " · keine dauerhafte Speicherung.";
+          });
+        document.getElementById("download-data").addEventListener("click", () => {
+          const url = URL.createObjectURL(
+            new Blob([document.getElementById("source-data").textContent], {
+              type: "application/json",
+            }),
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "visual-report-example.json";
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        });
+      })();
+    </script>
+  </body>
+</html>
+
+<!-- Generic FolderOpen icon license (Lucide):
+ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+---
+
+The following Lucide icons are derived from the Feather project:
+
+airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
+
+The MIT License (MIT) (for the icons listed above)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-->

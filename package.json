@@ -55,7 +55,7 @@
   "scripts": {
     "list": "bun --bun scripts/catalog/list-skills.mjs",
     "list:incubator": "bun --bun scripts/catalog/list-skills.mjs --incubator",
-    "validate": "bun exec \"pnpm run validate:metadata-mcp && pnpm run validate:ssh && pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run validate:product-planning && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:change-impact && pnpm run validate:review-fix-swarm && pnpm run validate:site\"",
+    "validate": "bun exec \"pnpm run validate:metadata-mcp && pnpm run validate:ssh && pnpm run validate:skills && pnpm run validate:memory-curators && pnpm run validate:adrs && pnpm run validate:runtime-matrix && pnpm run validate:ownership && pnpm run validate:bundles && pnpm run validate:release-descriptor && pnpm run validate:contract-snapshots && pnpm run validate:traceability && pnpm run validate:openai && pnpm run validate:projections && pnpm run validate:plugin-evals && pnpm run validate:network-endpoints && pnpm run verify:supply-chain && pnpm run validate:architecture-compass && pnpm run validate:product-planning && pnpm run lint:actions && pnpm run validate:scripts && pnpm run validate:release-subject && pnpm run validate:codegraph-ast-grep && pnpm run validate:drawio && pnpm run validate:animated-readme-logo && pnpm run validate:change-impact && pnpm run validate:review-fix-swarm && pnpm run validate:visual-reports && pnpm run validate:site\"",
     "release:prepare": "bun --bun scripts/release/prepare-release.mjs",
     "release:intent": "bun --bun scripts/release/check-release-intent.mjs",
     "release:validate": "bun --bun scripts/release/validate-release.mjs",
@@ -136,16 +136,24 @@
     "validate:karakeep:python": "python3 -B -m unittest discover -s skill-evals/karakeep-knowledge -p 'test_*.py' -v",
     "validate:karakeep:node": "node --test skill-evals/karakeep-knowledge/helper.test.mjs",
     "validate:review-fix-swarm": "node --test skill-evals/review-fix-swarm/fixture-kit.test.mjs",
-    "validate:metadata-mcp": "node --test packages/skill-metadata-mcp/test/*.test.mjs"
+    "validate:metadata-mcp": "node --test packages/skill-metadata-mcp/test/*.test.mjs",
+    "build:visual-reports": "bun --bun scripts/visual-reports/build.mjs",
+    "validate:visual-reports": "node --test skills/engineering-workflows/visual-reports/tests/*.test.mjs"
   },
   "devDependencies": {
+    "@lucide/icons": "1.59.0",
     "ajv": "^8.20.0",
+    "beautiful-mermaid": "1.1.3",
     "fflate": "^0.8.3",
     "github-actionlint": "1.7.12",
     "js-yaml": "5.4.2",
     "oxfmt": "0.71.0",
     "oxlint": "1.86.0",
-    "semver": "7.8.5"
+    "remark-directive": "4.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "semver": "7.8.5",
+    "unified": "11.0.5"
   },
   "engines": {
     "bun": ">=1.4.0",
