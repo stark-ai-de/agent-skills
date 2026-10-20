@@ -59,10 +59,14 @@
       {
         "name": "jev-capability-advisor",
         "source": "skills/skill-maintenance/jev-capability-advisor"
+      },
+      {
+        "name": "visual-reports",
+        "source": "skills/engineering-workflows/visual-reports"
       }
     ]
   },
-  "bundleHash": "3a1edf7e40685bc1df2102a9b45fe36209c00a8bc33f34977826ea999b1391fe",
+  "bundleHash": "2806c10676efe2d2c1d57f478ed7a6c9fc76d1dc5cc95f3a493b3351c16dd373",
   "files": [
     {
       "byteLength": 10271,
@@ -74,7 +78,7 @@
       "byteLength": 1492,
       "mode": "0644",
       "path": "README.md",
-      "sha256": "13ad48e425d25c85cdb6133a75bb8af99c1ca3bafebceb88fbad4c81806ed5f8"
+      "sha256": "766e1d4a5900c0268018847e90a7eb8279a15fef246d6e11280e788c1ab76536"
     },
     {
       "byteLength": 241,
@@ -2589,6 +2593,252 @@
       "mode": "0644",
       "path": "skills/telegram-serverless/references/sources.md",
       "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
+    },
+    {
+      "byteLength": 8574,
+      "mode": "0644",
+      "path": "skills/visual-reports/SKILL.md",
+      "sha256": "77c41bbe34f62fa183c8c75cb2744533f9e81db895b2b85e6dd9883c79df9a06"
+    },
+    {
+      "byteLength": 497,
+      "mode": "0644",
+      "path": "skills/visual-reports/agents/openai.yaml",
+      "sha256": "6a2442e22eab3c513bc8e99fe88a5ba36c920b11ebfaa882b333b45d794c3c77"
+    },
+    {
+      "byteLength": 3259,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/completion-example.md",
+      "sha256": "e1b6fa6a725b58d2384eaf19759024eaa99f1e6d2765cf866e7fea4797e52bf6"
+    },
+    {
+      "byteLength": 18080,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/graphite-grain/configurator.html",
+      "sha256": "ace27f4364687204f9e4685f01cfbe0d8ff2fe6f2432a5e414aefc085a356539"
+    },
+    {
+      "byteLength": 7036,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/graphite-grain/configurator.mjs",
+      "sha256": "285a715f253e0f11e5d8e6d7aac1fb9882c1855cd0cc23928dd218b0e4cb0034"
+    },
+    {
+      "byteLength": 4343,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/graphite-grain/relaxed.css",
+      "sha256": "f9e31e7f1b8a6c6fcd27141408526256831203eabc5232c7ed40a21346befcb5"
+    },
+    {
+      "byteLength": 10528,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/openai-icon.png",
+      "sha256": "636c320c10262df997d0d7919056f83210b3ef54d2098de28956977cc4409d32"
+    },
+    {
+      "byteLength": 318,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/openai-icon.svg",
+      "sha256": "09ea93fcdf0f603e4e7be6be10b14af13dd0e50d2618f77f5243f5b0221d345a"
+    },
+    {
+      "byteLength": 2583,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/preview.js",
+      "sha256": "d84735cf7e4084c9a41bef889092f13cf08767d2d73cb823cce610baf9fbf333"
+    },
+    {
+      "byteLength": 19412,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/report-recipes.mjs",
+      "sha256": "e5848ec6fe85be948c8df5c813629528ec52e1100e03a12418ab85acccd6bc44"
+    },
+    {
+      "byteLength": 9554,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/report-runtime.css",
+      "sha256": "44e75f84e14bad281ad7339c65f1e425876af9aec4305d612dd79f0404fc135b"
+    },
+    {
+      "byteLength": 12176,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/report-runtime.js",
+      "sha256": "ddbcb9e4ce406c9e2bd496c912e34bf7760ebdd3fb54cea7e546b2f99d73f9b6"
+    },
+    {
+      "byteLength": 14484,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/report-shell.html",
+      "sha256": "61b6af6e4aff546fc76e3cd84e16bad6b5e5ae7fdbf7ee49f803535a1ed56d70"
+    },
+    {
+      "byteLength": 114402,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/vendor/NOTICE.txt",
+      "sha256": "e54b94f0927a9c1e021b121182b570ac04144fd47401116fbb45995d42ded4c4"
+    },
+    {
+      "byteLength": 1773599,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/vendor/generator.mjs",
+      "sha256": "fc8e59238c4357fe3018ad7a5778e45d3ec01a036fc56448a0eab2afac425b19"
+    },
+    {
+      "byteLength": 2263,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/vendor/icons.mjs",
+      "sha256": "560a33ad1643ade2ac48037b4d9db7c58492015b9aaea39899e5ba268885bbc7"
+    },
+    {
+      "byteLength": 19360,
+      "mode": "0644",
+      "path": "skills/visual-reports/assets/vendor/manifest.json",
+      "sha256": "958ce295b2751ef75ad5c6efe726fa168e769323f1d2d8547c963c03a01df07a"
+    },
+    {
+      "byteLength": 4670,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/comparisons.md",
+      "sha256": "4dc5210827ed9173dc847f7cafdcf833326ee92671e4194dbb407264702d08c2"
+    },
+    {
+      "byteLength": 4545,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/filesystem-handoff.md",
+      "sha256": "978769b6cc9befa5606e6701fb6378d876e1ca6cd187b7ffb5597795ff1cd64e"
+    },
+    {
+      "byteLength": 4499,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/managed-reports.md",
+      "sha256": "b214e881d463155f7811ac45e0772db44bcc2906116eb7d1f15b7681920986ea"
+    },
+    {
+      "byteLength": 3510,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/markdown-input.md",
+      "sha256": "83840448b4056b56426e9c0b857a287e456ff7e7bea8431aabe8301239abf45a"
+    },
+    {
+      "byteLength": 7761,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/model-v2.md",
+      "sha256": "d33acf8dfbe58323de38baf44a679e3e65703d9656277c0f3d4660af510243f2"
+    },
+    {
+      "byteLength": 22990,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/renderer.md",
+      "sha256": "be603c2358c089fa25e0443f2f72a1bff99e4a2f7df0ba5169c58f12c23ab3c1"
+    },
+    {
+      "byteLength": 15499,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/report-contract.md",
+      "sha256": "1a7efc9f4eb39da8c3d54508ee2c58bf513f6924acc1ccf7b2234a0840a24aec"
+    },
+    {
+      "byteLength": 4405,
+      "mode": "0644",
+      "path": "skills/visual-reports/references/selection.md",
+      "sha256": "f410b332c56feaa43b289a95faecbc7f95099150c2297182ad4f4b0b1c19fff6"
+    },
+    {
+      "byteLength": 2218,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/benchmark.mjs",
+      "sha256": "fdab7787996fee727dff4edf2b70b8a88f40c7553f029c0107d5d430c7574c3c"
+    },
+    {
+      "byteLength": 4136,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/cache_icon.py",
+      "sha256": "91cd13ac31e7daff22bd9a9881814627be73a93f9382ed49d438be546eacabca"
+    },
+    {
+      "byteLength": 4508,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/export-assets.mjs",
+      "sha256": "1d2e9509231f2f3bba871da256fab97e49d4a7694a289644bccd83ecded71493"
+    },
+    {
+      "byteLength": 23763,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/blocks-v2.mjs",
+      "sha256": "8078ca5ba7d4ae89a12d86ea0b2446b701d963660d3ab2758fb6c49ff21914ae"
+    },
+    {
+      "byteLength": 3818,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/cli.mjs",
+      "sha256": "a0eaf0b0e68497f296a0895dba2ffcfc672f69a8a0a5183ee67307639a311fbf"
+    },
+    {
+      "byteLength": 472,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/generator-entry.mjs",
+      "sha256": "f038c1928f91cedfae11ff213bb39873821e54fdbd4510f0b59f004b8180e7fc"
+    },
+    {
+      "byteLength": 9445,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/markdown-input.mjs",
+      "sha256": "af1583da157e86a34693aff842ff075ad87895c5912fbf283cf15ab7fdd43c4e"
+    },
+    {
+      "byteLength": 4554,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/preview.mjs",
+      "sha256": "1e4dedad8c3828246200213a4861e4242aa02b58d817ad730cf36bf4d70afb1c"
+    },
+    {
+      "byteLength": 6048,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/report-store.mjs",
+      "sha256": "28c702da4e3d0fcdd4c2c6acd2b864862e6f5d2dde02fdd57eac58436043c8c5"
+    },
+    {
+      "byteLength": 4743,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/lib/templates.mjs",
+      "sha256": "ac0590213f76d873f354d7c89154b71fc0b0f9b4bdd17029b5a725d21cef6d73"
+    },
+    {
+      "byteLength": 32052,
+      "mode": "0644",
+      "path": "skills/visual-reports/scripts/render-report.mjs",
+      "sha256": "9dfa500591c1034252fb0cb971343a000a8202fda96b63f74dd46eac64b548db"
+    },
+    {
+      "byteLength": 10820,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/browser-delivery.mjs",
+      "sha256": "d8dbe12cac9409fcbdfb33039cb80b40a07b47a18b35682bed38b220e5e294eb"
+    },
+    {
+      "byteLength": 8131,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/browser-smoke.py",
+      "sha256": "1de59bb7920d325f53c0a2bee232580051e5a1bb7778649a9c50498833563696"
+    },
+    {
+      "byteLength": 5144,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/export-assets.test.mjs",
+      "sha256": "4525bbb4566fa6e94ba5668edc9813fdb35014419e96fdf0a390d314b6a40806"
+    },
+    {
+      "byteLength": 7174,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/render-report.test.mjs",
+      "sha256": "7294368b99aae2e9802e0665e5d05f325e8ed38fb0328de54c807289736afe27"
+    },
+    {
+      "byteLength": 15960,
+      "mode": "0644",
+      "path": "skills/visual-reports/tests/v2.test.mjs",
+      "sha256": "479e42c52db2ce52f3b7b4c2fbd98ba765c44e73880b2bb4ed7ce5170029066a"
     }
   ],
   "plugin": {
@@ -2597,5 +2847,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "f033f95a5198c747c8df3f8ea8db6e35111968c21b31b79d12a19d2b3c36c37a"
+  "treeHash": "3ebd4987c5e99ed7a954a8cdcc1274b12d821e75b18f249aa059fc56f919f020"
 }

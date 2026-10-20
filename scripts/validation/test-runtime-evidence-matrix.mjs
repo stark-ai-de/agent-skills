@@ -147,6 +147,8 @@ function discoverPackageScriptSurfaces(rootScripts, siteScripts) {
       command === "node --test packages/skill-metadata-mcp/test/*.test.mjs"
     ) {
       surface = "package:root:metadata-mcp-node";
+    } else if (name === "validate:visual-reports" && /^node\b/.test(command)) {
+      surface = "package:root:visual-reports-node";
     } else if (name === "validate:review-fix-swarm" && /^node\b/.test(command)) {
       surface = "package:root:review-fix-swarm-node";
     } else if (name === "validate:karakeep:node" && /^node\b/.test(command)) {
@@ -615,8 +617,8 @@ requireCondition(
   "Draw.io explicit Node.js ownership must be discovered exactly once",
 );
 requireCondition(
-  requiredSurfaces.size === 21,
-  `current runtime-selection inventory must discover 21 surfaces, found ${requiredSurfaces.size}`,
+  requiredSurfaces.size === 22,
+  `current runtime-selection inventory must discover 22 surfaces, found ${requiredSurfaces.size}`,
 );
 requireCondition(
   seenSurfaces.size === requiredSurfaces.size &&
@@ -624,8 +626,8 @@ requireCondition(
   "matrix surfaces must equal the complete current runtime-selection inventory",
 );
 requireCondition(
-  matrix.boundaries?.length === 20,
-  `current runtime evidence matrix must define 20 boundaries, found ${matrix.boundaries?.length ?? 0}`,
+  matrix.boundaries?.length === 21,
+  `current runtime evidence matrix must define 21 boundaries, found ${matrix.boundaries?.length ?? 0}`,
 );
 errors.push(...runtimeAlignmentErrors(matrix.boundaries ?? [], surfaceOccurrences));
 errors.push(...negativeFixtureErrors());

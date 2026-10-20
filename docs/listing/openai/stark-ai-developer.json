@@ -5,7 +5,7 @@
     "version": "1.16.0",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
-    "longDescription": "stark AI Developer supports product blueprints, specifications, architecture decisions, code search, diagrams, repository visuals, agent memory, capability advice, Telegram bots and local Karakeep knowledge. Its open-source instructions and scripts are reviewable.\n\nThe OpenAI package has no bundled service or telemetry. Jev optionally sends tasks and public capability cards to TypeSafe using your key. Telegram remote operations can send code or tests and change live data. Karakeep requires a separately installed official MCP and local service; approved sync and curation change saved content. Retrieved knowledge reaches your agent provider under the host data policy. Installation starts no service, scheduler or watcher. The host controls discovery and permissions; external services retain their own access requirements.",
+    "longDescription": "stark AI Developer supports product blueprints, specifications, architecture decisions, code search, diagrams, visual reports, repository visuals, agent memory, capability advice, Telegram bots and local Karakeep knowledge. Its open-source instructions and scripts are reviewable.\n\nThe OpenAI package has no bundled service or telemetry. Jev optionally sends tasks and public capability cards to TypeSafe using your key. Telegram remote operations can send code or tests and change live data. Karakeep requires a separately installed official MCP and local service; approved sync and curation change saved content. Retrieved knowledge reaches your agent provider under the host data policy. Installation starts no service, scheduler or watcher. The host controls discovery and permissions; external services retain their own access requirements.",
     "developerName": "servrox solutions UG",
     "category": "Developer Tools",
     "capabilities": [
@@ -18,7 +18,8 @@
       "Curate durable Codex memory with explicit safety boundaries.",
       "Build and maintain bots and Mini Apps on Telegram Serverless.",
       "Recommend available skills and tools for a supplied task with Jev in Codex.",
-      "Connect, synchronize approved repository knowledge and curate a local Karakeep collection."
+      "Connect, synchronize approved repository knowledge and curate a local Karakeep collection.",
+      "Create and update compact visual HTML reports with complete source exports."
     ],
     "starterPrompts": [
       "Turn this feature idea into an implementation-ready specification.",
@@ -45,7 +46,7 @@
   "publisher": {
     "legalName": "servrox solutions UG"
   },
-  "releaseNotes": "Karakeep Knowledge 0.5.0 preserves human bookmarks during duplicate saves, verifies original sources before dependent writes, recovers definitively rejected creates and isolates Git checkout context. It adds optional official-CLI reading, status diagnostics and evidence handoffs. Existing policies and one writer govern collection changes; live host and collection qualification remain separate.",
+  "releaseNotes": "Adds Visual Reports: eight purpose templates, five domain profiles, a shared offline renderer, bounded Markdown input, automatic diagrams and local revision history. Existing recipes and JSON v1 remain supported. Local fixture/browser evidence does not establish native discovery on every host or platform publication.",
   "skills": [
     {
       "name": "codex-memory-curator",
@@ -126,6 +127,14 @@
       "products": ["CODEX"],
       "allowImplicitInvocation": true,
       "portalGlyph": "chart"
+    },
+    {
+      "name": "visual-reports",
+      "intent": "Create and update visual reports from one validated model with explicit evidence and local preview.",
+      "cohesion": "Makes developer findings, comparisons and plans readable while preserving source data and workflow boundaries.",
+      "products": ["CHAT", "CODEX"],
+      "allowImplicitInvocation": true,
+      "portalGlyph": "default"
     }
   ]
 }

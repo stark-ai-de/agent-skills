@@ -39,19 +39,19 @@ Use:
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --list
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a codex -y
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a cursor -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a claude-code -y
-npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass -g -a cursor
-npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a cursor
-npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams -g -a claude-code
-npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a codex
-npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo -g -a cursor
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill codegraph-ast-grep visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-spec-interviewer visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill architecture-compass visual-reports -g -a cursor
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams visual-reports -g -a cursor
+npx skills@latest add stark-ai-de/agent-skills --skill drawio-diagrams visual-reports -g -a claude-code
+npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo visual-reports -g -a codex
+npx skills@latest add stark-ai-de/agent-skills --skill animated-readme-logo visual-reports -g -a cursor
 ```
 
 The Codex release bundle is an explicit, ordered allowlist in [`plugins/stark-ai-developer.source.json`](../plugins/stark-ai-developer.source.json); category membership and directory discovery do not add skills implicitly. The standalone commands above remain individually scoped so runtime-specific skills are never selected by inference.
@@ -60,7 +60,7 @@ Install Claude Code public skills project-locally or globally with the skills CL
 
 ```bash
 npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -a claude-code -y
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
 ```
 
 Avoid `--skill '*'` scoped to one runtime: the wildcard also selects runtime-specific skills for the other runtime, such as `cursor-spec-interviewer` and `claude-spec-interviewer` for Codex.

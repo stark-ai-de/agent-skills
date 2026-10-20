@@ -25,3 +25,11 @@ vendor/ssh-manager/runtime
 
 # Pinned upstream MCP schema bytes are verified against their source checksum.
 scripts/vendor/agent-plugins/1.0.0/mcp.schema.json
+
+# Pinned generated report dependencies retain their reviewed digests.
+skills/engineering-workflows/visual-reports/assets/vendor
+plugins/stark-ai-developer/skills/visual-reports/assets/vendor
+
+# This is bounded directive input, validated by its parser rather than a Markdown formatter.
+skills/engineering-workflows/visual-reports/assets/completion-example.md
+plugins/stark-ai-developer/skills/visual-reports/assets/completion-example.md

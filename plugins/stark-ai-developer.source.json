@@ -44,6 +44,10 @@
     {
       "name": "jev-capability-advisor",
       "source": "skills/skill-maintenance/jev-capability-advisor"
+    },
+    {
+      "name": "visual-reports",
+      "source": "skills/engineering-workflows/visual-reports"
     }
   ],
   "distributions": {
@@ -95,7 +99,7 @@
         "version": "2.0.0",
         "transport": "http",
         "url": "https://skills-mcp.stark-ai.de/mcp",
-        "description": "Ten reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
+        "description": "Eleven reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
       },
       "new-remote": {
         "pluginId": "stark-ai-developer-tools",
@@ -103,14 +107,14 @@
         "displayName": "stark AI Developer Tools",
         "transport": "http",
         "url": "https://skills-mcp.stark-ai.de/mcp",
-        "description": "Ten reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
+        "description": "Eleven reviewed developer skills plus deterministic skill and plugin metadata validation. Explicitly supplied metadata is processed by a stateless publisher-operated service; no repository upload, shell execution or publication approval."
       },
       "desktop-local": {
         "pluginId": "stark-ai-developer-desktop",
         "version": "1.0.0",
         "displayName": "stark AI Developer Desktop",
         "transport": "stdio",
-        "description": "Ten reviewed developer skills plus local deterministic skill and plugin metadata validation. Runs on the desktop with Node.js 24; no remote metadata service or SSH MCP is included."
+        "description": "Eleven reviewed developer skills plus local deterministic skill and plugin metadata validation. Runs on the desktop with Node.js 24; no remote metadata service or SSH MCP is included."
       }
     }
   }
