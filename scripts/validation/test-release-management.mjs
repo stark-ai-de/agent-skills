@@ -44,6 +44,7 @@ import { runCli as verifyReleaseRecoverySubjects } from "../release/verify-relea
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const releaseImpactScript = path.join(repositoryRoot, "scripts/release/check-release-intent.mjs");
+const releaseValidationScript = path.join(repositoryRoot, "scripts/release/validate-release.mjs");
 const triggerClassifier = path.join(
   repositoryRoot,
   "scripts/release/classify-release-please-trigger.mjs",
@@ -70,7 +71,12 @@ function git(root, args) {
   }).trimEnd();
 }
 
-function createReleaseFixture({ manifest = true } = {}) {
+function createReleaseFixture({
+  manifest = true,
+  skillVersion = "0.1.0",
+  skillInternal = false,
+  validateSkillsStub = false,
+} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-release-management-"));
   fs.mkdirSync(path.join(root, "skills/test/demo/references"), {
     recursive: true,
@@ -82,7 +88,8 @@ function createReleaseFixture({ manifest = true } = {}) {
       "name: demo",
       "description: Test fixture",
       "metadata:",
-      '  version: "0.1.0"',
+      ...(skillVersion === null ? [] : [`  version: "${skillVersion}"`]),
+      ...(skillInternal ? ["  internal: true"] : []),
       "---",
       "",
       "# Demo",
@@ -108,7 +115,25 @@ function createReleaseFixture({ manifest = true } = {}) {
       "",
     ].join("\n"),
   );
-  writeJson(root, "package.json", { name: "fixture", version: "0.20.1" });
+  const packageJson = { name: "fixture", version: "0.20.1" };
+  if (validateSkillsStub) {
+    packageJson.scripts = { "validate:skills": "node validate-skills-fixture.mjs" };
+    // The fixture isolates release validation; full repository skill-catalog validation is out of scope here.
+    fs.writeFileSync(
+      path.join(root, "validate-skills-fixture.mjs"),
+      [
+        "import fs from 'node:fs';",
+        "if (!fs.existsSync('skills/test/demo/SKILL.md')) process.exit(1);",
+        "console.log('Fixture skill-validator boundary passed.');",
+        "",
+      ].join("\n"),
+    );
+    // The release validator resolves its impact child from cwd; expose the real validator in the fixture.
+    const fixtureImpactScript = path.join(root, "scripts/release/check-release-intent.mjs");
+    fs.mkdirSync(path.dirname(fixtureImpactScript), { recursive: true });
+    fs.symlinkSync(releaseImpactScript, fixtureImpactScript);
+  }
+  writeJson(root, "package.json", packageJson);
   if (manifest) writeJson(root, ".release-please-manifest.json", { ".": "0.20.1" });
   writeJson(root, "plugins/stark-ai-developer.source.json", {
     version: "1.0.0",
@@ -149,6 +174,16 @@ function runImpact(root, base) {
       )
     : {};
   return { ...result, githubOutput: output };
+}
+
+function runReleaseValidation(root, base, version) {
+  const result = spawnSync(
+    process.execPath,
+    [releaseValidationScript, "--base-ref", base, "--version", version],
+    { cwd: root, encoding: "utf8" },
+  );
+  if (result.error) throw result.error;
+  return result;
 }
 
 function releaseChangelog(version, { afterBaseline = false, preamble = "# Changelog" } = {}) {
@@ -415,6 +450,43 @@ try {
   assert.equal(fs.readFileSync(output, "utf8"), "skip=true\n");
 } finally {
   fs.rmSync(releaseFixture.root, { recursive: true, force: true });
+}
+
+const independentSkillReleaseFixture = createReleaseFixture({
+  skillVersion: "1.0.0",
+  validateSkillsStub: true,
+});
+try {
+  prepareGeneratedRelease(independentSkillReleaseFixture.root, "0.21.0");
+  const result = runReleaseValidation(
+    independentSkillReleaseFixture.root,
+    independentSkillReleaseFixture.base,
+    "0.21.0",
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Release v0\.21\.0 validated\./);
+} finally {
+  fs.rmSync(independentSkillReleaseFixture.root, { recursive: true, force: true });
+}
+
+for (const [name, options, expected] of [
+  ["missing public skill version", { skillVersion: null }, /must set metadata\.version/],
+  ["malformed public skill version", { skillVersion: "not-semver" }, /must use x\.y\.z semver/],
+  [
+    "internal skill marked public",
+    { skillVersion: "0.1.0", skillInternal: true },
+    /public skills must not set metadata\.internal: true/,
+  ],
+]) {
+  const fixture = createReleaseFixture({ ...options, validateSkillsStub: true });
+  try {
+    prepareGeneratedRelease(fixture.root, "0.21.0");
+    const result = runReleaseValidation(fixture.root, fixture.base, "0.21.0");
+    assert.notEqual(result.status, 0, `${name} must fail`);
+    assert.match(result.stderr, expected);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
 }
 
 const overbroadReleaseFixture = createReleaseFixture();
