@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   changelogReleaseOrder,
@@ -128,10 +128,13 @@ function createReleaseFixture({
         "",
       ].join("\n"),
     );
-    // The release validator resolves its impact child from cwd; expose the real validator in the fixture.
+    // The release validator resolves its impact child from cwd; forward to the maintained validator.
     const fixtureImpactScript = path.join(root, "scripts/release/check-release-intent.mjs");
     fs.mkdirSync(path.dirname(fixtureImpactScript), { recursive: true });
-    fs.symlinkSync(releaseImpactScript, fixtureImpactScript);
+    fs.writeFileSync(
+      fixtureImpactScript,
+      `import ${JSON.stringify(pathToFileURL(releaseImpactScript).href)};\n`,
+    );
   }
   writeJson(root, "package.json", packageJson);
   if (manifest) writeJson(root, ".release-please-manifest.json", { ".": "0.20.1" });
