@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "b1ac8c38fc05454ce713d301181f88fff094758293aaa7269dd9047a9abcfa25"
+      "sha256": "2c089c4e64e65a83d21bb5328d77a91f55a212ce0905553ed29859a6ceee418b"
     },
     {
       "byteLength": 2128,
@@ -1785,10 +1785,10 @@
       "sha256": "483247453e62c19a6e602e8425d7a35984f6cdd610b033c8f47849a8ddbd86b2"
     },
     {
-      "byteLength": 17018,
+      "byteLength": 18071,
       "mode": "0644",
       "path": "skills/codex-memory-curator/SKILL.md",
-      "sha256": "d8dc9aa303771420601d2db26f8993429899bc11c48cbe03f1e41830b43ce77a"
+      "sha256": "8c444e61f66ed59173a9288a8639aff1e4b8cec9cacc835609fde5e558f7e55f"
     },
     {
       "byteLength": 575,
@@ -1809,10 +1809,10 @@
       "sha256": "5408d634debafdbf3ff363429df858cfc179ff0d7c1288f8c18622cd60ef6b24"
     },
     {
-      "byteLength": 2159,
+      "byteLength": 2406,
       "mode": "0644",
       "path": "skills/codex-memory-curator/assets/review-report-template.md",
-      "sha256": "cd52f1806d21a30af83df99106a4d7d2404c9a67ea1c3d15dc607394e6a8fd62"
+      "sha256": "f3ec0b23e9f487daf22ba53b45b93949c8a892556051a463babfbcca385894fe"
     },
     {
       "byteLength": 8141,
@@ -1821,10 +1821,10 @@
       "sha256": "4c02b82b17b99e4133a3d34b9916b4e924f347093d449a3ffefdd0a2c77b3cd0"
     },
     {
-      "byteLength": 6828,
+      "byteLength": 16313,
       "mode": "0644",
       "path": "skills/codex-memory-curator/references/config-modes.md",
-      "sha256": "9e0631b94fcb3e02a1da76dea9d0580f72d2b2397e254f2c59346f2ca4cc71c5"
+      "sha256": "833ea971d6ef80f8114d9161739e464ea2c163cbe90e79b454b9116a07ef847a"
     },
     {
       "byteLength": 1628,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.18.0"
+    "version": "1.18.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "a3b6d65f7a0f8e693db283d21b95f773b68b12e496d0abbff764414b69fb89de"
+  "treeHash": "57391a2b4de231847bf2315d299a74592fb60a5f4c97034ff120bb704c6e33dd"
 }
