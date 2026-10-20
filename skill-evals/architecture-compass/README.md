@@ -146,6 +146,11 @@ Focused routed-library cases:
 - `cases/portability-taxonomy.md`
 - `cases/host-metadata-gating.md`
 - `cases/worktree-parallelism-gate.md`
+- `cases/worktrunk-installed-reuse.md`
+- `cases/worktrunk-missing-choice.md`
+- `cases/worktrunk-unusable-tool.md`
+- `cases/worktrunk-path-and-hook-conflicts.md`
+- `cases/worktrunk-harness-alignment.md`
 - `cases/public-skill-reuse-consent.md`
 - `cases/opinionated-stack-profile-selection.md`
 - `cases/proportional-planning-evidence.md`
@@ -261,3 +266,19 @@ version evidence, proof, convergence, accounting and scope boundaries. Run just
 these checks with `bun --bun scripts/validation/architecture-compass/simplification-contract.test.mjs`.
 They are structural regression evidence, not executed conversational cases or
 proof of model quality. The synthetic simplification cases remain prospective.
+
+## Worktrunk and harness alignment
+
+The five Worktrunk cases above cover installed/absent/unusable tools, explicit
+installation refusal versus no answer, existing and detached assignments,
+configured/default external paths, hook trust and initial harness alignment.
+The harness case separates matching, optional, conflicting, unverified and
+saved-but-not-active configuration, including manual or authorized automation
+through the authoritative owner/source.
+
+These are prospective conversational cases. Inventory/structure validation does
+not run them or qualify a native harness. The contract regressions additionally
+mutate the amended provider Short/Long decisions and the matching repository
+Short/Long decision together in a disposable copy. Their rejection establishes
+that the narrowly approved lock refresh does not permit later decision drift;
+it is not evidence of model behavior or OS sandbox enforcement.
