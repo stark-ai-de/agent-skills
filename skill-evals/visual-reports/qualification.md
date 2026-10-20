@@ -124,6 +124,7 @@ was uploaded.
 
 See [public admission](public-admission.json), the
 [skill](../../skills/engineering-workflows/visual-reports/SKILL.md) and accepted
-ADRs [0073](../../docs/adrs/0073-bundle-visual-report-generator-dependencies.long.md),
-[0074](../../docs/adrs/0074-use-one-versioned-visual-report-model.long.md) and
-[0075](../../docs/adrs/0075-version-local-visual-reports-atomically.long.md).
+ADRs
+[ADR-0073](../../docs/adrs/0073-bundle-visual-report-generator-dependencies.short.md) ([Long, canonical](../../docs/adrs/0073-bundle-visual-report-generator-dependencies.long.md) · [Guide](../../docs/adrs/0073-bundle-visual-report-generator-dependencies.guide.md)),
+[ADR-0074](../../docs/adrs/0074-use-one-versioned-visual-report-model.short.md) ([Long, canonical](../../docs/adrs/0074-use-one-versioned-visual-report-model.long.md) · [Guide](../../docs/adrs/0074-use-one-versioned-visual-report-model.guide.md)) and
+[ADR-0075](../../docs/adrs/0075-version-local-visual-reports-atomically.short.md) ([Long, canonical](../../docs/adrs/0075-version-local-visual-reports-atomically.long.md) · [Guide](../../docs/adrs/0075-version-local-visual-reports-atomically.guide.md)).
