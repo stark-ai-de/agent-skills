@@ -103,7 +103,7 @@ test("new remote ZIP carries one real MCP, unchanged skills, provenance and repr
             true,
           );
           assert.equal(manifest.name, "stark-ai-developer-tools");
-          assert.equal(manifest.version, "1.0.0");
+          assert.equal(manifest.version, source.openai.profiles["new-remote"].version);
           assert.equal(manifest.mcpServers, "./.mcp.json");
           const config = JSON.parse(fs.readFileSync(path.join(staged.stage, ".mcp.json")));
           assert.deepEqual(config, {
@@ -226,7 +226,10 @@ test("desktop candidate contains a self-contained validator and notices, not SSH
 });
 
 test("a new OpenAI identity receives its own version and release issue marker", () => {
-  const profile = openAiIdentityFromSource(source, "new-remote");
+  const candidate = structuredClone(source);
+  candidate.version = "9.8.7";
+  candidate.openai.profiles["new-remote"].version = "1.2.3";
+  const profile = openAiIdentityFromSource(candidate, "new-remote");
   const listing = listingForOpenAiIdentity(
     JSON.parse(fs.readFileSync(path.join(root, "docs/listing/openai/stark-ai-developer.json"))),
     profile,
@@ -246,7 +249,7 @@ test("a new OpenAI identity receives its own version and release issue marker", 
     },
     listing,
     subject: {
-      pluginVersion: source.version,
+      pluginVersion: candidate.version,
       openaiProfile: profile,
       subjects: { openai: { sha256: "b".repeat(64) } },
     },
@@ -255,8 +258,8 @@ test("a new OpenAI identity receives its own version and release issue marker", 
     issues: [],
   });
   assert.equal(plan.status, "create");
-  assert.equal(plan.pluginVersion, "1.0.0");
-  assert.ok(plan.marker.includes("stark-ai-developer-tools@1.0.0"));
+  assert.equal(plan.pluginVersion, "1.2.3");
+  assert.ok(plan.marker.includes("stark-ai-developer-tools@1.2.3"));
   assert.ok(plan.body.includes("new-remote"));
   assert.ok(!plan.body.includes("- ChatGPT plugin: https://chatgpt.com/"));
 });
