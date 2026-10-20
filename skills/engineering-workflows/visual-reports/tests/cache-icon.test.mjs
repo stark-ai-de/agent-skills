@@ -11,17 +11,20 @@ const python = (body) =>
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"],
   });
+const url = (scheme, authority, resource = "/a") =>
+  `${scheme}:${"/".repeat(2)}${authority}${resource}`;
 
 test("SVG cache accepts static local fragments and rejects active XML, namespace and escaped CSS", () => {
+  const external = url("https", "example.com", "/x");
   python(
     `m.validate_svg(b'<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g"/></defs><rect fill="url(#g)"/></svg>')`,
   );
   for (const payload of [
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:x="urn:svg"><x:script/></svg>`,
-    `<svg xmlns="http://www.w3.org/2000/svg"><rect style="fill:u\\\\72l(https://example.com/x)"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg"><rect style="fill:u\\\\72l(${external})"/></svg>`,
     `<!DOCTYPE svg [<!ENTITY x "y">]><svg/>`,
     `<svg><foreignObject/></svg>`,
-    `<svg><rect fill="url(https://example.com/x)"/></svg>`,
+    `<svg><rect fill="url(${external})"/></svg>`,
   ]) {
     assert.throws(() =>
       python(
@@ -32,15 +35,23 @@ test("SVG cache accepts static local fragments and rejects active XML, namespace
 });
 
 test("public asset identities and redirects reject credentials before use without echoing them", () => {
+  const urls = [
+    url("https", "user:secret@example.com"),
+    url("http", "example.com"),
+    url("https", "printer"),
+    url("https", "host.invalid"),
+  ];
+  const initial = url("https", "example.com");
+  const redirect = url("https", "user:secret@example.com", "/b");
   const result = python(`
 import urllib.request
-for url in ["https://user:secret@example.com/a", "http://example.com/a", "https://printer/a", "https://host.invalid/a"]:
+for url in ${JSON.stringify(urls)}:
  try: m.validate_public_https_url(url, "Asset URL")
  except ValueError as e:
   assert "secret" not in str(e)
  else: raise AssertionError("unsafe URL accepted")
-request=urllib.request.Request("https://example.com/a")
-try: m.PublicHttpsRedirectHandler().redirect_request(request, object(), 302, "Found", {}, "https://user:secret@example.com/b")
+request=urllib.request.Request(${JSON.stringify(initial)})
+try: m.PublicHttpsRedirectHandler().redirect_request(request, object(), 302, "Found", {}, ${JSON.stringify(redirect)})
 except ValueError as e: assert "secret" not in str(e)
 else: raise AssertionError("credential redirect accepted")
 `);

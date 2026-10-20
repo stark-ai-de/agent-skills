@@ -2835,10 +2835,10 @@
       "sha256": "53e3286d1454da76900fe1abd5dcde79ab94e37f976a873a9728ac0178cf1bde"
     },
     {
-      "byteLength": 2262,
+      "byteLength": 2588,
       "mode": "0644",
       "path": "skills/visual-reports/tests/cache-icon.test.mjs",
-      "sha256": "35064bb27bc881340d77ebce74441e9f33e0dd900cba737294a34ca63c68fa9d"
+      "sha256": "ded644619914c26e15f051212f9b7f049c4cbd62915a4a127dfa75161d9f82c5"
     },
     {
       "byteLength": 5604,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "5d05fae0f4a8572cfefe0ef2f9741c6a6f85092a48bc8fda4c6f9a02a3a4fde7"
+  "treeHash": "66125c6df203c2c5eb665f786fb450cd251a13969f5155bc7c088184cf7fe9ae"
 }
