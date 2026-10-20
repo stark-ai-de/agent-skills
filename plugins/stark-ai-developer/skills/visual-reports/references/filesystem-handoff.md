@@ -57,8 +57,11 @@ ignored download cache, required attribution/license and fully embedded safe byt
 Use a neutral labeled placeholder when no genuine mark is available. A simple
 tree does not require collecting decorative logos.
 
-Keep HTML trees readable without JavaScript and provide local horizontal scrolling
-on narrow screens rather than overflowing the whole page. Maintain visible status
+Keep HTML trees readable without JavaScript. A standalone wide tree may use a
+labeled horizontal scroller on narrow screens. Within a guided tab panel, wrap
+paths or use a nested list so all content stays readable without a local scroller;
+follow the [guided layout contract](report-contract.md#guided-layout-and-navigation).
+Ordinary vertical page scrolling is allowed. Maintain visible status
 labels in monochrome and print. Style changes must preserve paths, labels and any
 open detail/selection state. Use an ordinary labeled figure/preformatted structure
 or nested list; do not add an ARIA tree widget without implementing its keyboard

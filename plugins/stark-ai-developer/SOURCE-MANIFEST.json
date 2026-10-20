@@ -2595,10 +2595,10 @@
       "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
     },
     {
-      "byteLength": 8574,
+      "byteLength": 10337,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "77c41bbe34f62fa183c8c75cb2744533f9e81db895b2b85e6dd9883c79df9a06"
+      "sha256": "682c4bf7894bd6ab948e42c9bfb40fb906a46c54e13f268726b80f26f2c25fba"
     },
     {
       "byteLength": 497,
@@ -2655,10 +2655,10 @@
       "sha256": "9c1be070642545f686a4dcc9984e0d3d7db6cb195fe8d21f6392efcf2f84ba3d"
     },
     {
-      "byteLength": 9554,
+      "byteLength": 10105,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.css",
-      "sha256": "44e75f84e14bad281ad7339c65f1e425876af9aec4305d612dd79f0404fc135b"
+      "sha256": "de0bc2846c26b5e594a145fc6d5735b1a097c0bc9a69738200a4e0e8be4d4c3c"
     },
     {
       "byteLength": 20938,
@@ -2697,22 +2697,22 @@
       "sha256": "958ce295b2751ef75ad5c6efe726fa168e769323f1d2d8547c963c03a01df07a"
     },
     {
-      "byteLength": 4670,
+      "byteLength": 4966,
       "mode": "0644",
       "path": "skills/visual-reports/references/comparisons.md",
-      "sha256": "4dc5210827ed9173dc847f7cafdcf833326ee92671e4194dbb407264702d08c2"
+      "sha256": "e3c41fc03169f9f59a0d0734246fed322a77df2bf30e61733612c9a342469a1d"
     },
     {
-      "byteLength": 4545,
+      "byteLength": 4775,
       "mode": "0644",
       "path": "skills/visual-reports/references/filesystem-handoff.md",
-      "sha256": "978769b6cc9befa5606e6701fb6378d876e1ca6cd187b7ffb5597795ff1cd64e"
+      "sha256": "d2a61c2812ba6e9efcf1e887bc8043414caa1e504ffe69260ba7f3ec12ee2f15"
     },
     {
-      "byteLength": 4499,
+      "byteLength": 5284,
       "mode": "0644",
       "path": "skills/visual-reports/references/managed-reports.md",
-      "sha256": "b214e881d463155f7811ac45e0772db44bcc2906116eb7d1f15b7681920986ea"
+      "sha256": "ca0ba7388cdc0d66814547662f448ced5634ee902de2780606d3270b34bd9855"
     },
     {
       "byteLength": 3510,
@@ -2721,28 +2721,28 @@
       "sha256": "83840448b4056b56426e9c0b857a287e456ff7e7bea8431aabe8301239abf45a"
     },
     {
-      "byteLength": 7761,
+      "byteLength": 8906,
       "mode": "0644",
       "path": "skills/visual-reports/references/model-v2.md",
-      "sha256": "d33acf8dfbe58323de38baf44a679e3e65703d9656277c0f3d4660af510243f2"
+      "sha256": "5c1aa83c1296e6ae9a89efb5b61e25c57d20a9674f3fd218a85847fc2b3b0227"
     },
     {
-      "byteLength": 24524,
+      "byteLength": 25127,
       "mode": "0644",
       "path": "skills/visual-reports/references/renderer.md",
-      "sha256": "503af31762574279abd9e05d78a6844f45877411c5995669a28bfab8b03df8fe"
+      "sha256": "31a9811366b79d9ab1bebf3b60180fe088666267a4295294bd6bb8b68556c352"
     },
     {
-      "byteLength": 16767,
+      "byteLength": 28866,
       "mode": "0644",
       "path": "skills/visual-reports/references/report-contract.md",
-      "sha256": "0831a91d49172bd2b1de6e1a8725d225c5df5ec1d232f325dbbb350466c4aab3"
+      "sha256": "35158cd4c4c8de0977223d152ff64f4133c7f65396a220f3a659719692db41eb"
     },
     {
-      "byteLength": 4405,
+      "byteLength": 4815,
       "mode": "0644",
       "path": "skills/visual-reports/references/selection.md",
-      "sha256": "f410b332c56feaa43b289a95faecbc7f95099150c2297182ad4f4b0b1c19fff6"
+      "sha256": "c04e531acc3db9da683306ac0ec7052126c75420d2250ebda8bb94a2ef6515e4"
     },
     {
       "byteLength": 2218,
@@ -2793,16 +2793,16 @@
       "sha256": "af1583da157e86a34693aff842ff075ad87895c5912fbf283cf15ab7fdd43c4e"
     },
     {
-      "byteLength": 4554,
+      "byteLength": 4977,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/preview.mjs",
-      "sha256": "1e4dedad8c3828246200213a4861e4242aa02b58d817ad730cf36bf4d70afb1c"
+      "sha256": "f85717a87becce1c8b064efc08a763e819e5b8d4d5b4749005d2ccd720680137"
     },
     {
-      "byteLength": 13056,
+      "byteLength": 13729,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/lib/report-state.mjs",
-      "sha256": "da84b0b37e319b6b06250b3a987adaf16ce3f1a974f75bacf13e5ffec91f9133"
+      "sha256": "2e7f0bfbeccdeef58cf89a40e2037660fc757a62454229d245bb31672e4f98a6"
     },
     {
       "byteLength": 7141,
@@ -2817,16 +2817,16 @@
       "sha256": "ac0590213f76d873f354d7c89154b71fc0b0f9b4bdd17029b5a725d21cef6d73"
     },
     {
-      "byteLength": 34004,
+      "byteLength": 35484,
       "mode": "0644",
       "path": "skills/visual-reports/scripts/render-report.mjs",
-      "sha256": "20d3f715944caf5fdc49543b8e5c40576a6cfa99593ae7eadd09b3f517ce962b"
+      "sha256": "c8c0671e9b3babbf45d79aaab93f302f62b200cb0d57123ad94fac41ece8ace2"
     },
     {
-      "byteLength": 21254,
+      "byteLength": 22431,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-delivery.mjs",
-      "sha256": "a8d27618ab77dfe407fbe48a8857101106e230efa4796f0a3b008cae907ede5e"
+      "sha256": "b528fd97f395b17c7b11ae111bb44d03ed2fcf1b0e6f0f6a53d358b67b6a9e92"
     },
     {
       "byteLength": 15373,
@@ -2847,10 +2847,10 @@
       "sha256": "d634cf67b1a472b0dc3b07435bddb4bc089a8da902b517b2950db6135097b3fe"
     },
     {
-      "byteLength": 10338,
+      "byteLength": 12106,
       "mode": "0644",
       "path": "skills/visual-reports/tests/render-report.test.mjs",
-      "sha256": "cc472348da91fddbeaba213b7bb57539a447fd0e24f2c68474c0182da37784ce"
+      "sha256": "6abe83566413fdaf099d6606ff34ee5cb4c8788ea181551529ca243b3625fbc0"
     },
     {
       "byteLength": 11935,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "a3b6d65f7a0f8e693db283d21b95f773b68b12e496d0abbff764414b69fb89de"
+  "treeHash": "1f1e2f6f181c6973c1d3153dd9b371e756b7190da2d9b0082bc0d5e8fea15504"
 }

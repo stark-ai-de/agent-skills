@@ -16,6 +16,7 @@ import {
 } from "./lib/blocks-v2.mjs";
 import {
   editNotice,
+  readerStatusLines,
   originalReport,
   stateMarkdown,
   validateRevision,
@@ -185,6 +186,23 @@ export function validateReport(report) {
   assert(styles.includes(report.style ?? "current"), "Invalid style");
   if (report.presentation !== undefined)
     assert(["slides", "reading"].includes(report.presentation), "Invalid presentation start mode");
+  if (report.readerStatus !== undefined) {
+    object(report.readerStatus, "readerStatus");
+    assert(
+      Object.keys(report.readerStatus).every((key) => ["state", "condition"].includes(key)),
+      "Unsupported readerStatus field",
+    );
+    const { state, condition } = report.readerStatus;
+    assert(
+      ["information", "completed", "action-required", "conditional"].includes(state),
+      "Invalid readerStatus.state",
+    );
+    if (["information", "completed"].includes(state)) {
+      assert(report.nextAction === undefined, "Summary readerStatus cannot require a nextAction");
+    } else text(report.nextAction, "readerStatus.nextAction");
+    if (state === "conditional") text(condition, "readerStatus.condition");
+    else assert(condition === undefined, "Only conditional readerStatus accepts a condition");
+  }
   strings(report.criticalCaveats, "criticalCaveats", true);
   list(report.sources, "sources", true);
   const known = ids(report.sources, "sources");
@@ -580,7 +598,19 @@ export async function renderReport(report) {
     digest = createHash("sha256").update(runtime).digest("base64");
   const csp = `default-src 'none'; script-src 'sha256-${digest}'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'`;
   const original = originalReport(report);
-  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}</style></head><body><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1><p class="takeaway">${escape(report.takeaway)}</p>${caveats(report.criticalCaveats)}${report.nextAction ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>` : ""}<div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
+  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}</style></head><body><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1><p class="takeaway">${escape(report.takeaway)}</p>${caveats(report.criticalCaveats)}${
+    report.readerStatus
+      ? `<p class="reader-handoff" role="note" data-reader-state="${escape(report.readerStatus.state)}">${readerStatusLines(
+          report,
+        )
+          .map((line, index) =>
+            index === 0 ? `<strong>${escape(line)}</strong>` : `<span>${escape(line)}</span>`,
+          )
+          .join(" ")}</p>`
+      : report.nextAction
+        ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>`
+        : ""
+  }<p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><footer class="report-tooling" aria-label="Report-Tooling"><details id="report-toolbox"><summary>Bericht-Werkzeuge · Export &amp; Darstellung</summary><p class="muted">Werkzeuge für diesen Bericht; kein Teil des behandelten Themas.</p><div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p></details></footer><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
   return { html, markdown, json: json(report) };
 }
 /** Explicit local writes only. A new output directory prevents accidental report overwrite. */

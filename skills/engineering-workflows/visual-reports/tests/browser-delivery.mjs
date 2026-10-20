@@ -144,6 +144,9 @@ try {
       await navigate(files[i]);
       const state = await evaluate(`({
         enhanced:document.documentElement.classList.contains('js'),
+        toolingClosed:document.querySelector('#report-toolbox')?.open===false,
+        toolingInFooter:document.querySelector('footer #export-json')!==null,
+        toolingHidden:!document.querySelector('#export-json').checkVisibility(),
         sections:document.querySelectorAll('main>section').length,
         overflow:document.documentElement.scrollWidth>innerWidth+1,
         caveats:document.querySelectorAll('header>.caveat').length,
@@ -153,6 +156,20 @@ try {
         motionDisabled:document.querySelector('[data-play]')?.disabled??null
       })`);
       assert.equal(state.enhanced, !disabled, reports[i].id);
+      assert.equal(state.toolingClosed, true);
+      assert.equal(state.toolingInFooter, true);
+      assert.equal(state.toolingHidden, true);
+      if (!disabled) {
+        assert.equal(
+          await evaluate(`(() => {
+          document.querySelector('#report-toolbox').open = true;
+          const visible = document.querySelector('#export-json').checkVisibility();
+          document.querySelector('#report-toolbox').open = false;
+          return visible;
+        })()`),
+          true,
+        );
+      }
       assert.equal(state.overflow, false, reports[i].id);
       assert.equal(state.sections, reports[i].sections.length);
       assert.ok(state.caveats && state.markdown && state.images, reports[i].id);
@@ -355,6 +372,15 @@ try {
   const first = await publishRevision(managedReport, store);
   preview = await serveReport(store);
   await navigate(preview.url);
+  assert.deepEqual(
+    await evaluate(`({
+    closed: document.querySelector('#preview-toolbox')?.open === false,
+    footer: document.querySelector('footer #versions') !== null,
+    noticeOutside: document.querySelector('#preview-toolbox #notice') === null,
+    controlsHidden: !document.querySelector('#apply').checkVisibility()
+  })`),
+    { closed: true, footer: true, noticeOutside: true, controlsHidden: true },
+  );
   for (
     let i = 0;
     i < 100 &&

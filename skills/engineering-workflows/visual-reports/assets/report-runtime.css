@@ -590,3 +590,31 @@ li {
   width: 100%;
   object-fit: contain;
 }
+
+/* Tooling is opt-in footer UI; content navigation and evidence remain in the report. */
+.report-tooling {
+  margin-top: 2rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--line);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.report-tooling > details > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.reader-handoff {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.8rem;
+}
+.reader-handoff strong {
+  font-weight: 550;
+}
+.reader-handoff span {
+  display: block;
+}
+@media print {
+  .report-tooling {
+    display: none;
+  }
+}

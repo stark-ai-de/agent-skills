@@ -24,6 +24,33 @@ Optional `icon` selects one bundled Lucide name from `assets/vendor/manifest.jso
 Optional `details: [{title, items: string[]}]` holds supplementary evidence.
 Essential constraints belong in visible `caveats`, not details.
 
+## Reader status and next action
+
+Optional `readerStatus` makes the reader handoff explicit. It never infers state
+from a title, evidence badge or prose. Existing models without it keep their
+legacy rendering and v1 APIs remain available.
+
+```json
+{
+  "readerStatus": {
+    "state": "conditional",
+    "condition": "Only if the local command fails"
+  },
+  "nextAction": "Use the repair command printed in the console."
+}
+```
+
+States are `information`, `completed`, `action-required` and `conditional`.
+`information` and `completed` require `nextAction` to be omitted: do not invent a
+reader chore for a summary. `action-required` requires a nonempty `nextAction`.
+`conditional` requires both a nonempty `condition` and `nextAction`; conditions
+are not accepted on the other states. Unknown status fields/states are rejected.
+
+HTML and reader Markdown show one compact labeled status, condition and action
+where applicable. They do not repeat the same action in a second next-step banner.
+The author remains responsible for evidence: `completed` is not proof that an
+unrun gate passed. Deeper conditions must remain beside their affected claim.
+
 ## New blocks
 
 | Kind            | Data                                                                         |
