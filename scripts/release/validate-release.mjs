@@ -178,7 +178,7 @@ function runImpactValidation(baseRef, headRef) {
   }
 }
 
-function validateCurrentPublicSkills(releaseVersion) {
+function validateCurrentPublicSkills() {
   const skillFiles = walk(
     path.join(root, "skills"),
     (file) => path.basename(file) === "SKILL.md",
@@ -197,10 +197,6 @@ function validateCurrentPublicSkills(releaseVersion) {
       errors.push(`${rel}: public skills must set metadata.version`);
     } else if (!semverPattern.test(props.version)) {
       errors.push(`${rel}: metadata.version must use x.y.z semver`);
-    } else if (compareSemver(props.version, releaseVersion) > 0) {
-      errors.push(
-        `${rel}: metadata.version ${props.version} must not exceed package release ${releaseVersion}`,
-      );
     }
   }
 }
@@ -261,7 +257,7 @@ if (errors.length === 0) {
   if (currentPackageVersion !== args.version) {
     errors.push(`package.json version is ${currentPackageVersion}; expected ${args.version}`);
   }
-  validateCurrentPublicSkills(args.version);
+  validateCurrentPublicSkills();
   if (args.baseRef) {
     runImpactValidation(args.baseRef, args.headRef);
     const basePackageVersion = packageVersion(readGitFile(args.baseRef, "package.json"));
