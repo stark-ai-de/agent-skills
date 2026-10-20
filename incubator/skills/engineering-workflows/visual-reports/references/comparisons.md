@@ -1,68 +1,80 @@
 # Comparable products and capabilities
 
-Use these patterns when the report's purpose is to compare products, harnesses or
-technical approaches. Choose the views needed by the reader; do not turn every
-report into a catalogue, feature matrix or market map. Product research belongs
-to the consuming repository, not this skill.
+Use these patterns for comparing products, harnesses or technical approaches.
+Choose views from the reader's task; not every report is a catalogue, feature
+matrix or market map. Product research stays in the consuming repository.
+
+## Comparison first
+
+The initial view presents multiple options and their common criteria together.
+Use aligned charts for comparable numbers and a shared matrix for qualitative
+facts. Keep units, periods, denominators, evidence states and decisive conditions
+beside the values. Unknown values use explicit text/dashed marks, not invented
+zeros. Numeric scales are common per criterion; do not imply that different units
+share a meaningful magnitude or normalize them into an unexplained score.
+
+Option/metric toggles, search and sorting refine an already visible comparison.
+A long entry list followed by individual detail panels fails the comparison goal.
+Do not require the reader to remember values from other screens or repeatedly open
+products to find differences. There is no general four-item cap. On small screens,
+a labeled local comparison scroller is preferable to page overflow or stacked
+product essays. Details can hold supporting evidence, never decisive limitations.
+
+Product details are retained, not removed: decision-relevant properties, values,
+conditions and boundaries belong on the joint surface; long explanations and
+sources remain accessible. All selections use the same facts as unfiltered exports.
 
 ## Shared criteria and badges
 
-Define one source-backed feature vocabulary, with stable IDs and concise labels.
-Use the same small icon and color for a feature wherever it appears, so equivalent
-capabilities are recognizable across products and views. State is a separate
-dimension: always show a textual status, with an additional shape or symbol where
-useful. Do not confuse a feature's identity color with proof that it is available.
+Define one source-backed feature vocabulary with stable IDs and concise labels.
+Use the same small icon/color for a feature wherever it appears. Feature identity
+is separate from evidence/status: always show a textual state, supplemented by a
+shape or symbol when useful. A color is not proof that a feature is available.
 
-Keep supported, partial, explicitly absent, unknown/unverified and planned states
-distinct when the source model contains them. No documentation is not proof of a
-missing feature; a plan is not an available capability. Put decisive limitations
-and evidence links beside the badge. Preserve scope, version and snapshot limits.
-Use only criteria meaningful to the comparison; the skill does not prescribe a
-universal product score or a fixed feature list.
-
-Start compactly with identity, distinction and a short limit/check note. Offer
-search, category/status filters, native details, a common matrix and side-by-side
-selection of up to four items when useful. Keep the same source facts and state
-definitions across all views, selections and exports.
+Keep supported/documented, partial, explicitly absent, unknown/unverified and
+planned states distinct. Missing documentation is not proof of absence; a plan is
+not delivered. Place decisive conditions and source links beside badges. Preserve
+scope, version and snapshot limits. Use meaningful criteria, not a universal
+feature list or invented product score.
 
 ## KPIs and editorial estimates
 
-Use inventory, documented coverage and source availability as KPIs only when they
-are derived from the actual dataset. Show units, denominator, snapshot and excluded
+Inventory, documentation coverage and source availability can be KPIs only when
+derived from the actual dataset. Show units, denominator, snapshot and excluded
 items. Unknown cells stay unknown; do not fabricate a percentage to fill a chart.
 Distinguish measurements, documentation coverage and editorial estimates.
 
-If the user's own product is included, separate current implementation from its
-target. Do not automatically give it a perfect similarity score or count its plans
-as delivered features. Identify its reference role and state whether competitor
-KPIs exclude it. A similarity-to-vision estimate needs a visible editorial label,
-its assessment basis and uncertainty; it is not measured quality or feature coverage.
+When including the user's product, separate actual implementation from its target.
+Do not grant a perfect similarity score or count plans as shipped features. State
+its reference role and whether competitor KPIs exclude it. A similarity-to-vision
+estimate requires an editorial label, assessment basis and uncertainty; it is not
+measured quality or feature coverage. Domain profiles may require fields/checks,
+but must not supply fictitious evidence, weights or scores.
 
 ## Product screenshots
 
-Use available genuine product screenshots when requested or useful. Prefer official
-pages, documentation or repositories; retain the exact source, retrieval/snapshot
-information, component scope and known usage terms. Label manufacturer screenshots
-as such. A screenshot is not a successful test or proof of a feature's availability.
-Never substitute an invented UI or a namesake product for missing evidence.
+Use genuine available product screenshots when requested or useful. Prefer official
+pages, documentation or repositories and retain exact source, retrieval/snapshot,
+component scope and known usage terms. Label manufacturer screenshots accordingly.
+An image is not a successful test or proof of feature availability. Never substitute
+an invented UI or namesake product for missing evidence.
 
-Use small consistent thumbnails, useful alt text and optional larger views. Show
-unavailable images explicitly. Keep raw downloads and discovery material in an
-ignored local cache such as `.cache/show-html/screenshots/`. The consumer may retain
-reviewed output assets and their source manifest for reproducible generation;
-embed required bytes in standalone HTML. Do not commit private captures or infer a
-license merely because an image is publicly viewable.
+Use consistent small thumbnails, useful alt text and optional larger views. Mark
+unavailable images explicitly. Keep discovery/download material in ignored local
+`.cache/show-html/screenshots/`. Consumers may retain reviewed assets and source
+manifests for reproducible generation; embed required bytes in standalone HTML.
+Do not commit private captures or infer a license from public visibility.
 
 ## Area maps and positioning
 
-A map can show role, primary use and documented or editorially assessed strengths.
-Choose labeled dimensions or meaningful areas; some products may be access tools,
-terminals or specialist applications rather than harnesses. Distinguish measured
-coordinates from editorial placement. Without quantitative evidence, area, distance,
-size and ordering must not suggest measured quality, performance or market share.
+Maps may show role, primary use and documented/editorially assessed strengths.
+Use meaningful labeled dimensions/areas; some tools are terminals, access layers
+or specialists rather than harnesses. Distinguish measured coordinates from
+editorial placement. Without quantitative evidence, area, distance, size and order
+must not imply measured quality, performance or market share.
 
-Explain what each area means and where each product fits, with source references
-and uncertainty. Keep an unclassified area when identity or scope is unknown.
-Mark the user's target separately from implemented competitors. Provide a readable
-table or list of the same positions without JavaScript; filtering and map jumps
-must preserve a recognizable selection and location.
+Explain areas and placements with source references and uncertainty. Retain an
+unclassified area when identity/scope is unknown. Separate the user's target from
+implemented competitors. Provide equivalent readable table/text without JavaScript.
+Filters and map jumps must preserve recognizable selection and location. The shared
+renderer offers labeled diagrams, not an automatic market-positioning algorithm.

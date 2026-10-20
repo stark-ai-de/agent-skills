@@ -1,6 +1,6 @@
 interface:
   display_name: "Visual Reports"
-  short_description: "Compact HTML reports with complete sources and adjustable styles"
-  default_prompt: "Use $visual-reports to create a compact visual report with visible caveats and complete source exports."
+  short_description: "Shared renderer, 24 visual recipes and complete source exports"
+  default_prompt: "Use $visual-reports to choose and combine visual blocks, show comparisons together and generate complete HTML/Markdown/JSON with visible caveats. Keep prototype and editor changes local."
 policy:
   allow_implicit_invocation: true
