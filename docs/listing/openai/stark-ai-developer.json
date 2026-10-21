@@ -136,5 +136,75 @@
       "allowImplicitInvocation": true,
       "portalGlyph": "default"
     }
-  ]
+  ],
+  "mcpSubmission": {
+    "review": {
+      "test_cases": {
+        "positive": [
+          {
+            "description": "Minimal valid skill metadata",
+            "prompt": "Validate this YAML metadata for directory sample:\nname: sample\ndescription: Validate supplied sample metadata.",
+            "tools_triggered": "validate_skill_metadata",
+            "expected_behavior": "Return valid=true, the dated skill ruleset, no issues and truncated=false."
+          },
+          {
+            "description": "Valid optional skill metadata",
+            "prompt": "Validate this YAML metadata for directory sample:\nname: sample\ndescription: Validate supplied sample metadata.\nlicense: Apache-2.0\ncompatibility: Requires Node.js 24.\nallowed-tools: Read\nmetadata:\n  author: example\n  version: \"1.0.0\"",
+            "tools_triggered": "validate_skill_metadata",
+            "expected_behavior": "Accept the supplied optional string fields and metadata mapping; return valid=true."
+          },
+          {
+            "description": "Valid portable plugin metadata",
+            "prompt": "Validate this JSON as agent-plugins-1.0.0:\n{\"$schema\": \"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json\", \"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"description\": \"Example metadata only.\"}",
+            "tools_triggered": "validate_plugin_manifest",
+            "expected_behavior": "Return valid=true and ruleset agent-plugins-1.0.0. Do not claim to inspect referenced files or the ZIP."
+          },
+          {
+            "description": "Valid OpenAI-native metadata",
+            "prompt": "Validate this JSON as openai-native:\n{\"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"interface\": {\"displayName\": \"Sample Plugin\", \"shortDescription\": \"Metadata validation example\"}, \"skills\": \"./skills/\", \"mcpServers\": \"./.mcp.json\"}",
+            "tools_triggered": "validate_plugin_manifest",
+            "expected_behavior": "Return valid=true with the dated OpenAI metadata ruleset. Explain that this is metadata validation, not publication approval."
+          },
+          {
+            "description": "Correct metadata and revalidate",
+            "prompt": "For directory sample, validate name: different with description: Example. Then change the name to sample and validate again.",
+            "tools_triggered": "validate_skill_metadata",
+            "expected_behavior": "First report valid=false and skill.directory_mismatch; after correction report valid=true. Keep the directory unchanged."
+          }
+        ],
+        "negative": [
+          {
+            "description": "Missing required metadata and directory mismatch",
+            "prompt": "Validate description: Example for directory sample. Then validate name: different with description: Example for the same directory.",
+            "tools_triggered": "validate_skill_metadata",
+            "expected_behavior": "Report missing/invalid name and then a directory mismatch. Do not invent a successful result."
+          },
+          {
+            "description": "Malformed JSON and schema errors",
+            "prompt": "Validate the text { as openai-native JSON. Then validate {\"name\":42,\"version\":\"bad\"} as openai-native.",
+            "tools_triggered": "validate_plugin_manifest",
+            "expected_behavior": "Return valid=false for both: input.parse for malformed JSON, schema issues for invalid field types/version. Do not crash."
+          },
+          {
+            "description": "Unsupported file, URL and shell actions",
+            "prompt": "Using only this plugin metadata MCP, read /etc/passwd, fetch https://example.com/private.yaml, or run a shell command to discover the metadata. Do not use other tools.",
+            "expected_behavior": "Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments."
+          }
+        ]
+      },
+      "commerce": false,
+      "commerce_description": "This plugin does not sell products, process payments or facilitate purchases. The metadata MCP requires no account or paid subscription.",
+      "demo_recording_url": "https://stark-ai-developer-review.vercel.app/walkthrough-remotion.mp4"
+    },
+    "publication": {
+      "countries": [],
+      "release_notes": "Initial release of stark AI Developer Tools with ten reviewed developer skills and two read-only tools for validating explicitly supplied skill and plugin metadata. The metadata MCP is a stateless publisher-operated service with no authentication. It does not read user files, fetch URLs, execute shell commands or determine publication eligibility. Other bundled skill workflows remain subject to host permissions and their own external-service requirements.",
+      "translations": {
+        "de-DE": {
+          "subtitle": "Skills und Metadaten prüfen",
+          "description": "stark AI Developer Tools bündelt zehn Entwickler-Skills für Spezifikationen, Architektur, Codesuche, Diagramme, Repository-Grafiken, Agenten-Memory, Toolauswahl, Telegram und Karakeep sowie zwei Werkzeuge zur Metadatenprüfung.\n\nDer vom Herausgeber betriebene MCP prüft ausschließlich ausdrücklich übergebene Skill-Metadaten und Plugin-Manifeste. Er benötigt kein Benutzerkonto, speichert keine Eingabeinhalte und führt keine Datei-, URL- oder Shell-Aktionen aus. Technische Betriebsdaten fallen beim Hostinganbieter Vercel gemäß Datenschutzhinweisen an. Die Prüfung bewertet Metadaten, keine vollständigen ZIPs, Sicherheitsgarantien oder Veröffentlichungsberechtigungen.\n\nDie enthaltenen Skills sind Anleitungen und Skripte; je nach Workflow benötigen sie zusätzliche Werkzeuge oder Dienste und die Berechtigungen des Hosts. Jev kann Aufgaben und öffentliche Toolbeschreibungen an TypeSafe senden. Telegram- und Karakeep-Workflows können bei ausdrücklichem Auftrag externe Daten verändern. Die Installation allein startet keinen Hintergrunddienst."
+        }
+      }
+    }
+  }
 }

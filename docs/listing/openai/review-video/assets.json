@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "source": "Publisher-owned public review media and synthetic MCP responses",
+  "remotionVersion": "4.0.535",
+  "assets": {
+    "walkthrough.mp4": {
+      "sha256": "3f609df7b9b000e62dd993be9727052f6466fdb67d3b9a6a8e6fe2baf0d23cd2",
+      "bytes": 1378204
+    },
+    "walkthrough-remotion.mp4": {
+      "sha256": "b045a91344d01a55b0b952ad1a7fd2378169768a78aacffe2654db6cae6e0333",
+      "bytes": 5428511
+    }
+  },
+  "remotionVideo": {
+    "durationSeconds": 108,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "originalRecording": {
+    "durationSeconds": 139.866667
+  },
+  "preparedUploadCandidate": {
+    "sha256": "a52a66b1d6f1ceda63a10fcc26c15cd478bb03b28bd028fef240c9d41a7ab3c5",
+    "bytes": 3602946,
+    "profile": "new-remote",
+    "pluginId": "stark-ai-developer-tools",
+    "version": "1.0.0",
+    "state": "local candidate prepared before review; exact uploaded bytes not independently observed"
+  },
+  "evidenceScope": "15 recorded production requests, including initialize and tools/list; 13 tool calls covering five positive and three negative cases. No native installation or model-refusal claim."
+}

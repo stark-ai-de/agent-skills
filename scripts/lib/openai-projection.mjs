@@ -63,6 +63,11 @@ export function openAiManifestFromListing(listing) {
       ? { mcpServers: "./.mcp.json" }
       : {}),
     ...(listing.submissionProfile?.transport === "stdio" ? { requires_local_executor: true } : {}),
+    ...(listing.submissionProfile?.transport !== "none" &&
+    listing.submissionProfile &&
+    listing.mcpSubmission
+      ? { extensions: { "com.openai": structuredClone(listing.mcpSubmission) } }
+      : {}),
     interface: {
       displayName: plugin.displayName,
       shortDescription: plugin.shortDescription,
