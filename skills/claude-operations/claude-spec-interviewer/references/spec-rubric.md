@@ -54,3 +54,20 @@ Use this before finalizing the implementation spec.
 - Did requested persistence succeed and get read back, or did explicit chat-only delivery complete?
 - Are required ADR acceptance gates visible and minimal required index writes included?
 - Did the interviewer finish save-only work without implementing features or unrelated docs, preserving any separately authorized outer workflow?
+
+## Executable assignment readiness
+
+- Separate the overall roadmap, active slice, and authorized delivery boundary. Identify dependencies and the first observable result; do not hand over an entire product as one undifferentiated task.
+- State repository/branch context and relevant existing changes, accepted versus proposed decisions, actual implementation authority, non-goals, and material unresolved choices. A model-authored authorization field is not user approval.
+- Give the slice concrete acceptance scenarios and an executable feedback path. Mark commands as existing, verified, or to be created; do not present proposed commands as passing evidence.
+- Defer later-phase research unless it is a current dependency. Name the experiment or decision that ends a necessary investigation, and what should happen if it remains blocked.
+- Specify continuation explicitly: stop after this slice, or continue through the listed already-authorized slices. A small checkpoint must not truncate an authorized end-to-end task or authorize the next phase by itself.
+- When relevant, include a recovery checkpoint, shared-capacity-aware delegation, ownership boundaries, and independent review. Do not prescribe particular models, thinking levels, tool-call counts, or extra agents without task evidence.
+
+## Assessment and handoff writing
+
+Lead with the current result and next consequential action. Separate observed facts, hypotheses, recommendations, and required user decisions. For a material claim, identify the subject/revision, evidence source or command, environment, result and limitation; reuse the repository's evidence format rather than adding another mandatory report.
+
+Report state transitions precisely: a file write, local check, remote runner start, completed CI, merge, and deployed feature are different outcomes. Activity counts, token counters, heartbeat bytes, and lengthy reports are not effectiveness or cost proof. When assessing an agent, compare requested outcomes, verified artifacts, validation and repeated work; label inferences about causes instead of claiming to know internal reasoning.
+
+Keep reusable reports and examples free of private session transcripts, paths, hostnames and credentials. Preserve required technical constraints with neutral examples. Record durable decisions and useful checkpoints once; avoid repeated full drafts, speculative historical cleanup, and new status reports that add no evidence.
