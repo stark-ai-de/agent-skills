@@ -441,10 +441,10 @@
       "sha256": "20c01ca5868879f0b63d7605142195cbe21c685e254f0e7bed7c3aaed3438a2a"
     },
     {
-      "byteLength": 5718,
+      "byteLength": 8742,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-003-coordinate-agents-and-execute-only-approved-bounded-slices.guide.md",
-      "sha256": "95a64f5a5137acc526ff4698936cb9b071e26af4b01cc558ac8497924777b73c"
+      "sha256": "42c690d31164aca32c794c8fb8cc933b34959e1cc0a77485f5ee46d321aba5c4"
     },
     {
       "byteLength": 6580,
@@ -459,10 +459,10 @@
       "sha256": "0e0c0b3f179f45c1814d849fe894571bfca50465ff2b42e94d6d70799de0a3cf"
     },
     {
-      "byteLength": 4794,
+      "byteLength": 6451,
       "mode": "0644",
       "path": "skills/architecture-compass/references/ac-adr-004-report-staged-evidence-and-protect-public-outputs.guide.md",
-      "sha256": "2734379979842499069567b7ca2e9481e17f253c149d401736d5266fbef5619a"
+      "sha256": "5ed330456e6805eefe27fa74558149dc9e963b85616faa40b5d5d636d80ffde2"
     },
     {
       "byteLength": 6004,
@@ -1893,10 +1893,10 @@
       "sha256": "7075a18e6012ff78eed81f24b225a8befa667d8ff9a054c5e73c43c9130318b4"
     },
     {
-      "byteLength": 1962,
+      "byteLength": 6239,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/assets/codex-execution-prompt.md",
-      "sha256": "fef9ec1d9873b5e4c567003f71676c5da06045dd7564a874b96b621bd7aec506"
+      "sha256": "dbcdad2723d347700eec2529edf98b8894d72f85438aca438fea9226adf4235a"
     },
     {
       "byteLength": 10195,
@@ -1983,10 +1983,10 @@
       "sha256": "bfbd16d875df5fbee2aac47ddf5b2f11b7c3c6cf4b298f063eb5d5f1c8ac774b"
     },
     {
-      "byteLength": 4226,
+      "byteLength": 6676,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/spec-rubric.md",
-      "sha256": "3958a2d8eacb2bf80ef995cf94151a80aa098eb7b66175e69cd82d09044766dd"
+      "sha256": "04d92a577f3ee708f7372dbac2be1853908e1528cff8067fd5f7d34d2918457b"
     },
     {
       "byteLength": 9213,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "114818f0dcf24d0f13098e2cb23c157231a6dbc0d622660bc60df4bbe7f7c4e5"
+  "treeHash": "6caf8d65da539f69a205e3639d5c0ce800e06e38df8ecb0ab3a54e6ef4319380"
 }

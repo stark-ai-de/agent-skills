@@ -42,6 +42,16 @@ Prefer exact statements such as “the local validator passed against the curren
 5. Record failures, skips, and unavailable environments.
 6. State what the collected evidence does not prove.
 
+## Concise assessments that support action
+
+Lead with the answer and its practical consequence. Separate direct observations, hypotheses, recommendations and decisions requiring the user's input. A useful finding links a current symptom to evidence, impact, and the smallest next action. Match detail to the decision; do not force a lengthy template on a simple result or repeat the full chronology.
+
+For an effectiveness assessment, compare the requested outcome with actual code/artifacts, runnable validation, completed milestones, and repeated investigations. File/tool/token counts and stream heartbeats describe activity; they do not prove quality, unique context, billing cost, useful progress or the model's internal motivation. Distinguish new progress from a repeated promise to act. Verify an apparent defect with a minimal check before presenting a hypothesis as a finding.
+
+After a push, tie remote observations to the exact commit and run. Distinguish queued work, assignment to the intended runner, started steps, failures before execution, completed tests and remaining acceptance. A successful runner migration can expose a genuine code failure; a green package build does not establish an untested feature interaction. Preserve required gates instead of bypassing them to make a report green.
+
+Record a concrete external blocker and the needed action after independent work is exhausted. Continue available authorized work when only a different platform or later milestone is blocked. Keep durable decisions and current evidence in their existing owners; archive historical material only within authorized scope after checking its users.
+
 ## Public normalization examples
 
 | Task-scoped input               | Public reusable form                                 |
