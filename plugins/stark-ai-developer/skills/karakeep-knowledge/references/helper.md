@@ -14,9 +14,13 @@ content assessment, factual reporting, synthesis, proposals and policy adoption.
 
 Use private owner-only regular files (0600), private directories (0700), absolute
 paths and no symlinks for credentials, policies or state. Credentials are referenced,
-never passed on the command line. Proxy-enabled Node runtimes are refused because
-this profile sends private credentials only to loopback; request the host's normal
-local-service permission instead of bypassing its sandbox/network restrictions.
+never passed on the command line. The helper uses the configured service origin
+and the host runtime's existing network/proxy behavior. Proxy environment variables
+do not identify a Karakeep instance or establish a permission failure, so they do
+not block a request. The helper never clears or overrides them. Keep native host
+permissions in force and report actual transport/HTTP failures. Select an existing
+connection through [setup](setup.md#select-an-existing-connection); no automatic
+instance discovery or host switching is implied.
 
 ## Global installation and start instruction
 
