@@ -49,6 +49,16 @@ not a claim that an agent has already passed it.
 [Local candidate observations](runs/2026-10-13-local.md) record the completed checks
 and remaining boundaries.
 
+## Sandbox and proxy regressions
+
+The Node suite covers absent, disabled and enabled `NODE_USE_ENV_PROXY` without
+changing host proxy variables, preserving route validation and safe transport
+diagnostics. These synthetic tests do not establish host permission. Behavioral
+evaluation must also cover a blocked shell check with working MCP reads: report
+both paths, keep helper readiness unverified and perform no implied sync/write.
+A host-policy denial must come from actual host evidence, never a proxy flag or
+a generic transport/HTTP failure.
+
 ## Qualification boundary
 
 The intended utility is reuse of the existing collection without duplicate setup,

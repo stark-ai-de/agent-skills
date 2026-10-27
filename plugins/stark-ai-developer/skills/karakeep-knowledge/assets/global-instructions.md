@@ -8,6 +8,8 @@ installed `karakeep-knowledge` skill and invoke its read-only start check:
 Resolve the skill's actual installed path if the host uses another location. Reuse
 this check within the same repository/context; check again after a repository or
 policy change. Respect the host's normal permissions for local-service access.
+If the host blocks the shell check, keep sync readiness unverified and test the
+already configured MCP read connection independently; report each result separately.
 
 Follow an adopted project policy. `needs_setup` calls for the one-time skill setup
 and repository adoption process; it is not permission to upload project contents.

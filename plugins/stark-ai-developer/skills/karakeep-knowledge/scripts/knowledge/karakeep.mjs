@@ -153,9 +153,9 @@ export class Karakeep {
   async request(route, { method = "GET", body } = {}) {
     try {
       requireThat(
-        route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY,
+        route.startsWith("/api/v1/") && !route.includes(".."),
         "connection",
-        "Unsupported route or proxy-enabled Node runtime.",
+        "Unsupported API route.",
       );
     } catch (error) {
       error.requestOutcome = "not_sent";
