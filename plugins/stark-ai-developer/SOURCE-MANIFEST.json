@@ -2595,16 +2595,16 @@
       "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
     },
     {
-      "byteLength": 10337,
+      "byteLength": 10831,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "e440a15f58910de791988e9508e5e2a8974dcbeeb260311b2030d92252418c38"
+      "sha256": "8bad72a830ac849b092654c0129111eef773f1d906945ecb32310b96f597be21"
     },
     {
-      "byteLength": 497,
+      "byteLength": 692,
       "mode": "0644",
       "path": "skills/visual-reports/agents/openai.yaml",
-      "sha256": "6a2442e22eab3c513bc8e99fe88a5ba36c920b11ebfaa882b333b45d794c3c77"
+      "sha256": "21351ed52b08bf52067060d2faafc25b514949464c29ce905cfb4f390a1d12a6"
     },
     {
       "byteLength": 3259,
@@ -2733,16 +2733,16 @@
       "sha256": "31a9811366b79d9ab1bebf3b60180fe088666267a4295294bd6bb8b68556c352"
     },
     {
-      "byteLength": 28866,
+      "byteLength": 30495,
       "mode": "0644",
       "path": "skills/visual-reports/references/report-contract.md",
-      "sha256": "35158cd4c4c8de0977223d152ff64f4133c7f65396a220f3a659719692db41eb"
+      "sha256": "5f9b6763e6e9e0cbaebd4d3a2014fcbd31609c4c2f8acc5bed4560737c106fe6"
     },
     {
-      "byteLength": 4815,
+      "byteLength": 4953,
       "mode": "0644",
       "path": "skills/visual-reports/references/selection.md",
-      "sha256": "c04e531acc3db9da683306ac0ec7052126c75420d2250ebda8bb94a2ef6515e4"
+      "sha256": "fbb9a02634acb9e113d3c225ea15c515fcb36f258784ad2f01374d091a0a338e"
     },
     {
       "byteLength": 2218,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "114818f0dcf24d0f13098e2cb23c157231a6dbc0d622660bc60df4bbe7f7c4e5"
+  "treeHash": "e0bcd0c4824572029b20bdf3273aa7ada72749d2ebda79c7b4ad51cea88c6d97"
 }

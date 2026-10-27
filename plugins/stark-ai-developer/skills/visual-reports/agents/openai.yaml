@@ -1,9 +1,9 @@
 interface:
   display_name: "Visual Reports"
-  short_description: "Compact visual reports with diagrams and complete source exports"
+  short_description: "One topic per page, short bullets and supporting diagrams"
   icon_small: "./assets/openai-icon.png"
   icon_large: "./assets/openai-icon.png"
-  default_prompt: "Use Visual Reports to choose and combine visual blocks, show comparisons together and generate complete HTML/Markdown/JSON with visible caveats. Keep prototype and editor changes local."
+  default_prompt: "Use Visual Reports to create explanatory reports with one topic per page, short bullet points and supporting diagrams below. Provide Back/Next navigation and a page count. Preserve essential conditions; keep optional sources and complete HTML/Markdown/JSON exports in a closed footer. Keep genuine comparisons together and honor explicit layouts. Keep prototype and editor changes local."
 policy:
   products:
     - CHAT

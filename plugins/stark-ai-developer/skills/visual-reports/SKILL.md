@@ -1,6 +1,6 @@
 ---
 name: visual-reports
-description: Create and update compact visual HTML reports, comparisons, explainers and local prototypes using purpose templates, domain profiles, diagrams and complete HTML/Markdown/JSON exports. Use when richer output helps an authorized answer or the user asks for a visual report; keep small answers in chat. Not production application UI or clinical advice.
+description: Create and update visual HTML reports with one topic per page, short bullets and supporting diagrams by default. Keep genuine comparisons together and preserve complete HTML/Markdown/JSON exports. Use when richer output helps an authorized answer or the user asks for a visual report; keep small answers in chat. Not production application UI or clinical advice.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
@@ -16,6 +16,11 @@ Make the answer, decision or next action easy to find. Use the shared renderer,
 clear hierarchy, short lists and meaningful visuals. Identify whether the reader
 needs an action, a decision or a summary before choosing the format. Preserve facts, evidence
 states, sources and decisive limitations. Do not invent quantities to fill charts.
+
+Default explanatory reports to a guided sequence: one topic per page, short bullet
+points and supporting diagrams below them, with Back/Next and a page count.
+Follow [the reading contract](references/report-contract.md#short-guided-reading-by-default)
+before choosing blocks; it also defines exceptions for explicit layouts and joint comparisons.
 
 ## When to use
 
@@ -60,12 +65,13 @@ gaps, reviewed assets, repository policy and explicitly selected preferences.
 2. Inspect source authority and evidence gaps. For a continuation, read the current
    model/revision and reuse its IDs, reviewed assets and sources. Keep consumer
    source registers authoritative; do not replace them for a presentation change.
-3. Lead with the result or smallest real next action. Do not invent a task for a
-   summary. For process improvement, guide the reader through short bounded steps;
-   reserve matrices for actual option comparison. For guided tabs, follow
-   [layout and navigation](references/report-contract.md#guided-layout-and-navigation).
-   Explain why links help. Apply the self-contained ADHD writing profile when
-   requested; keep essential conditions visible.
+3. Set the topic sequence before selecting visuals. Apply
+   [the default reading form](references/report-contract.md#short-guided-reading-by-default)
+   on the first draft and when revising an unclear report. Group each topic's
+   bullets and diagram on the same page; split longer topics while preserving
+   conditions and evidence. Follow [layout and navigation](references/report-contract.md#guided-layout-and-navigation).
+   Lead with the result or a real next action; a summary needs no invented task.
+   Apply the self-contained ADHD writing profile when requested.
 4. Compose registered blocks freely. Use comparison matrices for common criteria,
    automatic diagrams for structure and data charts for quantities. Use labeled
    bundled icons and verified product logos when they clarify the content.
@@ -154,8 +160,8 @@ retrying. Preserve unsaved drafts and report blocked preview routes explicitly.
 
 [Reader experience](references/report-contract.md#reader-experience) owns intent, guided reading,
 summary/action states, footer tooling and the ADHD writing profile. The same
-contract owns connected tab surfaces, shared alignment, compact navigation and
-content-sized panels without internal scrolling.
+contract owns the default topic sequence, optional tabbed presentation, shared
+alignment and content-sized pages without internal scrolling.
 The [general report contract](references/report-contract.md) governs source
 fidelity and reader presentation. [Comparisons](references/comparisons.md) adds
 shared-criteria and evidence rules; [selection provenance](references/selection.md)

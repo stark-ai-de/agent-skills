@@ -1,10 +1,12 @@
 # Choose for the reader's question
 
-First read [Reader experience](report-contract.md#reader-experience). Distinguish a request to
-simplify a process from a request to compare options. For simplification, prefer
-a short guided sequence of concrete changes and retained safeguards. For a summary,
-show completed results without manufacturing a next task. Choose a matrix only
-when shared-criteria option comparison is actually the reader's goal.
+First read [Reader experience](report-contract.md#reader-experience) and establish
+the topic sequence before choosing blocks. For explanatory reports, apply
+[single-topic pages by default](report-contract.md#short-guided-reading-by-default)
+on the first draft: short bullets, supporting diagrams and clear reading navigation.
+An explicit requested layout takes precedence. Keep genuine comparisons together;
+choose a dashboard or chart-led view when that is the reader's actual goal.
+For a summary, show results without manufacturing a next task.
 
 The eight purpose templates and five domain profiles are maintained in
 `scripts/lib/templates.mjs`; `--templates` prints their full finite inventory.
