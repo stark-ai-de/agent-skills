@@ -142,6 +142,21 @@ function createReleaseFixture({
   writeJson(root, "plugins/stark-ai-developer.source.json", {
     version: "1.0.0",
     skills: [{ name: "demo", source: "skills/test/demo" }],
+    outputs: { openaiArchive: "dist/openai/stark-ai-developer-tools-1.0.0.zip" },
+    openai: {
+      activeProfile: "new-remote",
+      profiles: {
+        "existing-skills-only": { transport: "none", listingUrl: "https://example.invalid/skills" },
+        "new-remote": {
+          pluginId: "stark-ai-developer-tools",
+          version: "1.0.0",
+          transport: "http",
+          url: "https://example.invalid/mcp",
+          listingUrl: "https://example.invalid/tools",
+        },
+      },
+      releaseProfiles: ["existing-skills-only", "new-remote"],
+    },
   });
   git(root, ["init", "--quiet"]);
   git(root, ["config", "user.name", "Release Test"]);
@@ -401,6 +416,174 @@ try {
   assert.match(result.stderr, /plugin.*must increase its version/i);
 } finally {
   fs.rmSync(missingBumpFixture.root, { recursive: true, force: true });
+}
+
+const openAiProfileOnlyFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    openAiProfileOnlyFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.openai.profiles["new-remote"].version = "1.0.1";
+  descriptor.openai.profiles["new-remote"].description = "Updated remote profile";
+  descriptor.outputs.openaiArchive = "dist/openai/stark-ai-developer-tools-1.0.1.zip";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(openAiProfileOnlyFixture.root, openAiProfileOnlyFixture.base);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(result.githubOutput.contract_kind, "feature");
+} finally {
+  fs.rmSync(openAiProfileOnlyFixture.root, { recursive: true, force: true });
+}
+
+const combinedProfileAndSkillMissingCommonBumpFixture = createReleaseFixture();
+try {
+  const skillPath = path.join(
+    combinedProfileAndSkillMissingCommonBumpFixture.root,
+    "skills/test/demo/SKILL.md",
+  );
+  fs.writeFileSync(
+    skillPath,
+    fs.readFileSync(skillPath, "utf8").replace('version: "0.1.0"', 'version: "0.1.1"'),
+  );
+  const descriptorPath = path.join(
+    combinedProfileAndSkillMissingCommonBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.openai.profiles["new-remote"].version = "1.0.1";
+  descriptor.openai.profiles["new-remote"].description = "Updated with a bundled skill";
+  descriptor.outputs.openaiArchive = "dist/openai/stark-ai-developer-tools-1.0.1.zip";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    combinedProfileAndSkillMissingCommonBumpFixture.root,
+    combinedProfileAndSkillMissingCommonBumpFixture.base,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /plugins\/stark-ai-developer\.source\.json version must increase/);
+} finally {
+  fs.rmSync(combinedProfileAndSkillMissingCommonBumpFixture.root, { recursive: true, force: true });
+}
+
+const combinedProfileAndSkillBumpedFixture = createReleaseFixture();
+try {
+  const skillPath = path.join(
+    combinedProfileAndSkillBumpedFixture.root,
+    "skills/test/demo/SKILL.md",
+  );
+  fs.writeFileSync(
+    skillPath,
+    fs.readFileSync(skillPath, "utf8").replace('version: "0.1.0"', 'version: "0.1.1"'),
+  );
+  const descriptorPath = path.join(
+    combinedProfileAndSkillBumpedFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.version = "1.0.1";
+  descriptor.openai.profiles["new-remote"].version = "1.0.1";
+  descriptor.openai.profiles["new-remote"].description = "Updated with a bundled skill";
+  descriptor.outputs.openaiArchive = "dist/openai/stark-ai-developer-tools-1.0.1.zip";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    combinedProfileAndSkillBumpedFixture.root,
+    combinedProfileAndSkillBumpedFixture.base,
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+} finally {
+  fs.rmSync(combinedProfileAndSkillBumpedFixture.root, { recursive: true, force: true });
+}
+
+const openAiProfileMissingBumpFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    openAiProfileMissingBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.openai.profiles["new-remote"].description = "Changed without a profile version bump";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    openAiProfileMissingBumpFixture.root,
+    openAiProfileMissingBumpFixture.base,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /OpenAI profile new-remote version must increase/);
+} finally {
+  fs.rmSync(openAiProfileMissingBumpFixture.root, { recursive: true, force: true });
+}
+
+const sharedDescriptorMissingBumpFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    sharedDescriptorMissingBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.skills.push({ name: "second", source: "skills/test/second" });
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    sharedDescriptorMissingBumpFixture.root,
+    sharedDescriptorMissingBumpFixture.base,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /plugins\/stark-ai-developer\.source\.json version must increase/);
+} finally {
+  fs.rmSync(sharedDescriptorMissingBumpFixture.root, { recursive: true, force: true });
+}
+
+const profileSelectorMissingBumpFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    profileSelectorMissingBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.openai.activeProfile = "existing-skills-only";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    profileSelectorMissingBumpFixture.root,
+    profileSelectorMissingBumpFixture.base,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /plugins\/stark-ai-developer\.source\.json version must increase/);
+} finally {
+  fs.rmSync(profileSelectorMissingBumpFixture.root, { recursive: true, force: true });
+}
+
+const releaseProfileSetMissingBumpFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    releaseProfileSetMissingBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.openai.releaseProfiles = ["existing-skills-only"];
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(
+    releaseProfileSetMissingBumpFixture.root,
+    releaseProfileSetMissingBumpFixture.base,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /plugins\/stark-ai-developer\.source\.json version must increase/);
+} finally {
+  fs.rmSync(releaseProfileSetMissingBumpFixture.root, { recursive: true, force: true });
+}
+
+const archiveOnlyMissingBumpFixture = createReleaseFixture();
+try {
+  const descriptorPath = path.join(
+    archiveOnlyMissingBumpFixture.root,
+    "plugins/stark-ai-developer.source.json",
+  );
+  const descriptor = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
+  descriptor.outputs.openaiArchive = "dist/openai/unrelated-archive-1.0.0.zip";
+  fs.writeFileSync(descriptorPath, `${JSON.stringify(descriptor, null, 2)}\n`);
+  const result = runImpact(archiveOnlyMissingBumpFixture.root, archiveOnlyMissingBumpFixture.base);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /plugins\/stark-ai-developer\.source\.json version must increase/);
+} finally {
+  fs.rmSync(archiveOnlyMissingBumpFixture.root, { recursive: true, force: true });
 }
 
 const releaseFixture = createReleaseFixture();

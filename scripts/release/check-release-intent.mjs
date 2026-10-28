@@ -119,6 +119,56 @@ function pluginSource(text) {
   return jsonValue(text, (document) => document);
 }
 
+function isOpenAiProfileOnlyChange(base, current) {
+  if (
+    !base ||
+    !current ||
+    !isDeepStrictEqual(base.skills, current.skills) ||
+    isDeepStrictEqual(base.openai?.profiles, current.openai?.profiles)
+  )
+    return false;
+  const normalized = structuredClone(current);
+  normalized.openai = { ...normalized.openai, profiles: base.openai?.profiles };
+  normalized.outputs = { ...normalized.outputs, openaiArchive: base.outputs?.openaiArchive };
+  return isDeepStrictEqual(normalized, base);
+}
+
+function validateOpenAiProfileVersions(base, current, errors, reasons) {
+  const baseProfiles = base?.openai?.profiles ?? {};
+  const currentProfiles = current?.openai?.profiles ?? {};
+  for (const profileId of new Set([
+    ...Object.keys(baseProfiles),
+    ...Object.keys(currentProfiles),
+  ])) {
+    const previous = baseProfiles[profileId];
+    const next = currentProfiles[profileId];
+    if (!previous || !next) {
+      errors.push(
+        `${profileId}: OpenAI profile additions and removals require explicit release review`,
+      );
+      continue;
+    }
+    if (isDeepStrictEqual(previous, next)) continue;
+    const previousVersion = previous.version ?? base.version;
+    const nextVersion = next.version ?? current.version;
+    if (
+      !previousVersion ||
+      !nextVersion ||
+      !semverPattern.test(previousVersion) ||
+      !semverPattern.test(nextVersion) ||
+      compareSemver(nextVersion, previousVersion) <= 0
+    ) {
+      errors.push(
+        `OpenAI profile ${profileId} version must increase from ${previousVersion ?? "(missing)"} to a higher semver for profile changes; got ${nextVersion ?? "(missing)"}`,
+      );
+    } else {
+      reasons.push(
+        `OpenAI profile ${profileId} version changed from ${previousVersion} to ${nextVersion}`,
+      );
+    }
+  }
+}
+
 function metadataVersion(text) {
   if (!text) return null;
   const frontmatter = text.match(/^---\n([\s\S]*?)\n---/)?.[1];
@@ -201,19 +251,23 @@ function validateBundledPlugin(files, baseRef, headRef, errors, reasons) {
     errors.push(`${descriptor} must increase its version when a bundled skill changes`);
   }
   if (!descriptorChanged) return;
+  const profileOnlyChange = !bundledChanged && isOpenAiProfileOnlyChange(base, current);
   if (
-    !base?.version ||
-    !current?.version ||
-    !semverPattern.test(base.version) ||
-    !semverPattern.test(current.version) ||
-    compareSemver(current.version, base.version) <= 0
+    !profileOnlyChange &&
+    (!base?.version ||
+      !current?.version ||
+      !semverPattern.test(base.version) ||
+      !semverPattern.test(current.version) ||
+      compareSemver(current.version, base.version) <= 0)
   ) {
     errors.push(
       `${descriptor} version must increase from ${base?.version ?? "(missing)"} to a higher semver; got ${current?.version ?? "(missing)"}`,
     );
   } else {
-    reasons.push(`${descriptor} version changed from ${base.version} to ${current.version}`);
+    if (!profileOnlyChange || base.version !== current.version)
+      reasons.push(`${descriptor} version changed from ${base.version} to ${current.version}`);
   }
+  validateOpenAiProfileVersions(base, current, errors, reasons);
 }
 
 const args = parseArgs(process.argv.slice(2));
