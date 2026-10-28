@@ -8,7 +8,7 @@ metadata:
   category: engineering-workflows
   # Boolean required by ADR-0009 and skills CLI 1.5.23 internal discovery.
   internal: true
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Review-Fix Swarm
