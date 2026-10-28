@@ -13,12 +13,12 @@ graphics, tables and compact structured text. A graphic must clarify a relations
 decorative icons alone are not an explanation. Do not force a chart for one fact or
 fabricate quantities to fill it.
 
-| Reader goal           | Structure                                                                |
-| --------------------- | ------------------------------------------------------------------------ |
-| Look up               | Direct answer, meaningful section labels, sources                        |
-| Decide                | Comparable alternatives, shared criteria, recommendation with conditions |
-| Execute               | Prerequisites, action, observable success, recovery action               |
-| Understand and retain | Guiding question, worked example, optional recall question               |
+| Reader goal           | Structure                                                                 |
+| --------------------- | ------------------------------------------------------------------------- |
+| Look up               | Direct answer, meaningful section labels, sources                         |
+| Decide                | Comparable alternatives, shared criteria, recommendation with conditions  |
+| Execute               | Prerequisites, action, observable success, recovery action                |
+| Understand and retain | Single-topic pages, short bullets, supporting diagrams and clear sequence |
 
 Use [Reader experience](#reader-experience) for intent, summary/action status,
 guided reading, useful links, duplication checks and requested ADHD writing.
@@ -304,11 +304,11 @@ alone does not select the layout. Keep these distinctions explicit:
 - **Conditional action:** state the trigger beside the action; until that trigger
   occurs, the report is not a task list.
 
-A process-improvement request usually needs a short guided path: what changes
-first, what changes later and what remains. A large matrix of possible actions
-would answer a different question. Use the comparison template when the intended
-outcome really is choosing between alternatives using shared criteria. Keep those
-alternatives jointly visible; do not force every report into a step-by-step view.
+Use the single-topic reading sequence below for explanatory reports, including
+architecture explanations and process improvements. Choose an explicit requested
+layout when supplied. A genuine comparison keeps alternatives and shared criteria
+together; a dashboard, chart-led analysis or requested slide presentation follows
+its own reader goal. One comparison can be a topic within a guided report.
 
 ### One compact handoff, no duplicated orientation
 
@@ -332,32 +332,48 @@ When updating a report, distinguish historical findings from current obligations
 Do not keep a resolved issue displayed as an outstanding reader task. Likewise,
 a reading sequence is not evidence that there are unfinished implementation steps.
 
-### Short guided reading where it helps
+### Guided reading when supported
 
-Each section or reading step develops one substantive point with a few plain
-bullets. Prefer a direct statement over an artificial guiding question. Keep
-current topic, position and available reading navigation recognizable without
-repeating them in a second status bar. No automatic advancement, forced quiz or
-repeated reassurance screens. For tabbed reading, use the layout below.
+Establish the topic sequence before the first render. Use one topic per page with
+Back/Next only when the selected authoring and renderer path implements that
+behavior for the authored model. The current renderer supports `presentation: "reading"`
+for a complete reading view and explicit `presentation: "slides"` for authored
+slides blocks; it does not turn arbitrary sections into guided pages. When guided
+topic navigation is unavailable, use the existing complete reading mode. Do not
+invent a presentation field, model block or renderer feature. Preserve explicit
+layout choices. The authoring unit is the topic whenever guided pages are supported:
+its heading, bullets and supporting diagram belong together. Keep sequence and stable
+topic links recognizable when revising an existing report.
 
-Use diagrams to clarify a boundary, cause or changed flow, with an equivalent text
-explanation. A graphic does not replace necessary conditions or exact facts.
-Keep extra evidence and exceptions in optional details; essential restrictions
-stay beside their recommendation. Without JavaScript, all substantive content is
-available in one complete reading view.
+- Use only short bullet points for explanatory page text, with one concrete
+  statement per bullet. Name unfamiliar components and terms clearly at first use.
+- Split a longer topic into meaningful pages; preserve facts, conditions,
+  exceptions and evidence. Put essential restrictions beside the affected claim.
+- Support relationships, boundaries and flows with a diagram below the bullets.
+  Reuse the same component names in both. Choose a chart for quantitative
+  relationships and omit a graphic that adds no explanation.
+- Use this page order: topic heading, bullet points, Back/Next with page position,
+  then the supporting diagram. If a diagram needs a status legend, place a small
+  one between navigation and diagram and use the same meanings throughout.
+- Keep optional source verification, complete exports and technical report tools
+  in the closed footer. Preserve accessible diagram descriptions and full exports.
 
-End only with a new useful action, condition or unresolved decision. Do not add a
-recap that merely repeats the opening. If nothing remains to do, stop; do not invent
-an under-two-minute chore to satisfy an action-first writing pattern.
+Prefer direct topic titles over artificial guiding questions. A diagram supplements
+exact facts; it does not replace their readable explanation. In the existing `reading` mode,
+show all topics in one complete reading view. Without JavaScript, retain the full
+content for any supported presentation. Reading navigation never starts a
+product operation, advances automatically or adds a required quiz.
+
+End only with a useful new action, condition or unresolved decision. A summary
+needs no invented task or repeated closing recap.
 
 ### Guided layout and navigation
 
-Shared alignment and emphasis apply to report reading views. The connected-surface,
-navigation and panel-sizing rules below apply when the reader's goal calls for a
-guided tabbed report. They do not make tabs mandatory for comparisons, ordinary
-reading or explicit slide presentations. This is a presentation contract, not an
-additional model block/API; use the documented renderer capabilities and preserve
-the canonical exports.
+Shared alignment, readable diagrams and natural content height apply to both
+a supported guided sequence and an explicitly chosen tabbed presentation. The
+connected-surface and tab-control rules below apply only to that tabbed form.
+Use documented renderer capabilities and preserve the canonical exports; this
+authoring contract does not introduce an additional model block/API.
 
 **Shared alignment and emphasis.** Align the page title, status, tab component,
 content headings and footer to a common left edge. Keep content widths, horizontal
@@ -374,15 +390,23 @@ text and a restrained warning accent where useful. Do not turn every paragraph
 into a callout or duplicate the status banner to create emphasis. Icons supplement
 explicit text; checkmarks remain reserved for evidenced completion.
 
-**Connected surface.** The selected tab title and its panel share a background
+**Sequence navigation.** Use plainly labeled Back and Next controls with a page
+position such as "2 / 8". Name the next topic when useful. Disable unavailable
+directions at either end; keep the displayed topic, position and stable link
+synchronized. Preserve keyboard operation and visible focus. Page changes and
+navigation alone leave report content unchanged. Direct topic selection is an
+optional addition; tabs and a slider are not required for the default sequence.
+
+**Tabbed presentation: connected surface.** The selected tab title and its panel share a background
 and an uninterrupted outer contour. No line or gap divides the selected title
 from its content. Distinguish inactive tabs and expose the current selection
 semantically. Place a small position label such as "1 of 5" directly with the
 selected title, without a separate horizontal rule or duplicate progress row.
 
-**Compact navigation.** Direct tab selection plus two small previous/next arrows
+**Tabbed presentation: compact navigation.** Direct tab selection plus two small previous/next arrows
 and a compact step slider below the component provide reading navigation. Replace
-large Back/Next buttons when these controls serve the same purpose. Keep tab
+large Back/Next buttons in this tabbed form when these controls serve the same
+purpose; the default sequence retains its labeled Back/Next controls. Keep tab
 selection, position, arrows and slider synchronized; disable the unavailable arrow
 at either end. Give icon-only controls accessible names and expose the slider's
 current step/topic. Preserve keyboard operation and visible focus. The tab-title
@@ -466,7 +490,11 @@ Check the intended outcome, not just report syntax: can the reader distinguish a
 summary from an obligation without opening a link? Does every visible item add
 information? Are conditions, sources and unrun gates still faithful? Verify the
 relevant navigation, optional details, footer controls, narrow layout and complete
-exports. For guided tabs, check shared alignment, an uninterrupted active join,
+exports. For the default sequence, verify that exactly one topic is visible,
+each bullet has one statement, topic content is preserved, diagrams follow the
+bullets/navigation, and first/last/deep-linked pages have correct controls and
+position. Check that no-JavaScript reading and exports retain every topic.
+For guided tabs, check shared alignment, an uninterrupted active join,
 synchronized controls, no tab-title/body scrollbar, proportional diagrams and
 reachable expanded footer/evidence. Page scrolling is acceptable. User acceptance
 confirms the chosen appearance; it does not establish unrun keyboard, responsive

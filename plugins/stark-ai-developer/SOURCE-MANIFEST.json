@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "f1e1d4a5af8f91dc08f70b910bc4071975a19234d3e50d35cd1e1a1c5a1da471"
+      "sha256": "e7106beacc69d24b3a34ce811d3821d16697527cf5bd24eb5efcfb4d8b8f2c53"
     },
     {
       "byteLength": 2128,
@@ -2595,16 +2595,16 @@
       "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
     },
     {
-      "byteLength": 10337,
+      "byteLength": 11254,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "e440a15f58910de791988e9508e5e2a8974dcbeeb260311b2030d92252418c38"
+      "sha256": "148d38e04776b6843fb4395c5d01399aa60b0216a715b908b537a3be20bf0a72"
     },
     {
-      "byteLength": 497,
+      "byteLength": 692,
       "mode": "0644",
       "path": "skills/visual-reports/agents/openai.yaml",
-      "sha256": "6a2442e22eab3c513bc8e99fe88a5ba36c920b11ebfaa882b333b45d794c3c77"
+      "sha256": "21351ed52b08bf52067060d2faafc25b514949464c29ce905cfb4f390a1d12a6"
     },
     {
       "byteLength": 3259,
@@ -2733,16 +2733,16 @@
       "sha256": "31a9811366b79d9ab1bebf3b60180fe088666267a4295294bd6bb8b68556c352"
     },
     {
-      "byteLength": 28866,
+      "byteLength": 30989,
       "mode": "0644",
       "path": "skills/visual-reports/references/report-contract.md",
-      "sha256": "35158cd4c4c8de0977223d152ff64f4133c7f65396a220f3a659719692db41eb"
+      "sha256": "8e36958a805f28cb0b5eb8c5d140980aa06875bdfb2a0c2b6787499f11c72040"
     },
     {
-      "byteLength": 4815,
+      "byteLength": 5049,
       "mode": "0644",
       "path": "skills/visual-reports/references/selection.md",
-      "sha256": "c04e531acc3db9da683306ac0ec7052126c75420d2250ebda8bb94a2ef6515e4"
+      "sha256": "bd40888b034bffa2965ae48ae5319eff4e2a481cf4ea199f20d6a9d01283ac04"
     },
     {
       "byteLength": 2218,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.5"
+    "version": "1.19.6"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7afb1c7cd534411bed2fd0575e7ecdb46cb0ffcf0956d2df6325f0202b4d2360"
+  "treeHash": "7d089b778ce1eaa6f7c5a4a92d60acd25c9882661b6eef15334ea32d5f8be4a4"
 }
