@@ -84,34 +84,46 @@ export function withinDepth(value) {
   }
   return true;
 }
+function normalizedSkillName(value) {
+  if (typeof value !== "string") return null;
+  const normalized = value.normalize("NFKC");
+  const length = [...normalized].length;
+  return length >= 1 &&
+    length <= 64 &&
+    normalized === normalized.toLowerCase() &&
+    /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u.test(normalized)
+    ? normalized
+    : null;
+}
 export function validateSkillMetadata({ frontmatter, directory_name }) {
   const { value, error } = parseDocument(frontmatter, "yaml");
   if (error) return result(RULESETS.skill, [error]);
   const issues = [];
-  if (
-    typeof value.name !== "string" ||
-    value.name.length < 1 ||
-    value.name.length > 64 ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.name)
-  )
+  const name = normalizedSkillName(value.name);
+  const directory = normalizedSkillName(directory_name);
+  if (name === null)
     issues.push(
       issue(
         "skill.name",
         "/name",
-        "Use 1–64 lowercase ASCII letters, digits and single separating hyphens.",
+        "Use 1–64 NFKC-normalized lowercase Unicode letters or numbers with single separating hyphens.",
       ),
     );
-  if (
-    typeof directory_name !== "string" ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(directory_name) ||
-    directory_name.length > 64
-  )
+  if (directory === null)
     issues.push(
-      issue("skill.directory", "/directory_name", "Provide one skill directory name, not a path."),
+      issue(
+        "skill.directory",
+        "/directory_name",
+        "Provide one valid skill directory name, not a path.",
+      ),
     );
-  if (typeof value.name === "string" && value.name !== directory_name)
+  if (name !== null && directory !== null && name !== directory)
     issues.push(
-      issue("skill.directory_mismatch", "/name", "Skill name must equal its directory name."),
+      issue(
+        "skill.directory_mismatch",
+        "/name",
+        "Skill name must equal its directory name after NFKC normalization.",
+      ),
     );
   if (
     typeof value.description !== "string" ||

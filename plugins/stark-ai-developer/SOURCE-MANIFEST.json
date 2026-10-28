@@ -2433,10 +2433,10 @@
       "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
     },
     {
-      "byteLength": 14804,
+      "byteLength": 15209,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/helper.md",
-      "sha256": "d4b46795e4786017f3eddbed8714486e3f217f692de3479cf289690447ef36c8"
+      "sha256": "7da708f0a5c3c1b9eece93efe66071de2d4619f6860a024c3727d83e51c27bb3"
     },
     {
       "byteLength": 5977,
@@ -2871,5 +2871,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "ffcafdce010d1d79c032dbb722304013403ae56eb6d7226a512cc33d1cde21a8"
+  "treeHash": "e7b42fae1291b4e6dd3e1a92d564b6792f69f70e437c1e088c8a5141e21eafad"
 }

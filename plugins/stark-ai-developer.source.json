@@ -62,7 +62,7 @@
   "publicListingStrategy": "single-plugin-bundled-skills",
   "outputs": {
     "portableProjection": "plugins/stark-ai-developer",
-    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.1.0.zip",
+    "openaiArchive": "dist/openai/stark-ai-developer-tools-1.1.1.zip",
     "repositoryMarketplaceTarget": "plugins/stark-ai-developer"
   },
   "contractSnapshots": {
@@ -103,7 +103,7 @@
       },
       "new-remote": {
         "pluginId": "stark-ai-developer-tools",
-        "version": "1.1.0",
+        "version": "1.1.1",
         "displayName": "stark AI Developer Tools",
         "transport": "http",
         "url": "https://skills-mcp.stark-ai.de/mcp",
