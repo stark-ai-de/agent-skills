@@ -12,6 +12,22 @@
 
 ### Removed
 
+## 0.32.0 (2026-10-28)
+
+## What's Changed
+* fix(review-fix-swarm): establish read-only review sessions by @servrox in https://github.com/stark-ai-de/agent-skills/pull/169
+* fix(metadata): accept Unicode names and enforce stdio request limits by @servrox in https://github.com/stark-ai-de/agent-skills/pull/154
+* fix(karakeep): allow configured proxy runtimes by @servrox in https://github.com/stark-ai-de/agent-skills/pull/166
+* fix(karakeep): separate shell readiness from MCP access by @servrox in https://github.com/stark-ai-de/agent-skills/pull/167
+* fix(karakeep): prefer local MCP and API before browser access by @servrox in https://github.com/stark-ai-de/agent-skills/pull/157
+* fix(codex-memory-curator): explain consolidation readiness by @servrox in https://github.com/stark-ai-de/agent-skills/pull/160
+* fix(planning): clarify bounded execution and evidence reporting by @servrox in https://github.com/stark-ai-de/agent-skills/pull/165
+* fix(visual-reports): guide reports within supported authoring paths by @servrox in https://github.com/stark-ai-de/agent-skills/pull/168
+* feat(release): publish both OpenAI plugin profiles by @servrox in https://github.com/stark-ai-de/agent-skills/pull/171
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.31.0...v0.32.0
+
 ## 0.31.0 (2026-10-20)
 
 ## What's Changed
