@@ -27,6 +27,25 @@ Docker group access, host networking or system installation is needed, explain t
 concrete change before seeking any missing authorization. Existing read authorization
 does not grant setup authority. Reuse explicit setup approval already in the session.
 
+## Select an existing connection
+
+Use the connection explicitly selected by the user or already adopted in the
+current client's/project's configuration. A second known installation does not
+invalidate that selection or require a repeated question.
+
+If several plausible connections are known and no selection is established,
+present their known endpoint, execution context and account/collection labels,
+then ask which to use before connecting or changing configuration. Mark unknown
+details as unknown. Do not infer the desired target from discovery order, a
+responding port, proxy variables or the presence of Windows/WSL.
+
+`localhost` is relative to the process making the request. Windows/WSL forwarding
+can make the same service reachable from multiple contexts, while identical URL
+text can also refer to different services. Neither proves identity. Use the
+selected connection and verify its expected account/known bookmark through that
+connection. The bounded probes above do not establish a complete installation
+inventory; no cross-host scan, credential copying or automatic fallback is needed.
+
 ## New local stack
 
 The baseline uses the official three-service Docker topology with immutable image

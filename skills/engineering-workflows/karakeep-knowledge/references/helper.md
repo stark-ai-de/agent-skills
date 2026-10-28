@@ -14,9 +14,19 @@ content assessment, factual reporting, synthesis, proposals and policy adoption.
 
 Use private owner-only regular files (0600), private directories (0700), absolute
 paths and no symlinks for credentials, policies or state. Credentials are referenced,
-never passed on the command line. Proxy-enabled Node runtimes are refused because
-this profile sends private credentials only to loopback; request the host's normal
-local-service permission instead of bypassing its sandbox/network restrictions.
+never passed on the command line. The helper uses the configured service origin
+and the host runtime's existing network/proxy behavior. Proxy environment variables
+do not identify a Karakeep instance or establish a permission failure, so they do
+not block a request. The helper never clears or overrides them. Keep native host
+permissions in force and report actual transport/HTTP failures. Select an existing
+connection through [setup](setup.md#select-an-existing-connection); no automatic
+instance discovery or host switching is implied.
+
+When `NODE_USE_ENV_PROXY=1`, Node routes requests through the configured
+`HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` settings. Treat those proxy routes as
+trusted and authorized by host policy: a loopback URL alone does not prove transport
+stays local. Do not clear, bypass or reconfigure a host proxy automatically. See
+[Node.js proxy configuration](https://nodejs.org/api/cli.html#node_use_env_proxy1).
 
 ## Global installation and start instruction
 
@@ -211,6 +221,26 @@ Inspect the JSON status, not only the process exit code. `check` can exit zero w
 | Python              | Absolute `scripts/status.py` path, selected config and bounded local probe | Python's connection path; not MCP tools or Node readiness.       |
 | Node helper         | `check --repo ...`, account/policy and optional diagnostic                 | That helper's connection/readiness result; not canonical sync.   |
 | MCP                 | Effective launcher/config, tools, account, one bounded search/content read | Actual MCP reads only; not write capability or complete capture. |
+
+A host tool's explicit sandbox/network denial is evidence about that command's
+execution path. Record it separately from helper JSON; the helper may never receive
+the request or produce a result. Proxy variables alone are not evidence of denial.
+Generic `EPERM`, `EACCES`, HTTP 403 and transport errors do not identify a host policy.
+
+If the shell check is blocked, use the already configured official MCP connection
+for a bounded search followed by content retrieval. Verify its expected account or
+known item; do not switch endpoints or credentials. Working MCP reads establish
+read access only. They do not complete the helper's project/state check, authorize
+writes, or turn `pending`/`needs_setup` into `ready`.
+
+For a confirmed host block, use the host's normal bounded approval mechanism where
+available. A permanent network exception belongs to the configuration owner and
+requires explicit scope. In Codex, an exact `localhost` allow rule can permit the
+selected loopback host while retaining the private-network guard; it applies to
+all ports on that host, not just Karakeep. Keep existing provider rules and offline
+profiles. Do not clear proxy variables, disable enforcement or widen all private
+network access. Verify changed host policy in a fresh session before claiming it
+effective. See [Codex local/private destinations](https://learn.chatgpt.com/docs/agent-approvals-security#local-and-private-destinations).
 
 Node keeps the safe `unreachable` code and may add `diagnostic`: `tls_trust`,
 `connection_refused`, `dns`, `timeout` or `transport`. These categories come from

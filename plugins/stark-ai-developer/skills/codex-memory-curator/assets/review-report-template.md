@@ -78,6 +78,9 @@ Report exact absolute backup and manifest paths only in non-persisted chat, neve
 - Re-read results:
 - Backup integrity result:
 - Residual risks:
+- Active-memory application (`stored`, `pending`, `verified`, `unknown`, or not applicable):
+- Application evidence (targeted content/source checks; version-qualified gate if pending):
+- Next user action and earliest eligibility time, when known:
 
 ## Config Recommendation
 

@@ -332,13 +332,18 @@ When updating a report, distinguish historical findings from current obligations
 Do not keep a resolved issue displayed as an outstanding reader task. Likewise,
 a reading sequence is not evidence that there are unfinished implementation steps.
 
-### Short guided reading by default
+### Guided reading when supported
 
-Establish the topic sequence before the first render. For explanatory reports,
-create one topic per page and show exactly one topic at a time with JavaScript.
-The authoring unit is the topic: its heading, bullet points and supporting diagram
-belong together, even when they use separate model sections. Keep the sequence
-and stable topic links recognizable when revising an existing report.
+Establish the topic sequence before the first render. Use one topic per page with
+Back/Next only when the selected authoring and renderer path implements that
+behavior for the authored model. The current renderer supports `presentation: "reading"`
+for a complete reading view and explicit `presentation: "slides"` for authored
+slides blocks; it does not turn arbitrary sections into guided pages. When guided
+topic navigation is unavailable, use the existing complete reading mode. Do not
+invent a presentation field, model block or renderer feature. Preserve explicit
+layout choices. The authoring unit is the topic whenever guided pages are supported:
+its heading, bullets and supporting diagram belong together. Keep sequence and stable
+topic links recognizable when revising an existing report.
 
 - Use only short bullet points for explanatory page text, with one concrete
   statement per bullet. Name unfamiliar components and terms clearly at first use.
@@ -354,8 +359,9 @@ and stable topic links recognizable when revising an existing report.
   in the closed footer. Preserve accessible diagram descriptions and full exports.
 
 Prefer direct topic titles over artificial guiding questions. A diagram supplements
-exact facts; it does not replace their readable explanation. Without JavaScript,
-show all topics in one complete reading view. Reading navigation never starts a
+exact facts; it does not replace their readable explanation. In the existing `reading` mode,
+show all topics in one complete reading view. Without JavaScript, retain the full
+content for any supported presentation. Reading navigation never starts a
 product operation, advances automatically or adds a required quiz.
 
 End only with a useful new action, condition or unresolved decision. A summary
@@ -364,7 +370,7 @@ needs no invented task or repeated closing recap.
 ### Guided layout and navigation
 
 Shared alignment, readable diagrams and natural content height apply to both
-the default guided sequence and an explicitly chosen tabbed presentation. The
+a supported guided sequence and an explicitly chosen tabbed presentation. The
 connected-surface and tab-control rules below apply only to that tabbed form.
 Use documented renderer capabilities and preserve the canonical exports; this
 authoring contract does not introduce an additional model block/API.

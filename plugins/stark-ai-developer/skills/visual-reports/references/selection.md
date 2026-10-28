@@ -1,10 +1,11 @@
 # Choose for the reader's question
 
 First read [Reader experience](report-contract.md#reader-experience) and establish
-the topic sequence before choosing blocks. For explanatory reports, apply
-[single-topic pages by default](report-contract.md#short-guided-reading-by-default)
-on the first draft: short bullets, supporting diagrams and clear reading navigation.
-An explicit requested layout takes precedence. Keep genuine comparisons together;
+the topic sequence before choosing blocks. Use [single-topic guided pages](report-contract.md#guided-reading-when-supported)
+when the selected authoring and renderer path supports them. The current renderer
+uses its existing complete `reading` mode for ordinary sections; explicit `slides`
+blocks remain available for slide presentations. An explicit requested layout takes
+precedence. Keep genuine comparisons together;
 choose a dashboard or chart-led view when that is the reader's actual goal.
 For a summary, show results without manufacturing a next task.
 

@@ -6,7 +6,7 @@ compatibility: Targets Cursor Agent evidence and execution prompts across Agent 
 metadata:
   author: stark-ai-de
   category: cursor-operations
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Cursor Spec Interviewer

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.0"
+  version: "0.5.3"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -37,10 +37,30 @@ user's existing account. A cloud account or external AI provider is not required
 ## Inputs to inspect
 
 - The current execution host, installed MCP tools and effective client configuration.
+- The selected connection and account. Follow [connection selection](references/setup.md#select-an-existing-connection)
+  when several candidates are known; localhost or proxy settings alone do not identify an instance.
 - Existing Karakeep endpoints, local account/collection, Compose project, mounts,
   service manager and declarative configuration owner. Do not dump environments.
 - Private config/data locations and the current operation's authority. Follow the
   host's existing Docker/runtime choice; do not install a second engine.
+
+## Access selection
+
+Prefer the existing local Karakeep MCP server or supported local API for information
+retrieval and authorized operations. Inspect callable MCP schemas and the installed
+release's supported API capabilities before choosing browser automation. A missing
+MCP tool alone does not establish an API gap; verify support rather than guessing
+endpoint names. Reuse the intended account and approved credential source.
+
+Use Playwright/browser MCP only when MCP and API cannot provide the information or
+operation needed for the task, such as UI-only settings or visual verification.
+Briefly explain the concrete gap and limit browser use to that gap; return to MCP
+or API for the rest. A request sent through a browser session to an internal web API
+is browser-assisted access, not proof of public API support.
+
+Denied approval, insufficient privileges or a restricted read key are not capability
+gaps to work around. Changing access methods never expands authorization; keep the
+same task scope and host/project approval requirements on every route.
 
 ## Workflow
 
@@ -66,6 +86,10 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
    `node <absolute-skill-root>/scripts/knowledge.mjs check --repo <absolute-repository-root>`
    once for that repository/context. Follow [Sync](references/sync.md) for the result.
    This check is read-only; missing project policy is not upload permission.
+   If the execution host blocks the check, record the host denial and keep sync
+   readiness unverified. Independently test the configured MCP connection with a
+   bounded search/content read; shell denial does not establish MCP failure. Follow
+   [host diagnosis](references/helper.md#diagnose-the-selected-host).
    Outside a Git repository, do not invent a repository or start an import. For
    Hermes discovery and native session auto-loading, read [Hermes](references/hermes.md).
    Check actual tool availability. If Karakeep is connected, search and retrieve one

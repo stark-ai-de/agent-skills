@@ -30,3 +30,7 @@ Grade actual conversation and artifact evidence; a static case inventory is not 
 Run the [shared approval scenarios](../codex-spec-interviewer/approval-scenarios.json) for this target with fixed answer cards and actual conversation continuation. Count material versus duplicate questions, skill-generated versus native host prompts, unapproved writes and truthful completion. Require no lost material decision, no duplicate approval of an unchanged result, and no unauthorized writes. Include older-host, unknown-host and denied-write arms.
 
 Static checks cover portable metadata, resolvable local references, template record uniqueness and scenario inventory only. They do not prove live decisions, native UI transitions or another client's behavior.
+
+## Execution handoff quality
+
+Use the shared [bounded execution and recovery case](../codex-spec-interviewer/cases/bounded-execution-and-recovery.md) to assess slice readiness, continuation authority, stale-summary recovery, capacity ownership and precise browser/CI evidence. Judge the resulting assignment and observed decisions, not heading/keyword matches. This scenario inventory is not a behavioral pass; record actual target-client conversations and artifacts before claiming qualification.

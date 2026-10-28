@@ -23,6 +23,7 @@ Cases cover positive triggers, negative triggers, and output-quality expectation
 - `cases/structured-cleanup-plan-artifact.md`
 - `cases/cross-source-conflict-detection.md`
 - `cases/generated-state-boundary.md`
+- `cases/consolidation-readiness.md`
 - `cases/unknown-schema-proposal.md`
 - `cases/approval-denied-no-edit.md`
 - `cases/baseline-comparison.md`

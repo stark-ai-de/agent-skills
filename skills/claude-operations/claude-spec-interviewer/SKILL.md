@@ -6,7 +6,7 @@ compatibility: Targets Claude Code evidence and execution prompts across Agent S
 metadata:
   author: stark-ai-de
   category: claude-operations
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Claude Spec Interviewer
