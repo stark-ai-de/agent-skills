@@ -107,12 +107,21 @@ jobs:
             fi
           fi
 
-      - name: 🔏 Attest plugin archives
-        if: ${{ steps.release.outcome == 'success' && steps.release.outputs.package_status == 'pass' && steps.release.outputs.release_sha != '' && env.RELEASE_TAG != 'v0.19.1' }}
+      - name: 🔏 Attest legacy plugin archives
+        if: ${{ steps.release.outcome == 'success' && steps.release.outputs.package_status == 'pass' && steps.release.outputs.release_sha != '' && steps.release.outputs.skills_only_sha == '' && env.RELEASE_TAG != 'v0.19.1' }}
         uses: actions/attest@v4
         with:
           subject-path: |
             release-subjects/openai.zip
+            release-subjects/portable.zip
+
+      - name: 🔏 Attest multi-profile plugin archives
+        if: ${{ steps.release.outcome == 'success' && steps.release.outputs.package_status == 'pass' && steps.release.outputs.release_sha != '' && steps.release.outputs.skills_only_sha != '' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-subjects/openai-skills-only.zip
+            release-subjects/openai-tools.zip
             release-subjects/portable.zip
 
       - name: 🧭 Summarize run

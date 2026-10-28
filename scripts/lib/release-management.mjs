@@ -252,12 +252,21 @@ export function releaseRecoverySubjectErrors(origin, candidate) {
     releaseVersion: document.releaseVersion,
     pluginVersion: document.pluginVersion,
     archiveProfile: document.archiveProfile,
+    ...(document.schemaVersion === 2
+      ? {
+          openaiProfile: document.openaiProfile,
+          openaiSkillsOnlyProfile: document.openaiSkillsOnlyProfile,
+        }
+      : {}),
     subjects: {
       openai: {
         name: document.subjects?.openai?.name,
         sha256: document.subjects?.openai?.sha256,
         bytes: document.subjects?.openai?.bytes,
       },
+      ...(document.schemaVersion === 2
+        ? { openaiSkillsOnly: document.subjects?.openaiSkillsOnly }
+        : {}),
       portable: {
         name: document.subjects?.portable?.name,
         sha256: document.subjects?.portable?.sha256,

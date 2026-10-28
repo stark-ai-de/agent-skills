@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "e7106beacc69d24b3a34ce811d3821d16697527cf5bd24eb5efcfb4d8b8f2c53"
+      "sha256": "a483d51b8b041698cddc1a02d96be2887b947da0e44c4c8764ce1fe5edb80eeb"
     },
     {
       "byteLength": 2128,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.6"
+    "version": "1.19.7"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "7d089b778ce1eaa6f7c5a4a92d60acd25c9882661b6eef15334ea32d5f8be4a4"
+  "treeHash": "431c642be171f9ba340b8fba5c9e314df1de802b2cd0985a78bfbca906cffe68"
 }

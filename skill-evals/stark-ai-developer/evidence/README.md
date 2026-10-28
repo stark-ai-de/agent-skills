@@ -53,11 +53,24 @@ Operator follow-up.
 
 ## Release subjects
 
-`release-subject.json` is the versioned metadata contract for the published
-`openai.zip` and `portable.zip` subjects. Validate it with
+Tags `v0.21.0` through `v0.31.0` use the historical single-listing contract:
+`openai.zip`, `portable.zip`, and a schema-v1 `release-subject.json`.
+`v0.20.1` is the earlier two-asset boundary and has no release-subject asset.
+Historical tag names and their original contracts remain unchanged.
+
+Starting with `v0.32.0`, each stable release carries both existing OpenAI
+listings as separate subjects: `openai-skills-only.zip` for **stark AI
+Developer**, `openai-tools.zip` for **stark AI Developer Tools**, and
+`portable.zip`, plus a schema-v2 `release-subject.json`. The subject binds each
+archive's name, SHA-256 digest, byte size, profile identity, and release source.
+All three ZIPs are attested. Post-release receipts record all three published
+archive digests and sizes and their matching attestation subjects. The two
+OpenAI listings use separate profile-specific handoffs; `portable.zip` is not
+uploaded to either listing.
+
+Validate release subjects with
 `npm run validate:release-subject-file -- --directory <subject-directory>`.
-The schema binds status, source revision, release/plugin versions, archive
-profile, subject digests, byte sizes, and differences. Historical tags may
-produce legacy evidence internally, but the current release action normalizes
-that evidence into this JSON contract. Standalone skill archives are a
-separate projection and may retain their own checksum file.
+Historical tags may produce legacy evidence internally, but the current
+release action normalizes that evidence into the versioned JSON contract.
+Standalone skill archives are a separate projection and may retain their own
+checksum file.

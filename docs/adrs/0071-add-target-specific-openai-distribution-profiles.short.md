@@ -2,7 +2,7 @@
 
 ID: ADR-0071
 Title: Add target-specific OpenAI distribution profiles
-Status: Accepted
+Status: Superseded
 Date: 2026-10-16
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0070
-Superseded by: None
+Superseded by: ADR-0076
 Guide verified: 2026-10-16
 Gist: One canonical source selects an explicit OpenAI distribution profile for each immutable release.
 

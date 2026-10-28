@@ -7,6 +7,7 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 import { resolveTagCommit } from "../lib/github-release-reconciliation.mjs";
+import { releaseAssetNamesForTag } from "../lib/release-assets.mjs";
 import {
   RELEASE_COMPLETION_MAX_WAIT_MS,
   RELEASE_COMPLETION_POLL_INTERVAL_MS,
@@ -35,6 +36,7 @@ function parseArgs(argv) {
     releaseSha: argument(argv, "--release-sha"),
     releasePullRequest: argument(argv, "--release-pr"),
     handoff: {
+      profileId: argument(argv, "--profile"),
       status: argument(argv, "--handoff-status"),
       reason: argument(argv, "--handoff-reason"),
       pluginVersionChanged:
@@ -129,7 +131,9 @@ export function collectReleaseCompletionObservation(expected, transport) {
       })
     : [];
   const assets = flattenPages(assetPages).map((asset) => ({ ...asset }));
-  for (const name of ["openai.zip", "portable.zip"]) {
+  for (const name of releaseAssetNamesForTag(expected.tag).filter((item) =>
+    item.endsWith(".zip"),
+  )) {
     const asset = releaseAsset(assets, name);
     if (asset && !/^sha256:[a-f0-9]{64}$/.test(asset.digest ?? "")) {
       const bytes = transport.getBytes(`repos/${expected.repository}/releases/assets/${asset.id}`);
@@ -211,7 +215,9 @@ export function renderReleaseCompletionSummary(
     `- Result: \`${result.reason}\``,
     `- Release: ${link(expected.tag, result.releaseUrl)}`,
     `- Commit: \`${expected.releaseSha}\``,
-    `- OpenAI SHA-256: \`${result.hashes?.["openai.zip"] ?? "unavailable"}\``,
+    ...Object.entries(result.hashes ?? {})
+      .filter(([name]) => name !== "portable.zip")
+      .map(([name, sha]) => `- ${name} SHA-256: \`${sha}\``),
     `- Portable SHA-256: \`${result.hashes?.["portable.zip"] ?? "unavailable"}\``,
     `- Evidence: ${link(result.evidence?.displayTitle ?? "not successful", result.evidence?.url)}`,
     `- Release PR: ${link(`#${expected.releasePullRequest}`, result.pullRequestUrl)}`,

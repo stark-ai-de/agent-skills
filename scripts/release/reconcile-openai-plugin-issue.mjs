@@ -60,6 +60,7 @@ function parseArgs(argv) {
     tag,
     releaseSha,
     releaseVersion: tag.slice(1),
+    profileId: argument(argv, "--profile"),
     subjectFile: argument(argv, "--subject-file"),
     githubOutput: argument(argv, "--github-output"),
   };
@@ -258,8 +259,15 @@ export function previousReleaseForIdentity({
     ) {
       throw new Error(`Invalid historical subject for ${previousRelease.tag_name}`);
     }
-    const historicalId = previousSubject.openaiProfile?.pluginId ?? legacyPluginId;
-    if (historicalId === pluginId) return { previousRelease, previousSubject };
+    const historicalProfiles = [
+      previousSubject.openaiProfile ?? {
+        pluginId: legacyPluginId,
+        version: previousSubject.pluginVersion,
+      },
+      ...(previousSubject.openaiSkillsOnlyProfile ? [previousSubject.openaiSkillsOnlyProfile] : []),
+    ];
+    if (historicalProfiles.some((profile) => profile.pluginId === pluginId))
+      return { previousRelease, previousSubject };
     remaining.splice(remaining.indexOf(previousRelease), 1);
   }
 }
@@ -306,10 +314,22 @@ export function buildOpenAiReleasePlan({
   previousRelease,
   previousSubject,
   issues,
+  profileId,
 }) {
   assertPublicListing(listing);
-  const currentVersion = subject.openaiProfile?.version ?? subject.pluginVersion;
-  const currentName = subject.openaiProfile?.pluginId ?? listing.plugin?.name;
+  if (subject.schemaVersion === 2 && !["existing-skills-only", "new-remote"].includes(profileId)) {
+    throw new Error("A multi-profile handoff requires an explicit selected profile");
+  }
+  const selected =
+    subject.schemaVersion === 2 && profileId === "existing-skills-only"
+      ? subject.openaiSkillsOnlyProfile
+      : subject.openaiProfile;
+  const selectedArchive =
+    subject.schemaVersion === 2 && profileId === "existing-skills-only"
+      ? subject.subjects?.openaiSkillsOnly
+      : subject.subjects?.openai;
+  const currentVersion = selected?.version ?? subject.pluginVersion;
+  const currentName = selected?.pluginId ?? listing.plugin?.name;
   if (listing.plugin?.version !== currentVersion || listing.plugin?.name !== currentName) {
     throw new Error("release subject pluginVersion does not match listing.plugin.version");
   }
@@ -317,12 +337,19 @@ export function buildOpenAiReleasePlan({
   if (previousRelease && !previousSubject) {
     throw new Error(`Previous release ${previousRelease.tag_name} is missing release-subject.json`);
   }
-  const previousName =
-    previousSubject?.openaiProfile?.pluginId ?? listing.canonicalPluginName ?? listing.plugin.name;
+  const previousProfiles = previousSubject
+    ? [
+        previousSubject.openaiProfile ?? {
+          pluginId: listing.canonicalPluginName ?? listing.plugin.name,
+          version: previousSubject.pluginVersion,
+        },
+        ...(previousSubject.openaiSkillsOnlyProfile
+          ? [previousSubject.openaiSkillsOnlyProfile]
+          : []),
+      ]
+    : [];
   const previousVersion =
-    previousName === currentName
-      ? (previousSubject?.openaiProfile?.version ?? previousSubject?.pluginVersion ?? null)
-      : null;
+    previousProfiles.find((profile) => profile.pluginId === currentName)?.version ?? null;
   if (previousVersion && !valid(previousVersion)) {
     throw new Error(`Previous release ${previousRelease.tag_name} has an invalid pluginVersion`);
   }
@@ -330,7 +357,9 @@ export function buildOpenAiReleasePlan({
     throw new Error(`Plugin version decreased from ${previousVersion} to ${currentVersion}`);
   }
   const marker = openAiIssueMarker(listing.plugin.name, currentVersion);
-  const existing = matchingOpenAiReleaseIssues(issues, marker)[0] ?? null;
+  const matches = matchingOpenAiReleaseIssues(issues, marker);
+  if (matches.length > 1) throw new Error(`Multiple trusted handoffs use ${marker}`);
+  const existing = matches[0] ?? null;
   const pluginVersionChanged = !previousVersion || compare(currentVersion, previousVersion) !== 0;
   if (!pluginVersionChanged) {
     return {
@@ -350,16 +379,17 @@ export function buildOpenAiReleasePlan({
       issue: openAiReleaseIssueReference(existing),
     };
   }
-  const openAi = releaseAsset(release, "openai.zip");
+  const assetName = selectedArchive?.name ?? "openai.zip";
+  const openAi = releaseAsset(release, assetName);
   if (typeof openAi.browser_download_url !== "string" || !openAi.browser_download_url) {
-    throw new Error("published openai.zip is missing a direct browser download URL");
+    throw new Error(`published ${assetName} is missing a direct browser download URL`);
   }
-  const openAiSha256 = subject.subjects?.openai?.sha256;
+  const openAiSha256 = selectedArchive?.sha256;
   if (!SHA256_PATTERN.test(openAiSha256 ?? "")) {
-    throw new Error("release subject is missing a valid openai.zip SHA-256");
+    throw new Error(`release subject is missing a valid ${assetName} SHA-256`);
   }
   if (openAi.digest && openAi.digest !== `sha256:${openAiSha256}`) {
-    throw new Error("published openai.zip digest does not match release-subject.json");
+    throw new Error(`published ${assetName} digest does not match release-subject.json`);
   }
   const releaseUrl = release.html_url ?? `https://github.com/${repository}/releases/tag/${tag}`;
   const body = renderOpenAiSubmissionChecklist(listing, {
@@ -368,6 +398,7 @@ export function buildOpenAiReleasePlan({
     releaseSha,
     releaseUrl,
     openaiAssetUrl: openAi.browser_download_url,
+    openaiAssetName: assetName,
     openaiSha256: openAiSha256,
     firstPublicationUrl: `https://github.com/${repository}/blob/${releaseSha}/docs/listing/openai/${listing.canonicalPluginName ?? listing.plugin.name}-first-publication.md#composer-icon-handoff`,
   });
@@ -376,7 +407,8 @@ export function buildOpenAiReleasePlan({
     reason: previousVersion ? "plugin_version_changed" : "first_automated_plugin_release",
     pluginVersionChanged: true,
     marker,
-    title: ISSUE_TITLE,
+    title:
+      subject.schemaVersion === 2 ? `${ISSUE_TITLE}: ${listing.plugin.displayName}` : ISSUE_TITLE,
     body,
     pluginVersion: currentVersion,
     releaseUrl,
@@ -389,7 +421,7 @@ function readCurrentContext(options) {
   const releaseSource = readJsonAtCommit(options.releaseSha, PLUGIN_SOURCE_PATH);
   const listing = listingForOpenAiIdentity(
     readJsonAtCommit(options.releaseSha, listingPath),
-    openAiIdentityFromSource(releaseSource),
+    openAiIdentityFromSource(releaseSource, options.profileId),
   );
   const tagCommit = readTagCommit(options.repository, options.tag);
   if (tagCommit !== options.releaseSha) {
@@ -417,7 +449,7 @@ function readCurrentContext(options) {
   const { previousRelease, previousSubject } = previousReleaseForIdentity({
     releases,
     currentReleaseVersion: options.releaseVersion,
-    pluginId: subject.openaiProfile?.pluginId ?? listing.plugin.name,
+    pluginId: listing.plugin.name,
     legacyPluginId: releaseSource.pluginId,
     readValidatedSubject: (historicalRelease) => {
       const historicalSha = readTagCommit(options.repository, historicalRelease.tag_name);
@@ -434,6 +466,7 @@ function readCurrentContext(options) {
     release,
     listing,
     subject,
+    profileId: options.profileId,
     previousRelease,
     previousSubject,
     issues: listAllIssues(options.repository),

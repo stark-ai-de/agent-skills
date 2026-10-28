@@ -10,7 +10,6 @@ import {
   applyReleaseReconciliation,
   classifyReleaseAsset,
   planReleaseReconciliation,
-  RELEASE_ZIP_ASSET_NAMES,
   releaseAssetCreatedAfterPublication,
   releaseAssetCreatedBeforePublication,
   releaseAssetNamesForTag,
@@ -325,8 +324,7 @@ function readLocalSubjects(options) {
   }
   const expectedSubjects = {};
   const subjectPaths = {};
-  for (const key of ["openai", "portable"]) {
-    const subject = validation.document.subjects[key];
+  for (const subject of Object.values(validation.document.subjects)) {
     expectedSubjects[subject.name] = { sha256: subject.sha256, bytes: subject.bytes };
     subjectPaths[subject.name] = path.join(options.subjectsDir, subject.name);
   }
@@ -336,6 +334,10 @@ function readLocalSubjects(options) {
     bytes: subjectBytes.length,
   };
   subjectPaths[RELEASE_SUBJECT_FILE] = subjectFile;
+  const required = releaseAssetNamesForTag(options.tag).sort();
+  if (JSON.stringify(Object.keys(subjectPaths).sort()) !== JSON.stringify(required)) {
+    throw new Error("Release subject assets do not match the tag's required asset set");
+  }
   return {
     expectedSubjects,
     subjectPaths,
@@ -382,12 +384,14 @@ function observe(options, localSubjects) {
         inspectedAssets.records.find((asset) => asset?.name === RELEASE_SUBJECT_FILE),
         remote.published_at,
       ),
-      zipAssetsCreatedBeforePublication: RELEASE_ZIP_ASSET_NAMES.every((name) =>
-        releaseAssetCreatedBeforePublication(
-          inspectedAssets.records.find((asset) => asset?.name === name),
-          remote.published_at,
+      zipAssetsCreatedBeforePublication: requiredAssetNames
+        .filter((name) => name.endsWith(".zip"))
+        .every((name) =>
+          releaseAssetCreatedBeforePublication(
+            inspectedAssets.records.find((asset) => asset?.name === name),
+            remote.published_at,
+          ),
         ),
-      ),
     };
   }
   return {

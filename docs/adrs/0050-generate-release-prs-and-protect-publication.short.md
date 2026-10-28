@@ -2,7 +2,7 @@
 
 ID: ADR-0050
 Title: Generate release PRs and protect publication
-Status: Accepted
+Status: Superseded
 Date: 2026-08-26
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Short
 Canonical variant: Long
 Supersedes: ADR-0015, ADR-0046
-Superseded by: None
+Superseded by: ADR-0077
 Guide verified: 2026-08-26
 Gist: Generated release PRs prepare one coherent version while protected publication preserves exact direct assets and dispatches post-release evidence explicitly.
 

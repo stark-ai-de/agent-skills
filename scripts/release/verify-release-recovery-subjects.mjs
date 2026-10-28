@@ -5,6 +5,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { releaseRecoverySubjectErrors } from "../lib/release-management.mjs";
+import { releaseAssetNamesForTag } from "../lib/release-assets.mjs";
 import { RELEASE_SUBJECT_FILE } from "../lib/release-subject.mjs";
 import { validateReleaseSubjectFile } from "../lib/release-subject-validation.mjs";
 
@@ -87,7 +88,9 @@ export function runCli(argv = process.argv.slice(2)) {
   if (origin.document && candidate.document) {
     errors.push(...releaseRecoverySubjectErrors(origin.document, candidate.document));
   }
-  for (const archive of ["openai.zip", "portable.zip"]) {
+  for (const archive of releaseAssetNamesForTag(`v${releaseVersion}`).filter((name) =>
+    name.endsWith(".zip"),
+  )) {
     if (
       !exactFileBytesEqual(
         path.join(originDirectory, archive),

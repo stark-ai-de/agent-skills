@@ -264,8 +264,8 @@ Merging the generated release PR changes `.release-please-manifest.json` on
 read-only readiness option.
 
 The readiness job has read-only permissions. It binds the workflow and hosted
-`Validate` to the exact generated-release SHA, downloads `openai.zip`,
-`portable.zip`, and `release-subject.json` as three direct artifacts with no
+`Validate` to the exact generated-release SHA, downloads `openai-skills-only.zip`,
+`openai-tools.zip`, `portable.zip`, and `release-subject.json` as four direct artifacts with no
 extraction or repacking, validates them, and computes the remote plan. The SHA
 must remain equal to or an ancestor of the currently observed protected `main`;
 later feature commits belong to the next release cycle and do not invalidate a
@@ -282,12 +282,13 @@ confirms that `main` is protected, and disables administrator bypass.
 A real publish may resume a matching tag or draft, uploads only missing exact
 subjects, never replaces a named asset, and publishes the completed draft last
 with `make_latest=true`. A published target is satisfied only when
-`/releases/latest` returns the same release ID and tag. Only the two ZIPs are
+`/releases/latest` returns the same release ID and tag. All three ZIPs are
 attested. The reconciler creates annotated tag objects and refs through the
 authenticated GitHub Git API; checkout credentials are never persisted.
-`v0.20.1` is the explicit legacy two-asset boundary; from `v0.21.0`
-onward all three direct assets are required. An exact mutable release may accept
-a missing validated JSON without a valid ZIP attestation only when both exact
+`v0.20.1` is the explicit legacy two-asset boundary; `v0.21.0` through
+`v0.31.0` require the historical three assets. From `v0.32.0` all four direct
+assets are required. For a historical two-ZIP release, an exact mutable release
+may accept a missing validated JSON without a valid ZIP attestation only when both exact
 ZIP assets have creation timestamps strictly before publication; after upload,
 the JSON timestamp must be strictly later. Equal, missing, or invalid timestamps
 block. A missing ZIP additionally requires its existing valid Publish Release
@@ -305,7 +306,7 @@ API, requires protected `main`, and binds `github.workflow_ref` and
 [`prepare-release-subjects.mjs`](../scripts/release/prepare-release-subjects.mjs)
 wrapper runs the tag-local [`verify-release-reproducibility.mjs`](../scripts/release/verify-release-reproducibility.mjs)
 script and translates the legacy evidence format used by historical tags.
-Hosted `Validate` uses the repository-owned script to build and upload the three
+Hosted `Validate` uses the repository-owned script to build and upload the four
 direct artifacts on `main`. `Publish Release` downloads those exact bytes for
 attestation and publication; it does not require a local packaging workflow.
 The local `pnpm run build:release-subjects` command
@@ -327,9 +328,9 @@ historical status.
 
 After the protected `publish` job succeeds, its read-only `release-completion`
 job polls for up to ten minutes at 15-second intervals. It checks the annotated
-tag and exact release commit, the three direct assets and their subject-bound
+tag and exact release commit, the four direct assets and their subject-bound
 digests, successful exact-tag Post-release Evidence after the latest release
-mutation, final Release Please labels, and the duplicate-free OpenAI handoff.
+mutation, final Release Please labels, and both duplicate-free OpenAI handoffs.
 It has no write permissions and does not use the `release` environment. A red
 completion job does not roll back an already-published release: repair or retry
 Post-release Evidence, then rerun only failed jobs with
@@ -381,7 +382,7 @@ or release. Hosted mutations require `--confirm`.
 | `pnpm run release:manage -- publish [--recovery-release-sha SHA] --confirm`             | **Actions → 🚀 Publish Release → Run workflow**, `dry_run=false`; omit the SHA for an ordinary current generated-release candidate, or repeat the plan-proven recovery SHA.                                                                                                                                                            |
 | `pnpm run release:manage -- approve --run-id ID [--recovery-release-sha SHA] --confirm` | Open the waiting run/deployment and approve the `release` environment; for recovery, verify the run title and repeat the exact original SHA.                                                                                                                                                                                           |
 | `pnpm run release:manage -- post-release --tag vX.Y.Z --confirm`                        | **Actions → 🧾 Post-release Evidence → Run workflow** with the exact tag.                                                                                                                                                                                                                                                              |
-| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest three-asset release and newest successful exact-tag Evidence run, then download `openai.zip` and open the OpenAI submission portal.                                                                                                                                                                                  |
+| `pnpm run release:manage -- openai-handoff --tag vX.Y.Z`                                | Verify the latest release and newest successful exact-tag Evidence run, then use the two profile-specific asset and portal links it reports.                                                                                                                                                                                           |
 
 Equivalent local release validation:
 
@@ -413,9 +414,9 @@ The exact local OpenAI-native harness-first fallback path is
 `outputs.openaiArchive` in
 [`plugins/stark-ai-developer.source.json`](../plugins/stark-ai-developer.source.json).
 It is generated from ephemeral adapter staging at package time. The normal
-portal handoff source is the direct `openai.zip` asset
-from the verified GitHub Release; its bytes came unchanged from successful
-hosted `Validate` for the exact release commit.
+portal handoff sources are the direct `openai-skills-only.zip` and
+`openai-tools.zip` assets from the verified GitHub Release; their bytes came
+unchanged from successful hosted `Validate` for the exact release commit.
 Canonical `agents/openai.yaml` is copied unchanged from each bundled skill into
 that archive; the adapter does not generate or overlay skill-local metadata.
 `dist/skills/*.zip` contains one skill root per optional standalone archive.
@@ -423,14 +424,15 @@ These artifacts do not replace canonical sources. A generated archive is not
 by itself proof of public-directory publication. First-publication observations
 for the OpenAI plugin live in
 [`docs/listing/openai/stark-ai-developer-first-publication.md`](listing/openai/stark-ai-developer-first-publication.md).
-Upload the direct GitHub Release asset `openai.zip` to the OpenAI portal, not the
-portable Agent Plugins zip or a locally rebuilt archive.
+Upload each direct GitHub Release asset to its matching existing listing as
+specified in [Operator follow-up](#operator-follow-up), not the portable Agent
+Plugins zip or a locally rebuilt archive.
 
 GitHub Releases also provide source archives for each tag, and normal
 standalone installation uses the skills CLI:
 
-`pnpm run build:release-subjects` writes the same final `openai.zip`,
-`portable.zip`, and versioned `release-subject.json` subject set to
+`pnpm run build:release-subjects` writes the same final `openai-skills-only.zip`,
+`openai-tools.zip`, `portable.zip`, and versioned `release-subject.json` subject set to
 `dist/release-subjects/`; it is the local fallback, not the normal publication
 path. The JSON subject is the release contract; standalone skill archives may
 retain their own independent checksum files.
@@ -518,16 +520,27 @@ before claiming that publication or installation is available.
 GitHub Actions job summaries point here after a run. These checks are product
 and portal work. Directory identity is a [manual observation](#manual-directory-observation).
 Later GitHub Release provenance is `Publish Release` plus `Post-release Evidence`.
-When the published plugin version changes, `Publish Release` also creates one
-**Release OpenAI Plugin** issue with the public checklist. Complete that issue
-manually after the exact-tag evidence run; existing open or closed issues are
-left unchanged.
+When a published plugin version changes, `Publish Release` creates its own
+**Release OpenAI Plugin** issue with a profile-specific public checklist.
+Complete each applicable issue manually after the exact-tag evidence run;
+existing open or closed issues are left unchanged. Update the two existing
+listings independently, using the matching direct release asset:
+
+| Profile     | Asset                    | Existing listing                                                                                         |
+| ----------- | ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Skills only | `openai-skills-only.zip` | [stark-ai-developer](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e)               |
+| Remote MCP  | `openai-tools.zip`       | [stark-ai-developer-tools](https://chatgpt.com/plugins/plugin_asdk_app_6ad281cbc9a481919d8d5e123985ddc8) |
+
+The releases share canonical skill contents but retain separate identities,
+versions, portal uploads, scans and reviews. The remote profile keeps its
+existing MCP origin. Do not create a third listing or upload either ZIP to the
+other listing. A GitHub release is not evidence of OpenAI approval or publication.
 
 If that issue is missing after a successful publication, first inspect the
 read-only plan from trusted current code and the exact release commit:
 
 ```bash
-pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha>
+pnpm run release:openai-issue -- plan --repository <owner/repo> --tag <vX.Y.Z> --release-sha <sha> --profile <existing-skills-only|new-remote>
 ```
 
 Only when no `Publish Release` run or other retry is active, repeat the handoff
@@ -591,11 +604,11 @@ security routes return HTTP 200.
 
 ### OpenAI portal submission
 
-1. Open the OpenAI Platform plugin submission portal from the selected
-   publishing organization.
-2. Create a plugin draft and choose **Skills only**.
-3. Enter the public listing and verified developer identity.
-4. Upload the exact direct `openai.zip` asset from the verified GitHub Release.
+1. Open the existing plugin in the OpenAI Platform submission portal under the
+   selected publishing organization; repeat this procedure for each profile.
+2. Preserve its existing **Skills only** or **With MCP** identity and settings.
+3. Verify the public listing and developer identity.
+4. Upload its exact matching direct ZIP from the verified GitHub Release.
 5. Verify all packaged skill icons. If the portal ignores package metadata,
    restore the reviewed `radar`, `chat`, `bolt`, `hierarchy`, `search`, `pen`,
    `code`, and `chart` glyphs.

@@ -111,7 +111,7 @@
             "required": ["name", "sha256"],
             "properties": {
               "name": {
-                "enum": ["openai.zip", "portable.zip"]
+                "enum": ["openai.zip", "openai-skills-only.zip", "openai-tools.zip", "portable.zip"]
               },
               "sha256": {
                 "type": "string",
@@ -359,39 +359,7 @@
               }
             }
           },
-          "artifacts": {
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "allOf": [
-              {
-                "contains": {
-                  "type": "object",
-                  "required": ["name"],
-                  "properties": {
-                    "name": {
-                      "const": "openai.zip"
-                    }
-                  }
-                },
-                "minContains": 1,
-                "maxContains": 1
-              },
-              {
-                "contains": {
-                  "type": "object",
-                  "required": ["name"],
-                  "properties": {
-                    "name": {
-                      "const": "portable.zip"
-                    }
-                  }
-                },
-                "minContains": 1,
-                "maxContains": 1
-              }
-            ]
-          },
+          "artifacts": { "$ref": "#/$defs/passingArchiveSubjectSet" },
           "attestation": {
             "type": "object",
             "required": [
@@ -430,39 +398,7 @@
               "predicateType": {
                 "const": "https://slsa.dev/provenance/v1"
               },
-              "subjects": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "allOf": [
-                  {
-                    "contains": {
-                      "type": "object",
-                      "required": ["name"],
-                      "properties": {
-                        "name": {
-                          "const": "openai.zip"
-                        }
-                      }
-                    },
-                    "minContains": 1,
-                    "maxContains": 1
-                  },
-                  {
-                    "contains": {
-                      "type": "object",
-                      "required": ["name"],
-                      "properties": {
-                        "name": {
-                          "const": "portable.zip"
-                        }
-                      }
-                    },
-                    "minContains": 1,
-                    "maxContains": 1
-                  }
-                ]
-              }
+              "subjects": { "$ref": "#/$defs/passingArchiveSubjectSet" }
             }
           }
         }
@@ -646,13 +582,97 @@
     }
   ],
   "$defs": {
+    "passingArchiveSubjectSet": {
+      "type": "array",
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "const": "openai.zip"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "const": "portable.zip"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "const": "openai-skills-only.zip"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "const": "openai-tools.zip"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "const": "portable.zip"
+                  }
+                }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        }
+      ]
+    },
     "artifact": {
       "type": "object",
       "additionalProperties": false,
       "required": ["name", "role", "sha256", "bytes"],
       "properties": {
         "name": {
-          "enum": ["openai.zip", "portable.zip"]
+          "enum": ["openai.zip", "openai-skills-only.zip", "openai-tools.zip", "portable.zip"]
         },
         "role": {
           "enum": ["verification-subject", "publication-subject", "generated"]

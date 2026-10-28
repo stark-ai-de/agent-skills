@@ -4,6 +4,7 @@ import path from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 
 import { RELEASE_SUBJECT_SCHEMA_PATH, readReleaseSubject, sha256File } from "./release-subject.mjs";
+import { isMultiProfileReleaseTag } from "./release-assets.mjs";
 
 function formatAjvErrors(errors = []) {
   return errors.map((error) => `${error.instancePath || "/"} ${error.message}`);
@@ -64,6 +65,34 @@ export function validateReleaseSubjectDocument(
     errors.push("pass release subjects must not contain differences");
   }
 
+  if (isMultiProfileReleaseTag(`v${document.releaseVersion}`) && document.schemaVersion !== 2) {
+    errors.push("multi-profile release tags require release subject schema version 2");
+  }
+  if (/^v\d+\.\d+\.\d+$/.test(document.sourceRevision.tag)) {
+    if (document.sourceRevision.tag !== `v${document.releaseVersion}`) {
+      errors.push("source tag must match releaseVersion");
+    }
+    if (!isMultiProfileReleaseTag(document.sourceRevision.tag) && document.schemaVersion !== 1) {
+      errors.push("historical release tags require their legacy release subject schema");
+    }
+  }
+  if (document.schemaVersion === 2) {
+    for (const profile of [document.openaiProfile, document.openaiSkillsOnlyProfile]) {
+      if (profile.archive !== `dist/openai/${profile.pluginId}-${profile.version}.zip`) {
+        errors.push(`${profile.profile} archive must match its plugin identity and version`);
+      }
+    }
+    if (document.openaiSkillsOnlyProfile.version !== document.pluginVersion) {
+      errors.push("skills-only profile version must equal the bundled plugin version");
+    }
+    if (document.subjects.openai.sha256 === document.subjects.openaiSkillsOnly.sha256) {
+      errors.push("OpenAI profiles must have distinct archive digests");
+    }
+    if (document.openaiProfile.listingUrl === document.openaiSkillsOnlyProfile.listingUrl) {
+      errors.push("OpenAI profile portal targets must be distinct");
+    }
+  }
+
   if (subjectDirectory && validateSubjectFiles) {
     const directory = path.resolve(subjectDirectory);
     for (const legacyName of ["SHA256SUMS", "IDENTITY"]) {
@@ -71,7 +100,9 @@ export function validateReleaseSubjectDocument(
         errors.push(`${legacyName} is not part of the release subject contract`);
       }
     }
-    for (const key of ["openai", "portable"]) {
+    for (const key of document.schemaVersion === 2
+      ? ["openai", "openaiSkillsOnly", "portable"]
+      : ["openai", "portable"]) {
       const subject = document.subjects[key];
       const archivePath = path.join(directory, subject.name);
       if (!fs.existsSync(archivePath) || !fs.statSync(archivePath).isFile()) {

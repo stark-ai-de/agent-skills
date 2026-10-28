@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 
 import { POST_RELEASE_RECEIPT_SCHEMA_PATH } from "./post-release-contract.mjs";
+import { releaseAssetNamesForTag } from "../lib/release-assets.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const schemaRelativePath = POST_RELEASE_RECEIPT_SCHEMA_PATH;
@@ -185,7 +186,9 @@ function validateReceiptInvariants(receipt) {
   const isPassingArchive = receipt?.status === "pass" && isArchiveReceipt;
   if (!isPassingArchive) return findings;
 
-  const expectedNames = ["openai.zip", "portable.zip"];
+  const expectedNames = releaseAssetNamesForTag(receipt.release?.tag).filter((name) =>
+    name.endsWith(".zip"),
+  );
   const artifacts = Array.isArray(receipt.artifacts) ? receipt.artifacts : [];
   const subjects = Array.isArray(receipt.attestation?.subjects) ? receipt.attestation.subjects : [];
   const artifactByName = new Map();
@@ -213,7 +216,9 @@ function validateReceiptInvariants(receipt) {
     expectedNames.some((name) => !artifactByName.has(name))
   ) {
     findings.push(
-      "archive receipts must contain exactly one openai.zip and one portable.zip artifact",
+      expectedNames.length === 2
+        ? "archive receipts must contain exactly one openai.zip and one portable.zip artifact"
+        : `archive receipts must contain exactly one of each archive: ${expectedNames.join(", ")}`,
     );
   }
   if (

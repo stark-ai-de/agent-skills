@@ -203,7 +203,7 @@
     "openai": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["activeProfile", "profiles"],
+      "required": ["activeProfile", "profiles", "releaseProfiles"],
       "properties": {
         "activeProfile": {
           "enum": ["existing-skills-only", "existing-remote", "new-remote", "desktop-local"]
@@ -274,6 +274,9 @@
               ]
             }
           }
+        },
+        "releaseProfiles": {
+          "const": ["existing-skills-only", "new-remote"]
         }
       }
     }
@@ -309,6 +312,10 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 4000
+        },
+        "listingUrl": {
+          "type": "string",
+          "pattern": "^https://chatgpt\\.com/plugins/[^/?#]+$"
         }
       },
       "allOf": [

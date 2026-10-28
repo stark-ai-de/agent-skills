@@ -1514,12 +1514,17 @@ assert.ok(
   "trusted main and merged release PRs must be verified before creating a write token",
 );
 
-assert.equal(occurrences(validateWorkflow, /^\s+archive: false$/gm), 3);
-for (const asset of ["openai.zip", "portable.zip", "release-subject.json"]) {
+assert.equal(occurrences(validateWorkflow, /^\s+archive: false$/gm), 4);
+for (const asset of [
+  "openai-skills-only.zip",
+  "openai-tools.zip",
+  "portable.zip",
+  "release-subject.json",
+]) {
   assert.match(validateWorkflow, new RegExp(`name: ${asset.replace(".", "\\.")}`));
 }
-assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 9);
-assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 9);
+assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 12);
+assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 12);
 assert.match(publishWorkflow, /^\s+environment: release$/m);
 assert.match(publishWorkflow, /^\s+RELEASE_ENVIRONMENT: release$/m);
 assert.doesNotMatch(publishWorkflow, /mark_latest|mark-latest/);
@@ -1614,10 +1619,13 @@ assert.match(
 );
 assert.ok(
   publishJob.indexOf("Complete the generated release-PR lifecycle") <
-    publishJob.indexOf("Reconcile OpenAI plugin handoff"),
+    publishJob.indexOf("Reconcile OpenAI Tools handoff"),
   "the public handoff issue must follow release-PR lifecycle labels",
 );
 assert.match(publishJob, /id: openai-handoff/);
+assert.match(publishJob, /id: skills-only-handoff/);
+assert.match(publishJob, /--profile new-remote/);
+assert.match(publishJob, /--profile existing-skills-only/);
 assert.match(publishJob, /--github-output "\$GITHUB_OUTPUT"/);
 for (const output of [
   "status",
@@ -1628,6 +1636,7 @@ for (const output of [
   "marker",
 ]) {
   assert.match(publishJob, new RegExp(`steps\\.openai-handoff\\.outputs\\.${output}`));
+  assert.match(publishJob, new RegExp(`steps\\.skills-only-handoff\\.outputs\\.${output}`));
 }
 assert.match(completionJob, /needs: \[publication-trigger, release-readiness, publish\]/);
 assert.match(completionJob, /if: \$\{\{ needs\.publish\.result == 'success' \}\}/);
@@ -1638,6 +1647,8 @@ assert.doesNotMatch(completionJob, /^\s+\S+: write$/m);
 assert.doesNotMatch(completionJob, /^\s+environment:/m);
 assert.match(completionJob, /^\s+timeout-minutes: 12$/m);
 assert.match(completionJob, /verify-release-completion\.mjs/);
+assert.match(completionJob, /--profile new-remote/);
+assert.match(completionJob, /--profile existing-skills-only/);
 assert.match(completionJob, /--max-wait-seconds 600/);
 assert.match(completionJob, /--poll-interval-seconds 15/);
 assert.match(validateWorkflow, /Verify generated release-PR provenance/);

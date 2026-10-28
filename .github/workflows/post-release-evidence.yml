@@ -85,6 +85,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          SKILLS_ONLY_SHA: ${{ steps.release.outputs.skills_only_sha }}
         run: |
           set -euo pipefail
           rm -rf published-assets
@@ -101,7 +102,12 @@ jobs:
               | \
               jq -s 'add | map(.name) | sort' \
               > "${asset_names_file}"
-            asset_patterns=(--pattern openai.zip --pattern portable.zip)
+            asset_patterns=(--pattern portable.zip)
+            if [ -n "${SKILLS_ONLY_SHA}" ]; then
+              asset_patterns+=(--pattern openai-skills-only.zip --pattern openai-tools.zip)
+            else
+              asset_patterns+=(--pattern openai.zip)
+            fi
             if jq -e 'index("release-subject.json") != null' \
                 "${asset_names_file}" >/dev/null; then
               asset_patterns+=(--pattern release-subject.json)
@@ -132,6 +138,7 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
           ASSET_STATUS: ${{ steps.assets.outputs.status }}
+          SKILLS_ONLY_SHA: ${{ steps.release.outputs.skills_only_sha }}
         run: |
           set -euo pipefail
           attestation_status=blocked
@@ -142,7 +149,13 @@ jobs:
             attestation_status=not-pre-publication-attested
           elif [ "${PACKAGE_STATUS}" = "pass" ] && [ "${ASSET_STATUS}" = "pass" ]; then
             attestation_status=verified
-            for archive in published-assets/openai.zip published-assets/portable.zip; do
+            archives=(published-assets/portable.zip)
+            if [ -n "${SKILLS_ONLY_SHA}" ]; then
+              archives+=(published-assets/openai-skills-only.zip published-assets/openai-tools.zip)
+            else
+              archives+=(published-assets/openai.zip)
+            fi
+            for archive in "${archives[@]}"; do
               gh attestation verify "$archive" \
                 --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
                 --signer-digest "$RELEASE_SHA" \
@@ -164,11 +177,14 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           PACKAGE_STATUS: ${{ steps.release.outputs.package_status }}
           OPENAI_SHA: ${{ steps.release.outputs.openai_sha }}
+          SKILLS_ONLY_SHA: ${{ steps.release.outputs.skills_only_sha }}
           PORTABLE_SHA: ${{ steps.release.outputs.portable_sha }}
           OPENAI_BYTES: ${{ steps.release.outputs.openai_bytes }}
+          SKILLS_ONLY_BYTES: ${{ steps.release.outputs.skills_only_bytes }}
           PORTABLE_BYTES: ${{ steps.release.outputs.portable_bytes }}
           ASSET_STATUS: ${{ steps.assets.outputs.status }}
           PUBLISHED_OPENAI_SHA: ${{ steps.assets.outputs.published_openai_sha }}
+          PUBLISHED_SKILLS_ONLY_SHA: ${{ steps.assets.outputs.published_skills_only_sha }}
           PUBLISHED_PORTABLE_SHA: ${{ steps.assets.outputs.published_portable_sha }}
           ATTESTATION_STATUS: ${{ steps.attestation.outputs.status }}
           VERIFIER_SHA: ${{ steps.verifier.outputs.verifier_sha }}

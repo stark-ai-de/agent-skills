@@ -12,6 +12,7 @@ const SUBJECT_KEYS = [
   ["openai", "published_openai_sha"],
   ["portable", "published_portable_sha"],
 ];
+const MULTI_PROFILE_SUBJECT = ["openaiSkillsOnly", "published_skills_only_sha"];
 
 function argument(argv, name) {
   const index = argv.indexOf(name);
@@ -100,8 +101,17 @@ function semanticReleaseSubject(document) {
     releaseVersion: document.releaseVersion,
     pluginVersion: document.pluginVersion,
     archiveProfile: document.archiveProfile,
+    ...(document.schemaVersion === 2
+      ? {
+          openaiProfile: document.openaiProfile,
+          openaiSkillsOnlyProfile: document.openaiSkillsOnlyProfile,
+        }
+      : {}),
     subjects: {
       openai: document.subjects.openai,
+      ...(document.schemaVersion === 2
+        ? { openaiSkillsOnly: document.subjects.openaiSkillsOnly }
+        : {}),
       portable: document.subjects.portable,
     },
   };
@@ -121,6 +131,7 @@ try {
   const output = {
     status: "blocked",
     published_openai_sha: "",
+    published_skills_only_sha: "",
     published_portable_sha: "",
   };
 
@@ -167,7 +178,9 @@ try {
           `release assets: expected exactly ${expectedAssetNames.join(", ")}; got ${observedAssetNames?.join(", ") ?? "unavailable"}`,
         );
       }
-      for (const [key, outputName] of SUBJECT_KEYS) {
+      for (const [key, outputName] of validation.document.schemaVersion === 2
+        ? [...SUBJECT_KEYS, MULTI_PROFILE_SUBJECT]
+        : SUBJECT_KEYS) {
         const subject = validation.document.subjects[key];
         const publishedPath = path.join(publishedDir, subject.name);
         if (!usableFile(publishedPath)) {
