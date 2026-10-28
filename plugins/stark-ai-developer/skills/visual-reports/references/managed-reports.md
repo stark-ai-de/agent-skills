@@ -42,6 +42,15 @@ database-grade guarantee against every filesystem or power failure.
 
 ## Preview behavior
 
+Revision, draft and download controls are grouped in a closed, labeled preview
+footer toolbox. The report itself retains its standalone export/style toolbox.
+Live revision and draft warnings remain outside the collapsed controls. Neither
+footer changes the report's actual subject or implies a reader task. Footers may
+fall below the viewport; neither needs a fixed position that constrains or covers
+report content. Keep actionable revision/draft notices visible independently of
+the closed toolbox. Guided panels follow the shared
+[layout and navigation contract](report-contract.md#guided-layout-and-navigation).
+
 The session-owned Node server binds only `127.0.0.1`, accepts read-only requests
 with a loopback Host, uses a random available port unless explicitly supplied, and
 stops with Ctrl-C. Keep its URL stable for this session; a fixed `--port` can be
@@ -63,7 +72,9 @@ unexported drafts. The standalone snapshot has no connection to the preview serv
 Offer a reachable HTTP preview in the ChatGPT/Codex desktop browser tab and
 Microsoft Edge where the host supports them. Verify the actual route. A file link,
 listening server or DOM loaded from a string is not evidence that the reader's URL
-works. Also deliver the standalone HTML and complete exports for offline handoff.
+works. Reuse the current session-owned URL and existing browser tab when possible;
+small iterations need no additional tabs. Follow host/repository browser-tool
+restrictions. Also deliver the standalone HTML and complete exports for offline handoff.
 
 ## Browser verification
 

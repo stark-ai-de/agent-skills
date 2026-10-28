@@ -1,5 +1,11 @@
 # Choose for the reader's question
 
+First read [Reader experience](report-contract.md#reader-experience). Distinguish a request to
+simplify a process from a request to compare options. For simplification, prefer
+a short guided sequence of concrete changes and retained safeguards. For a summary,
+show completed results without manufacturing a next task. Choose a matrix only
+when shared-criteria option comparison is actually the reader's goal.
+
 The eight purpose templates and five domain profiles are maintained in
 `scripts/lib/templates.mjs`; `--templates` prints their full finite inventory.
 Load only the chosen template/profile and the needed block reference. Do not fetch

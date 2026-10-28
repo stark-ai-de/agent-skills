@@ -111,12 +111,14 @@ for (const prefix of ["canonical", "portable"]) {
   for (const unsafe of [
     knowledgeTransport.replace('["localhost", "127.0.0.1", "[::1]"]', '["unexpected.example"]'),
     knowledgeTransport.replace('redirect: "manual"', 'redirect: "follow"'),
-    knowledgeTransport.replace("!process.env.NODE_USE_ENV_PROXY", "true"),
+    knowledgeTransport.replace('!route.includes("..")', "true"),
     knowledgeTransport.replace(
       "this.address = origin(auth.address)",
       "this.address = auth.address",
     ),
     knowledgeTransport.replace('route.startsWith("/api/v1/")', 'route.startsWith("/")'),
+    knowledgeTransport.replace("!u.username", "true"),
+    knowledgeTransport.replace("!u.password", "true"),
     knowledgeTransport + "\nfetch(destination)",
     knowledgeTransport + "\nrequest(destination)",
     knowledgeTransport + "\nhttps.request(destination)",

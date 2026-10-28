@@ -14,7 +14,7 @@ import {
   writeReport,
 } from "../scripts/render-report.mjs";
 import { recipes, exampleReport } from "../assets/report-recipes.mjs";
-import { workingReport } from "../scripts/lib/report-state.mjs";
+import { workingReport, readerStatusLines } from "../scripts/lib/report-state.mjs";
 const cli = fileURLToPath(new URL("../scripts/render-report.mjs", import.meta.url));
 
 for (const recipe of recipes) {
@@ -59,6 +59,33 @@ test("explicit presentation intent starts slides and rejects invalid or missing 
   report.presentation = "slides";
   report.sections = exampleReport("r01").sections;
   assert.throws(() => validateReport(report), /Presentation requires a slides block/);
+});
+test("comparison cells use escaped source labels while preserving target IDs", async () => {
+  const report = exampleReport("r01");
+  assert.ok(report.sections.some((s) => s.kind === "comparison"));
+  const source = report.sources.find((item) =>
+    report.sections.some(
+      (section) =>
+        section.kind === "comparison" &&
+        section.data.criteria.some((criterion) =>
+          Object.values(criterion.values).some((value) => value.sourceIds.includes(item.id)),
+        ),
+    ),
+  );
+  assert.ok(source);
+  source.label = `Reviewed <img src=x onerror="${source.id}"> source`;
+  const html = (await renderReport(report)).html;
+  const comparisonCell = [...html.matchAll(/<td data-option="[^"]+">[\s\S]*?<\/td>/g)].find(
+    ([cell]) => cell.includes(`href="#source-${source.id}"`),
+  )?.[0];
+  assert.ok(comparisonCell, "the source reference must render inside a comparison cell");
+  assert.ok(
+    comparisonCell.includes(
+      `href="#source-${source.id}">Reviewed &lt;img src=x onerror=&quot;${source.id}&quot;&gt; source</a>`,
+    ),
+  );
+  assert.ok(html.includes(`id="source-${source.id}"`));
+  assert.doesNotMatch(html, /<img src=x onerror=/);
 });
 test("embedded raster block is validated; remote images and active SVG rejected", async () => {
   const report = exampleReport("r10");
@@ -250,5 +277,41 @@ test("edited Node exports keep the original separately and preserve one source s
     assert.match(await readFile(path.join(destination, "r18.md"), "utf8"), /Original snapshot/);
   } finally {
     await rm(temp, { recursive: true, force: true });
+  }
+});
+
+for (const state of ["information", "completed", "action-required", "conditional"]) {
+  test(`reader handoff ${state} remains consistent across exports and edits`, async () => {
+    const report = exampleReport("r18");
+    report.readerStatus = { state };
+    delete report.nextAction;
+    if (state === "action-required" || state === "conditional")
+      report.nextAction = "Update the local package.";
+    if (state === "conditional") report.readerStatus.condition = "Only if the manager fails.";
+    const out = await renderReport(report);
+    assert.deepEqual(extractReport(out.html), report);
+    assert.deepEqual(JSON.parse(out.json), report);
+    const handoff = readerStatusLines(report);
+    assert.equal(handoff.length, state === "conditional" ? 3 : state === "action-required" ? 2 : 1);
+    assert.ok(out.markdown.includes(handoff[0]));
+    const draft = structuredClone(report);
+    draft.sections[0].data.cards[0].column = "Erledigt";
+    assert.deepEqual(workingReport(report, draft).readerStatus, report.readerStatus);
+  });
+}
+test("contradictory or incomplete handoffs are rejected", () => {
+  for (const patch of [
+    { readerStatus: { state: "information" }, nextAction: "Do something" },
+    { readerStatus: { state: "completed" }, nextAction: "Do something" },
+    { readerStatus: { state: "conditional" }, nextAction: "Update" },
+    { readerStatus: { state: "action-required" } },
+    { readerStatus: { state: "information", condition: "Maybe" } },
+    { readerStatus: { state: "invented" } },
+    { readerStatus: { state: "information", extra: true } },
+  ]) {
+    const report = exampleReport("r18");
+    delete report.nextAction;
+    Object.assign(report, patch);
+    assert.throws(() => validateReport(report));
   }
 });

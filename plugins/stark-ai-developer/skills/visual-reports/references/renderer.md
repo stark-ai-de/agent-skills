@@ -31,6 +31,15 @@ into an approved design detail. Earlier Obsidian Glass/emissive card experiments
 are not defaults for Graphite Grain reports. The quiet, card-free report direction
 wins; motion remains optional and explanatory, never decorative autoplay.
 
+For guided tabbed reading, the later
+[layout and navigation contract](report-contract.md#guided-layout-and-navigation)
+supersedes fixed-height panels, inner tab scrollbars, separated active tab/panel
+surfaces and redundant large Back/Next controls. A functional connected tab outline
+is compatible with quiet reports. Standalone wide comparisons/trees keep their
+scoped horizontal-scroll option; explicit slide presentations and the optional
+configurator remain distinct modes. This instruction update does not add a tab
+block to the model/API or claim those modes share one navigation implementation.
+
 The accepted October 20 completion plan authorizes public preparation, plugin
 inclusion and local installation. It does not authorize push, merge, publication,
 deployment, external writes or permanent preference changes.

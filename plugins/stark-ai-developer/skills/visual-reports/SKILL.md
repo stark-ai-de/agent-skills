@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Visual Reports
@@ -13,7 +13,8 @@ metadata:
 ## Goal
 
 Make the answer, decision or next action easy to find. Use the shared renderer,
-clear hierarchy, short lists and meaningful visuals. Preserve facts, evidence
+clear hierarchy, short lists and meaningful visuals. Identify whether the reader
+needs an action, a decision or a summary before choosing the format. Preserve facts, evidence
 states, sources and decisive limitations. Do not invent quantities to fill charts.
 
 ## When to use
@@ -28,14 +29,14 @@ operation or medical/clinical advice.
 
 ## Workflow
 
-| Route                | Authorized outcome                                             | Read when selected                                                         |
-| -------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Create or update     | Complete report from the same source snapshot                  | [Selection](references/selection.md), [v2 model](references/model-v2.md)   |
-| Preview and continue | Stable local URL, version history, explicit revision switching | [Managed reports](references/managed-reports.md)                           |
-| Present or prototype | Slides, opt-in motion or validated state simulation            | [Legacy blocks and 24 recipes](references/renderer.md)                     |
-| Edit locally         | Board, flags or prompt draft with separate export              | [Editor contract](references/renderer.md#browser-state-exports-and-safety) |
-| Explore styles       | Current, balanced and calm previews with identical facts       | [Presentation](references/report-contract.md#presentation-and-styles)      |
-| Adopt preference     | Persist an explicitly selected style in ignored local state    | [Preference contract](references/report-contract.md#local-preference)      |
+| Route                | Authorized outcome                                             | Read when selected                                                                                                                             |
+| -------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create or update     | Complete report from the same source snapshot                  | [Reader experience](references/report-contract.md#reader-experience), [selection](references/selection.md), [v2 model](references/model-v2.md) |
+| Preview and continue | Stable local URL, version history, explicit revision switching | [Managed reports](references/managed-reports.md)                                                                                               |
+| Present or prototype | Slides, opt-in motion or validated state simulation            | [Legacy blocks and 24 recipes](references/renderer.md)                                                                                         |
+| Edit locally         | Board, flags or prompt draft with separate export              | [Editor contract](references/renderer.md#browser-state-exports-and-safety)                                                                     |
+| Explore styles       | Current, balanced and calm previews with identical facts       | [Presentation](references/report-contract.md#presentation-and-styles)                                                                          |
+| Adopt preference     | Persist an explicitly selected style in ignored local state    | [Preference contract](references/report-contract.md#local-preference)                                                                          |
 
 For clear intent, announce the route and proceed. For a bare invocation or options
 request, show the complete inventory; options alone authorize no execution.
@@ -50,14 +51,21 @@ gaps, reviewed assets, repository policy and explicitly selected preferences.
 
 ### Work quickly from existing context
 
-1. Identify the reader's question and use `--templates` to select one of eight
+1. Read [Reader experience](references/report-contract.md#reader-experience): distinguish information,
+   completed work, required action and conditional action. A compact labeled status
+   is enough; do not repeat it as a question, legend and introductory step.
+   Use `--templates` to select one of eight
    purpose templates and five domain profiles. Read only the needed references,
    profile requirements and examples. Do not load an external catalog per report.
 2. Inspect source authority and evidence gaps. For a continuation, read the current
    model/revision and reuse its IDs, reviewed assets and sources. Keep consumer
    source registers authoritative; do not replace them for a presentation change.
-3. Lead with takeaway, decisive caveats and next action. Use bullets and meaningful
-   headings. Put supplementary evidence in details; keep necessary conditions open.
+3. Lead with the result or smallest real next action. Do not invent a task for a
+   summary. For process improvement, guide the reader through short bounded steps;
+   reserve matrices for actual option comparison. For guided tabs, follow
+   [layout and navigation](references/report-contract.md#guided-layout-and-navigation).
+   Explain why links help. Apply the self-contained ADHD writing profile when
+   requested; keep essential conditions visible.
 4. Compose registered blocks freely. Use comparison matrices for common criteria,
    automatic diagrams for structure and data charts for quantities. Use labeled
    bundled icons and verified product logos when they clarify the content.
@@ -66,12 +74,16 @@ gaps, reviewed assets, repository policy and explicitly selected preferences.
    supported. Optional [Markdown input](references/markdown-input.md) compiles to
    the same model. Do not execute MDX or infer evidence from typography.
 6. Produce HTML, full Markdown and JSON from one snapshot. Use an exclusive output
-   directory or a managed store with expected-base updates. HTML remains readable
+   directory or a managed store with expected-base updates. Use the host's
+   session-local visualization directory when provided. HTML remains readable
    offline without JavaScript. No per-report dependency installation or network.
-7. For requested visual delivery/iteration, start the session-owned loopback preview
-   and verify the actual URL. Offer the desktop browser tab and Microsoft Edge
-   where available. New versions require Apply; unsaved drafts block replacement.
-8. Check fidelity, relevant interactions and delivery. Use the bounded owning tests
+7. For requested visual delivery/iteration, reuse the session-owned preview and
+   browser tab where possible; start a loopback preview if needed. Verify the actual
+   URL and honor host browser-tool restrictions. Offer the desktop browser tab and
+   Microsoft Edge where available. New versions require Apply; unsaved drafts block replacement.
+8. Keep exports, style and version controls in a closed, labeled footer toolbox,
+   separate from report content. Check semantic duplication, fidelity, relevant
+   interactions and delivery. Use the bounded owning tests
    when changing the renderer; ordinary report content changes need only the
    relevant validation/visual checks. Report measured speed separately from model
    generation, research, cold start and first asset retrieval.
@@ -140,6 +152,10 @@ retrying. Preserve unsaved drafts and report blocked preview routes explicitly.
 
 ## References
 
+[Reader experience](references/report-contract.md#reader-experience) owns intent, guided reading,
+summary/action states, footer tooling and the ADHD writing profile. The same
+contract owns connected tab surfaces, shared alignment, compact navigation and
+content-sized panels without internal scrolling.
 The [general report contract](references/report-contract.md) governs source
 fidelity and reader presentation. [Comparisons](references/comparisons.md) adds
 shared-criteria and evidence rules; [selection provenance](references/selection.md)

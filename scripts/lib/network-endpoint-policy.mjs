@@ -97,10 +97,11 @@ export function scanNetworkSource(text, relative) {
     "!u.search",
     "!u.hash",
     "this.address = origin(auth.address)",
-    'route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY',
+    'route.startsWith("/api/v1/") && !route.includes("..")',
   ].every((guard) => text.includes(guard));
   // This exact module owns the reviewed, policy-bound loopback REST client.
   // Mask only its wrapper and single fetch shape; additional calls still fail.
+  // Proxy handling belongs to the host; environment flags are not origin guards.
   // Guard-drift fixtures complement runtime origin/credential tests, not a sandbox.
   if (karakeepTransport && loopbackGuards) {
     apiText = apiText

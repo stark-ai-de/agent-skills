@@ -37,9 +37,12 @@ def run(gallery: Path, executable: str | None = None) -> None:
             return page, errors
 
         def open_report(name: str):
-            return open_html((gallery / name / f"{name}.html").read_text(encoding="utf-8"))
+            page, errors = open_html((gallery / name / f"{name}.html").read_text(encoding="utf-8"))
+            assert not page.locator("#report-toolbox").evaluate("element => element.open")
+            return page, errors
 
         def download_text(page, selector: str):
+            page.locator("#report-toolbox").evaluate("element => { element.open = true; }")
             with page.expect_download() as info:
                 page.locator(selector).click()
             return Path(info.value.path()).read_text(encoding="utf-8")
@@ -70,6 +73,7 @@ def run(gallery: Path, executable: str | None = None) -> None:
             original = json.loads(page.locator("#report-data").text_content())
             main = page.locator("main").inner_text()
             for style in ("current", "balanced", "calm"):
+                page.locator("#report-toolbox").evaluate("element => { element.open = true; }")
                 page.select_option("#style", style)
                 current = download_json(page)
                 assert {key: value for key, value in current.items() if key != "editing"} == dict(original, style=style)
@@ -91,6 +95,7 @@ def run(gallery: Path, executable: str | None = None) -> None:
             if name == "r09": assert static.locator(".slide:visible").count() == 3
             nojs.close()
             reopened, reopened_errors = open_html(exported)
+            assert not reopened.locator("#report-toolbox").evaluate("element => element.open")
             assert download_json(reopened) == current
             assert not reopened_errors, (name, reopened_errors)
             reopened.close()
@@ -201,6 +206,7 @@ def run(gallery: Path, executable: str | None = None) -> None:
                 reopened.locator('[data-prompt-field="temperature"]').fill("3")
                 downloads = []
                 reopened.on("download", lambda d: downloads.append(d))
+                reopened.locator("#report-toolbox").evaluate("element => { element.open = true; }")
                 reopened.locator("#export-json").click()
                 assert "Export blockiert" in reopened.locator("#report-status").inner_text()
                 assert not downloads

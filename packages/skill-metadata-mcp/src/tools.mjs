@@ -24,9 +24,7 @@ export function registerTools(server) {
       "validate_skill_metadata",
       "Validate skill metadata",
       "Check explicitly supplied YAML skill metadata and its directory name against pinned public rules. Metadata only; no files, URLs, shell actions, security audit or publication approval. Send only metadata you intend to share with this service.",
-      z
-        .object({ frontmatter: z.string().max(65536), directory_name: z.string().min(1).max(64) })
-        .strict(),
+      z.object({ frontmatter: z.string().max(65536), directory_name: z.string().min(1) }).strict(),
       validateSkillMetadata,
     ],
     [

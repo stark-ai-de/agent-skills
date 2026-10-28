@@ -137,3 +137,58 @@ test("OpenAI versions follow complete SemVer prerelease and build rules", () => 
       version,
     );
 });
+
+test("Unicode skill names use normalized codepoints and directory agreement", () => {
+  for (const [name, directory_name] of [
+    ["café", "café"],
+    ["技能", "技能"],
+    ["καφές", "καφές"],
+    ["cafe\u0301", "café"],
+    ["ｃａｆé", "café"],
+    ["𐐨".repeat(64), "𐐨".repeat(64)],
+    ["e\u0301".repeat(64), "é".repeat(64)],
+  ]) {
+    assert.equal(
+      skill({
+        frontmatter: `name: ${JSON.stringify(name)}\ndescription: Example\n`,
+        directory_name,
+      }).valid,
+      true,
+      name,
+    );
+  }
+  for (const name of [
+    "Café",
+    "𐐀",
+    "𐐨".repeat(65),
+    "ﬃ".repeat(22),
+    "a b",
+    "a/b",
+    "../a",
+    "-a",
+    "a-",
+    "a--b",
+    "a😀",
+    "a\n",
+  ]) {
+    const output = skill({
+      frontmatter: `name: ${JSON.stringify(name)}\ndescription: Example\n`,
+      directory_name: name,
+    });
+    assert.equal(output.valid, false, name);
+    assert.ok(
+      output.issues.some((i) => i.code === "skill.name"),
+      name,
+    );
+    assert.ok(
+      output.issues.some((i) => i.code === "skill.directory"),
+      name,
+    );
+  }
+  assert.ok(
+    skill({
+      frontmatter: "name: café\ndescription: Example\n",
+      directory_name: "技能",
+    }).issues.some((i) => i.code === "skill.directory_mismatch"),
+  );
+});
