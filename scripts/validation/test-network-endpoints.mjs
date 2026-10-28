@@ -111,12 +111,14 @@ for (const prefix of ["canonical", "portable"]) {
   for (const unsafe of [
     knowledgeTransport.replace('["localhost", "127.0.0.1", "[::1]"]', '["unexpected.example"]'),
     knowledgeTransport.replace('redirect: "manual"', 'redirect: "follow"'),
-    knowledgeTransport.replace("!process.env.NODE_USE_ENV_PROXY", "true"),
+    knowledgeTransport.replace('!route.includes("..")', "true"),
     knowledgeTransport.replace(
       "this.address = origin(auth.address)",
       "this.address = auth.address",
     ),
     knowledgeTransport.replace('route.startsWith("/api/v1/")', 'route.startsWith("/")'),
+    knowledgeTransport.replace("!u.username", "true"),
+    knowledgeTransport.replace("!u.password", "true"),
     knowledgeTransport + "\nfetch(destination)",
     knowledgeTransport + "\nrequest(destination)",
     knowledgeTransport + "\nhttps.request(destination)",
@@ -139,3 +141,53 @@ for (const prefix of ["canonical", "portable"]) {
   }
 }
 console.log("Karakeep loopback REST declaration and rejection fixtures passed.");
+
+for (const prefix of ["canonical", "portable"]) {
+  for (const relative of [
+    "assets/preview.js",
+    "scripts/lib/preview.mjs",
+    "tests/browser-delivery.mjs",
+    "tests/v2.test.mjs",
+    "assets/vendor/generator.mjs",
+  ]) {
+    const text = fs.readFileSync(
+      new URL(`../../skills/engineering-workflows/visual-reports/${relative}`, import.meta.url),
+      "utf8",
+    );
+    const label = `${prefix}/visual-reports/${relative}`;
+    assert.deepEqual(scanNetworkSource(text, label), [], label);
+    for (const extra of [
+      '\nfetch("https://unexpected.example")',
+      '\nnew WebSocket("ws://unexpected.example")',
+    ])
+      assert.ok(scanNetworkSource(text + extra, label).length, "extra network calls must fail");
+    assert.ok(
+      scanNetworkSource(text, label.replace("visual-reports", "other-skill")).length,
+      "declaration must stay with its owner",
+    );
+    if (relative === "assets/preview.js")
+      assert.ok(
+        scanNetworkSource(text.replace('fetch("/current"', 'fetch("/outside"'), label).length,
+      );
+    if (relative === "scripts/lib/preview.mjs")
+      assert.ok(
+        scanNetworkSource(
+          text.replace(
+            'server.listen(port, "127.0.0.1", resolve)',
+            'server.listen(port, "0.0.0.0", resolve)',
+          ),
+          label,
+        ).length,
+      );
+    if (relative === "tests/browser-delivery.mjs")
+      assert.ok(
+        scanNetworkSource(
+          text.replace('["127.0.0.1", "localhost"]', '["unexpected.example"]'),
+          label,
+        ).length,
+      );
+  }
+}
+console.log(
+  "Visual Reports same-origin preview, loopback CDP, inert vendor URLs and negative fixtures stay scoped to exact owners.",
+);

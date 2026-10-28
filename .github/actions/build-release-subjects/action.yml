@@ -3,7 +3,7 @@ description: Build reproducible release ZIPs and the versioned JSON release subj
 
 inputs:
   subjects-dir:
-    description: Directory that receives openai.zip, portable.zip, and release-subject.json
+    description: Directory receiving both OpenAI ZIPs, portable.zip and release-subject.json
     required: true
   report-file:
     description: Optional path for the machine-readable reproducibility report
@@ -24,14 +24,20 @@ outputs:
     description: Plugin version bound to the subjects
     value: ${{ steps.build.outputs.plugin_version }}
   openai_sha:
-    description: SHA-256 of openai.zip
+    description: SHA-256 of the remote-MCP OpenAI archive
     value: ${{ steps.build.outputs.openai_sha }}
+  skills_only_sha:
+    description: SHA-256 of the skills-only OpenAI archive
+    value: ${{ steps.build.outputs.skills_only_sha }}
   portable_sha:
     description: SHA-256 of portable.zip
     value: ${{ steps.build.outputs.portable_sha }}
   openai_bytes:
-    description: Byte length of openai.zip
+    description: Byte length of the remote-MCP OpenAI archive
     value: ${{ steps.build.outputs.openai_bytes }}
+  skills_only_bytes:
+    description: Byte length of the skills-only OpenAI archive
+    value: ${{ steps.build.outputs.skills_only_bytes }}
   portable_bytes:
     description: Byte length of portable.zip
     value: ${{ steps.build.outputs.portable_bytes }}

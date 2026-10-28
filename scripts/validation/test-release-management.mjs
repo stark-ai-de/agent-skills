@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   changelogReleaseOrder,
@@ -41,9 +41,11 @@ import {
   releasePleasePullRequestOwnershipErrors,
 } from "../lib/release-please.mjs";
 import { runCli as verifyReleaseRecoverySubjects } from "../release/verify-release-recovery-subjects.mjs";
+import { recoverySubjectSetForVersion } from "../release/verify-prepublication-release-recovery.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const releaseImpactScript = path.join(repositoryRoot, "scripts/release/check-release-intent.mjs");
+const releaseValidationScript = path.join(repositoryRoot, "scripts/release/validate-release.mjs");
 const triggerClassifier = path.join(
   repositoryRoot,
   "scripts/release/classify-release-please-trigger.mjs",
@@ -70,7 +72,12 @@ function git(root, args) {
   }).trimEnd();
 }
 
-function createReleaseFixture({ manifest = true } = {}) {
+function createReleaseFixture({
+  manifest = true,
+  skillVersion = "0.1.0",
+  skillInternal = false,
+  validateSkillsStub = false,
+} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-release-management-"));
   fs.mkdirSync(path.join(root, "skills/test/demo/references"), {
     recursive: true,
@@ -82,7 +89,8 @@ function createReleaseFixture({ manifest = true } = {}) {
       "name: demo",
       "description: Test fixture",
       "metadata:",
-      '  version: "0.1.0"',
+      ...(skillVersion === null ? [] : [`  version: "${skillVersion}"`]),
+      ...(skillInternal ? ["  internal: true"] : []),
       "---",
       "",
       "# Demo",
@@ -108,7 +116,28 @@ function createReleaseFixture({ manifest = true } = {}) {
       "",
     ].join("\n"),
   );
-  writeJson(root, "package.json", { name: "fixture", version: "0.20.1" });
+  const packageJson = { name: "fixture", version: "0.20.1" };
+  if (validateSkillsStub) {
+    packageJson.scripts = { "validate:skills": "node validate-skills-fixture.mjs" };
+    // The fixture isolates release validation; full repository skill-catalog validation is out of scope here.
+    fs.writeFileSync(
+      path.join(root, "validate-skills-fixture.mjs"),
+      [
+        "import fs from 'node:fs';",
+        "if (!fs.existsSync('skills/test/demo/SKILL.md')) process.exit(1);",
+        "console.log('Fixture skill-validator boundary passed.');",
+        "",
+      ].join("\n"),
+    );
+    // The release validator resolves its impact child from cwd; forward to the maintained validator.
+    const fixtureImpactScript = path.join(root, "scripts/release/check-release-intent.mjs");
+    fs.mkdirSync(path.dirname(fixtureImpactScript), { recursive: true });
+    fs.writeFileSync(
+      fixtureImpactScript,
+      `import ${JSON.stringify(pathToFileURL(releaseImpactScript).href)};\n`,
+    );
+  }
+  writeJson(root, "package.json", packageJson);
   if (manifest) writeJson(root, ".release-please-manifest.json", { ".": "0.20.1" });
   writeJson(root, "plugins/stark-ai-developer.source.json", {
     version: "1.0.0",
@@ -149,6 +178,16 @@ function runImpact(root, base) {
       )
     : {};
   return { ...result, githubOutput: output };
+}
+
+function runReleaseValidation(root, base, version) {
+  const result = spawnSync(
+    process.execPath,
+    [releaseValidationScript, "--base-ref", base, "--version", version],
+    { cwd: root, encoding: "utf8" },
+  );
+  if (result.error) throw result.error;
+  return result;
 }
 
 function releaseChangelog(version, { afterBaseline = false, preamble = "# Changelog" } = {}) {
@@ -415,6 +454,43 @@ try {
   assert.equal(fs.readFileSync(output, "utf8"), "skip=true\n");
 } finally {
   fs.rmSync(releaseFixture.root, { recursive: true, force: true });
+}
+
+const independentSkillReleaseFixture = createReleaseFixture({
+  skillVersion: "1.0.0",
+  validateSkillsStub: true,
+});
+try {
+  prepareGeneratedRelease(independentSkillReleaseFixture.root, "0.21.0");
+  const result = runReleaseValidation(
+    independentSkillReleaseFixture.root,
+    independentSkillReleaseFixture.base,
+    "0.21.0",
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Release v0\.21\.0 validated\./);
+} finally {
+  fs.rmSync(independentSkillReleaseFixture.root, { recursive: true, force: true });
+}
+
+for (const [name, options, expected] of [
+  ["missing public skill version", { skillVersion: null }, /must set metadata\.version/],
+  ["malformed public skill version", { skillVersion: "not-semver" }, /must use x\.y\.z semver/],
+  [
+    "internal skill marked public",
+    { skillVersion: "0.1.0", skillInternal: true },
+    /public skills must not set metadata\.internal: true/,
+  ],
+]) {
+  const fixture = createReleaseFixture({ ...options, validateSkillsStub: true });
+  try {
+    prepareGeneratedRelease(fixture.root, "0.21.0");
+    const result = runReleaseValidation(fixture.root, fixture.base, "0.21.0");
+    assert.notEqual(result.status, 0, `${name} must fail`);
+    assert.match(result.stderr, expected);
+  } finally {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+  }
 }
 
 const overbroadReleaseFixture = createReleaseFixture();
@@ -905,6 +981,11 @@ const recoveryInput = (overrides = {}) => ({
 assert.equal(PRE_PUBLICATION_RECOVERY_MAX_COMMITS, 4);
 assert.equal(new Set(PRE_PUBLICATION_RECOVERY_PATHS).size, PRE_PUBLICATION_RECOVERY_PATHS.length);
 assert.deepEqual(
+  PRE_PUBLICATION_RECOVERY_PATHS.filter((filename) => filename.startsWith("docs/adrs/0078-")),
+  [],
+  "ADR-0078 must not expand the fixed recovery allowlist",
+);
+assert.deepEqual(
   successfulMainValidateRun([recoveryValidationRun], recoveryOriginSha),
   recoveryValidationRun,
 );
@@ -1044,6 +1125,27 @@ assert.match(
   ).join(";"),
   /path is not allowed/,
 );
+for (const filename of [
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.short.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.long.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.guide.md",
+]) {
+  const errors = releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      files: [
+        { filename: ".github/workflows/publish-release.yml", status: "modified" },
+        { filename, status: "added" },
+      ],
+    },
+  });
+  assert.ok(
+    errors.includes(`recovery path is not allowed: ${filename}`),
+    `recovery must reject additional ADR path ${filename}`,
+  );
+}
 assert.match(
   prePublicationRecoveryErrors(
     recoveryInput({
@@ -1158,6 +1260,11 @@ assert.match(
   /target tag is not proven absent/,
 );
 assert.match(
+  prePublicationRecoveryErrors(recoveryInput({ releaseExists: true, tagExists: true })).join(";"),
+  /target-version GitHub Release is not proven absent;target tag is not proven absent/,
+  "a historical tag/release cannot be reused as an unpublished recovery target",
+);
+assert.match(
   prePublicationRecoveryErrors(
     recoveryInput({
       branch: { protected: false, commit: { sha: recoveryCandidateSha } },
@@ -1213,6 +1320,9 @@ const replacementSubjects = {
   },
 };
 assert.deepEqual(releaseRecoverySubjectErrors(releaseSubjects, replacementSubjects), []);
+assert.equal(recoverySubjectSetForVersion("0.31.9"), "legacy");
+assert.equal(recoverySubjectSetForVersion("0.32.0"), "multi-profile");
+assert.throws(() => recoverySubjectSetForVersion("0.32"), /invalid/);
 assert.match(
   releaseRecoverySubjectErrors(releaseSubjects, {
     ...structuredClone(replacementSubjects),
@@ -1232,6 +1342,85 @@ assert.match(
     sourceRevision: { ...replacementSubjects.sourceRevision, tag: "v0.21.0" },
   }).join(";"),
   /untagged validation marker/,
+);
+const multiProfileSubjects = {
+  schemaVersion: 2,
+  status: "pass",
+  sourceRevision: { ...releaseSubjects.sourceRevision },
+  releaseVersion: "0.32.0",
+  pluginVersion: "1.19.6",
+  archiveProfile: "zip-store-v1",
+  openaiProfile: {
+    profile: "new-remote",
+    pluginId: "stark-ai-developer-tools",
+    version: "1.0.0",
+    displayName: "Tools",
+    transport: "http",
+    archive: "dist/openai/stark-ai-developer-tools-1.0.0.zip",
+    url: "https://skills-mcp.stark-ai.de/mcp",
+    listingUrl: "https://chatgpt.com/plugins/plugin_asdk_app_6ad281cbc9a481919d8d5e123985ddc8",
+  },
+  openaiSkillsOnlyProfile: {
+    profile: "existing-skills-only",
+    pluginId: "stark-ai-developer",
+    version: "1.19.6",
+    displayName: "Developer",
+    transport: "none",
+    archive: "dist/openai/stark-ai-developer-1.19.6.zip",
+    listingUrl: "https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e",
+  },
+  subjects: {
+    openai: { name: "openai-tools.zip", sha256: "1".repeat(64), bytes: 10 },
+    openaiSkillsOnly: {
+      name: "openai-skills-only.zip",
+      sha256: "3".repeat(64),
+      bytes: 11,
+    },
+    portable: { name: "portable.zip", sha256: "2".repeat(64), bytes: 20 },
+  },
+  differences: [],
+};
+assert.match(
+  releaseRecoverySubjectErrors(
+    { ...releaseSubjects, releaseVersion: "0.31.0" },
+    {
+      ...structuredClone(multiProfileSubjects),
+      releaseVersion: "0.31.0",
+      sourceRevision: { ...releaseSubjects.sourceRevision, commit: recoveryCandidateSha },
+    },
+  ).join(";"),
+  /subject schema does not match release tag profile/,
+  "a current three-profile candidate cannot be substituted for a historical schema-1 recovery subject",
+);
+assert.deepEqual(
+  releaseRecoverySubjectErrors(multiProfileSubjects, {
+    ...structuredClone(multiProfileSubjects),
+    sourceRevision: { ...multiProfileSubjects.sourceRevision, commit: recoveryCandidateSha },
+  }),
+  [],
+  "v0.32+ recovery requires matching complete three-ZIP subject membership",
+);
+assert.match(
+  releaseRecoverySubjectErrors(multiProfileSubjects, {
+    ...structuredClone(multiProfileSubjects),
+    subjects: {
+      ...multiProfileSubjects.subjects,
+      openai: { ...multiProfileSubjects.subjects.openai, name: "openai-skills-only.zip" },
+    },
+  }).join(";"),
+  /OpenAI subject name does not match/,
+  "swapped modern archive names fail closed",
+);
+assert.match(
+  releaseRecoverySubjectErrors(multiProfileSubjects, {
+    ...structuredClone(multiProfileSubjects),
+    subjects: {
+      openai: multiProfileSubjects.subjects.openai,
+      portable: multiProfileSubjects.subjects.portable,
+    },
+  }).join(";"),
+  /subject membership does not match/,
+  "a missing modern profile fails closed",
 );
 assert.throws(
   () =>
@@ -1315,6 +1504,71 @@ try {
   fs.rmSync(recoverySubjectFixture, { recursive: true, force: true });
 }
 
+const multiProfileRecoveryFixture = fs.mkdtempSync(
+  path.join(os.tmpdir(), "agent-skills-multi-profile-recovery-subjects-"),
+);
+try {
+  const originDirectory = path.join(multiProfileRecoveryFixture, "origin");
+  const candidateDirectory = path.join(multiProfileRecoveryFixture, "candidate");
+  fs.mkdirSync(originDirectory, { recursive: true });
+  fs.mkdirSync(candidateDirectory, { recursive: true });
+  const subjects = {};
+  for (const archive of ["openai-tools.zip", "openai-skills-only.zip", "portable.zip"]) {
+    const bytes = Buffer.from(`hosted exact bytes for ${archive}`);
+    for (const directory of [originDirectory, candidateDirectory]) {
+      fs.writeFileSync(path.join(directory, archive), bytes);
+    }
+    subjects[archive] = {
+      name: archive,
+      sha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+      bytes: bytes.length,
+    };
+  }
+  const originDocument = {
+    ...structuredClone(multiProfileSubjects),
+    subjects: {
+      openai: subjects["openai-tools.zip"],
+      openaiSkillsOnly: subjects["openai-skills-only.zip"],
+      portable: subjects["portable.zip"],
+    },
+    sourceRevision: { ...multiProfileSubjects.sourceRevision, commit: recoveryOriginSha },
+  };
+  const candidateDocument = {
+    ...structuredClone(originDocument),
+    sourceRevision: { ...originDocument.sourceRevision, commit: recoveryCandidateSha },
+  };
+  writeJson(originDirectory, "release-subject.json", originDocument);
+  writeJson(candidateDirectory, "release-subject.json", candidateDocument);
+  const args = [
+    "--origin-dir",
+    originDirectory,
+    "--candidate-dir",
+    candidateDirectory,
+    "--origin-sha",
+    recoveryOriginSha,
+    "--candidate-sha",
+    recoveryCandidateSha,
+    "--release-version",
+    "0.32.0",
+    "--plugin-version",
+    "1.19.6",
+    "--archive-profile",
+    "zip-store-v1",
+  ];
+  assert.doesNotThrow(
+    () => verifyReleaseRecoverySubjects(args),
+    "a complete v0.32+ three-ZIP recovery subject passes",
+  );
+  fs.rmSync(path.join(candidateDirectory, "openai-skills-only.zip"));
+  assert.throws(
+    () => verifyReleaseRecoverySubjects(args),
+    /archive is missing|differs between origin and replacement/,
+    "a missing modern profile archive fails closed",
+  );
+} finally {
+  fs.rmSync(multiProfileRecoveryFixture, { recursive: true, force: true });
+}
+
 const releaseWatermark = releaseStateChangedAt(
   {
     published_at: "2026-08-26T12:00:00Z",
@@ -1391,6 +1645,17 @@ const recoveryVerifier = read("scripts/release/verify-prepublication-release-rec
 const recoverySubjectVerifier = read("scripts/release/verify-release-recovery-subjects.mjs");
 const actionlintConfig = read(".github/actionlint.yaml");
 const formatIgnore = read(".oxfmtignore");
+assert.match(recoveryVerifier, /subject_set: result\.subjectSet/);
+assert.match(
+  publishWorkflow,
+  /recovery_subject_set: \$\{\{ steps\.release-recovery\.outputs\.subject_set \}\}/,
+);
+assert.match(publishWorkflow, /name: openai\.zip[\s\S]*recovery_subject_set == 'legacy'/);
+assert.match(
+  publishWorkflow,
+  /name: openai-tools\.zip[\s\S]*recovery_subject_set == 'multi-profile'/,
+);
+assert.match(recoverySubjectVerifier, /releaseAssetNamesForTag\(`v\$\{releaseVersion\}`\)/);
 assert.match(
   formatIgnore,
   /^CHANGELOG\.md$/m,
@@ -1439,12 +1704,17 @@ assert.ok(
   "trusted main and merged release PRs must be verified before creating a write token",
 );
 
-assert.equal(occurrences(validateWorkflow, /^\s+archive: false$/gm), 3);
-for (const asset of ["openai.zip", "portable.zip", "release-subject.json"]) {
+assert.equal(occurrences(validateWorkflow, /^\s+archive: false$/gm), 4);
+for (const asset of [
+  "openai-skills-only.zip",
+  "openai-tools.zip",
+  "portable.zip",
+  "release-subject.json",
+]) {
   assert.match(validateWorkflow, new RegExp(`name: ${asset.replace(".", "\\.")}`));
 }
-assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 9);
-assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 9);
+assert.equal(occurrences(publishWorkflow, /actions\/download-artifact@v8/g), 15);
+assert.equal(occurrences(publishWorkflow, /^\s+skip-decompress: true$/gm), 15);
 assert.match(publishWorkflow, /^\s+environment: release$/m);
 assert.match(publishWorkflow, /^\s+RELEASE_ENVIRONMENT: release$/m);
 assert.doesNotMatch(publishWorkflow, /mark_latest|mark-latest/);
@@ -1462,6 +1732,18 @@ assert.match(publishWorkflow, /verify-prepublication-release-recovery\.mjs/);
 assert.match(publishWorkflow, /verify-release-recovery-subjects\.mjs/);
 assert.match(publishWorkflow, /origin_validate_run_id/);
 assert.match(publishWorkflow, /release-origin-subjects/);
+assert.match(publishWorkflow, /subject_set: \$\{\{ steps\.version\.outputs\.subject_set \}\}/);
+assert.match(publishWorkflow, /Attest legacy release subjects[\s\S]*release-subjects\/openai\.zip/);
+assert.match(
+  publishWorkflow,
+  /Verify legacy release attestations[\s\S]*release-subjects\/openai\.zip/,
+);
+assert.match(publishWorkflow, /sha256sum release-subjects\/openai\.zip/);
+assert.match(publishWorkflow, /Reconcile historical OpenAI handoff[\s\S]*legacy-openai-handoff/);
+assert.match(
+  publishWorkflow,
+  /Verify complete historical OpenAI handoff[\s\S]*subject_set == 'legacy'/,
+);
 assert.match(
   publishWorkflow,
   /ref: \$\{\{ needs\.publication-trigger\.outputs\.candidate_sha \}\}/,
@@ -1524,7 +1806,11 @@ assert.match(publishJob, /--ignore-scripts/);
 assert.match(publishJob, /^\s+artifact-metadata: write$/m);
 assert.match(
   publishJob,
-  /if: \$\{\{ steps\.reconciliation\.outputs\.attestation_verification_required == 'true' \}\}/,
+  /if: \$\{\{ needs\.release-readiness\.outputs\.subject_set == 'multi-profile' && steps\.reconciliation\.outputs\.attestation_verification_required == 'true' \}\}/,
+);
+assert.match(
+  publishJob,
+  /subject_set == 'legacy' && steps\.reconciliation\.outputs\.attestation_verification_required == 'true'/,
 );
 assert.match(publishJob, /autorelease: tagged/);
 assert.match(publishJob, /autorelease%3A%20pending/);
@@ -1535,14 +1821,18 @@ assert.match(publishJob, /reconcile-openai-plugin-issue\.mjs apply/);
 assert.match(publishJob, /--subject-file release-subjects\/release-subject\.json/);
 assert.match(
   publishJob,
-  /success\(\) && steps\.reconciliation-apply\.outputs\.release_published == 'true'/,
+  /success\(\) && needs\.release-readiness\.outputs\.subject_set == 'multi-profile' && steps\.reconciliation-apply\.outputs\.release_published == 'true'/,
 );
 assert.ok(
   publishJob.indexOf("Complete the generated release-PR lifecycle") <
-    publishJob.indexOf("Reconcile OpenAI plugin handoff"),
+    publishJob.indexOf("Reconcile OpenAI Tools handoff"),
   "the public handoff issue must follow release-PR lifecycle labels",
 );
 assert.match(publishJob, /id: openai-handoff/);
+assert.match(publishJob, /id: skills-only-handoff/);
+assert.match(publishJob, /id: legacy-openai-handoff/);
+assert.match(publishJob, /--profile new-remote/);
+assert.match(publishJob, /--profile existing-skills-only/);
 assert.match(publishJob, /--github-output "\$GITHUB_OUTPUT"/);
 for (const output of [
   "status",
@@ -1553,6 +1843,7 @@ for (const output of [
   "marker",
 ]) {
   assert.match(publishJob, new RegExp(`steps\\.openai-handoff\\.outputs\\.${output}`));
+  assert.match(publishJob, new RegExp(`steps\\.skills-only-handoff\\.outputs\\.${output}`));
 }
 assert.match(completionJob, /needs: \[publication-trigger, release-readiness, publish\]/);
 assert.match(completionJob, /if: \$\{\{ needs\.publish\.result == 'success' \}\}/);
@@ -1563,6 +1854,8 @@ assert.doesNotMatch(completionJob, /^\s+\S+: write$/m);
 assert.doesNotMatch(completionJob, /^\s+environment:/m);
 assert.match(completionJob, /^\s+timeout-minutes: 12$/m);
 assert.match(completionJob, /verify-release-completion\.mjs/);
+assert.match(completionJob, /--profile new-remote/);
+assert.match(completionJob, /--profile existing-skills-only/);
 assert.match(completionJob, /--max-wait-seconds 600/);
 assert.match(completionJob, /--poll-interval-seconds 15/);
 assert.match(validateWorkflow, /Verify generated release-PR provenance/);

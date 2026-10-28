@@ -27,12 +27,18 @@ export function createReleaseSubject({
   pluginVersion,
   archiveProfile,
   openaiProfile,
+  skillsOnlyProfile,
   openai,
+  skillsOnly,
   portable,
   differences = [],
 }) {
+  const multiProfile = Boolean(skillsOnly || skillsOnlyProfile);
+  if (multiProfile && (!skillsOnly || !skillsOnlyProfile || !openaiProfile)) {
+    throw new Error("both OpenAI profiles and archive subjects are required");
+  }
   return {
-    schemaVersion: 1,
+    schemaVersion: multiProfile ? 2 : 1,
     status,
     sourceRevision: {
       commit: sourceRevision.commit,
@@ -43,8 +49,22 @@ export function createReleaseSubject({
     pluginVersion,
     archiveProfile,
     ...(openaiProfile ? { openaiProfile } : {}),
+    ...(skillsOnlyProfile ? { openaiSkillsOnlyProfile: skillsOnlyProfile } : {}),
     subjects: {
-      openai: { name: "openai.zip", sha256: openai.sha256, bytes: openai.bytes },
+      openai: {
+        name: multiProfile ? "openai-tools.zip" : "openai.zip",
+        sha256: openai.sha256,
+        bytes: openai.bytes,
+      },
+      ...(multiProfile
+        ? {
+            openaiSkillsOnly: {
+              name: "openai-skills-only.zip",
+              sha256: skillsOnly.sha256,
+              bytes: skillsOnly.bytes,
+            },
+          }
+        : {}),
       portable: { name: "portable.zip", sha256: portable.sha256, bytes: portable.bytes },
     },
     differences: [...differences],
@@ -52,6 +72,12 @@ export function createReleaseSubject({
 }
 
 export function normalizeReleaseSubject(report, { releaseTag } = {}) {
+  if (
+    report?.schemaVersion === 2 &&
+    (!report?.openaiSkillsOnlyProfile || !report?.subjects?.openaiSkillsOnly)
+  ) {
+    throw new Error("multi-profile release subject is incomplete");
+  }
   const sourceRevision = report?.sourceRevision ?? {
     commit: report?.sourceCommit,
     tag: report?.releaseTag ?? releaseTag ?? "manual-review-required",
@@ -70,7 +96,9 @@ export function normalizeReleaseSubject(report, { releaseTag } = {}) {
     pluginVersion: report?.pluginVersion,
     archiveProfile: report?.archiveProfile,
     openaiProfile: report?.openaiProfile,
+    skillsOnlyProfile: report?.openaiSkillsOnlyProfile,
     openai: subjects?.openai,
+    skillsOnly: subjects?.openaiSkillsOnly,
     portable: subjects?.portable,
     differences: report?.differences ?? [],
   });

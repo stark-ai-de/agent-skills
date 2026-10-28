@@ -5,10 +5,14 @@ import {
   selectPostReleaseEvidenceRun,
 } from "./post-release-evidence.mjs";
 import { matchingOpenAiReleaseIssues } from "./openai-release-handoff.mjs";
+import {
+  isMultiProfileReleaseTag,
+  RELEASE_ZIP_ASSET_NAMES,
+  releaseAssetNamesForTag,
+} from "./release-assets.mjs";
 
 export const RELEASE_COMPLETION_ASSETS = Object.freeze([
-  "openai.zip",
-  "portable.zip",
+  ...RELEASE_ZIP_ASSET_NAMES,
   "release-subject.json",
 ]);
 export const RELEASE_COMPLETION_MAX_WAIT_MS = 10 * 60 * 1000;
@@ -94,7 +98,7 @@ function validateReleaseIdentity(observation, expected) {
     .map((asset) => asset?.name)
     .filter(Boolean)
     .sort();
-  const required = [...RELEASE_COMPLETION_ASSETS].sort();
+  const required = releaseAssetNamesForTag(expected.tag).sort();
   if (JSON.stringify(assetNames) !== JSON.stringify(required)) {
     return failure(
       "release_asset_set_mismatch",
@@ -115,13 +119,40 @@ function validateReleaseIdentity(observation, expected) {
       "release-subject.json does not match the published release identity",
     );
   }
+  if (
+    isMultiProfileReleaseTag(expected.tag) &&
+    (subject.schemaVersion !== 2 ||
+      subject.openaiProfile?.profile !== "new-remote" ||
+      subject.openaiProfile?.pluginId !== "stark-ai-developer-tools" ||
+      subject.openaiProfile?.transport !== "http" ||
+      subject.openaiProfile?.listingUrl !==
+        "https://chatgpt.com/plugins/plugin_asdk_app_6ad281cbc9a481919d8d5e123985ddc8" ||
+      subject.openaiSkillsOnlyProfile?.profile !== "existing-skills-only" ||
+      subject.openaiSkillsOnlyProfile?.pluginId !== "stark-ai-developer" ||
+      subject.openaiSkillsOnlyProfile?.transport !== "none" ||
+      subject.openaiSkillsOnlyProfile?.listingUrl !==
+        "https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e" ||
+      subject.openaiSkillsOnlyProfile?.version !== subject.pluginVersion)
+  ) {
+    return failure(
+      "release_subject_identity_mismatch",
+      "both expected OpenAI profile identities and targets are required",
+    );
+  }
 
   const assets = releaseAssetMap(release);
   const hashes = {};
-  for (const [subjectKey, assetName] of [
-    ["openai", "openai.zip"],
-    ["portable", "portable.zip"],
-  ]) {
+  const subjectNames = isMultiProfileReleaseTag(expected.tag)
+    ? [
+        ["openaiSkillsOnly", "openai-skills-only.zip"],
+        ["openai", "openai-tools.zip"],
+        ["portable", "portable.zip"],
+      ]
+    : [
+        ["openai", "openai.zip"],
+        ["portable", "portable.zip"],
+      ];
+  for (const [subjectKey, assetName] of subjectNames) {
     const asset = assets.get(assetName);
     const expectedSubject = subject.subjects?.[subjectKey];
     if (
@@ -149,7 +180,7 @@ function validateReleaseIdentity(observation, expected) {
     hashes[assetName] = expectedSubject.sha256;
   }
 
-  const stateChangedAt = releaseStateChangedAt(release, RELEASE_COMPLETION_ASSETS);
+  const stateChangedAt = releaseStateChangedAt(release, required);
   if (!stateChangedAt) {
     return failure(
       "release_state_watermark_missing",
@@ -181,7 +212,19 @@ function validateHandoff(observation, expected) {
   if (!handoff || !markerMatch) {
     return failure("openai_handoff_invalid", "the OpenAI handoff marker is invalid");
   }
-  const profile = observation?.subject?.openaiProfile;
+  if (
+    isMultiProfileReleaseTag(expected.tag) &&
+    !["existing-skills-only", "new-remote"].includes(handoff.profileId)
+  ) {
+    return failure(
+      "openai_handoff_invalid",
+      "a multi-profile release requires an explicit handoff profile",
+    );
+  }
+  const profile =
+    handoff.profileId === "existing-skills-only"
+      ? observation?.subject?.openaiSkillsOnlyProfile
+      : observation?.subject?.openaiProfile;
   const expectedVersion = profile?.version ?? observation?.subject?.pluginVersion;
   if (markerMatch[2] !== expectedVersion || (profile && markerMatch[1] !== profile.pluginId)) {
     return failure(

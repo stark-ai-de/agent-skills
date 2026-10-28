@@ -1,0 +1,266 @@
+/* Presentation-only alternative. Product facts, exports and interactions are shared. */
+:root {
+  --bg: #222426;
+  --line: #383b3d;
+  --ink: #e5e7e3;
+  --muted: #bdc2bd;
+  --quiet: #a5aba7;
+  --green: #bbd9ad;
+  --yellow: #dfcf9a;
+  --red: #dfa9a9;
+  --grain-level: 0.012;
+  --shadow-level: 0.2;
+}
+body {
+  line-height: 1.8;
+}
+body:before {
+  opacity: var(--grain-level);
+}
+.masthead {
+  padding: 20px 28px;
+}
+.brand {
+  font-weight: 400;
+}
+.brand-icon {
+  background: #d8dcd6;
+  color: var(--bg);
+}
+.toplinks {
+  gap: 24px;
+}
+.demo-tabs {
+  gap: 12px;
+  padding: 10px 28px 18px;
+  border-bottom-color: #ffffff0c;
+}
+.demo-tabs button,
+.demo-buttons button {
+  border-color: transparent;
+  border-radius: 7px;
+  padding: 9px 14px;
+  color: var(--muted);
+}
+.demo-tabs button[aria-pressed="true"],
+.demo-buttons button[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: #ffffff1a;
+  background: #ffffff08;
+}
+button:not([data-category]) {
+  border-radius: 6px;
+}
+button:not([data-category]):hover {
+  color: var(--ink);
+  border-color: #a6b3a1;
+}
+.display-tools {
+  padding: 12px 28px;
+  border-bottom-color: #ffffff0c;
+}
+.display-tools > summary {
+  color: var(--quiet);
+}
+.display-controls {
+  gap: 28px;
+}
+.demo-section {
+  padding: 30px 28px;
+}
+.demo-section h1 {
+  font-size: calc(var(--demo-font) + 6px);
+  line-height: 1.6;
+  font-weight: 400;
+}
+.demo-section h2 {
+  font-weight: 400;
+}
+.demo-section > p {
+  color: var(--muted);
+  margin: 12px 0 18px;
+}
+.eyebrow {
+  letter-spacing: 0.09em;
+}
+.rule-row {
+  border-bottom-color: #ffffff0d;
+  padding: 23px 0;
+}
+.rule-row > summary {
+  gap: 28px;
+  line-height: 1.85;
+}
+.rule-row > summary > span:first-child {
+  color: var(--ink);
+}
+.rule-row > summary > span:last-child {
+  font-size: var(--demo-font);
+  color: var(--muted);
+  max-width: 90ch;
+}
+.rule-row > p {
+  color: var(--quiet);
+  font-size: 13px;
+}
+.rule-row[open],
+.product[open] > .product-details {
+  border-radius: 6px;
+}
+.workspace {
+  padding: 26px 28px 32px;
+  gap: 34px;
+}
+header {
+  margin-bottom: 30px;
+}
+#view-comparison h1 {
+  font-size: calc(var(--demo-font) + 6px);
+  line-height: 1.6;
+  font-weight: 400;
+}
+.sub {
+  font-size: 15px;
+  line-height: 1.8;
+}
+.signals {
+  gap: 24px;
+  margin-top: 20px;
+}
+.square,
+.circle,
+.triangle {
+  box-shadow: none;
+  filter: none;
+}
+.next {
+  color: var(--muted);
+}
+.columns {
+  border-bottom-color: #ffffff12;
+  padding: 16px 0;
+}
+.product {
+  border-bottom-color: #ffffff0d;
+}
+.product > summary {
+  padding: 27px 0;
+  line-height: 1.85;
+}
+.product > summary:hover {
+  background: #ffffff02;
+}
+.product > summary > span:not(.name),
+.product > summary .limit {
+  color: var(--muted);
+}
+.product-details {
+  border-top-color: #ffffff0d;
+  padding: 24px;
+}
+.product-details > details,
+.source-document,
+.flow-path {
+  border-color: #ffffff0d;
+}
+.filters {
+  gap: 15px;
+}
+.filters button {
+  color: var(--quiet);
+}
+.filters button[aria-pressed="true"] {
+  color: var(--ink);
+}
+.filters button[aria-pressed="true"]:after {
+  background: var(--green);
+  box-shadow: none;
+}
+a {
+  color: var(--ink);
+  text-decoration-color: #78827b;
+}
+a:hover {
+  color: var(--green);
+}
+input[type="search"],
+select {
+  border-bottom-color: #777f78;
+}
+.badge {
+  border-radius: 4px;
+  font-weight: 400;
+}
+.belegt {
+  color: #c1ddb3;
+  border-color: #7f9474;
+}
+.angenommen,
+.teilbelegt,
+.redaktionell_geschaetzt {
+  color: #e0d0a0;
+  border-color: #918568;
+}
+.offen,
+.warning {
+  color: #e6b8b8;
+}
+.flow-line {
+  gap: 36px;
+  padding: 26px 0;
+}
+.flow-line span {
+  color: var(--green);
+}
+.fiction {
+  color: var(--yellow);
+}
+#export-data,
+footer {
+  border-color: #ffffff0d;
+}
+:focus-visible {
+  outline: 2px solid #bfd6b5;
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button,
+  a,
+  summary {
+    transition:
+      color 140ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease;
+  }
+}
+@media (max-width: 740px) {
+  .masthead {
+    padding: 18px 20px;
+  }
+  .toplinks {
+    gap: 16px;
+  }
+  .demo-tabs {
+    padding: 10px 16px 16px;
+    gap: 6px;
+  }
+  .demo-tabs button {
+    padding: 8px 10px;
+  }
+  .display-tools {
+    padding: 12px 20px;
+  }
+  .demo-section {
+    padding: 26px 20px;
+  }
+  .rule-row {
+    padding: 20px 0;
+  }
+  .rule-row > summary {
+    gap: 7px;
+  }
+  .workspace {
+    padding: 22px 20px;
+  }
+}

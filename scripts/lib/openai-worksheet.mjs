@@ -33,6 +33,7 @@ export function renderOpenAiSubmissionChecklist(
     releaseSha = "release-commit",
     releaseUrl = `https://github.com/${repository}/releases/tag/${tag}`,
     openaiAssetUrl = `${releaseUrl}/download/openai.zip`,
+    openaiAssetName = "openai.zip",
     openaiSha256 = "sha256-pending",
     firstPublicationUrl = `https://github.com/${repository}/blob/${releaseSha}/docs/listing/openai/${listing?.plugin?.name ?? "stark-ai-developer"}-first-publication.md#composer-icon-handoff`,
   } = {},
@@ -43,7 +44,7 @@ export function renderOpenAiSubmissionChecklist(
     openAiIssueMarker(plugin.name, plugin.version),
     `# Release OpenAI Plugin: ${plugin.displayName}`,
     "",
-    "This issue is the public handoff for a published plugin release.",
+    "This issue is the public handoff for an update prepared from a published GitHub release.",
     "Complete the checklist manually and close the issue after publication.",
     "It confirms the GitHub release only; it does not assert an OpenAI upload, approval, or public portal state.",
     "",
@@ -53,7 +54,7 @@ export function renderOpenAiSubmissionChecklist(
     `- Version: \`${plugin.version}\``,
     `- Release: [${tag}](${releaseUrl})`,
     `- Source commit: \`${releaseSha}\``,
-    `- OpenAI archive: [openai.zip](${openaiAssetUrl})`,
+    `- OpenAI archive: [${openaiAssetName}](${openaiAssetUrl})`,
     `- OpenAI archive SHA-256: \`${openaiSha256}\``,
     "",
     "## Public listing",
@@ -67,10 +68,14 @@ export function renderOpenAiSubmissionChecklist(
     `- Terms: ${plugin.urls.termsOfService}`,
     `- Support: ${plugin.urls.support}`,
     `- Security: ${plugin.urls.security}`,
-    ...(listing.submissionProfile?.profile &&
-    ["new-remote", "desktop-local"].includes(listing.submissionProfile.profile)
-      ? ["- ChatGPT plugin: pending verified publication; retain the existing listing separately."]
-      : [`- ChatGPT plugin: ${plugin.urls.chatgptPlugin}`]),
+    ...(listing.submissionProfile?.listingUrl
+      ? [`- ChatGPT plugin: ${listing.submissionProfile.listingUrl}`]
+      : listing.submissionProfile?.profile &&
+          ["new-remote", "desktop-local"].includes(listing.submissionProfile.profile)
+        ? [
+            "- ChatGPT plugin: pending verified publication; retain the existing listing separately.",
+          ]
+        : [`- ChatGPT plugin: ${plugin.urls.chatgptPlugin}`]),
     `- Release notes: ${inline(releaseNotes)}`,
     "",
     "## Capabilities",
@@ -104,7 +109,13 @@ export function renderOpenAiSubmissionChecklist(
     `- Selected profile: ${listing.submissionProfile?.profile ?? "existing-skills-only"}`,
     `- Transport: ${listing.submissionProfile?.transport ?? "none"}`,
     ...(listing.submissionProfile?.url ? [`- MCP endpoint: ${listing.submissionProfile.url}`] : []),
-    "- Check A0 existing skills-only update first; use A1 only with confirmed migration permission, then B new remote, C allowlisted desktop, D direct-install bridge.",
+    ...(listing.submissionProfile?.listingUrl
+      ? [
+          "- Update this existing listing using the specified profile and archive; do not create or migrate another listing.",
+        ]
+      : [
+          "- Check A0 existing skills-only update first; use A1 only with confirmed migration permission, then B new remote, C allowlisted desktop, D direct-install bridge.",
+        ]),
     "- An in-progress review or repairable package, permission, DNS or service error does not trigger fallback. Resolve product review findings on the same route.",
     "- Keep private eligibility and portal observations in the maintainer workflow. Do not wait for support before an otherwise permitted new submission.",
     "- For remote profiles verify the stable public HTTPS MCP, domain challenge, tool scan, five positive and three negative cases, demo and current legal URLs before submission.",
@@ -112,7 +123,7 @@ export function renderOpenAiSubmissionChecklist(
     "## Checklist",
     "",
     "- [ ] Confirm the successful exact-tag Post-release Evidence run before uploading anything.",
-    "- [ ] Download the published `openai.zip` and verify its SHA-256 against this issue.",
+    `- [ ] Download the published \`${openaiAssetName}\` and verify its SHA-256 against this issue.`,
     "- [ ] Upload the exact archive to the OpenAI portal and review listing, skills, glyphs and logos.",
     "- [ ] Complete the portal review and publish the listing manually.",
     "- [ ] Verify public rendering, directory visibility and installation, then close this issue.",

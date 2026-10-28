@@ -1,4 +1,5 @@
 import { GENERATED_RELEASE_FILES } from "./release-please.mjs";
+import { isMultiProfileReleaseTag } from "./release-assets.mjs";
 
 export const RELEASE_PLEASE_LIFECYCLE_LABELS = Object.freeze([
   "autorelease: pending",
@@ -252,12 +253,21 @@ export function releaseRecoverySubjectErrors(origin, candidate) {
     releaseVersion: document.releaseVersion,
     pluginVersion: document.pluginVersion,
     archiveProfile: document.archiveProfile,
+    ...(document.schemaVersion === 2
+      ? {
+          openaiProfile: document.openaiProfile,
+          openaiSkillsOnlyProfile: document.openaiSkillsOnlyProfile,
+        }
+      : {}),
     subjects: {
       openai: {
         name: document.subjects?.openai?.name,
         sha256: document.subjects?.openai?.sha256,
         bytes: document.subjects?.openai?.bytes,
       },
+      ...(document.schemaVersion === 2
+        ? { openaiSkillsOnly: document.subjects?.openaiSkillsOnly }
+        : {}),
       portable: {
         name: document.subjects?.portable?.name,
         sha256: document.subjects?.portable?.sha256,
@@ -276,6 +286,34 @@ export function releaseRecoverySubjectErrors(origin, candidate) {
     candidate.sourceRevision?.tag !== "manual-review-required"
   ) {
     errors.push("pre-publication recovery subjects must retain the untagged validation marker");
+  }
+  const expectedLegacy = {
+    schemaVersion: 1,
+    openaiName: "openai.zip",
+    profileKeys: ["openai", "portable"],
+  };
+  const expectedMultiProfile = {
+    schemaVersion: 2,
+    openaiName: "openai-tools.zip",
+    profileKeys: ["openai", "openaiSkillsOnly", "portable"],
+  };
+  const expected = isMultiProfileReleaseTag(`v${origin.releaseVersion}`)
+    ? expectedMultiProfile
+    : expectedLegacy;
+  for (const [label, document] of [
+    ["origin", origin],
+    ["replacement", candidate],
+  ]) {
+    if (document.schemaVersion !== expected.schemaVersion) {
+      errors.push(`${label} subject schema does not match release tag profile`);
+    }
+    if (document.subjects?.openai?.name !== expected.openaiName) {
+      errors.push(`${label} OpenAI subject name does not match release tag profile`);
+    }
+    const keys = Object.keys(document.subjects ?? {}).sort();
+    if (JSON.stringify(keys) !== JSON.stringify([...expected.profileKeys].sort())) {
+      errors.push(`${label} subject membership does not match release tag profile`);
+    }
   }
   return errors;
 }

@@ -1,6 +1,6 @@
 # Implementation Specification: stark AI Developer Skills and OpenAI Plugin Distribution
 
-The existing skills-only publication remains the v1 reference. [ADR-0071](../adrs/0071-add-target-specific-openai-distribution-profiles.short.md) ([Long, canonical](../adrs/0071-add-target-specific-openai-distribution-profiles.long.md) · [Guide](../adrs/0071-add-target-specific-openai-distribution-profiles.guide.md)) adds explicit OpenAI distribution profiles, and [ADR-0072](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.short.md) ([Long, canonical](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.long.md) · [Guide](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.guide.md)) defines the optional metadata MCP. Follow the [MCP qualification guide](../../packages/skill-metadata-mcp/README.md) for those candidates; preparing a profile does not establish portal eligibility or publication.
+The skills-only publication is the historical v1 reference. Tags `v0.21.0` through `v0.31.0` retain their single-listing `openai.zip` plus `portable.zip` and schema-v1 release-subject contract; `v0.20.1` remains the earlier two-asset exception. Starting with `v0.32.0`, the release includes both existing OpenAI listings: **stark AI Developer** (`openai-skills-only.zip`) and **stark AI Developer Tools** (`openai-tools.zip`), alongside `portable.zip` and schema-v2 `release-subject.json`. All three ZIPs are attested, and each listing has a separate profile-specific handoff. [ADR-0071](../adrs/0071-add-target-specific-openai-distribution-profiles.short.md) ([Long, canonical](../adrs/0071-add-target-specific-openai-distribution-profiles.long.md) · [Guide](../adrs/0071-add-target-specific-openai-distribution-profiles.guide.md)) records the original target-specific profile boundary; it is superseded by [ADR-0076](../adrs/0076-publish-selected-openai-profiles-in-parallel.short.md) ([Long, canonical](../adrs/0076-publish-selected-openai-profiles-in-parallel.long.md) · [Guide](../adrs/0076-publish-selected-openai-profiles-in-parallel.guide.md)). [ADR-0077](../adrs/0077-protect-multi-profile-release-subjects-and-publication.short.md) ([Long, canonical](../adrs/0077-protect-multi-profile-release-subjects-and-publication.long.md) · [Guide](../adrs/0077-protect-multi-profile-release-subjects-and-publication.guide.md)) governs the protected multi-profile release contract. [ADR-0072](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.short.md) ([Long, canonical](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.long.md) · [Guide](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.guide.md)) defines the optional metadata MCP. Follow the [MCP qualification guide](../../packages/skill-metadata-mcp/README.md) for those candidates; preparing a profile does not establish portal eligibility or publication.
 
 - **Status:** Phase 6 publication recorded; current catalog membership unconfirmed
 - **Contract revision:** 14
@@ -1121,14 +1121,18 @@ OpenAI portal submission and explicit publication follow
 next follow-up after each hosted run. Record live portal observations in
 `docs/listing/openai/stark-ai-developer-first-publication.md`.
 
-For the normal hosted publication, download the direct `openai.zip` GitHub
-Release asset; its bytes came unchanged from the successful hosted `Validate`
-run for the exact release commit and it contains `.codex-plugin/plugin.json`.
-`dist/openai/` is only the local fallback. Do not upload the portable Agent
-Plugins archive. Packaged skill images use `icon_small` and `icon_large` paths
-in canonical `agents/openai.yaml`. Apps Management named glyphs remain separate
-portal-only `portalGlyph` fields in listing JSON and may need manual restoration
-when the portal ignores packaged icon metadata.
+Starting with `v0.32.0`, use the exact direct GitHub Release assets from the
+successful hosted `Validate` run for the release commit. Upload
+`openai-skills-only.zip` to the existing **stark AI Developer** listing and
+`openai-tools.zip` to the existing **stark AI Developer Tools** listing. Each
+archive contains that profile's `.codex-plugin/plugin.json`; keep the two
+profile uploads and handoffs separate. Do not upload `portable.zip` to either
+OpenAI listing. For historical tags, retain the asset contract that was
+published with that tag. `dist/openai/` is only the local fallback. Packaged
+skill images use `icon_small` and `icon_large` paths in canonical
+`agents/openai.yaml`. Apps Management named glyphs remain separate portal-only
+`portalGlyph` fields in listing JSON and may need manual restoration when the
+portal ignores packaged icon metadata.
 
 Submission does not equal publication. Approval does not equal publication. The publisher must explicitly publish the approved version.
 
@@ -1155,18 +1159,24 @@ The release-evidence procedure is canonical in
 on a proposed ADR for authority; the release workflow and receipt behavior
 below are defined here and operated through that canonical procedure.
 
-Hosted `Validate` on a successful `main` push uses the repository-owned
-`verify-release-reproducibility.mjs` script to build the `zip-store-v1` OpenAI
-and portable subjects plus schema-v1 metadata, then uploads `openai.zip`,
-`portable.zip`, and `release-subject.json` as three separate direct artifacts.
-The read-only Publish readiness job waits for that exact-SHA hosted run and
-downloads the three files without extracting or repacking them. The only
-write-capable job targets the protected `release` environment and verifies its
+Starting with `v0.32.0`, Hosted `Validate` on a successful `main` push uses the
+repository-owned `verify-release-reproducibility.mjs` script to build the
+`zip-store-v1` skills-only, remote-MCP, and portable subjects plus schema-v2
+metadata. It uploads `openai-skills-only.zip`, `openai-tools.zip`,
+`portable.zip`, and `release-subject.json` as four separate direct artifacts.
+The subject binds both existing OpenAI listing identities and their profile
+versions, transports, archive digests, and sizes. The read-only Publish
+readiness job waits for that exact-SHA hosted run and downloads all four files
+without extracting or repacking them. The only write-capable job targets the
+protected `release` environment and verifies its
 required reviewer, single custom `main` deployment-branch policy, protected
 `main`, and disabled administrator bypass before any mutation. A real publish creates `actions/attest@v4` attestations for
-the two ZIPs only, attaches all three exact files, publishes as stable `latest`,
-and verifies `/releases/latest` by ID and tag. Any missing artifact, digest,
-attestation, Latest, environment, or source-identity failure blocks. The local
+all three ZIPs, attaches all four exact files, publishes as stable `latest`,
+and verifies `/releases/latest` by ID and tag. Each existing listing gets a
+separate exact-asset, digest-bound handoff. Any missing artifact, digest,
+attestation, Latest, environment, or source-identity failure blocks. For
+historical releases, the matching tag's original asset and subject contract
+remains authoritative. The local
 `pnpm run build:release-subjects` command writes the subject set to
 `dist/release-subjects/` using the same script as a backup/fallback and is not
 required for hosted publication.
@@ -1176,9 +1186,12 @@ required for hosted publication.
 `main` after first publication and after any permitted mutable-release repair.
 It rebuilds from the tag, compares ZIP bytes, and from `v0.21.0` semantically
 compares the hosted JSON with the tag-bound rebuild while allowing the hosted
-pre-tag marker. It verifies ZIP attestations with the source commit and
-repository identity and uploads a sanitized receipt without committing it.
-`v0.20.1` remains the explicit two-asset legacy boundary. Historical Git tag
+pre-tag marker. Tags `v0.21.0` through `v0.31.0` retain the schema-v1
+single-listing subject with `openai.zip` and `portable.zip`; `v0.20.1` remains
+the explicit two-asset boundary without a release subject. From `v0.32.0`, it
+validates schema-v2 metadata for both listings and verifies attestations for
+all three ZIPs against the source commit and repository identity. It uploads a
+sanitized receipt without committing it. Historical Git tag
 `v0.19.1` is unsigned; its receipt is
 `retrospective` and `not-pre-publication-attested`. Later publishes attest
 through `Publish Release` and `Post-release Evidence`. Receipts use the

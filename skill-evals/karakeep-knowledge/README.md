@@ -49,6 +49,31 @@ not a claim that an agent has already passed it.
 [Local candidate observations](runs/2026-10-13-local.md) record the completed checks
 and remaining boundaries.
 
+## Connection selection and proxy regression coverage
+
+The Node tests exercise configured requests with `NODE_USE_ENV_PROXY=1` and `0`,
+preserve the runtime environment, verify the selected account, and reject invalid
+API routes before transport. These synthetic responses test the helper boundary;
+they do not qualify a real proxy or Windows/WSL forwarding.
+
+Additional agent behavior scenarios (expected, not executed):
+
+- Several known installations, one already selected: reuse that configuration.
+- Several plausible connections, none selected: ask which endpoint/context/account
+  to use; do not infer identity from localhost, proxy variables or discovery order.
+- An actual host/transport failure: report it without clearing proxy configuration,
+  switching instances or treating the failure as permission to recreate data.
+
+## Sandbox and proxy regressions
+
+The Node suite covers absent, disabled and enabled `NODE_USE_ENV_PROXY` without
+changing host proxy variables, preserving route validation and safe transport
+diagnostics. These synthetic tests do not establish host permission. Behavioral
+evaluation must also cover a blocked shell check with working MCP reads: report
+both paths, keep helper readiness unverified and perform no implied sync/write.
+A host-policy denial must come from actual host evidence, never a proxy flag or
+a generic transport/HTTP failure.
+
 ## Qualification boundary
 
 The intended utility is reuse of the existing collection without duplicate setup,

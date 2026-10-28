@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Graphite Grain · Konfigurator</title>
+    <style>
+      @font-face {
+        font-family: "Paper Mono";
+        src: url("{{FONT}}") format("woff2");
+        font-weight: 100 800;
+        font-display: swap;
+      }
+      :root {
+        color-scheme: dark;
+        --bg: #1c1d1f;
+        --ink: #eeefed;
+        --muted: #b1b2b4;
+        --line: #414448;
+        --accent: #b5d9a7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          13px/1.65 "Paper Mono",
+          Arial,
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      select {
+        background: transparent;
+        border: 1px solid #73777b;
+        border-radius: 4px;
+        padding: 7px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button[aria-pressed="true"] {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+      header {
+        padding: 14px 20px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+      h1 {
+        font-size: 16px;
+        font-weight: 400;
+        margin: 0;
+      }
+      header p {
+        color: var(--muted);
+        margin: 4px 0 0;
+        font-size: 12px;
+      }
+      a {
+        color: var(--ink);
+        text-underline-offset: 4px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        height: calc(100dvh - 86px);
+      }
+      aside {
+        padding: 18px;
+        overflow: auto;
+        border-right: 1px solid var(--line);
+      }
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 12px 0 20px;
+      }
+      .group {
+        border-top: 1px solid var(--line);
+        padding: 15px 0;
+      }
+      .group > summary {
+        cursor: pointer;
+        color: var(--ink);
+      }
+      .group label,
+      .blend-label {
+        display: block;
+        margin: 16px 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .range-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      input[type="range"] {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        accent-color: var(--accent);
+      }
+      output {
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 18px 0 12px;
+      }
+      .preview-area {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .preview-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+        border-bottom: 1px solid var(--line);
+      }
+      .view-toggle {
+        display: flex;
+        gap: 6px;
+      }
+      .frame-wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+        overflow: auto;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        min-height: 500px;
+        background: var(--bg);
+      }
+      .preview-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0;
+      }
+      #status {
+        font-size: 11px;
+        color: var(--accent);
+        min-height: 38px;
+      }
+      details pre {
+        max-height: 200px;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-family: inherit;
+        font-size: 11px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .draft-label {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      #config-file {
+        max-width: 100%;
+        font-size: 11px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+      @media (max-width: 850px) {
+        header {
+          align-items: start;
+        }
+        header > a {
+          font-size: 11px;
+        }
+        .layout {
+          display: block;
+          height: auto;
+        }
+        aside {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .settings-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0 22px;
+        }
+        .preview-area {
+          height: 850px;
+        }
+        .frame-wrap {
+          min-height: 600px;
+        }
+        .group {
+          min-width: 0;
+        }
+      }
+      @media (max-width: 500px) {
+        .settings-grid {
+          display: block;
+        }
+        header {
+          padding: 13px 16px;
+        }
+        .preview-toolbar {
+          align-items: start;
+        }
+        select {
+          max-width: 160px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Deinen Mittelweg finden.</h1>
+        <p>Stil wählen → feinjustieren → HTML herunterladen.</p>
+      </div>
+      <a href="demo.html">Aktuelle Demo ↗</a>
+    </header>
+    <noscript
+      ><p>
+        Die Vorschau bleibt lesbar. Für Regler und Downloads bitte JavaScript einschalten.
+      </p></noscript
+    >
+    <main class="layout">
+      <aside aria-label="Reportgestaltung">
+        <p class="hint">
+          Ausgangspunkt: die bevorzugte Version mit 13 px. Änderungen betreffen nur diese Vorschau.
+        </p>
+        <div class="presets" role="group" aria-label="Stilvorgaben">
+          <button type="button" data-preset="0" disabled>Aktuell</button
+          ><button type="button" data-preset="50" disabled>Mittelweg</button
+          ><button type="button" data-preset="100" disabled>Ruhiger</button>
+        </div>
+        <label class="blend-label" for="blend"
+          ><span class="range-title"
+            ><span>Gesamtrichtung</span><output id="blend-output">Aktuell</output></span
+          ><input id="blend" type="range" min="0" max="100" value="0" disabled /><span class="hint"
+            >Klar und kompakt ← → weicher und luftiger</span
+          ></label
+        >
+        <div class="settings-grid">
+          <details class="group" open>
+            <summary>Schrift &amp; Lesefluss</summary>
+            <label for="fontSize"
+              ><span class="range-title">Textgröße <output for="fontSize">13 px</output></span
+              ><input id="fontSize" type="range" min="12" max="16" step="1" value="13" disabled
+            /></label>
+            <label for="headingGap"
+              ><span class="range-title"
+                >Titelabstand zur Textgröße <output for="headingGap">8 px</output></span
+              ><input id="headingGap" type="range" min="2" max="8" step="1" value="8" disabled
+            /></label>
+            <label for="lineHeight"
+              ><span class="range-title">Zeilenhöhe <output for="lineHeight">1,65</output></span
+              ><input
+                id="lineHeight"
+                type="range"
+                min="1.5"
+                max="2"
+                step="0.05"
+                value="1.65"
+                disabled
+            /></label>
+            <label for="spacing"
+              ><span class="range-title"
+                >Luft zwischen Inhalten <output for="spacing">0 %</output></span
+              ><input id="spacing" type="range" min="0" max="100" step="1" value="0" disabled
+            /></label>
+          </details>
+          <details class="group">
+            <summary>Oberfläche &amp; Tiefe</summary>
+            <label for="grain"
+              ><span class="range-title">Grain <output for="grain">0,030</output></span
+              ><input id="grain" type="range" min="0" max="0.06" step="0.001" value="0.03" disabled
+            /></label>
+            <label for="depth"
+              ><span class="range-title">Schattentiefe <output for="depth">0,40</output></span
+              ><input id="depth" type="range" min="0" max="0.8" step="0.05" value="0.4" disabled
+            /></label>
+            <label for="softness"
+              ><span class="range-title"
+                >Weichere Kontraste <output for="softness">0 %</output></span
+              ><input id="softness" type="range" min="0" max="100" step="1" value="0" disabled
+            /></label>
+            <label for="lines"
+              ><span class="range-title">Trennlinien <output for="lines">100 %</output></span
+              ><input id="lines" type="range" min="0" max="100" step="1" value="100" disabled
+            /></label>
+          </details>
+          <details class="group">
+            <summary>Form &amp; Akzente</summary>
+            <label for="radius"
+              ><span class="range-title">Rundungen <output for="radius">0 px</output></span
+              ><input id="radius" type="range" min="0" max="10" step="1" value="0" disabled
+            /></label>
+            <label for="accent"
+              ><span class="range-title">Neonstärke <output for="accent">100 %</output></span
+              ><input id="accent" type="range" min="0" max="100" step="1" value="100" disabled
+            /></label>
+            <p class="hint">Originalfarben der Produktlogos bleiben erhalten.</p>
+          </details>
+        </div>
+        <div class="actions">
+          <button type="button" id="export-html" disabled>HTML herunterladen</button
+          ><button type="button" id="export-config" disabled>Einstellungen als JSON</button>
+        </div>
+        <details class="group">
+          <summary>Gespeicherte Einstellung laden</summary>
+          <label for="config-file" class="hint"
+            >Nur eine zuvor heruntergeladene Konfigurations-JSON wählen.</label
+          ><input type="file" id="config-file" accept=".json,application/json" disabled />
+        </details>
+        <p id="status" role="status">Vorschau wird vorbereitet.</p>
+        <p class="hint">
+          Kein neuer globaler Default. Alle Inhalte, Ansichten, Quellen und Exportdaten bleiben
+          erhalten. Zum Wiederverwenden die Einstellungen herunterladen.
+        </p>
+        <details class="group">
+          <summary>Aktuelle Werte lesen</summary>
+          <pre id="settings-json"></pre>
+        </details>
+      </aside>
+      <section class="preview-area" aria-label="Live-Vorschau">
+        <div class="preview-toolbar">
+          <div class="view-toggle" role="group" aria-label="Vergleich mit Ausgangsversion">
+            <button type="button" id="show-current" aria-pressed="true" disabled>
+              Deine Auswahl</button
+            ><button type="button" id="show-original" aria-pressed="false" disabled>
+              Ausgangsversion
+            </button>
+          </div>
+          <label class="preview-label" for="preview-width"
+            >Breite
+            <select id="preview-width" disabled>
+              <option value="full">Verfügbarer Platz</option>
+              <option value="390">Mobil · 390 px</option>
+              <option value="768">Tablet · 768 px</option>
+            </select></label
+          >
+        </div>
+        <div class="frame-wrap">
+          <iframe
+            id="preview"
+            title="Interaktiver Report mit deinen Gestaltungseinstellungen"
+            sandbox="allow-scripts allow-downloads"
+            srcdoc="{{PREVIEW}}"
+          ></iframe>
+        </div>
+      </section>
+    </main>
+    <script id="configuration-source" type="application/json">
+      {{SOURCE}}
+    </script>
+    <script>
+      /* CONFIG_FUNCTIONS */
+      (() => {
+        const source = JSON.parse(document.getElementById("configuration-source").textContent),
+          frame = document.getElementById("preview");
+        let settings = normalizeSettings(source.defaults),
+          original = false;
+        const keys = Object.keys(settings),
+          units = {
+            fontSize: " px",
+            headingGap: " px",
+            radius: " px",
+            spacing: " %",
+            softness: " %",
+            lines: " %",
+            accent: " %",
+          };
+        const status = document.getElementById("status");
+        function sync() {
+          for (const key of keys) {
+            document.getElementById(key).value = settings[key];
+            document.querySelector('output[for="' + key + '"]').value =
+              String(settings[key]).replace(".", ",") + (units[key] ?? "");
+          }
+          document.getElementById("settings-json").textContent = JSON.stringify(
+            { kind: "graphite-grain-config", version: 1, settings },
+            null,
+            2,
+          );
+        }
+        function apply() {
+          frame.contentWindow.postMessage(
+            { kind: "graphite-settings", css: settingsCss(original ? source.defaults : settings) },
+            "*",
+          );
+          document.getElementById("show-original").setAttribute("aria-pressed", String(original));
+          document.getElementById("show-current").setAttribute("aria-pressed", String(!original));
+          status.textContent = original
+            ? "Ausgangsversion · deine Werte bleiben erhalten."
+            : "Deine Auswahl · nur die Darstellung wurde geändert.";
+          sync();
+        }
+        for (const control of document.querySelectorAll("input,button,select"))
+          control.disabled = false;
+        for (const key of keys)
+          document.getElementById(key).addEventListener("input", () => {
+            settings = normalizeSettings({
+              ...settings,
+              [key]: document.getElementById(key).value,
+            });
+            original = false;
+            document.getElementById("blend-output").value = "Individuell";
+            document
+              .querySelectorAll("[data-preset]")
+              .forEach((b) => b.setAttribute("aria-pressed", "false"));
+            apply();
+          });
+        function preset(value) {
+          settings = blendSettings(value);
+          document.getElementById("blend").value = value;
+          document.getElementById("blend-output").value =
+            value === 0 ? "Aktuell" : value === 100 ? "Ruhiger" : value + " %";
+          document
+            .querySelectorAll("[data-preset]")
+            .forEach((b) =>
+              b.setAttribute("aria-pressed", String(Number(b.dataset.preset) === value)),
+            );
+          original = false;
+          apply();
+        }
+        document
+          .getElementById("blend")
+          .addEventListener("input", (e) => preset(Number(e.target.value)));
+        document
+          .querySelectorAll("[data-preset]")
+          .forEach((b) => b.addEventListener("click", () => preset(Number(b.dataset.preset))));
+        document.getElementById("show-original").addEventListener("click", () => {
+          original = true;
+          apply();
+        });
+        document.getElementById("show-current").addEventListener("click", () => {
+          original = false;
+          apply();
+        });
+        document.getElementById("preview-width").addEventListener("change", (e) => {
+          frame.style.width = e.target.value === "full" ? "100%" : e.target.value + "px";
+          frame.style.maxWidth = "100%";
+        });
+        function download(text, name, type) {
+          const url = URL.createObjectURL(new Blob([text], { type }));
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        document
+          .getElementById("export-html")
+          .addEventListener("click", () =>
+            download(
+              configuredReport(source.base, settings),
+              "graphite-grain-meine-version.html",
+              "text/html",
+            ),
+          );
+        document.getElementById("export-config").addEventListener("click", () =>
+          download(
+            JSON.stringify(
+              {
+                kind: "graphite-grain-config",
+                version: 1,
+                sourceFingerprint: source.fingerprint,
+                settings,
+              },
+              null,
+              2,
+            ),
+            "graphite-grain-einstellungen.json",
+            "application/json",
+          ),
+        );
+        document.getElementById("config-file").addEventListener("change", async (e) => {
+          try {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 32768) throw Error("Datei ist zu groß.");
+            const data = JSON.parse(await file.text());
+            if (
+              data.kind !== "graphite-grain-config" ||
+              data.version !== 1 ||
+              !data.settings ||
+              typeof data.settings !== "object"
+            )
+              throw Error("Keine passende Konfigurationsdatei.");
+            settings = normalizeSettings(data.settings);
+            original = false;
+            document.getElementById("blend-output").value = "Importiert";
+            document
+              .querySelectorAll("[data-preset]")
+              .forEach((b) => b.setAttribute("aria-pressed", "false"));
+            apply();
+            status.textContent = "Einstellungen geladen.";
+          } catch (error) {
+            status.textContent = "Import fehlgeschlagen: " + error.message;
+          }
+        });
+        frame.addEventListener("load", apply);
+        preset(0);
+      })();
+    </script>
+  </body>
+</html>

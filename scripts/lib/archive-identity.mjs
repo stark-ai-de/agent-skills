@@ -1,4 +1,4 @@
-export const REQUIRED_ARCHIVES = ["portable", "openai", "claude"];
+export const REQUIRED_ARCHIVES = ["portable", "openai", "openaiSkillsOnly", "claude"];
 const REQUIRED_PLATFORMS = ["linux", "darwin", "win32"];
 
 export function archiveIdentityErrors(identities) {

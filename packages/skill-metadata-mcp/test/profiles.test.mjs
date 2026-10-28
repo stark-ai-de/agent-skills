@@ -103,7 +103,7 @@ test("new remote ZIP carries one real MCP, unchanged skills, provenance and repr
             true,
           );
           assert.equal(manifest.name, "stark-ai-developer-tools");
-          assert.equal(manifest.version, "1.0.0");
+          assert.equal(manifest.version, source.openai.profiles["new-remote"].version);
           assert.equal(manifest.mcpServers, "./.mcp.json");
           const config = JSON.parse(fs.readFileSync(path.join(staged.stage, ".mcp.json")));
           assert.deepEqual(config, {
@@ -226,7 +226,10 @@ test("desktop candidate contains a self-contained validator and notices, not SSH
 });
 
 test("a new OpenAI identity receives its own version and release issue marker", () => {
-  const profile = openAiIdentityFromSource(source, "new-remote");
+  const candidate = structuredClone(source);
+  candidate.version = "9.8.7";
+  candidate.openai.profiles["new-remote"].version = "1.2.3";
+  const profile = openAiIdentityFromSource(candidate, "new-remote");
   const listing = listingForOpenAiIdentity(
     JSON.parse(fs.readFileSync(path.join(root, "docs/listing/openai/stark-ai-developer.json"))),
     profile,
@@ -246,7 +249,7 @@ test("a new OpenAI identity receives its own version and release issue marker", 
     },
     listing,
     subject: {
-      pluginVersion: source.version,
+      pluginVersion: candidate.version,
       openaiProfile: profile,
       subjects: { openai: { sha256: "b".repeat(64) } },
     },
@@ -255,10 +258,10 @@ test("a new OpenAI identity receives its own version and release issue marker", 
     issues: [],
   });
   assert.equal(plan.status, "create");
-  assert.equal(plan.pluginVersion, "1.0.0");
-  assert.ok(plan.marker.includes("stark-ai-developer-tools@1.0.0"));
+  assert.equal(plan.pluginVersion, "1.2.3");
+  assert.ok(plan.marker.includes("stark-ai-developer-tools@1.2.3"));
   assert.ok(plan.body.includes("new-remote"));
-  assert.ok(!plan.body.includes("- ChatGPT plugin: https://chatgpt.com/"));
+  assert.ok(plan.body.includes(`- ChatGPT plugin: ${profile.listingUrl}`));
 });
 test("route selection CLI is read-only and requires no portal credentials", () => {
   const result = spawnSync(
@@ -305,7 +308,7 @@ test("HTTP builds serve exact static challenge bytes and remove cached tokens", 
   }
 });
 test(
-  "isolated desktop release rebuilds both bundles and preserves both identities",
+  "parallel release subjects ignore the desktop default and isolated desktop builds remain reproducible",
   { timeout: 60000 },
   () => {
     const temp = fs.mkdtempSync(path.join(os.tmpdir(), "metadata-isolated-release-"));
@@ -366,13 +369,38 @@ test(
       assert.equal(evidence.reproducibility.byteIdentical, true);
       assert.equal(evidence.package.version, fixtureSource.version);
       assert.deepEqual(evidence.projections.openai.package, {
-        name: "stark-ai-developer-desktop",
-        version: "1.0.0",
+        name: "stark-ai-developer-tools",
+        version: fixtureSource.openai.profiles["new-remote"].version,
       });
-      const files = unzipSync(fs.readFileSync(path.join(subjects, "openai.zip")));
+      assert.equal(evidence.projections.openaiSkillsOnly.package.name, "stark-ai-developer");
+      assert.equal(fs.existsSync(path.join(subjects, "openai-desktop.zip")), false);
+      const desktopArchives = [];
+      for (let index = 0; index < 2; index++) {
+        const packageRoot = path.join(checkout, "packages/skill-metadata-mcp");
+        fs.rmSync(path.join(packageRoot, "dist"), { recursive: true, force: true });
+        const built = spawnSync(process.execPath, ["build.mjs", "stdio"], {
+          cwd: packageRoot,
+          encoding: "utf8",
+        });
+        assert.equal(built.status, 0, built.stderr || built.stdout);
+        desktopArchives.push(
+          withOpenAiStage(
+            checkout,
+            ({ stage }) =>
+              createDirectoryArchive({
+                sourceRoot: stage,
+                output: path.join(temp, `desktop-${index}.zip`),
+                archiveRoot: "",
+              }),
+            { profile: "desktop-local" },
+          ),
+        );
+      }
+      assert.equal(desktopArchives[0].sha256, desktopArchives[1].sha256);
+      const files = unzipSync(fs.readFileSync(desktopArchives[0].output));
       const manifest = JSON.parse(Buffer.from(files[".codex-plugin/plugin.json"]));
-      assert.equal(manifest.name, evidence.projections.openai.package.name);
-      assert.equal(manifest.version, evidence.projections.openai.package.version);
+      assert.equal(manifest.name, "stark-ai-developer-desktop");
+      assert.equal(manifest.version, "1.0.0");
       const install = path.join(temp, "install");
       fs.mkdirSync(install);
       const bundle = path.join(install, "index.mjs");

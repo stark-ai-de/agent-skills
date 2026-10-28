@@ -20,6 +20,34 @@ const DECLARED_ENDPOINT_PREFIXES = [
 ];
 const ENDPOINT_PATTERN = /https?:\/\/[^\s"'`<>()[\]{}]+/gi;
 
+// Visual Reports declarations are file-scoped. Vendor URLs are inert ELK namespace
+// identifiers and upstream font-import templates removed before report delivery.
+// Test URLs are negative fixtures, never permitted destinations for a fetch.
+const REPORT_ENDPOINTS = {
+  "assets/vendor/generator.mjs": [
+    "http://www.eclipse.org/elk/ElkGraph",
+    "http:///org/eclipse/emf/ecore/util/ExtendedMetaData",
+    "http://www.eclipse.org/emf/2002/Ecore",
+    "http://www.eclipse.org/emf/2003/XMLType",
+    "https://fonts.googleapis.com/css2?family=$",
+    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap",
+  ],
+  "scripts/export-assets.mjs": ["https://github.com/stark-ai-de/agent-skills"],
+  "scripts/lib/preview.mjs": ["http://localhost", "http://localhost:$"],
+  "tests/render-report.test.mjs": [
+    "https://example.invalid/a.png",
+    "https://secret@example.invalid",
+  ],
+  "tests/v2.test.mjs": [
+    "https://example.com",
+    "https://example.org/mark.svg",
+    "https://example.org/",
+    "https://example.org/a",
+  ],
+};
+const reportOwner = (relative) =>
+  relative.match(/^(?:canonical|portable)\/visual-reports\/(.+)$/)?.[1];
+
 function endpointIsDeclared(endpoint, relative) {
   const advisorEndpointOwner =
     /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/(?:jev_advisor|https_transport|jev_hooks)\.py$/.test(
@@ -33,6 +61,7 @@ function endpointIsDeclared(endpoint, relative) {
   // in its processing disclosure. Network-call exceptions remain transport-only.
   return (
     DECLARED_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix)) ||
+    (REPORT_ENDPOINTS[reportOwner(relative)] ?? []).includes(endpoint) ||
     (advisorEndpointOwner && endpoint === "https://api.typesafe.ai/v1/systemone") ||
     (karakeepLoopbackOwner && ["http://localhost", "http://localhost:3000"].includes(endpoint))
   );
@@ -68,10 +97,11 @@ export function scanNetworkSource(text, relative) {
     "!u.search",
     "!u.hash",
     "this.address = origin(auth.address)",
-    'route.startsWith("/api/v1/") && !route.includes("..") && !process.env.NODE_USE_ENV_PROXY',
+    'route.startsWith("/api/v1/") && !route.includes("..")',
   ].every((guard) => text.includes(guard));
   // This exact module owns the reviewed, policy-bound loopback REST client.
   // Mask only its wrapper and single fetch shape; additional calls still fail.
+  // Proxy handling belongs to the host; environment flags are not origin guards.
   // Guard-drift fixtures complement runtime origin/credential tests, not a sandbox.
   if (karakeepTransport && loopbackGuards) {
     apiText = apiText
@@ -84,6 +114,34 @@ export function scanNetworkSource(text, relative) {
         /\bfetch\(this\.address \+ route, \{\s*method,\s*redirect: "manual",/,
         'reviewedLoopbackCall(this.address + route, { method, redirect: "manual",',
       );
+  }
+  const reportFile = reportOwner(relative);
+  if (reportFile === "assets/preview.js") {
+    // One same-origin metadata read. Additional calls remain undeclared.
+    apiText = apiText.replace(
+      /\bfetch\("\/current", \{\s*cache: "no-store"\s*\}\)/,
+      "reviewedPreviewMetadata()",
+    );
+  }
+  if (
+    reportFile === "scripts/lib/preview.mjs" &&
+    !text.includes('server.listen(port, "127.0.0.1", resolve)')
+  )
+    errors.push(`${relative}: preview must bind loopback`);
+  if (reportFile === "tests/browser-delivery.mjs") {
+    const normalized = text.replace(/\s+/g, " ");
+    if (
+      normalized.includes('endpoint.protocol === "ws:"') &&
+      normalized.includes('["127.0.0.1", "localhost"].includes(endpoint.hostname)')
+    ) {
+      apiText = apiText.replace(/\bnew WebSocket\(endpoint\)/, "reviewedLoopbackCdp(endpoint)");
+    }
+  }
+  if (reportFile === "tests/v2.test.mjs") {
+    apiText = apiText.replace(
+      /\bfetch\(preview\.url(?=[\s,)])/g,
+      "reviewedFixtureRead(preview.url",
+    );
   }
   const hookManager =
     /^(?:canonical|portable)\/jev-capability-advisor\/scripts\/jev_hooks\.py$/.test(relative);

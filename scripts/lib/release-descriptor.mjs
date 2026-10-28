@@ -39,6 +39,9 @@ export function identityFromSource(source) {
   return {
     ...listingIdentityFromSource(source),
     openaiProfile: openAiIdentityFromSource(source),
+    openaiProfiles: (
+      source.openai?.releaseProfiles ?? [source.openai?.activeProfile ?? "existing-skills-only"]
+    ).map((profile) => openAiIdentityFromSource(source, profile)),
     schemaVersion: source.schemaVersion,
     submissionType: source.submissionType,
     publicListingStrategy: source.publicListingStrategy,
@@ -91,6 +94,20 @@ export function loadPluginSourceFile(root = moduleRoot) {
 
   const errors = [];
   const openai = openAiIdentityFromSource(source);
+  if (source.openai?.releaseProfiles) {
+    const profiles = source.openai.releaseProfiles.map((profile) =>
+      openAiIdentityFromSource(source, profile),
+    );
+    if (
+      new Set(profiles.map((profile) => profile.pluginId)).size !== profiles.length ||
+      new Set(profiles.map((profile) => profile.listingUrl)).size !== profiles.length ||
+      profiles.some((profile) => !profile.listingUrl)
+    ) {
+      errors.push(
+        "[REL-001] release profiles must have distinct plugin identities and portal targets",
+      );
+    }
+  }
   const expectedArchive = openai.archive;
   if (source.outputs.openaiArchive !== expectedArchive) {
     errors.push(
@@ -146,6 +163,7 @@ export function pluginIdentity(root = moduleRoot) {
     portableProjection: release.outputs.portableProjection,
     openaiArchive: release.outputs.openaiArchive,
     openaiProfile: release.openaiProfile,
+    openaiProfiles: release.openaiProfiles,
     marketplaceTarget: release.outputs.repositoryMarketplaceTarget,
     archiveProfile: release.build.archiveProfile,
     nodeVersion: release.build.nodeVersion,
