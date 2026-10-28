@@ -117,6 +117,8 @@ for (const prefix of ["canonical", "portable"]) {
       "this.address = auth.address",
     ),
     knowledgeTransport.replace('route.startsWith("/api/v1/")', 'route.startsWith("/")'),
+    knowledgeTransport.replace("!u.username", "true"),
+    knowledgeTransport.replace("!u.password", "true"),
     knowledgeTransport + "\nfetch(destination)",
     knowledgeTransport + "\nrequest(destination)",
     knowledgeTransport + "\nhttps.request(destination)",

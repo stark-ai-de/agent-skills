@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "938ad4714098d8263d516df90a72a460058f0a2e1517a5e254dc287f274f87e2"
+      "sha256": "2afe188a74ff7a689bc68be92236494fe50fe5a948a80b452f4f778fe81c8750"
     },
     {
       "byteLength": 2128,
@@ -2355,10 +2355,10 @@
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     },
     {
-      "byteLength": 10723,
+      "byteLength": 11038,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "77363a802d96b4c5723a525410ff5848f2ac74a8b2a36274de27795da86342d2"
+      "sha256": "ffa08e1096bf26b9b9dccb7ef42efa74a8ddc3e147a60e3018514f694a386425"
     },
     {
       "byteLength": 488,
@@ -2373,10 +2373,10 @@
       "sha256": "e56741b5b3ad921780978293a3bd429d1b02740eb6897d4f0f0545bac941a36c"
     },
     {
-      "byteLength": 1181,
+      "byteLength": 1346,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/assets/global-instructions.md",
-      "sha256": "5873b7d3d3bad52839427b27d61d3ea3b84dfdb1a2885d4f0ec182bb8241f9f3"
+      "sha256": "9a20a37955f423290a717ae946821341e9654064a9f1c3ed69a1e6d5688eae74"
     },
     {
       "byteLength": 320,
@@ -2433,10 +2433,10 @@
       "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
     },
     {
-      "byteLength": 15209,
+      "byteLength": 16638,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/helper.md",
-      "sha256": "7da708f0a5c3c1b9eece93efe66071de2d4619f6860a024c3727d83e51c27bb3"
+      "sha256": "fbdf65447e917a8d698a0689555c26d2307b69d7a24490a74aefafc8fa34bc48"
     },
     {
       "byteLength": 5977,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.1"
+    "version": "1.19.2"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "e7b42fae1291b4e6dd3e1a92d564b6792f69f70e437c1e088c8a5141e21eafad"
+  "treeHash": "c5972ccade75415a98e2995daf8afa9cdeee7f43e3840d71b825e57a20a0dcba"
 }

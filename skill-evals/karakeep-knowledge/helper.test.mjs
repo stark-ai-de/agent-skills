@@ -944,12 +944,47 @@ test("unsupported API routes remain unsent", async (t) => {
   assert.equal(requested.mock.callCount(), 0);
 });
 
+for (const proxyMode of [undefined, "0", "1"]) {
+  test(`host proxy mode ${proxyMode ?? "unset"} reaches transport without changing environment`, async (t) => {
+    const names = ["NODE_USE_ENV_PROXY", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"];
+    const prior = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+    try {
+      if (proxyMode === undefined) delete process.env.NODE_USE_ENV_PROXY;
+      else process.env.NODE_USE_ENV_PROXY = proxyMode;
+      process.env.HTTP_PROXY = "http://proxy.example.test:3128";
+      process.env.HTTPS_PROXY = "http://proxy.example.test:3128";
+      process.env.NO_PROXY = "localhost";
+      const before = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+      let requests = 0;
+      t.mock.method(globalThis, "fetch", async (url, options) => {
+        requests++;
+        assert.equal(url, "http://localhost:3000/api/v1/users/me");
+        assert.equal(options.headers.Authorization, "Bearer synthetic-secret");
+        return Response.json({ id: "account" });
+      });
+      const api = new Karakeep({ address: "http://localhost:3000", key: "synthetic-secret" });
+      assert.deepEqual(await api.request("/api/v1/users/me"), { id: "account" });
+      assert.equal(requests, 1);
+      await assert.rejects(api.request("/outside-api"), (error) => error.code === "connection");
+      assert.equal(requests, 1);
+      assert.deepEqual(Object.fromEntries(names.map((name) => [name, process.env[name]])), before);
+    } finally {
+      for (const [name, value] of Object.entries(prior)) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
+    }
+  });
+}
+
 for (const [code, diagnostic] of [
   ["SELF_SIGNED_CERT_IN_CHAIN", "tls_trust"],
   ["ECONNREFUSED", "connection_refused"],
   ["ENOTFOUND", "dns"],
   ["ETIMEDOUT", "timeout"],
   ["PRIVATE_UNKNOWN_CODE", "transport"],
+  ["EPERM", "transport"],
+  ["EACCES", "transport"],
 ]) {
   test(`transport diagnostics classify ${diagnostic} without exposing raw errors`, async (t) => {
     t.mock.method(globalThis, "fetch", async () => {

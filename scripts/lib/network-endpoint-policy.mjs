@@ -101,6 +101,7 @@ export function scanNetworkSource(text, relative) {
   ].every((guard) => text.includes(guard));
   // This exact module owns the reviewed, policy-bound loopback REST client.
   // Mask only its wrapper and single fetch shape; additional calls still fail.
+  // Proxy handling belongs to the host; environment flags are not origin guards.
   // Guard-drift fixtures complement runtime origin/credential tests, not a sandbox.
   if (karakeepTransport && loopbackGuards) {
     apiText = apiText

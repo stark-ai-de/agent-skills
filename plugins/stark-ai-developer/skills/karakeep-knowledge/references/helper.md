@@ -222,6 +222,26 @@ Inspect the JSON status, not only the process exit code. `check` can exit zero w
 | Node helper         | `check --repo ...`, account/policy and optional diagnostic                 | That helper's connection/readiness result; not canonical sync.   |
 | MCP                 | Effective launcher/config, tools, account, one bounded search/content read | Actual MCP reads only; not write capability or complete capture. |
 
+A host tool's explicit sandbox/network denial is evidence about that command's
+execution path. Record it separately from helper JSON; the helper may never receive
+the request or produce a result. Proxy variables alone are not evidence of denial.
+Generic `EPERM`, `EACCES`, HTTP 403 and transport errors do not identify a host policy.
+
+If the shell check is blocked, use the already configured official MCP connection
+for a bounded search followed by content retrieval. Verify its expected account or
+known item; do not switch endpoints or credentials. Working MCP reads establish
+read access only. They do not complete the helper's project/state check, authorize
+writes, or turn `pending`/`needs_setup` into `ready`.
+
+For a confirmed host block, use the host's normal bounded approval mechanism where
+available. A permanent network exception belongs to the configuration owner and
+requires explicit scope. In Codex, an exact `localhost` allow rule can permit the
+selected loopback host while retaining the private-network guard; it applies to
+all ports on that host, not just Karakeep. Keep existing provider rules and offline
+profiles. Do not clear proxy variables, disable enforcement or widen all private
+network access. Verify changed host policy in a fresh session before claiming it
+effective. See [Codex local/private destinations](https://learn.chatgpt.com/docs/agent-approvals-security#local-and-private-destinations).
+
 Node keeps the safe `unreachable` code and may add `diagnostic`: `tls_trust`,
 `connection_refused`, `dns`, `timeout` or `transport`. These categories come from
 known runtime codes; raw exceptions, certificate text, URLs and keys are omitted.

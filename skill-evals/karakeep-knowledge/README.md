@@ -64,6 +64,16 @@ Additional agent behavior scenarios (expected, not executed):
 - An actual host/transport failure: report it without clearing proxy configuration,
   switching instances or treating the failure as permission to recreate data.
 
+## Sandbox and proxy regressions
+
+The Node suite covers absent, disabled and enabled `NODE_USE_ENV_PROXY` without
+changing host proxy variables, preserving route validation and safe transport
+diagnostics. These synthetic tests do not establish host permission. Behavioral
+evaluation must also cover a blocked shell check with working MCP reads: report
+both paths, keep helper readiness unverified and perform no implied sync/write.
+A host-policy denial must come from actual host evidence, never a proxy flag or
+a generic transport/HTTP failure.
+
 ## Qualification boundary
 
 The intended utility is reuse of the existing collection without duplicate setup,
