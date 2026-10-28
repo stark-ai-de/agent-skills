@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "916da097c4dc3f29609cd3f419aeb387dbe21674d6f9223b2bccb0a0b51b9dd7"
+      "sha256": "938ad4714098d8263d516df90a72a460058f0a2e1517a5e254dc287f274f87e2"
     },
     {
       "byteLength": 2128,
@@ -2355,10 +2355,10 @@
       "sha256": "7f89290ef095005fa50242f8243fe36aea2b867716f922de01a312e77343bae6"
     },
     {
-      "byteLength": 10503,
+      "byteLength": 10723,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/SKILL.md",
-      "sha256": "d76b145404ce8655760aadbcb85161e29862f45c8190c1d82472feca3f8656a1"
+      "sha256": "77363a802d96b4c5723a525410ff5848f2ac74a8b2a36274de27795da86342d2"
     },
     {
       "byteLength": 488,
@@ -2433,10 +2433,10 @@
       "sha256": "87d2ae9553eee8b3f05f5ddc1b597af7249ad44ade6f02826aff11bbb9af4b29"
     },
     {
-      "byteLength": 14509,
+      "byteLength": 15209,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/helper.md",
-      "sha256": "884e15bc15bcbc95548cd309a5c52ce9dd3efb671eb59828c99627adb8122b5f"
+      "sha256": "7da708f0a5c3c1b9eece93efe66071de2d4619f6860a024c3727d83e51c27bb3"
     },
     {
       "byteLength": 5977,
@@ -2445,10 +2445,10 @@
       "sha256": "46f536bfb13bd411f0ff0496dcf51fa10574fbc523d3587399da2b5e453b174f"
     },
     {
-      "byteLength": 6193,
+      "byteLength": 6380,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/mcp.md",
-      "sha256": "3886e8bef5f9356e3c6f674da58787d4e31aaaaee1937e282f1ee9b839d8bb4c"
+      "sha256": "bcd501a7bb49f1633c4c698c5cbd4afa896ed01de2d00c0277d326a4d4f3dfa8"
     },
     {
       "byteLength": 5680,
@@ -2457,10 +2457,10 @@
       "sha256": "44465eed957cf3e90f8a0c7ec1f1df7677f1e2eabf8b5a4e257b070ae3fbbe05"
     },
     {
-      "byteLength": 7840,
+      "byteLength": 8946,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/references/setup.md",
-      "sha256": "1968507e65533b98faceb2720ba0be777ca00ccadc89cf16fa79e2c465103c78"
+      "sha256": "619828e8869c6cdfc6d37ef642dc28fde63532af89fe3f2ffda68cf86f892dd8"
     },
     {
       "byteLength": 7208,
@@ -2493,10 +2493,10 @@
       "sha256": "d1627b2aaac7961f357fac401fc3bfee6d25f64b7123688489c83c54078621e7"
     },
     {
-      "byteLength": 11104,
+      "byteLength": 11043,
       "mode": "0644",
       "path": "skills/karakeep-knowledge/scripts/knowledge/karakeep.mjs",
-      "sha256": "9e48aa576350f63d1c2547fd46eca076eeb4008823114a39195acbf24806c123"
+      "sha256": "da9200fba5d8aa25357880eb9412a57d3c90470a0c0afb5fcb2f235d55dd7227"
     },
     {
       "byteLength": 46215,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.0"
+    "version": "1.19.1"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "114818f0dcf24d0f13098e2cb23c157231a6dbc0d622660bc60df4bbe7f7c4e5"
+  "treeHash": "e7b42fae1291b4e6dd3e1a92d564b6792f69f70e437c1e088c8a5141e21eafad"
 }

@@ -14,9 +14,19 @@ content assessment, factual reporting, synthesis, proposals and policy adoption.
 
 Use private owner-only regular files (0600), private directories (0700), absolute
 paths and no symlinks for credentials, policies or state. Credentials are referenced,
-never passed on the command line. Proxy-enabled Node runtimes are refused because
-this profile sends private credentials only to loopback; request the host's normal
-local-service permission instead of bypassing its sandbox/network restrictions.
+never passed on the command line. The helper uses the configured service origin
+and the host runtime's existing network/proxy behavior. Proxy environment variables
+do not identify a Karakeep instance or establish a permission failure, so they do
+not block a request. The helper never clears or overrides them. Keep native host
+permissions in force and report actual transport/HTTP failures. Select an existing
+connection through [setup](setup.md#select-an-existing-connection); no automatic
+instance discovery or host switching is implied.
+
+When `NODE_USE_ENV_PROXY=1`, Node routes requests through the configured
+`HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` settings. Treat those proxy routes as
+trusted and authorized by host policy: a loopback URL alone does not prove transport
+stays local. Do not clear, bypass or reconfigure a host proxy automatically. See
+[Node.js proxy configuration](https://nodejs.org/api/cli.html#node_use_env_proxy1).
 
 ## Global installation and start instruction
 

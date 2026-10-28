@@ -2,8 +2,10 @@
 
 Karakeep's web service stores the collection. The official `@karakeep/mcp` process
 exposes tools over STDIO and calls that service. The browser UI is not in this path.
-Every agent connects to the same endpoint and intended account; another MCP process
-does not require another database.
+Each client uses its selected endpoint and intended account; another MCP process
+does not require another database. Multiple installations may be intentional. Use
+the [connection selection rule](setup.md#select-an-existing-connection) when the
+intended target is unclear, including across Windows and WSL.
 
 ## Runtime and credentials
 
