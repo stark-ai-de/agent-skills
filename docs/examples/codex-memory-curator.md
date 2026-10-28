@@ -33,3 +33,7 @@ Expected report shape:
 
 No edits applied yet. For larger cleanup sets, attach a structured plan with IDs, risk tags, confidence, proposed action, and approval status. Approval is required before writing backups or modifying memory files.
 ```
+
+## Approved note not yet applied
+
+When the host permits only a correction note, report its storage separately from application to generated memory. Use the skill's [consolidation readiness guide](../../skills/codex-operations/codex-memory-curator/references/config-modes.md#consolidation-readiness-and-user-guidance) to identify version-qualified gates and user actions. The six-hour cooldown verified for rust-v0.163.0 is not a universal or user-configurable timing promise.

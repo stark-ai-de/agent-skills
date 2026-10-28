@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "plugin": {
     "name": "stark-ai-developer",
-    "version": "1.19.0",
+    "version": "1.19.5",
     "displayName": "stark AI Developer",
     "shortDescription": "Harness-first toolkit",
     "longDescription": "stark AI Developer supports product blueprints, specifications, architecture decisions, code search, diagrams, visual reports, repository visuals, agent memory, capability advice, Telegram bots and local Karakeep knowledge. Its open-source instructions and scripts are reviewable.\n\nThe OpenAI package has no bundled service or telemetry. Jev optionally sends tasks and public capability cards to TypeSafe using your key. Telegram remote operations can send code or tests and change live data. Karakeep requires a separately installed official MCP and local service; approved sync and curation change saved content. Retrieved knowledge reaches your agent provider under the host data policy. Installation starts no service, scheduler or watcher. The host controls discovery and permissions; external services retain their own access requirements.",
