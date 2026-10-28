@@ -1,0 +1,364 @@
+[
+  {
+    "id": "CONNECT",
+    "title": "Connect without an account",
+    "detail": "Initialize the production MCP over HTTP. No credentials are required.",
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {},
+        "clientInfo": {
+          "name": "publisher-review-walkthrough",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "response": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "serverInfo": {
+        "name": "stark-ai-metadata-validator",
+        "version": "1.0.0"
+      }
+    }
+  },
+  {
+    "id": "TOOLS",
+    "title": "Two tools. Clear boundaries.",
+    "detail": "Discovery declares read-only metadata validation and no open-world actions.",
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list",
+      "params": {}
+    },
+    "response": [
+      {
+        "name": "validate_skill_metadata",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": false,
+          "idempotentHint": true
+        }
+      },
+      {
+        "name": "validate_plugin_manifest",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": false,
+          "idempotentHint": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "P1",
+    "title": "Minimal valid skill metadata",
+    "detail": "Return valid=true, the dated skill ruleset, no issues and truncated=false.",
+    "step": "",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "name: sample\ndescription: Validate supplied sample metadata.",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": true,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:46:36.451Z"
+  },
+  {
+    "id": "P2",
+    "title": "Valid optional skill metadata",
+    "detail": "Accept the supplied optional string fields and metadata mapping; return valid=true.",
+    "step": "",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "name: sample\ndescription: Validate supplied sample metadata.\nlicense: Apache-2.0\ncompatibility: Requires Node.js 24.\nallowed-tools: Read\nmetadata:\n  author: example\n  version: \"1.0.0\"",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": true,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:46:45.160Z"
+  },
+  {
+    "id": "P3",
+    "title": "Valid portable plugin metadata",
+    "detail": "Return valid=true and ruleset agent-plugins-1.0.0. Do not claim to inspect referenced files or the ZIP.",
+    "step": "",
+    "request": {
+      "name": "validate_plugin_manifest",
+      "arguments": {
+        "manifest_json": "{\"$schema\": \"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json\", \"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"description\": \"Example metadata only.\"}",
+        "format": "agent-plugins-1.0.0"
+      }
+    },
+    "response": {
+      "valid": true,
+      "ruleset": "agent-plugins-1.0.0",
+      "issues": [],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:46:53.912Z"
+  },
+  {
+    "id": "P4",
+    "title": "Valid OpenAI-native metadata",
+    "detail": "Return valid=true with the dated OpenAI metadata ruleset. Explain that this is metadata validation, not publication approval.",
+    "step": "",
+    "request": {
+      "name": "validate_plugin_manifest",
+      "arguments": {
+        "manifest_json": "{\"name\": \"sample-plugin\", \"version\": \"1.0.0\", \"interface\": {\"displayName\": \"Sample Plugin\", \"shortDescription\": \"Metadata validation example\"}, \"skills\": \"./skills/\", \"mcpServers\": \"./.mcp.json\"}",
+        "format": "openai-native"
+      }
+    },
+    "response": {
+      "valid": true,
+      "ruleset": "openai-native-metadata-2026-10-16",
+      "issues": [],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:02.614Z"
+  },
+  {
+    "id": "P5",
+    "title": "Correct metadata and revalidate",
+    "detail": "First report valid=false and skill.directory_mismatch; after correction report valid=true. Keep the directory unchanged.",
+    "step": "1/2",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "name: different\ndescription: Example",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": false,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [
+        {
+          "code": "skill.directory_mismatch",
+          "path": "/name",
+          "message": "Skill name must equal its directory name."
+        }
+      ],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:11.387Z"
+  },
+  {
+    "id": "P5",
+    "title": "Correct metadata and revalidate",
+    "detail": "First report valid=false and skill.directory_mismatch; after correction report valid=true. Keep the directory unchanged.",
+    "step": "2/2",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "name: sample\ndescription: Example",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": true,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:18.078Z"
+  },
+  {
+    "id": "N1",
+    "title": "Missing required metadata and directory mismatch",
+    "detail": "Report missing/invalid name and then a directory mismatch. Do not invent a successful result.",
+    "step": "1/2",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "description: Example",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": false,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [
+        {
+          "code": "skill.name",
+          "path": "/name",
+          "message": "Use 1\u201364 lowercase ASCII letters, digits and single separating hyphens."
+        }
+      ],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:24.805Z"
+  },
+  {
+    "id": "N1",
+    "title": "Missing required metadata and directory mismatch",
+    "detail": "Report missing/invalid name and then a directory mismatch. Do not invent a successful result.",
+    "step": "2/2",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "frontmatter": "name: different\ndescription: Example",
+        "directory_name": "sample"
+      }
+    },
+    "response": {
+      "valid": false,
+      "ruleset": "agent-skills-metadata-2026-10-16",
+      "issues": [
+        {
+          "code": "skill.directory_mismatch",
+          "path": "/name",
+          "message": "Skill name must equal its directory name."
+        }
+      ],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:31.588Z"
+  },
+  {
+    "id": "N2",
+    "title": "Malformed JSON and schema errors",
+    "detail": "Return valid=false for both: input.parse for malformed JSON, schema issues for invalid field types/version. Do not crash.",
+    "step": "1/2",
+    "request": {
+      "name": "validate_plugin_manifest",
+      "arguments": {
+        "manifest_json": "{",
+        "format": "openai-native"
+      }
+    },
+    "response": {
+      "valid": false,
+      "ruleset": "openai-native-metadata-2026-10-16",
+      "issues": [
+        {
+          "code": "input.parse",
+          "path": "/",
+          "message": "Expected valid JSON."
+        }
+      ],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:38.410Z"
+  },
+  {
+    "id": "N2",
+    "title": "Malformed JSON and schema errors",
+    "detail": "Return valid=false for both: input.parse for malformed JSON, schema issues for invalid field types/version. Do not crash.",
+    "step": "2/2",
+    "request": {
+      "name": "validate_plugin_manifest",
+      "arguments": {
+        "manifest_json": "{\"name\":42,\"version\":\"bad\"}",
+        "format": "openai-native"
+      }
+    },
+    "response": {
+      "valid": false,
+      "ruleset": "openai-native-metadata-2026-10-16",
+      "issues": [
+        {
+          "code": "schema.type",
+          "path": "/name",
+          "message": "must be string"
+        },
+        {
+          "code": "schema.pattern",
+          "path": "/version",
+          "message": "must match pattern \"^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$\""
+        }
+      ],
+      "truncated": false
+    },
+    "at": "2026-10-16T20:47:45.091Z"
+  },
+  {
+    "id": "N3",
+    "title": "Unsupported file, URL and shell actions",
+    "detail": "Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments.",
+    "step": "1/3",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "path": "/etc/passwd"
+      }
+    },
+    "response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"path\""
+        }
+      ],
+      "isError": true
+    },
+    "at": "2026-10-16T20:47:51.821Z"
+  },
+  {
+    "id": "N3",
+    "title": "Unsupported file, URL and shell actions",
+    "detail": "Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments.",
+    "step": "2/3",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "url": "https://example.com/private.yaml"
+      }
+    },
+    "response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"url\""
+        }
+      ],
+      "isError": true
+    },
+    "at": "2026-10-16T20:47:58.547Z"
+  },
+  {
+    "id": "N3",
+    "title": "Unsupported file, URL and shell actions",
+    "detail": "Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments.",
+    "step": "3/3",
+    "request": {
+      "name": "validate_skill_metadata",
+      "arguments": {
+        "command": "uname -a"
+      }
+    },
+    "response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: Invalid arguments for tool validate_skill_metadata: frontmatter: Invalid input: expected string, received undefined, directory_name: Invalid input: expected string, received undefined, Unrecognized key: \"command\""
+        }
+      ],
+      "isError": true
+    },
+    "at": "2026-10-16T20:48:05.294Z"
+  }
+]

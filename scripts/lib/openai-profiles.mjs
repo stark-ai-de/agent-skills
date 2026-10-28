@@ -15,7 +15,12 @@ export function listingForOpenAiIdentity(listing, profile) {
   const selected = structuredClone(listing);
   selected.canonicalPluginName = listing.plugin.name;
   selected.submissionProfile = profile;
+  if (profile.pluginId !== "stark-ai-developer-tools" || profile.transport !== "http") {
+    delete selected.mcpSubmission;
+  }
   if (profile.transport !== "none") {
+    if (selected.mcpSubmission?.publication?.release_notes)
+      selected.releaseNotes = selected.mcpSubmission.publication.release_notes;
     Object.assign(selected.plugin, {
       name: profile.pluginId,
       version: profile.version,

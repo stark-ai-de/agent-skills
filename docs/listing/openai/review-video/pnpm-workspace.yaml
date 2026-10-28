@@ -1,0 +1,12 @@
+packages:
+  - .
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+strictDepBuilds: true
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+allowBuilds:
+  esbuild: true
+overrides:
+  # Babel's older semver range fails the provenance policy; use the root-qualified parser.
+  semver@6.3.1: 7.8.5

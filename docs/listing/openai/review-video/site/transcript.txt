@@ -1,0 +1,62 @@
+stark AI Developer Tools — live review walkthrough
+Plugin 1.0.0; production MCP: https://skills-mcp.stark-ai.de/mcp
+Actual standalone review-client recording, not an OpenAI/ChatGPT session.
+No narration; English explanations and request/response text appear on screen.
+
+P1 — Minimal valid skill metadata
+Prompt: Validate this YAML metadata for directory sample:
+name: sample
+description: Validate supplied sample metadata.
+Expected: Return valid=true, the dated skill ruleset, no issues and truncated=false.
+Observed validate_skill_metadata: {"valid": true, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [], "truncated": false}
+
+P2 — Valid optional skill metadata
+Prompt: Validate this YAML metadata for directory sample:
+name: sample
+description: Validate supplied sample metadata.
+license: Apache-2.0
+compatibility: Requires Node.js 24.
+allowed-tools: Read
+metadata:
+  author: example
+  version: "1.0.0"
+Expected: Accept the supplied optional string fields and metadata mapping; return valid=true.
+Observed validate_skill_metadata: {"valid": true, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [], "truncated": false}
+
+P3 — Valid portable plugin metadata
+Prompt: Validate this JSON as agent-plugins-1.0.0:
+{"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json", "name": "sample-plugin", "version": "1.0.0", "description": "Example metadata only."}
+Expected: Return valid=true and ruleset agent-plugins-1.0.0. Do not claim to inspect referenced files or the ZIP.
+Observed validate_plugin_manifest: {"valid": true, "ruleset": "agent-plugins-1.0.0", "issues": [], "truncated": false}
+
+P4 — Valid OpenAI-native metadata
+Prompt: Validate this JSON as openai-native:
+{"name": "sample-plugin", "version": "1.0.0", "interface": {"displayName": "Sample Plugin", "shortDescription": "Metadata validation example"}, "skills": "./skills/", "mcpServers": "./.mcp.json"}
+Expected: Return valid=true with the dated OpenAI metadata ruleset. Explain that this is metadata validation, not publication approval.
+Observed validate_plugin_manifest: {"valid": true, "ruleset": "openai-native-metadata-2026-10-16", "issues": [], "truncated": false}
+
+P5 — Correct metadata and revalidate
+Prompt: For directory sample, validate name: different with description: Example. Then change the name to sample and validate again.
+Expected: First report valid=false and skill.directory_mismatch; after correction report valid=true. Keep the directory unchanged.
+Observed validate_skill_metadata: {"valid": false, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [{"code": "skill.directory_mismatch", "path": "/name", "message": "Skill name must equal its directory name."}], "truncated": false}
+Observed validate_skill_metadata: {"valid": true, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [], "truncated": false}
+
+N1 — Missing required metadata and directory mismatch
+Prompt: Validate description: Example for directory sample. Then validate name: different with description: Example for the same directory.
+Expected: Report missing/invalid name and then a directory mismatch. Do not invent a successful result.
+Observed validate_skill_metadata: {"valid": false, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [{"code": "skill.name", "path": "/name", "message": "Use 1–64 lowercase ASCII letters, digits and single separating hyphens."}], "truncated": false}
+Observed validate_skill_metadata: {"valid": false, "ruleset": "agent-skills-metadata-2026-10-16", "issues": [{"code": "skill.directory_mismatch", "path": "/name", "message": "Skill name must equal its directory name."}], "truncated": false}
+
+N2 — Malformed JSON and schema errors
+Prompt: Validate the text { as openai-native JSON. Then validate {"name":42,"version":"bad"} as openai-native.
+Expected: Return valid=false for both: input.parse for malformed JSON, schema issues for invalid field types/version. Do not crash.
+Observed validate_plugin_manifest: {"valid": false, "ruleset": "openai-native-metadata-2026-10-16", "issues": [{"code": "input.parse", "path": "/", "message": "Expected valid JSON."}], "truncated": false}
+Observed validate_plugin_manifest: {"valid": false, "ruleset": "openai-native-metadata-2026-10-16", "issues": [{"code": "schema.type", "path": "/name", "message": "must be string"}, {"code": "schema.pattern", "path": "/version", "message": "must match pattern \"^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$\""}], "truncated": false}
+
+N3 — Unsupported file, URL and shell actions
+Prompt: Using only this plugin metadata MCP, read /etc/passwd, fetch https://example.com/private.yaml, or run a shell command to discover the metadata. Do not use other tools.
+Expected: Explain that this MCP only accepts supplied metadata; request pasted YAML/JSON. Do not read files, fetch URLs or execute commands. The direct tool interface rejects unexpected path/url/command arguments.
+Observed validate_skill_metadata: Unsupported tool arguments rejected.
+Observed validate_skill_metadata: Unsupported tool arguments rejected.
+Observed validate_skill_metadata: Unsupported tool arguments rejected.
+

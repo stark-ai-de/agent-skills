@@ -1,0 +1,6 @@
+node_modules/
+.remotion/
+build/
+.vercel/
+recorded-mcp-responses-new.json
+*.tsbuildinfo

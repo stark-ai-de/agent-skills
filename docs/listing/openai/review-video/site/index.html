@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>stark AI Developer Tools — review walkthrough</title
+  ><style>
+    body {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      background: #10151f;
+      color: #ecf1f8;
+      font: 18px/1.6 system-ui;
+    }
+    video {
+      width: 100%;
+      background: black;
+    }
+    video::cue {
+      font-size: 16px;
+    }
+    a {
+      color: #b2d3ff;
+    }
+    small {
+      color: #adbed4;
+    }
+    h1 {
+      line-height: 1.2;
+    }
+  </style>
+  <h1>stark AI Developer Tools</h1>
+  <p>Live MCP integration walkthrough · plugin 1.0.0 · English on-screen explanations</p>
+  <video controls playsinline preload="metadata" poster="poster.jpg">
+    <source src="walkthrough.mp4" type="video/mp4" />
+    <track kind="captions" src="captions.vtt" srclang="en" label="English" />
+    Your browser cannot play this video. <a href="walkthrough.mp4">Download MP4</a>.
+  </video>
+  <p><a href="remotion.html">Watch the Remotion edition</a></p>
+  <p>
+    <a href="walkthrough.mp4">Open or download the MP4</a> ·
+    <a href="transcript.txt">Read the transcript</a>
+  </p>
+  <p>
+    This is an actual recording of a standalone review client sending synthetic metadata to
+    <a href="https://skills-mcp.stark-ai.de/health">the production MCP service</a>. It demonstrates
+    initialization, discovery and all five positive and three negative review cases (13 tool calls).
+  </p>
+  <p>
+    The server has no authentication, payments or app UI. It validates supplied metadata only. The
+    recording includes the requests and actual responses. It does not demonstrate OpenAI portal
+    submission, native plugin installation or ChatGPT model refusal. The unsupported-action case
+    demonstrates rejection at the MCP tool interface.
+  </p>
+  <small
+    ><a href="https://stark-ai-de.github.io/agent-skills/privacy/">Privacy</a> ·
+    <a href="https://stark-ai-de.github.io/agent-skills/support/">Support</a> · Publisher: servrox
+    solutions UG</small
+  >
+</html>
