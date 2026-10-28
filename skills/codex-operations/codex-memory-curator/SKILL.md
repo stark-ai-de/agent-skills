@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.2.3"
+  version: "0.2.4"
 ---
 
 # Codex Memory Curator
@@ -67,6 +67,7 @@ Workflow selection does not authorize whole-file deletion, destructive recovery,
 - Do not inspect when the route is unresolved, and do not mutate unless the selected route and user request authorize cleanup of the exact target scope.
 - Never silently delete, rewrite, truncate, or move memory files.
 - Back up every exact file before an approved edit and report the backup path.
+- Follow host memory-update restrictions: when only an extension note is permitted, store the approved correction there and preserve generated files. A stored note is not proof that the active index changed.
 - Do not print full secrets, tokens, credentials, customer data, private identifiers, or sensitive personal data.
 - If secret-like data is found, redact values in output, identify file and line when possible, recommend removal, and recommend rotation for real credentials.
 - If the memory schema is unclear, do not edit it directly. Defer it in the current record or chat result.
@@ -122,6 +123,10 @@ Every route applies the same review quality to the explicitly requested scope be
 
 Direct cleanup (`cleanup-chat` or `cleanup-file`) is limited to high-confidence atomic edits, moves, or entry deletion in existing, editable, runtime-owned Codex memory. Defer whole-file deletion, new context files, config, `AGENTS.md`, repository docs, skills, generated append-only evidence, uncertain schemas, medium/low-confidence changes, and any scope expansion. A plan-run route may execute broader curation changes only when the approved plan names each destination, write path, backup, rollback, and separate approval boundary.
 
+## Application to active memory
+
+When a correction uses an extension note, consolidation is pending, or the user asks when it becomes active, read [references/config-modes.md#consolidation-readiness-and-user-guidance](references/config-modes.md#consolidation-readiness-and-user-guidance). Distinguish **stored**, **pending**, **verified**, and **unknown** application in the selected route's existing result. Guide the user through only missing, evidenced prerequisites; do not make runtime troubleshooting mandatory for an ordinary review. A cleanup request alone does not authorize restarting Codex, creating chats, editing databases, or changing memory/quota settings. Verify the targeted generated entries before claiming application.
+
 ## Plan lifecycle
 
 Respect active/requested native Plan mode and actual write permissions on every route: no report, backup, or cleanup write while Plan is active or permission is unknown. Planning may continue read-only without a manual mode switch. For `plan-*` routes or pending material questions, read [references/plan-lifecycle.md](references/plan-lifecycle.md). Reuse unchanged approval; mode exit alone is not approval, and unanswered questions grant no authority. Recheck state before writes and reconfirm only material changes. Plan-only routes never authorize cleanup.
@@ -146,6 +151,7 @@ Read only when needed:
 
 - Classification and conflict: `references/classification-rubric.md`, `references/conflict-resolution.md`.
 - Config and store boundaries: `references/config-modes.md`, `references/memory-store-anatomy.md`.
+- Pending updates and user actions: the consolidation readiness section of `references/config-modes.md`.
 - Safe mutation and examples: `references/safe-editing-procedure.md`, `references/example-review-report.md`.
 - Output artifacts: `assets/review-report-template.md`, `assets/cleanup-plan-template.md`.
 

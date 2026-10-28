@@ -2347,7 +2347,7 @@ for (const curator of curators) {
       fail(`${curator.name}: missing plan lifecycle invariant ${marker}`);
   }
   const version = skill.match(/\n  version: "([^"]+)"/)?.[1];
-  const expectedVersion = curator.runtime === "codex" ? "0.2.3" : "0.2.2";
+  const expectedVersion = curator.runtime === "codex" ? "0.2.4" : "0.2.2";
   if (version !== expectedVersion) {
     fail(`${skillRelative}: expected version ${expectedVersion}; found ${version ?? "none"}`);
   }
