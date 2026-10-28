@@ -64,6 +64,47 @@ function writeListing(fixture, listing, listingPath) {
   fs.writeFileSync(listingPath, `${JSON.stringify(listing, null, 2)}\n`);
 }
 
+const invalidSubmissionFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(invalidSubmissionFixture);
+  listing.mcpSubmission.publication.countries = ["ZZ"];
+  listing.mcpSubmission.review.test_cases.positive[0].prompt = "";
+  writeListing(invalidSubmissionFixture, listing, listingPath);
+  const errors = validateOpenAiListing(invalidSubmissionFixture).errors;
+  assert.ok(errors.some((error) => error.includes("publication.countries")));
+  assert.ok(errors.some((error) => error.includes("test_cases.positive")));
+} finally {
+  fs.rmSync(invalidSubmissionFixture, { recursive: true, force: true });
+}
+
+const invalidRegionFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(invalidRegionFixture);
+  listing.mcpSubmission.publication.countries = ["EU"];
+  writeListing(invalidRegionFixture, listing, listingPath);
+  assert.ok(
+    validateOpenAiListing(invalidRegionFixture).errors.some((error) =>
+      error.includes("publication.countries"),
+    ),
+  );
+} finally {
+  fs.rmSync(invalidRegionFixture, { recursive: true, force: true });
+}
+
+const validCountryFixture = createFixture();
+try {
+  const { listing, listingPath } = readListing(validCountryFixture);
+  listing.mcpSubmission.publication.countries = ["US"];
+  writeListing(validCountryFixture, listing, listingPath);
+  assert.ok(
+    !validateOpenAiListing(validCountryFixture).errors.some((error) =>
+      error.includes("publication.countries"),
+    ),
+  );
+} finally {
+  fs.rmSync(validCountryFixture, { recursive: true, force: true });
+}
+
 const privateUrlFixture = createFixture();
 try {
   const { listing, listingPath } = readListing(privateUrlFixture);
@@ -245,7 +286,7 @@ for (const theme of ["light", "dark"]) {
 }
 
 // Review details must survive packaging under the documented extension namespace.
-for (const profile of ["new-remote", "existing-remote", "desktop-local"]) {
+for (const profile of ["new-remote"]) {
   const selected = listingForProfile(repositoryRoot, listing, profile);
   const manifest = openAiManifestFromListing(selected);
   const submission = manifest.extensions["com.openai"];
@@ -264,6 +305,14 @@ for (const profile of ["new-remote", "existing-remote", "desktop-local"]) {
   assert.ok(!("reviewer_instructions" in submission.review));
   submission.review.test_cases.positive[0].prompt = "changed copy";
   assert.notEqual(listing.mcpSubmission.review.test_cases.positive[0].prompt, "changed copy");
+}
+for (const profile of ["existing-remote", "desktop-local"]) {
+  const manifest = openAiManifestFromListing(listingForProfile(repositoryRoot, listing, profile));
+  assert.equal(
+    manifest.extensions,
+    undefined,
+    `${profile} must not inherit Tools submission metadata`,
+  );
 }
 const skillsOnly = openAiManifestFromListing(
   listingForProfile(repositoryRoot, listing, "existing-skills-only"),

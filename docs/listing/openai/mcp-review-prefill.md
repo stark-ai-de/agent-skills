@@ -1,13 +1,13 @@
 # MCP review information imported from the ZIP
 
 The canonical listing source `stark-ai-developer.json` owns `mcpSubmission`.
-For MCP profiles, the OpenAI generator copies it into
+For the Tools remote profile, the OpenAI generator copies it into
 `.codex-plugin/plugin.json` under `extensions.com.openai`. Skills-only packages
 omit these fields. Canonical skill-local `agents/openai.yaml` files are unchanged.
 
 The package supplies exactly five positive and three negative review cases,
-no-commerce information, release notes, German listing text and an empty
-`publication.countries` allowlist (no additional publisher country restriction).
+no-commerce information, release notes and German listing text.
+Country targeting is omitted to preserve the portal’s existing targeting; verify it manually before submission.
 English remains the base listing language; localization does not translate the
 skill files or add language guarantees to the runtime.
 
@@ -74,3 +74,5 @@ state record. Do not replace published assets or treat an in-review draft as app
 
 Source checked 2026-10-16:
 [OpenAI submission metadata reference](https://developers.openai.com/plugins/deploy/submission).
+
+The walkthrough is historical first-submission evidence and shows version 1.0.0. Verify that it remains representative before using it for a later submission.

@@ -23,6 +23,13 @@ const ALLOWED_INTERFACE_KEYS = new Set([
   "default_prompt",
 ]);
 const ALLOWED_POLICY_KEYS = new Set(["products", "allow_implicit_invocation"]);
+// ISO 3166-1 alpha-2 assignments. Intl.DisplayNames also accepts regions such
+// as EU and returns "Unknown Region" for ZZ, so it cannot validate countries.
+const ISO_3166_ALPHA_2 = new Set(
+  "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(
+    " ",
+  ),
+);
 
 function isMapping(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -269,6 +276,74 @@ export function validateOpenAiYaml(root, entry) {
   return errors;
 }
 
+function validateMcpSubmission(submission, errors) {
+  if (!isMapping(submission)) {
+    errors.push("listing.mcpSubmission must be a mapping");
+    return;
+  }
+  const review = submission.review;
+  const publication = submission.publication;
+  if (!isMapping(review) || !isMapping(review.test_cases)) {
+    errors.push("listing.mcpSubmission.review.test_cases must be a mapping");
+  } else {
+    for (const kind of ["positive", "negative"]) {
+      const cases = review.test_cases[kind];
+      if (!Array.isArray(cases) || cases.length === 0) {
+        errors.push(`listing.mcpSubmission.review.test_cases.${kind} must be a nonempty array`);
+        continue;
+      }
+      for (const entry of cases) {
+        const fields =
+          kind === "positive"
+            ? ["description", "prompt", "tools_triggered", "expected_behavior"]
+            : ["description", "prompt", "expected_behavior"];
+        if (
+          !isMapping(entry) ||
+          fields.some((field) => typeof entry[field] !== "string" || !entry[field].trim())
+        ) {
+          errors.push(`listing.mcpSubmission.review.test_cases.${kind} contains an invalid case`);
+        }
+      }
+    }
+    if (
+      typeof review.commerce !== "boolean" ||
+      typeof review.commerce_description !== "string" ||
+      !review.commerce_description.trim()
+    )
+      errors.push("listing.mcpSubmission.review commerce fields are invalid");
+    validateUrl(
+      review.demo_recording_url,
+      "listing.mcpSubmission.review.demo_recording_url",
+      errors,
+    );
+  }
+  if (!isMapping(publication)) {
+    errors.push("listing.mcpSubmission.publication must be a mapping");
+    return;
+  }
+  if (typeof publication.release_notes !== "string" || !publication.release_notes.trim())
+    errors.push("listing.mcpSubmission.publication.release_notes is required");
+  if (
+    "countries" in publication &&
+    (!Array.isArray(publication.countries) ||
+      publication.countries.some(
+        (country) => typeof country !== "string" || !ISO_3166_ALPHA_2.has(country),
+      ))
+  )
+    errors.push("listing.mcpSubmission.publication.countries must contain ISO country codes");
+  if (
+    !isMapping(publication.translations) ||
+    !isMapping(publication.translations["de-DE"]) ||
+    typeof publication.translations["de-DE"].subtitle !== "string" ||
+    !publication.translations["de-DE"].subtitle.trim() ||
+    publication.translations["de-DE"].subtitle.length > 30 ||
+    typeof publication.translations["de-DE"].description !== "string" ||
+    !publication.translations["de-DE"].description.trim() ||
+    publication.translations["de-DE"].description.length > 4000
+  )
+    errors.push("listing.mcpSubmission.publication.translations.de-DE is invalid");
+}
+
 export function validateOpenAiListing(root) {
   const errors = [];
   const bundle = loadValidatedBundle(root);
@@ -278,6 +353,7 @@ export function validateOpenAiListing(root) {
   } catch (error) {
     return { bundle, listing: null, errors: [error.message] };
   }
+  if (listing.mcpSubmission !== undefined) validateMcpSubmission(listing.mcpSubmission, errors);
   const plugin = listing.plugin;
   if (!isMapping(plugin)) {
     errors.push("listing.plugin must be a mapping");
