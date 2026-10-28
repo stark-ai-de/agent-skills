@@ -38,6 +38,7 @@ jobs:
       recovery_candidate: ${{ steps.release-recovery.outputs.authorized == 'true' }}
       recovery_release_sha: ${{ steps.release-recovery.outputs.release_origin_sha }}
       origin_validate_run_id: ${{ steps.release-recovery.outputs.origin_validate_run_id }}
+      recovery_subject_set: ${{ steps.release-recovery.outputs.subject_set }}
       release_candidate: ${{ (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}
       release_pull_request: ${{ steps.release-provenance.outputs.pull_request || steps.release-recovery.outputs.pull_request }}
       readiness_required: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) || (steps.release-intent.outputs.contract_kind == 'release-pr' && steps.release-provenance.outputs.authorized == 'true') || steps.release-recovery.outputs.authorized == 'true' }}
@@ -144,6 +145,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       version: ${{ steps.version.outputs.version }}
+      subject_set: ${{ steps.version.outputs.subject_set }}
       release_sha: ${{ steps.version.outputs.release_sha }}
       validate_run_id: ${{ steps.validate-receipt.outputs.run_id }}
       plugin_version: ${{ steps.subject-identity.outputs.plugin_version }}
@@ -199,6 +201,8 @@ jobs:
             --candidate "${release_sha}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "release_sha=${release_sha}" >> "$GITHUB_OUTPUT"
+          subject_set=$(bun --bun --eval 'import { recoverySubjectSetForVersion } from "./scripts/release/verify-prepublication-release-recovery.mjs"; console.log(recoverySubjectSetForVersion(process.argv[1]))' "${version}")
+          echo "subject_set=${subject_set}" >> "$GITHUB_OUTPUT"
 
       - name: 🔗 Require successful hosted Validate run
         id: validate-receipt
@@ -249,7 +253,19 @@ jobs:
       - name: 🚀 Validate release contract
         run: pnpm run release:validate
 
+      - name: ⬇️ Download hosted legacy OpenAI subject
+        if: ${{ steps.version.outputs.subject_set == 'legacy' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: openai.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.validate-receipt.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
+
       - name: ⬇️ Download hosted OpenAI Tools subject
+        if: ${{ steps.version.outputs.subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-tools.zip
@@ -260,6 +276,7 @@ jobs:
           skip-decompress: true
 
       - name: ⬇️ Download hosted OpenAI skills-only subject
+        if: ${{ steps.version.outputs.subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-skills-only.zip
@@ -289,8 +306,19 @@ jobs:
           path: release-subjects
           skip-decompress: true
 
+      - name: ⬇️ Download release-origin legacy OpenAI subject
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' && needs.publication-trigger.outputs.recovery_subject_set == 'legacy' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: openai.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.publication-trigger.outputs.origin_validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-origin-subjects
+          skip-decompress: true
+
       - name: ⬇️ Download release-origin OpenAI Tools subject
-        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' && needs.publication-trigger.outputs.recovery_subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-tools.zip
@@ -301,7 +329,7 @@ jobs:
           skip-decompress: true
 
       - name: ⬇️ Download release-origin OpenAI skills-only subject
-        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' }}
+        if: ${{ needs.publication-trigger.outputs.recovery_candidate == 'true' && needs.publication-trigger.outputs.recovery_subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-skills-only.zip
@@ -412,12 +440,19 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 20
     outputs:
+      subject_set: ${{ needs.release-readiness.outputs.subject_set }}
       openai_handoff_status: ${{ steps.openai-handoff.outputs.status }}
       openai_handoff_reason: ${{ steps.openai-handoff.outputs.reason }}
       openai_plugin_version_changed: ${{ steps.openai-handoff.outputs.plugin_version_changed }}
       openai_issue_url: ${{ steps.openai-handoff.outputs.issue_url }}
       openai_issue_state: ${{ steps.openai-handoff.outputs.issue_state }}
       openai_issue_marker: ${{ steps.openai-handoff.outputs.marker }}
+      legacy_handoff_status: ${{ steps.legacy-openai-handoff.outputs.status }}
+      legacy_handoff_reason: ${{ steps.legacy-openai-handoff.outputs.reason }}
+      legacy_plugin_version_changed: ${{ steps.legacy-openai-handoff.outputs.plugin_version_changed }}
+      legacy_issue_url: ${{ steps.legacy-openai-handoff.outputs.issue_url }}
+      legacy_issue_state: ${{ steps.legacy-openai-handoff.outputs.issue_state }}
+      legacy_issue_marker: ${{ steps.legacy-openai-handoff.outputs.marker }}
       skills_handoff_status: ${{ steps.skills-only-handoff.outputs.status }}
       skills_handoff_reason: ${{ steps.skills-only-handoff.outputs.reason }}
       skills_plugin_version_changed: ${{ steps.skills-only-handoff.outputs.plugin_version_changed }}
@@ -493,7 +528,19 @@ jobs:
       - name: 📦 Install receipt validation dependencies
         run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
+      - name: ⬇️ Download hosted legacy OpenAI subject
+        if: ${{ needs.release-readiness.outputs.subject_set == 'legacy' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: openai.zip
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.release-readiness.outputs.validate_run_id }}
+          github-token: ${{ github.token }}
+          path: release-subjects
+          skip-decompress: true
+
       - name: ⬇️ Download hosted OpenAI Tools subject
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-tools.zip
@@ -504,6 +551,7 @@ jobs:
           skip-decompress: true
 
       - name: ⬇️ Download hosted OpenAI skills-only subject
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' }}
         uses: actions/download-artifact@v8
         with:
           name: openai-skills-only.zip
@@ -572,7 +620,7 @@ jobs:
             --github-output "$GITHUB_OUTPUT"
 
       - name: 🔏 Attest release subjects
-        if: ${{ steps.reconciliation.outputs.requires_attestation == 'true' && steps.reconciliation.outputs.release_published != 'true' }}
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' && steps.reconciliation.outputs.requires_attestation == 'true' && steps.reconciliation.outputs.release_published != 'true' }}
         uses: actions/attest@v4
         with:
           subject-path: |
@@ -580,14 +628,40 @@ jobs:
             release-subjects/openai-skills-only.zip
             release-subjects/portable.zip
 
+      - name: 🔏 Attest legacy release subjects
+        if: ${{ needs.release-readiness.outputs.subject_set == 'legacy' && steps.reconciliation.outputs.requires_attestation == 'true' && steps.reconciliation.outputs.release_published != 'true' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-subjects/openai.zip
+            release-subjects/portable.zip
+
       - name: 🔎 Verify release attestations
-        if: ${{ steps.reconciliation.outputs.attestation_verification_required == 'true' }}
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' && steps.reconciliation.outputs.attestation_verification_required == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
         run: |
           set -euo pipefail
           for archive in release-subjects/openai-tools.zip release-subjects/openai-skills-only.zip release-subjects/portable.zip; do
+            gh attestation verify "$archive" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
+              --signer-digest "$RELEASE_SHA" \
+              --repo "$GITHUB_REPOSITORY" \
+              --source-digest "$RELEASE_SHA" \
+              --source-ref refs/heads/main \
+              --format json \
+              > "${archive%.zip}.attestation.json"
+          done
+
+      - name: 🔎 Verify legacy release attestations
+        if: ${{ needs.release-readiness.outputs.subject_set == 'legacy' && steps.reconciliation.outputs.attestation_verification_required == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+        run: |
+          set -euo pipefail
+          for archive in release-subjects/openai.zip release-subjects/portable.zip; do
             gh attestation verify "$archive" \
               --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/publish-release.yml" \
               --signer-digest "$RELEASE_SHA" \
@@ -609,11 +683,18 @@ jobs:
         run: |
           set -euo pipefail
           tag="v${VERSION}"
-          openai_sha=$(sha256sum release-subjects/openai-tools.zip | awk '{print $1}')
-          skills_only_sha=$(sha256sum release-subjects/openai-skills-only.zip | awk '{print $1}')
+          if [ "${{ needs.release-readiness.outputs.subject_set }}" = "legacy" ]; then
+            openai_sha=$(sha256sum release-subjects/openai.zip | awk '{print $1}')
+            openai_bytes=$(stat -c '%s' release-subjects/openai.zip)
+            skills_only_sha=""
+            skills_only_bytes=""
+          else
+            openai_sha=$(sha256sum release-subjects/openai-tools.zip | awk '{print $1}')
+            openai_bytes=$(stat -c '%s' release-subjects/openai-tools.zip)
+            skills_only_sha=$(sha256sum release-subjects/openai-skills-only.zip | awk '{print $1}')
+            skills_only_bytes=$(stat -c '%s' release-subjects/openai-skills-only.zip)
+          fi
           portable_sha=$(sha256sum release-subjects/portable.zip | awk '{print $1}')
-          openai_bytes=$(stat -c '%s' release-subjects/openai-tools.zip)
-          skills_only_bytes=$(stat -c '%s' release-subjects/openai-skills-only.zip)
           portable_bytes=$(stat -c '%s' release-subjects/portable.zip)
 
           RECEIPT_TAG="${tag}" \
@@ -712,7 +793,7 @@ jobs:
           fi
 
       - name: Reconcile OpenAI Tools handoff
-        if: ${{ success() && steps.reconciliation-apply.outputs.release_published == 'true' }}
+        if: ${{ success() && needs.release-readiness.outputs.subject_set == 'multi-profile' && steps.reconciliation-apply.outputs.release_published == 'true' }}
         id: openai-handoff
         env:
           GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
@@ -729,7 +810,7 @@ jobs:
             --github-output "$GITHUB_OUTPUT"
 
       - name: Reconcile OpenAI skills-only handoff
-        if: ${{ success() && steps.reconciliation-apply.outputs.release_published == 'true' }}
+        if: ${{ success() && needs.release-readiness.outputs.subject_set == 'multi-profile' && steps.reconciliation-apply.outputs.release_published == 'true' }}
         id: skills-only-handoff
         env:
           GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
@@ -742,6 +823,22 @@ jobs:
             --tag "$RELEASE_TAG" \
             --release-sha "$RELEASE_SHA" \
             --profile existing-skills-only \
+            --subject-file release-subjects/release-subject.json \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Reconcile historical OpenAI handoff
+        if: ${{ success() && needs.release-readiness.outputs.subject_set == 'legacy' && steps.reconciliation-apply.outputs.release_published == 'true' }}
+        id: legacy-openai-handoff
+        env:
+          GH_TOKEN: ${{ steps.release-label-token.outputs.token }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          RELEASE_TAG: v${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          bun --bun scripts/release/reconcile-openai-plugin-issue.mjs apply \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --release-sha "$RELEASE_SHA" \
             --subject-file release-subjects/release-subject.json \
             --github-output "$GITHUB_OUTPUT"
 
@@ -784,6 +881,7 @@ jobs:
           bun-version-file: ".bun-version"
 
       - name: 🔎 Verify complete OpenAI Tools handoff
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' }}
         env:
           GH_TOKEN: ${{ github.token }}
           HANDOFF_MARKER: ${{ needs.publish.outputs.openai_issue_marker }}
@@ -814,6 +912,7 @@ jobs:
             --summary-file "$GITHUB_STEP_SUMMARY"
 
       - name: 🔎 Verify complete OpenAI skills-only handoff
+        if: ${{ needs.release-readiness.outputs.subject_set == 'multi-profile' }}
         env:
           GH_TOKEN: ${{ github.token }}
           HANDOFF_MARKER: ${{ needs.publish.outputs.skills_issue_marker }}
@@ -833,6 +932,36 @@ jobs:
             --release-sha "$RELEASE_SHA" \
             --release-pr "$RELEASE_PULL_REQUEST" \
             --profile existing-skills-only \
+            --handoff-status "$HANDOFF_STATUS" \
+            --handoff-reason "$HANDOFF_REASON" \
+            --plugin-version-changed "$PLUGIN_VERSION_CHANGED" \
+            --issue-url "$ISSUE_URL" \
+            --issue-state "$ISSUE_STATE" \
+            --marker "$HANDOFF_MARKER" \
+            --max-wait-seconds 600 \
+            --poll-interval-seconds 15 \
+            --summary-file "$GITHUB_STEP_SUMMARY"
+
+      - name: 🔎 Verify complete historical OpenAI handoff
+        if: ${{ needs.release-readiness.outputs.subject_set == 'legacy' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HANDOFF_MARKER: ${{ needs.publish.outputs.legacy_issue_marker }}
+          HANDOFF_REASON: ${{ needs.publish.outputs.legacy_handoff_reason }}
+          HANDOFF_STATUS: ${{ needs.publish.outputs.legacy_handoff_status }}
+          ISSUE_STATE: ${{ needs.publish.outputs.legacy_issue_state }}
+          ISSUE_URL: ${{ needs.publish.outputs.legacy_issue_url }}
+          PLUGIN_VERSION_CHANGED: ${{ needs.publish.outputs.legacy_plugin_version_changed }}
+          RELEASE_PULL_REQUEST: ${{ needs.publication-trigger.outputs.release_pull_request }}
+          RELEASE_SHA: ${{ needs.release-readiness.outputs.release_sha }}
+          RELEASE_TAG: v${{ needs.release-readiness.outputs.version }}
+        run: |
+          set -euo pipefail
+          bun --bun scripts/release/verify-release-completion.mjs \
+            --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" \
+            --release-sha "$RELEASE_SHA" \
+            --release-pr "$RELEASE_PULL_REQUEST" \
             --handoff-status "$HANDOFF_STATUS" \
             --handoff-reason "$HANDOFF_REASON" \
             --plugin-version-changed "$PLUGIN_VERSION_CHANGED" \

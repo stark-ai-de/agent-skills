@@ -6,7 +6,7 @@ This repository contains public Agent Skills.
 
 - Follow the Agent Skills specification: https://agentskills.io/specification.
 - Follow the Agent Plugins specification for repository-managed portable plugins: https://agent-plugins.org/specification.
-- Keep client-native plugin packages that cannot share the portable root contract in separate generated adapter projections, as required by [ADR-0071](docs/adrs/0071-add-target-specific-openai-distribution-profiles.short.md) ([Long, canonical](docs/adrs/0071-add-target-specific-openai-distribution-profiles.long.md) · [Guide](docs/adrs/0071-add-target-specific-openai-distribution-profiles.guide.md)).
+- Keep client-native plugin packages that cannot share the portable root contract in separate generated adapter projections, as required by [ADR-0076](docs/adrs/0076-publish-selected-openai-profiles-in-parallel.short.md) ([Long, canonical](docs/adrs/0076-publish-selected-openai-profiles-in-parallel.long.md) · [Guide](docs/adrs/0076-publish-selected-openai-profiles-in-parallel.guide.md)).
 - Canonical SSH management sources belong to `stark-ai-de/ssh-manager`. Import only reviewed, revision- and digest-pinned artifacts under `vendor/ssh-manager/runtime`; generated local runtime and MCP membership are target-specific. Run `pnpm run validate:ssh` for the consumer contract.
 - Do not commit `adapters/`. Generate OpenAI-native packages into disposable staging and archive them under `dist/openai/` with `pnpm run package:openai-plugin`; `pnpm run sync:openai-plugin` is a refuse-redirect.
 - Follow [`docs/listing/openai/stark-ai-developer-first-publication.md`](docs/listing/openai/stark-ai-developer-first-publication.md) for OpenAI portal upload and first-publication observations.

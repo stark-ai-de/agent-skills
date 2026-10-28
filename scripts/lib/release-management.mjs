@@ -1,4 +1,5 @@
 import { GENERATED_RELEASE_FILES } from "./release-please.mjs";
+import { isMultiProfileReleaseTag } from "./release-assets.mjs";
 
 export const RELEASE_PLEASE_LIFECYCLE_LABELS = Object.freeze([
   "autorelease: pending",
@@ -19,6 +20,9 @@ export const PRE_PUBLICATION_RECOVERY_PATHS = Object.freeze([
   "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.guide.md",
   "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.long.md",
   "docs/adrs/0062-admit-release-reconciler-repairs-to-unpublished-recovery.short.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.guide.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.long.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.short.md",
   "docs/publishing.md",
   "incubator/skills/repo-maintenance/release-manager/SKILL.md",
   "scripts/lib/release-management.mjs",
@@ -285,6 +289,34 @@ export function releaseRecoverySubjectErrors(origin, candidate) {
     candidate.sourceRevision?.tag !== "manual-review-required"
   ) {
     errors.push("pre-publication recovery subjects must retain the untagged validation marker");
+  }
+  const expectedLegacy = {
+    schemaVersion: 1,
+    openaiName: "openai.zip",
+    profileKeys: ["openai", "portable"],
+  };
+  const expectedMultiProfile = {
+    schemaVersion: 2,
+    openaiName: "openai-tools.zip",
+    profileKeys: ["openai", "openaiSkillsOnly", "portable"],
+  };
+  const expected = isMultiProfileReleaseTag(`v${origin.releaseVersion}`)
+    ? expectedMultiProfile
+    : expectedLegacy;
+  for (const [label, document] of [
+    ["origin", origin],
+    ["replacement", candidate],
+  ]) {
+    if (document.schemaVersion !== expected.schemaVersion) {
+      errors.push(`${label} subject schema does not match release tag profile`);
+    }
+    if (document.subjects?.openai?.name !== expected.openaiName) {
+      errors.push(`${label} OpenAI subject name does not match release tag profile`);
+    }
+    const keys = Object.keys(document.subjects ?? {}).sort();
+    if (JSON.stringify(keys) !== JSON.stringify([...expected.profileKeys].sort())) {
+      errors.push(`${label} subject membership does not match release tag profile`);
+    }
   }
   return errors;
 }
