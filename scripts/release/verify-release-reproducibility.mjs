@@ -170,16 +170,25 @@ function writeEvidence(filePath, evidence) {
 function releaseSubjectReport(firstBuild, checksums, differences) {
   const identity = pluginIdentity(firstBuild.root);
   const source = sourceIdentity(repositoryRoot);
+  const skillsOnlyProfile = identity.openaiProfiles.find(
+    (profile) => profile.profile === "existing-skills-only",
+  );
+  const openaiProfile = identity.openaiProfiles.find((profile) => profile.profile === "new-remote");
   return createReleaseSubject({
     status: differences.length === 0 ? "pass" : "blocked",
     sourceRevision: source,
     releaseVersion: packageVersion(),
     pluginVersion: identity.version,
     archiveProfile: identity.archiveProfile,
-    openaiProfile: identity.openaiProfile,
+    openaiProfile,
+    skillsOnlyProfile,
     openai: {
-      sha256: checksums["openai.zip"],
-      bytes: firstBuild.archives["openai.zip"].bytes,
+      sha256: checksums["openai-tools.zip"],
+      bytes: firstBuild.archives["openai-tools.zip"].bytes,
+    },
+    skillsOnly: {
+      sha256: checksums["openai-skills-only.zip"],
+      bytes: firstBuild.archives["openai-skills-only.zip"].bytes,
     },
     portable: {
       sha256: checksums["portable.zip"],
@@ -194,7 +203,7 @@ function writeReleaseSubjects(directory, firstBuild) {
   for (const legacyName of ["SHA256SUMS", "IDENTITY"]) {
     fs.rmSync(path.join(directory, legacyName), { force: true });
   }
-  for (const name of ["openai.zip", "portable.zip"]) {
+  for (const name of ["openai-skills-only.zip", "openai-tools.zip", "portable.zip"]) {
     fs.copyFileSync(firstBuild.archives[name].output, path.join(directory, name));
   }
 }
@@ -227,8 +236,10 @@ function writeSubjectOutputs(filePath, report, openaiArchive) {
     `release_version=${report.releaseVersion}`,
     `plugin_version=${report.pluginVersion}`,
     `openai_sha=${report.subjects.openai.sha256}`,
+    `skills_only_sha=${report.subjects.openaiSkillsOnly.sha256}`,
     `portable_sha=${report.subjects.portable.sha256}`,
     `openai_bytes=${report.subjects.openai.bytes}`,
+    `skills_only_bytes=${report.subjects.openaiSkillsOnly.bytes}`,
     `portable_bytes=${report.subjects.portable.bytes}`,
     `archive_profile=${report.archiveProfile}`,
     `openai_archive=${openaiArchive}`,
@@ -255,35 +266,49 @@ function buildIsolated(root) {
   copyInputs(root);
   syncPortableProjection({ root, gitRoot: repositoryRoot, dependencyRoot: repositoryRoot });
   const identity = pluginIdentity(root);
-  if (identity.openaiProfile.transport === "stdio") {
-    const packageRoot = path.join(root, "packages/skill-metadata-mcp");
-    fs.symlinkSync(
-      path.join(repositoryRoot, "packages/skill-metadata-mcp/node_modules"),
-      path.join(packageRoot, "node_modules"),
-      process.platform === "win32" ? "junction" : "dir",
-    );
-    execFileSync(process.execPath, [path.join(packageRoot, "build.mjs"), "stdio"], {
-      cwd: packageRoot,
-      stdio: "inherit",
-    });
+  const expectedProfiles = ["existing-skills-only", "new-remote"];
+  if (
+    JSON.stringify(identity.openaiProfiles.map((profile) => profile.profile)) !==
+    JSON.stringify(expectedProfiles)
+  ) {
+    throw new Error("release must select both expected OpenAI profiles in order");
   }
-  const openAi = withOpenAiStage(
-    root,
-    (staged) => ({
-      archive: createDirectoryArchive({
-        sourceRoot: staged.stage,
-        output: path.join(root, identity.openaiArchive),
-        archiveRoot: "",
-      }),
-      projection: {
-        path: OPENAI_EPHEMERAL_PROJECTION_PATH,
-        projectionSha256: projectionHash(staged.stage),
-        sourceManifestSha256: hash(path.join(staged.stage, "SOURCE-MANIFEST.json")),
-        pluginManifestSha256: hash(path.join(staged.stage, ".codex-plugin", "plugin.json")),
-      },
-    }),
-    { gitRoot: repositoryRoot },
+  const openAi = Object.fromEntries(
+    identity.openaiProfiles.map((profile) => [
+      profile.profile,
+      withOpenAiStage(
+        root,
+        (staged) => ({
+          archive: createDirectoryArchive({
+            sourceRoot: staged.stage,
+            output: path.join(root, profile.archive),
+            archiveRoot: "",
+          }),
+          projection: {
+            path: OPENAI_EPHEMERAL_PROJECTION_PATH,
+            projectionSha256: projectionHash(staged.stage),
+            sourceManifestSha256: hash(path.join(staged.stage, "SOURCE-MANIFEST.json")),
+            pluginManifestSha256: hash(path.join(staged.stage, ".codex-plugin", "plugin.json")),
+          },
+        }),
+        { gitRoot: repositoryRoot, profile: profile.profile },
+      ),
+    ]),
   );
+  const skillPayload = (archive) => {
+    const entries = unzipSync(fs.readFileSync(archive.output));
+    const paths = Object.keys(entries).filter(
+      (name) => name.startsWith("skills/") && !name.endsWith("/"),
+    );
+    if (paths.length === 0) throw new Error("OpenAI archive has no bundled skills");
+    return paths.sort(comparePosixPaths).map((name) => [name, hashBytes(entries[name])]);
+  };
+  if (
+    JSON.stringify(skillPayload(openAi["existing-skills-only"].archive)) !==
+    JSON.stringify(skillPayload(openAi["new-remote"].archive))
+  ) {
+    throw new Error("OpenAI profiles do not contain identical canonical skill files");
+  }
   if (fs.existsSync(path.join(root, "adapters"))) {
     throw new Error("isolated OpenAI packaging must not create adapters/");
   }
@@ -295,7 +320,8 @@ function buildIsolated(root) {
   const bundle = loadValidatedBundle(root);
   const archives = {
     "portable.zip": portableArchive,
-    "openai.zip": openAi.archive,
+    "openai-skills-only.zip": openAi["existing-skills-only"].archive,
+    "openai-tools.zip": openAi["new-remote"].archive,
     "claude.zip": withClaudeStage(
       root,
       ({ stage }) =>
@@ -316,13 +342,23 @@ function buildIsolated(root) {
       output: path.join(standaloneRoot, `${entry.name}.zip`),
     });
   }
-  return { root, archives, openAiProjection: openAi.projection };
+  return {
+    root,
+    archives,
+    openAiProjection: openAi["new-remote"].projection,
+    skillsOnlyProjection: openAi["existing-skills-only"].projection,
+  };
 }
 
 function buildEvidence(firstBuild, checksums, differences) {
   const bundle = loadValidatedBundle(firstBuild.root);
   const listing = readOpenAiListing(firstBuild.root);
   const identity = sourceIdentity(repositoryRoot);
+  const releaseProfiles = pluginIdentity(firstBuild.root).openaiProfiles;
+  const toolsProfile = releaseProfiles.find((profile) => profile.profile === "new-remote");
+  const skillsOnlyProfile = releaseProfiles.find(
+    (profile) => profile.profile === "existing-skills-only",
+  );
   const generatedManifests = {
     ...portableManifestHashes(firstBuild.root),
     openAiManifest: firstBuild.openAiProjection.pluginManifestSha256,
@@ -365,10 +401,18 @@ function buildEvidence(firstBuild, checksums, differences) {
       },
       openai: {
         ...firstBuild.openAiProjection,
-        profile: pluginIdentity(firstBuild.root).openaiProfile.profile,
+        profile: toolsProfile.profile,
         package: {
-          name: pluginIdentity(firstBuild.root).openaiProfile.pluginId,
-          version: pluginIdentity(firstBuild.root).openaiProfile.version,
+          name: toolsProfile.pluginId,
+          version: toolsProfile.version,
+        },
+      },
+      openaiSkillsOnly: {
+        ...firstBuild.skillsOnlyProjection,
+        profile: "existing-skills-only",
+        package: {
+          name: skillsOnlyProfile.pluginId,
+          version: skillsOnlyProfile.version,
         },
       },
     },
@@ -432,7 +476,7 @@ try {
       writeReleaseSubjects(subjectsDir, firstBuild);
       writeReleaseSubjectMetadata(subjectsDir, subjectReport);
     }
-    writeSubjectOutputs(githubOutput, subjectReport, pluginIdentity(firstBuild.root).openaiArchive);
+    writeSubjectOutputs(githubOutput, subjectReport, subjectReport.openaiProfile.archive);
     writeSubjectReport(reportFile, subjectReport);
     if (differences.length > 0) {
       writeStderr([

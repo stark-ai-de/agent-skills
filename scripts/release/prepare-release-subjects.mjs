@@ -67,6 +67,7 @@ function hasCurrentReport(report) {
     allowedStatus &&
     (!historical || normalized.releaseVersion === "0.19.1") &&
     isSha256(normalized.subjects.openai.sha256) &&
+    (normalized.schemaVersion !== 2 || isSha256(normalized.subjects.openaiSkillsOnly?.sha256)) &&
     isSha256(normalized.subjects.portable.sha256),
   );
 }
@@ -158,8 +159,10 @@ function appendSubjectOutputs(githubOutput, report) {
     source_sha: report.sourceRevision.commit,
     plugin_version: report.pluginVersion,
     openai_sha: report.subjects.openai.sha256,
+    skills_only_sha: report.subjects.openaiSkillsOnly?.sha256,
     portable_sha: report.subjects.portable.sha256,
     openai_bytes: report.subjects.openai.bytes,
+    skills_only_bytes: report.subjects.openaiSkillsOnly?.bytes,
     portable_bytes: report.subjects.portable.bytes,
     archive_profile: report.archiveProfile,
   });

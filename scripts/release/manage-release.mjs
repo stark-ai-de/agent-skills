@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -12,6 +13,7 @@ import {
   selectPostReleaseEvidenceRun,
 } from "../lib/post-release-evidence.mjs";
 import { resolveTagCommit } from "../lib/github-release-reconciliation.mjs";
+import { isMultiProfileReleaseTag, releaseAssetNamesForTag } from "../lib/release-assets.mjs";
 import {
   approvalRunErrors,
   missingReleasePleaseLifecycleLabels,
@@ -354,7 +356,7 @@ function openAiHandoff(repository, tag) {
     .map((asset) => asset?.name)
     .filter(Boolean)
     .sort();
-  const required = ["openai.zip", "portable.zip", "release-subject.json"].sort();
+  const required = releaseAssetNamesForTag(tag).sort();
   const stateChangedAt = releaseStateChangedAt({ ...release, assets: releaseAssets }, required);
   const tagIdentity = remoteTagIdentity(repository, tag);
   const subjectAsset = releaseAssets.find((asset) => asset?.name === "release-subject.json");
@@ -372,7 +374,7 @@ function openAiHandoff(repository, tag) {
     subject?.status !== "pass"
   ) {
     throw new Error(
-      `${tag} is not an annotated, revision-bound latest release with all three direct assets`,
+      `${tag} is not an annotated, revision-bound latest release with its exact direct assets`,
     );
   }
   const evidenceRuns = ghJson([
@@ -395,11 +397,55 @@ function openAiHandoff(repository, tag) {
       `${tag} requires a successful exact-tag Post-release Evidence run after the latest release update`,
     );
   }
+  const handoffs = isMultiProfileReleaseTag(tag)
+    ? [
+        [subject.openaiSkillsOnlyProfile, subject.subjects?.openaiSkillsOnly],
+        [subject.openaiProfile, subject.subjects?.openai],
+      ]
+    : [[subject.openaiProfile, subject.subjects?.openai]];
+  const handoffLines = [];
+  for (const [profile, archive] of handoffs) {
+    const matches = releaseAssets.filter((asset) => asset.name === archive?.name);
+    const asset = matches.length === 1 ? matches[0] : null;
+    if (!asset || !/^[a-f0-9]{64}$/.test(archive?.sha256 ?? "") || asset.size !== archive.bytes) {
+      throw new Error("OpenAI handoff archive is missing or has the wrong size");
+    }
+    let digest = /^sha256:([a-f0-9]{64})$/.exec(asset.digest ?? "")?.[1];
+    if (!digest) {
+      const downloaded = spawnSync(
+        "gh",
+        [
+          "api",
+          "-H",
+          "Accept: application/octet-stream",
+          `repos/${repository}/releases/assets/${asset.id}`,
+        ],
+        { cwd: root, encoding: null, maxBuffer: 128 * 1024 * 1024 },
+      );
+      if (downloaded.error || downloaded.status !== 0)
+        throw new Error("Could not verify the OpenAI release archive bytes");
+      digest = crypto.createHash("sha256").update(downloaded.stdout).digest("hex");
+    }
+    if (digest !== archive.sha256)
+      throw new Error(`OpenAI handoff digest mismatch for ${archive.name}`);
+    if (
+      isMultiProfileReleaseTag(tag) &&
+      (!profile?.listingUrl || !profile?.pluginId || !profile?.version)
+    ) {
+      throw new Error("OpenAI handoff profile identity or portal target is missing");
+    }
+    handoffLines.push(
+      `- ${profile?.pluginId ?? "OpenAI plugin"} ${profile?.version ?? subject.pluginVersion}: ${archive.name} · SHA-256 ${archive.sha256}${profile?.listingUrl ? ` · ${profile.listingUrl}` : ""}`,
+    );
+    handoffLines.push(
+      `  Download: gh release download ${tag} --repo ${repository} --pattern ${archive.name}`,
+    );
+  }
   console.log(
     [
       `${postReleaseEvidenceTitle(tag)} passed at ${evidence.url}.`,
       `${tag} is ready for the manual OpenAI handoff: ${release.html_url}`,
-      `Download exact asset: gh release download ${tag} --repo ${repository} --pattern openai.zip`,
+      ...handoffLines,
       "Portal checks: complete the generated Release OpenAI Plugin issue after successful post-release evidence; verify every packaged skill, restore reviewed glyphs when needed, preserve both Plugin Info logos, follow docs/listing/openai/stark-ai-developer-first-publication.md#composer-icon-handoff for separate light/dark Composer PNGs, and verify light/dark rendering plus directory identity after propagation.",
     ].join("\n"),
   );

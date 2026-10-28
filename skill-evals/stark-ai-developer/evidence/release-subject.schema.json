@@ -16,7 +16,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": 1
+      "enum": [1, 2]
     },
     "status": {
       "enum": ["pass", "blocked", "not_applicable"]
@@ -57,19 +57,7 @@
       "required": ["openai", "portable"],
       "properties": {
         "openai": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/archiveSubject"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "const": "openai.zip"
-                }
-              }
-            }
-          ]
+          "$ref": "#/$defs/archiveSubject"
         },
         "portable": {
           "allOf": [
@@ -85,6 +73,9 @@
               }
             }
           ]
+        },
+        "openaiSkillsOnly": {
+          "$ref": "#/$defs/archiveSubject"
         }
       }
     },
@@ -93,6 +84,32 @@
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "openaiProfile": {
+      "$ref": "#/$defs/openaiProfile"
+    },
+    "openaiSkillsOnlyProfile": {
+      "$ref": "#/$defs/openaiProfile"
+    }
+  },
+  "$defs": {
+    "archiveSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "openaiProfile": {
@@ -128,28 +145,132 @@
         },
         "description": {
           "type": "string"
+        },
+        "listingUrl": {
+          "type": "string",
+          "pattern": "^https://chatgpt\\.com/plugins/[^/?#]+$"
         }
       }
     }
   },
-  "$defs": {
-    "archiveSubject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "sha256", "bytes"],
-      "properties": {
-        "name": {
-          "type": "string"
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": {
+            "const": 1
+          }
         },
-        "sha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "subjects": {
+            "type": "object",
+            "properties": {
+              "openai": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "openai.zip"
+                  }
+                }
+              }
+            },
+            "not": {
+              "properties": {
+                "openaiSkillsOnly": {}
+              },
+              "required": ["openaiSkillsOnly"]
+            }
+          }
         },
-        "bytes": {
-          "type": "integer",
-          "minimum": 1
+        "not": {
+          "properties": {
+            "openaiSkillsOnlyProfile": {}
+          },
+          "required": ["openaiSkillsOnlyProfile"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": {
+            "const": 2
+          }
+        },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "type": "object",
+        "required": ["openaiProfile", "openaiSkillsOnlyProfile"],
+        "properties": {
+          "subjects": {
+            "type": "object",
+            "properties": {
+              "openai": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "openai-tools.zip"
+                  }
+                }
+              },
+              "openaiSkillsOnly": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "const": "openai-skills-only.zip"
+                  }
+                }
+              }
+            },
+            "required": ["openaiSkillsOnly"]
+          },
+          "openaiProfile": {
+            "type": "object",
+            "required": ["listingUrl", "url"],
+            "properties": {
+              "profile": {
+                "const": "new-remote"
+              },
+              "pluginId": {
+                "const": "stark-ai-developer-tools"
+              },
+              "transport": {
+                "const": "http"
+              },
+              "listingUrl": {
+                "const": "https://chatgpt.com/plugins/plugin_asdk_app_6ad281cbc9a481919d8d5e123985ddc8"
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://skills-mcp\\.stark-ai\\.de/mcp$"
+              }
+            }
+          },
+          "openaiSkillsOnlyProfile": {
+            "type": "object",
+            "required": ["listingUrl"],
+            "properties": {
+              "profile": {
+                "const": "existing-skills-only"
+              },
+              "pluginId": {
+                "const": "stark-ai-developer"
+              },
+              "transport": {
+                "const": "none"
+              },
+              "listingUrl": {
+                "const": "https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e"
+              }
+            }
+          }
         }
       }
     }
-  }
+  ]
 }

@@ -24,7 +24,8 @@ For a later authorized release, use the exact post-release OpenAI archive and ge
 
 **Prepared 2026-09-23 for plugin 1.3.0; not a new portal publication observation.** The dated first-publication records below remain historical. The bundled plugin contains seven skills, including Jev Capability Advisor. Jev's optional advice and inspection scope was accepted for promotion on 2026-09-25; its [release handoff](../../skills/jev-capability-advisor/README.md#release-handoff) documents the release process.
 
-After GitHub publication and post-release evidence are complete:
+The historical 1.3.0 handoff specified the following after GitHub publication
+and post-release evidence. Current releases use the two-profile procedure below:
 
 - Update the **existing** plugin using the release's exact direct `openai.zip`; do not create a second listing or upload the portable ZIP.
 - Check all **seven** packaged skill interfaces against the generated **Release OpenAI Plugin** issue. Jev is **CODEX only**, with implicit invocation allowed and portal glyph **`chart`**. This metadata does not install a pre-prompt hook.
@@ -76,10 +77,15 @@ GitHub Pages plugin, privacy, terms, support, and security URLs returned HTTP
 
 For the dated first publication, the OpenAI-native archive came from
 `dist/openai/`; this is historical evidence, not the current update procedure.
-For every current update, wait for successful exact-tag Post-release Evidence,
-download the direct GitHub Release asset named `openai.zip`, and upload those
-exact bytes. Do not upload the portable Agent Plugins archive or a GitHub source
-archive. See `docs/publishing.md#operator-follow-up` for the current handoff.
+For each current update, wait for successful exact-tag Post-release Evidence.
+Upload the exact direct `openai-skills-only.zip` asset to the existing
+[stark-ai-developer listing](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e)
+and the exact direct `openai-tools.zip` asset to the existing
+[stark-ai-developer-tools listing](https://chatgpt.com/plugins/plugin_asdk_app_6ad281cbc9a481919d8d5e123985ddc8).
+Use the two generated profile-specific handoffs, preserve the remote MCP origin,
+and track each portal scan, review and publication independently. Do not upload
+the portable Agent Plugins archive or a GitHub source archive. See
+`docs/publishing.md#operator-follow-up` for the current handoff.
 
 Plugin version `1.0.0` is independent of the repository catalog version. The
 first public source identity is Git tag `v0.19.1` (`35101f2` on `main`). There
@@ -208,7 +214,7 @@ and [image validation](https://developers.openai.com/plugins/deploy/submission-e
 
 The current packager still uses `site/public/logo-dark.png` for its single
 `assets/composer-icon.png`. The two full-width Composer PNGs below are separate
-repository assets, not entries in `openai.zip`. After each verified ZIP upload:
+repository assets, not entries in either release ZIP. After each verified ZIP upload:
 
 1. Keep the existing **Plugin Info** light and dark logos. If the upload reset
    them, restore `site/public/logo.png` for light mode and
@@ -274,4 +280,4 @@ not a freeze.
 
 ## Metadata MCP candidate and fallback handoff
 
-ADR-0071 and ADR-0072 define explicit OpenAI profiles. See the [metadata MCP qualification guide](../../../packages/skill-metadata-mcp/README.md) for build, archive verification, Vercel configuration and manual fallback rules. The existing public listing remains authoritative until a replacement or update is verified as published. Do not treat a successful ZIP check, prepared endpoint or open pull request as portal acceptance.
+ADR-0076 supersedes ADR-0071 for parallel OpenAI profiles; ADR-0072 defines the shared metadata core. See the [metadata MCP qualification guide](../../../packages/skill-metadata-mcp/README.md) for build, archive verification, Vercel configuration and manual fallback rules. Each existing public listing remains authoritative until its update is verified as published. Do not treat a successful ZIP check, prepared endpoint or open pull request as portal acceptance.

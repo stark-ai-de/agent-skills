@@ -2,7 +2,7 @@
 
 ID: ADR-0062
 Title: Admit release reconciler repairs to unpublished recovery
-Status: Accepted
+Status: Superseded
 Date: 2026-10-09
 Owner: stark-ai-de
 Scope: repository
@@ -13,7 +13,7 @@ Adoptable: false
 Variant: Long
 Canonical variant: Long
 Supersedes: ADR-0053
-Superseded by: None
+Superseded by: ADR-0078
 Guide verified: 2026-10-09
 Gist: A reviewed reconciler fix can qualify as the guarded controller change for payload-equivalent pre-publication recovery.
 

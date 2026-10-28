@@ -309,7 +309,7 @@ try {
       os,
       archiveProfile: "zip-store-v1",
       archives: Object.fromEntries(
-        ["portable", "openai", "claude"].map((name) => [
+        ["portable", "openai", "openaiSkillsOnly", "claude"].map((name) => [
           name,
           { sha256: "a".repeat(64), bytes: 100 },
         ]),

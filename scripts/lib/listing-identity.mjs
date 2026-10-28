@@ -138,6 +138,7 @@ export function openAiIdentityFromSource(
     displayName: profile.displayName ?? source.displayName,
     transport: profile.transport,
     ...(profile.url ? { url: profile.url } : {}),
+    ...(profile.listingUrl ? { listingUrl: profile.listingUrl } : {}),
     ...(profile.description ? { description: profile.description } : {}),
     archive: `dist/openai/${pluginId}-${version}.zip`,
   };

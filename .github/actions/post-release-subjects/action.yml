@@ -26,12 +26,18 @@ outputs:
   openai_sha:
     description: Rebuilt OpenAI archive digest
     value: ${{ steps.package.outputs.openai_sha }}
+  skills_only_sha:
+    description: Rebuilt skills-only OpenAI archive digest
+    value: ${{ steps.package.outputs.skills_only_sha }}
   portable_sha:
     description: Rebuilt portable archive digest
     value: ${{ steps.package.outputs.portable_sha }}
   openai_bytes:
     description: Rebuilt OpenAI archive size
     value: ${{ steps.package.outputs.openai_bytes }}
+  skills_only_bytes:
+    description: Rebuilt skills-only OpenAI archive size
+    value: ${{ steps.package.outputs.skills_only_bytes }}
   portable_bytes:
     description: Rebuilt portable archive size
     value: ${{ steps.package.outputs.portable_bytes }}

@@ -10,6 +10,7 @@ import {
   prePublicationRecoveryErrors,
   successfulMainValidateRun,
 } from "../lib/release-management.mjs";
+import { isMultiProfileReleaseTag } from "../lib/release-assets.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
@@ -145,6 +146,13 @@ function parseReleaseVersion(packageText, manifestText) {
   return version;
 }
 
+export function recoverySubjectSetForVersion(version) {
+  if (!/^\d+\.\d+\.\d+$/.test(version ?? "")) {
+    throw new Error("recovery release version is invalid");
+  }
+  return isMultiProfileReleaseTag(`v${version}`) ? "multi-profile" : "legacy";
+}
+
 export function runCli(argv = process.argv.slice(2)) {
   const repository = argument(argv, "--repository");
   const releaseOriginSha = argument(argv, "--release-origin");
@@ -263,6 +271,7 @@ export function runCli(argv = process.argv.slice(2)) {
     originValidateRunId: originValidateRun.databaseId ?? originValidateRun.id,
     version,
     tag,
+    subjectSet: recoverySubjectSetForVersion(version),
   };
   writeGithubOutput(githubOutput, {
     authorized: true,
@@ -272,6 +281,7 @@ export function runCli(argv = process.argv.slice(2)) {
     origin_validate_run_id: result.originValidateRunId,
     version: result.version,
     tag: result.tag,
+    subject_set: result.subjectSet,
   });
   console.log(
     jsonOutput

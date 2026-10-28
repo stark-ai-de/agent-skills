@@ -13,6 +13,10 @@ const identity = pluginIdentity(root);
 const archives = {
   portable: path.join(root, "dist", "agent-plugins", `${identity.name}-${identity.version}.zip`),
   openai: path.join(root, identity.openaiArchive),
+  openaiSkillsOnly: path.join(
+    root,
+    identity.openaiProfiles.find((profile) => profile.profile === "existing-skills-only").archive,
+  ),
   claude: claudeArchivePath(root),
 };
 const report = {

@@ -91,7 +91,7 @@
     "validate:traceability": "bun --bun scripts/repo/generate-traceability.mjs --check",
     "verify:supply-chain": "bun --bun scripts/release/verify-supply-chain.mjs",
     "validate:post-release-receipt": "bun --bun scripts/release/validate-post-release-receipt.mjs",
-    "validate:release-subject": "bun --bun scripts/validation/test-release-subject.mjs",
+    "validate:release-subject": "bun --bun scripts/validation/test-release-subject.mjs && bun --bun scripts/validation/test-dual-release-subject.mjs",
     "validate:release-management": "bun exec \"bun --bun scripts/validation/test-release-environment.mjs && bun --bun scripts/validation/test-release-management.mjs\"",
     "validate:release-subject-file": "bun --bun scripts/release/validate-release-subject.mjs",
     "test:post-release-receipt": "bun exec \"bun --bun scripts/validation/test-post-release-receipt.mjs && bun --bun scripts/validation/test-release-reconciler.mjs && bun --bun scripts/validation/test-release-completion.mjs\"",

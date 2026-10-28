@@ -1,6 +1,7 @@
 import process from "node:process";
+import { isMultiProfileReleaseTag } from "./release-assets.mjs";
 
-const ARCHIVE_SUBJECTS = [
+const LEGACY_ARCHIVE_SUBJECTS = [
   {
     name: "openai.zip",
     sha256: "OPENAI_SHA",
@@ -13,6 +14,21 @@ const ARCHIVE_SUBJECTS = [
     bytes: "PORTABLE_BYTES",
     publishedSha256: "PUBLISHED_PORTABLE_SHA",
   },
+];
+const MULTI_PROFILE_ARCHIVE_SUBJECTS = [
+  {
+    name: "openai-skills-only.zip",
+    sha256: "SKILLS_ONLY_SHA",
+    bytes: "SKILLS_ONLY_BYTES",
+    publishedSha256: "PUBLISHED_SKILLS_ONLY_SHA",
+  },
+  {
+    name: "openai-tools.zip",
+    sha256: "OPENAI_SHA",
+    bytes: "OPENAI_BYTES",
+    publishedSha256: "PUBLISHED_OPENAI_SHA",
+  },
+  LEGACY_ARCHIVE_SUBJECTS[1],
 ];
 const LIFECYCLE_OPERATIONS = ["add", "enable", "disable", "update", "remove"];
 
@@ -51,7 +67,10 @@ function nonClientLifecycle(reason) {
 function archiveArtifacts(packageStatus, role = "generated") {
   if (!["pass", "not_applicable"].includes(packageStatus)) return [];
 
-  return ARCHIVE_SUBJECTS.map(({ name, sha256, bytes, publishedSha256 }) => {
+  const subjects = isMultiProfileReleaseTag(envValue("RECEIPT_TAG"))
+    ? MULTI_PROFILE_ARCHIVE_SUBJECTS
+    : LEGACY_ARCHIVE_SUBJECTS;
+  return subjects.map(({ name, sha256, bytes, publishedSha256 }) => {
     const publishedDigest = envValue(publishedSha256);
     return {
       name,

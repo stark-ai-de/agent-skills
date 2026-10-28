@@ -165,8 +165,9 @@ export function planReleaseReconciliation({
 
   if (
     !Array.isArray(requiredAssetNames) ||
-    requiredAssetNames.length < 2 ||
-    requiredAssetNames.some((name) => !RELEASE_ASSET_NAMES.includes(name))
+    requiredAssetNames.some((name) => !RELEASE_ASSET_NAMES.includes(name)) ||
+    JSON.stringify([...requiredAssetNames].sort()) !==
+      JSON.stringify(releaseAssetNamesForTag(tag).sort())
   ) {
     return blocked("invalid_required_release_assets", releasePublished);
   }
@@ -196,6 +197,7 @@ export function planReleaseReconciliation({
     }
     if (missingAssets.length === 0) {
       const metadataOnlyRepairProven =
+        requiredAssetNames.filter((name) => name.endsWith(".zip")).length === 2 &&
         release.metadataAssetAddedAfterPublication === true &&
         release.zipAssetsCreatedBeforePublication === true;
       if (attestationStatus !== "valid" && !metadataOnlyRepairProven) {
@@ -224,6 +226,7 @@ export function planReleaseReconciliation({
       attestationStatus !== "valid" &&
       (missingAssets.length !== 1 ||
         missingAssets[0] !== "release-subject.json" ||
+        requiredAssetNames.filter((name) => name.endsWith(".zip")).length !== 2 ||
         release.zipAssetsCreatedBeforePublication !== true)
     ) {
       return blocked("published_release_json_repair_chronology_ambiguous", true);
