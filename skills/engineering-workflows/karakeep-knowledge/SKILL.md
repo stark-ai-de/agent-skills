@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.2"
+  version: "0.5.3"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -43,6 +43,24 @@ user's existing account. A cloud account or external AI provider is not required
   service manager and declarative configuration owner. Do not dump environments.
 - Private config/data locations and the current operation's authority. Follow the
   host's existing Docker/runtime choice; do not install a second engine.
+
+## Access selection
+
+Prefer the existing local Karakeep MCP server or supported local API for information
+retrieval and authorized operations. Inspect callable MCP schemas and the installed
+release's supported API capabilities before choosing browser automation. A missing
+MCP tool alone does not establish an API gap; verify support rather than guessing
+endpoint names. Reuse the intended account and approved credential source.
+
+Use Playwright/browser MCP only when MCP and API cannot provide the information or
+operation needed for the task, such as UI-only settings or visual verification.
+Briefly explain the concrete gap and limit browser use to that gap; return to MCP
+or API for the rest. A request sent through a browser session to an internal web API
+is browser-assisted access, not proof of public API support.
+
+Denied approval, insufficient privileges or a restricted read key are not capability
+gaps to work around. Changing access methods never expands authorization; keep the
+same task scope and host/project approval requirements on every route.
 
 ## Workflow
 
