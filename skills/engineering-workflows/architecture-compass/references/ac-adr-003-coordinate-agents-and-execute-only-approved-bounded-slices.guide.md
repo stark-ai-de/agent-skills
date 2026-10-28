@@ -66,9 +66,9 @@ A governance migration can use one read-only inventory phase, one tool-compatibl
 
 ## Worktree isolation example
 
-This is a non-normative coordination example, not authority to create a checkout or choose its location. When the repository instructions and approved execution scope permit linked worktrees, consider one only for genuinely parallel writers whose same-codebase overlap justifies isolation. Sequential work, read-only analysis, or disjoint path ownership normally does not need another checkout.
+This is a non-normative coordination example, not authority to create a checkout or choose its location. Apply the accepted target policy first. When the repository adopts [AC-ADR-054](ac-adr-054-isolate-agent-writes-in-external-git-worktrees.short.md) ([Long](ac-adr-054-isolate-agent-writes-in-external-git-worktrees.long.md) · [Guide](ac-adr-054-isolate-agent-writes-in-external-git-worktrees.guide.md)), every writer uses an assigned external worktree, with Worktrunk management and an initial harness comparison. Reuse an existing suitable assignment; this does not require an extra checkout for every sequential task.
 
-Use the location required by the target repository. For example, a repository may require `<repo>/.worktrees/<name>` after confirming that scanners, build inputs, documentation generators, release inventories, ignore rules, and cleanup tooling safely exclude it. Do not substitute a sibling or external location when repository instructions prescribe a repository-local root.
+Without an adopted isolation requirement, additional worktrees can be justified by genuinely parallel writers with same-codebase conflict risk; sequential work, read-only analysis or disjoint ownership alone does not justify one. Use the location required by the target's accepted decision. If an existing local decision prescribes repository-local worktrees, report any scanner conflict and resolve the local decision before changing it. A provider update does not silently amend that policy.
 
 If a worktree is authorized, its record can name owner, branch, purpose, path, expected lifetime, validation responsibility, and cleanup condition. Creation never implies authority to delete, prune, remove branches, or mutate another active checkout.
 

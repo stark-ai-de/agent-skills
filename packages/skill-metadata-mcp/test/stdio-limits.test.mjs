@@ -151,3 +151,18 @@ for (const [bytes, complete] of [
     },
   );
 }
+
+test(
+  "stdio exits after its output reader closes while the input writer stays open",
+  { timeout: 10000 },
+  async (t) => {
+    const client = await start(t);
+    client.child.stdout.destroy();
+    client.child.stdin.write('{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n');
+    const [code] = await Promise.race([
+      client.closed,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("child did not exit")), 3000)),
+    ]);
+    assert.equal(code, 0);
+  },
+);

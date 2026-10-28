@@ -33,8 +33,12 @@ changes and actual HYBRID/Cloud qualification are outside this slice.
 - Freeze the merge-base and complete authorized feature snapshot, including staged,
   unstaged and non-ignored untracked files, renames/deletions and affected consumers.
   Record exclusions and preserve unrelated changes.
-- Reviewers run under an enforced read-only parent/session. Instructions alone do
-  not establish isolation. Compare source/index fingerprints around review;
+- Reviewers run under an enforced read-only parent/session. A writable coordinator
+  actively starts a separate host-supported read-only session in the target cwd;
+  inspect the CLI help for its supported sandbox option and confirm effective cwd,
+  policy and external tool restrictions. CI mode is not a prerequisite. Instructions
+  or a requested option alone do not establish isolation. Compare source/index
+  fingerprints around review;
   mutation invalidates all affected review results and blocks triage. Missing
   enforced isolation produces BLOCKED before reviewer execution.
 - Wait for all reviewers, verify/deduplicate claims and classify candidates as

@@ -15,7 +15,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), "architecture-contract-"));
 const skill = "skills/engineering-workflows/architecture-compass";
 const refs = `${skill}/references`;
 const stems = new Map(
-  [59, 60, 61, 62, 65, 66].map((id) => [
+  [54, 59, 60, 61, 62, 65, 66].map((id) => [
     id,
     fs
       .readdirSync(path.join(source, refs))
@@ -27,10 +27,10 @@ const stems = new Map(
   ]),
 );
 const file = (id, variant) => `${refs}/${stems.get(id)}.${variant}.md`;
-function run() {
+function run(validator = "architecture-compass") {
   const result = spawnSync(
     process.execPath,
-    [path.join(source, "scripts/validation/architecture-compass/validate.mjs")],
+    [path.join(source, "scripts/validation", validator, "validate.mjs")],
     { cwd: root, encoding: "utf8", timeout: 30000 },
   );
   assert.ifError(result.error);
@@ -57,6 +57,8 @@ try {
   for (const directory of [
     skill,
     "docs/adrs",
+    "docs/adrs.md",
+    "scripts/validation/adrs",
     "scripts/validation/architecture-compass",
     "skill-evals/architecture-compass",
   ]) {
@@ -68,6 +70,44 @@ try {
   }
   const baseline = run();
   assert.equal(baseline.status, 0, baseline.stderr);
+  const repositoryBaseline = run("adrs");
+  assert.equal(repositoryBaseline.status, 0, repositoryBaseline.stderr);
+  rejects(
+    "amended provider Short remains locked",
+    file(54, "short"),
+    (s) => s.replace("Silence is not refusal.", "Silence is refusal."),
+    /AC-ADR-054: Short Decision summary drifted from its accepted lock/,
+  );
+  rejects(
+    "amended provider Long remains locked",
+    file(54, "long"),
+    (s) => s.replace("Silence is not refusal.", "Silence is refusal."),
+    /AC-ADR-054: Long Decision drifted from its accepted lock/,
+  );
+  const repositoryWorktreeFiles = ["short", "long"].map((variant) =>
+    path.join(root, `docs/adrs/0029-keep-linked-worktrees-inside-the-repository.${variant}.md`),
+  );
+  const repositoryOriginals = repositoryWorktreeFiles.map((target) =>
+    fs.readFileSync(target, "utf8"),
+  );
+  try {
+    // Keep Short/Long equal so only the accepted-decision lock can catch this drift.
+    for (const [index, target] of repositoryWorktreeFiles.entries()) {
+      const candidate = repositoryOriginals[index].replace(
+        "Each worktree has at most one active writer.",
+        "Each worktree may have multiple active writers.",
+      );
+      assert.notEqual(candidate, repositoryOriginals[index]);
+      fs.writeFileSync(target, candidate);
+    }
+    const result = run("adrs");
+    assert.notEqual(result.status, 0, "amended repository decision remains locked");
+    assert.match(result.stderr, /ADR-0029 Decision drifted from its accepted lock/);
+  } finally {
+    for (const [index, target] of repositoryWorktreeFiles.entries()) {
+      fs.writeFileSync(target, repositoryOriginals[index]);
+    }
+  }
   rejects("missing variant", file(59, "short"), () => null, /missing|triplet/i);
   rejects("missing sparse-ID variant", file(66, "guide"), () => null, /missing|triplet/i);
   const unexpectedFiles = ["short", "long", "guide"].map((variant) =>
@@ -167,7 +207,7 @@ try {
     /lineage|relations/i,
   );
   console.log(
-    "Architecture Compass contract regressions passed: baseline and 14 malformed candidates; real source untouched.",
+    "Architecture Compass contract regressions passed: provider/repository baselines and 17 malformed candidates; real source untouched.",
   );
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

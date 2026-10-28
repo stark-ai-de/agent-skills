@@ -18,7 +18,7 @@ Provide useful deterministic metadata checks through one stateless core and HTTP
 
 ## Architecture and profiles
 
-[ADR-0071](../adrs/0071-add-target-specific-openai-distribution-profiles.long.md) owns target-specific profiles; [ADR-0072](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.long.md) owns the shared core. No new ADR is required: these corrections implement existing contracts. Canonical skill contents and the independently pinned portable/Claude SSH runtime remain unchanged.
+[ADR-0071](../adrs/0071-add-target-specific-openai-distribution-profiles.short.md) ([Long, canonical](../adrs/0071-add-target-specific-openai-distribution-profiles.long.md) · [Guide](../adrs/0071-add-target-specific-openai-distribution-profiles.guide.md)) owns target-specific profiles; [ADR-0072](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.short.md) ([Long, canonical](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.long.md) · [Guide](../adrs/0072-share-one-metadata-validation-core-across-mcp-transports.guide.md)) owns the shared core. No new ADR is required: these corrections implement existing contracts. Canonical skill contents and the independently pinned portable/Claude SSH runtime remain unchanged.
 
 The canonical plugin source selects exactly one release profile. `existing-skills-only` retains the canonical identity without MCP; `existing-remote` uses the existing identity with HTTP MCP; `new-remote` uses `stark-ai-developer-tools`, initially 1.0.0, with HTTP MCP; `desktop-local` uses `stark-ai-developer-desktop`, initially 1.0.0, with a bundled offline stdio server. The current selected profile is `new-remote`. Portable bundle versions remain independent of OpenAI profile versions.
 

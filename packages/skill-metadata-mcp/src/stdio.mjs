@@ -58,4 +58,12 @@ serveStdio(
   },
 );
 
+const onTransportClose = transport.onclose;
+transport.onclose = () => {
+  process.stdin.unpipe(input);
+  process.stdin.destroy();
+  input.destroy();
+  onTransportClose?.();
+};
+
 process.stdin.pipe(input);

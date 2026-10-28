@@ -28,6 +28,7 @@ export const EXPECTED_CODEX_SKILL_SOURCES = [
   "skills/engineering-workflows/telegram-serverless",
   "skills/engineering-workflows/karakeep-knowledge",
   "skills/skill-maintenance/jev-capability-advisor",
+  "skills/engineering-workflows/visual-reports",
 ];
 export const OPENAI_PRODUCTS = new Set(["CHAT", "CODEX"]);
 

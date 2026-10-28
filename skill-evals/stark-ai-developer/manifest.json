@@ -567,6 +567,31 @@
       ],
       "tags": ["mutation-approval", "no-invention", "output-contract"],
       "reason": "Reading sources authorizes neither repository enrollment nor collection maintenance."
+    },
+    {
+      "id": "visual-report-completion",
+      "kind": "positive",
+      "skill": "visual-reports",
+      "surface": "CODEX",
+      "discovery": "direct",
+      "request": "Create a compact HTML comparison from these explicitly fictional measurements, then update the same report.",
+      "tags": ["output-contract", "no-invention", "mutation-approval"],
+      "expectedResultShape": [
+        "Visible takeaway, limitations and next action",
+        "Common scales and source-preserving HTML/Markdown/JSON",
+        "Local managed preview with protected drafts"
+      ],
+      "passCriteria": [
+        "No invented facts or external writes",
+        "Stale updates fail without replacing newer content",
+        "Standalone output remains readable offline"
+      ],
+      "expected": [
+        "No invented facts or external writes",
+        "Stale updates fail without replacing newer content",
+        "Standalone output remains readable offline"
+      ],
+      "fixtures": ["skills/engineering-workflows/visual-reports/assets/completion-example.md"]
     }
   ],
   "listingMappings": [
@@ -609,6 +634,10 @@
     {
       "skill": "karakeep-knowledge",
       "capability": "Connect, synchronize approved repository knowledge and curate a local Karakeep collection."
+    },
+    {
+      "skill": "visual-reports",
+      "capability": "Create and update compact visual HTML reports with complete source exports."
     }
   ]
 }
