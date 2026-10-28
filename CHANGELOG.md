@@ -12,6 +12,14 @@
 
 ### Removed
 
+## 0.32.1 (2026-10-28)
+
+## What's Changed
+* fix(openai): preserve MCP review metadata and walkthrough sources by @servrox in https://github.com/stark-ai-de/agent-skills/pull/155
+
+
+**Full Changelog**: https://github.com/stark-ai-de/agent-skills/compare/v0.32.0...v0.32.1
+
 ## 0.32.0 (2026-10-28)
 
 ## What's Changed
