@@ -22,6 +22,12 @@ permissions in force and report actual transport/HTTP failures. Select an existi
 connection through [setup](setup.md#select-an-existing-connection); no automatic
 instance discovery or host switching is implied.
 
+When `NODE_USE_ENV_PROXY=1`, Node routes requests through the configured
+`HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` settings. Treat those proxy routes as
+trusted and authorized by host policy: a loopback URL alone does not prove transport
+stays local. Do not clear, bypass or reconfigure a host proxy automatically. See
+[Node.js proxy configuration](https://nodejs.org/api/cli.html#node_use_env_proxy1).
+
 ## Global installation and start instruction
 
 Install this skill once in the host's supported user-wide skill location. Codex

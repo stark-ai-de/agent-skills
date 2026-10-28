@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.0"
+  version: "0.5.2"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -69,9 +69,9 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
    once for that repository/context. Follow [Sync](references/sync.md) for the result.
    This check is read-only; missing project policy is not upload permission.
    If the execution host blocks the check, record the host denial and keep sync
-   readiness unverified. Independently test the already configured MCP connection
-   with a bounded search/content read; a shell denial does not establish MCP
-   failure. Follow [host diagnosis](references/helper.md#diagnose-the-selected-host).
+   readiness unverified. Independently test the configured MCP connection with a
+   bounded search/content read; shell denial does not establish MCP failure. Follow
+   [host diagnosis](references/helper.md#diagnose-the-selected-host).
    Outside a Git repository, do not invent a repository or start an import. For
    Hermes discovery and native session auto-loading, read [Hermes](references/hermes.md).
    Check actual tool availability. If Karakeep is connected, search and retrieve one

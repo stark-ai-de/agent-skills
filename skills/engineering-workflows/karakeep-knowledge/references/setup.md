@@ -27,10 +27,6 @@ Docker group access, host networking or system installation is needed, explain t
 concrete change before seeking any missing authorization. Existing read authorization
 does not grant setup authority. Reuse explicit setup approval already in the session.
 
-A shell sandbox denial does not establish that the service or MCP is unavailable.
-Test the configured MCP independently and keep shell readiness pending; follow
-[host diagnosis](helper.md#diagnose-the-selected-host) before proposing a host change.
-
 ## Select an existing connection
 
 Use the connection explicitly selected by the user or already adopted in the

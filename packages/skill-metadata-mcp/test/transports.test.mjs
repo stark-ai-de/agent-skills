@@ -208,3 +208,12 @@ test(
     }
   },
 );
+
+test("HTTP argument schema accepts supplementary-plane directory names", async () => {
+  const name = "𐐨".repeat(64);
+  const response = await rpc("tools/call", {
+    name: "validate_skill_metadata",
+    arguments: { frontmatter: `name: ${name}\ndescription: Example`, directory_name: name },
+  });
+  assert.equal(response.result.structuredContent.valid, true);
+});

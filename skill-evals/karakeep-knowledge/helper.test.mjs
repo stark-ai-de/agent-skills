@@ -906,6 +906,44 @@ test("inherited Git selectors cannot mix same-remote checkout identity and bytes
   }
 });
 
+for (const proxyMode of ["1", "0"]) {
+  test(`configured connection works with NODE_USE_ENV_PROXY=${proxyMode} and checks its account`, async (t) => {
+    const prior = process.env.NODE_USE_ENV_PROXY;
+    t.after(() => {
+      if (prior === undefined) delete process.env.NODE_USE_ENV_PROXY;
+      else process.env.NODE_USE_ENV_PROXY = prior;
+    });
+    process.env.NODE_USE_ENV_PROXY = proxyMode;
+    const runtime = { ...process.env };
+    const requested = t.mock.method(globalThis, "fetch", async (url, options) => {
+      assert.equal(url, "http://localhost:3000/api/v1/users/me");
+      assert.equal(options.method, "GET");
+      assert.equal(options.headers.Authorization, "Bearer synthetic-secret");
+      assert.equal(options.redirect, "manual");
+      return Response.json({ id: "selected-account" });
+    });
+    const api = new Karakeep({ address: "http://localhost:3000", key: "synthetic-secret" });
+    assert.equal(await api.account("selected-account"), "selected-account");
+    await assert.rejects(api.account("different-account"), (e) => e.code === "account");
+    assert.equal(requested.mock.callCount(), 2);
+    assert.deepEqual({ ...process.env }, runtime);
+  });
+}
+
+test("unsupported API routes remain unsent", async (t) => {
+  const requested = t.mock.method(globalThis, "fetch", async () => {
+    throw new Error("Invalid routes must not reach the transport");
+  });
+  const api = new Karakeep({ address: "http://localhost:3000", key: "synthetic-secret" });
+  for (const route of ["/other", "/api/v1/../users/me"]) {
+    await assert.rejects(
+      api.request(route),
+      (e) => e.code === "connection" && e.requestOutcome === "not_sent",
+    );
+  }
+  assert.equal(requested.mock.callCount(), 0);
+});
+
 for (const proxyMode of [undefined, "0", "1"]) {
   test(`host proxy mode ${proxyMode ?? "unset"} reaches transport without changing environment`, async (t) => {
     const names = ["NODE_USE_ENV_PROXY", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"];
@@ -922,9 +960,7 @@ for (const proxyMode of [undefined, "0", "1"]) {
         requests++;
         assert.equal(url, "http://localhost:3000/api/v1/users/me");
         assert.equal(options.headers.Authorization, "Bearer synthetic-secret");
-        return new Response(JSON.stringify({ id: "account" }), {
-          headers: { "content-type": "application/json" },
-        });
+        return Response.json({ id: "account" });
       });
       const api = new Karakeep({ address: "http://localhost:3000", key: "synthetic-secret" });
       assert.deepEqual(await api.request("/api/v1/users/me"), { id: "account" });
