@@ -71,4 +71,4 @@ ADR-0074	0074-use-one-versioned-visual-report-model	65ce39fcb34fcb4d874a6e76acae
 ADR-0075	0075-version-local-visual-reports-atomically	b41ea31cd724f353e32ca649fe0f12a88e5cb27cf19c1ef94f24575b6e253375
 ADR-0076	0076-publish-selected-openai-profiles-in-parallel	7311e9e4d2f80eb11a9b10954ed835621f048b3bc95b03dd455a8d1a5d220967
 ADR-0077	0077-protect-multi-profile-release-subjects-and-publication	5ee9f08e327354d0a7613df643fd131ac7b349bf775be9ecf03be83c04e15b3a
-ADR-0078	0078-recover-unpublished-releases-with-tag-specific-subjects	f49b9f1fc9a7425808f0b8310ac64bd95673dd2d7d7c41b52d85c7aa3c82bfc3
+ADR-0078	0078-recover-unpublished-releases-with-tag-specific-subjects	131f23ff8f4196706ea8984048d2ed365617c775ffd9a254ab16377a5187eca5

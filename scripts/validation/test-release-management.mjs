@@ -981,6 +981,11 @@ const recoveryInput = (overrides = {}) => ({
 assert.equal(PRE_PUBLICATION_RECOVERY_MAX_COMMITS, 4);
 assert.equal(new Set(PRE_PUBLICATION_RECOVERY_PATHS).size, PRE_PUBLICATION_RECOVERY_PATHS.length);
 assert.deepEqual(
+  PRE_PUBLICATION_RECOVERY_PATHS.filter((filename) => filename.startsWith("docs/adrs/0078-")),
+  [],
+  "ADR-0078 must not expand the fixed recovery allowlist",
+);
+assert.deepEqual(
   successfulMainValidateRun([recoveryValidationRun], recoveryOriginSha),
   recoveryValidationRun,
 );
@@ -1120,6 +1125,27 @@ assert.match(
   ).join(";"),
   /path is not allowed/,
 );
+for (const filename of [
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.short.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.long.md",
+  "docs/adrs/0078-recover-unpublished-releases-with-tag-specific-subjects.guide.md",
+]) {
+  const errors = releaseRecoveryComparisonErrors({
+    releaseOriginSha: recoveryOriginSha,
+    candidateSha: recoveryCandidateSha,
+    comparison: {
+      ...recoveryComparison,
+      files: [
+        { filename: ".github/workflows/publish-release.yml", status: "modified" },
+        { filename, status: "added" },
+      ],
+    },
+  });
+  assert.ok(
+    errors.includes(`recovery path is not allowed: ${filename}`),
+    `recovery must reject additional ADR path ${filename}`,
+  );
+}
 assert.match(
   prePublicationRecoveryErrors(
     recoveryInput({
