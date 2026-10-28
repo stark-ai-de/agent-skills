@@ -83,7 +83,7 @@ npx skills@latest update
 <summary><strong>Install the Codex bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a codex -y
+npx skills@latest add stark-ai-de/agent-skills --skill codex-memory-curator codex-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a codex -y
 ```
 
 Install the portable plugin with Codex CLI 0.147.0 or later:
@@ -101,7 +101,7 @@ See the [plugin documentation](plugins/README.md) for package and distribution d
 <summary><strong>Install the Cursor bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a cursor -y
+npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cursor-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a cursor -y
 ```
 
 </details>
@@ -110,7 +110,7 @@ npx skills@latest add stark-ai-de/agent-skills --skill cursor-memory-curator cur
 <summary><strong>Install the Claude Code bundle</strong></summary>
 
 ```bash
-npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor -g -a claude-code -y
+npx skills@latest add stark-ai-de/agent-skills --skill claude-memory-curator claude-spec-interviewer animated-readme-logo architecture-compass architecture-zoom codegraph-ast-grep drawio-diagrams telegram-serverless karakeep-knowledge jev-capability-advisor visual-reports -g -a claude-code -y
 ```
 
 </details>
@@ -224,6 +224,7 @@ publication approval.
 |   <img src="plugins/stark-ai-developer/skills/codegraph-ast-grep/assets/openai-icon.png" alt="" width="24" height="24" />   | [CodeGraph + ast-grep](skills/engineering-workflows/codegraph-ast-grep/SKILL.md)   | Set up, update, or diagnose CodeGraph and ast-grep so coding agents can use semantic repository scope and structural syntax evidence automatically. Use when a repository needs an idempotent CodeGraph/ast-grep installation, stable tool and index migrations, MCP reconnection, persisted agent guidance, or a read-only setup diagnosis.                                                                                                                                                                   |
 |    <img src="plugins/stark-ai-developer/skills/drawio-diagrams/assets/openai-icon.png" alt="" width="24" height="24" />     | [Draw.io Diagrams](skills/engineering-workflows/drawio-diagrams/SKILL.md)          | Create, draw, generate, edit, verify, and export draw.io/diagrams.net `.drawio` diagrams. Use when the user asks for editable diagrams, flowcharts, architecture, sequence, ER/UML/state, BPMN, SysML, ML/DL, swimlane, timeline, network, icon-rich technical diagrams, or PNG/SVG/PDF exports; do not use for charts/plots or artistic image generation.                                                                                                                                                     |
 |  <img src="plugins/stark-ai-developer/skills/telegram-serverless/assets/openai-icon.png" alt="" width="24" height="24" />   | [Telegram Serverless](skills/engineering-workflows/telegram-serverless/SKILL.md)   | Build, review, deploy, and troubleshoot Telegram-hosted bots and Mini Apps, with explicit database, authentication, and remote-operation boundaries.                                                                                                                                                                                                                                                                                                                                                           |
+|     <img src="plugins/stark-ai-developer/skills/visual-reports/assets/openai-icon.png" alt="" width="24" height="24" />     | [Visual Reports](skills/engineering-workflows/visual-reports/SKILL.md)             | Compact visual reports with purpose templates, domain profiles, diagrams, managed revisions and complete offline HTML/Markdown/JSON exports.                                                                                                                                                                                                                                                                                                                                                                   |
 | <img src="plugins/stark-ai-developer/skills/jev-capability-advisor/assets/openai-icon.png" alt="" width="24" height="24" /> | [Jev Capability Advisor](skills/skill-maintenance/jev-capability-advisor/SKILL.md) | Recommend available skills and tools for a supplied task, or inspect candidates locally without an API call.                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 The icons follow the reviewed glyph choices prepared for the [stark AI Developer plugin page](https://chatgpt.com/plugins/plugins_6a85d98a7bc48191879aedd91610271e). See the [complete public catalog](skills/README.md) for Cursor- and Claude-specific variants, exact trigger descriptions, and [`skill-evals/`](skill-evals/README.md) for maintainer proof.

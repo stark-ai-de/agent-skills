@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.1"
+  version: "0.5.3"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -37,6 +37,8 @@ user's existing account. A cloud account or external AI provider is not required
 ## Inputs to inspect
 
 - The current execution host, installed MCP tools and effective client configuration.
+- The selected connection and account. Follow [connection selection](references/setup.md#select-an-existing-connection)
+  when several candidates are known; localhost or proxy settings alone do not identify an instance.
 - Existing Karakeep endpoints, local account/collection, Compose project, mounts,
   service manager and declarative configuration owner. Do not dump environments.
 - Private config/data locations and the current operation's authority. Follow the
@@ -84,6 +86,10 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
    `node <absolute-skill-root>/scripts/knowledge.mjs check --repo <absolute-repository-root>`
    once for that repository/context. Follow [Sync](references/sync.md) for the result.
    This check is read-only; missing project policy is not upload permission.
+   If the execution host blocks the check, record the host denial and keep sync
+   readiness unverified. Independently test the configured MCP connection with a
+   bounded search/content read; shell denial does not establish MCP failure. Follow
+   [host diagnosis](references/helper.md#diagnose-the-selected-host).
    Outside a Git repository, do not invent a repository or start an import. For
    Hermes discovery and native session auto-loading, read [Hermes](references/hermes.md).
    Check actual tool availability. If Karakeep is connected, search and retrieve one

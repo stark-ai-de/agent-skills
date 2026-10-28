@@ -540,6 +540,36 @@
       "rationale": "The approved deployment and offline stdio runtime is Node.js 24.18 or newer. Node 24.22.0 passed the local metadata, HTTP, stdio and isolated bundle fixtures. The Node test runner directly qualifies that declared production runtime; Bun remains the existing repository build tool. Hosted and native desktop qualification are separate pending evidence.",
       "fallbackOrder": ["node"],
       "revisit": "Reassess when the declared hosting/runtime contract changes or Node compatibility regresses."
+    },
+    {
+      "id": "visual-reports-portable-node",
+      "surfaces": ["package:root:visual-reports-node"],
+      "candidates": [
+        {
+          "id": "bun",
+          "signals": {
+            "nodeTestRunnerContract": "fail",
+            "crossPlatformHosted": "unknown"
+          }
+        },
+        {
+          "id": "node",
+          "signals": {
+            "nodeTestRunnerContract": "pass",
+            "offlineBundle": "pass",
+            "crossPlatformHosted": "unknown"
+          }
+        }
+      ],
+      "winner": "node",
+      "evidenceRefs": [
+        "pnpm run validate:visual-reports",
+        "skills/engineering-workflows/visual-reports/tests/v2.test.mjs",
+        "ADR-0073"
+      ],
+      "rationale": "Node 24.22.0 passes the portable renderer and managed-revision fixtures on Linux/WSL. Bun 1.4.2 with --test rejects node:test outside its runner. The consumer contract explicitly targets Node; repository artifact bundling uses Bun. Hosted Windows/macOS runs remain separate evidence.",
+      "fallbackOrder": ["node"],
+      "revisit": "Reassess when the consumer runtime or the Node test-runner invocation contract changes."
     }
   ]
 }

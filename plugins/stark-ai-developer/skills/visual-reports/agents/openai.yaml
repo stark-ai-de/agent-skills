@@ -1,0 +1,11 @@
+interface:
+  display_name: "Visual Reports"
+  short_description: "Compact visual reports with diagrams and complete source exports"
+  icon_small: "./assets/openai-icon.png"
+  icon_large: "./assets/openai-icon.png"
+  default_prompt: "Use Visual Reports to choose and combine visual blocks, show comparisons together and generate complete HTML/Markdown/JSON with visible caveats. Keep prototype and editor changes local."
+policy:
+  products:
+    - CHAT
+    - CODEX
+  allow_implicit_invocation: true
