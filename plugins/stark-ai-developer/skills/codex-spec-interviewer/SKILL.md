@@ -6,7 +6,7 @@ compatibility: Targets Codex evidence and execution prompts across Agent Skills 
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.5.0"
+  version: "0.5.1"
 ---
 
 # Codex Spec Interviewer

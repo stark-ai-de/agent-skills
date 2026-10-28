@@ -78,6 +78,24 @@ Validation cadence and evidence reuse are governed by the target repository's ad
 
 Do not treat later-phase completeness as a baseline requirement before those artifacts are expected to exist. Promote a semantic concern into automation only when it has become objective and stable, prevents a recurring failure, or demonstrably saves more process cost than it adds.
 
+## Productive execution and recovery
+
+Within the approved execution boundary, prefer a small behavior slice with an early executable check over broad scaffolding and deferred validation. Name the active result, current evidence, exclusions, first check, and the condition for advancing. Keep the larger roadmap available without researching every later dependency up front. Continue through already-authorized phases when requested; a checkpoint is not an automatic stop or a new approval gate.
+
+Investigations should resolve a concrete uncertainty. Reuse current repository/source evidence, inspect public integration APIs before dependency internals, and record reusable findings. Repeated reads, searches or status messages without new evidence are a signal to change method: run a focused reproduction, observe runtime state, test a hypothesis, or identify a real blocker. Do not enforce arbitrary tool-call limits or prevent justified deeper research.
+
+For a timing-sensitive browser failure, inspect the actual DOM, styles, animation lifecycle, viewport and browser revision. Verify against the relevant harness and preserve the failing behavior assertion; an unrelated browser's passing smoke test is insufficient. Prefer waiting for an observable lifecycle/state transition over sleeps, blanket disabling of behavior or weakened tests.
+
+Use an existing authorized checkpoint surface for branch/revision, uncommitted work, accepted decisions and user authority, exact validation, active delegates and next action. After compaction or restart, reconcile the summary against those sources. It can be stale, omit a later instruction, or report a successful write as still missing. Neither a spinner nor received stream bytes alone proves a completed summary or useful progress.
+
+## Shared capacity and interrupted work
+
+Count actual simultaneous lead, child, other-client and compaction work when selecting delegation. A cheaper model or larger thinking budget is not a substitute for a bounded deliverable and verification. Inspect the available capacity and configured model routing; do not generalize a provider-specific limit or model assignment into a universal rule.
+
+Separate tool-schema errors, session-policy conflicts, capacity/quota rejection, deadlines, infrastructure provisioning and application failures. Correct malformed tool arguments rather than repeatedly issuing them; check partial side effects before a retry. If external capacity is exhausted, avoid multiplying retries or spawning replacement agents. Missing live credentials or a later platform gate blocks dependent proof, not independent authorized implementation.
+
+Before cancellation, correlate process/session identity, parentage, task, timestamps and request state; obtain or reuse authority for that exact run. Prefer the installed runtime's graceful cancellation protocol, preserve unrelated work, then verify cancellation and the intended session's resumption. A process count alone does not establish who consumes a shared run slot.
+
 ## Decision lineage
 
 - `generalizes`: [ADR-0029](https://github.com/stark-ai-de/agent-skills/blob/main/docs/adrs/0029-keep-linked-worktrees-inside-the-repository.long.md).
