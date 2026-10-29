@@ -21,6 +21,71 @@
   ReportState.validateRevision(source);
   document.documentElement.classList.add("js");
 
+  // Native radio inputs keep every topic reachable without JS. This enhancement
+  // synchronizes the optional slider, named arrow controls, and stable links.
+  const guide = document.querySelector(".topic-guide");
+  let activateTopic = () => false;
+  if (guide) {
+    const radios = all(".topic-radio", guide),
+      slider = guide.querySelector(".topic-slider"),
+      live = guide.querySelector(".topic-live");
+    function select(index, writeLink = false) {
+      if (index < 0 || index >= radios.length) return false;
+      const radio = radios[index];
+      radio.checked = true;
+      slider.value = String(index + 1);
+      slider.setAttribute(
+        "aria-valuetext",
+        `${index + 1} von ${radios.length}: ${radio.dataset.topicTitle}`,
+      );
+      live.textContent = `Thema ${index + 1} von ${radios.length}: ${radio.dataset.topicTitle}`;
+      if (writeLink) {
+        try {
+          history.replaceState(null, "", `#topic-page-${radio.dataset.topicId}`);
+        } catch (_) {
+          /* file URLs may restrict history */
+        }
+      }
+      return true;
+    }
+    activateTopic = (topicId, writeLink = false) =>
+      select(
+        radios.findIndex((radio) => radio.dataset.topicId === topicId),
+        writeLink,
+      );
+    function fromHash() {
+      let element;
+      try {
+        element = byId(decodeURIComponent(location.hash.slice(1)));
+      } catch (_) {
+        return;
+      }
+      const panel = element?.closest(".topic-panel");
+      if (panel) activateTopic(panel.dataset.topicId);
+    }
+    radios.forEach((radio, index) => radio.addEventListener("change", () => select(index, true)));
+    slider.hidden = false;
+    slider.addEventListener("input", () => select(Number(slider.value) - 1, true));
+    all("label.topic-arrow", guide).forEach((label) => {
+      label.tabIndex = 0;
+      label.setAttribute("role", "button");
+      label.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          label.click();
+        }
+      });
+    });
+    window.addEventListener("hashchange", fromHash);
+    fromHash();
+    select(
+      Math.max(
+        0,
+        radios.findIndex((radio) => radio.checked),
+      ),
+    );
+  }
+
   function download(name, content, mime = "application/json") {
     const url = URL.createObjectURL(new Blob([content], { type: mime + ";charset=utf-8" }));
     const link = document.createElement("a");
@@ -67,12 +132,13 @@
     },
     exportDraft: () => byId("export-draft").click(),
     capture: () => {
-      const anchor = all("main > section").find(
-        (section) => section.getBoundingClientRect().bottom > 0,
+      const anchor = all("main [data-section-index]").find(
+        (section) => section.getClientRects().length && section.getBoundingClientRect().bottom > 0,
       );
       return {
         scroll: scrollY,
         anchor: anchor?.id,
+        topic: guide?.querySelector(".topic-radio:checked")?.dataset.topicId,
         offset: anchor?.getBoundingClientRect().top,
         open: all("details")
           .map((details, index) => (details.open ? details.id || `index-${index}` : null))
@@ -80,6 +146,11 @@
       };
     },
     restore: (state) => {
+      const anchor = state.anchor ? byId(state.anchor) : null;
+      if (guide && !(state.topic && activateTopic(state.topic))) {
+        const panel = anchor?.closest(".topic-panel");
+        if (panel) activateTopic(panel.dataset.topicId);
+      }
       all("details").forEach((details, index) => {
         details.open = (state.open ?? []).includes(details.id || `index-${index}`);
       });
@@ -132,6 +203,22 @@
     clone.classList.remove("js");
     clone.dataset.style = current.style ?? "current";
     clone.querySelector("#report-toolbox").open = false;
+    all(".topic-radio", clone).forEach((input, index) => {
+      input.checked = index === 0;
+      input.toggleAttribute("checked", index === 0);
+    });
+    const topicSlider = clone.querySelector(".topic-slider");
+    if (topicSlider) {
+      topicSlider.hidden = true;
+      topicSlider.value = "1";
+      topicSlider.setAttribute("value", "1");
+    }
+    const topicLive = clone.querySelector(".topic-live");
+    if (topicLive) topicLive.textContent = "";
+    all("label.topic-arrow", clone).forEach((label) => {
+      label.removeAttribute("tabindex");
+      label.removeAttribute("role");
+    });
     all("[data-option], [data-criterion], tbody tr, .slide", clone).forEach((node) => {
       node.hidden = false;
     });

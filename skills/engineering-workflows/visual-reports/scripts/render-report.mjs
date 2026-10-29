@@ -186,7 +186,12 @@ export function validateReport(report) {
   );
   assert(styles.includes(report.style ?? "current"), "Invalid style");
   if (report.presentation !== undefined)
-    assert(["slides", "reading"].includes(report.presentation), "Invalid presentation start mode");
+    assert(
+      ["slides", "reading", ...(report.schemaVersion === 2 ? ["topics"] : [])].includes(
+        report.presentation,
+      ),
+      "Invalid presentation start mode",
+    );
   if (report.readerStatus !== undefined) {
     object(report.readerStatus, "readerStatus");
     assert(
@@ -215,6 +220,22 @@ export function validateReport(report) {
   }
   list(report.sections, "sections");
   ids(report.sections, "sections");
+  if (report.topics !== undefined) {
+    assert(report.schemaVersion === 2, "topics require schemaVersion 2");
+    list(report.topics, "topics");
+    ids(report.topics, "topics");
+    for (const topic of report.topics) {
+      object(topic, "topic");
+      text(topic.title, "topic.title");
+      if (topic.shortTitle !== undefined) text(topic.shortTitle, "topic.shortTitle");
+      strings(topic.sectionIds, "topic.sectionIds");
+    }
+    assert(
+      JSON.stringify(report.topics.flatMap((topic) => topic.sectionIds)) ===
+        JSON.stringify(report.sections.map((section) => section.id)),
+      "topics must contain each section exactly once and preserve section order",
+    );
+  }
   for (const section of report.sections) {
     assert(KINDS.includes(section.kind), `Unsupported block ${section.kind}`);
     text(section.title, "section.title");
@@ -466,7 +487,7 @@ const caveats = (items) =>
   items.map((s) => `<p class="caveat"><strong>Hinweis:</strong> ${escape(s)}</p>`).join("");
 const notes = (items) => items.map((s) => `<p>${escape(s)}</p>`).join("");
 function table(d) {
-  return `<div class="toolbar js-only"><label>Suchen <input type="search" data-search></label><output data-result-count aria-live="polite">${d.rows.length} / ${d.rows.length}</output></div><div class="scroll" role="region" tabindex="0" aria-label="Datentabelle"><table><thead><tr>${d.columns.map((c, i) => `<th scope="col">${escape(c.label)} <button class="js-only" data-sort="${i}" aria-label="${escape(c.label)} sortieren">↕</button></th>`).join("")}</tr></thead><tbody>${d.rows.map((r) => `<tr>${d.columns.map((c) => `<td data-value="${escape(r.cells[c.id])}">${r.cells[c.id] === null ? "Unbekannt" : escape(r.cells[c.id])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  return `<div class="toolbar js-only"><label>Suchen <input type="search" data-search></label><output data-result-count aria-live="polite">${d.rows.length} / ${d.rows.length}</output></div><div class="scroll" role="region" tabindex="0" aria-label="Datentabelle"><table><thead><tr>${d.columns.map((c, i) => `<th scope="col">${escape(c.label)} <button class="js-only" data-sort="${i}" aria-label="${escape(c.label)} sortieren">↕</button></th>`).join("")}</tr></thead><tbody>${d.rows.map((r) => `<tr>${d.columns.map((c) => `<td data-label="${escape(c.label)}" data-value="${escape(r.cells[c.id])}">${r.cells[c.id] === null ? "Unbekannt" : escape(r.cells[c.id])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
 }
 function comparison(d, sources) {
   const controls = `<div class="js-only"><fieldset><legend>Optionen</legend>${d.options.map((o) => `<label><input type="checkbox" checked data-option-toggle value="${escape(o.id)}">${escape(o.label)}</label>`).join("")}</fieldset><fieldset><legend>Kriterien / Kennzahlen</legend>${d.criteria.map((c) => `<label><input type="checkbox" checked data-criterion-toggle value="${escape(c.id)}">${escape(c.label)}</label>`).join("")}</fieldset></div>`;
@@ -487,7 +508,7 @@ function comparison(d, sources) {
               : typeof v.value === "number"
                 ? `<div class="track" aria-hidden="true"><span class="zero" style="left:${((0 - lo) / range) * 100}%"></span><span class="bar" style="margin-left:${((Math.min(0, v.value) - lo) / range) * 100}%;width:${(Math.abs(v.value) / range) * 100}%"></span></div>`
                 : "";
-          return `<td data-option="${escape(o.id)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds, sources)}</small></td>`;
+          return `<td data-option="${escape(o.id)}" data-label="${escape(o.label)}"><span class="value">${v.value === null ? "Unbekannt" : escape(v.value)} ${escape(c.unit)}</span>${chart}<span class="state">${escape(v.state)}</span><small>${escape(v.note)} ${sourceLinks(v.sourceIds, sources)}</small></td>`;
         })
         .join("");
       return `<tr data-criterion="${escape(c.id)}"><th scope="row">${escape(c.label)}<small>${escape(c.context)} · ${escape(c.direction)}${numeric.length ? ` · gemeinsame Skala ${lo} … ${hi} ${escape(c.unit)}` : ""}</small></th>${cells}</tr>`;
@@ -580,6 +601,63 @@ function block(s, sources) {
       return renderExtra(s, sources);
   }
 }
+function sectionHtml(s, i, report, topicHeading = false, omitHeading = false) {
+  const heading = topicHeading ? "h3" : "h2";
+  return `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}">${omitHeading ? "" : `<${heading}>${icon(s.icon)}${escape(s.title)}</${heading}>`}${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s, report.sources)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds, report.sources) || "Keine Quelle zugeordnet"}</p></section>`;
+}
+
+function topicView(report) {
+  const topics =
+    report.topics ?? report.sections.map((s) => ({ id: s.id, title: s.title, sectionIds: [s.id] }));
+  const sections = new Map(
+    report.sections.map((section, index) => [section.id, { section, index }]),
+  );
+  const inputs = topics
+    .map(
+      (topic, i) =>
+        `<input class="topic-radio" type="radio" name="report-topic" id="topic-select-${topic.id}" data-topic-id="${topic.id}" data-topic-title="${escape(topic.title)}" aria-label="${escape(topic.title)} · ${i + 1} von ${topics.length}" aria-controls="topic-page-${topic.id}"${i === 0 ? " checked" : ""}>`,
+    )
+    .join("");
+  const sidebar = topics.length > 5;
+  const tabs = `<nav class="topic-tabs"${sidebar ? ' data-sidebar="true"' : ""} aria-label="Thema auswählen" style="--topic-count:${topics.length}">${topics.map((topic, i) => `<label for="topic-select-${topic.id}"><span>${escape(topic.shortTitle ?? topic.title)}</span><small class="topic-position">${i + 1} / ${topics.length}</small></label>`).join("")}</nav>`;
+  const visualKinds = new Set(["diagram", "chart", "figure", "graph"]);
+  const panels = topics
+    .map((topic, i) => {
+      const content = topic.sectionIds.map((id) => sections.get(id));
+      const parts = content.map(({ section, index }) =>
+        sectionHtml(section, index, report, true, topic.title === section.title),
+      );
+      const takeaway = `<p class="takeaway topic-takeaway">${escape(report.takeaway)}</p>`;
+      if (i === 0) parts.splice(visualKinds.has(content[0].section.kind) ? 1 : 0, 0, takeaway);
+      return `<div class="topic-panel" id="topic-page-${topic.id}" data-topic-id="${topic.id}"><h2 class="topic-heading">${escape(topic.title)}</h2>${parts.join("")}</div>`;
+    })
+    .join("");
+  const arrow = (i, delta) => {
+    const target = i + delta,
+      symbol = delta < 0 ? "←" : "→",
+      direction = delta < 0 ? "Vorheriges" : "Nächstes";
+    if (target < 0 || target >= topics.length)
+      return `<span class="topic-arrow" data-topic-step="${i}" aria-disabled="true" aria-label="${direction} Thema nicht verfügbar">${symbol}</span>`;
+    return `<label class="topic-arrow" data-topic-step="${i}" for="topic-select-${topics[target].id}" aria-label="${direction} Thema: ${escape(topics[target].title)}" title="${direction} Thema: ${escape(topics[target].title)}">${symbol}</label>`;
+  };
+  const controls = `<div class="topic-controls"><div>${topics.map((_, i) => arrow(i, -1)).join("")}</div><input class="topic-slider" type="range" min="1" max="${topics.length}" step="1" value="1" aria-label="Report-Thema" aria-valuetext="1 von ${topics.length}: ${escape(topics[0].title)}" hidden><div>${topics.map((_, i) => arrow(i, 1)).join("")}</div><span class="topic-live" aria-live="polite"></span></div>`;
+  const selectors = topics
+    .map(
+      (topic, i) => `
+#topic-select-${topic.id}:checked ~ main #topic-page-${topic.id} { display:block; }
+#topic-select-${topic.id}:checked ~ .topic-tabs label[for="topic-select-${topic.id}"] { background:var(--topic-surface); color:var(--fg); border-color:var(--topic-border); border-bottom-color:var(--topic-surface); font-weight:700; }
+#topic-select-${topic.id}:checked ~ .topic-tabs label[for="topic-select-${topic.id}"] .topic-position { display:block; }
+#topic-select-${topic.id}:checked ~ .topic-tabs[data-sidebar="true"] label[for="topic-select-${topic.id}"] { border-bottom-color:var(--topic-border); border-right-color:var(--topic-surface); }
+#topic-select-${topic.id}:focus-visible ~ .topic-tabs label[for="topic-select-${topic.id}"] { outline:2px solid var(--accent); outline-offset:-4px; }
+#topic-select-${topic.id}:checked ~ .topic-controls [data-topic-step="${i}"] { display:flex; }`,
+    )
+    .join("\n");
+  return {
+    html: `<div class="topic-guide"${sidebar ? ' data-sidebar="true"' : ""}>${inputs}${tabs}<main id="content">${panels}</main>${controls}</div>`,
+    selectors,
+  };
+}
+
 export function renderMarkdown(report) {
   validateReport(report);
   return stateMarkdown(report);
@@ -597,7 +675,11 @@ export async function renderReport(report) {
     digest = createHash("sha256").update(runtime).digest("base64");
   const csp = `default-src 'none'; script-src 'sha256-${digest}'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'`;
   const original = originalReport(report);
-  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}</style></head><body><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1><p class="takeaway">${escape(report.takeaway)}</p>${caveats(report.criticalCaveats)}${
+  const guided =
+    report.schemaVersion === 2 && !["reading", "slides"].includes(report.presentation)
+      ? topicView(report)
+      : null;
+  const html = `<!doctype html>\n<html lang="de" data-style="${report.style ?? "current"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}"><title>${escape(report.title)}</title><style>${css}\n${guided?.selectors ?? ""}</style></head><body data-presentation="${guided ? "topics" : "reading"}"><a class="skip" href="#content">Zum Inhalt</a><header><h1>${escape(report.title)}</h1>${guided ? "" : `<p class="takeaway">${escape(report.takeaway)}</p>`}${caveats(report.criticalCaveats)}${
     report.readerStatus
       ? `<p class="reader-handoff" role="note" data-reader-state="${escape(report.readerStatus.state)}">${readerStatusLines(
           report,
@@ -609,7 +691,7 @@ export async function renderReport(report) {
       : report.nextAction
         ? `<p class="next-action"><strong>Nächster Schritt:</strong> ${escape(report.nextAction)}</p>`
         : ""
-  }<p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar.</p></noscript></header><nav aria-label="Abschnitte">${report.sections.map((s) => `<a href="#block-${s.id}">${escape(s.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((s, i) => `<section id="block-${s.id}" data-section-index="${i}" data-kind="${s.kind}"><h2>${icon(s.icon)}${escape(s.title)}</h2>${caveats(s.caveats)}<p class="caveat" data-edit-notice${editNotice(report, s.id) ? "" : " hidden"}>${escape(editNotice(report, s.id))}</p>${block(s, report.sources)}${(s.details ?? []).map((d, di) => `<details id="detail-${s.id}-${di}"><summary>${escape(d.title)}</summary><ul>${d.items.map((v) => `<li>${escape(v)}</li>`).join("")}</ul></details>`).join("")}<p class="muted">Quellen: ${sourceLinks(s.sourceIds, report.sources) || "Keine Quelle zugeordnet"}</p></section>`).join("")}</main><section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section><footer class="report-tooling" aria-label="Report-Tooling"><details id="report-toolbox"><summary>Bericht-Werkzeuge · Export &amp; Darstellung</summary><p class="muted">Werkzeuge für diesen Bericht; kein Teil des behandelten Themas.</p><div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p></footer><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
+  }<p class="caveat" id="edit-status"${report.editing ? "" : " hidden"}>${escape(editNotice(report))}</p><p class="status" id="report-status" role="status" aria-live="polite"></p><noscript><p>${guided ? "Themen lassen sich ohne JavaScript auswählen; der Schieberegler benötigt JavaScript." : "Statische Vollansicht. Filter, Präsentation, Bewegung und lokale Editoren benötigen JavaScript; Quellen und Exporte bleiben lesbar."}</p></noscript></header>${guided ? guided.html : `<nav aria-label="Abschnitte">${report.sections.map((section) => `<a href="#block-${section.id}">${escape(section.title)}</a>`).join("")}</nav><main id="content">${report.sections.map((section, index) => sectionHtml(section, index, report)).join("")}</main>`}${guided ? `<details class="source-catalog"><summary>Quellen und Evidenz</summary>` : ""}<section aria-label="Quellen"><h2>Quellen und Evidenz</h2><ul class="source-list">${report.sources.map((s) => `<li id="source-${s.id}">${s.url ? `<a rel="noreferrer noopener" href="${escape(s.url)}">${escape(s.label)}</a>` : escape(s.label)} · ${escape(s.state)}${s.asOf ? ` · Stand: ${escape(s.asOf)}` : ""}</li>`).join("")}</ul></section>${guided ? "</details>" : ""}<footer class="report-tooling" aria-label="Report-Tooling"><details id="report-toolbox"><summary>Bericht-Werkzeuge · Export &amp; Darstellung</summary><p class="muted">Werkzeuge für diesen Bericht; kein Teil des behandelten Themas.</p><div class="toolbar js-only"><label>Stil <select id="style">${styles.map((v, i) => `<option value="${v}"${(report.style ?? "current") === v ? " selected" : ""}>${["Aktuell", "Mittelweg", "Ruhiger"][i]}</option>`).join("")}</select></label><button id="export-draft">Aktuelles HTML</button><button id="export-md">Aktuelles Markdown</button><button id="export-json">Aktuelles JSON</button><button id="export-original">Original-Snapshot</button><button id="export-settings">Stil exportieren</button></div><details class="agent-ledger" id="complete-json"><summary>Vollständiger JSON-Datenstand (auch ohne JavaScript lesbar)</summary><pre id="report-json">${escape(json(report))}</pre></details><details class="agent-ledger" id="complete-markdown"><summary>Vollständiges Markdown (ungefiltert)</summary><pre id="report-markdown">${escape(markdown)}</pre></details><details class="agent-ledger"><summary>Original-Snapshot (getrennt, unverändert)</summary><pre id="report-original">${escape(json(original))}</pre></details></details><p class="print-note">Aktueller Arbeitsstand; Nutzerbearbeitungen sind keine neue Quellenprüfung. Original-Snapshot bleibt getrennt erhalten.</p></footer><script type="application/json" id="report-data">${scriptJson(report)}</script><script>${runtime}</script></body></html>\n`;
   return { html, markdown, json: json(report) };
 }
 /** Explicit local writes only. A new output directory prevents accidental report overwrite. */

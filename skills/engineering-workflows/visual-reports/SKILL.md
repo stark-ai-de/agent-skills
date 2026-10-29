@@ -1,11 +1,11 @@
 ---
 name: visual-reports
-description: Create and update visual HTML reports with a guided topic sequence when the selected authoring and renderer path supports it; otherwise use the complete reading mode. Keep genuine comparisons together and preserve complete HTML/Markdown/JSON exports. Use when richer output helps an authorized answer or the user asks for a visual report; keep small answers in chat. Not production application UI or clinical advice.
+description: Create and update visual HTML reports with one guided topic at a time, useful diagrams, concise points, joint comparisons and complete offline HTML/Markdown/JSON exports. Use when richer output helps an authorized answer or the user asks for a visual report; keep small answers in chat. Not production application UI or clinical advice.
 license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "1.1.1"
+  version: "1.2.0"
 ---
 
 # Visual Reports
@@ -17,13 +17,11 @@ clear hierarchy, short lists and meaningful visuals. Identify whether the reader
 needs an action, a decision or a summary before choosing the format. Preserve facts, evidence
 states, sources and decisive limitations. Do not invent quantities to fill charts.
 
-Use a guided topic sequence only when the selected authoring and renderer path
-actually supports it. The current renderer supports its existing `reading` mode and
-explicit `slides` blocks; ordinary sections are not converted to guided pages. For
-those reports, use the complete reading-mode output. Preserve explicitly requested
-layouts. Follow [the reading contract](references/report-contract.md#guided-reading-when-supported)
-before choosing blocks; it defines the supported fallback and exceptions for layouts
-and joint comparisons.
+For v2 reports, the shared renderer starts with one guided topic at a time. Group
+related sections into topics; keep a meaningful diagram above concise points and
+keep genuine comparisons together. The author explicitly selects `reading` or
+`slides` when requested. Follow [the reading contract](references/report-contract.md#guided-reading-when-supported)
+for layout, accessible navigation and source fidelity.
 
 ## When to use
 
@@ -68,12 +66,11 @@ gaps, reviewed assets, repository policy and explicitly selected preferences.
 2. Inspect source authority and evidence gaps. For a continuation, read the current
    model/revision and reuse its IDs, reviewed assets and sources. Keep consumer
    source registers authoritative; do not replace them for a presentation change.
-3. Set the topic sequence before selecting visuals. Check whether the selected authoring and renderer path supports guided topic
-   navigation. If it does, follow [the guided reading form](references/report-contract.md#guided-reading-when-supported)
-   on the first draft and group each topic's bullets and diagram together. Otherwise,
-   use the existing complete `reading` mode; do not invent a presentation field or
-   renderer behavior. Preserve explicit layout choices. Follow [layout and navigation](references/report-contract.md#guided-layout-and-navigation)
-   when that presentation is supported.
+3. Set the topic sequence before selecting visuals. Follow [the guided reading form](references/report-contract.md#guided-reading-when-supported)
+   on the first draft: group each topic's diagram and bullets in the documented
+   `topics` model and place a useful graphic before its explanations. Use a chart
+   only for actual quantitative data. Preserve explicitly requested layouts; `reading`
+   and authored `slides` remain available. Follow [layout and navigation](references/report-contract.md#guided-layout-and-navigation).
    Lead with the result or a real next action; a summary needs no invented task.
    Apply the self-contained ADHD writing profile when requested.
 4. Compose registered blocks freely. Use comparison matrices for common criteria,
