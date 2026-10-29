@@ -2601,10 +2601,10 @@
       "sha256": "222f1ac6d8556604481c52739c1d5bb4e2db4f658ce2aa8763112db6d3dc8cc5"
     },
     {
-      "byteLength": 692,
+      "byteLength": 565,
       "mode": "0644",
       "path": "skills/visual-reports/agents/openai.yaml",
-      "sha256": "21351ed52b08bf52067060d2faafc25b514949464c29ce905cfb4f390a1d12a6"
+      "sha256": "7f7a0493937088053fb29508adb996a4f2e5d1c63a8178cbd67762e89dac42c7"
     },
     {
       "byteLength": 3259,
@@ -2865,10 +2865,10 @@
       "sha256": "07ff065e1237a631052beb812cb863157317ad3d834bd742aab8d693814c5181"
     },
     {
-      "byteLength": 4722,
+      "byteLength": 5228,
       "mode": "0644",
       "path": "skills/visual-reports/tests/topics.test.mjs",
-      "sha256": "a990158bccddc30a0673e70410302a3164a60cae86388d4d2a58bfb5c6cf7e0a"
+      "sha256": "f1449ce3495c461e92f385a147c7c4945147629db1c78392b88076bb7ada51e9"
     },
     {
       "byteLength": 21600,
@@ -2883,5 +2883,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "762e2a73bd2a38334542c7c669fee1bc4007221bfc477b6b93884029f6b12b73"
+  "treeHash": "a244511e4f87e2c8c944935d88324f74e613d549cb9903a669802fbd8b75a1f3"
 }

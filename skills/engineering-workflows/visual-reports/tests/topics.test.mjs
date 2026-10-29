@@ -113,3 +113,14 @@ test("Markdown authors can group sections and select reading explicitly", async 
   assert.equal(reading.presentation, "reading");
   assert.doesNotMatch((await renderReport(reading)).html, /class="topic-guide"/);
 });
+
+test("the skill invocation prompt requests the same topic and graphic order", async () => {
+  const metadata = await readFile(new URL("../agents/openai.yaml", import.meta.url), "utf8");
+  const prompt = metadata
+    .split("\n")
+    .find((line) => line.trimStart().startsWith("default_prompt:"));
+  assert.match(prompt, /Visual Reports/);
+  assert.match(prompt, /one topic visible at a time/);
+  assert.match(prompt, /graphic above concise bullets/);
+  assert.doesNotMatch(prompt, /diagrams below/);
+});

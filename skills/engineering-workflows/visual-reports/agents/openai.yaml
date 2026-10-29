@@ -3,7 +3,7 @@ interface:
   short_description: "One topic per page, short bullets and supporting diagrams"
   icon_small: "./assets/openai-icon.png"
   icon_large: "./assets/openai-icon.png"
-  default_prompt: "Use Visual Reports to create explanatory reports with one topic per page, short bullet points and supporting diagrams below. Provide Back/Next navigation and a page count. Preserve essential conditions; keep optional sources and complete HTML/Markdown/JSON exports in a closed footer. Keep genuine comparisons together and honor explicit layouts. Keep prototype and editor changes local."
+  default_prompt: "Use Visual Reports to create a guided report with one topic visible at a time, a meaningful graphic above concise bullets, connected tabs and navigation. Preserve essential conditions and complete exports, keep comparisons together, and honor explicit layouts."
 policy:
   products:
     - CHAT
