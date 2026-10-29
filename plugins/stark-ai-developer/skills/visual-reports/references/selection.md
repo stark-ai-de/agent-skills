@@ -2,9 +2,8 @@
 
 First read [Reader experience](report-contract.md#reader-experience) and establish
 the topic sequence before choosing blocks. Use [single-topic guided pages](report-contract.md#guided-reading-when-supported)
-when the selected authoring and renderer path supports them. The current renderer
-uses its existing complete `reading` mode for ordinary sections; explicit `slides`
-blocks remain available for slide presentations. An explicit requested layout takes
+by default for v2 sections. Explicit `reading` keeps the continuous view; `slides`
+requires an authored slides block. An explicitly requested layout takes
 precedence. Keep genuine comparisons together;
 choose a dashboard or chart-led view when that is the reader's actual goal.
 For a summary, show results without manufacturing a next task.

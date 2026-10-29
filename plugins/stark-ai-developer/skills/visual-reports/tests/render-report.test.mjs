@@ -75,7 +75,7 @@ test("comparison cells use escaped source labels while preserving target IDs", a
   assert.ok(source);
   source.label = `Reviewed <img src=x onerror="${source.id}"> source`;
   const html = (await renderReport(report)).html;
-  const comparisonCell = [...html.matchAll(/<td data-option="[^"]+">[\s\S]*?<\/td>/g)].find(
+  const comparisonCell = [...html.matchAll(/<td data-option="[^"]+"[^>]*>[\s\S]*?<\/td>/g)].find(
     ([cell]) => cell.includes(`href="#source-${source.id}"`),
   )?.[0];
   assert.ok(comparisonCell, "the source reference must render inside a comparison cell");

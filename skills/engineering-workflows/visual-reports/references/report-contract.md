@@ -334,46 +334,41 @@ a reading sequence is not evidence that there are unfinished implementation step
 
 ### Guided reading when supported
 
-Establish the topic sequence before the first render. Use one topic per page with
-Back/Next only when the selected authoring and renderer path implements that
-behavior for the authored model. The current renderer supports `presentation: "reading"`
-for a complete reading view and explicit `presentation: "slides"` for authored
-slides blocks; it does not turn arbitrary sections into guided pages. When guided
-topic navigation is unavailable, use the existing complete reading mode. Do not
-invent a presentation field, model block or renderer feature. Preserve explicit
-layout choices. The authoring unit is the topic whenever guided pages are supported:
-its heading, bullets and supporting diagram belong together. Keep sequence and stable
-topic links recognizable when revising an existing report.
+Establish the topic sequence before the first render. V2 reports default to the
+shared renderer's connected `topics` view, with one topic visible at a time.
+Group related sections with the documented `topics` array or Markdown directives.
+Without an explicit grouping, each section is one topic. Preserve explicit
+`reading` and `slides` layouts. Keep sequence and stable topic links recognizable
+when revising an existing report.
 
 - Use only short bullet points for explanatory page text, with one concrete
   statement per bullet. Name unfamiliar components and terms clearly at first use.
 - Split a longer topic into meaningful pages; preserve facts, conditions,
   exceptions and evidence. Put essential restrictions beside the affected claim.
-- Support relationships, boundaries and flows with a diagram below the bullets.
+- Support relationships, boundaries and flows with a diagram above the bullets.
   Reuse the same component names in both. Choose a chart for quantitative
   relationships and omit a graphic that adds no explanation.
-- Use this page order: topic heading, bullet points, Back/Next with page position,
-  then the supporting diagram. If a diagram needs a status legend, place a small
-  one between navigation and diagram and use the same meanings throughout.
+- Use this page order: topic heading, meaningful graphic, short bullet points and
+  necessary explanations. Put the position with the active tab; place previous/
+  next controls and the step slider below the content. If a diagram needs a status
+  legend, keep a small one beside it and use the same meanings throughout.
 - Keep optional source verification, complete exports and technical report tools
   in the closed footer. Preserve accessible diagram descriptions and full exports.
 
 Prefer direct topic titles over artificial guiding questions. A diagram supplements
-exact facts; it does not replace their readable explanation. In the existing `reading` mode,
-show all topics in one complete reading view. Without JavaScript, retain the full
-content for any supported presentation. Reading navigation never starts a
-product operation, advances automatically or adds a required quiz.
+exact facts; it does not replace their readable explanation. Explicit `reading` mode
+shows all sections in one continuous view. Without JavaScript, native topic controls
+and every section remain available. Reading navigation never starts a product
+operation, advances automatically or adds a required quiz.
 
 End only with a useful new action, condition or unresolved decision. A summary
 needs no invented task or repeated closing recap.
 
 ### Guided layout and navigation
 
-Shared alignment, readable diagrams and natural content height apply to both
-a supported guided sequence and an explicitly chosen tabbed presentation. The
-connected-surface and tab-control rules below apply only to that tabbed form.
-Use documented renderer capabilities and preserve the canonical exports; this
-authoring contract does not introduce an additional model block/API.
+Shared alignment, readable diagrams and natural content height apply to guided
+topics. The connected-surface and tab-control rules below describe the default
+tabbed form. Use the documented model and preserve the canonical exports.
 
 **Shared alignment and emphasis.** Align the page title, status, tab component,
 content headings and footer to a common left edge. Keep content widths, horizontal
