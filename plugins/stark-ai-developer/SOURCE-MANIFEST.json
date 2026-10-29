@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "a483d51b8b041698cddc1a02d96be2887b947da0e44c4c8764ce1fe5edb80eeb"
+      "sha256": "8ed478bd2235cebc858ab62a93e0d5f27d572ecd38c2e4069bfafe52c3d91ad1"
     },
     {
       "byteLength": 2128,
@@ -1881,10 +1881,10 @@
       "sha256": "7751f4fe095618cd1ffed693325b4a04095fc7e18346e6699ff108c0d4cefcd3"
     },
     {
-      "byteLength": 8402,
+      "byteLength": 8870,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/SKILL.md",
-      "sha256": "177549db36610031c217acc4cf24734f9e5f69199e4a3e4dee1c01c7beb7226f"
+      "sha256": "6003fbbc0f3efe99345ddc9fa64cfc0b4f00ee4edf8c77915865cace8ee4ee19"
     },
     {
       "byteLength": 470,
@@ -1953,10 +1953,10 @@
       "sha256": "7d4729da14da88949a1708ac30856df3bab3ac1e98689c1e4a00e185e5703688"
     },
     {
-      "byteLength": 5610,
+      "byteLength": 8929,
       "mode": "0644",
       "path": "skills/codex-spec-interviewer/references/host-adapters.md",
-      "sha256": "fada690b49b7255235ae08b71a9ee4a4a1ffaa4883040b086746baa3460f2ed3"
+      "sha256": "0c1f37385c7d95d6e61ad7e41f4d1853fca1e5f7dea11b8869af178879c52754"
     },
     {
       "byteLength": 2225,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.7"
+    "version": "1.19.8"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "431c642be171f9ba340b8fba5c9e314df1de802b2cd0985a78bfbca906cffe68"
+  "treeHash": "7fb9d64791ab14e3f4658e2d9f9b215049d87d7f4b6e5c2212ea41d06c9ba02a"
 }

@@ -6,7 +6,7 @@ compatibility: Targets Codex evidence and execution prompts across Agent Skills 
 metadata:
   author: stark-ai-de
   category: codex-operations
-  version: "0.5.1"
+  version: "0.6.0"
 ---
 
 # Codex Spec Interviewer
@@ -54,6 +54,10 @@ Follow [workflow-details.md](references/workflow-details.md) for the shared inte
 4. Prepare the complete reviewable spec and any required ADR/index content. Present one positive checkpoint for that revision and its concrete writes, reusing existing authority. A native plan approval can serve as this checkpoint.
 5. Preserve approval across any required Plan exit. Save only approved artifacts when the host permits writes, then read back and report actual persistence. Explicit chat-only delivery completes without a save.
 6. Emit the Codex execution prompt and run the rubric. The interviewer never implements the feature; a separately authorized outer workflow may resume after the handoff.
+
+## Optional visual support
+
+Use optional native interactive visualizations when a complex interview benefits and the current host exposes a callable capability. Preserve the complete conversational interview, evidence, reviewable spec and checkpoint if visualization is absent, fails or cannot be verified. Apply the [host capability and action boundaries](references/host-adapters.md#optional-native-visualizations) without adding a workflow or assuming a callback.
 
 ## Safety rules
 

@@ -38,10 +38,24 @@ Use `AskQuestion` only when exposed. For a native transition that is actually ne
 
 A missing structured question, async question, native plan, or exit tool is not a reason to omit the interview or repeat approved content. Use ordinary conversation and actual permissions. While a required answer is pending, only independent authorized work continues. Silence and timeouts do not select defaults. If write state cannot be established, return the reviewed draft with persistence pending rather than attempting a write.
 
+## Optional native visualizations
+
+Use a visualization only if current host instructions and actually exposed or callable interfaces establish that this session can invoke it and interaction will make the interview easier to understand. The host's product name, documentation, installed skill or a prior session does not establish current availability. Small, simple decisions remain concise conversation. Do not install a renderer, create a Page, generate HTML or launch a service as a fallback.
+
+Select a view based on the actual interview: a decision tree with settled and pending branches; an options and tradeoffs comparison; a scope and dependency map; a requirement-to-evidence and acceptance trace; an ADR gate showing proposed versus accepted decisions; or a checkpoint showing the exact spec revision, authorized writes and persistence status. Use only facts and sources already gathered; never invent status, paths, decisions, capabilities or evidence. Make unknowns explicit; provide meaningful labels, keyboard access and cues beyond color. Visual exploration must not require extra repository inspection.
+
+Keep the complete interview, questions, options, evidence, full reviewable spec, decision and approval checkpoint in text or conversation. If rendering is unavailable, fails, is blocked, or has an unknown or unverified render outcome, continue in text without retry loops or a new dependency. Only claim a view was displayed when the host establishes actual display, not merely a queued or attempted call.
+
+A documented current-session action bridge must deliver a genuine host-delivered user click or selection before it can count as the user's answer or bounded request. Show the decision, exact option and material scope before the action; recheck current state and preserve existing authority. A preselected option, silence, timeout or mere display is not an answer, acceptance or authorization. Without a documented callback, offer the same choices and a complete request in chat. Filtering or viewing must not execute commands, create files, switch modes or accept an ADR. Never infer a callback from native ChatGPT Visualize or use an Apps SDK bridge outside its documented app integration.
+
+Never persist or write repository artifacts while native Plan is active. A visualization action cannot override this boundary, treat permission to save a proposed ADR as acceptance, implement the feature, or grant unrelated external mutation. Acceptance of an ADR decision requires the user’s explicit acceptance of the reviewed decision. A user-approved complete revision and its exact authorized writes can use a supported native plan approval as the single checkpoint; do not ask again for unchanged approval. If the callback cannot establish explicit approval, use the normal conversational checkpoint. An action with stale or materially changed content, destination or scope requires resolving that specific delta; deduplicate repeated callbacks and reconcile the actual outcome before retrying; do not replay an uncertain action. Keep a trusted explicit user's selection separate from a rendered suggestion.
+
 ## Documentation pointers
 
 Consult current primary documentation only when the relevant mechanism is unclear:
 
+- [ChatGPT Visualizations](https://learn.chatgpt.com/docs/visualizations)
+- [Apps SDK component bridge](https://developers.openai.com/plugins/reference#windowopenai-component-bridge)
 - [Codex CLI commands](https://developers.openai.com/codex/cli/slash-commands)
 - [ChatGPT developer commands](https://learn.chatgpt.com/docs/developer-commands)
 - [ChatGPT skills](https://learn.chatgpt.com/docs/skills-and-plugins)
