@@ -169,6 +169,12 @@ try {
     assert.equal(actual.sliderHidden, false);
   }
   await click('.topic-tabs label[for="topic-select-start"]');
+  await page("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 480,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
   assert.equal(
     await evaluate(
       `document.querySelector('.topic-controls [data-topic-step="0"][aria-disabled="true"]')?.checkVisibility()`,
@@ -177,6 +183,10 @@ try {
   );
   await click('.topic-controls label[data-topic-step="0"]');
   assert.equal((await state()).checked, "metrics");
+  const guideTop = await evaluate(
+    "document.querySelector('.topic-guide').getBoundingClientRect().top",
+  );
+  assert.ok(Math.abs(guideTop) <= 2, `next topic starts at the top: ${guideTop}`);
   await click('.topic-controls label[data-topic-step="1"][for="topic-select-start"]');
   assert.equal((await state()).checked, "start");
   await evaluate(`document.querySelector('.topic-controls label[data-topic-step="0"]').focus()`);

@@ -75,6 +75,11 @@
           label.click();
         }
       });
+      // An explicit previous/next action starts the newly selected topic at
+      // its heading; ordinary rendering and automatic updates never scroll.
+      label.addEventListener("click", () =>
+        guide.scrollIntoView({ block: "start", behavior: "auto" }),
+      );
     });
     window.addEventListener("hashchange", fromHash);
     fromHash();

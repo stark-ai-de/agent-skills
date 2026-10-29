@@ -2661,10 +2661,10 @@
       "sha256": "5a584c346af19fe03e7d204a764a02e0b61eac28dbabd6ac1cdde8b23abb79d5"
     },
     {
-      "byteLength": 24230,
+      "byteLength": 24505,
       "mode": "0644",
       "path": "skills/visual-reports/assets/report-runtime.js",
-      "sha256": "520b83eb00571c5d9ac6487c9aafc38e97002023f5502b25db70f237132dac86"
+      "sha256": "58034c205245506d812161bab3ed56b11349feb107e1dd10a2ba815171dd1b9f"
     },
     {
       "byteLength": 14431,
@@ -2835,10 +2835,10 @@
       "sha256": "d0035ec0ead44c570a1c88c39a93a7c30212c5c0cd7ec37efdaa7569553706a2"
     },
     {
-      "byteLength": 15077,
+      "byteLength": 15411,
       "mode": "0644",
       "path": "skills/visual-reports/tests/browser-topics.mjs",
-      "sha256": "0cdf504193b1b2f5dd085f64a6251b1ea5ad662f769effedacb9e4e9e9e0e0c0"
+      "sha256": "a489aec26263a7cabac8c56c996ecd996f07b83b3ee27e0ec52ae763e3b350a8"
     },
     {
       "byteLength": 5077,
@@ -2883,5 +2883,5 @@
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "76e8c8da003329fbcdd3653d580544af8cf3bdd8dfa8a3a2767d289fd0ca3f56"
+  "treeHash": "762e2a73bd2a38334542c7c669fee1bc4007221bfc477b6b93884029f6b12b73"
 }
