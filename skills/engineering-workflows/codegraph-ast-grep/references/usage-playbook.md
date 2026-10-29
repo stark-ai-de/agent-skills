@@ -6,6 +6,8 @@ Persist the following concise rule, adapted to the target repository's existing 
 
 ## Contents
 
+- [Optional visualizations and actions](#optional-visualizations-and-actions)
+
 - [Choose the smallest evidence path](#choose-the-smallest-evidence-path)
 - [Semantic exploration](#semantic-exploration)
 - [Structural search and rules](#structural-search-and-rules)
@@ -123,3 +125,30 @@ Return the minimum proof the user can act on:
 - project validation and remaining risk.
 
 Do not paste full configs, broad graph dumps, or hundreds of match lines. Summarize counts, give representative matches, and offer exact artifact paths or narrower follow-ups.
+
+## Optional Visualizations and Actions
+
+This reference applies to setup, update, doctor, and internal coding behaviors after setup. Visualization and action delivery are separate capabilities. Discover them from current host instructions and callable interfaces for this turn. Documentation, product names, or a prior turn do not prove availability. Unknown means unavailable for the current response. Do not install a renderer, create a Page, generate HTML, or start a service as a fallback.
+
+### Choose a useful view
+
+| Situation         | View                                                                                      | Details to preserve                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Setup readiness   | Dependency map across CodeGraph, ast-grep CLI, client MCP, graph, and repository guidance | State, provenance, scope, checks, and gaps per component                                |
+| Update            | Version and provenance comparison with required migration steps                           | Channel, installed and target versions, configuration changes, index work, verification |
+| Doctor            | Filterable findings by severity and component                                             | Checked and unchecked evidence, confidence, root, read-only boundary, next route        |
+| Impact analysis   | Entry point to implementation, callers, dependents, and likely tests                      | Source-backed edges and dynamic or unindexed boundaries                                 |
+| Structural search | Pattern with representative matches and positive/negative examples                        | Language/parser, paths, match counts, exclusions, and coverage limits                   |
+| Reviewed rewrite  | Before/after view of the bounded patch                                                    | Exact files and pattern, changed count, tests, approval state, remaining matches        |
+
+Render only when interaction helps explore relationships, alternatives, or a meaningful result set. Small or simple results remain concise text. Build views only from evidence already obtained for the task; a view does not authorize extra repository reads. Label missing evidence as unknown, never as an empty result. Keep an equivalent chat result with findings, provenance, limitations, and next steps. Use accessible labels, keyboard navigation, and cues beyond color.
+
+### Actions
+
+An action is callable only when the current host documents a callback from the visible visualization to the agent and exposes the requested operation. Native ChatGPT Visualize availability does not establish such a callback. Apps SDK or other widget bridges apply only in their own supported integrations. Never guess a JavaScript bridge, send a hidden shell command from rendered content, or treat a suggested prompt as an executed action.
+
+For every action, show the operation, repository root, affected scope, expected writes, and relevant evidence before the click. A genuine host-delivered click on that exact visible action is a user request within that scope. Recheck current state, selected tool capabilities, and existing approvals before acting; retain any approval or confirmation required by the host or task. A changed target, write set, destructive step, or external action is outside the click's scope and follows the ordinary approval boundary.
+
+Filtering, zooming, expanding details, and opening evidence are view-only. Repeated clicks or an unknown prior execution result never justify blind mutation replay: inspect current state and report uncertainty. Keep `doctor` non-repairing; an approved follow-up enters the matching setup/update or coding behavior.
+
+When no documented callback is available, present the complete bounded action as text the user can submit in chat. Clearly label it as a proposed follow-up. If native rendering is missing, fails, or its outcome cannot be verified, continue with the complete text result and do not retry automatically. Do not claim an action or render succeeded without current evidence.

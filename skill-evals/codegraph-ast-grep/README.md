@@ -5,6 +5,8 @@ deterministic contract checks, an unchanged historical internal reviewer capture
 reproducible historical behavioral evidence. It is maintainer evidence, not
 installed runtime content.
 
+Current v0.4.0 adds visualization and action-boundary scenario and source-contract checks. These checks are not live native rendering or agent-action evidence.
+
 ## Current contract coverage
 
 - The finite public workflows are `setup`, `update`, and `doctor`; there is no recursive `auto` workflow.
@@ -17,7 +19,7 @@ installed runtime content.
 - Routine semantic exploration, structural search, impact analysis, rule authoring, and reviewed rewrites are internal coding behaviors, not public modes.
 - Normal setup excludes the experimental ast-grep MCP server.
 
-Current v0.3.4 routing has source-contract assertions, the maintained scenario catalog, and [six fresh Codex CLI captures](behavioral/v0.3.4-routing/README.md) with 36/36 machine-recomputed routing assertions. The captures cover direct setup/update requests, the canonical Codex starter prompt with clear setup/update additions, the bare starter, and an explicit options request. They use synthetic project facts and a composed starter prompt; they do not prove native Codex UI behavior or a real tool installation. The explicit-options case now has a captured and graded current counterpart. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
+Historical v0.3.4 routing has source-contract assertions, the maintained scenario catalog, and [six historical Codex CLI captures](behavioral/v0.3.4-routing/README.md) with 36/36 machine-recomputed routing assertions. The captures cover direct setup/update requests, the canonical Codex starter prompt with clear setup/update additions, the bare starter, and an explicit options request. They use synthetic project facts and a composed starter prompt; they do not prove native Codex UI behavior or a real tool installation. The explicit-options case now has a captured and graded current counterpart. Historical source bytes are preserved in `behavioral-baseline/v0.3.3/` so old evidence can still be independently verified. Current cases are the files named in the deterministic validator. The five cases
 under [`behavioral/current-contract/`](behavioral/current-contract/README.md)
 bind prompts, reused internal clean-context reviewer outputs, historical
 independent gradings, and provenance to the exact v0.3.3 behavioral runtime payload. The
@@ -53,7 +55,7 @@ pnpm run validate:codegraph-ast-grep
 ```
 
 The validator checks the installed runtime contract, current scenario structure,
-all new and historical source/prompt/output/grading/provenance hashes, the v0.3.4 skill-and-starter-prompt candidate binding, six fresh routing captures with 36/36 assertions, historical runtime-payload
+all new and historical source/prompt/output/grading/provenance hashes, the historical v0.3.4 snapshot-and-starter-prompt binding, six historical routing captures with 36/36 assertions, historical runtime-payload
 binding, the 5/35/0 independent review result, target-guidance persistence,
 provenance-preserving setup/update behavior, doctor authority, current/legacy
 command safety, and historical capture integrity. Validation itself is offline:

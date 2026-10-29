@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "a483d51b8b041698cddc1a02d96be2887b947da0e44c4c8764ce1fe5edb80eeb"
+      "sha256": "8ed478bd2235cebc858ab62a93e0d5f27d572ecd38c2e4069bfafe52c3d91ad1"
     },
     {
       "byteLength": 2128,
@@ -1725,10 +1725,10 @@
       "sha256": "a7123c56c7528629676df7cdf8bd003bf1bcf2c8f660b0aabf5801cf56e03422"
     },
     {
-      "byteLength": 12701,
+      "byteLength": 13285,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/SKILL.md",
-      "sha256": "00c31971bc10fc98227f622bb24024605db1a678bcff9f76cfe7f9727e32705e"
+      "sha256": "a4f444ff4fa51dcacf7a7496b371052b0942ab2e3c50c9853790b9888508bb9b"
     },
     {
       "byteLength": 967,
@@ -1749,10 +1749,10 @@
       "sha256": "192302b65ef59eb93c21aa3ca7cad3743e562e24b04dcfef4e6553298d3f7613"
     },
     {
-      "byteLength": 10936,
+      "byteLength": 10927,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/references/codegraph-capability-guide.md",
-      "sha256": "547e985239840b0167ae2e73d19a432bb95e9518eac633782e222515be11e7b1"
+      "sha256": "f78b3633fbda2d13415e58b19c1165bd039a39cfcd7baf839abdde0579617ede"
     },
     {
       "byteLength": 9088,
@@ -1761,10 +1761,10 @@
       "sha256": "52441808dbe2589a25ba4b29f55717e44b86d4071839b698fffe34acc393b473"
     },
     {
-      "byteLength": 28038,
+      "byteLength": 28039,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/references/setup-and-mcp-config.md",
-      "sha256": "838dc1b2a506029badd953581a679370cce1b123b7c6cb09fa145b9d5bd156a3"
+      "sha256": "f0fbf53d456bb7572e869b6811d9c16b89d5485e717dd14a70ae8d3057ad39cc"
     },
     {
       "byteLength": 10024,
@@ -1773,16 +1773,16 @@
       "sha256": "6bac8d229809cd9855a781660f8a1b9306c3101870f37b456db0b35bceeda116"
     },
     {
-      "byteLength": 19135,
+      "byteLength": 19213,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/references/update-and-provenance.md",
-      "sha256": "7784dfe7c1164c8124052f60ced38d8e9e1936280da31be62f1c442afc556393"
+      "sha256": "d01b7692c5a25a4ecb9f4ec1d4956e576f940d6e567f9c6cf9e181d9b5012d40"
     },
     {
-      "byteLength": 8141,
+      "byteLength": 12509,
       "mode": "0644",
       "path": "skills/codegraph-ast-grep/references/usage-playbook.md",
-      "sha256": "483247453e62c19a6e602e8425d7a35984f6cdd610b033c8f47849a8ddbd86b2"
+      "sha256": "0579e3aff8fe74ab30c4a5a909bcd7735f762ca2e8c0d06e02dd191c1574d99f"
     },
     {
       "byteLength": 18071,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.7"
+    "version": "1.19.8"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "431c642be171f9ba340b8fba5c9e314df1de802b2cd0985a78bfbca906cffe68"
+  "treeHash": "e6ad204509477956f3ebb195536a750735f434929f4465b9c7dcc36ccc59ef72"
 }

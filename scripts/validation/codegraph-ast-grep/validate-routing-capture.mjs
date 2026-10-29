@@ -70,7 +70,10 @@ function json(root, relative, errors) {
 }
 
 function candidateHash(root, errors) {
-  const directory = path.join(root, skill);
+  const directory = path.join(
+    root,
+    "skill-evals/codegraph-ast-grep/behavioral-baseline/v0.3.4/runtime",
+  );
   if (!fs.existsSync(directory) || !fs.lstatSync(directory).isDirectory()) {
     errors.push(`${skill}: missing candidate directory`);
     return "";
@@ -177,7 +180,7 @@ export function validateRoutingCapture(root) {
     manifest.candidate?.hash_recipe !==
       "For each canonical skill file in bytewise lexicographic path order, excluding assets/openai-icon.png: relative path, NUL, file bytes, NUL; then SHA-256. Includes SKILL.md and agents/openai.yaml."
   ) {
-    errors.push(`${manifestPath}: candidate identity or current hash does not match`);
+    errors.push(`${manifestPath}: historical candidate identity or snapshot hash does not match`);
   }
   const capture = manifest.capture;
   if (
