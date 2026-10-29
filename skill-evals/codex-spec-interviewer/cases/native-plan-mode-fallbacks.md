@@ -49,7 +49,7 @@ the current composer control.
   `Planning capability: Available but inactive` and request selection of that
   item or provide standalone `/plan`. After confirmed activation, use the
   separate continuation `Use $codex-spec-interviewer to continue this request:
-  <original request>`. Combine the command and continuation only if this same
+<original request>`. Combine the command and continuation only if this same
   composer also proves inline argument support.
 - When Codex web control or state evidence is missing or contradictory, report
   `Planning capability: Indeterminate` and continue read-only discovery and
