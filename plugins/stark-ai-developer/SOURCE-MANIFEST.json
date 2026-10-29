@@ -90,7 +90,7 @@
       "byteLength": 756,
       "mode": "0644",
       "path": "plugin.json",
-      "sha256": "a483d51b8b041698cddc1a02d96be2887b947da0e44c4c8764ce1fe5edb80eeb"
+      "sha256": "8ed478bd2235cebc858ab62a93e0d5f27d572ecd38c2e4069bfafe52c3d91ad1"
     },
     {
       "byteLength": 2128,
@@ -2595,16 +2595,16 @@
       "sha256": "2457b07786dc06650691c2f4b215ca28c2a02d7cda39eb52c98a6d56bf413b3c"
     },
     {
-      "byteLength": 11254,
+      "byteLength": 12056,
       "mode": "0644",
       "path": "skills/visual-reports/SKILL.md",
-      "sha256": "148d38e04776b6843fb4395c5d01399aa60b0216a715b908b537a3be20bf0a72"
+      "sha256": "08b20978612a99900423df9be0b175f98855aed7b39abe526e9d7be1a780683f"
     },
     {
-      "byteLength": 692,
+      "byteLength": 780,
       "mode": "0644",
       "path": "skills/visual-reports/agents/openai.yaml",
-      "sha256": "21351ed52b08bf52067060d2faafc25b514949464c29ce905cfb4f390a1d12a6"
+      "sha256": "cdbbb95c1326eead4c75023d2c648a62d768365ee77f989446a1d1e7f7e42065"
     },
     {
       "byteLength": 3259,
@@ -2733,10 +2733,10 @@
       "sha256": "31a9811366b79d9ab1bebf3b60180fe088666267a4295294bd6bb8b68556c352"
     },
     {
-      "byteLength": 30989,
+      "byteLength": 34301,
       "mode": "0644",
       "path": "skills/visual-reports/references/report-contract.md",
-      "sha256": "8e36958a805f28cb0b5eb8c5d140980aa06875bdfb2a0c2b6787499f11c72040"
+      "sha256": "e8344bd077d24e2a1d9787bae527ccd614e91f37a1f39d63887961f2839d1eee"
     },
     {
       "byteLength": 5049,
@@ -2847,10 +2847,10 @@
       "sha256": "d634cf67b1a472b0dc3b07435bddb4bc089a8da902b517b2950db6135097b3fe"
     },
     {
-      "byteLength": 13276,
+      "byteLength": 14631,
       "mode": "0644",
       "path": "skills/visual-reports/tests/render-report.test.mjs",
-      "sha256": "ba6d3ed34a75d544219c9e32021371ff2c5ea7b9cfcff6b74a9efa7ee8f74f1a"
+      "sha256": "f2217a10173c6bef2de9497abe2c41bde821396f540684de9c0637e880b75eb7"
     },
     {
       "byteLength": 11935,
@@ -2867,9 +2867,9 @@
   ],
   "plugin": {
     "id": "stark-ai-developer",
-    "version": "1.19.7"
+    "version": "1.19.8"
   },
   "projection": "portable",
   "schemaVersion": 1,
-  "treeHash": "431c642be171f9ba340b8fba5c9e314df1de802b2cd0985a78bfbca906cffe68"
+  "treeHash": "5a839ef79d05d98184af57392c3d3cb8019c61b86b0ea69bbf87f1b01310998f"
 }

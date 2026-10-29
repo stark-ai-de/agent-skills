@@ -61,6 +61,18 @@ can be paused/reset, respects reduced motion and never replaces the static
 explanation. Opening, exporting or reopening a report is not permission to play.
 No decorative autoplay or automatically advancing slides.
 
+## Native presentation and HTML fallback
+
+Prefer the current host's native interactive visualization when an actually callable and displayable capability is established for this session and it can faithfully serve the full report. Host product names, prior sessions, a documentation page, a queued opening or an available Page-editing tool alone do not establish a native chat renderer. Respect explicit user-selected output, layout and host restrictions. Do not install a renderer, publish a site, edit a Page or send private material to an unrelated service merely to obtain a view. Process private material only within the current authorized host and its applicable data policy; do not copy it to an external renderer.
+
+Use the same validated report snapshot as the HTML, Markdown and JSON exports. Derive the native presentation only from the current normalized snapshot and check the displayed facts and evidence against it item by item; if that provenance or fidelity cannot be established, use HTML. Assess the native view against the actual reader goal and report contract: preserve every essential fact, comparison criterion, source, caveat and evidence status, required interactions, topic grouping, accessible labels and the requested layout. Maintain the same concise reader experience, short meaningful bullets, readable diagrams, explicit units and conditions, and no duplicated orientation. Do not simplify by dropping necessary evidence or inventing measurements. Keep complete HTML, Markdown and JSON exports available from that snapshot regardless of the primary display; preserve managed revision, explicit Apply and unsaved-draft protections.
+
+If the native capability is unavailable, fails, is unverified or insufficient, display the complete HTML report as the fallback using an actually accessible host-supported opening route. Reuse the session preview where appropriate and verify the actual URL and rendered content. If opening is blocked, report the precise limitation and provide the standalone HTML path and complete exports; do not claim it was displayed. Avoid automatic retry loops. A verified native display requires host evidence of actual display; a queued request is not proof.
+
+A native view is presentation only. Filtering, navigation or resizing cannot change the canonical snapshot, write files, approve a decision or execute product actions. No button is an agent callback unless a documented current-session interface actually delivers the user's bounded request; preserve existing authority and do not assume ChatGPT Visualize exposes the Apps SDK bridge. Editing, managed preview, history, styles and explicitly requested exports always stay with their existing authorized routes; native presentation does not replace those capabilities. Never silently claim unsupported controls, accessibility qualification or applied preferences.
+
+For examples, favor an interactive comparison with common criteria, an explorable process or architecture diagram, or a compact status/timeline when their interactions clarify the answer. A static claim or short action remains in chat; a generic animated graphic does not justify hiding the required report. If the user explicitly requests standalone HTML, managed preview, editable content or a specific layout, honor that outcome.
+
 ## Presentation and styles
 
 Graphite Grain uses the available width without a decorative outer frame: quiet
