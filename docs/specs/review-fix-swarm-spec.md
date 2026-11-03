@@ -192,3 +192,5 @@ work, execute the validation above, and report observed results and remaining ga
 ### Pilot-derived session safety
 
 Every session start or resume must re-confirm its effective working directory and enforced read-only policy before any probe or reviewer launch. CLI resumption is not evidence that either property persisted. Orchestration Git reads use `GIT_OPTIONAL_LOCKS=0`; capture fingerprints immediately around each review phase so index stat-cache refreshes during preflight cannot masquerade as reviewer writes. A mismatched or writable resumed session is blocked and its results are not accepted as review evidence.
+
+Dynamic collaboration tool hosts may omit spawn events from compact CLI output. Preserve private parent and child transcripts and reconcile native call outputs, child ancestry, completion, and actual review results before triage.
