@@ -14,6 +14,8 @@ Run these manually on independent disposable feature snapshots, with fresh agent
 | S8: Misleading code reduction         | Removing tests shrinks LOC; replacing helper adds more owned complexity        | Reject unjustified deletion, report production/test/total balance separately                                                    |
 | S9: Dirty worktree + missing source   | Existing unrelated edit, rename and untracked file                             | Preserve originals, avoid stash/reset/index actions, classify omissions and blocked write scope                                 |
 | S10: Timing comparison                | A/B share start snapshot but run with different smoke passes or extra reviewer | Flag protocol mismatch; do not claim relative wall-time/model-cost superiority                                                  |
+| S11: Ephemeral output truncated       | Read-only parent uses `--ephemeral`, and tool output truncates reviewer events | Capture private JSONL from startup or use a persistent transcript; reconcile actual child IDs and completion before cleanup |
+| S12: Narrated reviewers only         | Parent claims three reviewers completed, but no native launch or completion events are available | Report PARTIAL; do not start a fixer or infer reviewer creation from names |
 
 ## Grading
 

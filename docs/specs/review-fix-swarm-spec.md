@@ -41,6 +41,9 @@ changes and actual HYBRID/Cloud qualification are outside this slice.
   fingerprints around review;
   mutation invalidates all affected review results and blocks triage. Missing
   enforced isolation produces BLOCKED before reviewer execution.
+- Before launching a review round, establish a private, durable native-event or
+  transcript capture route. Reconcile each child creation and completion before
+  cleanup; an ephemeral coordinator narrative alone cannot prove reviewer work.
 - Wait for all reviewers, verify/deduplicate claims and classify candidates as
   apply, retain or defer with evidence. Exactly one authorized fixer writes after
   the review phase ends, within the target repository's worktree policy.
