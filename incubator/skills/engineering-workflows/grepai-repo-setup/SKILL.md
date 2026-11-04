@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.1"
+  version: "0.1.2"
   internal: true
 ---
 
@@ -66,7 +66,7 @@ No bundled scripts. Use the existing Git and GrepAI tools.
 
 ## Output format
 
-Report the finding, supporting evidence, working access route, unchecked items, and next step. Include any setup changes or pending registration. If useful, suggest `codegraph-ast-grep` as a separate follow-up for symbol, caller and structural evidence. Do not invoke it automatically.
+Report the finding, supporting evidence, working access route, unchecked items, and next step. Include any setup changes or pending registration. Offer `codegraph-ast-grep` when the user needs symbol, caller or structural evidence, and `karakeep-knowledge` when they want to consult or maintain approved knowledge. These are separate follow-ups. GrepAI onboarding grants neither graph setup nor knowledge publication.
 
 ## Completion criteria
 

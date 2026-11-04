@@ -1386,21 +1386,47 @@ test("review conventions separate unknown license, changed assessment, rename an
   assert.equal((await normalizeCodeRecord(rebound, f.p, { entries: {} })).reviewState, "stale");
 });
 
+test("collection status keeps the code grant separate from project readiness", async (t) => {
+  const f = await codeFixture(t);
+  const before = f.requests.length;
+  const project = await check({ repo: f.repo, config: path.join(f.root, "missing.json") });
+  const local = await status({ policy: f.policyFile });
+  assert.equal(project.status, "needs_setup");
+  assert.deepEqual(local.codeRecords, { supported: true, granted: true, writerAuthorized: true });
+  assert.equal(local.accountReadChecked, false);
+  assert.equal(f.requests.length, before);
+  const online = await status({ policy: f.policyFile, online: true });
+  assert.equal(online.accountReadChecked, true);
+  assert.deepEqual(online.codeRecords, local.codeRecords);
+  delete f.p.codeRecords;
+  await f.savePolicy();
+  assert.deepEqual((await status({ policy: f.policyFile })).codeRecords, {
+    supported: true,
+    granted: false,
+    writerAuthorized: false,
+  });
+  assert.equal(f.writes.length, 0);
+});
+
 test("Greppy maintenance uses the adopted account writer and converges without model calls", async (t) => {
   const f = await codeFixture(t);
   const item = await f.code();
   const { source, ...record } = item.codeRecord;
   const configFile = path.join(f.root, "workspace.json");
   const componentsFile = path.join(f.root, "components.json");
-  const adapter = fileURLToPath(
-    new URL(
-      "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
-      import.meta.url,
-    ),
-  );
-  const knowledgeRoot = fileURLToPath(
-    new URL("../../skills/engineering-workflows/karakeep-knowledge", import.meta.url),
-  );
+  const adapter =
+    process.env.GREPPY_TEST_RECORDS_ADAPTER ??
+    fileURLToPath(
+      new URL(
+        "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
+        import.meta.url,
+      ),
+    );
+  const knowledgeRoot =
+    process.env.GREPPY_TEST_KNOWLEDGE_ROOT ??
+    fileURLToPath(
+      new URL("../../skills/engineering-workflows/karakeep-knowledge", import.meta.url),
+    );
   await writeJson(componentsFile, {
     components: [
       { ...record, id: item.id, title: item.title, assessedSourceHash: source.fileHash },
@@ -1439,4 +1465,45 @@ test("Greppy maintenance uses the adopted account writer and converges without m
   assert.equal(f.objects.size, 1);
   assert.equal(f.writes.length, writes);
   assert.match(bookmark.note, /^Manual follow-up\n/u);
+});
+
+test("Greppy rejects incompatible owners and missing grants before state or model work", async (t) => {
+  const f = await codeFixture(t);
+  delete f.p.codeRecords;
+  await f.savePolicy();
+  const configFile = path.join(f.root, "workspace.json");
+  const stateRoot = path.join(f.root, "greppy-state");
+  const componentsFile = path.join(f.root, "components.json");
+  const adapter = fileURLToPath(
+    new URL(
+      "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
+      import.meta.url,
+    ),
+  );
+  const knowledgeRoot = path.dirname(path.dirname(helper));
+  const incompatible = path.join(f.root, "incompatible");
+  const modules = path.join(incompatible, "scripts/knowledge");
+  await fs.mkdir(modules, { recursive: true });
+  for (const name of ["state", "reconcile", "code-records"]) {
+    await fs.writeFile(path.join(modules, name + ".mjs"), "export const unsupported = true;");
+  }
+  for (const [root, code] of [
+    [incompatible, "owner_incompatible"],
+    [knowledgeRoot, "missing_grant"],
+  ]) {
+    await writeJson(configFile, {
+      knowledgeRoot: root,
+      codePolicy: f.policyFile,
+      componentsFile,
+      stateRoot,
+      agent: { enabled: true },
+    });
+    await assert.rejects(
+      exec(process.execPath, [adapter, "--config", configFile]),
+      (error) => JSON.parse(error.stderr).code === code,
+    );
+    await assert.rejects(fs.stat(stateRoot), { code: "ENOENT" });
+    await assert.rejects(fs.stat(componentsFile), { code: "ENOENT" });
+    assert.equal(f.requests.length, 0);
+  }
 });

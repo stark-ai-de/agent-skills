@@ -583,6 +583,115 @@ def watcher_events(invocation):
             'events': [line[-1500:] for line in events[-20:]]}
 
 
+def knowledge_health(c):
+    root, policy = c.get('knowledgeRoot'), c.get('codePolicy')
+    if not root or not policy:
+        return {'status': 'not_configured'}
+    helper = Path(root) / 'scripts/knowledge.mjs'
+    if not helper.is_absolute() or not helper.is_file() or not shutil.which('node'):
+        return {'status': 'unverified', 'reason': 'owner_unavailable'}
+    command = ['node', str(helper), 'status', '--policy', policy]
+    try:
+        local = json.loads(run(command, timeout=15, check=False).stdout)
+        if local.get('status') not in {'ready', 'pending'}:
+            return {'status': 'unverified', 'reason': 'owner_status_unverified'}
+        grant = local.get('codeRecords')
+        if not isinstance(grant, dict) or grant.get('supported') is not True:
+            return {'status': 'unverified', 'reason': 'owner_incompatible'}
+    except (AttributeError, ValueError, OSError, subprocess.TimeoutExpired):
+        return {'status': 'unverified', 'reason': 'owner_status_unverified'}
+
+    evidence = {'status': 'unverified', 'reason': 'account_read_unverified',
+                'ownerStatus': local['status'], 'codeRecords': grant}
+    try:
+        online = json.loads(run(command + ['--online'], timeout=15, check=False).stdout)
+        if online.get('accountReadChecked') is True and online.get('codeRecords') == grant:
+            evidence = {'status': 'ready', 'ownerStatus': online['status'], 'codeRecords': grant}
+    except (AttributeError, ValueError, OSError, subprocess.TimeoutExpired):
+        pass
+    return evidence
+
+
+def maintenance_health(c, checks, knowledge):
+    try:
+        receipt = read(Path(c['stateRoot']) / 'last-record-maintenance.json', None)
+    except FileNotFoundError:
+        receipt, receipt_issue = {}, 'receipt_missing'
+    except (ValueError, OSError):
+        receipt, receipt_issue = {}, 'receipt_unreadable'
+    else:
+        receipt_issue = None
+    if not c.get('recordsCommand'):
+        return {'status': 'not_configured'}, receipt
+
+    outcome = {'status': 'unverified'}
+    if not receipt_issue:
+        try:
+            at = dt.datetime.fromisoformat(receipt['at'].replace('Z', '+00:00'))
+            if at.tzinfo is None or at > dt.datetime.now(dt.timezone.utc):
+                raise ValueError('Invalid receipt timestamp')
+            outcome['receiptAt'] = at.isoformat()
+            status = receipt['status']
+            if status not in {'complete', 'pending', 'failed', 'uncertain'}:
+                raise ValueError('Unknown receipt status')
+            result = receipt.get('result') or {}
+            if result.get('status') in {'pending', 'failed', 'uncertain'}:
+                status = result['status']
+            outcome['receiptStatus'] = status
+        except (KeyError, TypeError, AttributeError, ValueError):
+            receipt_issue = 'receipt_invalid'
+
+    timer = c.get('maintenanceTimer')
+    service_issue = None
+    if timer:
+        try:
+            command = ['systemctl', '--user', 'show']
+            target = run(command + [timer, '-p', 'Triggers', '--value'], timeout=5).stdout.strip()
+            if not re.fullmatch(r'[a-zA-Z0-9_.@:-]+\.service', target):
+                raise ValueError('Unverified maintenance service')
+            properties = run(command + [target, '--timestamp=unix', '-p', 'ActiveState',
+                '-p', 'Result', '-p', 'ExecMainStartTimestamp', '-p', 'ExecMainExitTimestamp',
+                '-p', 'ExecMainStatus'], timeout=5).stdout
+            service = dict(line.split('=', 1) for line in properties.splitlines() if '=' in line)
+            outcome['serviceResult'] = service['Result']
+            started, finished = service['ExecMainStartTimestamp'], service['ExecMainExitTimestamp']
+            if started:
+                outcome['serviceStartedAt'] = dt.datetime.fromtimestamp(int(started.removeprefix('@')), dt.timezone.utc).isoformat()
+            if finished:
+                outcome['serviceFinishedAt'] = dt.datetime.fromtimestamp(int(finished.removeprefix('@')), dt.timezone.utc).isoformat()
+            if service['ActiveState'] == 'failed' or service['Result'] != 'success' or service['ExecMainStatus'] != '0':
+                service_issue = ('failed', 'maintenance_service_failed')
+            elif service['ActiveState'] in {'activating', 'active', 'deactivating'}:
+                service_issue = ('pending', 'maintenance_service_running')
+            elif not started or not finished or service['ActiveState'] != 'inactive':
+                service_issue = ('unverified', 'maintenance_service_unverified')
+            elif not receipt_issue and at.timestamp() < int(started.removeprefix('@')):
+                service_issue = ('unverified', 'receipt_predates_service_run')
+            elif checks['maintenanceTimer'] != 'active':
+                service_issue = ('pending', 'maintenance_timer_inactive')
+        except (ValueError, KeyError, OSError, OverflowError, RuntimeError, subprocess.TimeoutExpired):
+            service_issue = ('unverified', 'maintenance_service_unverified')
+
+    grant = knowledge.get('codeRecords', {})
+    if service_issue and service_issue[0] == 'failed':
+        outcome['status'], outcome['reason'] = service_issue
+    elif knowledge['status'] != 'ready':
+        outcome['reason'] = knowledge.get('reason', 'owner_not_configured')
+    elif grant.get('granted') is not True:
+        outcome['reason'] = 'missing_grant'
+    elif grant.get('writerAuthorized') is not True:
+        outcome['reason'] = 'writer_not_authorized'
+    elif (c.get('agent') or {}).get('enabled') and not checks['codex']:
+        outcome['reason'] = 'assessment_runner_missing'
+    elif service_issue:
+        outcome['status'], outcome['reason'] = service_issue
+    elif receipt_issue:
+        outcome['reason'] = receipt_issue
+    else:
+        outcome['status'] = 'ready' if status == 'complete' else status
+    return outcome, receipt
+
+
 def doctor(c):
     registry = read(c['registry'], {'projects': []})
     active = [x for x in registry['projects'] if x['status'] == 'active']
@@ -590,7 +699,7 @@ def doctor(c):
     checks['vueProcessing'] = c.get('vueProcessing', 'project_default')
     for executable in ['git', 'grepai', 'codegraph', 'ast-grep', 'codex']:
         checks[executable] = shutil.which(executable)
-        if not checks[executable]:
+        if executable in {'git', 'grepai'} and not checks[executable]:
             warnings.append('missing_executable:' + executable)
     for name, address in [('ollama', c['embedding']['endpoint'] + '/api/tags'),
                           ('qdrant', c['qdrant']['rest'] + '/collections/' + c['qdrant']['collection'])]:
@@ -618,7 +727,8 @@ def doctor(c):
             warnings.append('endpoint_unavailable:' + name)
     for key in ['watchService', 'discoveryTimer', 'maintenanceTimer']:
         checks[key] = run(['systemctl', '--user', 'is-active', c[key]], check=False).stdout.strip() if c.get(key) else 'not_configured'
-        if checks[key] != 'active': warnings.append('inactive:' + key)
+        if key != 'maintenanceTimer' and c.get(key) and checks[key] != 'active':
+            warnings.append('inactive:' + key)
     if c.get('watchService') and checks['watchService'] == 'active':
         invocation = run(['systemctl', '--user', 'show', c['watchService'], '--property=InvocationID', '--value'], check=False).stdout.strip()
         ready = run(['journalctl', '--user', '_SYSTEMD_INVOCATION_ID=' + invocation,
@@ -672,10 +782,27 @@ def doctor(c):
         age = (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(last['at'])).total_seconds()
         if age > c.get('maxReconcileAgeSeconds', 1200): warnings.append('repository_scan_stale')
     else: warnings.append('no_reconcile_receipt')
+    knowledge = knowledge_health(c)
+    records, receipt = maintenance_health(c, checks, knowledge)
+    health = {
+        'search': {'status': 'attention' if warnings else 'ready',
+                   'usable': any(sample['currentSourceMatches'] for sample in samples),
+                   'indexFreshness': 'unverified'},
+        'analysis': {'status': 'unverified' if checks['codegraph'] and checks['ast-grep'] else 'unavailable',
+                     'graphFreshness': 'unchecked', 'next': 'codegraph-ast-grep doctor'},
+        'knowledge': knowledge,
+        'records': records,
+    }
+    status_scope = ['search']
+    if c.get('recordsCommand'):
+        status_scope.append('records')
+        if records['status'] != 'ready':
+            warnings.append('record_maintenance:' + records.get('reason', records['status']))
     return {'status': 'attention' if warnings else 'healthy', 'at': stamp(), 'activeProjects': len(active),
+        'capabilities': health, 'statusScope': status_scope,
         'checks': checks, 'sourceSamples': samples, 'warnings': sorted(set(warnings)), 'lastReconcile': last,
         'lastNotification': read(state / 'last-notify.json', {}),
-        'lastRecordMaintenance': read(state / 'last-record-maintenance.json', {}),
+        'lastRecordMaintenance': receipt,
         'agentCheckpoints': read(state / 'agent-checkpoints.json', {}),
         'limits': ['Search samples do not prove every file is current.',
                    'HNSW vector count may be zero for small/unoptimized segments; successful search is checked separately.',

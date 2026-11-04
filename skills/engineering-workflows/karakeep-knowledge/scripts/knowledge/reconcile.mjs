@@ -1247,6 +1247,12 @@ export async function status({ policy: policyFile, online = false }) {
     entries: Object.keys(store.entries).length,
     pending,
     checkpoints: store.checkpoints,
+    accountReadChecked: online,
+    codeRecords: {
+      supported: true,
+      granted: Boolean(p.codeRecords),
+      writerAuthorized: Boolean(p.codeRecords && p.writeEnabled && p.writerHost === os.hostname()),
+    },
   };
 }
 export async function check({ repo, config = defaultConfig() }) {

@@ -2,6 +2,7 @@
 // Selection and scheduling only. All remote record writes use karakeep-knowledge.
 import * as fs from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -12,11 +13,39 @@ const { values } = parseArgs({
 });
 if (!values.config) throw new Error("--config is required");
 const config = JSON.parse(await fs.readFile(values.config, "utf8"));
-const owner = path.join(config.knowledgeRoot, "scripts/knowledge");
-const state = await import(pathToFileURL(path.join(owner, "state.mjs")));
-const api = await import(pathToFileURL(path.join(owner, "reconcile.mjs")));
-const code = await import(pathToFileURL(path.join(owner, "code-records.mjs")));
+const { state, api, code } = await loadOwner().catch(() => {
+  process.stderr.write(
+    JSON.stringify({
+      status: "failed",
+      code: "owner_incompatible",
+      message: "Install a compatible Karakeep knowledge owner.",
+    }) + "\n",
+  );
+  process.exit(1);
+});
 const { readJson, writeJson, hash, loadPolicy, now, privateDir } = state;
+
+async function loadOwner() {
+  if (!path.isAbsolute(config.knowledgeRoot ?? "")) throw new Error("Invalid owner root");
+  const owner = path.join(config.knowledgeRoot, "scripts/knowledge");
+  const modules = {};
+  for (const [key, name, required] of [
+    [
+      "state",
+      "state",
+      ["readJson", "writeJson", "hash", "loadPolicy", "loadStore", "now", "privateDir"],
+    ],
+    ["api", "reconcile", ["inspect", "plan", "apply"]],
+    ["code", "code-records", ["captureCodeSource", "normalizeCodeRecord"]],
+  ]) {
+    const module = await import(pathToFileURL(path.join(owner, name + ".mjs")));
+    if (required.some((symbol) => typeof module[symbol] !== "function")) {
+      throw new Error("Missing owner export");
+    }
+    modules[key] = module;
+  }
+  return modules;
+}
 
 function boundedCodex(args, cwd, seconds, log) {
   return new Promise((resolve, reject) => {
@@ -209,6 +238,11 @@ async function processOneQueue(p, manifest, report) {
 
 async function main() {
   const { policy: p } = await loadPolicy(config.codePolicy);
+  if (!p.codeRecords || !p.writeEnabled || p.writerHost !== os.hostname()) {
+    throw Object.assign(new Error("An adopted code-record writer grant is required."), {
+      code: !p.codeRecords ? "missing_grant" : "writer_not_authorized",
+    });
+  }
   const manifest = await readJson(config.componentsFile);
   const report = {
     status: "complete",

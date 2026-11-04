@@ -1,3 +1,4 @@
+import datetime as dt
 import importlib.util
 import json
 import os
@@ -42,6 +43,107 @@ class WorkspaceTests(unittest.TestCase):
         self.git(p,"add","source.py")
         self.git(p,"-c","user.name=Fixture","-c","user.email=fixture@example.invalid","commit","-qm",name)
         return p
+
+    def test_doctor_separates_search_from_optional_and_enabled_capabilities(self):
+        repo = self.repo("doctor")
+        state = Path(self.c["stateRoot"])
+        state.mkdir()
+        now = dt.datetime.now(dt.timezone.utc)
+        entry = {"name": "doctor", "status": "active", "path": str(repo)}
+        Path(self.c["registry"]).write_text(json.dumps({"projects": [entry]}))
+        (state / "last-reconcile.json").write_text(json.dumps({"at": now.isoformat()}))
+        meta = self.base / "index-meta/fixture"
+        meta.mkdir(parents=True)
+        (meta / "doctor.json").write_text(json.dumps({
+            key: self.c["embedding"][key] for key in ["provider", "model", "dimensions"]
+        }))
+        helper = self.base / "owner/scripts/knowledge.mjs"
+        helper.parent.mkdir(parents=True)
+        helper.touch()
+        policy = self.base / "policy.json"
+        policy.write_text("{}")
+        (state / "queue").mkdir()
+        (state / "queue/event.json").write_text("{}")
+        (repo / ".codegraph").mkdir()
+        (repo / ".codegraph/index").write_text("untouched")
+        receipt = state / "last-record-maintenance.json"
+        grant = {"supported": True, "granted": True, "writerAuthorized": True}
+        owner = {"status": "ready", "codeRecords": grant}
+        service = {"ActiveState": "inactive", "Result": "success", "ExecMainStatus": "0",
+                   "ExecMainStartTimestamp": f"@{int(now.timestamp()) - 2}",
+                   "ExecMainExitTimestamp": f"@{int(now.timestamp())}"}
+        core = {"git", "grepai", "node"}
+
+        def command(args, **kwargs):
+            if args[0] == "grepai":
+                self.assertEqual(args[1], "search")
+                out = json.dumps([{"file_path": "fixture/doctor/source.py", "start_line": 1,
+                                   "end_line": 2, "content": (repo / "source.py").read_text()}])
+            elif args[0] == "node":
+                self.assertEqual(args[2:5], ["status", "--policy", str(policy)])
+                out = json.dumps({**owner, "accountReadChecked": "--online" in args})
+            elif args[:3] == ["systemctl", "--user", "is-active"]:
+                out = "active"
+            elif args[:4] == ["systemctl", "--user", "show", "records.timer"]:
+                out = "records.service"
+            elif args[:4] == ["systemctl", "--user", "show", "records.service"]:
+                out = "\n".join(f"{key}={value}" for key, value in service.items())
+            else:
+                self.fail(f"Unexpected doctor command: {args}")
+            return subprocess.CompletedProcess(args, 0, stdout=out, stderr="")
+
+        def http(url):
+            if url.endswith("/api/tags"):
+                return {"models": [{"name": "fixture:latest"}]}
+            return {"result": {"status": "green", "config": {"params": {"vectors": {"size": 768}}}}}
+
+        def snapshot():
+            return {path: path.read_bytes() for path in self.base.rglob("*") if path.is_file()}
+
+        def doctor():
+            before = snapshot()
+            result = w.doctor(self.c)
+            self.assertEqual(before, snapshot())
+            self.assertTrue(result["capabilities"]["search"]["usable"])
+            self.assertEqual(result["capabilities"]["search"]["status"], "ready")
+            self.assertEqual(result["capabilities"]["analysis"]["graphFreshness"], "unchecked")
+            return result
+
+        with patch.object(w, "run", side_effect=command), patch.object(w, "http", side_effect=http), \
+                patch.object(w.shutil, "which", side_effect=lambda name: name if name in core else None):
+            result = doctor()
+            self.assertEqual(result["status"], "healthy")
+            self.assertEqual(result["statusScope"], ["search"])
+            self.assertEqual(result["capabilities"]["analysis"]["status"], "unavailable")
+            self.assertEqual(result["capabilities"]["records"]["status"], "not_configured")
+
+            self.c.update(recordsCommand=["node", "records.mjs"], maintenanceTimer="records.timer",
+                          knowledgeRoot=str(helper.parent.parent), codePolicy=str(policy))
+            cases = [(None, "unverified", "receipt_missing"), ("broken", "unverified", "receipt_unreadable"),
+                     ("{}", "unverified", "receipt_invalid")]
+            for status in ("complete", "failed", "pending", "uncertain"):
+                cases.append((json.dumps({"at": now.isoformat(), "status": status}),
+                              "ready" if status == "complete" else status, None))
+            for raw, expected, reason in cases:
+                with self.subTest(raw=raw):
+                    if raw is not None:
+                        receipt.write_text(raw)
+                    result = doctor()
+                    self.assertEqual(result["statusScope"], ["search", "records"])
+                    records = result["capabilities"]["records"]
+                    self.assertEqual((records["status"], records.get("reason")), (expected, reason))
+                    self.assertEqual(result["status"], "healthy" if expected == "ready" else "attention")
+
+            receipt.write_text(json.dumps({"at": now.isoformat(), "status": "complete"}))
+            service.update(Result="exit-code", ExecMainStatus="1")
+            self.assertEqual(doctor()["capabilities"]["records"]["reason"], "maintenance_service_failed")
+            service.update(Result="success", ExecMainStatus="0",
+                           ExecMainStartTimestamp=f"@{int(now.timestamp()) + 1}")
+            self.assertEqual(doctor()["capabilities"]["records"]["reason"], "receipt_predates_service_run")
+            grant["granted"] = False
+            self.assertEqual(doctor()["capabilities"]["records"]["reason"], "missing_grant")
+            del owner["codeRecords"]
+            self.assertEqual(doctor()["capabilities"]["records"]["reason"], "owner_incompatible")
 
     def test_current_invocation_warning_is_visible_despite_progress_output(self):
         invocation = 'a' * 32

@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.6.0"
+  version: "0.6.1"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows

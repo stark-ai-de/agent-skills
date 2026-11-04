@@ -6,9 +6,9 @@ Resolve existing installations before installing anything. Do not vendor their c
 | ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | grepai                 | local semantic search / workspace MCP                      | [upstream](https://github.com/yoanbernabeu/grepai), installed 1.1.x help/source                                   |
 | official grepai skills | focused usage guidance                                     | [catalog](https://yoanbernabeu.github.io/grepai/skills/), [source](https://github.com/yoanbernabeu/grepai-skills) |
-| codegraph-ast-grep     | installation, per-root graph freshness and syntax evidence | same canonical skill catalog; installed instructions and tools govern                                             |
-| karakeep-knowledge     | connection, adopted policy, writer and recovery            | same canonical skill catalog, codeRecords-capable owner required                                                  |
-| official Karakeep MCP  | search and readback using the existing account             | existing official Karakeep MCP package/launcher, preserve scoped credentials                                      |
+| codegraph-ast-grep     | installation, per-root graph freshness and syntax evidence | optional for GrepAI; the separate owner governs graph setup and checks                                            |
+| karakeep-knowledge     | connection, adopted policy, writer and recovery            | required for enabled record maintenance, with a compatible owner and adopted codeRecords grant                    |
+| official Karakeep MCP  | search and readback using the existing account             | optional read access to approved knowledge via the existing account                                               |
 
 After checking installed copies/scope, the qualified selective install form is:
 
@@ -25,7 +25,7 @@ notify = ["/absolute/python3", "/absolute/skill/scripts/workspace.py", "notify",
 
 [mcp_servers.grepai]
 command = "/absolute/grepai"
-args = ["mcp-serve", "--workspace", "dev"]
+args = ["mcp-serve", "--workspace", "<workspace>"]
 enabled = true
 startup_timeout_sec = 30
 tool_timeout_sec = 120
@@ -33,6 +33,6 @@ tool_timeout_sec = 120
 
 `notify` is a top-level key. Codex passes one JSON argument on `agent-turn-complete`. If a hook already exists, preserve it through the existing hook manager or a reviewed multiplexer; do not replace it. The queue ignores maintenance subprocesses and never saves prompts/transcripts. Register the canonical skill through the selected client's supported skill path, e.g. a deliberate local symlink. Verify a fresh process can discover it.
 
-Preserve the existing CodeGraph and official Karakeep MCP definitions. For each graph query pass the actual `projectPath`; check freshness and synchronize only generated metadata in the authorized root first. CodeGraph initialization may offer source/instruction changes: inspect the installed command and choose a source-preserving initialization path. Global server availability is not a global graph watcher.
+Preserve existing CodeGraph and Karakeep MCP definitions. For authorized graph work use the actual `projectPath` and the CodeGraph owner’s procedure, including approval before a diagnostic that may open or migrate a graph. Shared search can run before either companion is adopted. Use the Karakeep owner’s read-only `status --policy` for the configured collection capability and `--online` for account read verification. The separate `check --repo` workflow concerns project documents.
 
-Validate with actual MCP `initialize`, `tools/list` and search/read calls from both the operations directory and another repository. Then use a fresh Codex agent to prove configuration and instruction discovery. Existing chats need not hot-reload MCP tools; distinguish that from a verified fresh CLI session.
+Validate with actual MCP `initialize`, `tools/list` and GrepAI search calls from both the operations directory and another repository. Then use a fresh Codex agent to prove configuration and instruction discovery. Existing chats need not hot-reload MCP tools; distinguish that from a verified fresh CLI session.
