@@ -167,6 +167,13 @@ class WorkspaceTests(unittest.TestCase):
             del owner["codeRecords"]
             self.assertEqual(doctor()["capabilities"]["records"]["reason"], "owner_incompatible")
 
+    def test_watcher_process_enumeration_fails_closed(self):
+        with patch.object(w, "run", return_value=subprocess.CompletedProcess([], 1, stdout="", stderr="")):
+            self.assertFalse(w.competing_writers(self.c, []))
+        with patch.object(w, "run", return_value=subprocess.CompletedProcess([], 2, stdout="", stderr="error")):
+            with self.assertRaisesRegex(RuntimeError, "Cannot establish existing watcher ownership"):
+                w.competing_writers(self.c, [])
+
     def test_competing_workspace_watcher_blocks_changes_and_restoration(self):
         root = self.repo("project")
         with patch.object(w, "competing_writers", return_value=False), patch.object(w, "purge_excluded", return_value=0):

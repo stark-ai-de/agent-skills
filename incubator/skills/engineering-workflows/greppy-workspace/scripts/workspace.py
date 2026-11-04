@@ -384,7 +384,10 @@ def competing_writers(c, entries):
     config_file = Path(c['workspaceFile'])
     workspaces = yaml.safe_load(config_file.read_text()).get('workspaces', {}) if config_file.exists() else {}
     own = {x['path'] for x in entries}
-    for line in run(['pgrep', '-af', 'grepai.*watch'], check=False).stdout.splitlines():
+    processes = run(['pgrep', '-af', 'grepai.*watch'], check=False)
+    if processes.returncode not in (0, 1):
+        raise RuntimeError('Cannot establish existing watcher ownership')
+    for line in processes.stdout.splitlines():
         pid, _, command = line.partition(' ')
         try:
             if Path('/proc', pid, 'exe').resolve().name != 'grepai':
