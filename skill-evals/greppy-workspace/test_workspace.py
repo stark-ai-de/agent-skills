@@ -240,6 +240,24 @@ class WorkspaceTests(unittest.TestCase):
             w.purge_excluded(self.c, [entry])
         self.assertEqual(selected, [candidates[i] for i in (0, 2, 4)])
 
+    def test_excluded_symlinks_do_not_require_literal_rules(self):
+        root = self.repo("parent")
+        excluded = root / "private"
+        excluded.mkdir()
+        self.c["excludePaths"] = [str(excluded)]
+        with patch.object(w, "competing_writers", return_value=False), patch.object(w, "purge_excluded", return_value=0):
+            w.reconcile(self.c, "fixture", True)
+            (excluded / "link (1)").symlink_to(root / "source.py")
+            result = w.reconcile(self.c, "fixture", True)
+            self.assertEqual(result["status"], "reconciled")
+            (excluded / ".grepaiignore").write_text("!source.py\n")
+            with self.assertRaisesRegex(ValueError, "negation"):
+                w.reconcile(self.c, "fixture", True)
+            (excluded / ".grepaiignore").unlink()
+            (root / "link (1)").symlink_to(root / "source.py")
+            with self.assertRaisesRegex(ValueError, "unsupported by the qualified matcher"):
+                w.reconcile(self.c, "fixture", True)
+
     def test_unsafe_literal_ignore_is_rejected_before_mutation(self):
         root = self.repo("parent")
         self.c["excludePaths"] = [str(root / "private(1)")]

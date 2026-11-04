@@ -290,7 +290,7 @@ def project_ignores(root, all_roots, extra=(), excluded=()):
         dirs[:] = [d for d in dirs if d not in PRUNE and d != '.worktrees' and d not in extra]
         for name in dirs + files:
             f = p / name
-            if f.is_symlink():
+            if f.is_symlink() and not any(beneath(f, path) for path in excluded):
                 ignores.append(literal_ignore(f.relative_to(root)))
         if '.grepaiignore' in files:
             # Upstream negation overrides configured exclusions. Refuse that ambiguity.
