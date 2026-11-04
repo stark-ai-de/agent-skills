@@ -1,0 +1,8 @@
+interface:
+  display_name: "GrepAI Repository Setup"
+  short_description: "Set up or diagnose GrepAI for one repository"
+  default_prompt: "Use $grepai-repo-setup to set up or diagnose GrepAI for this repository."
+policy:
+  products:
+    - CODEX
+  allow_implicit_invocation: true
