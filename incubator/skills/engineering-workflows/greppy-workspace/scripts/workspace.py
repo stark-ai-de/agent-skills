@@ -203,7 +203,8 @@ def discover(c, previous=None):
                 dirs[:] = []
                 continue
             seen.add(p)
-            dirs[:] = sorted(d for d in dirs if d not in PRUNE and d not in c.get('pruneNames', ['.worktrees']))
+            dirs[:] = sorted(d for d in dirs if d not in PRUNE and d not in c.get('pruneNames', ['.worktrees'])
+                             and allowed(p / d))
             for d in list(dirs):
                 link = p / d
                 if link.is_symlink():
@@ -271,9 +272,9 @@ def explicit_exclusions(c):
 
 
 def literal_ignore(path):
-    if any(ch in path.as_posix() for ch in ('\r', '\n')):
-        raise ValueError('Line breaks are not supported in managed ignore paths')
-    return '/' + ''.join(('\\' if ch in '\\*?[] ' else '') + ch for ch in path.as_posix())
+    if not re.fullmatch(r'[A-Za-z0-9_./-]+', path.as_posix()):
+        raise ValueError('Managed ignore path contains characters unsupported by the qualified matcher')
+    return '/' + path.as_posix()
 
 
 def project_ignores(root, all_roots, extra=(), excluded=()):
@@ -486,7 +487,10 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
     if pending and pending.get('scope') != scope:
         raise ValueError('Pending reconciliation scope changed; restore its adopted config first')
     old = read(c['registry'], {'schemaVersion': 1, 'projects': []})
-    new = discover(c, old)
+    journal = pending.get('membership', [])
+    prior = {x['id']: x for x in old['projects']}
+    prior.update({x['id']: x for x in journal})
+    new = discover(c, {**old, 'projects': list(prior.values())})
     entries = [x for x in new['projects'] if x['status'] == 'active']
     priorities = c.get('priorityPaths', [])
     entries.sort(key=lambda x: (priorities.index(x['path']) if x['path'] in priorities else len(priorities), x['path']))
@@ -496,8 +500,8 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
     expected = {'name': c['workspace'], **workspace_settings(c), 'projects': []}
     migration = migration_plan(c, ws, migrate_from) if ws else None
     if ws:
-        known = {x['path'] for x in old['projects']} | {x['path'] for x in entries}
-        if any(x['path'] not in known for x in ws.get('projects', [])):
+        known = {(x['name'], x['path']) for x in [*old['projects'], *entries, *journal]}
+        if any((x.get('name'), x.get('path')) not in known for x in ws.get('projects', [])):
             raise ValueError('Workspace contains unowned entries; adopt before reconciling')
     else:
         ws = expected
@@ -533,7 +537,7 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
         if before != json.dumps(current, sort_keys=True, default=str):
             configs.append((f, yaml.safe_dump(current, sort_keys=False)))
     changed = changed or bool(configs)
-    removed = {x['name'] for x in old['projects'] if x.get('status') in ['active', 'retired'] and not x.get('vectorsPurged')} - {x['name'] for x in entries}
+    removed = {x['name'] for x in [*old['projects'], *journal] if x.get('status') in ['active', 'retired'] and not x.get('vectorsPurged')} - {x['name'] for x in entries}
     removed = (removed | set(pending.get('retired', []))) - {x['name'] for x in entries}
     summary = {'status': 'planned', 'projects': len(entries), 'excluded': sum(x['status'] == 'excluded' for x in new['projects']),
                'membershipChanged': ws.get('projects') != desired, 'configChanges': len(configs),
@@ -554,7 +558,7 @@ def reconcile(c, config_path, apply=False, migrate_from=None):
     if purge_ignores or removed:
         restore = restore or running
         pending = {'scope': scope, 'restoreWatcher': restore, 'retired': sorted(removed),
-                   'purgeExcluded': purge_ignores}
+                   'purgeExcluded': purge_ignores, 'membership': list({(x['name'], x['path']): x for x in [*journal, *entries]}.values())}
         atomic(recovery, pending)
         if running:
             run(['systemctl', '--user', 'stop', service], timeout=180)

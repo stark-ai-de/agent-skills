@@ -14,6 +14,8 @@ The qualified global configuration is `~/.grepai/workspace.yaml`, a map of works
 
 Workspace watching loads ignore and watch settings from each project's `.grepai/config.yaml`; adding only a global workspace ignore list does not enforce them. The helper uses supported gitignore-style patterns in the project configuration, disables automatic linked-worktree admission, excludes nested roots, generated indices, dependency/build/cache directories and common secret filenames. Both `vendor` and the observed capitalized `Vendor` directory are excluded. Existing `.grepaiignore` negations are refused because upstream gives them precedence over configured exclusions. Resolve that conflict explicitly, not by silently weakening secret exclusions.
 
+Generated literal exclusion paths accept only ASCII letters, digits, underscores, hyphens, dots and slashes. Reconciliation rejects other characters before changing configuration because the qualified GrepAI matcher cannot safely represent them. This also applies to generated nested-root and symlink exclusions.
+
 Existing symlinks are excluded during reconciliation. grepai 1.1 can follow a newly created file symlink before the next reconcile: filename exclusions are not a general secret scanner. Keep secrets outside indexed source trees and do not introduce links to private files. Validate the actual indexed payloads in isolated fixtures, including `.env`, key files, dependencies and a link to a private target. Local indices contain source text and require private storage.
 
 ## Recovery

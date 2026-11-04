@@ -220,18 +220,18 @@ class WorkspaceTests(unittest.TestCase):
 
     def test_nested_explicit_exclusions_share_literal_ignore_and_purge_scope(self):
         root = self.repo("parent")
-        excluded = root / "private[1]"
+        excluded = root / "private-1"
         operations = root / "operations"
         state = root / "state"
         self.c.update(excludePaths=[str(excluded)], operationsRoot=str(operations), stateRoot=str(state))
         ignored = w.project_ignores(root, [root], excluded=w.explicit_exclusions(self.c))
-        self.assertIn(r"/private\[1\]", ignored)
+        self.assertIn(r"/private-1", ignored)
         self.assertIn("/operations", ignored)
         self.assertIn("/state", ignored)
         entry = {"name": "parent", "path": str(root)}
-        candidates = ["fixture/parent/private[1]/file.py", "fixture/parent/private1/file.py",
+        candidates = ["fixture/parent/private-1/file.py", "fixture/parent/private1/file.py",
                       "fixture/parent/operations/notes.py", "fixture/parent/operations2/file.py",
-                      "fixture/parent/state/state.py", "other/parent/private[1]/file.py"]
+                      "fixture/parent/state/state.py", "other/parent/private-1/file.py"]
         selected = []
         def purge(_, predicate):
             selected.extend(file for file in candidates if predicate(file))
@@ -239,6 +239,72 @@ class WorkspaceTests(unittest.TestCase):
         with patch.object(w, "purge_matching", side_effect=purge):
             w.purge_excluded(self.c, [entry])
         self.assertEqual(selected, [candidates[i] for i in (0, 2, 4)])
+
+    def test_unsafe_literal_ignore_is_rejected_before_mutation(self):
+        root = self.repo("parent")
+        self.c["excludePaths"] = [str(root / "private(1)")]
+        with self.assertRaisesRegex(ValueError, "unsupported by the qualified matcher"):
+            w.reconcile(self.c, "fixture", True)
+        self.assertFalse(Path(self.c["workspaceFile"]).exists())
+        self.assertFalse((root / ".grepai/config.yaml").exists())
+
+    def test_discovery_prunes_excluded_children_before_opening(self):
+        root = self.repo("project")
+        excluded = self.dev / "blocked"
+        excluded.mkdir()
+        self.c["excludePaths"] = [str(excluded)]
+        actual = os.scandir
+        def scan(path):
+            if Path(path) == excluded:
+                raise PermissionError("blocked")
+            return actual(path)
+        with patch.object(w.os, "scandir", side_effect=scan):
+            self.assertIn(str(root), [x["path"] for x in w.discover(self.c)["projects"]])
+            self.c["excludePaths"] = []
+            with self.assertRaises(PermissionError):
+                w.discover(self.c)
+
+    def test_recovery_journals_membership_across_rename(self):
+        self.repo("existing")
+        with patch.object(w, "competing_writers", return_value=False), patch.object(w, "purge_excluded", return_value=0):
+            w.reconcile(self.c, "fixture", True)
+        newcomer = self.repo("newcomer")
+        self.c["watchService"] = "watch.fixture.service"
+        active = True
+        actual_run = w.run
+        def control(args, **kwargs):
+            nonlocal active
+            if args[0] != "systemctl":
+                return actual_run(args, **kwargs)
+            if args[2] == "stop": active = False
+            if args[2] == "start": active = True
+            return subprocess.CompletedProcess(args, 0 if active else 3, stdout="", stderr="")
+        with patch.object(w, "run", side_effect=control), patch.object(w, "competing_writers", return_value=False), \
+                patch.object(w, "purge_retired", return_value=0), \
+                patch.object(w, "purge_excluded", side_effect=[RuntimeError("failed"), 0]) as purge:
+            with self.assertRaisesRegex(RuntimeError, "failed"):
+                w.reconcile(self.c, "fixture", True)
+            newcomer.rename(self.dev / "renamed")
+            result = w.reconcile(self.c, "fixture", True)
+        self.assertEqual(purge.call_count, 2)
+        self.assertTrue(active)
+        self.assertTrue(result["watcherRestarted"])
+        self.assertFalse((Path(self.c["stateRoot"]) / "reconcile-pending.json").exists())
+
+    def test_recovery_does_not_adopt_unowned_workspace_entries(self):
+        self.repo("existing")
+        with patch.object(w, "competing_writers", return_value=False), patch.object(w, "purge_excluded", return_value=0):
+            w.reconcile(self.c, "fixture", True)
+        workspace = Path(self.c["workspaceFile"])
+        data = yaml.safe_load(workspace.read_text())
+        data["workspaces"]["fixture"]["projects"].append({"name": "foreign", "path": str(self.dev / "foreign")})
+        workspace.write_text(yaml.safe_dump(data))
+        scope = {"workspace": self.c["workspace"], "backend": self.c["qdrant"], "service": None,
+                 "configDigest": w.digest(self.c)}
+        w.atomic(Path(self.c["stateRoot"]) / "reconcile-pending.json", {
+            "scope": scope, "membership": w.read(self.c["registry"])["projects"]})
+        with self.assertRaisesRegex(ValueError, "unowned entries"):
+            w.reconcile(self.c, "fixture", True)
 
     def test_discovery_handles_alias_cycles_and_rejects_partial_scan(self):
         root = self.repo("project")
