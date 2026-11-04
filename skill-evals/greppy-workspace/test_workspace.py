@@ -167,6 +167,59 @@ class WorkspaceTests(unittest.TestCase):
             del owner["codeRecords"]
             self.assertEqual(doctor()["capabilities"]["records"]["reason"], "owner_incompatible")
 
+    def test_competing_workspace_watcher_blocks_changes_and_restoration(self):
+        root = self.repo("project")
+        with patch.object(w, "competing_writers", return_value=False), patch.object(w, "purge_excluded", return_value=0):
+            w.reconcile(self.c, "fixture", True)
+        self.c.update(watchService="watch.fixture.service", pruneNames=["new-exclusion"])
+        actual_run = w.run
+        actual_resolve = Path.resolve
+        command = ""
+        calls = []
+
+        def resolve(path, *args, **kwargs):
+            if str(path) == "/proc/123/exe": return Path("/usr/bin/grepai")
+            if str(path) == "/proc/123/cwd": return self.base / "operations"
+            return actual_resolve(path, *args, **kwargs)
+
+        def control(args, **kwargs):
+            if args[0] == "pgrep":
+                return subprocess.CompletedProcess(args, 0, stdout="123 grepai watch " + command + "\n", stderr="")
+            if args[0] == "systemctl":
+                calls.append(args[2])
+                return subprocess.CompletedProcess(args, 3, stdout="", stderr="")
+            return actual_run(args, **kwargs)
+
+        workspace = Path(self.c["workspaceFile"])
+        config = root / ".grepai/config.yaml"
+        before = (workspace.read_bytes(), config.read_bytes())
+        with patch.object(Path, "resolve", resolve), patch.object(w, "run", side_effect=control), \
+                patch.object(w, "purge_excluded") as purge:
+            for command in ["--workspace fixture", "--workspace=fixture"]:
+                with self.subTest(command=command), self.assertRaisesRegex(RuntimeError, "unmanaged grepai watcher"):
+                    w.reconcile(self.c, "fixture", True)
+                self.assertEqual((workspace.read_bytes(), config.read_bytes()), before)
+                purge.assert_not_called()
+            for command in ["--workspace", "--workspace=", "--workspace --no-ui", "--workspace fixture --workspace=other"]:
+                with self.subTest(command=command), self.assertRaisesRegex(RuntimeError, "Cannot establish"):
+                    w.competing_writers(self.c, [{"path": str(root)}])
+            data = yaml.safe_load(workspace.read_text())
+            data["workspaces"]["other"] = {"projects": [{"path": str(root)}]}
+            workspace.write_text(yaml.safe_dump(data))
+            command = "--workspace=other"
+            self.assertTrue(w.competing_writers(self.c, [{"path": str(root)}]))
+            workspace.write_bytes(before[0])
+            self.c["pruneNames"] = []
+            scope = {"workspace": self.c["workspace"], "backend": self.c["qdrant"],
+                     "service": self.c["watchService"], "configDigest": w.digest(self.c)}
+            pending = Path(self.c["stateRoot"]) / "reconcile-pending.json"
+            for command in ["--workspace fixture", "--workspace=fixture"]:
+                w.atomic(pending, {"scope": scope, "restoreWatcher": True, "retired": [], "purgeExcluded": False})
+                with self.subTest(command=command), self.assertRaisesRegex(RuntimeError, "Cannot restore"):
+                    w.reconcile(self.c, "fixture", True)
+                self.assertTrue(pending.exists())
+            self.assertNotIn("start", calls)
+
     def test_failed_purge_and_restart_resume_from_recovery_receipt(self):
         self.repo("project")
         with patch.object(w, "competing_writers", return_value=False), \

@@ -392,8 +392,14 @@ def competing_writers(c, entries):
             args = shlex.split(command)
             if 'watch' not in args:
                 continue
-            if '--workspace' in args:
-                name = args[args.index('--workspace') + 1]
+            flags = [i for i, arg in enumerate(args) if arg == '--workspace' or arg.startswith('--workspace=')]
+            if flags:
+                if len(flags) != 1:
+                    raise ValueError('Ambiguous workspace flags')
+                flag = args[flags[0]]
+                name = args[flags[0] + 1] if flag == '--workspace' else flag.partition('=')[2]
+                if not name or name.startswith('-'):
+                    raise ValueError('Invalid workspace flag')
                 other = {x['path'] for x in workspaces.get(name, {}).get('projects', [])}
                 if own & other or name == c['workspace']:
                     return True
