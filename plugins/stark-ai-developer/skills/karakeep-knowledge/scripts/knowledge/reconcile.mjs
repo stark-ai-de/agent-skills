@@ -22,6 +22,7 @@ import {
 } from "./state.mjs";
 import { snapshot, validateSnapshot, localFingerprints, git, eligible } from "./git.mjs";
 import { connect } from "./karakeep.mjs";
+import { normalizeCodeRecord, verifyCodeRecord } from "./code-records.mjs";
 const fence = String.fromCharCode(96).repeat(3);
 const label = "## Karakeep knowledge provenance\n" + fence + "json\n";
 export function splitNote(note = "") {
@@ -125,6 +126,12 @@ async function normalizedItems(inspection, intent, p, store, operation, runDir) 
     "intent",
     "Intent does not match inspection.",
   );
+  if (intent.items.some((x) => x.kind === "code-record"))
+    requireThat(
+      p.codeRecords && intent.items.length <= p.codeRecords.maxItems,
+      "code_budget",
+      "Code batch exceeds its adopted item bound.",
+    );
   const items = [];
   for (const input of intent.items) {
     object(
@@ -142,6 +149,7 @@ async function normalizedItems(inspection, intent, p, store, operation, runDir) 
         "capture",
         "coverage",
         "sourceUrl",
+        "codeRecord",
       ],
       ["kind", "title"],
     );
@@ -182,6 +190,12 @@ async function normalizedItems(inspection, intent, p, store, operation, runDir) 
       key = source.key;
       text = source.text;
       channel = source.channel;
+    } else if (input.kind === "code-record") {
+      const record = await normalizeCodeRecord(input, p, store);
+      key = record.key;
+      text = record.text;
+      source = record.source;
+      channel = record.channel;
     } else if (input.kind === "source") {
       source = { url: url(input.url) };
       key = identity("source", source.url);
@@ -277,7 +291,7 @@ async function normalizedItems(inspection, intent, p, store, operation, runDir) 
       inputs,
       purpose: input.purpose ?? null,
       references,
-      lifecycle: "current",
+      lifecycle: input.kind === "code-record" ? source.lifecycle : "current",
     };
     const fingerprint = hash(stable);
     const meta = {
@@ -348,7 +362,7 @@ async function normalizedItems(inspection, intent, p, store, operation, runDir) 
       requireThat(
         original &&
           original.contentHash === input.contentHash &&
-          !["finding", "overview", "dossier", "dataset"].includes(original.kind),
+          !["finding", "overview", "dossier", "dataset", "code-record"].includes(original.kind),
         "lineage",
         "Aggregate input must match an original inspected source, not another aggregate or mirror.",
       );
@@ -797,6 +811,7 @@ export async function apply({
     }
     receipt.status = "pending";
     const freshSources = new Map();
+    const codeDeadline = p.codeRecords ? Date.now() + p.codeRecords.maxSeconds * 1000 : Infinity;
     const order = (item) => (item.kind === "source" ? 0 : item.inputs.length ? 2 : 1);
     for (const item of [...data.items].sort((a, b) => order(a) - order(b))) {
       const op = data.operations.find((x) => x.key === item.key);
@@ -807,8 +822,15 @@ export async function apply({
       }
       let record = store.entries[item.key],
         current = null;
-      const checkDependencies = () =>
-        verifyDependencies(item, op, data, inspection, store, api, freshSources);
+      const checkDependencies = async () => {
+        requireThat(
+          Date.now() < codeDeadline,
+          "code_budget",
+          "Code-record run reached its time bound; resume remaining work.",
+        );
+        await verifyCodeRecord(item, p);
+        return verifyDependencies(item, op, data, inspection, store, api, freshSources);
+      };
       try {
         await checkDependencies();
       } catch (e) {

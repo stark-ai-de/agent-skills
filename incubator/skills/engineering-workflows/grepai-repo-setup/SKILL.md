@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.1.0"
+  version: "0.1.1"
   internal: true
 ---
 
@@ -21,7 +21,7 @@ Use for repository onboarding, a search readiness check, or a reported configura
 
 ## When not to use
 
-Use ordinary GrepAI search for code discovery. Shared infrastructure provisioning and maintenance belong to the workspace owner, such as `code-reuse-workspace` where adopted.
+Use ordinary GrepAI search for code discovery. Shared infrastructure provisioning and maintenance belong to the workspace owner, such as `greppy-workspace` where adopted. Recognize `code-reuse-workspace` as the legacy name used by existing deployments.
 
 ## Inputs to inspect
 

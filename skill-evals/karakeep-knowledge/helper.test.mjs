@@ -1107,3 +1107,336 @@ test("stored original text is read afresh before an approved aggregate write", a
   assert.equal(result.results[identity("session", "policy", "independent")].status, "verified");
   assert.equal([...f.objects.values()].filter((b) => b.title === "Derived").length, 0);
 });
+
+// Code-reuse records retain the same account lock, reconciliation and receipts.
+import {
+  captureCodeSource,
+  sanitizeCodeRemote,
+  normalizeCodeRecord,
+} from "../../skills/engineering-workflows/karakeep-knowledge/scripts/knowledge/code-records.mjs";
+
+async function codeFixture(t) {
+  const f = await fixture(t);
+  const repo = path.join(f.root, "repo");
+  await fs.mkdir(repo);
+  await exec("git", ["init", "-q", repo]);
+  await fs.writeFile(path.join(repo, "retry.js"), "export function retry() {\n  return 1;\n}\n");
+  await exec("git", ["-C", repo, "add", "retry.js"]);
+  await exec("git", [
+    "-C",
+    repo,
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "fixture",
+  ]);
+  f.p.kinds.push("code-record");
+  f.p.tags["code-record"] = ["code-reuse"];
+  f.p.codeRecords = {
+    registryFile: path.join(f.root, "registry.json"),
+    roots: [f.root],
+    include: ["**/*.js"],
+    exclude: ["**/secret*"],
+    maxItems: 3,
+    maxSeconds: 30,
+    approval: "Fixture code-record grant",
+  };
+  await writeJson(f.p.codeRecords.registryFile, {
+    schemaVersion: 1,
+    projects: [{ id: "repo-one", name: "fixture", path: repo, status: "active" }],
+  });
+  await f.savePolicy();
+  f.repo = repo;
+  f.code = async () => {
+    const selection = {
+      repoId: "repo-one",
+      file: "retry.js",
+      symbol: "retry",
+      startLine: 1,
+      endLine: 3,
+    };
+    return {
+      kind: "code-record",
+      id: "retry",
+      title: "Bounded retry",
+      codeRecord: {
+        selection,
+        source: await captureCodeSource(f.p, selection),
+        problem: "Transient failures",
+        useCase: "Bounded retry",
+        dependencies: ["JavaScript"],
+        license: "Synthetic fixture",
+        tests: [],
+        adaptation: "Supply a retry limit",
+        status: "source-checked",
+        reviewedAt: "2026-01-01T00:00:00Z",
+      },
+    };
+  };
+  return f;
+}
+
+test("code records need an explicit grant; ordinary findings stay proposals", async (t) => {
+  const f = await codeFixture(t);
+  const item = await f.code();
+  delete f.p.codeRecords;
+  await f.savePolicy();
+  await assert.rejects(f.prepare([item]), (e) => e.code === "code_budget");
+  assert.equal(f.writes.length, 0);
+});
+
+test("code record identity survives commits and preserves manual notes without repeat writes", async (t) => {
+  const f = await codeFixture(t);
+  assert.equal((await (await f.prepare([await f.code()])).apply()).status, "complete");
+  const before = f.writes.length;
+  const item = [...f.objects.values()][0];
+  item.note = "Manual context\n" + item.note + "\nHuman follow-up";
+  assert.equal((await (await f.prepare([await f.code()])).apply()).status, "complete");
+  assert.equal(f.writes.length, before);
+  await fs.writeFile(path.join(f.repo, "retry.js"), "export function retry() {\n  return 2;\n}\n");
+  const draft = await f.code();
+  assert.equal(draft.codeRecord.source.sourceMode, "local-draft");
+  assert.equal(draft.codeRecord.source.revision, null);
+  await (await f.prepare([draft])).apply();
+  assert.equal(f.objects.size, 1);
+  assert.match(item.note, /^Manual context\n/u);
+  assert.match(item.note, /Human follow-up$/u);
+  await exec("git", ["-C", f.repo, "add", "retry.js"]);
+  await exec("git", [
+    "-C",
+    f.repo,
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.invalid",
+    "commit",
+    "-qm",
+    "update fixture",
+  ]);
+  await (await f.prepare([await f.code()])).apply();
+  assert.equal(f.objects.size, 1);
+  assert.equal(splitNote(item.note).meta.source.sourceMode, "commit");
+});
+
+test("code source drift between plan and apply prevents writes", async (t) => {
+  const f = await codeFixture(t);
+  const planned = await f.prepare([await f.code()]);
+  await fs.appendFile(path.join(f.repo, "retry.js"), "// changed\n");
+  await assert.rejects(planned.apply(), (e) => e.code === "needs_replan");
+  assert.equal(f.writes.length, 0);
+});
+
+test("deleted code is retired and cannot remain source-qualified", async (t) => {
+  const f = await codeFixture(t);
+  await (await f.prepare([await f.code()])).apply();
+  await fs.unlink(path.join(f.repo, "retry.js"));
+  const retired = await f.code();
+  await assert.rejects(f.prepare([retired]), (e) => e.code === "code_record");
+  retired.codeRecord.status = "candidate";
+  await (await f.prepare([retired])).apply();
+  assert.equal(f.objects.size, 1);
+  const b = [...f.objects.values()][0];
+  assert.equal(splitNote(b.note).meta.lifecycle, "retired");
+  assert.match(b.content.text, /QUELLE ENTFERNT/u);
+});
+
+test("symlink, secret, line and forged practical validation inputs are rejected", async (t) => {
+  const f = await codeFixture(t);
+  const item = await f.code();
+  item.codeRecord.status = "practically-validated";
+  await assert.rejects(f.prepare([item]), (e) => e.code === "code_tests");
+  const selection = item.codeRecord.selection;
+  await assert.rejects(
+    captureCodeSource(f.p, { ...selection, endLine: 900 }),
+    (e) => e.code === "code_lines",
+  );
+  await fs.symlink(path.join(f.repo, "retry.js"), path.join(f.repo, "link.js"));
+  await assert.rejects(
+    captureCodeSource(f.p, { ...selection, file: "link.js" }),
+    (e) => e.code === "invalid_path",
+  );
+  await assert.rejects(
+    captureCodeSource(f.p, { ...selection, file: "secret.js" }),
+    (e) => e.code === "code_scope",
+  );
+  await assert.rejects(
+    captureCodeSource(f.p, { ...selection, file: "../retry.js" }),
+    (e) => e.code === "code_scope",
+  );
+  assert.equal(f.writes.length, 0);
+});
+
+test("batch grant bounds and managed text conflicts fail closed", async (t) => {
+  const f = await codeFixture(t);
+  const item = await f.code();
+  await assert.rejects(f.prepare([item, item, item, item]), (e) => e.code === "code_budget");
+  await (await f.prepare([item])).apply();
+  [...f.objects.values()][0].content.text = "Human edited the managed body";
+  const next = await f.prepare([item]);
+  const data = await readJson(next.planFile);
+  assert.equal(data.operations[0].status, "conflict");
+  const before = f.writes.length;
+  assert.equal((await next.apply()).status, "pending");
+  assert.equal(f.writes.length, before);
+});
+
+test("excluded code roots retire owned records without reading revoked source", async (t) => {
+  const f = await codeFixture(t);
+  await (await f.prepare([await f.code()])).apply();
+  const original = [...f.objects.values()][0];
+  await writeJson(f.p.codeRecords.registryFile, {
+    schemaVersion: 1,
+    projects: [{ id: "repo-one", name: "fixture", path: f.repo, status: "excluded" }],
+  });
+  const item = await f.code();
+  assert.equal(item.codeRecord.source.lifecycle, "retired");
+  assert.equal(item.codeRecord.source.fileHash, null);
+  item.codeRecord.status = "candidate";
+  await (await f.prepare([item])).apply();
+  assert.equal(f.objects.size, 1);
+  assert.match(original.content.text, /QUELLE ENTFERNT/u);
+});
+
+test("a shortened source invalidates old lines instead of preserving a qualified record", async (t) => {
+  const f = await codeFixture(t);
+  await (await f.prepare([await f.code()])).apply();
+  await fs.writeFile(path.join(f.repo, "retry.js"), "// removed symbol\n");
+  const item = await f.code();
+  assert.equal(item.codeRecord.source.lifecycle, "stale");
+  assert.equal(item.codeRecord.source.startLine, null);
+  item.codeRecord.status = "candidate";
+  await (await f.prepare([item])).apply();
+  assert.match([...f.objects.values()][0].content.text, /ZEILENBEZUG UNGEKLÄRT/u);
+});
+
+test("code provenance strips remote credentials and captures branch/license evidence", async (t) => {
+  assert.equal(
+    sanitizeCodeRemote("https://user:secret@example.invalid/org/repo.git?token=secret#secret"),
+    "https://example.invalid/org/repo.git",
+  );
+  assert.equal(
+    sanitizeCodeRemote("git@example.invalid:org/repo.git"),
+    "ssh://example.invalid/org/repo.git",
+  );
+  for (const unsafe of [
+    "file:///private/repo",
+    "/private/repo",
+    "ext::credential-helper",
+    "C:\\private\\repo",
+    "bad value",
+  ])
+    assert.equal(sanitizeCodeRemote(unsafe), null);
+  const f = await codeFixture(t);
+  await exec("git", [
+    "-C",
+    f.repo,
+    "remote",
+    "add",
+    "origin",
+    "https://user:secret@example.invalid/org/repo.git?token=secret",
+  ]);
+  await fs.writeFile(path.join(f.repo, "LICENSE"), "Synthetic license evidence\n");
+  const item = await f.code();
+  assert.equal(item.codeRecord.source.remote, "https://example.invalid/org/repo.git");
+  assert.ok(item.codeRecord.source.branch);
+  assert.deepEqual(item.codeRecord.source.licenseEvidence, [
+    { file: "LICENSE", sha256: hash(Buffer.from("Synthetic license evidence\n")) },
+  ]);
+  const rendered = await normalizeCodeRecord(item, f.p, { entries: {} });
+  assert.equal(rendered.reviewState, "needs-review");
+  assert.doesNotMatch(rendered.text, /secret/u);
+  const oldSource = item.codeRecord.source;
+  await exec("git", ["-C", f.repo, "checkout", "-qb", "new-branch"]);
+  await assert.rejects(
+    normalizeCodeRecord(item, f.p, { entries: {} }),
+    (e) => e.code === "needs_replan",
+  );
+  assert.notDeepEqual((await f.code()).codeRecord.source, oldSource);
+});
+
+test("review conventions separate unknown license, changed assessment, rename and retirement", async (t) => {
+  const f = await codeFixture(t);
+  const original = await f.code();
+  const clean = await normalizeCodeRecord(original, f.p, { entries: {} });
+  assert.match(clean.text, /Lizenzbeleg: unknown/u);
+  await (await f.prepare([original])).apply();
+  const remote = [...f.objects.values()][0];
+  remote.note = "Human approval of original source only\n" + remote.note;
+  await fs.rename(path.join(f.repo, "retry.js"), path.join(f.repo, "renamed.js"));
+  const retired = await f.code();
+  retired.codeRecord.status = "candidate";
+  await (await f.prepare([retired])).apply();
+  assert.match(remote.content.text, /Review-Konvention: retired/u);
+  assert.match(remote.note, /^Human approval of original source only/u);
+  const rebound = structuredClone(original);
+  rebound.codeRecord.selection.file = "renamed.js";
+  rebound.codeRecord.source = await captureCodeSource(f.p, rebound.codeRecord.selection);
+  await (await f.prepare([rebound])).apply();
+  assert.equal(f.objects.size, 1);
+  assert.match(remote.content.text, /Review-Konvention: draft/u);
+  rebound.codeRecord.assessmentSourceHash = "a".repeat(64);
+  await assert.rejects(
+    normalizeCodeRecord(rebound, f.p, { entries: {} }),
+    (e) => e.code === "code_record",
+  );
+  rebound.codeRecord.status = "candidate";
+  assert.equal((await normalizeCodeRecord(rebound, f.p, { entries: {} })).reviewState, "stale");
+});
+
+test("Greppy maintenance uses the adopted account writer and converges without model calls", async (t) => {
+  const f = await codeFixture(t);
+  const item = await f.code();
+  const { source, ...record } = item.codeRecord;
+  const configFile = path.join(f.root, "workspace.json");
+  const componentsFile = path.join(f.root, "components.json");
+  const adapter = fileURLToPath(
+    new URL(
+      "../../incubator/skills/engineering-workflows/greppy-workspace/scripts/records.mjs",
+      import.meta.url,
+    ),
+  );
+  const knowledgeRoot = fileURLToPath(
+    new URL("../../skills/engineering-workflows/karakeep-knowledge", import.meta.url),
+  );
+  await writeJson(componentsFile, {
+    components: [
+      { ...record, id: item.id, title: item.title, assessedSourceHash: source.fileHash },
+    ],
+  });
+  await writeJson(configFile, {
+    knowledgeRoot,
+    codePolicy: f.policyFile,
+    componentsFile,
+    stateRoot: path.join(f.root, "workspace-state"),
+    agent: { enabled: true },
+    codexExecutable: path.join(f.root, "no-model-executable"),
+  });
+  const run = async () => {
+    const { stdout } = await exec(process.execPath, [
+      adapter,
+      "--config",
+      configFile,
+      "--no-agent",
+    ]);
+    return JSON.parse(stdout);
+  };
+
+  const first = await run();
+  assert.equal(first.status, "complete");
+  assert.equal(first.changed, 1);
+  const [bookmark] = f.objects.values();
+  assert.equal(splitNote(bookmark.note).meta.kind, "code-record");
+  assert.deepEqual([...f.members.get(bookmark.id)], ["list1"]);
+  bookmark.note = "Manual follow-up\n" + bookmark.note;
+  const writes = f.writes.length;
+
+  const second = await run();
+  assert.equal(second.status, "complete");
+  assert.equal(second.unchanged, 1);
+  assert.equal(f.objects.size, 1);
+  assert.equal(f.writes.length, writes);
+  assert.match(bookmark.note, /^Manual follow-up\n/u);
+});

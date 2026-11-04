@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "approval": "REPLACE_WITH_ACTUAL_SCOPE_ADOPTION",
+  "roots": ["/absolute/development"],
+  "excludePaths": ["/absolute/operations"],
+  "operationsRoot": "/absolute/operations",
+  "stateRoot": "/absolute/private/state",
+  "registry": "/absolute/private/state/repositories.json",
+  "workspaceFile": "/absolute/user/.grepai/workspace.yaml",
+  "workspace": "dev",
+  "embedding": {
+    "provider": "ollama",
+    "model": "bge-m3",
+    "endpoint": "http://127.0.0.1:11434",
+    "dimensions": 1024
+  },
+  "qdrant": {
+    "host": "127.0.0.1",
+    "grpcPort": 6334,
+    "rest": "http://127.0.0.1:6333",
+    "collection": "code_reuse_dev",
+    "filePathIndex": true
+  },
+  "includeWorktrees": false,
+  "scanSeconds": 120,
+  "pruneNames": [".worktrees"],
+  "watchService": "code-reuse-watch.service",
+  "discoveryTimer": "code-reuse-discover.timer",
+  "maintenanceTimer": "code-reuse-maintain.timer",
+  "selectedPaths": [
+    "/absolute/development/pilot-a",
+    "/absolute/development/pilot-b",
+    "/absolute/development/pilot-c"
+  ],
+  "knowledgeRoot": "/absolute/installed/karakeep-knowledge",
+  "skillRoot": "/absolute/canonical/greppy-workspace",
+  "codePolicy": "/absolute/private/config/code-reuse.json",
+  "componentsFile": "/absolute/private/state/components.json",
+  "recordsCommand": [
+    "/absolute/node",
+    "/absolute/canonical/greppy-workspace/scripts/records.mjs",
+    "--config",
+    "/absolute/private/workspace.json"
+  ],
+  "maintenanceSeconds": 360,
+  "agent": {
+    "enabled": false,
+    "maxSeconds": 180,
+    "cooldownSeconds": 3600,
+    "disabledMcpServers": []
+  },
+  "embeddingModelDigest": "REPLACE_WITH_VERIFIED_SHA256_DIGEST",
+  "vueProcessing": false,
+  "customExtensions": [".astro", ".cjs", ".cts", ".mdx", ".mjs", ".mts", ".nix"]
+}

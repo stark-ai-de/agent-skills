@@ -5,7 +5,7 @@ license: Apache-2.0
 metadata:
   author: stark-ai-de
   category: engineering-workflows
-  version: "0.5.3"
+  version: "0.6.0"
   hermes:
     tags: [knowledge, karakeep, repositories]
     category: engineering-workflows
@@ -111,6 +111,10 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
    Capture a private setup receipt after setup/repair so the next agent can locate
    the same endpoint and account. Recheck readiness; a receipt is not live proof.
 
+### Bounded code records
+
+An explicitly adopted collection `codeRecords` grant permits `code-record` creation and maintenance for registered local source roots. Use the existing account writer and `inspect → plan → apply` workflow. The grant specifies private destination lists and item and time bounds. Follow [Code records](references/code-records.md) and use the [policy example](assets/code-record-policy.example.json) for the grant and evidence fields.
+
 ## Safety rules
 
 - Ordinary use is read-only. Import, tagging, sync, curation, account creation and
@@ -136,6 +140,7 @@ one actual trigger. Do not claim unattended operation from a prompt file alone.
 - [Hermes](references/hermes.md): complete package installation, profile-scoped discovery and native auto-loading.
 - [Curation](references/curation.md): lists, tags, maintenance and resource limits.
 - [Operations](references/operations.md): NixOS/WSL, start/stop, backup and recovery.
+- [Code records](references/code-records.md): opt-in grants and source-backed reuse records.
 - [Sources](references/sources.md): checked upstream contracts and baseline versions.
 
 ## Scripts
